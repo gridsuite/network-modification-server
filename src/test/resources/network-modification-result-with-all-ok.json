@@ -4,8 +4,8 @@
   "networkImpacts": [
     {
       "impactType": "CREATION",
-      "elementId": "lineId",
       "elementType": "LINE",
+      "elementId": "lineId",
       "substationIds": [
         "s1",
         "s2"
@@ -13,16 +13,16 @@
     },
     {
       "impactType": "MODIFICATION",
-      "elementId": "loadId",
       "elementType": "LOAD",
+      "elementId": "loadId",
       "substationIds": [
         "s3"
       ]
     },
     {
       "impactType": "DELETION",
-      "elementId": "generatorId",
       "elementType": "GENERATOR",
+      "elementId": "generatorId",
       "substationIds": [
         "s4"
       ]

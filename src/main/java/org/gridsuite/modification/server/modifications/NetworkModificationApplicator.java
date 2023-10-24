@@ -23,13 +23,17 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -50,6 +54,9 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
+    @Value("${powsybl-ws.impacts.collection-factor:0.8}")
+    private Double collectionFactor;
+
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService) {
         this.networkStoreService = networkStoreService;
@@ -59,33 +66,40 @@ public class NetworkModificationApplicator {
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        ApplicationStatus applicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
-        listener.setApplicationStatus(applicationStatus);
-        listener.setLastGroupApplicationStatus(applicationStatus);
-        return listener.flushNetworkModifications();
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionFactor);
+        ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
+        Set<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        return
+            NetworkModificationResult.builder()
+                .applicationStatus(groupApplicationStatus)
+                .lastGroupApplicationStatus(groupApplicationStatus)
+                .networkImpacts(new ArrayList<>(networkImpacts))
+                .build();
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        List<ApplicationStatus> groupsStatuses =
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionFactor);
+        List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
                         .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
                         .toList();
-        listener.setApplicationStatus(groupsStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
-        listener.setLastGroupApplicationStatus(Streams.findLast(groupsStatuses.stream()).orElse(ApplicationStatus.ALL_OK));
-        return listener.flushNetworkModifications();
+        Set<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        return NetworkModificationResult.builder()
+                .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
+                .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
+                .networkImpacts(new ArrayList<>(networkImpacts))
+                .build();
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        ApplicationStatus applicationStatus = modificationInfosList.stream()
+        ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
                 .map(m -> apply(m, network, reporter))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         reportService.sendReport(reportInfos.getReportUuid(), reporter);
-        return applicationStatus;
+        return groupApplicationStatus;
     }
 
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReporterModel reporter) {

@@ -8,13 +8,13 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact.ImpactType;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.*;
@@ -40,25 +40,24 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
 
-    private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
+    private final Set<SimpleElementImpact> networkSimpleElementImpacts = new LinkedHashSet<>();
 
-    // TODO : Move to the NetworkModificationApplicator class
-    @Setter
-    private ApplicationStatus applicationStatus;
-    @Setter
-    private ApplicationStatus lastGroupApplicationStatus;
+    private final Set<IdentifiableType> equipmentTypeCollectionImpacted = new LinkedHashSet<>();
+
+    private Double collectionFactor;
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
-                                   NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
+                                   NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService, Double collectionFactor) {
         this.network = network;
         this.networkUuid = networkUuid;
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
+        this.collectionFactor = collectionFactor;
     }
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
-                                              EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService);
+                                              EquipmentInfosService equipmentInfosService, Double collectionFactor) {
+        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService, collectionFactor);
         network.addListener(listener);
         return listener;
     }
@@ -94,20 +93,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        networkImpacts.add(
-            SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
-                .elementType(identifiable.getType())
-                .elementId(identifiable.getId())
-                .substationIds(getSubstationIds(identifiable))
-                .build()
-        );
+        addSimpleModificationImpact(identifiable);
     }
 
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
-        networkImpacts.add(
+        addNetworkImpact(
                 SimpleElementImpact.builder()
-                        .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
+                        .impactType(ImpactType.MODIFICATION)
                         .elementType(identifiable.getType())
                         .elementId(identifiable.getId())
                         .substationIds(getSubstationIds(identifiable))
@@ -145,9 +137,9 @@ public class NetworkStoreListener implements NetworkListener {
             .type(identifiable.getType().name())
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .build());
-        networkImpacts.add(
+        addNetworkImpact(
             SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.CREATION)
+                .impactType(ImpactType.CREATION)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -158,9 +150,9 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         deletedEquipmentsIds.add(identifiable.getId());
-        networkImpacts.add(
+        addNetworkImpact(
             SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.DELETION)
+                .impactType(ImpactType.DELETION)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -173,7 +165,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public NetworkModificationResult flushNetworkModifications() {
+    public Set<AbstractBaseImpact> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
@@ -182,13 +174,16 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        // TODO : Move to the NetworkModificationApplicator class
-        return
-            NetworkModificationResult.builder()
-                .applicationStatus(applicationStatus)
-                .lastGroupApplicationStatus(lastGroupApplicationStatus)
-                .networkImpacts(new ArrayList<>(networkImpacts))
-                .build();
+        // Append SimpleElement impacts to Collection Impacts
+        Set<AbstractBaseImpact> impacts = new HashSet<>(networkSimpleElementImpacts.size() + equipmentTypeCollectionImpacted.size());
+        impacts.addAll(networkSimpleElementImpacts);
+        impacts.addAll(equipmentTypeCollectionImpacted.stream().map(type ->
+            CollectionElementImpact.builder()
+                .impactType(ImpactType.COLLECTION)
+                .elementType(type)
+                .build()
+        ).collect(Collectors.toSet()));
+        return impacts;
     }
 
     private void flushEquipmentInfos() {
@@ -212,5 +207,70 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
         equipmentInfosService.addAllEquipmentInfos(createdEquipments);
+    }
+
+    private void addNetworkImpact(SimpleElementImpact impact) {
+
+        // if there is already a Collection impact for this type then break
+        if (equipmentTypeCollectionImpacted.contains(impact.getElementType())) {
+            return;
+        }
+        // get number of SimpleElementimpacts on the same equipment type
+        Set<SimpleElementImpact> typedNetworkImpacts = networkSimpleElementImpacts.stream().filter(i -> impact.getElementType() == i.getElementType()).collect(Collectors.toSet());
+        long nbTypedImpacts = typedNetworkImpacts.size();
+        // get number of this equipment type in the network
+        int nbTypedEquipment = getEquipmentCount(impact.getElementType());
+        // compare using a parameter (ex: if nbLoadImpacts >= 70% * nbLoads)
+        if (nbTypedImpacts > nbTypedEquipment * collectionFactor) {
+            // Mark this elementType as collection impacted
+            equipmentTypeCollectionImpacted.add(impact.getElementType());
+            // - remove impacts of this type, it will be replaced by a Collection impact
+            networkSimpleElementImpacts.removeAll(typedNetworkImpacts);
+        } else {
+            // otherwise add the Simple Element impact
+            networkSimpleElementImpacts.add(impact);
+        }
+    }
+
+    private int getEquipmentCount(IdentifiableType type) {
+        switch (type) {
+            case BATTERY:
+                return network.getBatteryCount();
+            case BUS:
+                // @ TODO return network.getBusCount(); ???
+                return 0;
+            case BUSBAR_SECTION:
+                return network.getBusbarSectionCount();
+            case DANGLING_LINE:
+                return network.getDanglingLineCount();
+            case GENERATOR:
+                return network.getGeneratorCount();
+            case HVDC_CONVERTER_STATION:
+                return network.getHvdcConverterStationCount();
+            case HVDC_LINE:
+                return network.getHvdcLineCount();
+            case LINE:
+                return network.getLineCount();
+            case LOAD:
+                return network.getLoadCount();
+            case SHUNT_COMPENSATOR:
+                return network.getShuntCompensatorCount();
+            case STATIC_VAR_COMPENSATOR:
+                return network.getStaticVarCompensatorCount();
+            case SUBSTATION:
+                return network.getSubstationCount();
+            case SWITCH:
+                return network.getSwitchCount();
+            case THREE_WINDINGS_TRANSFORMER:
+                return network.getThreeWindingsTransformerCount();
+            case TIE_LINE:
+                return network.getTieLineCount();
+            case TWO_WINDINGS_TRANSFORMER:
+                return network.getTwoWindingsTransformerCount();
+            case VOLTAGE_LEVEL:
+                return network.getVoltageLevelCount();
+            default:
+                return 0;
+        }
     }
 }

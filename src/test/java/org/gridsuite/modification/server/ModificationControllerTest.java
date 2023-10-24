@@ -28,6 +28,8 @@ import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -712,7 +714,7 @@ public class ModificationControllerTest {
             .andReturn();
         assertApplicationStatusOK(mvcResult);
         String resultAsString = mvcResult.getResponse().getContentAsString();
-        testBranchCreationImpacts(mapper, resultAsString, IdentifiableType.LINE, "idLine1", Set.of("s1", "s2"));
+        testBranchCreationCollectionImpact(mapper, resultAsString, IdentifiableType.LINE);
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
@@ -953,15 +955,15 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        List<SimpleElementImpact> expectedImpacts = createMultipleDeletionImpacts(
+        List<AbstractBaseImpact> expectedImpacts = createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.HVDC_LINE, "hvdcLine"),
-                Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc"), Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc"),
                 Pair.of(IdentifiableType.SWITCH, "v1blcc"), Pair.of(IdentifiableType.SWITCH, "v1dlcc"),
                 Pair.of(IdentifiableType.SWITCH, "v2bvsc"), Pair.of(IdentifiableType.SWITCH, "v2dvsc")
             ),
             Set.of("s1")
         );
+        expectedImpacts.add(createCollectionElementImpact(IdentifiableType.HVDC_CONVERTER_STATION));
         testMultipleDeletionImpacts(mvcResult.getResponse().getContentAsString(), expectedImpacts);
         testNetworkModificationsCount(TEST_GROUP_ID, 11);
 
@@ -1011,23 +1013,12 @@ public class ModificationControllerTest {
         expectedImpacts = createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.SUBSTATION, "s2"), Pair.of(IdentifiableType.VOLTAGE_LEVEL, "v3"),
-                Pair.of(IdentifiableType.BUSBAR_SECTION, "3A"), Pair.of(IdentifiableType.LOAD, "v3load"),
-                Pair.of(IdentifiableType.SWITCH, "v3d1"), Pair.of(IdentifiableType.SWITCH, "v3b1"),
-                Pair.of(IdentifiableType.SWITCH, "v3bl1"), Pair.of(IdentifiableType.SWITCH, "v3dl1"),
-                Pair.of(IdentifiableType.SWITCH, "v3bl3"), Pair.of(IdentifiableType.SWITCH, "v3dl3")
+                Pair.of(IdentifiableType.BUSBAR_SECTION, "3A"), Pair.of(IdentifiableType.LOAD, "v3load")
             ),
             Set.of("s2")
         );
-        expectedImpacts.addAll(createMultipleDeletionImpacts(
-            List.of(
-                Pair.of(IdentifiableType.SWITCH, "v1bl3"), Pair.of(IdentifiableType.SWITCH, "v1dl3"),
-                Pair.of(IdentifiableType.SWITCH, "v4bl1"), Pair.of(IdentifiableType.SWITCH, "v4dl1")
-            ),
-            Set.of("s1")
-        ));
-        expectedImpacts.addAll(createMultipleDeletionImpacts(
-            List.of(Pair.of(IdentifiableType.LINE, "line1"), Pair.of(IdentifiableType.LINE, "line3")), Set.of("s1", "s2")
-        ));
+        expectedImpacts.add(createCollectionElementImpact(IdentifiableType.SWITCH));
+        expectedImpacts.add(createCollectionElementImpact(IdentifiableType.LINE));
         testMultipleDeletionImpacts(mvcResult.getResponse().getContentAsString(), expectedImpacts);
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
@@ -1098,12 +1089,28 @@ public class ModificationControllerTest {
         assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<SimpleElementImpact> expectedImpacts) throws JsonProcessingException {
-        // All equipments have been removed from network
-        expectedImpacts.forEach(impact -> assertNull(network.getIdentifiable(impact.getElementId())));
+    private void testDeletionCollectionElementImpacts(CollectionElementImpact impact) {
+        // Not all equipments of this type have been removed from network
+        // Not all equipments have been added as TombstonedEquipmentInfos in ElasticSearch
+    }
 
-        // All equipments have been added as TombstonedEquipmentInfos in ElasticSearch
-        expectedImpacts.forEach(impact -> assertTrue(existTombstonedEquipmentInfos(impact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
+    private void testDeletionSimpleElementImpacts(SimpleElementImpact impact) {
+        // Equipment has been removed from network
+        assertNull(network.getIdentifiable(impact.getElementId()));
+
+        // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(impact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+    }
+
+    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
+        expectedImpacts.forEach(impact -> {
+
+            if (impact instanceof SimpleElementImpact) {
+                testDeletionSimpleElementImpacts((SimpleElementImpact) impact);
+            } else if (impact instanceof CollectionElementImpact) {
+                testDeletionCollectionElementImpacts((CollectionElementImpact) impact);
+            }
+        });
 
         TestImpactUtils.testElementImpacts(mapper, networkModificationResultAsString, expectedImpacts);
     }
