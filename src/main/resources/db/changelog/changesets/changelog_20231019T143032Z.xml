@@ -23,4 +23,16 @@
             <column name="section_count" type="integer"/>
         </addColumn>
     </changeSet>
+    <changeSet author="marcelinhug" id="migrate_section_count_1">
+        <update tableName="shunt_compensator_creation_entity">
+            <column name="section_count" valueNumeric="0"/>
+            <where>max_susceptance=0 or maxqat_nominalv=0</where>
+        </update>
+    </changeSet>
+    <changeSet author="marcelinhug" id="migrate_section_count_0">
+        <update tableName="shunt_compensator_creation_entity">
+            <column name="section_count" valueNumeric="1"/>
+            <where>max_susceptance!=0 or maxqat_nominalv!=0</where>
+        </update>
+    </changeSet>
 </databaseChangeLog>
