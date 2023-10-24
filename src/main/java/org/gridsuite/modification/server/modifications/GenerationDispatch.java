@@ -47,6 +47,7 @@ public class GenerationDispatch extends AbstractModification {
     private static final String GENERATOR = "generator";
     private static final String SUBSTATION = "substation";
     private static final String REGION_CVG = "regionCvg";
+    private static final String IS_PLURAL = "isPlural";
     private static final double EPSILON = 0.001;
 
     private final GenerationDispatchInfos generationDispatchInfos;
@@ -83,21 +84,33 @@ public class GenerationDispatch extends AbstractModification {
 
     private static double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         double totalAmountFixedSupply = 0.;
-
+        List<Generator> generatorsWithoutSetpointList = new ArrayList<>();
         totalAmountFixedSupply += generatorsWithFixedSupply.stream().map(network::getGenerator)
-            .filter(generator -> generator != null && generator.getTerminal().isConnected() &&
-                generator.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() == component.getNum())
-            .peek(generator -> {
-                GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
-                if (startupExtension != null && !Double.isNaN(startupExtension.getPlannedActivePowerSetpoint())) {
-                    generator.setTargetP(startupExtension.getPlannedActivePowerSetpoint());
-                } else {
-                    generator.setTargetP(0.);
-                    report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator", "The generator ${generator} does not have a predefined active power set point",
-                        Map.of(GENERATOR, generator.getId()), TypedValue.WARN_SEVERITY);
-                }
-            })
-            .mapToDouble(Generator::getTargetP).sum();
+                .filter(generator -> generator != null && generator.getTerminal().isConnected() &&
+                        generator.getTerminal().getBusView().getBus().getSynchronousComponent().getNum() == component.getNum())
+                .peek(generator -> {
+                    GeneratorStartup startupExtension = generator.getExtension(GeneratorStartup.class);
+                    if (startupExtension != null && !Double.isNaN(startupExtension.getPlannedActivePowerSetpoint())) {
+                        generator.setTargetP(startupExtension.getPlannedActivePowerSetpoint());
+                    } else {
+                        generator.setTargetP(0.);
+                        generatorsWithoutSetpointList.add(generator);
+
+                    }
+                })
+                .mapToDouble(Generator::getTargetP).sum();
+        if (!generatorsWithoutSetpointList.isEmpty()) {
+            report(reporter, Integer.toString(component.getNum()), "GeneratorsWithoutPredefinedActivePowerSetpoint",
+                    "${numGeneratorsWithoutSetpoint} generator${isPlural} not have a predefined active power set point",
+                    Map.of("numGeneratorsWithoutSetpoint", generatorsWithoutSetpointList.size(),
+                            IS_PLURAL, generatorsWithoutSetpointList.size() > 1 ? "s do" : " does"), TypedValue.WARN_SEVERITY);
+        }
+
+        // Report details for each generator without a predefined setpoint
+        generatorsWithoutSetpointList.forEach(generator ->
+                report(reporter, Integer.toString(component.getNum()), "MissingPredefinedActivePowerSetpointForGenerator",
+                        "The generator ${generatorId} does not have a predefined active power set point",
+                        Map.of("generatorId", generator.getId()), TypedValue.TRACE_SEVERITY));
         return totalAmountFixedSupply;
     }
 
@@ -163,8 +176,8 @@ public class GenerationDispatch extends AbstractModification {
         if (nbNoCost > 0) {
             report(reporter, reporterSuffixKey, "NbGeneratorsWithNoCost", "${nbNoCost} generator${isPlural} been discarded from generation dispatch because of missing marginal cost. Their active power set point has been set to 0",
                     Map.of("nbNoCost", nbNoCost,
-                            "isPlural", nbNoCost > 1 ? "s have" : " has"),
-                    TypedValue.WARN_SEVERITY);
+                            IS_PLURAL, nbNoCost > 1 ? "s have" : " has"),
+                    TypedValue.INFO_SEVERITY);
         }
         generators.stream()
             .filter(generator -> getGeneratorMarginalCost(generator) == null)
@@ -291,7 +304,7 @@ public class GenerationDispatch extends AbstractModification {
         public void endReport(List<Generator> adjustableGenerators) {
             // report updated generators
             report(reporter, suffixKey, "TotalGeneratorSetTargetP", "The active power set points of ${nbUpdatedGenerator} generator${isPlural} have been updated as a result of generation dispatch",
-                    Map.of("nbUpdatedGenerator", updatedGenerators.size(), "isPlural", updatedGenerators.size() > 1 ? "s" : ""), TypedValue.INFO_SEVERITY);
+                    Map.of("nbUpdatedGenerator", updatedGenerators.size(), IS_PLURAL, updatedGenerators.size() > 1 ? "s" : ""), TypedValue.INFO_SEVERITY);
             updatedGenerators.forEach(g -> report(reporter, suffixKey, "GeneratorSetTargetP", "The active power set point of generator ${generator} has been set to ${newValue} MW",
                     Map.of(GENERATOR, g.getId(), "newValue", g.getTargetP()), TypedValue.TRACE_SEVERITY));
 
@@ -301,7 +314,7 @@ public class GenerationDispatch extends AbstractModification {
                 List<String> updatedGeneratorsIds = updatedGenerators.stream().map(Identifiable::getId).toList();
                 report(reporter, suffixKey, "TotalGeneratorUnchangedTargetP", "${nbUnchangedGenerator} eligible generator${isPlural} not been selected by the merit order algorithm. Their active power set point has been set to 0",
                         Map.of("nbUnchangedGenerator", nbUnchangedGenerators,
-                                "isPlural", nbUnchangedGenerators > 1 ? "s have" : " has"), TypedValue.INFO_SEVERITY);
+                                IS_PLURAL, nbUnchangedGenerators > 1 ? "s have" : " has"), TypedValue.INFO_SEVERITY);
                 adjustableGenerators.stream()
                         .filter(g -> !updatedGeneratorsIds.contains(g.getId()))
                         .forEach(g -> report(reporter, suffixKey, "GeneratorUnchangedTargetP", "Generator ${generator} has not been selected by the merit order algorithm. Its active power set point has been set to 0",
@@ -431,7 +444,7 @@ public class GenerationDispatch extends AbstractModification {
         if (!componentDisconnectedGenerators.isEmpty()) {
             report(reporter, Integer.toString(componentNum), "TotalDisconnectedGenerator", "${nbDisconnectedGenerator} generator${isPlural} been discarded from generation dispatch because their are disconnected. Their active power set point remains unchanged",
                     Map.of("nbDisconnectedGenerator", componentDisconnectedGenerators.size(),
-                            "isPlural", componentDisconnectedGenerators.size() > 1 ? "s have" : " has"),
+                            IS_PLURAL, componentDisconnectedGenerators.size() > 1 ? "s have" : " has"),
                     TypedValue.INFO_SEVERITY);
             componentDisconnectedGenerators.forEach(g ->
                 report(reporter, Integer.toString(componentNum), "DisconnectedGenerator", "Generator ${generator} has been discarded from generation dispatch because it is disconnected. Its active power set point remains unchanged",
@@ -449,7 +462,7 @@ public class GenerationDispatch extends AbstractModification {
 
         report(subReporter, "", "NbSynchronousComponents", "Network has ${scNumber} synchronous component${isPlural}: ${scList}",
                 Map.of("scNumber", synchronousComponents.size(),
-                        "isPlural", synchronousComponents.size() > 1 ? "s" : "",
+                        IS_PLURAL, synchronousComponents.size() > 1 ? "s" : "",
                         "scList", synchronousComponents.stream().map(sc -> "SC" + sc.getNum()).collect(Collectors.joining(", "))),
                 TypedValue.INFO_SEVERITY);
 
