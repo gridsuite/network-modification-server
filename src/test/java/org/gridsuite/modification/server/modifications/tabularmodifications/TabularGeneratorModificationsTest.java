@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -67,6 +69,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertEquals(500., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
         assertEquals(500., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
         assertEquals(500., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
+        assertLogMessage("GENERATOR_NOT_FOUND : Generator unknownGenerator does not exist in network", ModificationType.GENERATOR_MODIFICATION.name() + "1", reportService);
     }
 
     @Override

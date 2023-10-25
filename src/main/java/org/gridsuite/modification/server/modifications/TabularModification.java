@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TABULAR_MODIFICATION_ERROR;
 
@@ -41,14 +41,14 @@ public class TabularModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        AtomicReference<Integer> applicationFailuresCount = new AtomicReference<>(0);
+        AtomicInteger applicationFailuresCount = new AtomicInteger(0);
         modificationInfos.getModifications().forEach(modification -> {
             try {
                 modification.toModification().apply(network);
             } catch (NetworkModificationException e) {
-                applicationFailuresCount.set(applicationFailuresCount.get() + 1);
+                applicationFailuresCount.incrementAndGet();
                 subReporter.report(Report.builder()
-                        .withKey("generatorModification" + applicationFailuresCount.get())
+                        .withKey(modification.getType().name() + applicationFailuresCount.get())
                         .withDefaultMessage(e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
