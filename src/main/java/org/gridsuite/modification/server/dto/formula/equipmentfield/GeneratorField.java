@@ -20,12 +20,10 @@ public enum GeneratorField implements EquipmentField {
     ACTIVE_POWER_SET_POINT,
     REACTIVE_POWER_SET_POINT,
     VOLTAGE_SET_POINT,
-    PLANNING_ACTIVE_POWER_SET_POINT,
+    PLANNED_ACTIVE_POWER_SET_POINT,
     MARGINAL_COST,
-    PLANNING_OUTAGE_RATE,
+    PLANNED_OUTAGE_RATE,
     FORCED_OUTAGE_RATE,
-    MINIMUM_REACTIVE_POWER,
-    MAXIMUM_REACTIVE_POWER,
     DROOP,
     TRANSIENT_REACTANCE,
     STEP_UP_TRANSFORMER_REACTANCE,
@@ -37,7 +35,6 @@ public enum GeneratorField implements EquipmentField {
     }
 
     public static Double getReferenceValue(Generator generator, GeneratorField generatorField) {
-        MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
         GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
@@ -49,12 +46,10 @@ public enum GeneratorField implements EquipmentField {
             case RATED_NOMINAL_POWER -> generator.getRatedS();
             case REACTIVE_POWER_SET_POINT -> generator.getTargetQ();
             case VOLTAGE_SET_POINT -> generator.getTargetV();
-            case PLANNING_ACTIVE_POWER_SET_POINT -> generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : null;
+            case PLANNED_ACTIVE_POWER_SET_POINT -> generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : null;
             case MARGINAL_COST -> generatorStartup != null ? generatorStartup.getMarginalCost() : null;
-            case PLANNING_OUTAGE_RATE -> generatorStartup != null ? generatorStartup.getPlannedOutageRate() : null;
+            case PLANNED_OUTAGE_RATE -> generatorStartup != null ? generatorStartup.getPlannedOutageRate() : null;
             case FORCED_OUTAGE_RATE -> generatorStartup != null ? generatorStartup.getForcedOutageRate() : null;
-            case MINIMUM_REACTIVE_POWER -> minMaxReactiveLimits != null ? minMaxReactiveLimits.getMinQ() : null;
-            case MAXIMUM_REACTIVE_POWER -> minMaxReactiveLimits != null ? minMaxReactiveLimits.getMaxQ() : null;
             case DROOP -> activePowerControl != null ? activePowerControl.getDroop() : null;
             case TRANSIENT_REACTANCE -> generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : null;
             case STEP_UP_TRANSFORMER_REACTANCE -> generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : null;
@@ -66,8 +61,6 @@ public enum GeneratorField implements EquipmentField {
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
         GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
         MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
-        ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
-        CoordinatedReactiveControl coordinatedReactiveControl = generator.getExtension(CoordinatedReactiveControl.class);
         switch (generatorField) {
             case MAXIMUM_ACTIVE_POWER -> generator.setMaxP(newValue);
             case MINIMUM_ACTIVE_POWER -> generator.setMinP(newValue);
@@ -75,13 +68,18 @@ public enum GeneratorField implements EquipmentField {
             case RATED_NOMINAL_POWER -> generator.setRatedS(newValue);
             case REACTIVE_POWER_SET_POINT -> generator.setTargetQ(newValue);
             case VOLTAGE_SET_POINT -> generator.setTargetV(newValue);
-            case PLANNING_ACTIVE_POWER_SET_POINT -> {
+            case PLANNED_ACTIVE_POWER_SET_POINT -> {
                 if (generatorStartup == null) {
                     generator.newExtension(GeneratorStartupAdder.class)
                              .withPlannedActivePowerSetpoint(newValue)
                              .add();
                 } else {
-                    generatorStartup.setPlannedActivePowerSetpoint(newValue);
+                    generator.newExtension(GeneratorStartupAdder.class)
+                            .withMarginalCost(generatorStartup.getMarginalCost())
+                            .withPlannedActivePowerSetpoint(newValue)
+                            .withPlannedOutageRate(generatorStartup.getPlannedOutageRate())
+                            .withForcedOutageRate(generatorStartup.getForcedOutageRate())
+                            .add();
                 }
             }
             case MARGINAL_COST -> {
@@ -90,16 +88,26 @@ public enum GeneratorField implements EquipmentField {
                             .withMarginalCost(newValue)
                             .add();
                 } else {
-                    generatorStartup.setMarginalCost(newValue);
+                    generator.newExtension(GeneratorStartupAdder.class)
+                            .withMarginalCost(newValue)
+                            .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
+                            .withPlannedOutageRate(generatorStartup.getPlannedOutageRate())
+                            .withForcedOutageRate(generatorStartup.getForcedOutageRate())
+                            .add();
                 }
             }
-            case PLANNING_OUTAGE_RATE -> {
+            case PLANNED_OUTAGE_RATE -> {
                 if (generatorStartup == null) {
                     generator.newExtension(GeneratorStartupAdder.class)
                             .withPlannedOutageRate(newValue)
                             .add();
                 } else {
-                    generatorStartup.setPlannedOutageRate(newValue);
+                    generator.newExtension(GeneratorStartupAdder.class)
+                            .withMarginalCost(generatorStartup.getMarginalCost())
+                            .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
+                            .withPlannedOutageRate(newValue)
+                            .withForcedOutageRate(generatorStartup.getForcedOutageRate())
+                            .add();
                 }
             }
             case FORCED_OUTAGE_RATE -> {
@@ -108,36 +116,17 @@ public enum GeneratorField implements EquipmentField {
                             .withForcedOutageRate(newValue)
                             .add();
                 } else {
-                    generatorStartup.setForcedOutageRate(newValue);
-                }
-            }
-            case MINIMUM_REACTIVE_POWER -> {
-                if (minMaxReactiveLimits ==null) {
-                    throw new NetworkModificationException(NetworkModificationException.Type.MODIFY_GENERATOR_ERROR, "TODO");
-                }
-                generator.newMinMaxReactiveLimits()
-                        .setMinQ(newValue)
-                        .setMaxQ(minMaxReactiveLimits.getMaxQ())
-                        .add();
-            }
-            case MAXIMUM_REACTIVE_POWER -> {
-                if (minMaxReactiveLimits ==null) {
-                    throw new NetworkModificationException(NetworkModificationException.Type.MODIFY_GENERATOR_ERROR, "TODO");
-                }
-                generator.newMinMaxReactiveLimits()
-                        .setMaxQ(newValue)
-                        .setMinQ(minMaxReactiveLimits.getMinQ())
-                        .add();
-            }
-            case DROOP -> {
-                if (activePowerControl == null) {
-                    generator.newExtension(ActivePowerControlAdder.class)
-                            .withDroop(newValue)
+                    generator.newExtension(GeneratorStartupAdder.class)
+                            .withMarginalCost(generatorStartup.getMarginalCost())
+                            .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
+                            .withPlannedOutageRate(generatorStartup.getForcedOutageRate())
+                            .withForcedOutageRate(newValue)
                             .add();
-                } else {
-                    activePowerControl.setDroop(newValue);
                 }
             }
+            case DROOP -> generator.newExtension(ActivePowerControlAdder.class)
+                    .withDroop(newValue)
+                    .add();
             case TRANSIENT_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
                     .withDirectTransX(newValue)
                     .withStepUpTransformerX(generatorShortCircuit == null ? Double.NaN : generatorShortCircuit.getStepUpTransformerX())

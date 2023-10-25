@@ -44,6 +44,7 @@ public class FormulaEntity {
     private Operator operator;
 
     public FormulaEntity(FormulaInfos formulaInfos) {
+        this.id = UUID.randomUUID();
         this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
         this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField().toString();
         this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField().toString();

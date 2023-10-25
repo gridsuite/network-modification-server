@@ -2,15 +2,18 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.util.CollectionUtils;
@@ -88,11 +91,15 @@ public class ByFormulaModification extends AbstractModification  {
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
         switch (identifiable.getType()) {
-            case GENERATOR -> {
-                GeneratorField.setNewValue((Generator) identifiable,
-                        (GeneratorField) formulaInfos.getEquipmentField(),
+            case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable,
+                    (GeneratorField) formulaInfos.getEquipmentField(),
+                    applyOperation(formulaInfos.getOperator(), value1, value2));
+            case BATTERY -> {
+                BatteryField.setNewValue((Battery) identifiable,
+                        (BatteryField) formulaInfos.getEquipmentField(),
                         applyOperation(formulaInfos.getOperator(), value1, value2));
             }
+            default -> throw new NetworkModificationException(NetworkModificationException.Type.WRONG_EQUIPMENT_TYPE, "Unsupported equipment");
         }
     }
 
