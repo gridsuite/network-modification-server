@@ -52,7 +52,7 @@ public class TabularModification extends AbstractModification {
                         .withDefaultMessage(e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
-                LOGGER.error(e.getMessage());
+                LOGGER.warn(e.getMessage());
             }
         });
         String defaultMessage = " have been modified.";
