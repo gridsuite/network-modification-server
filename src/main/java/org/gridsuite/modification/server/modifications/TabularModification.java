@@ -12,6 +12,10 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TABULAR_MODIFICATION_ERROR;
 
@@ -19,6 +23,9 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 public class TabularModification extends AbstractModification {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TabularModification.class);
+
     private final TabularModificationInfos modificationInfos;
 
     public TabularModification(TabularModificationInfos modificationInfos) {
@@ -34,24 +41,37 @@ public class TabularModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        modificationInfos.getModifications().forEach(modification -> modification.toModification().apply(network));
-        String defaultMessage;
+        AtomicReference<Integer> applicationFailuresCount = new AtomicReference<>(0);
+        modificationInfos.getModifications().forEach(modification -> {
+            try {
+                modification.toModification().apply(network);
+            } catch (NetworkModificationException e) {
+                applicationFailuresCount.set(applicationFailuresCount.get() + 1);
+                subReporter.report(Report.builder()
+                        .withKey("generatorModification" + applicationFailuresCount.get())
+                        .withDefaultMessage(e.getMessage())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+                LOGGER.error(e.getMessage());
+            }
+        });
+        String defaultMessage = " have been modified.";
         switch (modificationInfos.getModificationType()) {
             case "GENERATOR_MODIFICATION":
-                defaultMessage = "generators have been modified.";
+                defaultMessage = "generators" + defaultMessage;
                 break;
             case "LOAD_MODIFICATION":
-                defaultMessage = "loads have been modified.";
+                defaultMessage = "loads" + defaultMessage;
                 break;
             default:
-                defaultMessage = "equipments of unknown type have been modified";
+                defaultMessage = "equipments of unknown type" + defaultMessage;
                 break;
         }
 
         subReporter.report(Report.builder()
                 .withKey("tabularModification")
                 .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage)
-                .withValue("modificationsCount", modificationInfos.getModifications().size())
+                .withValue("modificationsCount", modificationInfos.getModifications().size() - applicationFailuresCount.get())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
