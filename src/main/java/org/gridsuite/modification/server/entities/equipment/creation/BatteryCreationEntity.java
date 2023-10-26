@@ -110,11 +110,14 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .date(getDate())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
+                // injection
                 .voltageLevelId(getVoltageLevelId())
                 .busOrBusbarSectionId(getBusOrBusbarSectionId())
                 .connectionName(getConnectionName())
                 .connectionDirection(getConnectionDirection())
                 .connectionPosition(getConnectionPosition())
+                .connected(isConnected())
+                // battery
                 .minActivePower(getMinActivePower())
                 .maxActivePower(getMaxActivePower())
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
