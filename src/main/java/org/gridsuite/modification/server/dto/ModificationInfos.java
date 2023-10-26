@@ -65,7 +65,8 @@ import java.util.UUID;
     @JsonSubTypes.Type(value = GenerationDispatchInfos.class),
     @JsonSubTypes.Type(value = VoltageInitModificationInfos.class),
     @JsonSubTypes.Type(value = VscCreationInfos.class),
-    @JsonSubTypes.Type(value = ConverterStationCreationInfos.class)
+    @JsonSubTypes.Type(value = ConverterStationCreationInfos.class),
+    @JsonSubTypes.Type(value = TabularModificationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor

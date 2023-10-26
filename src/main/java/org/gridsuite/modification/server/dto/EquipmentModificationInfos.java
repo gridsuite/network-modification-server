@@ -25,7 +25,6 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @ToString(callSuper = true)
 @Schema(description = "Equipment modification")
-
 public class EquipmentModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     @NonNull
