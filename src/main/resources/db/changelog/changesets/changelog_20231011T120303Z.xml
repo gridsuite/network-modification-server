@@ -14,12 +14,22 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modification_modificationsPK"/>
             </column>
             <column name="modifications_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="modifications_order" type="INT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modification_modificationsPK"/>
             </column>
+            <column name="modifications_order" type="INT">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
+    </changeSet>
+    <changeSet author="homereti" id="create_tabular_modification_modifications_index">
+        <createIndex indexName="tabular_modification_modifications_index" tableName="tabular_modification_modifications">
+            <column name="modifications_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="homereti" id="create_tabular_modification_index">
+        <createIndex indexName="tabular_modification_index" tableName="tabular_modification">
+            <column name="id"/>
+        </createIndex>
     </changeSet>
     <changeSet author="homereti (generated)" id="1697025825843-37">
         <addUniqueConstraint columnNames="modifications_id" constraintName="UC_TABULAR_MODIFICATION_MODIFICATIONSMODIFICATIONS_ID_COL" tableName="tabular_modification_modifications"/>
