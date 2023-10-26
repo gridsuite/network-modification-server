@@ -303,6 +303,10 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
+        //set regulating to false and unset target deadband on the twtTransformer to modify
+        TwoWindingsTransformer twtToModify = getNetwork().getTwoWindingsTransformer("trf1");
+        twtToModify.getRatioTapChanger().setRegulating(false);
+        twtToModify.getRatioTapChanger().setTargetDeadband(Double.NaN);
         //unset regulating and modify target voltage
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
@@ -317,6 +321,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
         //unset target voltage and modify regulating terminal
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 
