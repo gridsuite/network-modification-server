@@ -54,8 +54,8 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    @Value("${powsybl-ws.impacts.collection-factor:0.8}")
-    private Double collectionFactor;
+    @Value("${powsybl-ws.impacts.collection-threshold:50}")
+    private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService) {
@@ -66,7 +66,7 @@ public class NetworkModificationApplicator {
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionFactor);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
         Set<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
         return
@@ -78,7 +78,7 @@ public class NetworkModificationApplicator {
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionFactor);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
                         .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))

@@ -134,13 +134,6 @@ public final class TestImpactUtils {
         testElementImpacts(mapper, resultAsString, impacts);
     }
 
-    public static void testBranchCreationCollectionImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType) throws JsonProcessingException {
-        List<AbstractBaseImpact> impacts = List.of(
-            createCollectionElementImpact(elementType)
-        );
-        testElementImpacts(mapper, resultAsString, impacts);
-    }
-
     public static void testBranchDeletionImpacts(ObjectMapper mapper, String resultAsString,
                                                  IdentifiableType branchType, String branchId,
                                                  String breakerId1, String disconnectorId1, String substationId1,

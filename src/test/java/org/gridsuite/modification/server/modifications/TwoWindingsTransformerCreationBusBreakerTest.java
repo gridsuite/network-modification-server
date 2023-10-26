@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBranchCreationCollectionImpact;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -320,7 +319,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .ratedS(200.)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
                 .build();
-        testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1, true);
+        testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("id2wt1WithRatioTapChanger2")
                 .equipmentName("2wtName")
@@ -338,7 +337,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
                 .build();
-        testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos2, 2, false);
+        testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos2, 2);
     }
 
     @Test
@@ -375,22 +374,18 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .phaseTapChanger(phaseTapChangerCreationInfos)
                 .build();
-        testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1, true);
+        testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
     }
 
-    private void testCreateTwoWindingsTransformerInBusBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize, boolean expectingCollectioImpact) throws Exception {
+    private void testCreateTwoWindingsTransformerInBusBreaker(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos, int actualSize) throws Exception {
         MvcResult mvcResult;
         final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
 
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        if (expectingCollectioImpact) {
-            testBranchCreationCollectionImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER);
-        } else {
-            testBranchCreationImpacts(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, twoWindingsTransformerCreationInfos.getEquipmentId(), Set.of("s1"));
+        testBranchCreationImpacts(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, twoWindingsTransformerCreationInfos.getEquipmentId(), Set.of("s1"));
 
-        }
         assertNotNull(getNetwork().getTwoWindingsTransformer(transformerId));  // transformer was created
         testNetworkModificationsCount(getGroupId(), actualSize);
     }

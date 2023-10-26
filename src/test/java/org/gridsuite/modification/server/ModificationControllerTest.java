@@ -714,7 +714,7 @@ public class ModificationControllerTest {
             .andReturn();
         assertApplicationStatusOK(mvcResult);
         String resultAsString = mvcResult.getResponse().getContentAsString();
-        testBranchCreationCollectionImpact(mapper, resultAsString, IdentifiableType.LINE);
+        testBranchCreationImpacts(mapper, resultAsString, IdentifiableType.LINE, "idLine1", Set.of("s1", "s2"));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
@@ -958,12 +958,12 @@ public class ModificationControllerTest {
         List<AbstractBaseImpact> expectedImpacts = createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.HVDC_LINE, "hvdcLine"),
+                Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc"), Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc"),
                 Pair.of(IdentifiableType.SWITCH, "v1blcc"), Pair.of(IdentifiableType.SWITCH, "v1dlcc"),
                 Pair.of(IdentifiableType.SWITCH, "v2bvsc"), Pair.of(IdentifiableType.SWITCH, "v2dvsc")
             ),
             Set.of("s1")
         );
-        expectedImpacts.add(createCollectionElementImpact(IdentifiableType.HVDC_CONVERTER_STATION));
         testMultipleDeletionImpacts(mvcResult.getResponse().getContentAsString(), expectedImpacts);
         testNetworkModificationsCount(TEST_GROUP_ID, 11);
 
@@ -1013,12 +1013,23 @@ public class ModificationControllerTest {
         expectedImpacts = createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.SUBSTATION, "s2"), Pair.of(IdentifiableType.VOLTAGE_LEVEL, "v3"),
-                Pair.of(IdentifiableType.BUSBAR_SECTION, "3A"), Pair.of(IdentifiableType.LOAD, "v3load")
+                Pair.of(IdentifiableType.BUSBAR_SECTION, "3A"), Pair.of(IdentifiableType.LOAD, "v3load"),
+                Pair.of(IdentifiableType.SWITCH, "v3d1"), Pair.of(IdentifiableType.SWITCH, "v3b1"),
+                Pair.of(IdentifiableType.SWITCH, "v3bl1"), Pair.of(IdentifiableType.SWITCH, "v3dl1"),
+                Pair.of(IdentifiableType.SWITCH, "v3bl3"), Pair.of(IdentifiableType.SWITCH, "v3dl3")
             ),
             Set.of("s2")
         );
-        expectedImpacts.add(createCollectionElementImpact(IdentifiableType.SWITCH));
-        expectedImpacts.add(createCollectionElementImpact(IdentifiableType.LINE));
+        expectedImpacts.addAll(createMultipleDeletionImpacts(
+            List.of(
+                Pair.of(IdentifiableType.SWITCH, "v1bl3"), Pair.of(IdentifiableType.SWITCH, "v1dl3"),
+                Pair.of(IdentifiableType.SWITCH, "v4bl1"), Pair.of(IdentifiableType.SWITCH, "v4dl1")
+            ),
+            Set.of("s1")
+        ));
+        expectedImpacts.addAll(createMultipleDeletionImpacts(
+            List.of(Pair.of(IdentifiableType.LINE, "line1"), Pair.of(IdentifiableType.LINE, "line3")), Set.of("s1", "s2")
+        ));
         testMultipleDeletionImpacts(mvcResult.getResponse().getContentAsString(), expectedImpacts);
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
