@@ -179,6 +179,7 @@ public class VscCreation extends AbstractModification {
                 .withValue("id", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+        ModificationUtils.getInstance().disconnectInjection(converterStationCreationInfos, vscConverterStation, converterStationReporter);
 
         return vscConverterStation;
     }
