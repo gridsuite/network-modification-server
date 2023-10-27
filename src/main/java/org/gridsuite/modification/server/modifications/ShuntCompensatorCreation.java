@@ -71,6 +71,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
+        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getShuntCompensator(modificationInfos.getEquipmentId()), subReporter);
     }
 
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
