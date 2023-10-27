@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -43,7 +42,6 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Maximal susceptance available")
     private Double maxSusceptance;
 
-    @JsonProperty("maxQAtNominalV")
     @Schema(description = "Qmax available at nominal voltage")
     private Double maxQAtNominalV;
 
