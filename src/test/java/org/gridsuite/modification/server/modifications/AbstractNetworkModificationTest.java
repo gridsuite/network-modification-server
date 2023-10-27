@@ -65,7 +65,7 @@ If you want to add a test specific to a modification, add it in its own class.
 @SpringBootTest
 @DisableElasticsearch
 @AutoConfigureMockMvc
-abstract class AbstractNetworkModificationTest {
+public abstract class AbstractNetworkModificationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkModificationTest.class);
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
