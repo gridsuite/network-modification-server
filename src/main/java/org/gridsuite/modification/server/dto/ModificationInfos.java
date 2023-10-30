@@ -66,6 +66,7 @@ import java.util.UUID;
     @JsonSubTypes.Type(value = VoltageInitModificationInfos.class),
     @JsonSubTypes.Type(value = VscCreationInfos.class),
     @JsonSubTypes.Type(value = ConverterStationCreationInfos.class),
+    @JsonSubTypes.Type(value = TabularModificationInfos.class),
     @JsonSubTypes.Type(value = ByFormulaModificationInfos.class)
 })
 @SuperBuilder
