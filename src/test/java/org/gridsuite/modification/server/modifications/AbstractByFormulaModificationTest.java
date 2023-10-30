@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
@@ -21,8 +20,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
@@ -38,7 +35,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -88,33 +84,8 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
-    @Test
-    public void testCreateWithError() throws Exception {
-        UUID filterId = UUID.randomUUID();
-        FilterEquipments filter = getFilterEquipments(filterId, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
-        var filterInfo = FilterInfos.builder()
-                .id(filterId)
-                .name("filterWithWrongId")
-                .build();
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterId))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
-
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterInfo))
-                .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
-                .build();
-
-        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
-                .formulaInfosList(List.of(formulaInfos))
-                .identifiableType(IdentifiableType.GENERATOR)
-                .build();
-
+    void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
+                                        NetworkModificationResult.ApplicationStatus withErrors) throws Exception {
         String modificationToCreateJson = mapper.writeValueAsString(byFormulaModificationInfos);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -122,50 +93,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(filterId)), false);
-    }
-
-    @Test
-    public void testCreateWithWarning() throws Exception {
-        UUID filterId = UUID.randomUUID();
-        String equipmentId = "v3Battery";
-        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(equipmentId, 1.0);
-        FilterEquipments filter = getFilterEquipments(filterId, "filterWithWrongId", List.of(identifiableAttributes1), List.of("wrongId"));
-        var filterInfo = FilterInfos.builder()
-                .id(filterId)
-                .name("filterWithWrongId")
-                .build();
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterId))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
-
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterInfo))
-                .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
-                .build();
-
-        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
-                .formulaInfosList(List.of(formulaInfos))
-                .identifiableType(IdentifiableType.BATTERY)
-                .build();
-
-        String modificationToCreateJson = mapper.writeValueAsString(byFormulaModificationInfos);
-
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertEquals(NetworkModificationResult.ApplicationStatus.WITH_WARNINGS, networkModificationResult.get().getApplicationStatus());
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(filterId)), false);
+        assertEquals(withErrors, networkModificationResult.get().getApplicationStatus());
     }
 
     @Override
@@ -220,7 +148,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .build();
     }
 
-    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
+    Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
         return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 

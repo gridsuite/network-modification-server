@@ -82,11 +82,14 @@ public class ByFormulaModification extends AbstractModification {
 
         modificationInfos.getFormulaInfosList().forEach(formulaInfos -> formulaInfos.getFilters().forEach(filterInfos -> {
             var filterEquipments = exportFilters.get(filterInfos.getId());
-            filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network, attributes.getId(), formulaInfos));
+            filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network, attributes.getId(), formulaInfos, subReporter));
         }));
+
+        createReport(subReporter, "byFormulaModification", "new modification by formula", TypedValue.INFO_SEVERITY);
+
     }
 
-    private void applyFormula(Network network, String identifiableId, FormulaInfos formulaInfos) {
+    private void applyFormula(Network network, String identifiableId, FormulaInfos formulaInfos, Reporter subReporter) {
         Identifiable<?> identifiable = network.getIdentifiable(identifiableId);
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
@@ -100,6 +103,13 @@ public class ByFormulaModification extends AbstractModification {
                     newValue);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.WRONG_EQUIPMENT_TYPE, "Unsupported equipment");
         }
+
+        createReport(subReporter, "byFormulaModificationFormula",
+                String.format("successful application of new modification by formula on %s for %s %S",
+                        formulaInfos.getEditedField(),
+                        identifiable.getType(),
+                        identifiable.getId()),
+                TypedValue.INFO_SEVERITY);
     }
 
     private Double applyOperation(Operator operator, Double value1, Double value2) {
