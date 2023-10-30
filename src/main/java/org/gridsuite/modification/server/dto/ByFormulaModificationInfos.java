@@ -39,7 +39,7 @@ import java.util.List;
 @Schema(description = "Modification by formula")
 public class ByFormulaModificationInfos extends ModificationInfos {
     @Schema(description = "Identifiable type")
-    private IdentifiableType C;
+    private IdentifiableType identifiableType;
 
     @Schema(description = "list of formulas")
     private List<FormulaInfos> formulaInfosList;

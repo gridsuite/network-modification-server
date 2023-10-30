@@ -114,7 +114,7 @@ public class ByFormulaModification extends AbstractModification {
 
     private Double applyOperation(Operator operator, Double value1, Double value2) {
         if (value1 == null ||
-            value2 == null ) {
+            value2 == null) {
             throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "at least one of the value or referenced field is null");
         } else {
             return switch (operator) {
@@ -129,6 +129,7 @@ public class ByFormulaModification extends AbstractModification {
                     yield value1 / value2;
                 }
                 case MODULUS -> value1 % value2;
-        };
-    }}
+            };
+        }
+    }
 }
