@@ -45,8 +45,9 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
-                .maximumNumberOfSections(1)
-                .susceptancePerSection(0.)
+                .maximumSectionCount(10)
+                .sectionCount(6)
+                .maxSusceptance(0.)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .connectionName("cn")
@@ -61,8 +62,9 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .maximumNumberOfSections(1)
-                .susceptancePerSection(0.)
+                .maximumSectionCount(20)
+                .sectionCount(3)
+                .maxSusceptance(0.)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("1.A")
                 .connectionName("cnEdited")
@@ -107,8 +109,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Test
     public void testCreateWithQAtNominalV() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
-        dto.setSusceptancePerSection(null);
-        dto.setQAtNominalV(80.0);
+        dto.setMaxSusceptance(null);
+        dto.setMaxQAtNominalV(80.0);
         //CAPACITOR test
         dto.setShuntCompensatorType(ShuntCompensatorType.CAPACITOR);
         String modificationToCreateJson = mapper.writeValueAsString(dto);
