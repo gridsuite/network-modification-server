@@ -4,6 +4,12 @@ spring:
 
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        order_inserts: true
+        order_updates: true
+        jdbc:
+          batch_size: 100
 
   cloud:
     function:
@@ -32,3 +38,5 @@ spring:
 powsybl-ws:
   database:
     name: networkmodifications
+    queryBegin: '&'
+    customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
