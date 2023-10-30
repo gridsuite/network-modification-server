@@ -165,6 +165,7 @@ public abstract class AbstractNetworkModificationTest {
         String resultAsString = mvcResult.getResponse().getContentAsString();
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
         });
+
         assertThat(receivedModification).recursivelyEquals(modificationToRead);
     }
 
@@ -203,7 +204,7 @@ public abstract class AbstractNetworkModificationTest {
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
         assertAfterNetworkModificationDeletion();
