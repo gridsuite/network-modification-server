@@ -27,10 +27,12 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
     }
+
     @Override
     protected ModificationInfos buildModificationWithOnlyMetadata() {
         return buildModification();
     }
+
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
