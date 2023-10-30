@@ -114,17 +114,21 @@ public class ByFormulaModification extends AbstractModification {
 
     private Double applyOperation(Operator operator, Double value1, Double value2) {
         if (value1 == null ||
-            value2 == null ||
-            value2 == 0 && operator == Operator.DIVISION) {
-            throw new UnsupportedOperationException("TODO");
-        }
-
-        return switch (operator) {
-            case ADDITION -> value1 + value2;
-            case SUBTRACTION -> value1 - value2;
-            case MULTIPLICATION -> value1 * value2;
-            case DIVISION -> value1 / value2;
-            case MODULUS -> value1 % value2;
+            value2 == null ) {
+            throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "at least one of the value or referenced field is null");
+        } else {
+            return switch (operator) {
+                case ADDITION -> value1 + value2;
+                case SUBTRACTION -> value1 - value2;
+                case MULTIPLICATION -> value1 * value2;
+                case DIVISION -> {
+                    if (value2 == 0) {
+                        throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
+                                "there is a division by 0 in one formula");
+                    }
+                    yield value1 / value2;
+                }
+                case MODULUS -> value1 % value2;
         };
-    }
+    }}
 }
