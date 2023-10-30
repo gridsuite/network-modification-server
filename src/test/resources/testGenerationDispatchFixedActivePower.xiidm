@@ -61,6 +61,7 @@
         </iidm:voltageLevel>
     </iidm:substation>
     <iidm:substation id="CC2_site1" name="CC2_site1">
+        <iidm:property name="regionCvg" value="EAST"/>
         <iidm:voltageLevel id="CC2_poste1" name="CC2_poste1" nominalV="225.0" topologyKind="NODE_BREAKER">
             <iidm:nodeBreakerTopology>
                 <iidm:busbarSection id="CC2_poste1_1_1" node="0"/>
@@ -78,6 +79,7 @@
         </iidm:voltageLevel>
     </iidm:substation>
     <iidm:substation id="S1">
+        <iidm:property name="regionCvg" value="EAST"/>
         <iidm:voltageLevel id="S1VL1" nominalV="225.0" lowVoltageLimit="220.0" highVoltageLimit="240.0" topologyKind="NODE_BREAKER">
             <iidm:nodeBreakerTopology>
                 <iidm:busbarSection id="S1VL1_BBS" name="S1VL1_BBS" node="0"/>

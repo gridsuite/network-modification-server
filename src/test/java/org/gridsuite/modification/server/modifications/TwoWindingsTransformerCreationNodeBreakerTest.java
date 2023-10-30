@@ -341,6 +341,40 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
             "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, stashed=null, messageType=null, messageValues=null), equipmentId=id2wt1WithRatioTapChanger2), equipmentName=2wtName), seriesResistance=400.0, seriesReactance=300.0, voltageLevelId1=v1, voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, currentLimits1=null, currentLimits2=null, connectionName1=null, connectionDirection1=TOP, connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null), magnetizingConductance=100.0, magnetizingSusceptance=200.0, ratedVoltage1=1000.0, ratedVoltage2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationInfos(super=TapChangerCreationInfos(lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, regulatingTerminalId=v1load, regulatingTerminalType=LOAD, regulatingTerminalVlId=v1, steps=[TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)]), loadTapChangingCapabilities=true, targetV=220.0), phaseTapChanger=null)",
             twoWindingsTransformerCreationInfos2.toString()
         );
+
+        // create twt with ratioTapChanger having a null targetV
+        TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos3 = TwoWindingsTransformerCreationInfos.builder()
+                .equipmentId("id2wt1WithRatioTapChanger3")
+                .equipmentName("2wtName")
+                .voltageLevelId1("v1")
+                .busOrBusbarSectionId1("1.1")
+                .voltageLevelId2("v4")
+                .busOrBusbarSectionId2("1.A")
+                .magnetizingConductance(100.0)
+                .magnetizingSusceptance(200.0)
+                .ratedVoltage1(1000)
+                .ratedVoltage2(1010)
+                .seriesReactance(300)
+                .seriesResistance(400)
+                .connectionName1("cnid2wt1")
+                .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connectionName2("cnid2wt2")
+                .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .ratioTapChanger(RatioTapChangerCreationInfos.builder()
+                        .lowTapPosition(0)
+                        .tapPosition(1)
+                        .regulating(false)
+                        .targetDeadband(null)
+                        .regulatingTerminalVlId("v1")
+                        .regulatingTerminalId("v1load")
+                        .regulatingTerminalType("LOAD")
+                        .loadTapChangingCapabilities(true)
+                        .targetV(null)
+                        .steps(getTapChangerSteps())
+                        .build())
+                .build();
+        testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos3, 3);
+
     }
 
     @Test
