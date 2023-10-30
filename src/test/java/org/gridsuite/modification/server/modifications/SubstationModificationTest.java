@@ -55,21 +55,9 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         return SubstationModificationInfos.builder()
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
-            .messageType("SUBSTATION_MODIFICATION")
-            .messageValues("{\"equipmentId\":\"s3\"}")
-            .stashed(false)
             .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
             .properties(null)
             .build();
-    }
-
-    @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("SUBSTATION_MODIFICATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"s3\"}");
-        return builtModificationInfos;
     }
 
     @Override

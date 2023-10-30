@@ -38,19 +38,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
         return EquipmentDeletionInfos.builder()
                 .equipmentType("LINE")
                 .equipmentId("v2")
-                .messageType("EQUIPMENT_DELETION")
-                .messageValues("{\"equipmentId\":\"v2\"}")
-                .stashed(false)
                 .build();
-    }
-
-    @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("EQUIPMENT_DELETION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"s1\"}");
-        return builtModificationInfos;
     }
 
     @Override

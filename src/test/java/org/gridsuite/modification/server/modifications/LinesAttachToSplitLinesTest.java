@@ -51,15 +51,6 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LINES_ATTACH_TO_SPLIT_LINES");
-        builtModificationInfos.setMessageValues("{\"attachedLineId\":\"l3\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LinesAttachToSplitLinesInfos.builder()
                 .lineToAttachTo1Id("newline1")
@@ -71,9 +62,6 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
                 .replacingLine1Name("newNewLine4")
                 .replacingLine2Id("newnl5")
                 .replacingLine2Name("newNewLine5")
-                .stashed(false)
-                .messageType("LINES_ATTACH_TO_SPLIT_LINES")
-                .messageValues("{\"attachedLineId\":\"newline3\"}")
                 .build();
     }
 

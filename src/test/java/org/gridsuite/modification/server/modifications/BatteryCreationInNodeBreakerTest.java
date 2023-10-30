@@ -63,23 +63,11 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("BATTERY_CREATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idBattery1\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryCreationInfos.builder()
                 .equipmentId("idBattery2")
                 .equipmentName("nameBatteryModified")
                 .voltageLevelId("v1")
-                .messageType("BATTERY_CREATION")
-                .messageValues("{\"equipmentId\":\"idBattery2\"}")
-                .stashed(false)
                 .busOrBusbarSectionId("bus1")
                 .minActivePower(101.0)
                 .maxActivePower(601.0)

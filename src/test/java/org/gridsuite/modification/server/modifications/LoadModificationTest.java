@@ -47,15 +47,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LOAD_MODIFICATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"v1load\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
             .equipmentId("v1load")
@@ -63,9 +54,6 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
             .activePower(new AttributeModification<>(300.0, OperationType.SET))
             .reactivePower(new AttributeModification<>(50.0, OperationType.SET))
-            .stashed(false)
-            .messageType("LOAD_MODIFICATION")
-            .messageValues("{\"equipmentId\":\"v1load\"}")
             .build();
     }
 

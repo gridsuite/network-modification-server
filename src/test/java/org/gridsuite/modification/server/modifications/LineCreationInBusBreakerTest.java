@@ -210,15 +210,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LINE_CREATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idLine1\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
             .equipmentId("idLineEdited1")
@@ -233,9 +224,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .busOrBusbarSectionId1("bus3")
             .voltageLevelId2("v3")
             .busOrBusbarSectionId2("bus4")
-            .stashed(false)
-            .messageType("LINE_CREATION")
-            .messageValues("{\"equipmentId\":\"idLineEdited1\"}")
             .build();
     }
 

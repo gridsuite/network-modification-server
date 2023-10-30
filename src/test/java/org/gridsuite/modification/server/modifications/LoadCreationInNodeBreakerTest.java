@@ -113,15 +113,6 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LOAD_CREATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idLoad1\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
             .equipmentId("idLoad1Edited")
@@ -133,9 +124,6 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .reactivePower(90.0)
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .connectionName("topEdited")
-            .stashed(false)
-            .messageType("LOAD_CREATION")
-            .messageValues("{\"equipmentId\":\"idLoad1Edited\"}")
             .build();
     }
 

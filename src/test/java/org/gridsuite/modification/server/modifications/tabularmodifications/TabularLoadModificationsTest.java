@@ -29,11 +29,6 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        return buildModification();
-    }
-
-    @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
                 LoadModificationInfos.builder().equipmentId("v1load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build(),

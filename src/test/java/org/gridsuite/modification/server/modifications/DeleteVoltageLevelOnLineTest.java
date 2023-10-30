@@ -48,24 +48,12 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("DELETE_VOLTAGE_LEVEL_ON_LINE");
-        builtModificationInfos.setMessageValues("{\"lineToAttachTo1Id\":\"l1\",\"lineToAttachTo2Id\":\"l2\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("line00")
                 .lineToAttachTo2Id("line11")
                 .replacingLine1Id("replacingLineId2")
                 .replacingLine1Name("replacingLine2")
-                .stashed(false)
-                .messageType("DELETE_VOLTAGE_LEVEL_ON_LINE")
-                .messageValues("{\"lineToAttachTo1Id\":\"line00\",\"lineToAttachTo2Id\":\"line11\"}")
                 .build();
     }
 

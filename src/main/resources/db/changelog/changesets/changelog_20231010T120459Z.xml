@@ -10,13 +10,23 @@
             <column name="message_values" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="souissimai (generated)" id="b422ee4424e3e3d06f4b925a757919e9-8">
+    <changeSet author="souissimai (generated)" id="1903df3596982e5c778a36bc37e7762f-8">
+        <comment>it's possible with PostgreSQL to have a performance-optimized request (for 3756 lines: 185ms vs 7s)</comment>
         <sqlFile
-                dbms="postgresql"
+                 dbms="postgresql"
                  encoding="UTF-8"
-                 path="migrationMetadataModifications.sql"
+                 path="migrationMetadataModificationsPostgres.sql"
                  relativeToChangelogFile="true"
                  splitStatements="true"
                  stripComments="true"/>
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="b422ee4424e3e3d06f4b925a757919e7-8">
+        <sqlFile
+                dbms="!postgresql"
+                encoding="UTF-8"
+                path="migrationMetadataModifications.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
     </changeSet>
 </databaseChangeLog>

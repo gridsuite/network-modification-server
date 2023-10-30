@@ -34,21 +34,9 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("EQUIPMENT_DELETION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"v1\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .equipmentType("LINE")
-                .messageType("EQUIPMENT_DELETION")
-                .messageValues("{\"equipmentId\":\"v2\"}")
-                .stashed(false)
                 .equipmentId("v2")
                 .build();
     }

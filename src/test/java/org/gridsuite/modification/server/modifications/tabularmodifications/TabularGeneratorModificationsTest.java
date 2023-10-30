@@ -38,11 +38,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        return buildModification();
-    }
-
-    @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
                 GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),

@@ -81,15 +81,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LINE_ATTACH_TO_VOLTAGE_LEVEL");
-        builtModificationInfos.setMessageValues("{\"lineToAttachToId\":\"line3\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
                 .lineToAttachToId("line2")
@@ -104,9 +95,6 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                 .newLine1Name("newLine1Name")
                 .newLine2Id("newLine2Id")
                 .newLine2Name("newLine2Name")
-                .stashed(false)
-                .messageType("LINE_ATTACH_TO_VOLTAGE_LEVEL")
-                .messageValues("{\"lineToAttachToId\":\"line2\"}")
                 .build();
     }
 

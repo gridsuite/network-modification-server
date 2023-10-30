@@ -595,19 +595,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                                                     GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name3").build(),
                                                     GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name4").build())).build()))
             .substationsGeneratorsOrdering(List.of())
-            .stashed(false)
-            .messageType("GENERATION_DISPATCH")
-            .messageValues("{}")
             .build();
-    }
-
-    @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("GENERATION_DISPATCH");
-        builtModificationInfos.setMessageValues("{}");
-        return builtModificationInfos;
     }
 
     private void assertNetworkAfterCreationWithStandardLossCoefficient() {

@@ -354,15 +354,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LOAD_SCALING");
-        builtModificationInfos.setMessageValues("{\"variationType\":\"DELTA_P\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         FilterInfos filter5 = FilterInfos.builder()
             .id(FILTER_ID_5)
@@ -381,9 +372,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
-            .stashed(false)
-            .messageType("LOAD_SCALING")
-            .messageValues("{\"variationType\":\"TARGET_P\"}")
             .build();
     }
 

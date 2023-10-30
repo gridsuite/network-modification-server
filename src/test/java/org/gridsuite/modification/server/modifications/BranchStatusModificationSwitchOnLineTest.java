@@ -45,19 +45,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId("line1")
-                .stashed(false)
-                .messageType("BRANCH_STATUS_MODIFICATION")
-                .messageValues("{\"action\":\"TRIP\",\"equipmentId\":\"line1\"}")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
-    }
-
-    @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("BRANCH_STATUS_MODIFICATION");
-        builtModificationInfos.setMessageValues("{\"action\":\"SWITCH_ON\",\"equipmentId\":\"line2\"}");
-        return builtModificationInfos;
     }
 
     @Override

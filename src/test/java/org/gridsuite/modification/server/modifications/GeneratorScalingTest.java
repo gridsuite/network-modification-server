@@ -126,15 +126,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         );
     }
 
-    @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("GENERATOR_SCALING");
-        builtModificationInfos.setMessageValues("{\"variationType\":\"DELTA_P\"}");
-        return builtModificationInfos;
-    }
-
     @Test
     @Override
     public void testCopy() throws Exception {
@@ -355,9 +346,6 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 //.date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation5))
-                .stashed(false)
-                .messageType("GENERATOR_SCALING")
-                .messageValues("{\"variationType\":\"TARGET_P\"}")
                 .build();
     }
 

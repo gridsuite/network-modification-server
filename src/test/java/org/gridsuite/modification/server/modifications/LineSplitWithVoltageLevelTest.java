@@ -53,15 +53,6 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LINE_SPLIT_WITH_VOLTAGE_LEVEL");
-        builtModificationInfos.setMessageValues("{\"lineToSplitId\":\"line2\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         VoltageLevelCreationInfos vl1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("newVoltageLevel")
@@ -88,9 +79,6 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
             .newLine1Name("NewLine1Edited")
             .newLine2Id("nl2vEdited")
             .newLine2Name("NewLine2Edited")
-            .stashed(false)
-            .messageType("LINE_SPLIT_WITH_VOLTAGE_LEVEL")
-            .messageValues("{\"lineToSplitId\":\"line2Edited\"}")
             .build();
     }
 

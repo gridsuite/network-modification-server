@@ -43,15 +43,6 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("LOAD_CREATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"idLoad1\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
             .equipmentId("idLoadEdited1")
@@ -63,9 +54,6 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .reactivePower(50.0)
             .connectionName("bottom")
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-            .stashed(false)
-            .messageType("LOAD_CREATION")
-            .messageValues("{\"equipmentId\":\"idLoadEdited1\"}")
             .build();
     }
 

@@ -186,15 +186,6 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos .setStashed(false);
-        builtModificationInfos .setMessageType("VOLTAGE_INIT_MODIFICATION");
-        builtModificationInfos .setMessageValues("{}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return VoltageInitModificationInfos.builder()
             .generators(List.of(
@@ -250,9 +241,6 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .sectionCount(0)
                     .connect(false)
                     .build()))
-        .stashed(false)
-        .messageType("VOLTAGE_INIT_MODIFICATION")
-        .messageValues("{}")
             .build();
     }
 

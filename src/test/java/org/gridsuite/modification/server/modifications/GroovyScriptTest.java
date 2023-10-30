@@ -44,21 +44,9 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("GROOVY_SCRIPT");
-        builtModificationInfos.setMessageValues("{}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return GroovyScriptInfos.builder()
                 .script("network.getGenerator('idGenerator').targetP=15\n")
-                .stashed(false)
-                .messageType("GROOVY_SCRIPT")
-                .messageValues("{}")
                 .build();
     }
 

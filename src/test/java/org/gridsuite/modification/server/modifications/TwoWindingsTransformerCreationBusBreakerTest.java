@@ -144,15 +144,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     }
 
     @Override
-    protected ModificationInfos buildModificationWithOnlyMetadata() {
-        ModificationInfos builtModificationInfos = buildModification();
-        builtModificationInfos.setStashed(false);
-        builtModificationInfos.setMessageType("TWO_WINDINGS_TRANSFORMER_CREATION");
-        builtModificationInfos.setMessageValues("{\"equipmentId\":\"new2wt\"}");
-        return builtModificationInfos;
-    }
-
-    @Override
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("new2wtUpdate")
@@ -254,9 +245,6 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                                         .build()
                         ))
                         .build())
-                .stashed(false)
-                .messageType("TWO_WINDINGS_TRANSFORMER_CREATION")
-                .messageValues("{\"equipmentId\":\"new2wtUpdate\"}")
                 .build();
     }
 

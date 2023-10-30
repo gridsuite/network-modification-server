@@ -134,7 +134,7 @@ public abstract class AbstractNetworkModificationTest {
     public void testCreate() throws Exception {
         MvcResult mvcResult;
         Optional<NetworkModificationResult> networkModificationResult;
-        ModificationInfos modificationToCreate = buildModificationWithOnlyMetadata();
+        ModificationInfos modificationToCreate = buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -142,7 +142,7 @@ public abstract class AbstractNetworkModificationTest {
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
-        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
@@ -185,7 +185,7 @@ public abstract class AbstractNetworkModificationTest {
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
-        ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
@@ -212,7 +212,7 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCopy() throws Exception {
 
-        ModificationInfos modificationToCopy = buildModificationWithOnlyMetadata();
+        ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
 
@@ -222,7 +222,7 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
 
         List<ModificationInfos> modifications = modificationRepository
-                .getModifications(TEST_GROUP_ID, true, true);
+                .getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(2, modifications.size());
         assertThat(modifications.get(0)).recursivelyEquals(modificationToCopy);
@@ -277,8 +277,6 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract Network createNetwork(UUID networkUuid);
 
     protected abstract ModificationInfos buildModification();
-
-    protected abstract ModificationInfos buildModificationWithOnlyMetadata();
 
     protected abstract ModificationInfos buildModificationUpdate();
 
