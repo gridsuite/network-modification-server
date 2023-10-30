@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="yenguised (generated)" id="1698262964986-27">
+    <changeSet author="yenguised (generated)" id="1698318623649-27">
         <createTable tableName="by_formula_modification">
             <column name="identifiable_type" type="SMALLINT"/>
             <column name="id" type="UUID">
@@ -8,7 +8,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-28">
+    <changeSet author="yenguised (generated)" id="1698318623649-28">
         <createTable tableName="by_formula_modification_formula_entities">
             <column name="by_formula_modification_entity_id" type="UUID">
                 <constraints nullable="false"/>
@@ -18,11 +18,12 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-29">
+    <changeSet author="yenguised (generated)" id="1698318623649-29">
         <createTable tableName="formula">
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="formulaPK"/>
             </column>
+            <column name="edited_field" type="VARCHAR(255)"/>
             <column name="equipment_field1" type="VARCHAR(255)"/>
             <column name="equipment_field2" type="VARCHAR(255)"/>
             <column name="operator" type="SMALLINT"/>
@@ -30,7 +31,7 @@
             <column name="value2" type="FLOAT(53)"/>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-30">
+    <changeSet author="yenguised (generated)" id="1698318623649-30">
         <createTable tableName="formula_filters">
             <column name="id" type="UUID">
                 <constraints nullable="false"/>
@@ -40,25 +41,25 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-31">
+    <changeSet author="yenguised (generated)" id="1698318623649-31">
         <addUniqueConstraint columnNames="formula_entities_id" constraintName="UC_BY_FORMULA_MODIFICATION_FORMULA_ENTITIESFORMULA_ENTITIES_ID_" tableName="by_formula_modification_formula_entities"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-33">
+    <changeSet author="yenguised (generated)" id="1698318623649-33">
         <addUniqueConstraint columnNames="filter_id" constraintName="UC_FORMULA_FILTERSFILTER_ID_COL" tableName="formula_filters"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-46">
+    <changeSet author="yenguised (generated)" id="1698318623649-46">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="formula_filters" constraintName="FK66qo60huxpm8evk95npbcj4hx" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="formula" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-47">
+    <changeSet author="yenguised (generated)" id="1698318623649-47">
         <addForeignKeyConstraint baseColumnNames="formula_entities_id" baseTableName="by_formula_modification_formula_entities" constraintName="FKdjqnu53qvda8h2h0hjebuq7v2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="formula" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-48">
+    <changeSet author="yenguised (generated)" id="1698318623649-48">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="by_formula_modification" constraintName="FKi5ixueu8vr5d2fv6lgpvmuasp" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-49">
+    <changeSet author="yenguised (generated)" id="1698318623649-49">
         <addForeignKeyConstraint baseColumnNames="by_formula_modification_entity_id" baseTableName="by_formula_modification_formula_entities" constraintName="FKi8f0n9sxptkcykdhdhk1sa0iv" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="by_formula_modification" validate="true"/>
     </changeSet>
-    <changeSet author="yenguised (generated)" id="1698262964986-50">
+    <changeSet author="yenguised (generated)" id="1698318623649-50">
         <addForeignKeyConstraint baseColumnNames="filter_id" baseTableName="formula_filters" constraintName="FKoelxfg9ohwxxgsly24vnx90a2" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="variation_filter" validate="true"/>
     </changeSet>
 </databaseChangeLog>

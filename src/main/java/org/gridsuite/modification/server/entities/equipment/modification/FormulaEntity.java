@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.EquipmentField;
+import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +29,9 @@ public class FormulaEntity {
     private List<VariationFilterEntity> filters;
 
     @Column
+    private String editedField;
+
+    @Column
     private String equipmentField1;
 
     @Column
@@ -44,12 +47,28 @@ public class FormulaEntity {
     private Operator operator;
 
     public FormulaEntity(FormulaInfos formulaInfos) {
-        this.id = UUID.randomUUID();
         this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
-        this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField().toString();
-        this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField().toString();
+        this.editedField = formulaInfos.getEditedField();
+        this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField();
+        this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField();
         this.value1 = formulaInfos.getFieldOrValue1().getValue();
         this.value2 = formulaInfos.getFieldOrValue2().getValue();
         this.operator = formulaInfos.getOperator();
+    }
+
+    public FormulaInfos toFormulaInfos() {
+        return FormulaInfos.builder()
+                .filters(getFilters().stream()
+                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                        .collect(Collectors.toList()))
+                .editedField(getEditedField())
+                .fieldOrValue1(ReferenceFieldOrValue.builder()
+                        .equipmentField(getEquipmentField1()).value(getValue1())
+                        .build())
+                .fieldOrValue2(ReferenceFieldOrValue.builder()
+                        .equipmentField(getEquipmentField2()).value(getValue2())
+                        .build())
+                .operator(getOperator())
+                .build();
     }
 }

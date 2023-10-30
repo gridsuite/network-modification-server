@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
-public class ByFormulaModification extends AbstractModification  {
+public class ByFormulaModification extends AbstractModification {
     private ByFormulaModificationInfos modificationInfos;
     protected FilterService filterService;
 
@@ -80,25 +80,24 @@ public class ByFormulaModification extends AbstractModification  {
                     TypedValue.WARN_SEVERITY);
         });
 
-        modificationInfos.getFormulaInfosList().forEach(formulaInfos -> formulaInfos.getFilters().forEach((filterInfos -> {
+        modificationInfos.getFormulaInfosList().forEach(formulaInfos -> formulaInfos.getFilters().forEach(filterInfos -> {
             var filterEquipments = exportFilters.get(filterInfos.getId());
             filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network, attributes.getId(), formulaInfos));
-        })));
+        }));
     }
 
     private void applyFormula(Network network, String identifiableId, FormulaInfos formulaInfos) {
         Identifiable<?> identifiable = network.getIdentifiable(identifiableId);
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
+        final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
         switch (identifiable.getType()) {
             case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable,
-                    (GeneratorField) formulaInfos.getEquipmentField(),
-                    applyOperation(formulaInfos.getOperator(), value1, value2));
-            case BATTERY -> {
-                BatteryField.setNewValue((Battery) identifiable,
-                        (BatteryField) formulaInfos.getEquipmentField(),
-                        applyOperation(formulaInfos.getOperator(), value1, value2));
-            }
+                    formulaInfos.getEditedField(),
+                    newValue);
+            case BATTERY -> BatteryField.setNewValue((Battery) identifiable,
+                    formulaInfos.getEditedField(),
+                    newValue);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.WRONG_EQUIPMENT_TYPE, "Unsupported equipment");
         }
     }
@@ -106,7 +105,7 @@ public class ByFormulaModification extends AbstractModification  {
     private Double applyOperation(Operator operator, Double value1, Double value2) {
         if (value1 == null ||
             value2 == null ||
-            (value2 == 0 && operator == Operator.DIVISION)) {
+            value2 == 0 && operator == Operator.DIVISION) {
             throw new UnsupportedOperationException("TODO");
         }
 

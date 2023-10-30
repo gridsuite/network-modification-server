@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class ByFormulaModificationEntity extends ModificationEntity {
         assignAttributes(byFormulaModificationInfos);
     }
 
+    @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         assignAttributes((ByFormulaModificationInfos) modificationInfos);
@@ -40,8 +42,28 @@ public class ByFormulaModificationEntity extends ModificationEntity {
 
     private void assignAttributes(ByFormulaModificationInfos byFormulaModificationInfos) {
         this.identifiableType = byFormulaModificationInfos.getIdentifiableType();
-        this.formulaEntities = byFormulaModificationInfos.getFormulaInfosList().stream()
-                .map(FormulaEntity::new)
-                .collect(Collectors.toList());
+        List<FormulaEntity> formulas = byFormulaModificationInfos.getFormulaInfosList().stream()
+                .map(FormulaInfos::toEntity).toList();
+        if (formulaEntities == null) {
+            formulaEntities = formulas;
+        } else {
+            formulaEntities.clear();
+            formulaEntities.addAll(formulas);
+        }
+    }
+
+    @Override
+    public ByFormulaModificationInfos toModificationInfos() {
+        return toByFormulaModificationInfosBuilder().build();
+    }
+
+    private ByFormulaModificationInfos.ByFormulaModificationInfosBuilder<?, ?> toByFormulaModificationInfosBuilder() {
+        return ByFormulaModificationInfos.builder()
+                .uuid(getId())
+                .date(getDate())
+                .identifiableType(getIdentifiableType())
+                .formulaInfosList(getFormulaEntities().stream()
+                        .map(FormulaEntity::toFormulaInfos)
+                        .collect(Collectors.toList()));
     }
 }
