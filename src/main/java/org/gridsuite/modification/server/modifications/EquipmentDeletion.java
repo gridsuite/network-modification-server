@@ -42,11 +42,13 @@ public class EquipmentDeletion extends AbstractModification {
         if (identifiable instanceof Connectable) {
             new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof HvdcLine) {
+
             removeHvdcLine(network, subReporter);
         } else if (identifiable instanceof VoltageLevel) {
             new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof Substation) {
-            new RemoveSubstation(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
+            RemoveSubstation rs = new RemoveSubstationBuilder().withSubstationId(modificationInfos.getEquipmentId()).build();
+            rs.apply(network, true, subReporter);
         }
 
         subReporter.report(Report.builder()
