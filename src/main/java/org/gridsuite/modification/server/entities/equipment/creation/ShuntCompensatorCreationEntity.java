@@ -25,22 +25,26 @@ import jakarta.persistence.*;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "shuntCompensatorCreation_id_fk_constraint"))
 public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     @Column
-    private int maximumNumberOfSections;
+    private int maximumSectionCount;
 
     @Column
-    private Double susceptancePerSection;
+    private int sectionCount;
 
     @Column
-    private Double qAtNominalV;
+    private Double maxSusceptance;
+
+    @Column
+    private Double maxQAtNominalV;
 
     @Column
     private ShuntCompensatorType shuntCompensatorType;
 
     public ShuntCompensatorCreationEntity(ShuntCompensatorCreationInfos creationInfos) {
         super(creationInfos);
-        maximumNumberOfSections = creationInfos.getMaximumNumberOfSections() != null ? creationInfos.getMaximumNumberOfSections() : 1;
-        susceptancePerSection = creationInfos.getSusceptancePerSection();
-        qAtNominalV = creationInfos.getQAtNominalV();
+        maximumSectionCount = creationInfos.getMaximumSectionCount();
+        sectionCount = creationInfos.getSectionCount();
+        maxSusceptance = creationInfos.getMaxSusceptance();
+        maxQAtNominalV = creationInfos.getMaxQAtNominalV();
         shuntCompensatorType = creationInfos.getShuntCompensatorType();
     }
 
@@ -48,9 +52,10 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
         ShuntCompensatorCreationInfos shuntCompensatorCreationInfos = (ShuntCompensatorCreationInfos) modificationInfos;
-        maximumNumberOfSections = shuntCompensatorCreationInfos.getMaximumNumberOfSections() != null ? shuntCompensatorCreationInfos.getMaximumNumberOfSections() : 1;
-        susceptancePerSection = shuntCompensatorCreationInfos.getSusceptancePerSection();
-        qAtNominalV = shuntCompensatorCreationInfos.getQAtNominalV();
+        maximumSectionCount = shuntCompensatorCreationInfos.getMaximumSectionCount();
+        sectionCount = shuntCompensatorCreationInfos.getSectionCount();
+        maxSusceptance = shuntCompensatorCreationInfos.getMaxSusceptance();
+        maxQAtNominalV = shuntCompensatorCreationInfos.getMaxQAtNominalV();
         shuntCompensatorType = shuntCompensatorCreationInfos.getShuntCompensatorType();
     }
 
@@ -68,9 +73,10 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .equipmentName(getEquipmentName())
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
-            .maximumNumberOfSections(getMaximumNumberOfSections())
-            .susceptancePerSection(getSusceptancePerSection())
-            .qAtNominalV(getQAtNominalV())
+            .maximumSectionCount(getMaximumSectionCount())
+            .sectionCount(getSectionCount())
+            .maxSusceptance(getMaxSusceptance())
+            .maxQAtNominalV(getMaxQAtNominalV())
             .shuntCompensatorType(getShuntCompensatorType())
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
