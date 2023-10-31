@@ -80,10 +80,8 @@ UPDATE modification m1 SET
                                                         WHEN dvlol.id IS NOT NULL THEN '{"lineToAttachTo1Id":"' || dvlol.line_to_attach_to1id || '","lineToAttachTo2Id":"' || dvlol.line_to_attach_to2id || '"}'
                                                         WHEN equipmentd.id IS NOT NULL THEN '{"equipmentId":"' || equipmentd.equipment_id || '"}'
                                                         WHEN feam.id IS NOT NULL THEN '{"equipmentAttributeName":"' || feam.attribute_name || '","equipmentId":"' || feam.equipment_id || '","equipmentAttributeValue":"' || feam.attribute_value || '"}'
-                                                        --WHEN gd.id IS NOT NULL THEN gd.equipment_id
                                                         WHEN generatorc.id IS NOT NULL THEN '{"equipmentId":"' || generatorc.equipment_id || '"}'
                                                         WHEN generatorm.id IS NOT NULL THEN '{"equipmentId":"' || generatorm.equipment_id || '"}'
-                                                        --WHEN gs.id IS NOT NULL THEN gs.equipment_id GROOVY_SCRIPT
                                                         WHEN ieam.id IS NOT NULL THEN '{"equipmentAttributeName":"' || ieam.attribute_name || '","equipmentId":"' || ieam.equipment_id || '","equipmentAttributeValue":"' || ieam.attribute_value || '"}'
                                                         WHEN lastsl.id IS NOT NULL THEN '{"attachedLineId":"' || lastsl.attached_line_id || '"}'
                                                         WHEN latvl.id IS NOT NULL THEN '{"lineToAttachToId":"' || latvl.line_to_attach_to_id || '"}'
@@ -91,7 +89,6 @@ UPDATE modification m1 SET
                                                         WHEN linem.id IS NOT NULL THEN '{"equipmentId":"' || linem.equipment_id || '"}'
                                                         WHEN loadc.id IS NOT NULL THEN '{"equipmentId":"' || loadc.equipment_id || '"}'
                                                         WHEN loadm.id IS NOT NULL THEN '{"equipmentId":"' || loadm.equipment_id || '"}'
-                                                        --WHEN ls.id IS NOT NULL THEN ls.equipment_id
                                                         WHEN lswvl.id IS NOT NULL THEN '{"lineToSplitId":"' || lswvl.line_to_split_id || '"}'
                                                         WHEN seam.id IS NOT NULL THEN '{"equipmentAttributeName":"' || seam.attribute_name || '","equipmentId":"' || seam.equipment_id || '","equipmentAttributeValue":"' || seam.attribute_value || '"}'
                                                         WHEN shuntcc.id IS NOT NULL THEN '{"equipmentId":"' || shuntcc.equipment_id || '"}'
@@ -100,7 +97,6 @@ UPDATE modification m1 SET
                                                         WHEN substationm.id IS NOT NULL THEN '{"equipmentId":"' || substationm.equipment_id || '"}'
                                                         WHEN twtc.id IS NOT NULL THEN '{"equipmentId":"' || twtc.equipment_id || '"}'
                                                         WHEN twtm.id IS NOT NULL THEN '{"equipmentId":"' || twtm.equipment_id || '"}'
-                                                        --WHEN vim.id IS NOT NULL THEN vim.equipment_id
                                                         WHEN voltageLevelc.id IS NOT NULL THEN '{"equipmentId":"' || voltageLevelc.equipment_id || '"}'
                                                         WHEN voltageLevelm.id IS NOT NULL THEN '{"equipmentId":"' || voltageLevelm.equipment_id || '"}'
                                                         WHEN vsc.id IS NOT NULL THEN '{"equipmentId":"' || vsc.equipment_id || '"}'
@@ -117,10 +113,8 @@ UPDATE modification m1 SET
                                                       LEFT JOIN delete_voltage_level_on_line dvlol ON m.id = dvlol.id
                                                       LEFT JOIN equipment_deletion equipmentd ON m.id = equipmentd.id
                                                       LEFT JOIN float_equipment_attribute_modification feam ON m.id = feam.id
-                                                 --LEFT JOIN generation_dispatch gd ON m.id = gd.id
                                                       LEFT JOIN generator_creation generatorc ON m.id = generatorc.id
                                                       LEFT JOIN generator_modification generatorm ON m.id = generatorm.id
-                                                 --LEFT JOIN generator_scaling gs ON m.id = gs.id
                                                       LEFT JOIN integer_equipment_attribute_modification ieam ON m.id = ieam.id
                                                       LEFT JOIN lines_attach_to_split_lines lastsl ON m.id = lastsl.id
                                                       LEFT JOIN line_attach_to_voltage_level latvl ON m.id = latvl.id
@@ -128,7 +122,6 @@ UPDATE modification m1 SET
                                                       LEFT JOIN line_modification linem ON m.id = linem.id
                                                       LEFT JOIN load_creation loadc ON m.id = loadc.id
                                                       LEFT JOIN load_modification loadm ON m.id = loadm.id
-                                                 --LEFT JOIN load_scaling ls ON m.id = ls.id
                                                       LEFT JOIN line_split_with_voltage_level lswvl ON m.id = lswvl.id
                                                       LEFT JOIN string_equipment_attribute_modification seam ON m.id = seam.id
                                                       LEFT JOIN shunt_compensator_creation_entity shuntcc ON m.id = shuntcc.id
@@ -137,7 +130,6 @@ UPDATE modification m1 SET
                                                       LEFT JOIN substation_modification substationm ON m.id = substationm.id
                                                       LEFT JOIN two_windings_transformer_creation twtc ON m.id = twtc.id
                                                       LEFT JOIN two_windings_transformer_modification twtm ON m.id = twtm.id
-                                                 --LEFT JOIN voltage_init_modification vim ON m.id = vim.id
                                                       LEFT JOIN voltage_level_creation_entity voltageLevelc ON m.id = voltageLevelc.id
                                                       LEFT JOIN voltage_level_modification voltageLevelm ON m.id = voltageLevelm.id
                                                       LEFT JOIN vsc_creation vsc ON m.id = vsc.id

@@ -64,10 +64,6 @@ SET
                            WHEN bsm.id IS NOT NULL THEN '{"energizedVoltageLevelId":"' || bsm.energized_voltage_level_id || '","action":"' || bsm.action || '","equipmentId":"' || bsm.equipment_id || '"}'
                            WHEN dvlol.id IS NOT NULL THEN '{"lineToAttachTo1Id":"' || dvlol.line_to_attach_to1id || '","lineToAttachTo2Id":"' || dvlol.line_to_attach_to2id || '"}'
                            WHEN dal.id IS NOT NULL THEN '{"attachedLineId":"' || dal.attached_line_id || '","lineToAttachTo1Id":"' || dal.line_to_attach_to1id || '","lineToAttachTo2Id":"' || dal.line_to_attach_to2id || '"}'
-        --                                       WHEN ls.id IS NOT NULL THEN ls.equipment_id
---                                    WHEN gs.id IS NOT NULL THEN gs.equipment_id  GROOVY_SCRIPT
---                                    WHEN gd.id IS NOT NULL THEN gd.equipment_id
---                                    WHEN vim.id IS NOT NULL THEN vim.equipment_id
                            WHEN csc.id IS NOT NULL THEN '{"equipmentId":"' || csc.equipment_id || '"}'
                            ELSE '{}'
         END
