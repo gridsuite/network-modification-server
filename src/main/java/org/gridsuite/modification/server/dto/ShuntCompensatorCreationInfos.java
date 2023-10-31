@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -35,14 +34,16 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorCreation;
 @ModificationErrorTypeName("CREATE_SHUNT_COMPENSATOR_ERROR")
 public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Maximum number of sections")
-    private Integer maximumNumberOfSections;
+    private Integer maximumSectionCount;
 
-    @Schema(description = "Susceptance per section")
-    private Double susceptancePerSection;
+    @Schema(description = "Section count")
+    private Integer sectionCount;
 
-    @JsonProperty("qAtNominalV")
-    @Schema(description = "Q at Nominal Voltage")
-    private Double qAtNominalV;
+    @Schema(description = "Maximal susceptance available")
+    private Double maxSusceptance;
+
+    @Schema(description = "Qmax available at nominal voltage")
+    private Double maxQAtNominalV;
 
     @Schema(description = "Shunt Compensator Type")
     private ShuntCompensatorType shuntCompensatorType;
