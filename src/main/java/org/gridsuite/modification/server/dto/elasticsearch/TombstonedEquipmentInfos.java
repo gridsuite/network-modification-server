@@ -6,7 +6,8 @@
  */
 package org.gridsuite.modification.server.dto.elasticsearch;
 
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -17,10 +18,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+@Data
 @Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}tombstoned-equipments")
 @Setting(settingPath = "elasticsearch_settings.json")
 @TypeAlias(value = "TombstonedEquipmentInfos")

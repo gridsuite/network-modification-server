@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
@@ -23,11 +23,10 @@ import org.gridsuite.modification.server.modifications.VoltageLevelModification;
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
+@AllArgsConstructor
+@Data
 @Schema(description = "Voltage level modification")
 @JsonTypeName("VOLTAGE_LEVEL_MODIFICATION")
 @ModificationErrorTypeName("MODIFY_VOLTAGE_LEVEL_ERROR")

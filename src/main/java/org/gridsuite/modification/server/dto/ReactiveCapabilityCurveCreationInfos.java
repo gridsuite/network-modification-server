@@ -9,20 +9,17 @@ package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
-
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@Data
 @Schema(description = "Generator reactive capability curve point creation")
 public class ReactiveCapabilityCurveCreationInfos {
     @Schema(description = "Minimum reactive power ")

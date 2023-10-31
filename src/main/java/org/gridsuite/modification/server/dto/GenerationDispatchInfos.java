@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GenerationDispatchEntity;
@@ -27,8 +27,8 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
+@AllArgsConstructor
+@Data
 @Schema(description = "Generation dispatch creation")
 @JsonTypeName("GENERATION_DISPATCH")
 @ModificationErrorTypeName("GENERATION_DISPATCH_ERROR")

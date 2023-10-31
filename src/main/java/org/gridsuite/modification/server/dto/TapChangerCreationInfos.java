@@ -7,10 +7,9 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -20,12 +19,10 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString
+@AllArgsConstructor
+@Data
 @Schema(description = "TapChanger attributes")
 public class TapChangerCreationInfos {
-
     @Schema(description = "lowTapPosition")
     private int lowTapPosition;
 

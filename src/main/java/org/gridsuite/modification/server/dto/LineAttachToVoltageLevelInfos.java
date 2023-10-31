@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
@@ -23,14 +25,11 @@ import org.gridsuite.modification.server.modifications.LineAttachToVoltageLevel;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@Data
 @Schema(description = "Line attach to voltage level")
 @JsonTypeName("LINE_ATTACH_TO_VOLTAGE_LEVEL")
 @ModificationErrorTypeName("LINE_ATTACH_ERROR")
 public class LineAttachToVoltageLevelInfos extends ModificationInfos {
-
     @Schema(description = "line to attach to ID")
     private String lineToAttachToId;
 

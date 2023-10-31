@@ -9,19 +9,17 @@ package org.gridsuite.modification.server.dto;
 import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
  */
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@Data
 @Schema(description = "Voltage level bus bar sections connection creation")
 public class BusbarConnectionCreationInfos {
     @Schema(description = "one side of the connection")

@@ -6,7 +6,10 @@
  */
 package org.gridsuite.modification.server.dto.elasticsearch;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -21,11 +24,10 @@ import java.util.UUID;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString
+@AllArgsConstructor
+@Data
 @EqualsAndHashCode
-public class BasicEquipmentInfos {
+class BasicEquipmentInfos {
     @Id
     private String uniqueId;
 

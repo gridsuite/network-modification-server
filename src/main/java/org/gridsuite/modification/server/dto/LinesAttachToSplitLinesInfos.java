@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
@@ -24,14 +26,11 @@ import org.gridsuite.modification.server.modifications.LinesAttachToSplitLines;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@Data
 @Schema(description = "Line attach to split line")
 @JsonTypeName("LINES_ATTACH_TO_SPLIT_LINES")
 @ModificationErrorTypeName("LINE_ATTACH_ERROR")
 public class LinesAttachToSplitLinesInfos extends ModificationInfos {
-
     @Schema(description = "line 1 id")
     private String lineToAttachTo1Id;
 

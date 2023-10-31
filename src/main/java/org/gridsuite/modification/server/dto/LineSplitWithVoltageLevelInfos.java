@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
@@ -24,14 +26,11 @@ import org.gridsuite.modification.server.modifications.LineSplitWithVoltageLevel
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@Data
 @Schema(description = "Line split with voltage level")
 @JsonTypeName("LINE_SPLIT_WITH_VOLTAGE_LEVEL")
 @ModificationErrorTypeName("LINE_SPLIT_ERROR")
 public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
-
     @Schema(description = "line to split ID")
     private String lineToSplitId;
 

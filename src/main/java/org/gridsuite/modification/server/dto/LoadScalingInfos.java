@@ -10,10 +10,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadScalingEntity;
@@ -25,14 +23,11 @@ import org.gridsuite.modification.server.modifications.LoadScaling;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Getter
-@Setter
-@ToString(callSuper = true)
+@Data
 @Schema(description = "Load scaling creation")
 @JsonTypeName("LOAD_SCALING")
 @ModificationErrorTypeName("LOAD_SCALING_ERROR")
 public class LoadScalingInfos extends ScalingInfos {
-
     @Override
     public LoadScalingEntity toEntity() {
         return new LoadScalingEntity(this);

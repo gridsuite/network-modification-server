@@ -7,8 +7,10 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
 import java.util.UUID;
@@ -16,15 +18,12 @@ import java.util.UUID;
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 @Schema(description = "Filter Infos")
 public class FilterInfos {
-
     @Schema(description = "id of filter")
     private UUID id;
 

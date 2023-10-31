@@ -8,30 +8,28 @@ package org.gridsuite.modification.server.dto;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorModification;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
  */
-
 @SuperBuilder
 @NoArgsConstructor
+@AllArgsConstructor
 @Data
-@ToString(callSuper = true)
 @Schema(description = "generator modification")
 @JsonTypeName("GENERATOR_MODIFICATION")
 @ModificationErrorTypeName("MODIFY_GENERATOR_ERROR")
