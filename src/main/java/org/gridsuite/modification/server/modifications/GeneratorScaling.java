@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static com.powsybl.iidm.modification.scalable.ScalingParameters.Priority.RESPECT_OF_VOLUME_ASKED;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
 
 /**
@@ -61,16 +62,16 @@ public class GeneratorScaling extends AbstractScaling {
                                           Double distributionKeys) {
         if (distributionKeys != null) {
             AtomicReference<Double> sum = new AtomicReference<>(0D);
-            List<Float> percentages = new ArrayList<>();
+            List<Double> percentages = new ArrayList<>();
             List<Scalable> scalables = new ArrayList<>();
 
             identifiableAttributes.forEach(equipment -> {
                 sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
                 scalables.add(getScalable(equipment.getId()));
-                percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+                percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
-            scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable, new ScalingParameters().setIterative(true));
+            scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
         }
     }
 
@@ -93,9 +94,9 @@ public class GeneratorScaling extends AbstractScaling {
                     return getScalable(generator.getId());
                 }).collect(Collectors.toList());
 
-        List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
+        List<Double> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), 100.0 / scalables.size()));
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable, new ScalingParameters().setIterative(true));
+        scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
     }
 
     @Override
@@ -108,7 +109,7 @@ public class GeneratorScaling extends AbstractScaling {
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
         Map<String, Double> maxPMap = new HashMap<>();
-        List<Float> percentages = new ArrayList<>();
+        List<Double> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
 
         // we retrieve max P and the sum of max P of each generator to calculate the percentage.
@@ -121,7 +122,7 @@ public class GeneratorScaling extends AbstractScaling {
 
         setScalablePercentage(maxPSum, maxPMap, percentages, scalables);
         Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable, new ScalingParameters().setIterative(true));
+        scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
     }
 
     @Override
@@ -132,7 +133,7 @@ public class GeneratorScaling extends AbstractScaling {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Generator> generators = identifiableAttributes
                 .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
-        List<Float> percentages = new ArrayList<>();
+        List<Double> percentages = new ArrayList<>();
         Map<String, Double> targetPMap = new HashMap<>();
         List<Scalable> scalables = new ArrayList<>();
 
@@ -145,15 +146,15 @@ public class GeneratorScaling extends AbstractScaling {
         // we calculate percentage of each target P value relative to the sum of target P
         setScalablePercentage(sum, targetPMap, percentages, scalables);
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable, new ScalingParameters().setIterative(true));
+        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
     }
 
     private void setScalablePercentage(AtomicReference<Double> sum,
                                        Map<String, Double> targetPMap,
-                                       List<Float> percentages,
+                                       List<Double> percentages,
                                        List<Scalable> scalables) {
         targetPMap.forEach((id, p) -> {
-            percentages.add((float) ((p / sum.get()) * 100));
+            percentages.add((p / sum.get()) * 100);
             scalables.add(getScalable(id));
         });
     }
