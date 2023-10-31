@@ -6,14 +6,13 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.springframework.lang.NonNull;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.springframework.lang.NonNull;
 
 import java.util.Map;
 
@@ -33,7 +32,7 @@ public class EquipmentModificationInfos extends ModificationInfos {
     private String equipmentId;
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         return Map.of("equipmentId", getEquipmentId());
     }
 }

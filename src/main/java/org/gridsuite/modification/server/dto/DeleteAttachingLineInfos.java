@@ -10,11 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.DeleteAttachingLineEntity;
@@ -69,7 +65,7 @@ public class DeleteAttachingLineInfos extends ModificationInfos {
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         Map<String, String> mapMessageValues = new LinkedHashMap<>();
         mapMessageValues.put("attachedLineId", getAttachedLineId());
         mapMessageValues.put("lineToAttachTo1Id", getLineToAttachTo1Id());

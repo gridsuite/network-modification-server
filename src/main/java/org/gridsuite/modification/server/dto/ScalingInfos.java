@@ -34,7 +34,7 @@ public class ScalingInfos extends ModificationInfos {
     private VariationType variationType;
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         return Map.of("variationType", getVariationType().name());
     }
 

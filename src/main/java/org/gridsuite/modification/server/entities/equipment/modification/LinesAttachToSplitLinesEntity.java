@@ -6,16 +6,15 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -78,16 +77,9 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
 
     @Override
     public LinesAttachToSplitLinesInfos toModificationInfos() {
-        return toLinesAttachToSplitLinesInfosBuilder().build();
-    }
-
-    private LinesAttachToSplitLinesInfos.LinesAttachToSplitLinesInfosBuilder toLinesAttachToSplitLinesInfosBuilder() {
-        return LinesAttachToSplitLinesInfos
-                .builder()
+        return LinesAttachToSplitLinesInfos.builder()
                 .uuid(getId())
                 .date(getDate())
-                .messageType(getMessageType())
-                .messageValues(getMessageValues())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())
@@ -96,6 +88,7 @@ public class LinesAttachToSplitLinesEntity extends ModificationEntity {
                 .replacingLine1Id(getReplacingLine1Id())
                 .replacingLine1Name(getReplacingLine1Name())
                 .replacingLine2Id(getReplacingLine2Id())
-                .replacingLine2Name(getReplacingLine2Name());
+                .replacingLine2Name(getReplacingLine2Name())
+                .build();
     }
 }

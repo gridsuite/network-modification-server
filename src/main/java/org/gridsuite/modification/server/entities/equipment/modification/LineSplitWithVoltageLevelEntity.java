@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -14,8 +15,6 @@ import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-
-import jakarta.persistence.*;
 
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
@@ -81,24 +80,18 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
 
     @Override
     public LineSplitWithVoltageLevelInfos toModificationInfos() {
-        return toLineSplitWithVoltageLevelInfosBuilder().build();
-    }
-
-    private LineSplitWithVoltageLevelInfos.LineSplitWithVoltageLevelInfosBuilder<?, ?> toLineSplitWithVoltageLevelInfosBuilder() {
-        return LineSplitWithVoltageLevelInfos
-            .builder()
-            .uuid(getId())
-            .date(getDate())
-            .messageType(getMessageType())
-            .messageValues(getMessageValues())
-            .lineToSplitId(getLineToSplitId())
-            .percent(getPercent())
-            .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
-            .existingVoltageLevelId(getExistingVoltageLevelId())
-            .bbsOrBusId(getBbsOrBusId())
-            .newLine1Id(getNewLine1Id())
-            .newLine1Name(getNewLine1Name())
-            .newLine2Id(getNewLine2Id())
-            .newLine2Name(getNewLine2Name());
+        return LineSplitWithVoltageLevelInfos.builder()
+                .uuid(getId())
+                .date(getDate())
+                .lineToSplitId(getLineToSplitId())
+                .percent(getPercent())
+                .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
+                .existingVoltageLevelId(getExistingVoltageLevelId())
+                .bbsOrBusId(getBbsOrBusId())
+                .newLine1Id(getNewLine1Id())
+                .newLine1Name(getNewLine1Name())
+                .newLine2Id(getNewLine2Id())
+                .newLine2Name(getNewLine2Name())
+                .build();
     }
 }

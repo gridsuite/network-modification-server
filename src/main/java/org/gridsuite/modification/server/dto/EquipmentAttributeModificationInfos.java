@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
@@ -30,7 +29,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ATTRIBUTE_NAME_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ATTRIBUTE_VALUE_ERROR;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -112,7 +112,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         Map<String, String> mapMessageValues = new LinkedHashMap<>();
         mapMessageValues.put("equipmentAttributeName", getEquipmentAttributeName());
         mapMessageValues.put("equipmentId", getEquipmentId());

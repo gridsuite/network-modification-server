@@ -68,7 +68,7 @@ public class GenerationDispatchInfos extends ModificationInfos {
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         return Map.of();
     }
 }

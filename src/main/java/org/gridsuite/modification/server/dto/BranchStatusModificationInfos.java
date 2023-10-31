@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BranchStatusModification;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -93,7 +94,7 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         Map<String, String> mapMessageValues = new HashMap<>();
         mapMessageValues.put("action", getAction().name());
         mapMessageValues.put("equipmentId", getEquipmentId());

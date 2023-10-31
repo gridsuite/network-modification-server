@@ -6,13 +6,12 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-
-import jakarta.persistence.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -49,12 +48,9 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
 
     @Override
     public BranchStatusModificationInfos toModificationInfos() {
-        return BranchStatusModificationInfos
-            .builder()
+        return BranchStatusModificationInfos.builder()
             .uuid(getId())
             .date(getDate())
-            .messageType(getMessageType())
-            .messageValues(getMessageValues())
             .equipmentId(getEquipmentId())
             .action(getAction())
             .energizedVoltageLevelId(getEnergizedVoltageLevelId())

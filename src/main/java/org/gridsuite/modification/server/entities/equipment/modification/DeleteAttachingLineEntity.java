@@ -6,15 +6,14 @@
 */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 /**
 * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -53,21 +52,15 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
 
     @Override
     public DeleteAttachingLineInfos toModificationInfos() {
-        return toDeleteAttachingLineInfosBuilder().build();
-    }
-
-    private DeleteAttachingLineInfos.DeleteAttachingLineInfosBuilder<?, ?> toDeleteAttachingLineInfosBuilder() {
-        return DeleteAttachingLineInfos
-                .builder()
+        return DeleteAttachingLineInfos.builder()
                 .uuid(getId())
                 .date(getDate())
-                .messageType(getMessageType())
-                .messageValues(getMessageValues())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())
                 .replacingLine1Id(getReplacingLine1Id())
-                .replacingLine1Name(getReplacingLine1Name());
+                .replacingLine1Name(getReplacingLine1Name())
+                .build();
     }
 
     private void assignAttributes(DeleteAttachingLineInfos deleteAttachingLineInfos) {

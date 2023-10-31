@@ -6,10 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -85,12 +82,6 @@ public class ModificationInfos {
     @Schema(description = "Modification flag")
     private Boolean stashed;
 
-    @Schema(description = "Message type")
-    private String messageType;
-
-    @Schema(description = "Message values")
-    private String messageValues;
-
     @JsonIgnore
     public ModificationEntity toEntity() {
         throw new UnsupportedOperationException("TODO");
@@ -111,13 +102,14 @@ public class ModificationInfos {
         return NetworkModificationException.Type.valueOf(this.getClass().getAnnotation(ModificationErrorTypeName.class).value());
     }
 
-    @JsonIgnore
+    @JsonProperty("messageType")
+    @Schema(description = "Message type")
     public final ModificationType getType() {
         return ModificationType.valueOf(this.getClass().getAnnotation(JsonTypeName.class).value());
     }
 
-    @JsonIgnore
-    public Map<String, String> getMapMessageValues() {
+    @Schema(description = "Message values")
+    public Map<String, String> getMessageValues() {
         return Map.of();
     }
 

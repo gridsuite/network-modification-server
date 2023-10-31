@@ -8,10 +8,8 @@ package org.gridsuite.modification.server.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
@@ -52,13 +50,15 @@ public class ModificationEntity {
     @Column(name = "modifications_order")
     private int modificationsOrder;
 
+    @Setter(AccessLevel.PRIVATE)
     @Column(name = "message_type")
-    private String messageType;
+    private ModificationType messageType;
 
+    @Setter(AccessLevel.PRIVATE)
     @Column(name = "message_values")
     private String messageValues;
 
-    public ModificationEntity(UUID id, ZonedDateTime date, Boolean stashed, String messageType, String messageValues) {
+    public ModificationEntity(UUID id, ZonedDateTime date, Boolean stashed, ModificationType messageType, String messageValues) {
         this.id = id;
         this.date = date;
         this.stashed = stashed;
@@ -76,13 +76,12 @@ public class ModificationEntity {
         assignAttributes(modificationInfos);
     }
 
+    @SneakyThrows
     public ModificationInfos toModificationInfos() {
         return ModificationInfos.builder()
                 .uuid(this.id)
                 .date(this.date)
                 .stashed(this.stashed)
-                .messageType(this.messageType)
-                .messageValues(this.messageValues)
                 .build();
     }
 
@@ -96,8 +95,8 @@ public class ModificationEntity {
 
     @SneakyThrows
     private void assignAttributes(ModificationInfos modificationInfos) {
-        this.setMessageType(modificationInfos.getType().name());
-        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+        this.setMessageType(modificationInfos.getType());
+        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMessageValues()));
     }
 
     public ModificationEntity copy() {

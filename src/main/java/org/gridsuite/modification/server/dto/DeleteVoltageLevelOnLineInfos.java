@@ -63,7 +63,7 @@ public class DeleteVoltageLevelOnLineInfos extends ModificationInfos {
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         Map<String, String> mapMessageValues = new LinkedHashMap<>();
         mapMessageValues.put("lineToAttachTo1Id", getLineToAttachTo1Id());
         mapMessageValues.put("lineToAttachTo2Id", getLineToAttachTo2Id());

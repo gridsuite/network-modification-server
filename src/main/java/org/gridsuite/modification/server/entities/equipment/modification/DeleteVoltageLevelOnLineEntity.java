@@ -6,16 +6,15 @@
 */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 /**
 * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -51,20 +50,14 @@ public class DeleteVoltageLevelOnLineEntity extends ModificationEntity {
 
     @Override
     public DeleteVoltageLevelOnLineInfos toModificationInfos() {
-        return toDeleteVoltageLevelOnLineInfosBuilder().build();
-    }
-
-    private DeleteVoltageLevelOnLineInfos.DeleteVoltageLevelOnLineInfosBuilder<?, ?> toDeleteVoltageLevelOnLineInfosBuilder() {
-        return DeleteVoltageLevelOnLineInfos
-                .builder()
+        return DeleteVoltageLevelOnLineInfos.builder()
                 .uuid(getId())
                 .date(getDate())
-                .messageType(getMessageType())
-                .messageValues(getMessageValues())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .replacingLine1Id(getReplacingLine1Id())
-                .replacingLine1Name(getReplacingLine1Name());
+                .replacingLine1Name(getReplacingLine1Name())
+                .build();
     }
 
     private void assignAttributes(DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos) {

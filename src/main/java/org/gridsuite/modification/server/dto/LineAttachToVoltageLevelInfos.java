@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LineAttachToVoltageLevel;
+
 import java.util.Map;
 
 /**
@@ -84,7 +85,7 @@ public class LineAttachToVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         return Map.of("lineToAttachToId", getLineToAttachToId());
     }
 }

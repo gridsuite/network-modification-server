@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -15,8 +16,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-
-import jakarta.persistence.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
 
@@ -99,16 +98,9 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
 
     @Override
     public LineAttachToVoltageLevelInfos toModificationInfos() {
-        return toLineAttachToVoltageLevelInfosBuilder().build();
-    }
-
-    private LineAttachToVoltageLevelInfos.LineAttachToVoltageLevelInfosBuilder<?, ?> toLineAttachToVoltageLevelInfosBuilder() {
-        return LineAttachToVoltageLevelInfos
-                .builder()
+        return LineAttachToVoltageLevelInfos.builder()
                 .uuid(getId())
                 .date(getDate())
-                .messageType(getMessageType())
-                .messageValues(getMessageValues())
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
@@ -120,6 +112,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .newLine1Id(getNewLine1Id())
                 .newLine1Name(getNewLine1Name())
                 .newLine2Id(getNewLine2Id())
-                .newLine2Name(getNewLine2Name());
+                .newLine2Name(getNewLine2Name())
+                .build();
     }
 }

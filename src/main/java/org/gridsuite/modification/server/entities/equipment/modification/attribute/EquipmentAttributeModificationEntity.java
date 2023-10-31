@@ -7,16 +7,15 @@
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
 import com.powsybl.iidm.network.IdentifiableType;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.MappedSuperclass;
 
 
 /**
@@ -61,19 +60,13 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
 
     @Override
     public EquipmentAttributeModificationInfos toModificationInfos() {
-        return toModificationInfosBuilder().build();
-    }
-
-    private EquipmentAttributeModificationInfos.EquipmentAttributeModificationInfosBuilder<?, ?> toModificationInfosBuilder() {
-        return EquipmentAttributeModificationInfos
-            .builder()
-            .uuid(getId())
-            .date(getDate())
-            .messageType(getMessageType())
-            .messageValues(getMessageValues())
-            .equipmentId(getEquipmentId())
-            .equipmentAttributeName(getAttributeName())
-            .equipmentAttributeValue(getAttributeValue())
-            .equipmentType(getEquipmentType());
+        return EquipmentAttributeModificationInfos.builder()
+                .uuid(getId())
+                .date(getDate())
+                .equipmentId(getEquipmentId())
+                .equipmentAttributeName(getAttributeName())
+                .equipmentAttributeValue(getAttributeValue())
+                .equipmentType(getEquipmentType())
+                .build();
     }
 }

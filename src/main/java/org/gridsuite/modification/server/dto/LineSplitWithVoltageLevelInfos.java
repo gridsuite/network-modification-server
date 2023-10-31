@@ -12,7 +12,6 @@ import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LineSplitWithVoltageLevelEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -77,7 +76,7 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
     }
 
     @Override
-    public Map<String, String> getMapMessageValues() {
+    public Map<String, String> getMessageValues() {
         return Map.of("lineToSplitId", getLineToSplitId());
     }
 }
