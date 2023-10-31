@@ -59,6 +59,8 @@ public class TabularModificationEntity extends ModificationEntity {
                 .uuid(getId())
                 .modificationType(modificationType)
                 .modifications(modificationsInfos)
+                .messageType(getMessageType())
+                .messageValues(getMessageValues())
                 .build();
     }
 

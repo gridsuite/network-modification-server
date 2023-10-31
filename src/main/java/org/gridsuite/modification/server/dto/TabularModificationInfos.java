@@ -21,7 +21,9 @@ import org.springframework.lang.NonNull;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.experimental.SuperBuilder;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -53,5 +55,12 @@ public class TabularModificationInfos extends ModificationInfos {
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(ModificationType.TABULAR_MODIFICATION.name(), "Tabular modification");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        Map<String, String> mapMessageValues = new HashMap<>();
+        mapMessageValues.put("tabularModificationType", getModificationType());
+        return mapMessageValues;
     }
 }

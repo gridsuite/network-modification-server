@@ -30,6 +30,7 @@ UPDATE modification m1 SET
                                                       WHEN voltageLevelc.id IS NOT NULL THEN 'VOLTAGE_LEVEL_CREATION'
                                                       WHEN voltageLevelm.id IS NOT NULL THEN 'VOLTAGE_LEVEL_MODIFICATION'
                                                       WHEN vsc.id IS NOT NULL THEN 'VSC_CREATION'
+                                                      WHEN tm.id IS NOT NULL THEN 'TABULAR_MODIFICATION'
                                                       ELSE 'NoModificationType'
                                                       END --as msg_type
                                            FROM modification m
@@ -67,6 +68,7 @@ UPDATE modification m1 SET
                                                     LEFT JOIN voltage_level_creation_entity voltageLevelc ON m.id = voltageLevelc.id
                                                     LEFT JOIN voltage_level_modification voltageLevelm ON m.id = voltageLevelm.id
                                                     LEFT JOIN vsc_creation vsc ON m.id = vsc.id
+                                                    LEFT JOIN tabular_modification tm ON m.id = tm.id
                                            where m1.id = m.id
                            ),
                            message_values = (select CASE
@@ -100,6 +102,7 @@ UPDATE modification m1 SET
                                                         WHEN voltageLevelc.id IS NOT NULL THEN '{"equipmentId":"' || voltageLevelc.equipment_id || '"}'
                                                         WHEN voltageLevelm.id IS NOT NULL THEN '{"equipmentId":"' || voltageLevelm.equipment_id || '"}'
                                                         WHEN vsc.id IS NOT NULL THEN '{"equipmentId":"' || vsc.equipment_id || '"}'
+                                                        WHEN tm.id IS NOT NULL THEN '{"tabularModificationType":"' || tm.modification_type || '"}'
                                                         ELSE '{}'
                                                         END --as msg_values
                                              FROM modification m
@@ -133,5 +136,6 @@ UPDATE modification m1 SET
                                                       LEFT JOIN voltage_level_creation_entity voltageLevelc ON m.id = voltageLevelc.id
                                                       LEFT JOIN voltage_level_modification voltageLevelm ON m.id = voltageLevelm.id
                                                       LEFT JOIN vsc_creation vsc ON m.id = vsc.id
-                                                      where m1.id = m.id
+                                                      LEFT JOIN tabular_modification tm ON m.id = tm.id
+                                             where m1.id = m.id
                            );
