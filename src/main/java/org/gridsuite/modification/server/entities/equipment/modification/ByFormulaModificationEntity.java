@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Getter
+@Setter
 @Entity
 @Table(name = "byFormulaModification")
 public class ByFormulaModificationEntity extends ModificationEntity {
@@ -42,13 +44,17 @@ public class ByFormulaModificationEntity extends ModificationEntity {
 
     private void assignAttributes(ByFormulaModificationInfos byFormulaModificationInfos) {
         this.identifiableType = byFormulaModificationInfos.getIdentifiableType();
-        List<FormulaEntity> formulas = byFormulaModificationInfos.getFormulaInfosList().stream()
-                .map(FormulaInfos::toEntity).toList();
         if (formulaEntities == null) {
-            formulaEntities = formulas;
+            formulaEntities = byFormulaModificationInfos.getFormulaInfosList()
+                    .stream()
+                    .map(FormulaInfos::toEntity)
+                    .toList();
         } else {
             formulaEntities.clear();
-            formulaEntities.addAll(formulas);
+            formulaEntities.addAll(byFormulaModificationInfos.getFormulaInfosList()
+                    .stream()
+                    .map(FormulaInfos::toEntity)
+                    .toList());
         }
     }
 

@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
@@ -36,6 +37,7 @@ import java.util.List;
 @Setter
 @JsonTypeName("BY_FORMULA_MODIFICATION")
 @ModificationErrorTypeName("BY_FORMULA_MODIFICATION_ERROR")
+@ToString(callSuper = true)
 @Schema(description = "Modification by formula")
 public class ByFormulaModificationInfos extends ModificationInfos {
     @Schema(description = "Identifiable type")

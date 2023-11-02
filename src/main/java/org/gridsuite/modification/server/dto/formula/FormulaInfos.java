@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FormulaEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -28,6 +29,9 @@ import java.util.List;
 @Getter
 @Setter
 public class FormulaInfos {
+    @Schema(description = "id")
+    private UUID id;
+
     @Schema(description = "List of filters")
     private List<FilterInfos> filters;
 
