@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -101,12 +102,22 @@ public class ModificationInfos {
 
     @JsonIgnore
     public final NetworkModificationException.Type getErrorType() {
-        return NetworkModificationException.Type.valueOf(this.getClass().getAnnotation(ModificationErrorTypeName.class).value());
+        final ModificationErrorTypeName annotation = AnnotationUtils.findAnnotation(this.getClass(), ModificationErrorTypeName.class);
+        if (annotation != null) {
+            return NetworkModificationException.Type.valueOf(annotation.value());
+        } else {
+            return null;
+        }
     }
 
     @JsonIgnore
     public final ModificationType getType() {
-        return ModificationType.valueOf(this.getClass().getAnnotation(JsonTypeName.class).value());
+        final JsonTypeName annotation = AnnotationUtils.findAnnotation(this.getClass(), JsonTypeName.class);
+        if (annotation != null) {
+            return ModificationType.valueOf(annotation.value());
+        } else {
+            return null;
+        }
     }
 
     @JsonIgnore
