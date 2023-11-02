@@ -1,0 +1,43 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="yenguised (generated)" id="1698938664570-31">
+        <createTable tableName="by_formula_modification">
+            <column name="identifiable_type" type="SMALLINT"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="by_formula_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1698938664570-32">
+        <createTable tableName="formula">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="formulaPK"/>
+            </column>
+            <column name="edited_field" type="VARCHAR(255)"/>
+            <column name="equipment_field1" type="VARCHAR(255)"/>
+            <column name="equipment_field2" type="VARCHAR(255)"/>
+            <column name="operator" type="SMALLINT"/>
+            <column name="value1" type="FLOAT(53)"/>
+            <column name="value2" type="FLOAT(53)"/>
+            <column name="by_formula_modification_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1698938664570-33">
+        <createTable tableName="formula_filters">
+            <column name="formula_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filters_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1698938664570-35">
+        <addUniqueConstraint columnNames="filters_id" constraintName="UC_FORMULA_FILTERSFILTERS_ID_COL" tableName="formula_filters"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1698938664570-49">
+        <createIndex indexName="by_formula_modification_id_idx" tableName="formula">
+            <column name="by_formula_modification_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@Table(name = "formula")
+@Table(name = "formula", indexes = @Index(name = "by_formula_modification_id_idx", columnList = "by_formula_modification_id"))
 public class FormulaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -36,9 +36,6 @@ public class FormulaEntity {
     private UUID id;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinTable(
-            joinColumns = @JoinColumn(name = "id"),
-            inverseJoinColumns = @JoinColumn(name = "filterId"))
     private List<VariationFilterEntity> filters;
 
     @Column

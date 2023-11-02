@@ -1,12 +1,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -29,6 +24,8 @@ public class ByFormulaModificationEntity extends ModificationEntity {
     private IdentifiableType identifiableType;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "by_formula_modification_id",
+            foreignKey = @ForeignKey(name = "by_formula_modification_id_fk"))
     private List<FormulaEntity> formulaEntities;
 
     public ByFormulaModificationEntity(ByFormulaModificationInfos byFormulaModificationInfos) {
