@@ -28,6 +28,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -135,5 +136,17 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLoad("idLoad1"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LOAD_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLoad1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LOAD_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLoad1Edited\"}");
     }
 }

@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.UUID;
 
@@ -56,5 +57,17 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getSubstation("s1"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        Assertions.assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
+        Assertions.assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"s1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        Assertions.assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
+        Assertions.assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v2\"}");
     }
 }

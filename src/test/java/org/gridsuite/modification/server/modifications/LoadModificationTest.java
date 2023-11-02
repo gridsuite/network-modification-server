@@ -49,7 +49,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
-            .equipmentId("v1load")
+            .equipmentId("v1loadEdited")
             .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
             .activePower(new AttributeModification<>(300.0, OperationType.SET))
@@ -88,5 +88,17 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Load 'v1load': load type is null", loadModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LOAD_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1load\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LOAD_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1loadEdited\"}");
     }
 }

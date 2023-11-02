@@ -15,7 +15,6 @@ import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.VariationType;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -32,10 +31,5 @@ public class ScalingInfos extends ModificationInfos {
 
     @Schema(description = "variation type")
     private VariationType variationType;
-
-    @Override
-    public Map<String, String> getMapMessageValues() {
-        return Map.of("variationType", getVariationType().name());
-    }
 
 }

@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
@@ -38,13 +39,15 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(TARGET_LINE_ID)
+                .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId("line1")
+                .equipmentId("line1Edited")
+                .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
@@ -62,5 +65,17 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
         assertTrue(line.getTerminals().stream().noneMatch(Terminal::isConnected));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"energizedVoltageLevelId\",\"action\":\"SWITCH_ON\",\"equipmentId\":\"line2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"energizedVoltageLevelIdEdited\",\"action\":\"TRIP\",\"equipmentId\":\"line1Edited\"}");
     }
 }

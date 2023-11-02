@@ -53,8 +53,6 @@ public class BranchStatusModificationEntity extends EquipmentModificationEntity 
             .builder()
             .uuid(getId())
             .date(getDate())
-            .messageType(getMessageType())
-            .messageValues(getMessageValues())
             .equipmentId(getEquipmentId())
             .action(getAction())
             .energizedVoltageLevelId(getEnergizedVoltageLevelId())

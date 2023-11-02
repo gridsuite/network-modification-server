@@ -114,4 +114,16 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
         assertSelectCount(3);
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TABULAR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"tabularModificationType\":\"GENERATOR_MODIFICATION\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TABULAR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"tabularModificationType\":\"GENERATOR_MODIFICATION\"}");
+    }
 }

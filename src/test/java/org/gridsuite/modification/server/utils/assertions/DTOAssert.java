@@ -32,7 +32,6 @@ public class DTOAssert<T> extends AbstractAssert<DTOAssert<T>, T> {
         return RecursiveComparisonConfiguration.builder()
             .withIgnoreAllOverriddenEquals(true)                                    // For equals test, need specific tests
             .withIgnoredFieldsOfTypes(UUID.class, Date.class, ZonedDateTime.class)  // For these types, need specific tests (uuid from db for example)
-            .withIgnoredFields("messageType", "messageValues")          // For these fields no need to test
             .withIgnoreCollectionOrder(true)                                        // For collection order test, need specific tests
             .build();
     }

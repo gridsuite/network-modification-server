@@ -67,4 +67,16 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
         assertEquals(0., getNetwork().getLoad("v2load").getQ0(), 0.001);
         assertEquals(0., getNetwork().getLoad("v3load").getQ0(), 0.001);
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TABULAR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"tabularModificationType\":\"LOAD_MODIFICATION\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TABULAR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"tabularModificationType\":\"LOAD_MODIFICATION\"}");
+    }
 }

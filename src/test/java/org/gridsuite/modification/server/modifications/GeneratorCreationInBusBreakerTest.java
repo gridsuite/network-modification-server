@@ -26,6 +26,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,7 +77,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
-                .equipmentId("idGenerator2")
+                .equipmentId("idGenerator2Edited")
                 .equipmentName("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
@@ -146,5 +147,17 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),
             generatorCreationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "GENERATOR_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "GENERATOR_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator2Edited\"}");
     }
 }

@@ -157,6 +157,18 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
 
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"line1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"line1\"}");
+    }
+
     @Test
     public void testCharacteristicsModification() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();

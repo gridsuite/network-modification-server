@@ -120,7 +120,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return VscCreationInfos.builder()
-                .equipmentId("vsc1")
+                .equipmentId("vsc1Edited")
                 .equipmentName("vsc2Name")
                 .dcNominalVoltage(53.)
                 .dcResistance(2.)
@@ -186,6 +186,18 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         assertEquals(55, reactiveLimits2.getMinQ(), 0);
         assertEquals(34, vscConverterStation2.getVoltageSetpoint(), 0);
         assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "VSC_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"vsc1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "VSC_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"vsc1Edited\"}");
     }
 
     @Override

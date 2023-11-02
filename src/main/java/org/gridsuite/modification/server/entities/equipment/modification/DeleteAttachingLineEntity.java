@@ -61,8 +61,6 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
-                .messageType(getMessageType())
-                .messageValues(getMessageValues())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())

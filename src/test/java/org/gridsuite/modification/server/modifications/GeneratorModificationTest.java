@@ -77,7 +77,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorModificationInfos.builder()
-                .equipmentId("idGenerator")
+                .equipmentId("idGeneratorEdited")
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
@@ -411,5 +411,17 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
 
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "GENERATOR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "GENERATOR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGeneratorEdited\"}");
     }
 }

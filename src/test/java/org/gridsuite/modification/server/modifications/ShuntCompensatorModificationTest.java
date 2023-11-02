@@ -210,4 +210,16 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         assertNotNull(model);
         assertEquals(1.0, model.getBPerSection(), 0);
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "SHUNT_COMPENSATOR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v7shunt\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "SHUNT_COMPENSATOR_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v2shunt\"}");
+    }
 }

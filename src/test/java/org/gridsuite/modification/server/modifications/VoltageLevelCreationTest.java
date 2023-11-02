@@ -175,4 +175,16 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification).recursivelyEquals(vli);
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "VOLTAGE_LEVEL_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"vlId\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "VOLTAGE_LEVEL_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"VoltageLevelIdEdited\"}");
+    }
 }

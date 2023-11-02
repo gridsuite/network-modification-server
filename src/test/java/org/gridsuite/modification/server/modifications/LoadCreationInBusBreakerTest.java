@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
@@ -65,5 +66,17 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLoad("idLoad1"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LOAD_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLoad1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LOAD_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLoadEdited1\"}");
     }
 }

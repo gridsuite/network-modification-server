@@ -279,5 +279,17 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
         assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),
                 twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TWO_WINDINGS_TRANSFORMER_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"id2wt1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TWO_WINDINGS_TRANSFORMER_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"new2wtUpdate\"}");
+    }
 }
 

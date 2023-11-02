@@ -21,6 +21,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -86,5 +87,17 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"vl1\",\"action\":\"ENERGISE_END_ONE\",\"equipmentId\":\"line2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"vl1_bis\",\"action\":\"TRIP\",\"equipmentId\":\"line1\"}");
     }
 }

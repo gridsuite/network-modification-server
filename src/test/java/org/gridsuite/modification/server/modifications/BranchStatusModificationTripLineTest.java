@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class BranchStatusModificationTripLineTest extends AbstractNetworkModificationTest {
@@ -39,6 +40,7 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(TARGET_LINE_ID)
+                .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
@@ -46,6 +48,7 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(UPDATE_BRANCH_ID)
+                .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -58,5 +61,17 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
     protected void assertAfterNetworkModificationDeletion() {
         // back to init status
         TestUtils.assertBranchStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"energizedVoltageLevelId\",\"action\":\"TRIP\",\"equipmentId\":\"line2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"energizedVoltageLevelIdEdited\",\"action\":\"SWITCH_ON\",\"equipmentId\":\"line1\"}");
     }
 }

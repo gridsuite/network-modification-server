@@ -53,7 +53,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return SubstationModificationInfos.builder()
-            .equipmentId("s3")
+            .equipmentId("s3Edited")
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
             .properties(null)
@@ -96,5 +96,17 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", infos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "SUBSTATION_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"s3\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "SUBSTATION_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"s3Edited\"}");
     }
 }

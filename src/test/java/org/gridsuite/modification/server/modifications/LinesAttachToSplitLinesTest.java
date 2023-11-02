@@ -21,6 +21,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,5 +117,17 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
                 linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINES_ATTACH_TO_SPLIT_LINES");
+        assertEquals(modificationInfos.getMessageValues(), "{\"attachedLineId\":\"l3\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINES_ATTACH_TO_SPLIT_LINES");
+        assertEquals(modificationInfos.getMessageValues(), "{\"attachedLineId\":\"newline3\"}");
     }
 }

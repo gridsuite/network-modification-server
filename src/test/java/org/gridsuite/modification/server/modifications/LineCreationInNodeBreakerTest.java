@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -292,5 +293,17 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLine\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLineEdited\"}");
     }
 }

@@ -59,7 +59,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryModificationInfos.builder()
-                .equipmentId("idBattery")
+                .equipmentId("idBatteryEdited")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
@@ -259,5 +259,17 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 batteryModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BATTERY_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v3Battery\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BATTERY_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idBatteryEdited\"}");
     }
 }

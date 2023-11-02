@@ -22,6 +22,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -170,5 +171,17 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v5").getMessage(),
                 tryWithAttachmentPointId.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_ATTACH_TO_VOLTAGE_LEVEL");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachToId\":\"line3\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_ATTACH_TO_VOLTAGE_LEVEL");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachToId\":\"line2\"}");
     }
 }

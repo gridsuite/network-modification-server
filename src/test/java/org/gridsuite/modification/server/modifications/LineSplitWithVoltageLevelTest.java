@@ -26,6 +26,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -136,5 +137,17 @@ public class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTe
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage(),
                 tryWithBadId.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_SPLIT_WITH_VOLTAGE_LEVEL");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToSplitId\":\"line2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_SPLIT_WITH_VOLTAGE_LEVEL");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToSplitId\":\"line2Edited\"}");
     }
 }

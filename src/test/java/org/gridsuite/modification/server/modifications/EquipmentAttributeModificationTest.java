@@ -10,6 +10,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -27,6 +28,7 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmpt
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -183,5 +185,17 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertFalse(getNetwork().getSwitch("v1b1").isOpen());
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_ATTRIBUTE_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentAttributeName\":\"open\",\"equipmentId\":\"v1b1\",\"equipmentAttributeValue\":\"true\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_ATTRIBUTE_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentAttributeName\":\"open\",\"equipmentId\":\"v1b1Edited\",\"equipmentAttributeValue\":\"false\"}");
     }
 }

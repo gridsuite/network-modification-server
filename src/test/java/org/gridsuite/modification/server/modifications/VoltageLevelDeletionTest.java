@@ -13,8 +13,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -54,5 +53,17 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getVoltageLevel("v1"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v2\"}");
     }
 }

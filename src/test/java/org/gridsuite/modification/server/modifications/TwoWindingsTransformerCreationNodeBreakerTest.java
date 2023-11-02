@@ -551,5 +551,17 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                         .build()
         );
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TWO_WINDINGS_TRANSFORMER_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"new2wt\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TWO_WINDINGS_TRANSFORMER_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"new2wtUpdate\"}");
+    }
 }
 

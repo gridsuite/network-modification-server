@@ -24,6 +24,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,7 +61,7 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryCreationInfos.builder()
-                .equipmentId("idBattery2")
+                .equipmentId("idBattery2Edited")
                 .equipmentName("nameBatteryModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
@@ -102,5 +103,17 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
                 batteryCreationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BATTERY_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idBattery2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BATTERY_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idBattery2Edited\"}");
     }
 }

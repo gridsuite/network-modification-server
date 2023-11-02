@@ -74,4 +74,16 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", substationCreationInfos.getErrorType().name(), reportService);
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "SUBSTATION_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"SubstationId\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "SUBSTATION_CREATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"SubstationIdEdited\"}");
+    }
 }

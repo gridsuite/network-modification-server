@@ -132,7 +132,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
+        return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1Edited")
                 .equipmentName(new AttributeModification<>("2wt modified name again", OperationType.SET))
                 .seriesResistance(new AttributeModification<>(1.1, OperationType.SET))
                 .seriesReactance(new AttributeModification<>(2.1, OperationType.SET))
@@ -546,6 +546,18 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TWO_WINDINGS_TRANSFORMER_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"trf1\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "TWO_WINDINGS_TRANSFORMER_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"trf1Edited\"}");
     }
 }
 

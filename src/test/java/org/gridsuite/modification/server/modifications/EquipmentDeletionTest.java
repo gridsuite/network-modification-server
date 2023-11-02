@@ -165,4 +165,16 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         PowsyblException e = assertThrows(PowsyblException.class, () -> removeSubstation.apply(network, true, Reporter.NO_OP));
         assertEquals("Substation not found: unknownSubstation", e.getMessage());
     }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1load\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator\"}");
+    }
 }

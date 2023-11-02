@@ -23,6 +23,7 @@ import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUT
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -109,5 +110,17 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
 
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"energizedVoltageLevelId\",\"action\":\"LOCKOUT\",\"equipmentId\":\"line2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
+        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"energizedVoltageLevelId\",\"action\":\"SWITCH_ON\",\"equipmentId\":\"line1\"}");
     }
 }

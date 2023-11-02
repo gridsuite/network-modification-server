@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -75,7 +76,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
-                .lineToAttachToId("line3")
+                .lineToAttachToId("line3Edited")
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
                 .attachmentPointName("attPointName")
@@ -110,5 +111,17 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
         assertNull(getNetwork().getVoltageLevel("AttPointId"));
         assertNull(getNetwork().getVoltageLevel("newVoltageLevel"));
         assertNotNull(getNetwork().getLine("line3"));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_ATTACH_TO_VOLTAGE_LEVEL");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachToId\":\"line3\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "LINE_ATTACH_TO_VOLTAGE_LEVEL");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachToId\":\"line3Edited\"}");
     }
 }

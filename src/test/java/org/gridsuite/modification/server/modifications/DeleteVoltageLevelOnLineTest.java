@@ -23,6 +23,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -101,5 +102,17 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
                 deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "DELETE_VOLTAGE_LEVEL_ON_LINE");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachTo1Id\":\"l1\",\"lineToAttachTo2Id\":\"l2\"}");
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals(modificationInfos.getMessageType(), "DELETE_VOLTAGE_LEVEL_ON_LINE");
+        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachTo1Id\":\"line00\",\"lineToAttachTo2Id\":\"line11\"}");
     }
 }
