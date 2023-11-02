@@ -21,9 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.SimpleBeanDefinitionRegistry;
-import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import java.lang.reflect.InvocationTargetException;
@@ -67,16 +66,12 @@ class ModificationInfosTest implements WithAssertions, WithAssumptions {
     }
 
     private static List<Arguments> provideModificationInfosImplementationsWithClasses() throws ClassNotFoundException {
-        final BeanDefinitionRegistry bdr = new SimpleBeanDefinitionRegistry();
-        final ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(bdr);
-        scanner.resetFilters(false); //remove the default Spring filters that would include all classes with @Component, @Service, and some other annotations
-        scanner.setIncludeAnnotationConfig(false); //filter Spring own classes out
+        final ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AssignableTypeFilter(ModificationInfos.class)); //we search all children classes
-        scanner.scan(NetworkModificationApplication.class.getPackageName()); //we scan the application package
 
-        final List<Arguments> arguments = new ArrayList<>(bdr.getBeanDefinitionCount());
-        for (final String beanName : bdr.getBeanDefinitionNames()) {
-            final String clazzName = bdr.getBeanDefinition(beanName).getBeanClassName();
+        final List<Arguments> arguments = new ArrayList<>();
+        for (final BeanDefinition beanDef : scanner.findCandidateComponents(NetworkModificationApplication.class.getPackageName())) {
+            final String clazzName = beanDef.getBeanClassName();
             if (ModificationInfos.class.getCanonicalName().equals(clazzName) ||
                     ModificationWithAnnotations.class.getName().equals(clazzName)) {
                 continue; //skip parent, we want only children and no test class
