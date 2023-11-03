@@ -36,6 +36,8 @@ public class FormulaEntity {
     private UUID id;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "formula_id",
+            foreignKey = @ForeignKey(name = "formula_id_fk"))
     private List<VariationFilterEntity> filters;
 
     @Column

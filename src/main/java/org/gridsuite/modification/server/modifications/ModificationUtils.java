@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -960,6 +961,36 @@ public final class ModificationUtils {
         addToReports(reports, point.getP(), "P" + fieldSuffix);
         addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
         addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
+    }
+
+    public boolean isValidFilter(Reporter subReporter,
+                                 NetworkModificationException.Type errorType,
+                                 Map<UUID, String> filters,
+                                 Map<UUID, FilterEquipments> exportFilters) {
+        // collect all filters with wrong equipments ids
+        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet()
+                .stream()
+                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
+
+        if (noValidEquipmentId) {
+            String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            return false;
+        }
+
+        // create report for each wrong filter
+        filterWithWrongEquipmentsIds.values().forEach(f -> {
+            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
+            createReport(subReporter,
+                    "filterEquipmentsNotFound_" + f.getFilterName(),
+                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
+                    TypedValue.WARN_SEVERITY);
+        });
+        return true;
     }
 }
 
