@@ -133,28 +133,47 @@ class ModificationInfosTest implements WithAssertions, WithAssumptions {
                 .isInstanceOf(UnsupportedOperationException.class);*/
     }
 
+    @DisplayName("Check toEntity() is override")
     @ParameterizedTest(name = "for class {0}")
     @MethodSource("provideTerminalImplementationsWithInstances")
-    void checkMethodsUnsupportedOperationOverrides(final String name, final ModificationInfos instance, final SoftAssertions softly) throws UnsupportedOperationException {
+    void checkMethodsUnsupportedOperationOverrideToEntity(final String name, final ModificationInfos instance,
+                                                          final SoftAssertions softly) throws UnsupportedOperationException {
         try {
             softly.assertThat(instance.toEntity()).isNotNull();
         } catch (final NullPointerException rEx) {
-            //Assumptions.abort("conversion append on uninitialized fields");
+            Assumptions.abort("conversion append on uninitialized fields");
         } catch (final NetworkModificationException ex) {
-            //Assumptions.abort("internal check on uninitialized field prevent verification");
-        }
-        if (!(instance instanceof ConverterStationCreationInfos)) { //exception because CSCI is included in VscCreationInfos (HVCD case)
-            softly.assertThat(instance.toModification()).isNotNull();
-            try {
-                softly.assertThat(instance.createSubReporter(new ReporterModel("test", "test reporter"))).isNotNull();
-            } catch (final NullPointerException rEx) {
-                //Assumptions.abort("sub reporter template need uninitialized value");
-            }
+            Assumptions.abort("internal check on uninitialized field prevent verification");
         }
     }
 
+    @DisplayName("Check toModification() is override")
+    @ParameterizedTest(name = "for class {0}")
+    @MethodSource("provideTerminalImplementationsWithInstances")
+    void checkMethodsUnsupportedOperationOverrideToModification(final String name, final ModificationInfos instance,
+                                                                final SoftAssertions softly) throws UnsupportedOperationException {
+        //exception because CSCI is included in VscCreationInfos (HVDC case)
+        assumeThat(instance).isNotExactlyInstanceOf(ConverterStationCreationInfos.class);
+        softly.assertThat(instance.toModification()).isNotNull();
+    }
+
+    @DisplayName("Check createSubReporter(...) is override")
+    @ParameterizedTest(name = "for class {0}")
+    @MethodSource("provideTerminalImplementationsWithInstances")
+    void checkMethodsUnsupportedOperationOverrideCreateSubReporter(final String name, final ModificationInfos instance,
+                                                                   final SoftAssertions softly) throws UnsupportedOperationException {
+        //exception because CSCI is included in VscCreationInfos (HVDC case)
+        assumeThat(instance).isNotExactlyInstanceOf(ConverterStationCreationInfos.class);
+        try {
+            softly.assertThat(instance.createSubReporter(new ReporterModel("test", "test reporter"))).isNotNull();
+        } catch (final NullPointerException rEx) {
+            Assumptions.abort("sub reporter template need uninitialized value");
+        }
+    }
+
+    @DisplayName("Check @JsonSubTypes({...}) declare all children")
     @Test
-    void isAllSubTypesDeclared() throws Exception {
+    void isAllSubTypesDeclared() {
         assertThat(ModificationInfos.class.getAnnotation(JsonSubTypes.class).value())
                 .as("ModificationInfos Jackson SubTypes declared")
                 .isNotEmpty()
@@ -166,6 +185,7 @@ class ModificationInfosTest implements WithAssertions, WithAssumptions {
     /*
      * because else error in ModificationInfos.getType()
      */
+    @DisplayName("Check all @JsonTypeName(...) have correct values")
     @ParameterizedTest(name = "{0}")
     @MethodSource("provideTerminalImplementationsWithClasses")
     void isAllJsonNamesValid(final String name, final Class<? extends ModificationInfos> clazz) throws IllegalArgumentException {
@@ -177,6 +197,7 @@ class ModificationInfosTest implements WithAssertions, WithAssumptions {
     /*
      * because else error in ModificationInfos.getErrorType()
      */
+    @DisplayName("Check all @ModificationErrorTypeName(...) have correct values")
     @ParameterizedTest(name = "{0}")
     @MethodSource("provideTerminalImplementationsWithClasses")
     void isAllErrorTypesValid(final String name, final Class<? extends ModificationInfos> clazz) throws IllegalArgumentException {
