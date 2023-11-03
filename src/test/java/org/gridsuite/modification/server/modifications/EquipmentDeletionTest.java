@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.RemoveSubstation;
+import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -162,7 +163,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Test
     public void testRemoveUnknownSubstation() {
         Network network = Network.create("empty", "test");
-        RemoveSubstation removeSubstation = new RemoveSubstation("unknownSubstation");
+        RemoveSubstation removeSubstation = new RemoveSubstationBuilder().withSubstationId("unknownSubstation").build();
         PowsyblException e = assertThrows(PowsyblException.class, () -> removeSubstation.apply(network, true, Reporter.NO_OP));
         assertEquals("Substation not found: unknownSubstation", e.getMessage());
     }

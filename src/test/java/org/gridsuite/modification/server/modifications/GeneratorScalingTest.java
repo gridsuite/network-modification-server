@@ -11,7 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -50,9 +49,9 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_1 = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_2 = UUID.randomUUID();
-    private static final String GENERATOR_ID_1 = "idGenerator";
-    private static final String GENERATOR_ID_2 = "v5generator";
-    private static final String GENERATOR_ID_3 = "v6generator";
+    private static final String GENERATOR_ID_1 = "gen1";
+    private static final String GENERATOR_ID_2 = "gen2";
+    private static final String GENERATOR_ID_3 = "gen3";
     private static final String GENERATOR_ID_4 = "gen4";
     private static final String GENERATOR_ID_5 = "gen5";
     private static final String GENERATOR_ID_6 = "gen6";
@@ -76,13 +75,13 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         getNetwork().getGenerator(GENERATOR_ID_1).setTargetP(100).setMaxP(500);
         getNetwork().getGenerator(GENERATOR_ID_2).setTargetP(200).setMaxP(2000);
         getNetwork().getGenerator(GENERATOR_ID_3).setTargetP(200).setMaxP(2000);
-        createGenerator(getNetwork().getVoltageLevel("v1"), GENERATOR_ID_4, 3, 100, 1.0, "cn10", 11, ConnectablePosition.Direction.TOP, 500, -1);
-        createGenerator(getNetwork().getVoltageLevel("v1"), GENERATOR_ID_5, 20, 200, 1.0, "cn10", 12, ConnectablePosition.Direction.TOP, 2000, -1);
-        createGenerator(getNetwork().getVoltageLevel("v2"), GENERATOR_ID_6, 11, 100, 1.0, "cn10", 13, ConnectablePosition.Direction.TOP, 500, -1);
-        createGenerator(getNetwork().getVoltageLevel("v6"), GENERATOR_ID_7, 10, 200, 1.0, "cn10", 14, ConnectablePosition.Direction.TOP, 2000, -1);
-        createGenerator(getNetwork().getVoltageLevel("v3"), GENERATOR_ID_8, 10, 100, 1.0, "cn10", 15, ConnectablePosition.Direction.TOP, 500, -1);
-        createGenerator(getNetwork().getVoltageLevel("v4"), GENERATOR_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP, 2000, -1);
-        createGenerator(getNetwork().getVoltageLevel("v5"), GENERATOR_ID_10, 10, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP, 500, -1);
+        getNetwork().getGenerator(GENERATOR_ID_4).setTargetP(100).setMaxP(500);
+        getNetwork().getGenerator(GENERATOR_ID_5).setTargetP(200).setMaxP(2000);
+        getNetwork().getGenerator(GENERATOR_ID_6).setTargetP(100).setMaxP(500);
+        getNetwork().getGenerator(GENERATOR_ID_7).setTargetP(200).setMaxP(2000);
+        getNetwork().getGenerator(GENERATOR_ID_8).setTargetP(100).setMaxP(500);
+        getNetwork().getGenerator(GENERATOR_ID_9).setTargetP(200).setMaxP(2000);
+        getNetwork().getGenerator(GENERATOR_ID_10).setTargetP(100).setMaxP(500);
     }
 
     private List<FilterEquipments> getTestFilters() {
@@ -261,7 +260,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.create(networkUuid, true);
+        return NetworkCreation.createGeneratorsNetwork(networkUuid, new NetworkFactoryImpl());
     }
 
     @Override
