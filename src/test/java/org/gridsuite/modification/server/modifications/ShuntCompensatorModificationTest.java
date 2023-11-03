@@ -217,9 +217,9 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("v7shunt", createdValues.get("equipmentId"));
+        assertEquals("v7shunt", createdValues.get("equipmentId"));
     }
 
     @Override
@@ -227,6 +227,6 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("v2shunt", updatedValues.get("equipmentId"));
+        assertEquals("v2shunt", updatedValues.get("equipmentId"));
     }
 }

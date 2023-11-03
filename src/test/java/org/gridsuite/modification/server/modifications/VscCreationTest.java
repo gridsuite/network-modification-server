@@ -195,7 +195,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        Assertions.assertEquals("VSC_CREATION", modificationInfos.getMessageType());
+        assertEquals("VSC_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         Assertions.assertEquals("vsc1", createdValues.get("equipmentId"));
     }
@@ -203,7 +203,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        Assertions.assertEquals("VSC_CREATION", modificationInfos.getMessageType());
+        assertEquals("VSC_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         Assertions.assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
     }

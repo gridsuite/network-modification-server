@@ -119,7 +119,7 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "BATTERY_CREATION");
+        assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
     }
