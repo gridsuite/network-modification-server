@@ -43,13 +43,13 @@ public class LoadScaling extends AbstractScaling {
     protected void applyVentilationVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos, Double distributionKeys) {
         if (distributionKeys != null) {
             AtomicReference<Double> sum = new AtomicReference<>(0D);
-            List<Float> percentages = new ArrayList<>();
+            List<Double> percentages = new ArrayList<>();
             List<Scalable> scalables = new ArrayList<>();
 
             identifiableAttributes.forEach(equipment -> {
                 sum.set(network.getLoad(equipment.getId()).getP0() + sum.get());
                 scalables.add(getScalable(equipment.getId()));
-                percentages.add((float) ((equipment.getDistributionKey() / distributionKeys) * 100));
+                percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
             var asked = getAsked(scalingVariationInfos, sum);
@@ -74,7 +74,7 @@ public class LoadScaling extends AbstractScaling {
                     return getScalable(load.getId());
                 }).collect(Collectors.toList());
 
-        List<Float> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), (float) (100.0 / scalables.size())));
+        List<Double> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), 100.0 / scalables.size()));
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, regularDistributionScalable);
@@ -87,14 +87,14 @@ public class LoadScaling extends AbstractScaling {
                 .stream().map(attribute -> network.getLoad(attribute.getId())).collect(Collectors.toList());
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
-        List<Float> percentages = new ArrayList<>();
+        List<Double> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
         loads.forEach(load -> {
             targetPMap.put(load.getId(), load.getP0());
             sum.set(sum.get() + load.getP0());
         });
         targetPMap.forEach((id, p) -> {
-            percentages.add((float) ((p / sum.get()) * 100));
+            percentages.add((p / sum.get()) * 100);
             scalables.add(getScalable(id));
         });
 

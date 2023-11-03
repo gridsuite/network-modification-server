@@ -11,7 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,11 +60,11 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     private static final UUID FILTER_WRONG_ID_2 = UUID.randomUUID();
 
-    private static final String LOAD_ID_1 = "v1load";
+    private static final String LOAD_ID_1 = "load1";
 
-    private static final String LOAD_ID_2 = "v5load";
+    private static final String LOAD_ID_2 = "load2";
 
-    private static final String LOAD_ID_3 = "v6load";
+    private static final String LOAD_ID_3 = "load3";
 
     private static final String LOAD_ID_4 = "load4";
 
@@ -98,13 +97,13 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         getNetwork().getLoad(LOAD_ID_1).setP0(100).setQ0(10);
         getNetwork().getLoad(LOAD_ID_2).setP0(200).setQ0(20);
         getNetwork().getLoad(LOAD_ID_3).setP0(200).setQ0(20);
-        createLoad(getNetwork().getVoltageLevel("v1"), LOAD_ID_4, LOAD_ID_4, 3, 100, 1.0, "cn10", 11, ConnectablePosition.Direction.TOP);
-        createLoad(getNetwork().getVoltageLevel("v1"), LOAD_ID_5, LOAD_ID_5, 20, 200, 2.0, "cn10", 12, ConnectablePosition.Direction.TOP);
-        createLoad(getNetwork().getVoltageLevel("v2"), LOAD_ID_6, LOAD_ID_6, 11, 120, 4.0, "cn10", 13, ConnectablePosition.Direction.TOP);
-        createLoad(getNetwork().getVoltageLevel("v6"), LOAD_ID_7, LOAD_ID_7, 10, 200, 1.0, "cn10", 14, ConnectablePosition.Direction.TOP);
-        createLoad(getNetwork().getVoltageLevel("v3"), LOAD_ID_8, LOAD_ID_8, 10, 130, 3.0, "cn10", 15, ConnectablePosition.Direction.TOP);
-        createLoad(getNetwork().getVoltageLevel("v4"), LOAD_ID_9, LOAD_ID_9, 10, 200, 1.0, "cn10", 16, ConnectablePosition.Direction.TOP);
-        createLoad(getNetwork().getVoltageLevel("v5"), LOAD_ID_10, LOAD_ID_10, 12, 100, 1.0, "cn10", 17, ConnectablePosition.Direction.TOP);
+        getNetwork().getLoad(LOAD_ID_4).setP0(100).setQ0(1.0);
+        getNetwork().getLoad(LOAD_ID_5).setP0(200).setQ0(2.0);
+        getNetwork().getLoad(LOAD_ID_6).setP0(120).setQ0(4.0);
+        getNetwork().getLoad(LOAD_ID_7).setP0(200).setQ0(1.0);
+        getNetwork().getLoad(LOAD_ID_8).setP0(130).setQ0(3.0);
+        getNetwork().getLoad(LOAD_ID_9).setP0(200).setQ0(1.0);
+        getNetwork().getLoad(LOAD_ID_10).setP0(100).setQ0(1.0);
     }
 
     private List<FilterEquipments> getTestFilters() {
@@ -281,7 +280,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.create(networkUuid, true);
+        return NetworkCreation.createLoadNetwork(networkUuid, new NetworkFactoryImpl());
     }
 
     @Override
