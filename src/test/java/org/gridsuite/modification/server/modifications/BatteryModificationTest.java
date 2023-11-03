@@ -273,6 +273,6 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals(modificationInfos.getMessageType(), "BATTERY_MODIFICATION");
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
+        assertEquals("idBatteryEdited", updatedValues.get("equipmentId"));
     }
 }

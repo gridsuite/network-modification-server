@@ -107,8 +107,8 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
                 deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
     }
 
-   @Override
-   @SneakyThrows
+    @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("DELETE_VOLTAGE_LEVEL_ON_LINE", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });

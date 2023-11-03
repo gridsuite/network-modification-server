@@ -138,7 +138,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SubstationIdEdited", updatedValues.get("equipmentId"));
+        assertEquals("shuntOneId", updatedValues.get("equipmentId"));
         assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"shuntOneId\"}");
     }
 
@@ -147,7 +147,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SubstationIdEdited", updatedValues.get("equipmentId"));
+        assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
         assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"shuntOneIdEdited\"}");
     }
 }

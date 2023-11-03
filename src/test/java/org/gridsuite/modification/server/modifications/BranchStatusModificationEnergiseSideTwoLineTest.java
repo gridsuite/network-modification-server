@@ -97,7 +97,7 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
         assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("vl2", createdValues.get("energizedVoltageLevelId"));
-        assertEquals("ENERGISE_END_ONE", createdValues.get("action"));
+        assertEquals("ENERGISE_END_TWO", createdValues.get("action"));
         assertEquals("line2", createdValues.get("equipmentId"));
     }
 

@@ -196,8 +196,8 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("open", createdValues.get("equipmentAttributeName"));
-        assertEquals("equipmentId", createdValues.get("v1b1"));
-        assertEquals("equipmentAttributeValue", createdValues.get("true"));
+        assertEquals("v1b1", createdValues.get("equipmentId"));
+        assertEquals("true", createdValues.get("equipmentAttributeValue"));
     }
 
     @Override
@@ -206,7 +206,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("open", createdValues.get("equipmentAttributeName"));
-        assertEquals("equipmentId", createdValues.get("v1b1Edited"));
-        assertEquals("equipmentAttributeValue", createdValues.get("false"));
+        assertEquals("v1b1Edited", createdValues.get("equipmentId"));
+        assertEquals("false", createdValues.get("equipmentAttributeValue"));
     }
 }

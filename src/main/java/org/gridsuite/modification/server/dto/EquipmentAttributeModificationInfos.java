@@ -26,7 +26,7 @@ import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.EquipmentAttributeModification;
 import org.springframework.lang.NonNull;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -113,7 +113,7 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
 
     @Override
     public Map<String, String> getMapMessageValues() {
-        Map<String, String> mapMessageValues = new LinkedHashMap<>();
+        Map<String, String> mapMessageValues = new HashMap<>();
         mapMessageValues.put("equipmentAttributeName", getEquipmentAttributeName());
         mapMessageValues.put("equipmentId", getEquipmentId());
         mapMessageValues.put("equipmentAttributeValue", getEquipmentAttributeValue() != null

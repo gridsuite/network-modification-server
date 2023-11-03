@@ -153,6 +153,6 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("LOAD_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("idLoad1", updatedValues.get("equipmentId"));
+        assertEquals("idLoad1Edited", updatedValues.get("equipmentId"));
     }
 }
