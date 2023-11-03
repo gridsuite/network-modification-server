@@ -263,7 +263,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "BATTERY_MODIFICATION");
+        assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v3Battery", updatedValues.get("equipmentId"));
     }
@@ -271,7 +271,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "BATTERY_MODIFICATION");
+        assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBatteryEdited", updatedValues.get("equipmentId"));
     }
