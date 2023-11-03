@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
