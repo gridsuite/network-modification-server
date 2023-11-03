@@ -7,7 +7,9 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
@@ -239,14 +242,18 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLine1\"}");
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLine1", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLineEdited1\"}");
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLineEdited1", updatedValues.get("equipmentId"));
     }
 }

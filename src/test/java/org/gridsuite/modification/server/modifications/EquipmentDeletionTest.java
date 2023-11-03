@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -167,14 +168,18 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1load\"}");
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1load", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator\"}");
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator", createdValues.get("equipmentId"));
     }
 }

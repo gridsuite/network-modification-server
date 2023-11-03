@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.DeleteA
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.DeleteAttachingLine;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -70,7 +71,7 @@ public class DeleteAttachingLineInfos extends ModificationInfos {
 
     @Override
     public Map<String, String> getMapMessageValues() {
-        Map<String, String> mapMessageValues = new LinkedHashMap<>();
+        Map<String, String> mapMessageValues = new HashMap<>();
         mapMessageValues.put("attachedLineId", getAttachedLineId());
         mapMessageValues.put("lineToAttachTo1Id", getLineToAttachTo1Id());
         mapMessageValues.put("lineToAttachTo2Id", getLineToAttachTo2Id());

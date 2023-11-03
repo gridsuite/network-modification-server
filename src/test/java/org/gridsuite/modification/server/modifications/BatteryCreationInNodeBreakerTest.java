@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -22,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -203,14 +205,19 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals(modificationInfos.getMessageType(), "BATTERY_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idBattery1\"}");
+
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idBattery1", updatedValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals(modificationInfos.getMessageType(), "BATTERY_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idBattery2Edited\"}");
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
     }
 }

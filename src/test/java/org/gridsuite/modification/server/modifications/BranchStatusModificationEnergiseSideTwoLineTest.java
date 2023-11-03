@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -16,6 +18,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
@@ -89,14 +92,22 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"vl2\",\"action\":\"ENERGISE_END_TWO\",\"equipmentId\":\"line2\"}");
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("vl2", createdValues.get("energizedVoltageLevelId"));
+        assertEquals("ENERGISE_END_ONE", createdValues.get("action"));
+        assertEquals("line2", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "BRANCH_STATUS_MODIFICATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"energizedVoltageLevelId\":\"vl2_bis\",\"action\":\"TRIP\",\"equipmentId\":\"line1\"}");
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("vl2_bis", updatedValues.get("energizedVoltageLevelId"));
+        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("line1", updatedValues.get("equipmentId"));
     }
 }

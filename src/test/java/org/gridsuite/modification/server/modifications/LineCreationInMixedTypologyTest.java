@@ -7,13 +7,16 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
@@ -90,14 +93,18 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLine1\"}");
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLine1", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLineEdited1\"}");
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLineEdited1", updatedValues.get("equipmentId"));
     }
 }

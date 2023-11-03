@@ -7,8 +7,10 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
@@ -19,6 +21,7 @@ import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
@@ -90,15 +93,18 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
-    @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "SHUNT_COMPENSATOR_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"shuntOneId\"}");
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneId", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "SHUNT_COMPENSATOR_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"shuntOneIdEdited\"}");
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
     }
 }

@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -19,9 +21,11 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -122,14 +126,18 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "VOLTAGE_LEVEL_MODIFICATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1\"}");
+        assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "VOLTAGE_LEVEL_MODIFICATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1Edited\"}");
+        assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1Edited", updatedValues.get("equipmentId"));
     }
 }

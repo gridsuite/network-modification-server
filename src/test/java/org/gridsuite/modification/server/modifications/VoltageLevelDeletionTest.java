@@ -6,14 +6,18 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -56,14 +60,18 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v1\"}");
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_DELETION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"v2\"}");
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v2", updatedValues.get("equipmentId"));
     }
 }

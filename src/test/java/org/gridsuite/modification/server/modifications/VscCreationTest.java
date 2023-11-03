@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.MinMaxReactiveLimits;
 import com.powsybl.iidm.network.Network;
@@ -16,6 +17,7 @@ import com.powsybl.iidm.network.VscConverterStation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -23,9 +25,11 @@ import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfo
 import org.gridsuite.modification.server.dto.VscCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
@@ -189,15 +193,19 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "VSC_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"vsc1\"}");
+        Assertions.assertEquals("VSC_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("vsc1", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "VSC_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"vsc1Edited\"}");
+        Assertions.assertEquals("VSC_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
     }
 
     @Override

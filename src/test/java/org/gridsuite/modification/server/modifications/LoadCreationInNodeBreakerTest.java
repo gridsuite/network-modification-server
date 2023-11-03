@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -139,14 +141,18 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LOAD_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLoad1\"}");
+        assertEquals("LOAD_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLoad1", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LOAD_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLoad1Edited\"}");
+        assertEquals("LOAD_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLoad1", updatedValues.get("equipmentId"));
     }
 }

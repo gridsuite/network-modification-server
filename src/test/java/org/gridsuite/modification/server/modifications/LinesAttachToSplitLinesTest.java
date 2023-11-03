@@ -6,7 +6,9 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LinesAttachToSplitLinesInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
@@ -120,14 +123,18 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINES_ATTACH_TO_SPLIT_LINES");
-        assertEquals(modificationInfos.getMessageValues(), "{\"attachedLineId\":\"l3\"}");
+        assertEquals("LINES_ATTACH_TO_SPLIT_LINES", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("l3", createdValues.get("attachedLineId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINES_ATTACH_TO_SPLIT_LINES");
-        assertEquals(modificationInfos.getMessageValues(), "{\"attachedLineId\":\"newline3\"}");
+        assertEquals("LINES_ATTACH_TO_SPLIT_LINES", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("newline3", updatedValues.get("attachedLineId"));
     }
 }

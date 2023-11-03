@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -23,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -247,14 +249,18 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "GENERATOR_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator1\"}");
+        assertEquals("GENERATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator1", updatedValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "GENERATOR_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idGenerator2\"}");
+        assertEquals("GENERATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator2", updatedValues.get("equipmentId"));
     }
 }

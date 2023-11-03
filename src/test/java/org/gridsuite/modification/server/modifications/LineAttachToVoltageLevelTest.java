@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -174,14 +177,18 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_ATTACH_TO_VOLTAGE_LEVEL");
-        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachToId\":\"line3\"}");
+        assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("line3", createdValues.get("lineToAttachToId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_ATTACH_TO_VOLTAGE_LEVEL");
-        assertEquals(modificationInfos.getMessageValues(), "{\"lineToAttachToId\":\"line2\"}");
+        assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("line2", updatedValues.get("lineToAttachToId"));
     }
 }

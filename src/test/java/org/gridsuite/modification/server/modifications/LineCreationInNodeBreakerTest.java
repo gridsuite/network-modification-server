@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -18,10 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -296,14 +294,18 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLine\"}");
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLine", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "LINE_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"idLineEdited\"}");
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLineEdited", updatedValues.get("equipmentId"));
     }
 }

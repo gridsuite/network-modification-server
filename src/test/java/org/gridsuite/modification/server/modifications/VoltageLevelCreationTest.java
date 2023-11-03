@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -19,12 +21,14 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -177,14 +181,18 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "VOLTAGE_LEVEL_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"vlId\"}");
+        assertEquals("VOLTAGE_LEVEL_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("vlId", createdValues.get("equipmentId"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "VOLTAGE_LEVEL_CREATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentId\":\"VoltageLevelIdEdited\"}");
+        assertEquals("VOLTAGE_LEVEL_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("VoltageLevelIdEdited", updatedValues.get("equipmentId"));
     }
 }

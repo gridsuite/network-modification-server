@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -188,14 +191,22 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
+    @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_ATTRIBUTE_MODIFICATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentAttributeName\":\"open\",\"equipmentId\":\"v1b1\",\"equipmentAttributeValue\":\"true\"}");
+        assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("open", createdValues.get("equipmentAttributeName"));
+        assertEquals("equipmentId", createdValues.get("v1b1"));
+        assertEquals("equipmentAttributeValue", createdValues.get("true"));
     }
 
     @Override
+    @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageType(), "EQUIPMENT_ATTRIBUTE_MODIFICATION");
-        assertEquals(modificationInfos.getMessageValues(), "{\"equipmentAttributeName\":\"open\",\"equipmentId\":\"v1b1Edited\",\"equipmentAttributeValue\":\"false\"}");
+        assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("open", createdValues.get("equipmentAttributeName"));
+        assertEquals("equipmentId", createdValues.get("v1b1Edited"));
+        assertEquals("equipmentAttributeValue", createdValues.get("false"));
     }
 }
