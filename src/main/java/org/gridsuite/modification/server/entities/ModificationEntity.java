@@ -38,6 +38,9 @@ public class ModificationEntity {
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "type")
+    private String type;
+
     @Column(name = "date")
     private ZonedDateTime date;
 
@@ -58,8 +61,9 @@ public class ModificationEntity {
     @Column(name = "message_values")
     private String messageValues;
 
-    public ModificationEntity(UUID id, ZonedDateTime date, Boolean stashed, String messageType, String messageValues) {
+    public ModificationEntity(UUID id, String type, ZonedDateTime date, Boolean stashed, String messageType, String messageValues) {
         this.id = id;
+        this.type = type;
         this.date = date;
         this.stashed = stashed;
         this.messageType = messageType;
@@ -77,13 +81,7 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
-        return ModificationInfos.builder()
-                .uuid(this.id)
-                .date(this.date)
-                .stashed(this.stashed)
-                .messageType(this.messageType)
-                .messageValues(this.messageValues)
-                .build();
+        return ModificationInfos.fromEntity(this);
     }
 
     public void update(ModificationInfos modificationInfos) {
@@ -96,6 +94,7 @@ public class ModificationEntity {
 
     @SneakyThrows
     private void assignAttributes(ModificationInfos modificationInfos) {
+        this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
