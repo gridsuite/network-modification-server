@@ -7,18 +7,22 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
@@ -65,5 +69,20 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLoad("idLoad1"));
+    }
+
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LOAD_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLoad1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LOAD_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLoadEdited1", updatedValues.get("equipmentId"));
     }
 }

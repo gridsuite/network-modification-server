@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBran
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -326,7 +329,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
 
         assertEquals(
-            "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, stashed=null), equipmentId=id2wt1WithRatioTapChanger2), equipmentName=2wtName), seriesResistance=400.0, seriesReactance=300.0, voltageLevelId1=v1, voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, currentLimits1=null, currentLimits2=null, connectionName1=null, connectionDirection1=TOP, connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null), magnetizingConductance=100.0, magnetizingSusceptance=200.0, ratedVoltage1=1000.0, ratedVoltage2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationInfos(super=TapChangerCreationInfos(lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, regulatingTerminalId=v1load, regulatingTerminalType=LOAD, regulatingTerminalVlId=v1, steps=[TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)]), loadTapChangingCapabilities=true, targetV=220.0), phaseTapChanger=null)",
+            "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=TWO_WINDINGS_TRANSFORMER_CREATION, date=null, stashed=null, messageType=null, messageValues=null), equipmentId=id2wt1WithRatioTapChanger2), equipmentName=2wtName), seriesResistance=400.0, seriesReactance=300.0, voltageLevelId1=v1, voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, currentLimits1=null, currentLimits2=null, connectionName1=null, connectionDirection1=TOP, connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null), magnetizingConductance=100.0, magnetizingSusceptance=200.0, ratedVoltage1=1000.0, ratedVoltage2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationInfos(super=TapChangerCreationInfos(lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, regulatingTerminalId=v1load, regulatingTerminalType=LOAD, regulatingTerminalVlId=v1, steps=[TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)]), loadTapChangingCapabilities=true, targetV=220.0), phaseTapChanger=null)",
             twoWindingsTransformerCreationInfos2.toString()
         );
 
@@ -550,6 +553,22 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                         .rho(1.)
                         .build()
         );
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TWO_WINDINGS_TRANSFORMER_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("new2wt", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TWO_WINDINGS_TRANSFORMER_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("new2wtUpdate", updatedValues.get("equipmentId"));
     }
 }
 

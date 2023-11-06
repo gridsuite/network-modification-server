@@ -20,6 +20,9 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BranchStatusModification;
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
 
 /**
@@ -87,5 +90,17 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
         if (action == null) {
             throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
         }
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        Map<String, String> mapMessageValues = new HashMap<>();
+        mapMessageValues.put("action", getAction().name());
+        mapMessageValues.put("equipmentId", getEquipmentId());
+        if (getEnergizedVoltageLevelId() != null) {
+            mapMessageValues.put("energizedVoltageLevelId", getEnergizedVoltageLevelId());
+        }
+        return mapMessageValues;
+
     }
 }

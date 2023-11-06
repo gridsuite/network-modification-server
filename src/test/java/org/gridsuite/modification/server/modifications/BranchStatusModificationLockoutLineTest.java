@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -17,12 +19,14 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -48,6 +52,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(TARGET_LINE_ID)
+                .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
@@ -55,6 +60,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(UPDATE_BRANCH_ID)
+                .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
@@ -107,5 +113,25 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
 
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
+        assertEquals("LOCKOUT", createdValues.get("action"));
+        assertEquals("line2", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
+        assertEquals("SWITCH_ON", updatedValues.get("action"));
+        assertEquals("line1", updatedValues.get("equipmentId"));
     }
 }

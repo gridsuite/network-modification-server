@@ -7,10 +7,12 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -18,10 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
@@ -77,7 +76,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorModificationInfos.builder()
-                .equipmentId("idGenerator")
+                .equipmentId("idGeneratorEdited")
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
@@ -411,5 +410,21 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
 
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGeneratorEdited", createdValues.get("equipmentId"));
     }
 }

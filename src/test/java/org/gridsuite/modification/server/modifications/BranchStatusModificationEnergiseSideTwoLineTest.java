@@ -6,8 +6,10 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -16,11 +18,13 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -85,5 +89,25 @@ public class BranchStatusModificationEnergiseSideTwoLineTest extends AbstractNet
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("vl2", createdValues.get("energizedVoltageLevelId"));
+        assertEquals("ENERGISE_END_TWO", createdValues.get("action"));
+        assertEquals("line2", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("vl2_bis", updatedValues.get("energizedVoltageLevelId"));
+        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("line1", updatedValues.get("equipmentId"));
     }
 }

@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.modification.LinesAttachToSplitLinesEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LinesAttachToSplitLines;
+import java.util.Map;
 
 
 /**
@@ -72,5 +73,10 @@ public class LinesAttachToSplitLinesInfos extends ModificationInfos {
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(getType().name(), "Lines attach to split lines");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        return Map.of("attachedLineId", getAttachedLineId());
     }
 }
