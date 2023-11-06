@@ -18,7 +18,7 @@
     <changeSet author="souissimai (generated)" id="858e3adf2d13a190f5c808247f825d37-8">
         <sqlFile
                 encoding="UTF-8"
-                path="migrationMetadataModifications.sql"
+                path="migrationMetadataModifications_20231010T120459Z.sql"
                 relativeToChangelogFile="true"
                 splitStatements="true"
                 stripComments="true"/>

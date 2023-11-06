@@ -1293,7 +1293,7 @@ public class ModificationControllerTest {
 
         List<VoltageInitModificationInfos> modificationsInfos2 = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, modificationsInfos2.size());
-       // assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
+        assertThat(modificationsInfos2.get(0)).recursivelyEquals(modificationsInfos1);
     }
 
     @Test
