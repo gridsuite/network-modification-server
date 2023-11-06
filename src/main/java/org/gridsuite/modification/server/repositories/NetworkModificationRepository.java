@@ -144,6 +144,7 @@ public class NetworkModificationRepository {
                 .map(this::getModificationInfos)
                 .collect(Collectors.toList());
     }
+
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
@@ -178,7 +179,6 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
         }
     }
-
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
