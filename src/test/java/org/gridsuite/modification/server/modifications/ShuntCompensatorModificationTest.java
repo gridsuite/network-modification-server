@@ -70,24 +70,6 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
     @SneakyThrows
     @Test
-    public void testShuntCompensatorWithMultipleSections() {
-        var shuntCompensator = getNetwork().getShuntCompensator("v5shunt");
-
-        ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
-                .equipmentId("v5shunt")
-                .voltageLevelId("v5")
-                .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
-                .build();
-
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationInfos)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        assertLogMessage("It is currently not possible to modify the multi sections shunt compensator with id=v5shunt",
-                "shuntCompensatorModificationMultiSections", reportService);
-    }
-
-    @SneakyThrows
-    @Test
     public void testCreateModificationWithShuntCompensatorType() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
         createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
@@ -123,14 +105,34 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v7shunt")
                 .voltageLevelId("v5")
-                .susceptancePerSection(AttributeModification.toAttributeModification(3.0, OperationType.SET))
+                .maxSusceptance(AttributeModification.toAttributeModification(3.0, OperationType.SET))
                 .build();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         assertEquals(3.0, model.getBPerSection(), 0);
-        assertEquals(1, shuntCompensator.getSectionCount());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateModificationWithSections() {
+        var shuntCompensatorToModify = getNetwork().getShuntCompensator("v5shunt");
+        var model = shuntCompensatorToModify.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v5shunt")
+                .voltageLevelId("v5")
+                .maximumSectionCount(AttributeModification.toAttributeModification(3, OperationType.SET))
+                .sectionCount(AttributeModification.toAttributeModification(2, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertEquals(3, shuntCompensatorToModify.getMaximumSectionCount());
+        assertEquals(2, shuntCompensatorToModify.getSectionCount());
     }
 
     @SneakyThrows
@@ -144,14 +146,14 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
                         .equipmentId("v7shunt")
                         .voltageLevelId("v5")
-                        .qAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
+                        .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
                         .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
                         .build();
 
         ShuntCompensatorModificationInfos modificationInfos2 = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v8shunt")
                 .voltageLevelId("v6")
-                .qAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
+                .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
                 .build();
 
@@ -180,8 +182,10 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         return ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
-                .qAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
+                .maxQAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
                 .voltageLevelId("v2")
+                .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
+                .sectionCount(new AttributeModification<>(1, OperationType.SET))
                 .build();
 
     }
@@ -191,7 +195,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         return ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v2shunt")
                 .voltageLevelId("v2")
-                .susceptancePerSection(new AttributeModification<>(0.5, OperationType.SET))
+                .maxSusceptance(new AttributeModification<>(0.5, OperationType.SET))
                 .build();
     }
 

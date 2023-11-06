@@ -16,8 +16,6 @@ import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
@@ -58,16 +56,6 @@ public class ShuntCompensatorModification extends AbstractModification {
         ShuntCompensator shuntCompensator = network.getShuntCompensator(modificationInfos.getEquipmentId());
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
 
-        if (shuntCompensator.getMaximumSectionCount() > 1) {
-            subReporter.report(Report.builder()
-                    .withKey("shuntCompensatorModificationMultiSections")
-                    .withDefaultMessage("It is currently not possible to modify the multi sections shunt compensator with id=${id}")
-                    .withValue("id", modificationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
-            return;
-        }
-
         subReporter.report(Report.builder()
                 .withKey("shuntCompensatorModification")
                 .withDefaultMessage("Shunt Compensator with id=${id} modified :")
@@ -86,11 +74,24 @@ public class ShuntCompensatorModification extends AbstractModification {
         List<Report> reports = new ArrayList<>();
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
+        var maximumSectionCount = shuntCompensator.getMaximumSectionCount();
+
+        if (modificationInfos.getMaximumSectionCount() != null) {
+            maximumSectionCount = modificationInfos.getMaximumSectionCount().getValue();
+            if (modificationInfos.getMaxSusceptance() == null && modificationInfos.getMaxQAtNominalV() == null) {
+                model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
+            }
+            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(model::setMaximumSectionCount, shuntCompensator::getSectionCount, modificationInfos.getMaximumSectionCount(), "Maximum section count"));
+        }
+
+        if (modificationInfos.getSectionCount() != null) {
+            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(shuntCompensator::setSectionCount, shuntCompensator::getSectionCount, modificationInfos.getSectionCount(), "Section count"));
+        }
 
         if (modificationInfos.getShuntCompensatorType() != null) {
             reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensatorType, modificationInfos.getShuntCompensatorType().getValue(), "Type"));
             shuntCompensatorType = modificationInfos.getShuntCompensatorType().getValue();
-            if (modificationInfos.getQAtNominalV() == null) {
+            if (modificationInfos.getMaxQAtNominalV() == null) {
                 // we retrieve the absolute value of susceptance per section, then we determine the sign using the type
                 double bPerSectionAbsoluteValue = Math.abs(model.getBPerSection());
                 double newBPerSection = shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? bPerSectionAbsoluteValue : -bPerSectionAbsoluteValue;
@@ -98,22 +99,18 @@ public class ShuntCompensatorModification extends AbstractModification {
             }
         }
 
-        if (modificationInfos.getQAtNominalV() != null) {
+        if (modificationInfos.getMaxQAtNominalV() != null) {
             double olQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
-            double susceptancePerSection = modificationInfos.getQAtNominalV().getValue() / Math.pow(voltageLevel.getNominalV(), 2);
-
+            double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
+            double susceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
             model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
-            reports.add(ModificationUtils.getInstance().buildModificationReport(olQAtNominalV, modificationInfos.getQAtNominalV().getValue(), "Q at nominal voltage"));
-
-            AttributeModification<Integer> sectionCountModification = AttributeModification.toAttributeModification(modificationInfos.getQAtNominalV().getValue() == 0. ? 0 : 1, OperationType.SET);
-            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(shuntCompensator::setSectionCount, shuntCompensator::getSectionCount, sectionCountModification, "Section count"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(olQAtNominalV, newQatNominalV, "Q at nominal voltage"));
         }
 
-        if (modificationInfos.getSusceptancePerSection() != null) {
-            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(model::setBPerSection, model::getBPerSection, modificationInfos.getSusceptancePerSection(), "Susceptance per section"));
-
-            AttributeModification<Integer> sectionCountModification = AttributeModification.toAttributeModification(modificationInfos.getSusceptancePerSection().getValue() == 0. ? 0 : 1, OperationType.SET);
-            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(shuntCompensator::setSectionCount, shuntCompensator::getSectionCount, sectionCountModification, "Section count"));
+        if (modificationInfos.getMaxSusceptance() != null) {
+            double susceptancePerSection = modificationInfos.getMaxSusceptance().getValue() / maximumSectionCount;
+            model.setBPerSection(susceptancePerSection);
+            reports.add(ModificationUtils.getInstance().buildModificationReport(model.getBPerSection(), susceptancePerSection, "Susceptance per section"));
         }
         reports.forEach(subReporter::report);
     }
