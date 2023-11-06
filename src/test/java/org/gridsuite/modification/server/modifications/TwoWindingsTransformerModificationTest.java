@@ -45,7 +45,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
     @Override
     protected ModificationInfos buildModification() {
-        return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
+        return TwoWindingsTransformerModificationInfos.builder().stashed(false).equipmentId("trf1")
                 .equipmentName(new AttributeModification<>("2wt modified name", OperationType.SET))
                 .seriesResistance(new AttributeModification<>(1., OperationType.SET))
                 .seriesReactance(new AttributeModification<>(2., OperationType.SET))
@@ -135,7 +135,9 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1Edited")
+        return TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("trf1Edited")
                 .equipmentName(new AttributeModification<>("2wt modified name again", OperationType.SET))
                 .seriesResistance(new AttributeModification<>(1.1, OperationType.SET))
                 .seriesReactance(new AttributeModification<>(2.1, OperationType.SET))
@@ -288,6 +290,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     @Test
     public void testRatioTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("trf1")
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .build())
@@ -409,6 +412,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     @Test
     public void testPhaseTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("trf2")
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .build())

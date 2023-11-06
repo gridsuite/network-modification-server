@@ -51,6 +51,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
+                .stashed(false)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.LOCKOUT).build();
@@ -59,6 +60,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
+                .stashed(false)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();

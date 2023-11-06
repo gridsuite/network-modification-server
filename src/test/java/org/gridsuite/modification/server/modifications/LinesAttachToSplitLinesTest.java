@@ -42,6 +42,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     @Override
     protected ModificationInfos buildModification() {
         return LinesAttachToSplitLinesInfos.builder()
+                .stashed(false)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -57,6 +58,7 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LinesAttachToSplitLinesInfos.builder()
+                .stashed(false)
                 .lineToAttachTo1Id("newline1")
                 .lineToAttachTo2Id("newline2")
                 .attachedLineId("newline3")

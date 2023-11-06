@@ -41,6 +41,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
+                .stashed(false)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
@@ -51,6 +52,7 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
         return BranchStatusModificationInfos.builder()
                 .equipmentId("line1Edited")
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
+                .stashed(false)
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 

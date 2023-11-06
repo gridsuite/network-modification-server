@@ -41,6 +41,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return LoadModificationInfos.builder()
+            .stashed(false)
             .equipmentId("v1load")
             .equipmentName(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
@@ -53,6 +54,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
             .equipmentId("v1loadEdited")
+            .stashed(false)
             .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
             .activePower(new AttributeModification<>(300.0, OperationType.SET))
@@ -84,6 +86,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     public void testCreateWithErrors() throws Exception {
         // Unset an attribute that should not be null
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v1load")
                 .loadType(new AttributeModification<>(null, OperationType.UNSET))
                 .build();

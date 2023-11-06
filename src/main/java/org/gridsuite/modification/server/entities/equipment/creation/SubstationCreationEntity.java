@@ -64,6 +64,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationCountry(getCountry())

@@ -50,6 +50,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("LOAD")
                 .equipmentId("v1load")
                 .build();
@@ -58,6 +59,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("GENERATOR")
                 .equipmentId("idGenerator")
                 .build();
@@ -77,6 +79,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     public void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("LOAD")
                 .equipmentId("v5load")
                 .build();
@@ -117,6 +120,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 new HvdcLccDeletionInfos(shuntData, null) :
                 new HvdcLccDeletionInfos(null, shuntData);
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("HVDC_LINE")
                 .equipmentId(hvdcLineName)
                 .equipmentInfos(hvdcLccDeletionInfos)

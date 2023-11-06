@@ -38,6 +38,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return BatteryModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
@@ -58,6 +59,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("idBatteryEdited")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
