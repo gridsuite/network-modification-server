@@ -6,18 +6,22 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
@@ -38,13 +42,15 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
                 .equipmentId(TARGET_LINE_ID)
+                .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
-                .equipmentId("line1")
+                .equipmentId("line1Edited")
+                .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
     }
 
@@ -62,5 +68,25 @@ public class BranchStatusModificationSwitchOnLineTest extends AbstractNetworkMod
         Line line = getNetwork().getLine(TARGET_LINE_ID);
         assertNotNull(line);
         assertTrue(line.getTerminals().stream().noneMatch(Terminal::isConnected));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
+        assertEquals("SWITCH_ON", createdValues.get("action"));
+        assertEquals("line2", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));
+        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("line1Edited", updatedValues.get("equipmentId"));
     }
 }

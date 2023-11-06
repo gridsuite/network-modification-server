@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.modification.LineAttachToVoltageLevelEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LineAttachToVoltageLevel;
+import java.util.Map;
 
 /**
  * @author Nicolas NOIR <nicolas.noir at rte-france.com>
@@ -80,5 +81,10 @@ public class LineAttachToVoltageLevelInfos extends ModificationInfos {
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(getType().name(), "Line attach to voltage level");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        return Map.of("lineToAttachToId", getLineToAttachToId());
     }
 }

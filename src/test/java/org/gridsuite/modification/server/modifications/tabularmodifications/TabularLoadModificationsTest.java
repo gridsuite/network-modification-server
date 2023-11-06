@@ -7,13 +7,17 @@
 
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -66,5 +70,21 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
         assertEquals(0., getNetwork().getLoad("v1load").getQ0(), 0.001);
         assertEquals(0., getNetwork().getLoad("v2load").getQ0(), 0.001);
         assertEquals(0., getNetwork().getLoad("v3load").getQ0(), 0.001);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("LOAD_MODIFICATION", createdValues.get("tabularModificationType"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("LOAD_MODIFICATION", updatedValues.get("tabularModificationType"));
     }
 }

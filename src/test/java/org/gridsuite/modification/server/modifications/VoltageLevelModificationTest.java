@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -19,9 +21,11 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,7 +55,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelModificationInfos.builder()
-                .equipmentId("v1")
+                .equipmentId("v1Edited")
                 .equipmentName(new AttributeModification<>("test 2", OperationType.SET))
                 .nominalVoltage(new AttributeModification<>(450D, OperationType.SET))
                 .lowVoltageLimit(new AttributeModification<>(40D, OperationType.SET))
@@ -119,5 +123,21 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                         .content(mapper.writeValueAsString(infos))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1Edited", updatedValues.get("equipmentId"));
     }
 }

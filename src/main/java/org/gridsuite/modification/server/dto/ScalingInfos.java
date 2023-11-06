@@ -31,4 +31,5 @@ public class ScalingInfos extends ModificationInfos {
 
     @Schema(description = "variation type")
     private VariationType variationType;
+
 }

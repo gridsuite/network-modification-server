@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -19,6 +21,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -49,7 +52,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadModificationInfos.builder()
-            .equipmentId("v1load")
+            .equipmentId("v1loadEdited")
             .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
             .activePower(new AttributeModification<>(300.0, OperationType.SET))
@@ -88,5 +91,20 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Load 'v1load': load type is null", loadModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LOAD_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1load", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LOAD_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1loadEdited", updatedValues.get("equipmentId"));
     }
 }
