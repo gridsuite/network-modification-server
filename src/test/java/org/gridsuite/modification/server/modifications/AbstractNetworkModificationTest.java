@@ -292,10 +292,10 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract void assertAfterNetworkModificationDeletion();
 
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageValues(), "{}");
+        assertEquals("{}", modificationInfos.getMessageValues());
     }
 
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals(modificationInfos.getMessageValues(), "{}");
+        assertEquals("{}", modificationInfos.getMessageValues());
     }
 }
