@@ -45,6 +45,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         UUID modificationUuid = UUID.randomUUID();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .uuid(modificationUuid)
             .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .equipmentId("equipmentId")
@@ -52,9 +53,10 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00Z, stashed=null, messageType=null, messageValues=null), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00Z, stashed=false, messageType=null, messageValues=null), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -133,6 +135,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     public void testWithErrors() throws Exception {
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("close") // bad
             .equipmentAttributeValue(true)
@@ -163,6 +166,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected EquipmentAttributeModificationInfos buildModification() {
         return EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -173,6 +177,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected EquipmentAttributeModificationInfos buildModificationUpdate() {
         return EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)

@@ -55,6 +55,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return VscCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("vsc1")
                 .equipmentName("vsc1Name")
                 .dcNominalVoltage(39.)
@@ -124,6 +125,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return VscCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("vsc1Edited")
                 .equipmentName("vsc2Name")
                 .dcNominalVoltage(53.)

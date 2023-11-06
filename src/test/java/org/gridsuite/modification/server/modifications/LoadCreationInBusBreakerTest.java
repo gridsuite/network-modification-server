@@ -34,6 +34,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return LoadCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLoad1")
             .equipmentName("nameLoad1")
             .voltageLevelId("v1")
@@ -49,6 +50,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LoadCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLoadEdited1")
             .equipmentName("nameLoadEdited1")
             .voltageLevelId("v1Edited")

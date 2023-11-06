@@ -1224,6 +1224,7 @@ public class ModificationControllerTest {
     public void testCreateVoltageInitModification() throws Exception {
         // Create the modification
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
+            .stashed(false)
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")

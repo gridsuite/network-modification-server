@@ -236,6 +236,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
                 .seriesResistance(100.0)
@@ -260,6 +261,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .seriesResistance(110.0)

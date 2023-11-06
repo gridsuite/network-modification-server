@@ -42,6 +42,7 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
     @Override
     protected ModificationInfos buildModification() {
         return BranchStatusModificationInfos.builder()
+                .stashed(false)
                 .equipmentId(TARGET_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(BranchStatusModificationInfos.ActionType.TRIP).build();
@@ -50,6 +51,7 @@ public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetwo
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BranchStatusModificationInfos.builder()
+                .stashed(false)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();

@@ -348,6 +348,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .seriesResistance(AttributeModification.toAttributeModification(getSeriesResistance()))

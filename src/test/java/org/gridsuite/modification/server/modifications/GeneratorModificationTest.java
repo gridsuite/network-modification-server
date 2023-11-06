@@ -40,6 +40,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GeneratorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
@@ -77,6 +78,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorModificationInfos.builder()
                 .equipmentId("idGeneratorEdited")
+                .stashed(false)
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
