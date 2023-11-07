@@ -60,6 +60,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
+            .stashed(getStashed())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // injection

@@ -147,6 +147,9 @@ public abstract class AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertAfterNetworkModificationCreation();
+
+        ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
     @Test
@@ -187,9 +190,12 @@ public abstract class AbstractNetworkModificationTest {
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
         ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        ModificationInfos updatedModificationwithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
+
     }
 
     @Test
@@ -284,4 +290,12 @@ public abstract class AbstractNetworkModificationTest {
     protected abstract void assertAfterNetworkModificationCreation();
 
     protected abstract void assertAfterNetworkModificationDeletion();
+
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("{}", modificationInfos.getMessageValues());
+    }
+
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("{}", modificationInfos.getMessageValues());
+    }
 }

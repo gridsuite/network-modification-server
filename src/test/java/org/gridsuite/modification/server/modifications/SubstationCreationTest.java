@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -22,6 +24,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,6 +39,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return SubstationCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
                 .substationCountry(Country.AF)
@@ -46,6 +50,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return SubstationCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("SubstationIdEdited")
                 .equipmentName("SubstationNameEdited")
                 .substationCountry(Country.CI)
@@ -73,5 +78,21 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", substationCreationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SUBSTATION_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("SubstationId", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SUBSTATION_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("SubstationIdEdited", updatedValues.get("equipmentId"));
     }
 }

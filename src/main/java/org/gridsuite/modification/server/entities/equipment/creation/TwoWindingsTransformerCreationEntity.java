@@ -177,6 +177,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .seriesResistance(getSeriesResistance())

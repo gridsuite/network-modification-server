@@ -23,6 +23,7 @@ public final class ModificationCreation {
 
     public static VoltageLevelCreationInfos getCreationVoltageLevel(String substationId, String voltageLevelId, String voltageLevelName) {
         return VoltageLevelCreationInfos.builder()
+            .stashed(false)
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
             .substationId(substationId)
@@ -39,6 +40,7 @@ public final class ModificationCreation {
 
     public static BatteryCreationInfos getCreationBattery(String vlId, String batteryId, String batteryName, String busOrBusbarSectionId) {
         return BatteryCreationInfos.builder()
+                .stashed(false)
                 .equipmentId(batteryId)
                 .equipmentName(batteryName)
                 .voltageLevelId(vlId)
@@ -62,6 +64,7 @@ public final class ModificationCreation {
     public static GeneratorCreationInfos getCreationGenerator(String vlId, String generatorId, String generatorName, String busOrBusbarSectionId,
                                                               String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
         return GeneratorCreationInfos.builder()
+            .stashed(false)
             .equipmentId(generatorId)
             .equipmentName(generatorName)
             .voltageLevelId(vlId)

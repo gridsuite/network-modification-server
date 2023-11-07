@@ -6,14 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

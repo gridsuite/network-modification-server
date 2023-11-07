@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -18,14 +19,12 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -224,7 +223,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, date=null, stashed=null), equipmentId=idLineEdited), equipmentName=nameLineEdited), seriesResistance=110.0, seriesReactance=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0), shuntConductance1=15.0, shuntSusceptance1=15.0, shuntConductance2=25.0, shuntSusceptance2=25.0)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=null, messageType=null, messageValues=null), equipmentId=idLineEdited), equipmentName=nameLineEdited), seriesResistance=110.0, seriesReactance=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0), shuntConductance1=15.0, shuntSusceptance1=15.0, shuntConductance2=25.0, shuntSusceptance2=25.0)",
             lineCreation.toString()
         );
     }
@@ -237,6 +236,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
                 .seriesResistance(100.0)
@@ -261,6 +261,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .seriesResistance(110.0)
@@ -292,5 +293,21 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLine", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLineEdited", updatedValues.get("equipmentId"));
     }
 }
