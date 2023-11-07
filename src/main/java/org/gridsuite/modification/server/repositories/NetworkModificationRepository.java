@@ -239,19 +239,6 @@ public class NetworkModificationRepository {
         return count;
     }
 
-    @Transactional // To have the find and delete in the same transaction (atomic)
-    public int deleteStashedModifications(UUID groupUuid, List<UUID> uuids) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
-                .filter(m -> uuids.contains(m.getId()))
-                .filter(ModificationEntity::getStashed)
-                .collect(Collectors.toList());
-        modifications.forEach(groupEntity::removeModification);
-        int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
-        return count;
-    }
-
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
         return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
     }
