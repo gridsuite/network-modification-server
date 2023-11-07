@@ -103,14 +103,14 @@ public class ShuntCompensatorModification extends AbstractModification {
             double olQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
             double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
             double susceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
-            model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
             reports.add(ModificationUtils.getInstance().buildModificationReport(olQAtNominalV, newQatNominalV, "Q at nominal voltage"));
+            model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
         }
 
         if (modificationInfos.getMaxSusceptance() != null) {
             double susceptancePerSection = modificationInfos.getMaxSusceptance().getValue() / maximumSectionCount;
-            model.setBPerSection(susceptancePerSection);
             reports.add(ModificationUtils.getInstance().buildModificationReport(model.getBPerSection(), susceptancePerSection, "Susceptance per section"));
+            model.setBPerSection(susceptancePerSection);
         }
         reports.forEach(subReporter::report);
     }
