@@ -103,6 +103,7 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .voltageLevelId(getVoltageLevelId())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))

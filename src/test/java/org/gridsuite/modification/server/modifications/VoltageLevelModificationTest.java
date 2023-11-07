@@ -42,6 +42,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return VoltageLevelModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v1")
                 .equipmentName(new AttributeModification<>("test 1", OperationType.SET))
                 .nominalVoltage(new AttributeModification<>(420D, OperationType.SET))
@@ -55,6 +56,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v1Edited")
                 .equipmentName(new AttributeModification<>("test 2", OperationType.SET))
                 .nominalVoltage(new AttributeModification<>(450D, OperationType.SET))
@@ -96,6 +98,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         applyModification(infos);
 
         VoltageLevelModificationInfos updatedInfos = VoltageLevelModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v1")
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .build();

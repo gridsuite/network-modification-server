@@ -38,6 +38,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     private LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId(lineName)
                 .seriesResistance(50.6)
                 .seriesReactance(25.3)
@@ -46,6 +47,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
 
     private VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("newVoltageLevel")
                 .equipmentName("NewVoltageLevel")
                 .nominalVoltage(379.3)
@@ -69,6 +71,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         return LineAttachToVoltageLevelInfos.builder()
+                .stashed(false)
                 .lineToAttachToId("line3")
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
@@ -87,6 +90,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineAttachToVoltageLevelInfos.builder()
+                .stashed(false)
                 .lineToAttachToId("line2")
                 .percent(30.0)
                 .attachmentPointId("newAttPointId")

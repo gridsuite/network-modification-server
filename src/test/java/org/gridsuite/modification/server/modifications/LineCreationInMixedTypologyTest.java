@@ -37,6 +37,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         // between voltage level "v1" and busbar section "1.1" type NODE_BREAKER and
         //         voltage level "v2" and busbar section "bus2 type BUS_BREAKER"
         return LineCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
             .seriesResistance(100.0)
@@ -61,6 +62,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
             .seriesResistance(200.0)

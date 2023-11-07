@@ -43,7 +43,9 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        return LineModificationInfos.builder().equipmentId("line1")
+        return LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -67,7 +69,9 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return LineModificationInfos.builder().equipmentId("line1")
+        return LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified1", OperationType.SET))
                 .seriesReactance(new AttributeModification<>(1.1, OperationType.SET))
                 .seriesResistance(new AttributeModification<>(2.1, OperationType.SET))
@@ -291,6 +295,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .endTemporaryLimit()
                 .add();
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
@@ -323,6 +328,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         // Modify name and no modification on temporary limits
         line.setName(null);
         LineModificationInfos lineModificationInfos1 = LineModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("ModifiedName", OperationType.SET))
                 .build();

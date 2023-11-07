@@ -46,6 +46,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testEquipmentWithWrongId() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("wrong id")
                 .build();
 
@@ -60,6 +61,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testWrongVoltageLevelId() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v5shunt")
                 .voltageLevelId("wrongVLId")
                 .build();
@@ -83,6 +85,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .voltageLevelId("v5")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
@@ -106,6 +109,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .voltageLevelId("v5")
                 .maxSusceptance(AttributeModification.toAttributeModification(3.0, OperationType.SET))
@@ -147,6 +151,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         createShuntCompensator(v6, "v8shunt", "v8shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v8shunt", 50, ConnectablePosition.Direction.BOTTOM);
 
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
                         .equipmentId("v7shunt")
                         .voltageLevelId("v5")
                         .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
@@ -154,6 +159,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
                         .build();
 
         ShuntCompensatorModificationInfos modificationInfos2 = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v8shunt")
                 .voltageLevelId("v6")
                 .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
@@ -183,6 +189,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         createShuntCompensator(v2, "v7shunt", "v7shunt", 15, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         return ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
                 .maxQAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
@@ -196,6 +203,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v2shunt")
                 .voltageLevelId("v2")
                 .maxSusceptance(new AttributeModification<>(0.5, OperationType.SET))

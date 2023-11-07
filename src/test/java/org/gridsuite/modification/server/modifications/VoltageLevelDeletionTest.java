@@ -31,6 +31,7 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("VOLTAGE_LEVEL")
                 .equipmentId("v1")
                 .build();
@@ -39,6 +40,7 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("LINE")
                 .equipmentId("v2")
                 .build();
