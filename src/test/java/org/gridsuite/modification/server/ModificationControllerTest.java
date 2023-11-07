@@ -385,6 +385,18 @@ public class ModificationControllerTest {
     }
 
     @Test
+    public void testDeleteTryToDeleteEmptyStashedModification() throws Exception {
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+
+        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("onlyStashed", "true")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString()))
+                .andExpect(status().isBadRequest());
+//        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
+    }
+
+    @Test
     public void testNetworkModificationsWithErrorOnNetworkFlush() throws Exception {
         String uriString = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_FLUSH_ERROR_ID + URI_NETWORK_MODIF_PARAMS;
 
