@@ -393,7 +393,6 @@ public class ModificationControllerTest {
                         .queryParam("onlyStashed", "true")
                         .queryParam("groupUuid", TEST_GROUP_ID.toString()))
                 .andExpect(status().isBadRequest());
-//        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
     }
 
     @Test
