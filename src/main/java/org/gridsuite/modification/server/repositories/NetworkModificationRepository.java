@@ -136,13 +136,20 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
-        return modificationRepository
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
+        Stream<ModificationEntity> modificationEntitySteam = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-                .stream()
-                .filter(m -> m.getStashed() == stashedModifications)
-                .map(this::getModificationInfos)
-                .collect(Collectors.toList());
+                .stream();
+        if(onlyStashed) {
+            return modificationEntitySteam.filter(m -> m.getStashed())
+                    .map(this::getModificationInfos)
+                    .collect(Collectors.toList());
+        }
+        else {
+            return modificationEntitySteam
+                    .map(this::getModificationInfos)
+                    .collect(Collectors.toList());
+        }
     }
 
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
@@ -175,7 +182,6 @@ public class NetworkModificationRepository {
                     .collect(Collectors.toList());
         } else {
             return modificationEntity.map(ModificationEntity::toModificationInfos)
-
                 .collect(Collectors.toList());
         }
     }
