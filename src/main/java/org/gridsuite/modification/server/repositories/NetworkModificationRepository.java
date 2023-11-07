@@ -140,12 +140,11 @@ public class NetworkModificationRepository {
         Stream<ModificationEntity> modificationEntitySteam = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
-        if(onlyStashed) {
+        if (onlyStashed) {
             return modificationEntitySteam.filter(m -> m.getStashed())
                     .map(this::getModificationInfos)
                     .collect(Collectors.toList());
-        }
-        else {
+        } else {
             return modificationEntitySteam
                     .map(this::getModificationInfos)
                     .collect(Collectors.toList());
