@@ -574,6 +574,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GenerationDispatchInfos.builder()
+            .stashed(false)
             .lossCoefficient(20.)
             .defaultOutageRate(0.)
             .generatorsWithoutOutage(List.of())
@@ -586,6 +587,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GenerationDispatchInfos.builder()
+            .stashed(false)
             .lossCoefficient(50.)
             .defaultOutageRate(25.)
             .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name1").build()))

@@ -7,16 +7,20 @@
 
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
@@ -113,5 +117,21 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 .andReturn();
         // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
         assertSelectCount(3);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("GENERATOR_MODIFICATION", createdValues.get("tabularModificationType"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("GENERATOR_MODIFICATION", updatedValues.get("tabularModificationType"));
     }
 }

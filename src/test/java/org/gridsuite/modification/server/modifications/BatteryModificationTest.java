@@ -7,8 +7,10 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -16,10 +18,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
@@ -39,6 +38,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return BatteryModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
@@ -59,7 +59,8 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryModificationInfos.builder()
-                .equipmentId("idBattery")
+                .stashed(false)
+                .equipmentId("idBatteryEdited")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
@@ -259,5 +260,21 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 batteryModificationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v3Battery", updatedValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idBatteryEdited", updatedValues.get("equipmentId"));
     }
 }

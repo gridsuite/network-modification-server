@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.VoltageLevel;
@@ -16,8 +17,10 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
@@ -43,6 +46,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testEquipmentWithWrongId() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("wrong id")
                 .build();
 
@@ -57,6 +61,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testWrongVoltageLevelId() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v5shunt")
                 .voltageLevelId("wrongVLId")
                 .build();
@@ -74,6 +79,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         var shuntCompensator = getNetwork().getShuntCompensator("v5shunt");
 
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v5shunt")
                 .voltageLevelId("v5")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
@@ -98,6 +104,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .voltageLevelId("v5")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
@@ -121,6 +128,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .voltageLevelId("v5")
                 .susceptancePerSection(AttributeModification.toAttributeModification(3.0, OperationType.SET))
@@ -142,6 +150,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         createShuntCompensator(v6, "v8shunt", "v8shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v8shunt", 50, ConnectablePosition.Direction.BOTTOM);
 
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
                         .equipmentId("v7shunt")
                         .voltageLevelId("v5")
                         .qAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
@@ -149,6 +158,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
                         .build();
 
         ShuntCompensatorModificationInfos modificationInfos2 = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v8shunt")
                 .voltageLevelId("v6")
                 .qAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
@@ -178,6 +188,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         createShuntCompensator(v2, "v7shunt", "v7shunt", 15, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         return ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
                 .qAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
@@ -189,6 +200,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v2shunt")
                 .voltageLevelId("v2")
                 .susceptancePerSection(new AttributeModification<>(0.5, OperationType.SET))
@@ -209,5 +221,21 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);
         assertEquals(1.0, model.getBPerSection(), 0);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v7shunt", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v2shunt", updatedValues.get("equipmentId"));
     }
 }

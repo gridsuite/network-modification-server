@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -22,12 +23,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +45,7 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     protected ModificationInfos buildModification() {
         // create new battery in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         return BatteryCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idBattery1")
                 .equipmentName("idBattery1")
                 .voltageLevelId("v2")
@@ -65,7 +69,8 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return BatteryCreationInfos.builder()
-                .equipmentId("idBattery2")
+                .stashed(false)
+                .equipmentId("idBattery2Edited")
                 .equipmentName("nameBatteryModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
@@ -199,5 +204,21 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
         assertTrue(networkModificationResult.isEmpty());  // no modifications returned
         assertNull(getNetwork().getBattery("idBattery3"));  // battery was not created
         testNetworkModificationsCount(getGroupId(), 10);  // new modification stored in the database
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idBattery1", updatedValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
     }
 }

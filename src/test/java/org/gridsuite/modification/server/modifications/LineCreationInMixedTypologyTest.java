@@ -7,17 +7,21 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
@@ -33,6 +37,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         // between voltage level "v1" and busbar section "1.1" type NODE_BREAKER and
         //         voltage level "v2" and busbar section "bus2 type BUS_BREAKER"
         return LineCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
             .seriesResistance(100.0)
@@ -57,6 +62,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
             .seriesResistance(200.0)
@@ -86,5 +92,21 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine1"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLine1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLineEdited1", updatedValues.get("equipmentId"));
     }
 }

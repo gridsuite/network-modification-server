@@ -18,6 +18,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.LineSpl
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LineSplitWithVoltageLevel;
 
+import java.util.Map;
+
 /**
  * @author Laurent GARNIER <laurent.garnier at rte-france.com>
  */
@@ -72,5 +74,10 @@ public class LineSplitWithVoltageLevelInfos extends ModificationInfos {
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
         return reporter.createSubReporter(getType().name(), "Line split with voltage level");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        return Map.of("lineToSplitId", getLineToSplitId());
     }
 }

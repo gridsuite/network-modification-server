@@ -115,10 +115,10 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     private VscCreationInfos.VscCreationInfosBuilder<?, ?> toVscCreationInfosBuilder() {
         ConverterStationCreationInfos converterStationCreationInfos1 = getConverterStation1() == null ? null : getConverterStation1().toConverterStationInfos();
         ConverterStationCreationInfos converterStationCreationInfos2 = getConverterStation2() == null ? null : getConverterStation2().toConverterStationInfos();
-
         return VscCreationInfos.builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .activePower(getActivePower())

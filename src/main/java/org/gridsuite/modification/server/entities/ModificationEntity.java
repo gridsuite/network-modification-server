@@ -6,13 +6,15 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
-import jakarta.persistence.*;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -36,6 +38,9 @@ public class ModificationEntity {
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "type")
+    private String type;
+
     @Column(name = "date")
     private ZonedDateTime date;
 
@@ -50,10 +55,19 @@ public class ModificationEntity {
     @Column(name = "modifications_order")
     private int modificationsOrder;
 
-    public ModificationEntity(UUID id, ZonedDateTime date, Boolean stashed) {
+    @Column(name = "message_type")
+    private String messageType;
+
+    @Column(name = "message_values")
+    private String messageValues;
+
+    public ModificationEntity(UUID id, String type, ZonedDateTime date, Boolean stashed, String messageType, String messageValues) {
         this.id = id;
+        this.type = type;
         this.date = date;
         this.stashed = stashed;
+        this.messageType = messageType;
+        this.messageValues = messageValues;
     }
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
@@ -62,14 +76,12 @@ public class ModificationEntity {
         }
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+        this.stashed = modificationInfos.getStashed();
+        assignAttributes(modificationInfos);
     }
 
     public ModificationInfos toModificationInfos() {
-        return ModificationInfos.builder()
-                .uuid(this.id)
-                .date(this.date)
-                .stashed(this.stashed)
-                .build();
+        return ModificationInfos.fromEntity(this);
     }
 
     public void update(ModificationInfos modificationInfos) {
@@ -77,6 +89,14 @@ public class ModificationEntity {
         if (modificationInfos == null) {
             throw new NullPointerException("Impossible to update entity from null DTO");
         }
+        assignAttributes(modificationInfos);
+    }
+
+    @SneakyThrows
+    private void assignAttributes(ModificationInfos modificationInfos) {
+        this.setType(modificationInfos.getType().name());
+        this.setMessageType(modificationInfos.getType().name());
+        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
     public ModificationEntity copy() {

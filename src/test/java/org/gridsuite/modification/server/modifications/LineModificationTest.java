@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
@@ -40,7 +43,9 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        return LineModificationInfos.builder().equipmentId("line1")
+        return LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -64,7 +69,9 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return LineModificationInfos.builder().equipmentId("line1")
+        return LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified1", OperationType.SET))
                 .seriesReactance(new AttributeModification<>(1.1, OperationType.SET))
                 .seriesResistance(new AttributeModification<>(2.1, OperationType.SET))
@@ -288,6 +295,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .endTemporaryLimit()
                 .add();
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
@@ -320,6 +328,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         // Modify name and no modification on temporary limits
         line.setName(null);
         LineModificationInfos lineModificationInfos1 = LineModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("ModifiedName", OperationType.SET))
                 .build();
@@ -331,5 +340,21 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos1);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("line1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("line1", updatedValues.get("equipmentId"));
     }
 }

@@ -7,8 +7,10 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
@@ -28,6 +31,7 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +46,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Override
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
+                .stashed(false)
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
@@ -59,6 +64,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
+                .stashed(false)
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
@@ -127,5 +133,21 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
             .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification).recursivelyEquals(dto);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneId", updatedValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
     }
 }

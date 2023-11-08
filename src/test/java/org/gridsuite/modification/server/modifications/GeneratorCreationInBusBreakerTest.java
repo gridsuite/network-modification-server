@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -20,12 +22,14 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,6 +43,7 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModification() {
         return GeneratorCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idGenerator2")
                 .equipmentName("nameGenerator2")
                 .voltageLevelId("v1")
@@ -76,7 +81,8 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorCreationInfos.builder()
-                .equipmentId("idGenerator2")
+                .equipmentId("idGenerator2Edited")
+                .stashed(false)
                 .equipmentName("nameGeneratorModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
@@ -146,5 +152,21 @@ public class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificati
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),
             generatorCreationInfos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("GENERATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator2", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("GENERATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator2Edited", createdValues.get("equipmentId"));
     }
 }
