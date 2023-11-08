@@ -69,6 +69,7 @@ public class BatteryCreation extends AbstractModification {
         } else {
             createBatteryInBusBreaker(voltageLevel, modificationInfos, subReporter);
         }
+        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getBattery(modificationInfos.getEquipmentId()), subReporter);
     }
 
     private void createBatteryInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Network network, Reporter subReporter) {
