@@ -125,9 +125,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
+    public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid, stashedModifications) : getModificationsInfos(List.of(groupUuid), stashedModifications);
+            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -136,13 +136,19 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean stashedModifications) {
-        return modificationRepository
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
+        Stream<ModificationEntity> modificationEntitySteam = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-                .stream()
-                .filter(m -> m.getStashed() == stashedModifications)
-                .map(this::getModificationInfos)
-                .collect(Collectors.toList());
+                .stream();
+        if (onlyStashed) {
+            return modificationEntitySteam.filter(m -> m.getStashed())
+                    .map(this::getModificationInfos)
+                    .collect(Collectors.toList());
+        } else {
+            return modificationEntitySteam
+                    .map(this::getModificationInfos)
+                    .collect(Collectors.toList());
+        }
     }
 
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
@@ -167,11 +173,16 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean stashedModifications) {
-        return groupUuids.stream().flatMap(this::getModificationEntityStream)
-                .filter(m -> m.getStashed() == stashedModifications)
-                .map(this::getModificationInfos)
+    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
+        Stream<ModificationEntity> modificationEntity = groupUuids.stream().flatMap(this::getModificationEntityStream);
+        if (onlyStashed) {
+            return modificationEntity.filter(m -> m.getStashed() == onlyStashed)
+                    .map(ModificationEntity::toModificationInfos)
+                    .collect(Collectors.toList());
+        } else {
+            return modificationEntity.map(ModificationEntity::toModificationInfos)
                 .collect(Collectors.toList());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -197,6 +208,23 @@ public class NetworkModificationRepository {
             }
             throw e;
         }
+    }
+
+    @Transactional
+    public int deleteModifications(UUID groupUuid, boolean onlyStashed) {
+        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+        List<ModificationEntity> modifications;
+        if (onlyStashed) {
+            modifications = getModificationEntityStream(groupUuid)
+                .filter(ModificationEntity::getStashed)
+                .collect(Collectors.toList());
+        } else {
+            modifications = getModificationEntityStream(groupUuid).collect(Collectors.toList());
+        }
+        modifications.forEach(groupEntity::removeModification);
+        int count = modifications.size();
+        this.modificationRepository.deleteAll(modifications);
+        return count;
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)

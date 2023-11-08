@@ -26,6 +26,7 @@ public class NetworkModificationException extends PowsyblException {
         GROOVY_SCRIPT_ERROR(HttpStatus.BAD_REQUEST),
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
         VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND),
+        NOTHING_TO_DELETE(HttpStatus.BAD_REQUEST),
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),

@@ -976,6 +976,38 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testDeleteStashedModificationList() {
+        //create a modification and add it to the repository
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().stashed(true).script("script1").build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
+        //check the modification is in the repository
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modificationInfos.size());
+
+        //delete the modification
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1.getId()));
+        //check the modification is not in the repository
+        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(0, modificationInfos.size());
+    }
+
+    @Test
+    public void testDeleteNonStashedModificationList() {
+        //create a modification and add it to the repository
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().stashed(false).script("script1").build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
+        //check the modification is in the repository
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(1, modificationInfos.size());
+
+        //delete the modification
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1.getId()));
+        //check the modification is not in the repository
+        modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(0, modificationInfos.size());
+    }
+
+    @Test
     public void testDeleteAttachingLine() {
         DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
