@@ -72,15 +72,18 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .stashed(getStashed())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
+            // Injection
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
+            .connectionName(getConnectionName())
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition())
+            .connected(isConnected())
+            // ShuntCompensator
             .maximumSectionCount(getMaximumSectionCount())
             .sectionCount(getSectionCount())
             .maxSusceptance(getMaxSusceptance())
             .maxQAtNominalV(getMaxQAtNominalV())
-            .shuntCompensatorType(getShuntCompensatorType())
-            .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection())
-            .connectionPosition(getConnectionPosition());
+            .shuntCompensatorType(getShuntCompensatorType());
     }
 }

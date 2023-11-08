@@ -63,13 +63,16 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .stashed(getStashed())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
+            // injection
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
-            .loadType(getLoadType())
-            .activePower(getActivePower())
-            .reactivePower(getReactivePower())
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
-            .connectionPosition(getConnectionPosition());
+            .connectionPosition(getConnectionPosition())
+            .connected(isConnected())
+            // load
+            .loadType(getLoadType())
+            .activePower(getActivePower())
+            .reactivePower(getReactivePower());
     }
 }
