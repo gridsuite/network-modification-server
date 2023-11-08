@@ -70,23 +70,39 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
     }
 
+    private void modifyMaximumSectionCount(List<Report> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {
+        if (modificationInfos.getMaximumSectionCount() != null) {
+            var maximumSectionCount = modificationInfos.getMaximumSectionCount().getValue();
+            if (modificationInfos.getMaxSusceptance() == null && modificationInfos.getMaxQAtNominalV() == null) {
+                model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
+            }
+            reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensator.getMaximumSectionCount(), maximumSectionCount, "Maximum section count"));
+            model.setMaximumSectionCount(maximumSectionCount);
+        }
+    }
+
+    private void modifySectionCount(List<Report> reports, ShuntCompensator shuntCompensator) {
+        if (modificationInfos.getSectionCount() != null) {
+            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(shuntCompensator::setSectionCount, shuntCompensator::getSectionCount, modificationInfos.getSectionCount(), "Section count"));
+        }
+    }
+
     private void applyModificationOnLinearModel(Reporter subReporter, ShuntCompensator shuntCompensator, VoltageLevel voltageLevel) {
         List<Report> reports = new ArrayList<>();
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
-        var maximumSectionCount = shuntCompensator.getMaximumSectionCount();
 
-        if (modificationInfos.getMaximumSectionCount() != null) {
-            maximumSectionCount = modificationInfos.getMaximumSectionCount().getValue();
-            if (modificationInfos.getMaxSusceptance() == null && modificationInfos.getMaxQAtNominalV() == null) {
-                model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
-            }
-            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(model::setMaximumSectionCount, shuntCompensator::getSectionCount, modificationInfos.getMaximumSectionCount(), "Maximum section count"));
+        // due to cross validation between maximum section count and section count, we need to modify section count first
+        // when maximum section count old value is greater than the new one
+        if (modificationInfos.getMaximumSectionCount() != null && modificationInfos.getMaximumSectionCount().getValue() < shuntCompensator.getMaximumSectionCount()) {
+            modifySectionCount(reports, shuntCompensator);
+            modifyMaximumSectionCount(reports, shuntCompensator, model);
+        } else {
+            modifyMaximumSectionCount(reports, shuntCompensator, model);
+            modifySectionCount(reports, shuntCompensator);
         }
 
-        if (modificationInfos.getSectionCount() != null) {
-            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(shuntCompensator::setSectionCount, shuntCompensator::getSectionCount, modificationInfos.getSectionCount(), "Section count"));
-        }
+        var maximumSectionCount = modificationInfos.getMaximumSectionCount() != null ? modificationInfos.getMaximumSectionCount().getValue() : shuntCompensator.getMaximumSectionCount();
 
         if (modificationInfos.getShuntCompensatorType() != null) {
             reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensatorType, modificationInfos.getShuntCompensatorType().getValue(), "Type"));
