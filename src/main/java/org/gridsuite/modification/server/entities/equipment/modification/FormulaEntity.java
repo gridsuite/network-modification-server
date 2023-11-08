@@ -60,12 +60,7 @@ public class FormulaEntity {
 
     public FormulaEntity(FormulaInfos formulaInfos) {
         this.id = null;
-        if (filters == null) {
-            this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
-        } else {
-            filters.clear();
-            filters.addAll(formulaInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
-        }
+        this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
         this.editedField = formulaInfos.getEditedField();
         this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField();
         this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField();
