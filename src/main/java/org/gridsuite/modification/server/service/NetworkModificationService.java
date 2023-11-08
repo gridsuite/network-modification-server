@@ -198,6 +198,12 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
+    public void deleteNetworkModifications(UUID groupUuid, boolean onlyStashed) {
+        if (networkModificationRepository.deleteModifications(groupUuid, onlyStashed) == 0) {
+            throw new NetworkModificationException(NOTHING_TO_DELETE);
+        }
+    }
+
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
@@ -293,4 +299,5 @@ public class NetworkModificationService {
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
     }
+
 }
