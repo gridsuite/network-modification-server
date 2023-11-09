@@ -186,9 +186,9 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
 
         FormulaInfos formulaInfos2 = getFormulaInfo(BatteryField.MINIMUM_ACTIVE_POWER.name(),
                 List.of(filter3),
-                Operator.MODULUS,
-                minActivePowerRef,
-                ReferenceFieldOrValue.builder().value(30.).build());
+                Operator.PERCENTAGE,
+                ReferenceFieldOrValue.builder().value(30.).build(),
+                minActivePowerRef);
 
         FormulaInfos formulaInfos3 = getFormulaInfo(BatteryField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter5),
@@ -228,11 +228,6 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
                 .name("filter3")
                 .build();
 
-        var filter4 = FilterInfos.builder()
-                .id(FILTER_ID_4)
-                .name("filter4")
-                .build();
-
         var filter5 = FilterInfos.builder()
                 .id(FILTER_ID_5)
                 .name("filter5")
@@ -248,9 +243,9 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
 
         FormulaInfos formulaInfos2 = FormulaInfos.builder()
                 .editedField(BatteryField.MINIMUM_ACTIVE_POWER.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build())
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(35.).build())
-                .operator(Operator.MODULUS)
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(35.).build())
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build())
+                .operator(Operator.PERCENTAGE)
                 .filters(List.of(filter3))
                 .build();
 
@@ -279,13 +274,13 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
         assertEquals(380, getNetwork().getBattery(BATTERY_ID_3).getTargetP(), 0);
         assertEquals(400, getNetwork().getBattery(BATTERY_ID_4).getMaxP(), 0);
 
-        assertEquals(20, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);
+        assertEquals(15, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);
         assertEquals(70, getNetwork().getBattery(BATTERY_ID_5).getTargetQ(), 0);
         ActivePowerControl activePowerControl5 = getNetwork().getBattery(BATTERY_ID_5).getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl5);
         assertEquals(8, activePowerControl5.getDroop(), 0);
 
-        assertEquals(20, getNetwork().getBattery(BATTERY_ID_6).getMinP(), 0);
+        assertEquals(60, getNetwork().getBattery(BATTERY_ID_6).getMinP(), 0);
     }
 
     @Override

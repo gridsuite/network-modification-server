@@ -85,7 +85,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     }
 
     void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
-                                        NetworkModificationResult.ApplicationStatus withErrors) throws Exception {
+                                        NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
         String modificationToCreateJson = mapper.writeValueAsString(byFormulaModificationInfos);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -93,7 +93,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertEquals(withErrors, networkModificationResult.get().getApplicationStatus());
+        assertEquals(applicationStatus, networkModificationResult.get().getApplicationStatus());
     }
 
     @Override

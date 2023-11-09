@@ -16,5 +16,5 @@ public enum Operator {
     SUBTRACTION,
     MULTIPLICATION,
     DIVISION,
-    MODULUS
+    PERCENTAGE
 }

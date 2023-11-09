@@ -91,7 +91,8 @@ public class ByFormulaModification extends AbstractModification {
         var filterEquipments = exportFilters.get(filterInfos.getId());
         filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network,
                 attributes.getId(),
-                formulaInfos));
+                formulaInfos,
+                formulaReports));
 
         formulaReports.add(Report.builder()
                 .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
@@ -134,7 +135,8 @@ public class ByFormulaModification extends AbstractModification {
 
     private void applyFormula(Network network,
                               String identifiableId,
-                              FormulaInfos formulaInfos) {
+                              FormulaInfos formulaInfos,
+                              List<Report> reports) {
         Identifiable<?> identifiable = network.getIdentifiable(identifiableId);
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
@@ -148,6 +150,16 @@ public class ByFormulaModification extends AbstractModification {
                     newValue);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
         }
+
+        reports.add(Report.builder()
+                .withKey("EquipmentModifiedReport_" + reports.size())
+                .withDefaultMessage(String.format("        %s id : %s, new value of %s : %s",
+                        modificationInfos.getIdentifiableType(),
+                        identifiable.getId(),
+                        formulaInfos.getEditedField(),
+                        newValue))
+                .withSeverity(TypedValue.TRACE_SEVERITY)
+                .build());
     }
 
     private Double applyOperation(Operator operator, Double value1, Double value2) {
@@ -167,7 +179,7 @@ public class ByFormulaModification extends AbstractModification {
                         yield value1 / value2;
                     }
                 }
-                case MODULUS -> value1 % value2;
+                case PERCENTAGE -> value1 * (value2 / 100);
             };
         }
     }
