@@ -30,6 +30,8 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 
 public class ShuntCompensatorModification extends AbstractModification {
+    private static final String SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE = "Switched-on Q at nominal voltage";
+
     private final ShuntCompensatorModificationInfos modificationInfos;
 
     public ShuntCompensatorModification(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
@@ -91,6 +93,12 @@ public class ShuntCompensatorModification extends AbstractModification {
         List<Report> reports = new ArrayList<>();
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
+        double oldSusceptancePerSection = model.getBPerSection();
+        double oldQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * oldSusceptancePerSection);
+        double oldMaxSusceptance = oldSusceptancePerSection * shuntCompensator.getMaximumSectionCount();
+        double oldMaxQAtNominalV = oldQAtNominalV * shuntCompensator.getMaximumSectionCount();
+        double oldSwitchedOnSusceptance = oldSusceptancePerSection * shuntCompensator.getSectionCount();
+        double oldSwitchedOnQAtNominalV = oldQAtNominalV * shuntCompensator.getSectionCount();
 
         // due to cross validation between maximum section count and section count, we need to modify section count first
         // when maximum section count old value is greater than the new one
@@ -102,34 +110,59 @@ public class ShuntCompensatorModification extends AbstractModification {
             modifySectionCount(reports, shuntCompensator);
         }
 
-        var maximumSectionCount = modificationInfos.getMaximumSectionCount() != null ? modificationInfos.getMaximumSectionCount().getValue() : shuntCompensator.getMaximumSectionCount();
+        int maximumSectionCount = modificationInfos.getMaximumSectionCount() != null ? modificationInfos.getMaximumSectionCount().getValue() : shuntCompensator.getMaximumSectionCount();
+        int sectionCount = modificationInfos.getSectionCount() != null ? modificationInfos.getSectionCount().getValue() : shuntCompensator.getSectionCount();
 
         if (modificationInfos.getShuntCompensatorType() != null) {
             reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensatorType, modificationInfos.getShuntCompensatorType().getValue(), "Type"));
             shuntCompensatorType = modificationInfos.getShuntCompensatorType().getValue();
             if (modificationInfos.getMaxQAtNominalV() == null) {
                 // we retrieve the absolute value of susceptance per section, then we determine the sign using the type
-                double bPerSectionAbsoluteValue = Math.abs(model.getBPerSection());
+                double bPerSectionAbsoluteValue = Math.abs(oldSusceptancePerSection);
                 double newBPerSection = shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? bPerSectionAbsoluteValue : -bPerSectionAbsoluteValue;
                 model.setBPerSection(newBPerSection);
             }
         }
 
         if (modificationInfos.getMaxQAtNominalV() != null) {
-            double oldQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
-            double oldMaxQAtNominalV = oldQAtNominalV * shuntCompensator.getMaximumSectionCount();
             double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
-            double susceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
+            double newSusceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldMaxQAtNominalV, modificationInfos.getMaxQAtNominalV().getValue(), "Qmax available at nominal voltage"));
-            model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
+
+            model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? newSusceptancePerSection : -newSusceptancePerSection);
         }
 
         if (modificationInfos.getMaxSusceptance() != null) {
-            double susceptancePerSection = modificationInfos.getMaxSusceptance().getValue() / maximumSectionCount;
-            double oldMaxSusceptance = Math.abs(model.getBPerSection()) * shuntCompensator.getMaximumSectionCount();
+            double newSusceptancePerSection = modificationInfos.getMaxSusceptance().getValue() / maximumSectionCount;
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldMaxSusceptance, modificationInfos.getMaxSusceptance().getValue(), "Maximal susceptance available"));
-            model.setBPerSection(susceptancePerSection);
+
+            model.setBPerSection(newSusceptancePerSection);
         }
+
+        reportSwitchedOnAndPerSectionValues(reports, oldQAtNominalV, oldSwitchedOnQAtNominalV, oldSusceptancePerSection, oldSwitchedOnSusceptance, oldMaxQAtNominalV, sectionCount, maximumSectionCount);
+
         reports.forEach(subReporter::report);
+    }
+
+    private void reportSwitchedOnAndPerSectionValues(List<Report> reports, double oldQAtNominalV, double oldSwitchedOnQAtNominalV, double oldSusceptancePerSection, double oldSwitchedOnSusceptance, double oldMaxQAtNominalV, int sectionCount, int maximumSectionCount) {
+        if (modificationInfos.getMaxQAtNominalV() != null) {
+            double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
+            double newSwitchedOnQAtNominalV = newQatNominalV * sectionCount;
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldQAtNominalV, newQatNominalV, "Q at nominal voltage per section"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldSwitchedOnQAtNominalV, newSwitchedOnQAtNominalV, SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE));
+        } else if (modificationInfos.getMaxSusceptance() != null) {
+            double newSusceptancePerSection = modificationInfos.getMaxSusceptance().getValue() / maximumSectionCount;
+            double newSwitchedOnSusceptance = newSusceptancePerSection * sectionCount;
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldSusceptancePerSection, newSusceptancePerSection, "Susceptance per section"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldSwitchedOnSusceptance, newSwitchedOnSusceptance, "Switched-on susceptance"));
+        } else if (modificationInfos.getMaximumSectionCount() != null) {
+            double newQatNominalV = oldMaxQAtNominalV / maximumSectionCount;
+            double newSwitchedOnQAtNominalV = newQatNominalV * sectionCount;
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldQAtNominalV, newQatNominalV, "Q at nominal voltage per section"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldSwitchedOnQAtNominalV, newSwitchedOnQAtNominalV, SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE));
+        } else if (modificationInfos.getSectionCount() != null) {
+            double newSwitchedOnQAtNominalV = oldQAtNominalV * sectionCount;
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldSwitchedOnQAtNominalV, newSwitchedOnQAtNominalV, SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE));
+        }
     }
 }
