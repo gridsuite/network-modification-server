@@ -34,7 +34,7 @@ public class TabularModificationEntity extends ModificationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
-    private List<ModificationEntity> modifications;
+    private List<GeneratorModificationEntity> modifications;
 
     public TabularModificationEntity(TabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
@@ -43,12 +43,27 @@ public class TabularModificationEntity extends ModificationEntity {
             case "GENERATOR_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList());
                 break;
-            case "LOAD_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
-                break;
+//            case "LOAD_MODIFICATION":
+//                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
+//                break;
             default:
                 break;
         }
+    }
+
+    public TabularModificationEntity(String modificationType, List<GeneratorModificationEntity> modifications) {
+        this.modificationType = modificationType;
+        this.modifications = modifications;
+//        switch (modificationType) {
+//            case "GENERATOR_MODIFICATION":
+//                modifications = modifications.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList());
+//                break;
+//            case "LOAD_MODIFICATION":
+//                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
+//                break;
+//            default:
+//                break;
+//        }
     }
 
     @Override
@@ -72,9 +87,9 @@ public class TabularModificationEntity extends ModificationEntity {
             case "GENERATOR_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList()));
                 break;
-            case "LOAD_MODIFICATION":
-                modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
-                break;
+//            case "LOAD_MODIFICATION":
+//                modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
+//                break;
             default:
                 break;
         }

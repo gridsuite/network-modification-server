@@ -9,9 +9,11 @@ package org.gridsuite.modification.server.repositories;
 import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +34,21 @@ public class NetworkModificationRepository {
 
     private final ModificationRepository modificationRepository;
 
+    private final GeneratorModificationRepository generatorModificationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository, GeneratorModificationRepository generatorModificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteAll() {
         modificationRepository.deleteAll();
         modificationGroupRepository.deleteAll();
+        generatorModificationRepository.deleteAll();
     }
 
     @Transactional // To have all create in the same transaction (atomic)
@@ -147,22 +153,24 @@ public class NetworkModificationRepository {
 
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
-        switch (tabularModificationEntity.getModificationType()) {
-            case "GENERATOR_MODIFICATION":
-                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-                );
-                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
-                break;
-            default:
-                break;
-        }
+//        switch (tabularModificationEntity.getModificationType()) {
+//            case "GENERATOR_MODIFICATION":
+////                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
+////                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
+////                );
+//                List<UUID> ids = generatorModificationRepository.findSubModificationsIds(tabularModificationEntity.getId());
+//                generatorModificationRepository.findAllById(ids);
+////                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
+//                break;
+//            default:
+//                break;
+//        }
         return tabularModificationEntity;
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+            return ((TabularModificationEntity) modificationEntity).toModificationInfos();
         }
         return modificationEntity.toModificationInfos();
     }
@@ -177,10 +185,14 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
         Optional<ModificationEntity> optionalModificationEntity = modificationRepository.findById(modificationUuid);
+        List<UUID> ids = generatorModificationRepository.findSubModificationsIds(modificationUuid);
+//        generatorModificationRepository.findAllById(ids);
+        List<GeneratorModificationEntity> entities = generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(ids);
         if (!optionalModificationEntity.isPresent()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
         }
-        return getModificationInfos(optionalModificationEntity.get());
+        ModificationEntity modificationEntity = optionalModificationEntity.get();
+        return getModificationInfos(new TabularModificationEntity("GENERATOR_MODIFICATION", entities));
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
