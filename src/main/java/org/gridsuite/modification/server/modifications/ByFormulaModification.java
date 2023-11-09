@@ -89,10 +89,6 @@ public class ByFormulaModification extends AbstractModification {
                                                 FormulaInfos formulaInfos,
                                                 FilterInfos filterInfos) {
         var filterEquipments = exportFilters.get(filterInfos.getId());
-        filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network,
-                attributes.getId(),
-                formulaInfos,
-                formulaReports));
 
         formulaReports.add(Report.builder()
                 .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
@@ -122,6 +118,11 @@ public class ByFormulaModification extends AbstractModification {
                 .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
+
+        filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network,
+                attributes.getId(),
+                formulaInfos,
+                formulaReports));
     }
 
     @Nullable
