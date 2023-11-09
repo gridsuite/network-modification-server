@@ -982,14 +982,6 @@ public final class ModificationUtils {
             return false;
         }
 
-        // create report for each wrong filter
-        filterWithWrongEquipmentsIds.values().forEach(f -> {
-            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
-            createReport(subReporter,
-                    "filterEquipmentsNotFound_" + f.getFilterName(),
-                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
-                    TypedValue.WARN_SEVERITY);
-        });
         return true;
     }
 }

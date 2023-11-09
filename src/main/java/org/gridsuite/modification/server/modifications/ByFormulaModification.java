@@ -29,7 +29,7 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 public class ByFormulaModification extends AbstractModification {
-    private ByFormulaModificationInfos modificationInfos;
+    private final ByFormulaModificationInfos modificationInfos;
     protected FilterService filterService;
 
     public ByFormulaModification(ByFormulaModificationInfos modificationInfos) {
@@ -67,20 +67,60 @@ public class ByFormulaModification extends AbstractModification {
         Map<UUID, FilterEquipments> exportFilters = getUuidFilterEquipmentsMap(network, subReporter, filters);
 
         if (exportFilters != null) {
+            Reporter formulaSubReporter = subReporter.createSubReporter("appliedFormulasModifications", "Formulas");
             List<Report> formulaReports = new ArrayList<>();
-            modificationInfos.getFormulaInfosList().forEach(formulaInfos -> formulaInfos.getFilters().forEach(filterInfos -> {
-                var filterEquipments = exportFilters.get(filterInfos.getId());
-                filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network,
-                        attributes.getId(),
-                        formulaInfos, formulaReports));
-            }));
+            modificationInfos.getFormulaInfosList().forEach(formulaInfos ->
+                    formulaInfos.getFilters().forEach(filterInfos ->
+                            applyFormulaOnFilterEquipments(network, exportFilters, formulaReports, formulaInfos, filterInfos)));
 
             createReport(subReporter, "byFormulaModification", "new modification by formula", TypedValue.INFO_SEVERITY);
-            ModificationUtils.getInstance().reportModifications(subReporter,
-                    formulaReports,
-                    "appliedFormulasModifications",
-                    "Formulas : ");
+            formulaSubReporter.report(Report.builder()
+                    .withKey("appliedFormulasModifications")
+                    .withDefaultMessage("  Formulas")
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+            formulaReports.forEach(formulaSubReporter::report);
         }
+    }
+
+    private void applyFormulaOnFilterEquipments(Network network,
+                                                Map<UUID, FilterEquipments> exportFilters,
+                                                List<Report> formulaReports,
+                                                FormulaInfos formulaInfos,
+                                                FilterInfos filterInfos) {
+        var filterEquipments = exportFilters.get(filterInfos.getId());
+        filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network,
+                attributes.getId(),
+                formulaInfos));
+
+        formulaReports.add(Report.builder()
+                .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                .withDefaultMessage(String.format("    successful application of new modification by formula on filter %s",
+                        filterInfos.getName()))
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+
+        formulaReports.add(Report.builder()
+                .withKey("numberOfValidEquipment" + formulaReports.size())
+                .withDefaultMessage(String.format("      Number of equipment modified : %s", filterEquipments.getIdentifiableAttributes().size()))
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+
+        if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
+            var equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
+            formulaReports.add(Report.builder()
+                    .withKey("filterEquipmentsNotFound_" + formulaReports.size())
+                    .withDefaultMessage(String.format("      Equipment not found : %s",
+                            equipmentIds))
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
+        }
+
+        formulaReports.add(Report.builder()
+                .withKey("editedFieldFilter_" + formulaReports.size())
+                .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 
     @Nullable
@@ -94,8 +134,7 @@ public class ByFormulaModification extends AbstractModification {
 
     private void applyFormula(Network network,
                               String identifiableId,
-                              FormulaInfos formulaInfos,
-                              List<Report> formulaReports) {
+                              FormulaInfos formulaInfos) {
         Identifiable<?> identifiable = network.getIdentifiable(identifiableId);
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
@@ -109,15 +148,6 @@ public class ByFormulaModification extends AbstractModification {
                     newValue);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
         }
-
-        formulaReports.add(Report.builder()
-                .withKey("byFormulaModificationFormula" + formulaReports.size())
-                .withDefaultMessage(String.format("successful application of new modification by formula on %s for %s %s",
-                        formulaInfos.getEditedField(),
-                        identifiable.getType(),
-                        identifiable.getId()))
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
     }
 
     private Double applyOperation(Operator operator, Double value1, Double value2) {
