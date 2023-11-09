@@ -92,7 +92,7 @@ public class ByFormulaModification extends AbstractModification {
 
         formulaReports.add(Report.builder()
                 .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
-                .withDefaultMessage(String.format("    successful application of new modification by formula on filter %s",
+                .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
                         filterInfos.getName()))
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
