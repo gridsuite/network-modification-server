@@ -116,16 +116,18 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
 
         if (modificationInfos.getMaxQAtNominalV() != null) {
-            double olQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
+            double oldQAtNominalV = Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * model.getBPerSection());
+            double oldMaxQAtNominalV = oldQAtNominalV * shuntCompensator.getMaximumSectionCount();
             double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
             double susceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
-            reports.add(ModificationUtils.getInstance().buildModificationReport(olQAtNominalV, newQatNominalV, "Q at nominal voltage"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMaxQAtNominalV, modificationInfos.getMaxQAtNominalV().getValue(), "Qmax available at nominal voltage"));
             model.setBPerSection(shuntCompensatorType == ShuntCompensatorType.CAPACITOR ? susceptancePerSection : -susceptancePerSection);
         }
 
         if (modificationInfos.getMaxSusceptance() != null) {
             double susceptancePerSection = modificationInfos.getMaxSusceptance().getValue() / maximumSectionCount;
-            reports.add(ModificationUtils.getInstance().buildModificationReport(model.getBPerSection(), susceptancePerSection, "Susceptance per section"));
+            double oldMaxSusceptance = Math.abs(model.getBPerSection()) * shuntCompensator.getMaximumSectionCount();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMaxSusceptance, modificationInfos.getMaxSusceptance().getValue(), "Maximal susceptance available"));
             model.setBPerSection(susceptancePerSection);
         }
         reports.forEach(subReporter::report);
