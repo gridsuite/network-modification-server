@@ -269,6 +269,118 @@ public final class NetworkCreation {
         return network;
     }
 
+    public static Network createGeneratorsNetwork(UUID uuid, NetworkFactory networkFactory) {
+        Network network = networkFactory.createNetwork(uuid.toString(), "test");
+
+        Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
+        VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v1, "1.1", "1.1", 0);
+        createBusBarSection(v1, "1.2", "1.2", 1);
+        createGenerator(v1, "gen1", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+
+        VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0);
+        createBusBarSection(v2, "2.1", "2.1", 0);
+        createBusBarSection(v2, "2.2", "2.2", 1);
+        createGenerator(v2, "gen2", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createGenerator(v2, "gen3", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v2, "v2d1", "v2d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v2, "v2d2", "v2d2", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+
+        Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
+        VoltageLevel v21 = createVoltageLevel(s2, "v21", "v21", TopologyKind.NODE_BREAKER, 450.0);
+        createBusBarSection(v21, "3.1", "3.1", 0);
+        createBusBarSection(v21, "3.2", "3.2", 1);
+        createGenerator(v21, "gen4", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v21, "v21d1", "v21d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+
+        VoltageLevel v22 = createVoltageLevel(s2, "v22", "v22", TopologyKind.NODE_BREAKER, 225.0);
+        createBusBarSection(v22, "4.1", "4.1", 0);
+        createBusBarSection(v22, "4.2", "4.2", 1);
+        createGenerator(v22, "gen5", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createGenerator(v22, "gen6", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v22, "v22d1", "v22d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v22, "v22d2", "v22d2", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+
+        Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
+        VoltageLevel v31 = createVoltageLevel(s3, "v31", "v31", TopologyKind.NODE_BREAKER, 450.0);
+        createBusBarSection(v31, "5.1", "5.1", 0);
+        createBusBarSection(v31, "5.2", "5.2", 1);
+        createGenerator(v31, "gen7", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createGenerator(v31, "gen8", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v31, "v31d1", "v31d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v31, "v31d2", "v31d2", SwitchKind.DISCONNECTOR, true, false, false, 1, 3);
+
+        VoltageLevel v32 = createVoltageLevel(s3, "v32", "v32", TopologyKind.NODE_BREAKER, 225.0);
+        createBusBarSection(v32, "6.1", "6.1", 0);
+        createBusBarSection(v32, "6.2", "6.2", 1);
+        createGenerator(v32, "gen9", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createGenerator(v32, "gen10", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v32, "v32d1", "v32d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v32, "v32d2", "v32d2", SwitchKind.DISCONNECTOR, true, false, false, 1, 3);
+
+        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
+
+        return network;
+    }
+
+    public static Network createLoadNetwork(UUID uuid, NetworkFactory networkFactory) {
+        Network network = networkFactory.createNetwork(uuid.toString(), "test");
+
+        Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
+        VoltageLevel v1 = createVoltageLevel(s1, "v1", "v1", TopologyKind.NODE_BREAKER, 380.0);
+        createBusBarSection(v1, "1.1", "1.1", 0);
+        createBusBarSection(v1, "1.2", "1.2", 1);
+        createLoad(v1, "load1", "load1", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v1, "v1d1", "v1d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+
+        VoltageLevel v2 = createVoltageLevel(s1, "v2", "v2", TopologyKind.NODE_BREAKER, 225.0);
+        createBusBarSection(v2, "2.1", "2.1", 0);
+        createBusBarSection(v2, "2.2", "2.2", 1);
+        createLoad(v2, "load2", "load2", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createLoad(v2, "load3", "load3", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v2, "v2d1", "v2d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v2, "v2d2", "v2d2", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+
+        Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
+        VoltageLevel v21 = createVoltageLevel(s2, "v21", "v21", TopologyKind.NODE_BREAKER, 450.0);
+        createBusBarSection(v21, "3.1", "3.1", 0);
+        createBusBarSection(v21, "3.2", "3.2", 1);
+        createLoad(v21, "load4", "load4", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v21, "v21d1", "v21d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+
+        VoltageLevel v22 = createVoltageLevel(s2, "v22", "v22", TopologyKind.NODE_BREAKER, 225.0);
+        createBusBarSection(v22, "4.1", "4.1", 0);
+        createBusBarSection(v22, "4.2", "4.2", 1);
+        createLoad(v22, "load5", "load5", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createLoad(v22, "load6", "load6", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v22, "v22d1", "v22d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v22, "v22d2", "v22d2", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
+
+        Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
+        VoltageLevel v31 = createVoltageLevel(s3, "v31", "v31", TopologyKind.NODE_BREAKER, 450.0);
+        createBusBarSection(v31, "5.1", "5.1", 0);
+        createBusBarSection(v31, "5.2", "5.2", 1);
+        createLoad(v31, "load7", "load7", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createLoad(v31, "load8", "load8", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v31, "v31d1", "v31d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v31, "v31d2", "v31d2", SwitchKind.DISCONNECTOR, true, false, false, 1, 3);
+
+        VoltageLevel v32 = createVoltageLevel(s3, "v32", "v32", TopologyKind.NODE_BREAKER, 225.0);
+        createBusBarSection(v32, "6.1", "6.1", 0);
+        createBusBarSection(v32, "6.2", "6.2", 1);
+        createLoad(v32, "load9", "load9", 2, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createLoad(v32, "load10", "load10", 3, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v32, "v32d1", "v32d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
+        createSwitch(v32, "v32d2", "v32d2", SwitchKind.DISCONNECTOR, true, false, false, 1, 3);
+
+        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
+
+        return network;
+    }
+
     public static Network createBusBreaker(UUID uuid) {
         Network network = new NetworkFactoryImpl().createNetwork(uuid.toString(), "test");
 

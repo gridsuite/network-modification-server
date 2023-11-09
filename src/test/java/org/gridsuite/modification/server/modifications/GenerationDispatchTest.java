@@ -116,7 +116,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Sum of generator active power setpoints in SOUTH region: 330.0 MW.", "SumGeneratorActivePowerSOUTH" + secondSynchronousComponentNum, reportService);
     }
 
     @Test
@@ -244,8 +246,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-
+        assertLogMessage("Sum of generator active power setpoints in WEST region: 330.0 MW.", "SumGeneratorActivePowerWEST" + secondSynchronousComponentNum, reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
@@ -308,7 +311,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Sum of generator active power setpoints in EAST region: 330.0 MW.", "SumGeneratorActivePowerEAST" + secondSynchronousComponentNum, reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getNetworkUuid(), filtersForPmaxReduction.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFixedSupply, PATH, handleQueryParams(getNetworkUuid(), filtersForFixedSupply.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
@@ -398,7 +403,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Sum of generator active power setpoints in WEST region: 330.0 MW.", "SumGeneratorActivePowerWEST" + secondSynchronousComponentNum, reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getNetworkUuid(), getGeneratorsWithoutOutageFilters123().stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getNetworkUuid(), getGeneratorsFrequencyReserveFilters45().stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
@@ -550,7 +557,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogNthMessage("The active power set point of generator GH2 has been set to 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 2);
         assertLogNthMessage("The active power set point of generator GH3 has been set to 126.1 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
         assertLogNthMessage("The active power set point of generator ABC has been set to 63.900000000000006 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
+        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Sum of generator active power setpoints in NORTH region: 330.0 MW.", "SumGeneratorActivePowerNORTH" + secondSynchronousComponentNum, reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getNetworkUuid(), getGeneratorsWithoutOutageFilters123().stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getNetworkUuid(), getGeneratorsFrequencyReserveFilters45().stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
@@ -565,6 +574,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GenerationDispatchInfos.builder()
+            .stashed(false)
             .lossCoefficient(20.)
             .defaultOutageRate(0.)
             .generatorsWithoutOutage(List.of())
@@ -577,6 +587,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GenerationDispatchInfos.builder()
+            .stashed(false)
             .lossCoefficient(50.)
             .defaultOutageRate(25.)
             .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name1").build()))

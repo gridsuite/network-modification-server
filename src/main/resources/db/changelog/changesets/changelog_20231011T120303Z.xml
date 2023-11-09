@@ -1,0 +1,46 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="homereti (generated)" id="1697025825843-27">
+        <createTable tableName="tabular_modification">
+            <column name="modification_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1697025825843-28">
+        <createTable tableName="tabular_modification_modifications">
+            <column name="tabular_modification_entity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modification_modificationsPK"/>
+            </column>
+            <column name="modifications_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modification_modificationsPK"/>
+            </column>
+            <column name="modifications_order" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="homereti" id="create_tabular_modification_modifications_index">
+        <createIndex indexName="tabular_modification_modifications_index" tableName="tabular_modification_modifications">
+            <column name="modifications_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="homereti" id="create_tabular_modification_index">
+        <createIndex indexName="tabular_modification_index" tableName="tabular_modification">
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1697025825843-37">
+        <addUniqueConstraint columnNames="modifications_id" constraintName="UC_TABULAR_MODIFICATION_MODIFICATIONSMODIFICATIONS_ID_COL" tableName="tabular_modification_modifications"/>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1697025825843-43">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="tabular_modification" constraintName="FK35nytdrebm01nfsoxg9ns5tdf" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1697025825843-44">
+        <addForeignKeyConstraint baseColumnNames="modifications_id" baseTableName="tabular_modification_modifications" constraintName="FK9rysee4yir567ea60uvw2vvxq" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="homereti (generated)" id="1697025825843-45">
+        <addForeignKeyConstraint baseColumnNames="tabular_modification_entity_id" baseTableName="tabular_modification_modifications" constraintName="FKtj2l253n5tt1wv8h04esw5e06" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tabular_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

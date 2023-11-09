@@ -270,6 +270,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))

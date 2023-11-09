@@ -7,7 +7,9 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
@@ -25,6 +28,7 @@ import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,6 +50,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters() throws Exception {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -69,6 +74,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters2() throws Exception {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .seriesResistance(100.0)
@@ -96,6 +102,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Test
     public void testCreateLineOptionalParameters3() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .seriesResistance(100.0)
@@ -120,6 +127,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Test
     public void testCreateLineOptionalParameters4() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .seriesResistance(100.0)
@@ -146,6 +154,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Test
     public void testCreateLineOptionalParameters5() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .seriesResistance(100.0)
@@ -165,6 +174,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Test
     public void testCreateLineOptionalParameters6() throws Exception {
         LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("idLine3")
                 .equipmentName("nameLine3")
                 .seriesResistance(100.0)
@@ -192,6 +202,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         // between voltage level "v1" and busbar section "bus1" and
         //         voltage level "v2" and busbar section "bus2"
         return LineCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
             .seriesResistance(100.0)
@@ -212,6 +223,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
+            .stashed(false)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
             .seriesResistance(200.0)
@@ -235,5 +247,21 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNull(getNetwork().getLine("idLine1"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLine1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("LINE_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idLineEdited1", updatedValues.get("equipmentId"));
     }
 }

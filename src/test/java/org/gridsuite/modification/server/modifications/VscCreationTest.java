@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.MinMaxReactiveLimits;
 import com.powsybl.iidm.network.Network;
@@ -16,6 +17,7 @@ import com.powsybl.iidm.network.VscConverterStation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -23,9 +25,11 @@ import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfo
 import org.gridsuite.modification.server.dto.VscCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
@@ -51,6 +55,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return VscCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("vsc1")
                 .equipmentName("vsc1Name")
                 .dcNominalVoltage(39.)
@@ -120,7 +125,8 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return VscCreationInfos.builder()
-                .equipmentId("vsc1")
+                .stashed(false)
+                .equipmentId("vsc1Edited")
                 .equipmentName("vsc2Name")
                 .dcNominalVoltage(53.)
                 .dcResistance(2.)
@@ -186,6 +192,22 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         assertEquals(55, reactiveLimits2.getMinQ(), 0);
         assertEquals(34, vscConverterStation2.getVoltageSetpoint(), 0);
         assertEquals("v2", vscConverterStation2.getTerminal().getVoltageLevel().getId());
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("VSC_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("vsc1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("VSC_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Assertions.assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
     }
 
     @Override

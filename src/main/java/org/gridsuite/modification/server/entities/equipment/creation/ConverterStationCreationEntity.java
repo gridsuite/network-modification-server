@@ -83,8 +83,17 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
 
     public ConverterStationCreationInfos toConverterStationInfos() {
         return ConverterStationCreationInfos.builder()
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
+                // Injection
+                .voltageLevelId(getVoltageLevelId())
+                .busOrBusbarSectionId(getBusOrBusbarSectionId())
+                .connectionName(getConnectionName())
+                .connectionPosition(getConnectionPosition())
+                .connectionDirection(getConnectionDirection())
+                .connected(isConnected())
+                // ConverterStation
                 .lossFactor(getLossFactor())
                 .minimumReactivePower(getMinimumReactivePower())
                 .maximumReactivePower(getMaximumReactivePower())
@@ -92,11 +101,6 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .voltageRegulationOn(getVoltageRegulationOn())
                 .voltage(getVoltage())
                 .reactiveCapabilityCurvePoints(toReactiveCapabilityCurveInfos(getReactiveCapabilityCurvePoints()))
-                .voltageLevelId(getVoltageLevelId())
-                .busOrBusbarSectionId(getBusOrBusbarSectionId())
-                .connectionName(getConnectionName())
-                .connectionPosition(getConnectionPosition())
-                .connectionDirection(getConnectionDirection())
                 .reactiveCapabilityCurve(getReactiveCapabilityCurve())
                 .build();
     }

@@ -7,11 +7,13 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.LoadingLimits;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
@@ -42,7 +45,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
     @Override
     protected ModificationInfos buildModification() {
-        return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
+        return TwoWindingsTransformerModificationInfos.builder().stashed(false).equipmentId("trf1")
                 .equipmentName(new AttributeModification<>("2wt modified name", OperationType.SET))
                 .seriesResistance(new AttributeModification<>(1., OperationType.SET))
                 .seriesReactance(new AttributeModification<>(2., OperationType.SET))
@@ -132,7 +135,9 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return TwoWindingsTransformerModificationInfos.builder().equipmentId("trf1")
+        return TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("trf1Edited")
                 .equipmentName(new AttributeModification<>("2wt modified name again", OperationType.SET))
                 .seriesResistance(new AttributeModification<>(1.1, OperationType.SET))
                 .seriesReactance(new AttributeModification<>(2.1, OperationType.SET))
@@ -285,6 +290,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     @Test
     public void testRatioTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("trf1")
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .build())
@@ -303,6 +309,10 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
+        //set regulating to false and unset target deadband on the twtTransformer to modify
+        TwoWindingsTransformer twtToModify = getNetwork().getTwoWindingsTransformer("trf1");
+        twtToModify.getRatioTapChanger().setRegulating(false);
+        twtToModify.getRatioTapChanger().setTargetDeadband(Double.NaN);
         //unset regulating and modify target voltage
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
@@ -317,6 +327,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
         //unset target voltage and modify regulating terminal
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 
@@ -401,6 +412,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     @Test
     public void testPhaseTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("trf2")
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .build())
@@ -517,7 +529,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
-        // modify regulation side to side 2
+        // unset regulation type and modify regulation side to side 2
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationType(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationSide(new AttributeModification<>(RegulationSide.SIDE2, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
@@ -540,6 +553,22 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
 
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("trf1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("trf1Edited", updatedValues.get("equipmentId"));
     }
 }
 

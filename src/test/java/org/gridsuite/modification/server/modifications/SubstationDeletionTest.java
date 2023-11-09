@@ -6,15 +6,18 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -28,6 +31,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("SUBSTATION")
                 .equipmentId("s1")
                 .build();
@@ -36,6 +40,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
+                .stashed(false)
                 .equipmentType("LINE")
                 .equipmentId("v2")
                 .build();
@@ -56,5 +61,21 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertNotNull(getNetwork().getSubstation("s1"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("s1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v2", updatedValues.get("equipmentId"));
     }
 }

@@ -164,10 +164,17 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .builder()
             .uuid(getId())
             .date(getDate())
+            .stashed(getStashed())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
+            // injection
             .voltageLevelId(getVoltageLevelId())
             .busOrBusbarSectionId(getBusOrBusbarSectionId())
+            .connectionName(getConnectionName())
+            .connectionDirection(getConnectionDirection())
+            .connectionPosition(getConnectionPosition())
+            .connected(isConnected())
+            // generator
             .energySource(getEnergySource())
             .minActivePower(getMinActivePower())
             .maxActivePower(getMaxActivePower())
@@ -191,9 +198,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .qPercent(getQPercent())
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
             .transientReactance(getTransientReactance())
-            .stepUpTransformerReactance(getStepUpTransformerReactance())
-            .connectionName(getConnectionName())
-            .connectionDirection(getConnectionDirection())
-            .connectionPosition(getConnectionPosition());
+            .stepUpTransformerReactance(getStepUpTransformerReactance());
     }
 }

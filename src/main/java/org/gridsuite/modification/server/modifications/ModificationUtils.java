@@ -517,6 +517,19 @@ public final class ModificationUtils {
         return null;
     }
 
+    public void disconnectInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
+        // A newly created injection is connected by default, unless we choose not to do
+        if (!modificationInfos.isConnected()) {
+            injection.getTerminal().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("equipmentDisconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+    }
+
     public Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
         if (type == null || equipmentId == null) {
             return null;
@@ -934,7 +947,7 @@ public final class ModificationUtils {
                     } else if (i == (points.size() - 1)) {
                         fieldSuffix = "max";
                     } else {
-                        fieldSuffix = Integer.toString(i);
+                        fieldSuffix = Integer.toString(i - 1);
                     }
                     createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
                 });

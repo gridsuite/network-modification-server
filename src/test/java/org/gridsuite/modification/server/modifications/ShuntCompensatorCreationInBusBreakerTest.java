@@ -7,8 +7,10 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
@@ -19,12 +21,14 @@ import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,11 +54,13 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
+            .stashed(false)
             .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
             .equipmentId("shuntOneId")
             .equipmentName("hopOne")
-            .maximumNumberOfSections(1)
-            .susceptancePerSection(0.)
+            .maximumSectionCount(10)
+            .sectionCount(6)
+            .maxSusceptance(0.)
             .voltageLevelId("v2")
             .busOrBusbarSectionId("bus2")
             .connectionName("cn2")
@@ -65,11 +71,13 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
+                .stashed(false)
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .maximumNumberOfSections(1)
-                .susceptancePerSection(1.)
+                .maximumSectionCount(20)
+                .sectionCount(3)
+                .maxSusceptance(1.)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("bus3")
                 .connectionName("cnEdited")
@@ -87,4 +95,18 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneId", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
+    }
 }
