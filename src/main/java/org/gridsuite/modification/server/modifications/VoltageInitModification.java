@@ -78,9 +78,7 @@ public class VoltageInitModification extends AbstractModification {
             if (generator == null) {
                 Reporter reporter = subReporter.createSubReporter(GENERATOR_MSG + m.getGeneratorId(), GENERATOR_MSG + m.getGeneratorId());
                 reporter.report(createReport("generatorNotFound", "Generator with id=${id} not found", Map.of("id", m.getGeneratorId()), TypedValue.WARN_SEVERITY, 0));
-                return;
-            }
-            if (m.getVoltageSetpoint() != null || m.getReactivePowerSetpoint() != null) {
+            } else if (m.getVoltageSetpoint() != null || m.getReactivePowerSetpoint() != null) {
                 Reporter reporter = subReporter.createSubReporter(GENERATOR_MSG + m.getGeneratorId(), GENERATOR_MSG + m.getGeneratorId());
                 reporter.report(createReport("generatorModification", "Generator with id=${id} modified :", Map.of("id", m.getGeneratorId()), TypedValue.INFO_SEVERITY, 0));
                 if (m.getVoltageSetpoint() != null) {
@@ -107,35 +105,31 @@ public class VoltageInitModification extends AbstractModification {
                 if (threeWindingsTransformer == null) {
                     Reporter reporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
                     reporter.report(createReport("3WindingsTransformerNotFound", "3 windings transformer with id=${id} not found", Map.of("id", t.getTransformerId()), TypedValue.WARN_SEVERITY, 0));
-                    return;
-                }
-                if (threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger() == null) {
+                } else if (threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger() == null) {
                     Reporter reporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
                     reporter.report(createReport("3WindingsTransformerRatioTapChangerNotFound", "3 windings transformer with id=${id} : Ratio tap changer for leg ${leg} not found", Map.of("id", t.getTransformerId(), "leg", t.getLegSide().name()), TypedValue.WARN_SEVERITY, 0));
-                    return;
+                } else {
+                    Reporter reporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
+                    reporter.report(createReport("3WindingsTransformerModification", "3 windings transformer with id=${id} modified :", Map.of("id", t.getTransformerId()), TypedValue.INFO_SEVERITY, 0));
+                    final int oldTapPosition = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTapPosition();
+                    threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Leg " + t.getLegSide().name() + " ratio tap changer position", 1));
                 }
-                Reporter reporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), THREE_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
-                reporter.report(createReport("3WindingsTransformerModification", "3 windings transformer with id=${id} modified :", Map.of("id", t.getTransformerId()), TypedValue.INFO_SEVERITY, 0));
-                final int oldTapPosition = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTapPosition();
-                threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
-                reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Leg " + t.getLegSide().name() + " ratio tap changer position", 1));
             } else {
                 final TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(t.getTransformerId());
                 if (twoWindingsTransformer == null) {
                     Reporter reporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
                     reporter.report(createReport("2WindingsTransformerNotFound", "2 windings transformer with id=${id} not found", Map.of("id", t.getTransformerId()), TypedValue.WARN_SEVERITY, 0));
-                    return;
-                }
-                if (twoWindingsTransformer.getRatioTapChanger() == null) {
+                } else if (twoWindingsTransformer.getRatioTapChanger() == null) {
                     Reporter reporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
                     reporter.report(createReport("2WindingsTransformerRatioTapChangerNotFound", "2 windings transformer with id=${id} : Ratio tap changer not found", Map.of("id", t.getTransformerId()), TypedValue.WARN_SEVERITY, 0));
-                    return;
+                } else {
+                    Reporter reporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
+                    reporter.report(createReport("2WindingsTransformerModification", "2 windings transformer with id=${id} modified :", Map.of("id", t.getTransformerId()), TypedValue.INFO_SEVERITY, 0));
+                    final int oldTapPosition = twoWindingsTransformer.getRatioTapChanger().getTapPosition();
+                    twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
+                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1));
                 }
-                Reporter reporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId(), TWO_WINDINGS_TRANSFORMER_MSG + t.getTransformerId());
-                reporter.report(createReport("2WindingsTransformerModification", "2 windings transformer with id=${id} modified :", Map.of("id", t.getTransformerId()), TypedValue.INFO_SEVERITY, 0));
-                final int oldTapPosition = twoWindingsTransformer.getRatioTapChanger().getTapPosition();
-                twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
-                reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1));
             }
         });
     }
@@ -146,9 +140,7 @@ public class VoltageInitModification extends AbstractModification {
             if (staticVarCompensator == null) {
                 Reporter reporter = subReporter.createSubReporter(STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId(), STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId());
                 reporter.report(createReport("staticVarCompensatorNotFound", "Static var compensator with id=${id} not found", Map.of("id", s.getStaticVarCompensatorId()), TypedValue.WARN_SEVERITY, 0));
-                return;
-            }
-            if (s.getVoltageSetpoint() != null || s.getReactivePowerSetpoint() != null) {
+            } else if (s.getVoltageSetpoint() != null || s.getReactivePowerSetpoint() != null) {
                 Reporter reporter = subReporter.createSubReporter(STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId(), STATIC_VAR_COMPENSATOR_MSG + s.getStaticVarCompensatorId());
                 reporter.report(createReport("staticVarCompensatorModification", "Static var compensator with id=${id} modified :", Map.of("id", s.getStaticVarCompensatorId()), TypedValue.INFO_SEVERITY, 0));
                 if (s.getVoltageSetpoint() != null) {
@@ -172,9 +164,7 @@ public class VoltageInitModification extends AbstractModification {
             if (vscConverterStation == null) {
                 Reporter reporter = subReporter.createSubReporter(VSC_CONVERTER_STATION_MSG + v.getVscConverterStationId(), VSC_CONVERTER_STATION_MSG + v.getVscConverterStationId());
                 reporter.report(createReport("vscConverterStationNotFound", "Vsc converter station with id=${id} not found", Map.of("id", v.getVscConverterStationId()), TypedValue.WARN_SEVERITY, 0));
-                return;
-            }
-            if (v.getVoltageSetpoint() != null || v.getReactivePowerSetpoint() != null) {
+            } else if (v.getVoltageSetpoint() != null || v.getReactivePowerSetpoint() != null) {
                 Reporter reporter = subReporter.createSubReporter(VSC_CONVERTER_STATION_MSG + v.getVscConverterStationId(), VSC_CONVERTER_STATION_MSG + v.getVscConverterStationId());
                 reporter.report(createReport("vscConverterStationModification", "Vsc converter station with id=${id} modified :", Map.of("id", v.getVscConverterStationId()), TypedValue.INFO_SEVERITY, 0));
                 if (v.getVoltageSetpoint() != null) {
@@ -197,9 +187,7 @@ public class VoltageInitModification extends AbstractModification {
             if (shuntCompensator == null) {
                 Reporter reporter = subReporter.createSubReporter(SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId(), SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId());
                 reporter.report(createReport("shuntCompensatorNotFound", "Shunt compensator with id=${id} not found", Map.of("id", m.getShuntCompensatorId()), TypedValue.WARN_SEVERITY, 0));
-                return;
-            }
-            if (m.getSectionCount() != null || m.getConnect() != null) {
+            } else if (m.getSectionCount() != null || m.getConnect() != null) {
                 List<Report> reports = new ArrayList<>();
                 final int currentSectionCount = shuntCompensator.getSectionCount();
                 final Terminal shuntCompensatorTerminal = shuntCompensator.getTerminal();
@@ -230,7 +218,6 @@ public class VoltageInitModification extends AbstractModification {
                         }
                     }
                 }
-
                 if (!reports.isEmpty()) {
                     Reporter reporter = subReporter.createSubReporter(SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId(), SHUNT_COMPENSATOR_MSG + m.getShuntCompensatorId());
                     reporter.report(createReport("shuntCompensatorModification", "Shunt compensator with id=${id} modified :", Map.of("id", m.getShuntCompensatorId()), TypedValue.INFO_SEVERITY, 0));
