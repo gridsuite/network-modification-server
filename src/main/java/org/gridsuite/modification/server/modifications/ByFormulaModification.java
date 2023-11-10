@@ -175,7 +175,7 @@ public class ByFormulaModification extends AbstractModification {
                 case DIVISION -> {
                     if (value2 == 0) {
                         throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
-                                "there is a division by zero in one formula");
+                                "there is a division by zero in a formula");
                     } else {
                         yield value1 / value2;
                     }
