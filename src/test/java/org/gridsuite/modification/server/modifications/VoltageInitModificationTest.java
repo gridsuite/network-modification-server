@@ -325,6 +325,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     @Test
     public void testVoltageInitDisconnectedCurrentSection0Section1() throws Exception {
         testVoltageInitShunt("v5shunt", 0, 1, true);
+        assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
         assertEquals(1, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
     }
 
@@ -343,6 +344,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     @Test
     public void testVoltageInitDisconnectedCurrentSection1Section1() throws Exception {
         testVoltageInitShunt("v5shunt", 1, 1, true);
+        assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
         assertEquals(1, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
     }
 
