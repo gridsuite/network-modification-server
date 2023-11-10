@@ -15,6 +15,7 @@ import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -39,17 +40,31 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "susceptancePerSection")),
-        @AttributeOverride(name = "opType", column = @Column(name = "susceptancePerSectionOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "maximumSectionCount")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maximumSectionCountOp"))
     })
-    private DoubleModificationEmbedded susceptancePerSection;
+    private IntegerModificationEmbedded maximumSectionCount;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "qAtNominalV")),
-        @AttributeOverride(name = "opType", column = @Column(name = "qAtNominalVOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "sectionCount")),
+        @AttributeOverride(name = "opType", column = @Column(name = "sectionCountOp"))
     })
-    private DoubleModificationEmbedded qAtNominalV;
+    private IntegerModificationEmbedded sectionCount;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "maxSusceptance")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maxSusceptanceOp"))
+    })
+    private DoubleModificationEmbedded maxSusceptance;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "maxQAtNominalV")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maxQAtNominalVOp"))
+    })
+    private DoubleModificationEmbedded maxQAtNominalV;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -71,9 +86,11 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
 
     private void assignAttributes(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
         this.voltageLevelId = shuntCompensatorModificationInfos.getVoltageLevelId();
-        this.qAtNominalV = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getQAtNominalV());
+        this.maximumSectionCount = new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount());
+        this.sectionCount = new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount());
+        this.maxQAtNominalV = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV());
         this.shuntCompensatorType = new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType());
-        this.susceptancePerSection = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getSusceptancePerSection());
+        this.maxSusceptance = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxSusceptance());
     }
 
     @Override
@@ -91,7 +108,9 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .shuntCompensatorType(toAttributeModification(getShuntCompensatorType()))
-                .qAtNominalV(toAttributeModification(getQAtNominalV()))
-                .susceptancePerSection(toAttributeModification(getSusceptancePerSection()));
+                .maxQAtNominalV(toAttributeModification(getMaxQAtNominalV()))
+                .maxSusceptance(toAttributeModification(getMaxSusceptance()))
+                .maximumSectionCount(toAttributeModification(getMaximumSectionCount()))
+                .sectionCount(toAttributeModification(getSectionCount()));
     }
 }

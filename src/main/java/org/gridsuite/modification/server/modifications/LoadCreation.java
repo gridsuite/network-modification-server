@@ -62,8 +62,8 @@ public class LoadCreation extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         }
-
         reportElementaryCreations(subReporter);
+        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getLoad(modificationInfos.getEquipmentId()), subReporter);
     }
 
     private void reportElementaryCreations(Reporter subReporter) {
