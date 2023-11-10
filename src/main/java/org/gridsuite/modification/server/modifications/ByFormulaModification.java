@@ -59,7 +59,7 @@ public class ByFormulaModification extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter) {
         // collect all filters from all variations
-        var filters = modificationInfos.getFormulaInfosList().stream()
+        Map<UUID, String> filters = modificationInfos.getFormulaInfosList().stream()
                 .flatMap(v -> v.getFilters().stream())
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
@@ -88,7 +88,7 @@ public class ByFormulaModification extends AbstractModification {
                                                 List<Report> formulaReports,
                                                 FormulaInfos formulaInfos,
                                                 FilterInfos filterInfos) {
-        var filterEquipments = exportFilters.get(filterInfos.getId());
+        FilterEquipments filterEquipments = exportFilters.get(filterInfos.getId());
 
         formulaReports.add(Report.builder()
                 .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
@@ -104,7 +104,7 @@ public class ByFormulaModification extends AbstractModification {
                 .build());
 
         if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
-            var equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
+            String equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
             formulaReports.add(Report.builder()
                     .withKey("filterEquipmentsNotFound_" + formulaReports.size())
                     .withDefaultMessage(String.format("      Equipment not found : %s",
