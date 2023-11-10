@@ -16,6 +16,7 @@ import java.util.Set;
  * This type of network impact only describes an individual impacted item and the list of associated substations
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Setter

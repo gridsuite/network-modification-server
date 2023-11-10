@@ -19,6 +19,7 @@ import java.util.TreeSet;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @Builder
 @Data
