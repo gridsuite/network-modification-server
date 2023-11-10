@@ -44,9 +44,6 @@ public class VoltageInitModification extends AbstractModification {
     private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
     private static final String SHUNT_COMPENSATOR_MSG = "Shunt compensator ";
     private static final String SECTION_COUNT = "Section count";
-    private static final String SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY = "shuntCompensatorSectionCountValueIgnored";
-    private static final String SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED = "Section count value ${value} cannot be applied : it should be 0 or 1";
-    private static final String VALUE = "value";
 
     public VoltageInitModification(VoltageInitModificationInfos voltageInitModificationInfos) {
         this.voltageInitModificationInfos = voltageInitModificationInfos;
