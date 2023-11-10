@@ -92,18 +92,6 @@ public class NetworkStoreListener implements NetworkListener {
         return network;
     }
 
-    @Override
-    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        networkImpacts.add(
-            SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
-                .elementType(identifiable.getType())
-                .elementId(identifiable.getId())
-                .substationIds(getSubstationIds(identifiable))
-                .build()
-        );
-    }
-
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
         networkImpacts.add(
                 SimpleElementImpact.builder()
@@ -130,9 +118,29 @@ public class NetworkStoreListener implements NetworkListener {
         addSimpleModificationImpact(identifiable);
     }
 
+
+    @Override
+    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
+        networkImpacts.add(
+            SimpleElementImpact.builder()
+                .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
+                .elementType(identifiable.getType())
+                .elementId(identifiable.getId())
+                .substationIds(getSubstationIds(identifiable))
+                .build()
+        );
+        equipmentInfosService.updateEquipment(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId());
+    }
+
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
+        equipmentInfosService.updateEquipment(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId());
+        // because all each equipment carry its linked voltage levels/substations name within its document
+        // if attribute is "name" and identifiable type is VOLTAGE_LEVEL or SUBSTATION, we need to update all equipments linked to it
+        if(attribute.equals("name") && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
+            equipmentInfosService.updateLinkedEquipments(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId());
+        }
     }
 
     @Override
