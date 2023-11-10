@@ -29,7 +29,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -978,14 +977,7 @@ public final class ModificationUtils {
 
     public boolean isValidFilter(Reporter subReporter,
                                  NetworkModificationException.Type errorType,
-                                 Map<UUID, String> filters,
                                  Map<UUID, FilterEquipments> exportFilters) {
-        // collect all filters with wrong equipments ids
-        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet()
-                .stream()
-                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
         boolean noValidEquipmentId = exportFilters.values().stream()
                 .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
 

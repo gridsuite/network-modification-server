@@ -130,7 +130,7 @@ public class ByFormulaModification extends AbstractModification {
         // export filters from filter server
         Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
 
-        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, modificationInfos.getErrorType(), filters, exportFilters);
+        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, modificationInfos.getErrorType(), exportFilters);
         return isValidFilter ? exportFilters : null;
     }
 
