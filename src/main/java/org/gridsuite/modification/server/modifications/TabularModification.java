@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
@@ -45,7 +46,7 @@ public class TabularModification extends AbstractModification {
         modificationInfos.getModifications().forEach(modification -> {
             try {
                 modification.toModification().apply(network);
-            } catch (NetworkModificationException e) {
+            } catch (PowsyblException e) {
                 applicationFailuresCount.incrementAndGet();
                 subReporter.report(Report.builder()
                         .withKey(modification.getType().name() + applicationFailuresCount.get())

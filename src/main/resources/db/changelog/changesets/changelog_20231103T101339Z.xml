@@ -1,0 +1,47 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="labidiayo (generated)" id="1699006442823-31">
+        <renameColumn tableName="shunt_compensator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="susceptance_per_section"
+                      newColumnName="max_susceptance" />
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-32">
+        <renameColumn tableName="shunt_compensator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="susceptance_per_section_op"
+                      newColumnName="max_susceptance_op" />
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-33">
+        <renameColumn tableName="shunt_compensator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="q_at_nominalv"
+                      newColumnName="maxqat_nominalv" />
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-34">
+        <renameColumn tableName="shunt_compensator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="q_at_nominalvop"
+                      newColumnName="maxqat_nominalvop" />
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-35">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="maximum_section_count" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-36">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="maximum_section_count_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-37">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="section_count" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1699006442823-38">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="section_count_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
