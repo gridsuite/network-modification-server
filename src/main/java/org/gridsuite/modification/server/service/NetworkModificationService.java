@@ -163,7 +163,10 @@ public class NetworkModificationService {
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false);
+                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
+                        .stream()
+                        .filter(m -> !m.getStashed())
+                        .collect(Collectors.toList());
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
