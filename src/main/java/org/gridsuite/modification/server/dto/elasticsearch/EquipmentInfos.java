@@ -17,6 +17,7 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -102,4 +103,33 @@ public class EquipmentInfos extends BasicEquipmentInfos {
                 .collect(Collectors.toSet());
     }
 
+    public static EquipmentInfos toInfosWithUpdatedVoltageLevelName(Identifiable linkedEquipment, VoltageLevel updatedVoltageLevel, UUID networkUuid, String variantId) {
+        return EquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .id(linkedEquipment.getId())
+            .name(linkedEquipment.getNameOrId())
+            .type(linkedEquipment.getType().name())
+            .substations(EquipmentInfos.getSubstationsInfos(linkedEquipment))
+            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(linkedEquipment).stream()
+                .map(vl -> vl.getId().equals(updatedVoltageLevel.getId())
+                    ? VoltageLevelInfos.builder().id(vl.getId()).name(updatedVoltageLevel.getNameOrId()).build()
+                    : vl).collect(Collectors.toSet()))
+            .build();
+    }
+
+    public static EquipmentInfos toInfosWithUpdatedSubstationName(Identifiable linkedEquipment, Substation updatedSubstation, UUID networkUuid, String variantId) {
+        return EquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .id(linkedEquipment.getId())
+            .name(linkedEquipment.getNameOrId())
+            .type(linkedEquipment.getType().name())
+            .substations(EquipmentInfos.getSubstationsInfos(linkedEquipment).stream()
+                .map(s -> s.getId().equals(updatedSubstation.getId())
+                    ? SubstationInfos.builder().id(s.getId()).name(updatedSubstation.getNameOrId()).build()
+                    : s).collect(Collectors.toSet()))
+            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(linkedEquipment))
+            .build();
+    }
 }

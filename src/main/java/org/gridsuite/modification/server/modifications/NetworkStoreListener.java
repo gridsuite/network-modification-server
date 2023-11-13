@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.google.common.collect.Iterables;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Setter;
@@ -118,7 +119,6 @@ public class NetworkStoreListener implements NetworkListener {
         addSimpleModificationImpact(identifiable);
     }
 
-
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         networkImpacts.add(
@@ -129,18 +129,62 @@ public class NetworkStoreListener implements NetworkListener {
                 .substationIds(getSubstationIds(identifiable))
                 .build()
         );
-        equipmentInfosService.updateEquipment(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId());
+        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        equipmentInfosService.updateEquipment(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId());
+        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+    }
+
+    private void updateEquipmentIndexation(Identifiable identifiable, String attribute, UUID networkUuid, String variantId) {
+        equipmentInfosService.updateEquipment(identifiable, networkUuid, variantId);
         // because all each equipment carry its linked voltage levels/substations name within its document
         // if attribute is "name" and identifiable type is VOLTAGE_LEVEL or SUBSTATION, we need to update all equipments linked to it
-        if(attribute.equals("name") && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
-            equipmentInfosService.updateLinkedEquipments(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId());
+        if (attribute.equals("name") && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
+            updateLinkedEquipments(identifiable);
         }
+    }
+
+    private void updateLinkedEquipments(Identifiable identifiable) {
+        if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
+            VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
+            // update all equipments linked to voltageLevel
+            updateEquipmentsLinkedToVoltageLevel(updatedVoltageLevel);
+            // update substation linked to voltageLevel
+            Optional<Substation> linkedSubstation = updatedVoltageLevel.getSubstation();
+            if (linkedSubstation.isPresent()) {
+                createdEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(linkedSubstation.get(), updatedVoltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()));
+            }
+        } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
+            Substation updatedSubstation = network.getSubstation(identifiable.getId());
+            Iterable<VoltageLevel> linkedVoltageLevels = updatedSubstation.getVoltageLevels();
+            // update all voltageLevels linked to substation
+            linkedVoltageLevels.forEach(vl -> createdEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(vl, updatedSubstation, networkUuid, network.getVariantManager().getWorkingVariantId())));
+            // update all equipments linked to each of the voltageLevels
+            linkedVoltageLevels.forEach(vl -> {
+                Iterable<Identifiable> linkedEquipments = Iterables.concat(
+                    vl.getConnectables(),
+                    vl.getSwitches()
+                );
+                linkedEquipments.forEach(c ->
+                    createdEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(c, updatedSubstation, networkUuid, network.getVariantManager().getWorkingVariantId()))
+                );
+            });
+        }
+    }
+
+    private void updateEquipmentsLinkedToVoltageLevel(VoltageLevel voltageLevel) {
+        Iterable<Identifiable> linkedEquipments = Iterables.concat(
+            voltageLevel.getConnectables(),
+            voltageLevel.getSwitches()
+        );
+        linkedEquipments.forEach(c ->
+            createdEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(c, voltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()))
+        );
+        //FIXME check null
+        createdEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(voltageLevel.getSubstation().get(), voltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()));
     }
 
     @Override
