@@ -156,7 +156,7 @@ public class VoltageInitModification extends AbstractModification {
             }
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("transformerModificationsResume", "${count} transformer(s) have been modified.", Map.of(
+            subReporter.report(new Report("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.", Map.of(
                     "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
                     Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
