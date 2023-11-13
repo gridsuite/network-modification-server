@@ -901,6 +901,41 @@ public class BuildTest {
     }
 
     @Test
+    public void runBuildWithStashedModificationsTest() throws Exception {
+        // create modification entities in the database
+        List<ModificationEntity> entities1 = new ArrayList<>();
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).connected(true).build().toEntity());
+
+        modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
+
+        testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        String uuidString = modifications.get(1).getUuid().toString();
+        mockMvc.perform(put("/v1/network-modifications")
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString)
+                        .queryParam("stashed", "true"))
+                .andExpect(status().isOk());
+        assertEquals(true, modificationRepository.getModificationInfo(UUID.fromString(uuidString)).getStashed());
+
+        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
+            NetworkCreation.VARIANT_ID,
+            TEST_REPORT_ID,
+            List.of(TEST_GROUP_ID),
+            List.of(TEST_SUB_REPORTER_ID_1),
+            new HashSet<>());
+        networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
+
+        // test that only non stashed modifications have been made on variant VARIANT_ID
+        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
+        assertTrue(network.getSwitch("v1d1").isOpen());
+        assertNull(network.getLoad("willBeStashedLoad"));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
+    @Test
     public void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
             EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity(),
