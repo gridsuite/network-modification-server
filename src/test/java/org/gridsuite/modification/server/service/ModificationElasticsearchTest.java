@@ -90,7 +90,7 @@ public class ModificationElasticsearchTest {
     }
 
     @Test
-    public void modificationsImpactElasticsearch() throws Exception{
+    public void modificationsImpactElasticsearch() throws Exception {
         // load creation - assert name and vl name values
         LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
         String loadCreationJson = mapper.writeValueAsString(loadCreationInfos);

@@ -32,17 +32,12 @@ public class EquipmentInfosService {
 
     private final TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository;
 
-    private final ElasticsearchOperations elasticsearchOperations;
-
-    private static final int PAGE_MAX_SIZE = 400;
-
     @Value("${spring.data.elasticsearch.partition-size:10000}")
     private int partitionSize;
 
-    public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository, ElasticsearchOperations elasticsearchOperations) {
+    public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
         this.tombstonedEquipmentInfosRepository = tombstonedEquipmentInfosRepository;
-        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos) {
@@ -98,7 +93,7 @@ public class EquipmentInfosService {
         tombstonedEquipmentInfosRepository.deleteAll();
     }
 
-    public void updateEquipment(Identifiable identifiable, UUID networkUuid, String variantId) {
+    public void updateEquipment(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
         EquipmentInfos equipmentToUpdate = EquipmentInfos.builder()
             .networkUuid(networkUuid)
             .variantId(variantId)

@@ -138,7 +138,7 @@ public class NetworkStoreListener implements NetworkListener {
         updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
     }
 
-    private void updateEquipmentIndexation(Identifiable identifiable, String attribute, UUID networkUuid, String variantId) {
+    private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
         equipmentInfosService.updateEquipment(identifiable, networkUuid, variantId);
         // because all each equipment carry its linked voltage levels/substations name within its document
         // if attribute is "name" and identifiable type is VOLTAGE_LEVEL or SUBSTATION, we need to update all equipments linked to it
@@ -147,7 +147,7 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    private void updateLinkedEquipments(Identifiable identifiable) {
+    private void updateLinkedEquipments(Identifiable<?> identifiable) {
         if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
             VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
             // update all equipments linked to voltageLevel
@@ -164,7 +164,7 @@ public class NetworkStoreListener implements NetworkListener {
             linkedVoltageLevels.forEach(vl -> createdEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(vl, updatedSubstation, networkUuid, network.getVariantManager().getWorkingVariantId())));
             // update all equipments linked to each of the voltageLevels
             linkedVoltageLevels.forEach(vl -> {
-                Iterable<Identifiable> linkedEquipments = Iterables.concat(
+                Iterable<Identifiable<?>> linkedEquipments = Iterables.concat(
                     vl.getConnectables(),
                     vl.getSwitches()
                 );
@@ -176,15 +176,13 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void updateEquipmentsLinkedToVoltageLevel(VoltageLevel voltageLevel) {
-        Iterable<Identifiable> linkedEquipments = Iterables.concat(
+        Iterable<Identifiable<?>> linkedEquipments = Iterables.concat(
             voltageLevel.getConnectables(),
             voltageLevel.getSwitches()
         );
         linkedEquipments.forEach(c ->
             createdEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(c, voltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()))
         );
-        //FIXME check null
-        createdEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(voltageLevel.getSubstation().get(), voltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()));
     }
 
     @Override

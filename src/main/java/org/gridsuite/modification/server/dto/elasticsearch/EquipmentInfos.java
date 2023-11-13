@@ -103,7 +103,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
                 .collect(Collectors.toSet());
     }
 
-    public static EquipmentInfos toInfosWithUpdatedVoltageLevelName(Identifiable linkedEquipment, VoltageLevel updatedVoltageLevel, UUID networkUuid, String variantId) {
+    public static EquipmentInfos toInfosWithUpdatedVoltageLevelName(Identifiable<?> linkedEquipment, VoltageLevel updatedVoltageLevel, UUID networkUuid, String variantId) {
         return EquipmentInfos.builder()
             .networkUuid(networkUuid)
             .variantId(variantId)
@@ -118,7 +118,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
             .build();
     }
 
-    public static EquipmentInfos toInfosWithUpdatedSubstationName(Identifiable linkedEquipment, Substation updatedSubstation, UUID networkUuid, String variantId) {
+    public static EquipmentInfos toInfosWithUpdatedSubstationName(Identifiable<?> linkedEquipment, Substation updatedSubstation, UUID networkUuid, String variantId) {
         return EquipmentInfos.builder()
             .networkUuid(networkUuid)
             .variantId(variantId)
