@@ -44,9 +44,6 @@ public class VoltageInitModification extends AbstractModification {
     private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
     private static final String SHUNT_COMPENSATOR_MSG = "Shunt compensator ";
     private static final String SECTION_COUNT = "Section count";
-    private static final String SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY = "shuntCompensatorSectionCountValueIgnored";
-    private static final String SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED = "Section count value ${value} cannot be applied : it should be 0 or 1";
-    private static final String VALUE = "value";
 
     public VoltageInitModification(VoltageInitModificationInfos voltageInitModificationInfos) {
         this.voltageInitModificationInfos = voltageInitModificationInfos;
@@ -216,10 +213,6 @@ public class VoltageInitModification extends AbstractModification {
                 if (shuntCompensatorTerminal.isConnected()) {  // shunt compensator is connected
                     if (m.getSectionCount() == null) {
                         reports.add(createReport("shuntCompensatorSectionCountUndefined", "Section count value is undefined", Map.of(), TypedValue.WARN_SEVERITY, 1));
-                    } else if (m.getSectionCount() > 1) {
-                        reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
-                    } else if (currentSectionCount > 1) {
-                        reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
                     } else {
                         if (m.getSectionCount() == 0) {
                             shuntCompensatorTerminal.disconnect();
@@ -233,12 +226,8 @@ public class VoltageInitModification extends AbstractModification {
                 } else {  // shunt compensator is disconnected
                     if (m.getConnect() == null) {
                         reports.add(createReport("shuntCompensatorConnectUndefined", "Connect value is undefined", Map.of(), TypedValue.WARN_SEVERITY, 1));
-                    } else if (m.getSectionCount() > 1) {
-                        reports.add(createReport(SHUNT_SECTION_COUNT_VALUE_IGNORED_KEY, SHUNT_SECTION_COUNT_VALUE_CANNOT_BE_APPLIED, Map.of(VALUE, m.getSectionCount()), TypedValue.WARN_SEVERITY, 1));
-                    } else if (currentSectionCount > 1) {
-                        reports.add(createReport("shuntCompensatorCurrentSectionCountValueIgnored", "Current section count value ${value} should be 0 or 1", Map.of(VALUE, currentSectionCount), TypedValue.WARN_SEVERITY, 1));
                     } else {
-                        if (Boolean.TRUE.equals(m.getConnect()) && m.getSectionCount() == 1) {
+                        if (Boolean.TRUE.equals(m.getConnect())) {
                             shuntCompensatorTerminal.connect();
                             reports.add(createReport("shuntCompensatorReconnected", "Shunt compensator reconnected", Map.of(), TypedValue.INFO_SEVERITY, 1));
                         }
