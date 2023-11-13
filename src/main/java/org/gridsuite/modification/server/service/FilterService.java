@@ -9,6 +9,8 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.slf4j.Logger;
@@ -21,8 +23,11 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.FILTERS_NOT_FOUND;
@@ -63,6 +68,15 @@ public class FilterService {
         } catch (HttpStatusCodeException e) {
             throw handleChangeError(e, FILTERS_NOT_FOUND);
         }
+    }
+
+    public Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(Network network, Map<UUID, String> filters) {
+        String workingVariantId = network.getVariantManager().getWorkingVariantId();
+        UUID uuid = ((NetworkImpl) network).getUuid();
+        return exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
+                .stream()
+                .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
+                .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
     }
 
     private NetworkModificationException handleChangeError(HttpStatusCodeException httpException, NetworkModificationException.Type type) {

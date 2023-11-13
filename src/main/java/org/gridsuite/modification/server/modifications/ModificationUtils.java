@@ -974,5 +974,20 @@ public final class ModificationUtils {
         addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
         addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
     }
+
+    public boolean isValidFilter(Reporter subReporter,
+                                 NetworkModificationException.Type errorType,
+                                 Map<UUID, FilterEquipments> exportFilters) {
+        boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
+
+        if (noValidEquipmentId) {
+            String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            return false;
+        }
+
+        return true;
+    }
 }
 
