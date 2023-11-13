@@ -85,12 +85,12 @@ public class VoltageInitModification extends AbstractModification {
                 if (m.getVoltageSetpoint() != null) {
                     final double oldTargetV = generator.getTargetV();
                     generator.setTargetV(m.getVoltageSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, m.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTargetV, m.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
                 if (m.getReactivePowerSetpoint() != null) {
                     final double oldTargetQ = generator.getTargetQ();
                     generator.setTargetQ(m.getReactivePowerSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, m.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTargetQ, m.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
             }
         }
@@ -124,7 +124,7 @@ public class VoltageInitModification extends AbstractModification {
                     reporter.report(createReport("3WindingsTransformerModification", "3 windings transformer with id=${id} modified :", Map.of("id", t.getTransformerId()), TypedValue.TRACE_SEVERITY, 0));
                     final int oldTapPosition = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTapPosition();
                     threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Leg " + t.getLegSide().name() + " ratio tap changer position", 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTapPosition, t.getRatioTapChangerPosition(), "Leg " + t.getLegSide().name() + " ratio tap changer position", 1, TypedValue.TRACE_SEVERITY));
                 }
             } else {
                 final TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(t.getTransformerId());
@@ -139,7 +139,7 @@ public class VoltageInitModification extends AbstractModification {
                     reporter.report(createReport("2WindingsTransformerModification", "2 windings transformer with id=${id} modified :", Map.of("id", t.getTransformerId()), TypedValue.TRACE_SEVERITY, 0));
                     final int oldTapPosition = twoWindingsTransformer.getRatioTapChanger().getTapPosition();
                     twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1, TypedValue.TRACE_SEVERITY));
                 }
             }
         }
@@ -167,12 +167,12 @@ public class VoltageInitModification extends AbstractModification {
                 if (s.getVoltageSetpoint() != null) {
                     final double oldTargetV = staticVarCompensator.getVoltageSetpoint();
                     staticVarCompensator.setVoltageSetpoint(s.getVoltageSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, s.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTargetV, s.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
                 if (s.getReactivePowerSetpoint() != null) {
                     final double oldTargetQ = staticVarCompensator.getReactivePowerSetpoint();
                     staticVarCompensator.setReactivePowerSetpoint(s.getReactivePowerSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, s.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTargetQ, s.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
             }
         }
@@ -200,12 +200,12 @@ public class VoltageInitModification extends AbstractModification {
                 if (v.getVoltageSetpoint() != null) {
                     final double oldTargetV = vscConverterStation.getVoltageSetpoint();
                     vscConverterStation.setVoltageSetpoint(v.getVoltageSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetV, v.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTargetV, v.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
                 if (v.getReactivePowerSetpoint() != null) {
                     final double oldTargetQ = vscConverterStation.getReactivePowerSetpoint();
                     vscConverterStation.setReactivePowerSetpoint(v.getReactivePowerSetpoint());
-                    reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldTargetQ, v.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1));
+                    reporter.report(ModificationUtils.buildModificationReport(oldTargetQ, v.getReactivePowerSetpoint(), REACTIVE_POWER_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
             }
         }
@@ -240,7 +240,7 @@ public class VoltageInitModification extends AbstractModification {
                         }
                         if (m.getSectionCount() != currentSectionCount) {
                             shuntCompensator.setSectionCount(m.getSectionCount());
-                            reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, m.getSectionCount(), SECTION_COUNT, 1));
+                            reports.add(ModificationUtils.buildModificationReport(currentSectionCount, m.getSectionCount(), SECTION_COUNT, 1, TypedValue.TRACE_SEVERITY));
                         }
                     }
                 } else {  // shunt compensator is disconnected
@@ -253,7 +253,7 @@ public class VoltageInitModification extends AbstractModification {
                         }
                         if (m.getSectionCount() != currentSectionCount) {
                             shuntCompensator.setSectionCount(m.getSectionCount());
-                            reports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(currentSectionCount, m.getSectionCount(), SECTION_COUNT, 1));
+                            reports.add(ModificationUtils.buildModificationReport(currentSectionCount, m.getSectionCount(), SECTION_COUNT, 1, TypedValue.TRACE_SEVERITY));
                         }
                     }
                 }
