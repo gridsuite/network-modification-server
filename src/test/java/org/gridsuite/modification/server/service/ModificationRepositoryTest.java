@@ -1176,4 +1176,15 @@ public class ModificationRepositoryTest {
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertRequestsCount(2, 0, 0, 0);
     }
+
+    @Test
+    public void testGetModificationCount() {
+        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
+
+        SQLStatementCountValidator.reset();
+        assertEquals(2, networkModificationRepository.getModificationsCount(TEST_GROUP_ID, false).intValue());
+        assertRequestsCount(1, 0, 0, 0);
+    }
 }

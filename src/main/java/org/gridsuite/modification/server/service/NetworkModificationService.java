@@ -81,6 +81,10 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
 
+    public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashedModifications) {
+        return networkModificationRepository.getModificationsCount(groupUuid, stashedModifications);
+    }
+
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }

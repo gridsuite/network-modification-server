@@ -1351,4 +1351,24 @@ public class ModificationControllerTest {
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
         mockMvc.perform(delete("/v1/groups/" + UUID.randomUUID() + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
     }
+
+    @Test
+    public void testGetModificationsCount() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .equipmentType(IdentifiableType.LOAD)
+            .equipmentAttributeName("open")
+            .equipmentAttributeValue(true)
+            .equipmentAttributeName("v1load")
+            .equipmentId("v1load")
+            .build();
+        String loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        MvcResult result = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
+                .queryParam("stashed", "false"))
+            .andExpect(status().isOk()).andReturn();
+        assertEquals(1, Integer.valueOf(result.getResponse().getContentAsString()).intValue());
+    }
 }

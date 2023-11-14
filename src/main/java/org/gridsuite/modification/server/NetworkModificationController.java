@@ -57,6 +57,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
     }
 
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications-count", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a groups's modification count")
+    @ApiResponse(responseCode = "200", description = "Count of group's modifications")
+    public ResponseEntity<Integer> getNetworkModificationsCount(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsCount(groupUuid, onlyStashed));
+    }
+
     @PostMapping(value = "/groups")
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
