@@ -52,6 +52,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         return TabularModificationInfos.builder()
                 .modificationType("GENERATOR_MODIFICATION")
                 .modifications(modifications)
+                .stashed(false)
                 .build();
     }
 
@@ -65,6 +66,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         return TabularModificationInfos.builder()
                 .modificationType("GENERATOR_MODIFICATION")
                 .modifications(modifications)
+                .stashed(false)
                 .build();
     }
 
