@@ -1189,5 +1189,7 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModificationsCount(TEST_GROUP_ID, true).intValue());
         assertRequestsCount(1, 0, 0, 0);
+
+        assertThrows(NullPointerException.class, () -> networkModificationRepository.getModificationsCount(null, true));
     }
 }
