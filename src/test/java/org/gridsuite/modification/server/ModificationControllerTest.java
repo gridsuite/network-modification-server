@@ -1355,20 +1355,15 @@ public class ModificationControllerTest {
     @Test
     public void testGetModificationsCount() throws Exception {
         MvcResult mvcResult;
-        EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
-            .equipmentType(IdentifiableType.LOAD)
-            .equipmentAttributeName("open")
-            .equipmentAttributeValue(true)
-            .equipmentAttributeName("v1load")
-            .equipmentId("v1load")
-            .build();
-        String loadModificationInfosJson = objectWriter.writeValueAsString(loadModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        assertApplicationStatusOK(mvcResult);
-
-        MvcResult result = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
-                .queryParam("stashed", "false"))
+        createSomeSwitchModifications(TEST_GROUP_ID, 3);
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
+                .queryParam("onlyStashed", "false"))
             .andExpect(status().isOk()).andReturn();
-        assertEquals(1, Integer.valueOf(result.getResponse().getContentAsString()).intValue());
+        assertEquals(3, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
+                .queryParam("onlyStashed", "true"))
+            .andExpect(status().isOk()).andReturn();
+        assertEquals(0, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
     }
 }
