@@ -476,7 +476,7 @@ public final class ModificationUtils {
     }
 
     //TODO rename to buildModificationReport()
-    public  <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
+    public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
         return buildModificationReport(oldValue, newValue, fieldName, indentationLevel, TypedValue.INFO_SEVERITY);
     }
 
@@ -485,10 +485,10 @@ public final class ModificationUtils {
                 ? NO_VALUE : oldValue.toString();
         final String newValueString = (newValue == null || newValue instanceof Double newDouble && Double.isNaN(newDouble))
                 ? NO_VALUE : newValue.toString();
-        final String indentation = "    ".repeat(Math.max(0, indentationLevel));
+        final String indentation = "\t".repeat(indentationLevel);
         return Report.builder()
-                .withKey("Modification" + fieldName)
-                .withDefaultMessage(indentation + "${fieldName} : ${oldValue} -> ${newValue}")
+                .withKey("modification-ident" + indentationLevel)
+                .withDefaultMessage(indentation + "${fieldName} : ${oldValue} → ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
                 .withValue("newValue", newValueString)
