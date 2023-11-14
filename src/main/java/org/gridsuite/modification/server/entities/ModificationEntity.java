@@ -76,6 +76,9 @@ public class ModificationEntity {
         }
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+        // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
+        this.setStashed(modificationInfos.getStashed());
+
         assignAttributes(modificationInfos);
     }
 
@@ -96,7 +99,6 @@ public class ModificationEntity {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
-        this.setStashed(modificationInfos.getStashed());
     }
 
     public ModificationEntity copy() {
