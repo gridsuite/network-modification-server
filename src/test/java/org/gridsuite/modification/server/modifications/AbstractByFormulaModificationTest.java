@@ -106,6 +106,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         return ByFormulaModificationInfos.builder()
                 .identifiableType(IdentifiableType.GENERATOR)
                 .formulaInfosList(getFormulaInfos())
+                .stashed(false)
                 .build();
     }
 
@@ -114,6 +115,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         return ByFormulaModificationInfos.builder()
                 .identifiableType(IdentifiableType.GENERATOR)
                 .formulaInfosList(getUpdatedFormulaInfos())
+                .stashed(false)
                 .build();
     }
 
