@@ -28,6 +28,7 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -119,6 +120,25 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 .andReturn();
         // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
         assertSelectCount(3);
+    }
+
+    @Test
+    public void testAllModificationsHaveFailed() throws Exception {
+        List<ModificationInfos> modifications = List.of(
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build()
+        );
+        ModificationInfos modificationInfos = TabularModificationInfos.builder()
+                .modificationType("GENERATOR_MODIFICATION")
+                .modifications(modifications)
+                .build();
+        String modificationToCreateJson = mapper.writeValueAsString(modificationInfos);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk()).andReturn();
+        assertLogMessage("Tabular modification: No generators have been modified", "tabularModificationError", reportService);
     }
 
     @Override

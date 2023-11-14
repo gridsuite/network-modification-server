@@ -27,7 +27,7 @@ public class TabularModification extends AbstractModification {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TabularModification.class);
 
-    private static final String TABULAR_MODIFICATION_LOG_KEY = "tabularModification";
+    private static final String TABULAR_MODIFICATION_REPORT_KEY = "tabularModification";
 
     private final TabularModificationInfos modificationInfos;
 
@@ -73,13 +73,13 @@ public class TabularModification extends AbstractModification {
 
         if (modificationInfos.getModifications().size() == applicationFailuresCount.get()) {
             subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_LOG_KEY + "Error")
+                    .withKey(TABULAR_MODIFICATION_REPORT_KEY + "Error")
                     .withDefaultMessage("Tabular modification: No " + defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
         } else if (applicationFailuresCount.get() > 0) {
             subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_LOG_KEY + "Warning")
+                    .withKey(TABULAR_MODIFICATION_REPORT_KEY + "Warning")
                     .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage + " and ${failuresCount} have not been modified")
                     .withValue("modificationsCount", modificationInfos.getModifications().size() - applicationFailuresCount.get())
                     .withValue("failuresCount", applicationFailuresCount.get())
@@ -87,7 +87,7 @@ public class TabularModification extends AbstractModification {
                     .build());
         } else {
             subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_LOG_KEY)
+                    .withKey(TABULAR_MODIFICATION_REPORT_KEY)
                     .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage)
                     .withValue("modificationsCount", modificationInfos.getModifications().size())
                     .withSeverity(TypedValue.INFO_SEVERITY)
