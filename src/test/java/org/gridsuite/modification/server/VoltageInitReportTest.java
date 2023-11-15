@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package org.gridsuite.modification.server;
 
 import com.fasterxml.jackson.databind.InjectableValues;
@@ -19,7 +25,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult.Applicati
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +47,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 @Slf4j
-@DisableElasticsearch
-//@SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith({MockitoExtension.class})
 class VoltageInitReportTest {

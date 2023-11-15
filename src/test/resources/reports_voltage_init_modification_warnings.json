@@ -217,7 +217,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "40.0"
@@ -253,7 +253,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "224.0"
@@ -283,7 +283,7 @@
       "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
       "StaticVarCompensatorModifications" : "Static var compensator ${id}",
       "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
-      "modification-ident1" : "\t${fieldName} : ${oldValue} → ${newValue}",
+      "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
       "3WindingsTransformerModifications" : "3 windings transformer ${id}",
       "2WindingsTransformerNotFound" : "2 windings transformer with id=${id} not found",
       "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",

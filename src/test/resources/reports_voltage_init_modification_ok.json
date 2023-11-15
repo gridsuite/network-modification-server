@@ -79,7 +79,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "0.1"
@@ -115,7 +115,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "2"
@@ -151,7 +151,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "1346.7"
@@ -195,7 +195,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "0"
@@ -231,7 +231,7 @@
             }
           }
         }, {
-          "reportKey" : "modification-ident1",
+          "reportKey" : "modification-indent1",
           "values" : {
             "newValue" : {
               "value" : "326.6"
@@ -255,7 +255,7 @@
     "default" : {
       "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
       "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
-      "modification-ident1" : "\t${fieldName} : ${oldValue} → ${newValue}",
+      "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
       "GeneratorModifications" : "Generator ${id}",
       "generatorModification" : "Generator with id=${id} modified :",
       "generatorModificationsResume" : "${count} generator(s) have been modified.",

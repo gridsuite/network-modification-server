@@ -487,7 +487,7 @@ public final class ModificationUtils {
                 ? NO_VALUE : newValue.toString();
         final String indentation = "\t".repeat(indentationLevel);
         return Report.builder()
-                .withKey("modification-ident" + indentationLevel)
+                .withKey("modification-indent" + indentationLevel)
                 .withDefaultMessage(indentation + "${fieldName} : ${oldValue} → ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
