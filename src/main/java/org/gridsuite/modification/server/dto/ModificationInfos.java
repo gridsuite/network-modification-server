@@ -87,7 +87,8 @@ public class ModificationInfos {
     private ZonedDateTime date;
 
     @Schema(description = "Modification flag")
-    private Boolean stashed;
+    @Builder.Default
+    private Boolean stashed = false;
 
     @Schema(description = "Message type")
     private String messageType;
