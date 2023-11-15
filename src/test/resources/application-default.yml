@@ -12,7 +12,6 @@ spring:
       ddl-auto: none
 logging:
   level:
-    org.gridsuite.modification.server: DEBUG
     org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: DEBUG
     org.hibernate.SQL: DEBUG
