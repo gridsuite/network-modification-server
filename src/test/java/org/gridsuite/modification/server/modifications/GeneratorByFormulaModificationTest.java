@@ -44,11 +44,6 @@ import static org.junit.Assert.assertNotNull;
 
 @Tag("IntegrationTest")
 public class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTest {
-    private static final UUID FILTER_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final UUID FILTER_ID_3 = UUID.randomUUID();
-    private static final UUID FILTER_ID_4 = UUID.randomUUID();
-    private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final String GENERATOR_ID_1 = "idGenerator";
     private static final String GENERATOR_ID_2 = "v5generator";
     private static final String GENERATOR_ID_3 = "v6generator";
@@ -215,31 +210,6 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
 
     @Override
     List<FormulaInfos> getFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
-        var filter4 = FilterInfos.builder()
-                .id(FILTER_ID_4)
-                .name("filter4")
-                .build();
-
-        var filter5 = FilterInfos.builder()
-                .id(FILTER_ID_5)
-                .name("filter5")
-                .build();
-
         FormulaInfos formulaInfos1 = getFormulaInfo(GeneratorField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1, filter2),
                 Operator.ADDITION,
@@ -335,21 +305,6 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
 
     @Override
     List<FormulaInfos> getUpdatedFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
         FormulaInfos formulaInfos1 = FormulaInfos.builder()
                 .editedField(GeneratorField.REACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
@@ -515,5 +470,10 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
 
         assertEquals(60, getNetwork().getGenerator(GENERATOR_ID_9).getRatedS(), 0);
         assertEquals(30, getNetwork().getGenerator(GENERATOR_ID_10).getRatedS(), 0);
+    }
+
+    @Override
+    IdentifiableType getIdentifiableType() {
+        return IdentifiableType.GENERATOR;
     }
 }

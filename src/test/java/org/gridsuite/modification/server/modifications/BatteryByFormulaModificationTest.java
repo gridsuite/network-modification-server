@@ -34,11 +34,6 @@ import static org.junit.Assert.assertNotNull;
  */
 
 public class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest {
-    private static final UUID FILTER_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final UUID FILTER_ID_3 = UUID.randomUUID();
-    private static final UUID FILTER_ID_4 = UUID.randomUUID();
-    private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final String BATTERY_ID_1 = "v3Battery";
     private static final String BATTERY_ID_2 = "battery2";
     private static final String BATTERY_ID_3 = "battery3";
@@ -150,31 +145,6 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
 
     @Override
     List<FormulaInfos> getFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
-        var filter4 = FilterInfos.builder()
-                .id(FILTER_ID_4)
-                .name("filter4")
-                .build();
-
-        var filter5 = FilterInfos.builder()
-                .id(FILTER_ID_5)
-                .name("filter5")
-                .build();
-
         ReferenceFieldOrValue maxActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MAXIMUM_ACTIVE_POWER.name()).build();
         ReferenceFieldOrValue minActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build();
 
@@ -213,26 +183,6 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
 
     @Override
     List<FormulaInfos> getUpdatedFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
-        var filter5 = FilterInfos.builder()
-                .id(FILTER_ID_5)
-                .name("filter5")
-                .build();
-
         FormulaInfos formulaInfos1 = FormulaInfos.builder()
                 .editedField(BatteryField.MAXIMUM_ACTIVE_POWER.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(200.).build())
@@ -304,5 +254,10 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
         assertEquals(4, activePowerControl5.getDroop(), 0);
 
         assertEquals(200, getNetwork().getBattery(BATTERY_ID_6).getMinP(), 0);
+    }
+
+    @Override
+    IdentifiableType getIdentifiableType() {
+        return IdentifiableType.BATTERY;
     }
 }

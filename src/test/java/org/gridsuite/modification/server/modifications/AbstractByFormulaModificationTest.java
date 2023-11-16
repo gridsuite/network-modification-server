@@ -45,6 +45,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public abstract class AbstractByFormulaModificationTest extends AbstractNetworkModificationTest {
+    protected static final UUID FILTER_ID_1 = UUID.randomUUID();
+    protected static final UUID FILTER_ID_2 = UUID.randomUUID();
+    protected static final UUID FILTER_ID_3 = UUID.randomUUID();
+    protected static final UUID FILTER_ID_4 = UUID.randomUUID();
+    protected static final UUID FILTER_ID_5 = UUID.randomUUID();
+    protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1");
+    protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2");
+    protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3");
+    protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4");
+    protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
+
     public static final String PATH = "/v1/filters/export";
 
     @Before
@@ -66,7 +77,6 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         super.testCreate();
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
-
     }
 
     @Test
@@ -104,7 +114,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     @Override
     protected ByFormulaModificationInfos buildModification() {
         return ByFormulaModificationInfos.builder()
-                .identifiableType(IdentifiableType.GENERATOR)
+                .identifiableType(getIdentifiableType())
                 .formulaInfosList(getFormulaInfos())
                 .stashed(false)
                 .build();
@@ -113,7 +123,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     @Override
     protected ByFormulaModificationInfos buildModificationUpdate() {
         return ByFormulaModificationInfos.builder()
-                .identifiableType(IdentifiableType.GENERATOR)
+                .identifiableType(getIdentifiableType())
                 .formulaInfosList(getUpdatedFormulaInfos())
                 .stashed(false)
                 .build();
@@ -122,7 +132,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     IdentifiableAttributes getIdentifiableAttributes(String id, Double distributionKey) {
         return IdentifiableAttributes.builder()
                 .id(id)
-                .type(IdentifiableType.GENERATOR)
+                .type(getIdentifiableType())
                 .distributionKey(distributionKey)
                 .build();
     }
@@ -168,4 +178,6 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     abstract List<FormulaInfos> getFormulaInfos();
 
     abstract List<FormulaInfos> getUpdatedFormulaInfos();
+
+    abstract IdentifiableType getIdentifiableType();
 }
