@@ -138,8 +138,8 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
         assertEquals(10, shuntCompensator4.getSectionCount());
 
         ShuntCompensator shuntCompensator5 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_5);
-        assertEquals(3, shuntCompensator5.getSectionCount());
-        assertEquals(2, shuntCompensator5.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
+        assertEquals(2, shuntCompensator5.getSectionCount());
+        assertEquals(1, shuntCompensator5.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
 
         ShuntCompensator shuntCompensator6 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_6);
         assertEquals(3, shuntCompensator6.getMaximumSectionCount());
