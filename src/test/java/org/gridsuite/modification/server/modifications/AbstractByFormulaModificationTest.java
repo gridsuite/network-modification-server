@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
@@ -50,11 +51,15 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     protected static final UUID FILTER_ID_3 = UUID.randomUUID();
     protected static final UUID FILTER_ID_4 = UUID.randomUUID();
     protected static final UUID FILTER_ID_5 = UUID.randomUUID();
+    protected static final UUID FILTER_WITH_ALL_WRONG_IDS = UUID.randomUUID();
+    protected static final UUID FILTER_WITH_ONE_WRONG_ID = UUID.randomUUID();
     protected final FilterInfos filter1 = new FilterInfos(FILTER_ID_1, "filter1");
     protected final FilterInfos filter2 = new FilterInfos(FILTER_ID_2, "filter2");
     protected final FilterInfos filter3 = new FilterInfos(FILTER_ID_3, "filter3");
     protected final FilterInfos filter4 = new FilterInfos(FILTER_ID_4, "filter4");
     protected final FilterInfos filter5 = new FilterInfos(FILTER_ID_5, "filter5");
+    protected final FilterInfos filterWithAllWrongId = new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithAllWrongId");
+    protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
     public static final String PATH = "/v1/filters/export";
 
@@ -62,7 +67,45 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
 
+        getNetwork().getVariantManager().setWorkingVariant("variant_1");
         createEquipments();
+    }
+
+    public void checkCreateWithWarning(List<FormulaInfos> formulaInfos, List<IdentifiableAttributes> existingEquipmentList) throws Exception {
+        FilterEquipments filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, "filterWithWrongId", existingEquipmentList, List.of("wrongId"));
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ONE_WRONG_ID))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(filter)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .formulaInfosList(formulaInfos)
+                .identifiableType(getIdentifiableType())
+                .build();
+
+        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_WITH_ONE_WRONG_ID)), false);
+    }
+
+    public void checkCreateWithError(List<FormulaInfos> formulaInfos) throws Exception {
+        FilterEquipments filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
+
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ALL_WRONG_IDS))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(filter)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .formulaInfosList(formulaInfos)
+                .identifiableType(getIdentifiableType())
+                .build();
+
+        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_WITH_ALL_WRONG_IDS)), false);
     }
 
     @Test

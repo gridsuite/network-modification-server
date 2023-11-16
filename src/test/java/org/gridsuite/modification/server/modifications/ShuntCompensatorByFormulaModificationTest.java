@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
+import org.junit.Test;
 
 import java.util.List;
 
@@ -31,9 +32,38 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     private static final String SHUNT_COMPENSATOR_ID_5 = "v5shunt";
     private static final String SHUNT_COMPENSATOR_ID_6 = "v6shunt";
 
+    @Test
+    public void testCreateWithWarning() throws Exception {
+        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
+
+
+        FormulaInfos formulaInfos = FormulaInfos.builder()
+                .filters(List.of(filterWithOneWrongId))
+                .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
+                .operator(Operator.ADDITION)
+                .fieldOrValue2(ReferenceFieldOrValue.builder().value(3.).build())
+                .build();
+
+        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes));
+        assertEquals(5, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
+    }
+
+    @Test
+    public void testCreateWithError() throws Exception {
+        FormulaInfos formulaInfos = FormulaInfos.builder()
+                .filters(List.of(filterWithAllWrongId))
+                .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
+                .operator(Operator.ADDITION)
+                .fieldOrValue2(ReferenceFieldOrValue.builder().value(3.).build())
+                .build();
+
+        checkCreateWithError(List.of(formulaInfos));
+    }
+
     @Override
     void createEquipments() {
-        getNetwork().getVariantManager().setWorkingVariant("variant_1");
         createShuntCompensator(getNetwork().getVoltageLevel("v1"), SHUNT_COMPENSATOR_ID_1, "v1shunt", 8, 225., 10, true, 4, 2, 3, 2, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
         createShuntCompensator(getNetwork().getVoltageLevel("v3"), SHUNT_COMPENSATOR_ID_3, "v3shunt", 10, 305., 20, true, 6, 3, 3, 4, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
         createShuntCompensator(getNetwork().getVoltageLevel("v4"), SHUNT_COMPENSATOR_ID_4, "v3shunt", 10, 305., 20, true, 15, 4, 3, 10, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
