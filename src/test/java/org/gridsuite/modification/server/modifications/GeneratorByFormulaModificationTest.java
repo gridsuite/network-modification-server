@@ -79,7 +79,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         checkCreateWithError(List.of(formulaInfos));
     }
 
-    void createEquipments() {
+    protected void createEquipments() {
         getNetwork().getGenerator(GENERATOR_ID_1)
                 .setTargetP(100)
                 .setMaxP(500)
@@ -143,7 +143,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         getNetwork().getGenerator(GENERATOR_ID_10).setRatedS(30.);
     }
 
-    List<FilterEquipments> getTestFilters() {
+    protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes gen1 = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         IdentifiableAttributes gen2 = getIdentifiableAttributes(GENERATOR_ID_2, 2.0);
         IdentifiableAttributes gen3 = getIdentifiableAttributes(GENERATOR_ID_3, 2.0);
@@ -165,7 +165,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Override
-    List<FormulaInfos> getFormulaInfos() {
+    protected List<FormulaInfos> getFormulaInfos() {
         FormulaInfos formulaInfos1 = getFormulaInfo(GeneratorField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1, filter2),
                 Operator.ADDITION,
@@ -260,7 +260,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Override
-    List<FormulaInfos> getUpdatedFormulaInfos() {
+    protected List<FormulaInfos> getUpdatedFormulaInfos() {
         FormulaInfos formulaInfos1 = FormulaInfos.builder()
                 .editedField(GeneratorField.REACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
@@ -429,7 +429,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Override
-    IdentifiableType getIdentifiableType() {
+    protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.GENERATOR;
     }
 }

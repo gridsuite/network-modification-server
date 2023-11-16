@@ -62,14 +62,14 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     }
 
     @Override
-    void createEquipments() {
+    protected void createEquipments() {
         createShuntCompensator(getNetwork().getVoltageLevel("v1"), SHUNT_COMPENSATOR_ID_1, "v1shunt", 8, 225., 10, true, 4, 2, 3, 2, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
         createShuntCompensator(getNetwork().getVoltageLevel("v3"), SHUNT_COMPENSATOR_ID_3, "v3shunt", 10, 305., 20, true, 6, 3, 3, 4, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
         createShuntCompensator(getNetwork().getVoltageLevel("v4"), SHUNT_COMPENSATOR_ID_4, "v3shunt", 10, 305., 20, true, 15, 4, 3, 10, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
     }
 
     @Override
-    List<FilterEquipments> getTestFilters() {
+    protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes shunt1 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifiableAttributes shunt2 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_2, 2.0);
         IdentifiableAttributes shunt3 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_3, 2.0);
@@ -87,7 +87,7 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     }
 
     @Override
-    List<FormulaInfos> getFormulaInfos() {
+    protected List<FormulaInfos> getFormulaInfos() {
         FormulaInfos formulaInfos1 = getFormulaInfo(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name(),
                 List.of(filter1, filter2),
                 Operator.PERCENTAGE,
@@ -116,7 +116,7 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     }
 
     @Override
-    List<FormulaInfos> getUpdatedFormulaInfos() {
+    protected List<FormulaInfos> getUpdatedFormulaInfos() {
         FormulaInfos formulaInfos1 = getFormulaInfo(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name(),
                 List.of(filter1, filter2),
                 Operator.PERCENTAGE,
@@ -183,7 +183,7 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     }
 
     @Override
-    IdentifiableType getIdentifiableType() {
+    protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.SHUNT_COMPENSATOR;
     }
 }

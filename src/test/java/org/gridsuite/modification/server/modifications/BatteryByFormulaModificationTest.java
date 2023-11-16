@@ -66,7 +66,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    void createEquipments() {
+    protected void createEquipments() {
         getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setTargetQ(80);
         getNetwork().getBattery(BATTERY_ID_1).newExtension(ActivePowerControlAdder.class).withDroop(1).add();
 
@@ -82,7 +82,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    List<FilterEquipments> getTestFilters() {
+    protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes battery1 = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
         IdentifiableAttributes battery2 = getIdentifiableAttributes(BATTERY_ID_2, 2.0);
         IdentifiableAttributes battery3 = getIdentifiableAttributes(BATTERY_ID_3, 2.0);
@@ -100,7 +100,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    List<FormulaInfos> getFormulaInfos() {
+    protected List<FormulaInfos> getFormulaInfos() {
         ReferenceFieldOrValue maxActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MAXIMUM_ACTIVE_POWER.name()).build();
         ReferenceFieldOrValue minActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build();
 
@@ -138,7 +138,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    List<FormulaInfos> getUpdatedFormulaInfos() {
+    protected List<FormulaInfos> getUpdatedFormulaInfos() {
         FormulaInfos formulaInfos1 = FormulaInfos.builder()
                 .editedField(BatteryField.MAXIMUM_ACTIVE_POWER.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(200.).build())
@@ -213,7 +213,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    IdentifiableType getIdentifiableType() {
+    protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.BATTERY;
     }
 }
