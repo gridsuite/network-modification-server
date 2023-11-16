@@ -30,7 +30,7 @@
       "subReporters" : [ {
         "taskKey" : "GeneratorModifications",
         "taskValues" : {
-          "id" : {
+          "generatorId" : {
             "value" : "G1"
           }
         },
@@ -49,7 +49,7 @@
       }, {
         "taskKey" : "GeneratorModifications",
         "taskValues" : {
-          "id" : {
+          "generatorId" : {
             "value" : "G2"
           }
         },
@@ -68,7 +68,7 @@
       }, {
         "taskKey" : "2WindingsTransformerModifications",
         "taskValues" : {
-          "id" : {
+          "transformerId" : {
             "value" : "2WT1"
           }
         },
@@ -87,7 +87,7 @@
       }, {
         "taskKey" : "3WindingsTransformerModifications",
         "taskValues" : {
-          "id" : {
+          "transformerId" : {
             "value" : "3WT1"
           }
         },
@@ -106,7 +106,7 @@
       }, {
         "taskKey" : "StaticVarCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "SVC1"
           }
         },
@@ -125,7 +125,7 @@
       }, {
         "taskKey" : "StaticVarCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "SVC2"
           }
         },
@@ -144,7 +144,7 @@
       }, {
         "taskKey" : "ShuntCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "v2shunt"
           }
         },
@@ -163,7 +163,7 @@
       }, {
         "taskKey" : "ShuntCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "v5shunt"
           }
         },
@@ -182,7 +182,7 @@
       }, {
         "taskKey" : "ShuntCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "v6shunt"
           }
         },
@@ -201,7 +201,7 @@
       }, {
         "taskKey" : "VscConverterStationModifications",
         "taskValues" : {
-          "id" : {
+          "converterId" : {
             "value" : "VSC1"
           }
         },
@@ -237,7 +237,7 @@
       }, {
         "taskKey" : "VscConverterStationModifications",
         "taskValues" : {
-          "id" : {
+          "converterId" : {
             "value" : "VSC2"
           }
         },
@@ -277,21 +277,21 @@
     "default" : {
       "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
       "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
-      "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
-      "GeneratorModifications" : "Generator ${id}",
-      "ShuntCompensatorModifications" : "Shunt compensator ${id}",
-      "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
-      "StaticVarCompensatorModifications" : "Static var compensator ${id}",
-      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
       "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
-      "3WindingsTransformerModifications" : "3 windings transformer ${id}",
+      "GeneratorModifications" : "Generator ${generatorId}",
+      "generatorNotFound" : "Generator with id=${id} not found",
+      "2WindingsTransformerModifications" : "2 windings transformer ${transformerId}",
       "2WindingsTransformerNotFound" : "2 windings transformer with id=${id} not found",
-      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
-      "shuntCompensatorNotFound" : "Shunt compensator with id=${id} not found",
-      "VscConverterStationModifications" : "Vsc converter station ${id}",
+      "3WindingsTransformerModifications" : "3 windings transformer ${transformerId}",
       "3WindingsTransformerNotFound" : "3 windings transformer with id=${id} not found",
-      "2WindingsTransformerModifications" : "2 windings transformer ${id}",
-      "generatorNotFound" : "Generator with id=${id} not found"
+      "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
+      "VscConverterStationModifications" : "Vsc converter station ${converterId}",
+      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
+      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
+      "StaticVarCompensatorModifications" : "Static var compensator ${compensatorId}",
+      "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
+      "ShuntCompensatorModifications" : "Shunt compensator ${compensatorId}",
+      "shuntCompensatorNotFound" : "Shunt compensator with id=${id} not found"
     }
   }
 }
