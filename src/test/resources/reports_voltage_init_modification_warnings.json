@@ -1,0 +1,297 @@
+{
+  "version" : "1.0",
+  "reportTree" : {
+    "taskKey" : "99999999-9999-9999-9999-999999999999@NetworkModification",
+    "subReporters" : [ {
+      "taskKey" : "VOLTAGE_INIT_MODIFICATION",
+      "reports" : [ {
+        "reportKey" : "windingsTransformerModificationsResume",
+        "values" : {
+          "reportSeverity" : {
+            "value" : "INFO",
+            "type" : "SEVERITY"
+          },
+          "count" : {
+            "value" : 2
+          }
+        }
+      }, {
+        "reportKey" : "vscModificationsResume",
+        "values" : {
+          "reportSeverity" : {
+            "value" : "INFO",
+            "type" : "SEVERITY"
+          },
+          "count" : {
+            "value" : 2
+          }
+        }
+      } ],
+      "subReporters" : [ {
+        "taskKey" : "GeneratorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "G1"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "generatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "G1"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "GeneratorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "G2"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "generatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "G2"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "2WindingsTransformerModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "2WT1"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "2WindingsTransformerNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "2WT1"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "3WindingsTransformerModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "3WT1"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "3WindingsTransformerNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "3WT1"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "StaticVarCompensatorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "SVC1"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "staticVarCompensatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "SVC1"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "StaticVarCompensatorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "SVC2"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "staticVarCompensatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "SVC2"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "ShuntCompensatorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "v2shunt"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "shuntCompensatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "v2shunt"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "ShuntCompensatorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "v5shunt"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "shuntCompensatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "v5shunt"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "ShuntCompensatorModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "v6shunt"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "shuntCompensatorNotFound",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "WARN",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "v6shunt"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "VscConverterStationModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "VSC1"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "vscConverterStationModification",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "TRACE",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "VSC1"
+            }
+          }
+        }, {
+          "reportKey" : "modification-indent1",
+          "values" : {
+            "newValue" : {
+              "value" : "40.0"
+            },
+            "fieldName" : {
+              "value" : "Reactive power set point"
+            },
+            "reportSeverity" : {
+              "value" : "TRACE",
+              "type" : "SEVERITY"
+            },
+            "oldValue" : {
+              "value" : "500.0"
+            }
+          }
+        } ]
+      }, {
+        "taskKey" : "VscConverterStationModifications",
+        "taskValues" : {
+          "id" : {
+            "value" : "VSC2"
+          }
+        },
+        "reports" : [ {
+          "reportKey" : "vscConverterStationModification",
+          "values" : {
+            "reportSeverity" : {
+              "value" : "TRACE",
+              "type" : "SEVERITY"
+            },
+            "id" : {
+              "value" : "VSC2"
+            }
+          }
+        }, {
+          "reportKey" : "modification-indent1",
+          "values" : {
+            "newValue" : {
+              "value" : "224.0"
+            },
+            "fieldName" : {
+              "value" : "Voltage set point"
+            },
+            "reportSeverity" : {
+              "value" : "TRACE",
+              "type" : "SEVERITY"
+            },
+            "oldValue" : {
+              "value" : "0.0"
+            }
+          }
+        } ]
+      } ]
+    } ]
+  },
+  "dics" : {
+    "default" : {
+      "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
+      "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
+      "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
+      "GeneratorModifications" : "Generator ${id}",
+      "ShuntCompensatorModifications" : "Shunt compensator ${id}",
+      "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
+      "StaticVarCompensatorModifications" : "Static var compensator ${id}",
+      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
+      "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
+      "3WindingsTransformerModifications" : "3 windings transformer ${id}",
+      "2WindingsTransformerNotFound" : "2 windings transformer with id=${id} not found",
+      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
+      "shuntCompensatorNotFound" : "Shunt compensator with id=${id} not found",
+      "VscConverterStationModifications" : "Vsc converter station ${id}",
+      "3WindingsTransformerNotFound" : "3 windings transformer with id=${id} not found",
+      "2WindingsTransformerModifications" : "2 windings transformer ${id}",
+      "generatorNotFound" : "Generator with id=${id} not found"
+    }
+  }
+}
