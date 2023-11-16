@@ -530,7 +530,7 @@ public final class ModificationUtils {
         }
     }
 
-    public Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
+    static Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
         if (type == null || equipmentId == null) {
             return null;
         }
