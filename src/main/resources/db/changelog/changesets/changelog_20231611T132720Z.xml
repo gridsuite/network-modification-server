@@ -3,12 +3,14 @@
     <changeSet author="labidiayo" id="migrate_section_count_1">
         <update tableName="shunt_compensator_modification">
             <column name="section_count" valueNumeric="0"/>
+            <column name="section_count_op" value="SET"/>
             <where>max_susceptance=0 or maxqat_nominalv=0</where>
         </update>
     </changeSet>
     <changeSet author="labidiayo" id="migrate_section_count_0">
         <update tableName="shunt_compensator_modification">
             <column name="section_count" valueNumeric="1"/>
+            <column name="section_count_op" value="SET"/>
             <where>max_susceptance!=0 or maxqat_nominalv!=0</where>
         </update>
     </changeSet>
