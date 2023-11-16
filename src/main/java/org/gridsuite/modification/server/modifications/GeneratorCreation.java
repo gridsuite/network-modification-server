@@ -79,7 +79,9 @@ public class GeneratorCreation extends AbstractModification {
         } else {
             createGeneratorInBusBreaker(voltageLevel, modificationInfos, subReporter);
         }
-        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getGenerator(modificationInfos.getEquipmentId()), subReporter);
+        if (!modificationInfos.isConnected()) {
+            network.getGenerator(modificationInfos.getEquipmentId()).getTerminal().disconnect();
+        }
     }
 
     private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, Reporter subReporter) {
@@ -258,6 +260,14 @@ public class GeneratorCreation extends AbstractModification {
             if (generatorCreationInfos.getConnectionPosition() != null) {
                 connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
+            }
+            if (!generatorCreationInfos.isConnected()) {
+                connectivityReports.add(Report.builder()
+                        .withKey("equipmentDisconnected")
+                        .withDefaultMessage("    Equipment with id=${id} disconnected")
+                        .withValue("id", generatorCreationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
             }
             ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
         }
