@@ -91,7 +91,6 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     public void checkCreateWithError(List<FormulaInfos> formulaInfos) throws Exception {
         FilterEquipments filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
 
-
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ALL_WRONG_IDS))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))

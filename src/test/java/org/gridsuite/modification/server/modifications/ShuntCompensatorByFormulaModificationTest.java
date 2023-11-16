@@ -36,7 +36,6 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     public void testCreateWithWarning() throws Exception {
         IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
 
-
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filterWithOneWrongId))
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
