@@ -20,7 +20,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
