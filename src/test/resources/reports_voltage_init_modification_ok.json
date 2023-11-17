@@ -4,7 +4,8 @@
     "taskKey" : "99999999-9999-9999-9999-999999999999@NetworkModification",
     "subReporters" : [ {
       "taskKey" : "VOLTAGE_INIT_MODIFICATION",
-      "reports" : [ {
+      "reports" : [
+        {
         "reportKey" : "generatorModificationsResume",
         "values" : {
           "reportSeverity" : {
@@ -63,11 +64,12 @@
       "subReporters" : [ {
         "taskKey" : "GeneratorModifications",
         "taskValues" : {
-          "id" : {
+          "generatorId" : {
             "value" : "GTH2"
           }
         },
-        "reports" : [ {
+        "reports" : [
+          {
           "reportKey" : "generatorModification",
           "values" : {
             "reportSeverity" : {
@@ -99,11 +101,12 @@
       }, {
         "taskKey" : "2WindingsTransformerModifications",
         "taskValues" : {
-          "id" : {
+          "transformerId" : {
             "value" : "TWT2"
           }
         },
-        "reports" : [ {
+        "reports" : [
+          {
           "reportKey" : "2WindingsTransformerModification",
           "values" : {
             "reportSeverity" : {
@@ -135,7 +138,7 @@
       }, {
         "taskKey" : "StaticVarCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "SVC"
           }
         },
@@ -171,7 +174,7 @@
       }, {
         "taskKey" : "ShuntCompensatorModifications",
         "taskValues" : {
-          "id" : {
+          "compensatorId" : {
             "value" : "SHUNT3"
           }
         },
@@ -215,7 +218,7 @@
       }, {
         "taskKey" : "VscConverterStationModifications",
         "taskValues" : {
-          "id" : {
+          "converterId" : {
             "value" : "VSC2"
           }
         },
@@ -256,19 +259,19 @@
       "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
       "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
       "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
-      "GeneratorModifications" : "Generator ${id}",
+      "GeneratorModifications" : "Generator ${generatorId}",
       "generatorModification" : "Generator with id=${id} modified :",
       "generatorModificationsResume" : "${count} generator(s) have been modified.",
-      "2WindingsTransformerModifications" : "2 windings transformer ${id}",
+      "2WindingsTransformerModifications" : "2 windings transformer ${transformerId}",
       "2WindingsTransformerModification" : "2 windings transformer with id=${id} modified :",
       "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
-      "VscConverterStationModifications" : "Vsc converter station ${id}",
+      "VscConverterStationModifications" : "Vsc converter station ${converterId}",
       "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
       "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
-      "StaticVarCompensatorModifications" : "Static var compensator ${id}",
+      "StaticVarCompensatorModifications" : "Static var compensator ${compensatorId}",
       "staticVarCompensatorModification" : "Static var compensator with id=${id} modified :",
       "svcModificationsResume" : "${count} static var compensator(s) have been modified.",
-      "ShuntCompensatorModifications" : "Shunt compensator ${id}",
+      "ShuntCompensatorModifications" : "Shunt compensator ${compensatorId}",
       "shuntCompensatorModification" : "Shunt compensator with id=${id} modified :",
       "shuntCompensatorDisconnected" : "\tShunt compensator disconnected",
       "shuntCompensatorModificationsResume" : "${count} shunt compensator(s) have been modified."
