@@ -36,7 +36,7 @@ UPDATE modification m1 SET
                                                     LEFT JOIN battery_creation batteryc ON m.id = batteryc.id
                                                     LEFT JOIN battery_modification batterym ON m.id = batterym.id
                                                     LEFT JOIN boolean_equipment_attribute_modification beam ON m.id = beam.id
-                                                    LEFT JOIN branch_status_modification bsm ON m.id = bsm.id
+                                                    LEFT JOIN operational_status_modification bsm ON m.id = bsm.id
                                                     LEFT JOIN converter_station_creation csc ON m.id = csc.id
                                                     LEFT JOIN delete_attaching_line dal ON m.id = dal.id
                                                     LEFT JOIN double_equipment_attribute_modification deam ON m.id = deam.id
@@ -107,7 +107,7 @@ UPDATE modification m1 SET
                                                     LEFT JOIN battery_creation batteryc ON m.id = batteryc.id
                                                     LEFT JOIN battery_modification batterym ON m.id = batterym.id
                                                     LEFT JOIN boolean_equipment_attribute_modification beam ON m.id = beam.id
-                                                    LEFT JOIN branch_status_modification bsm ON m.id = bsm.id
+                                                    LEFT JOIN operational_status_modification bsm ON m.id = bsm.id
                                                     LEFT JOIN converter_station_creation csc ON m.id = csc.id
                                                     LEFT JOIN delete_attaching_line dal ON m.id = dal.id
                                                     LEFT JOIN double_equipment_attribute_modification deam ON m.id = deam.id
@@ -179,7 +179,7 @@ UPDATE modification m1 SET
                                                       LEFT JOIN battery_creation batteryc ON m.id = batteryc.id
                                                       LEFT JOIN battery_modification batterym ON m.id = batterym.id
                                                       LEFT JOIN boolean_equipment_attribute_modification beam ON m.id = beam.id
-                                                      LEFT JOIN branch_status_modification bsm ON m.id = bsm.id
+                                                      LEFT JOIN operational_status_modification bsm ON m.id = bsm.id
                                                       LEFT JOIN converter_station_creation csc ON m.id = csc.id
                                                       LEFT JOIN delete_attaching_line dal ON m.id = dal.id
                                                       LEFT JOIN double_equipment_attribute_modification deam ON m.id = deam.id

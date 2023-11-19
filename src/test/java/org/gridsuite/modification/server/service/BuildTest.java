@@ -558,7 +558,7 @@ public class BuildTest {
 
         entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
         entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
-        entities2.add(BranchStatusModificationInfos.builder().equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
+        entities2.add(OperationalStatusModificationInfos.builder().equipmentId("line2").action(OperationalStatusModificationInfos.ActionType.TRIP).build().toEntity());
         entities2.add(VoltageLevelCreationInfos.builder()
                 .equipmentId("vl9")
                 .equipmentName("vl9")

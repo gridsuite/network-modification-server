@@ -17,13 +17,13 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.OperationalStatusModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.BranchStatusModification;
+import org.gridsuite.modification.server.modifications.OperationalStatusModification;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -33,10 +33,10 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Branch status modification")
-@JsonTypeName("BRANCH_STATUS_MODIFICATION")
-@ModificationErrorTypeName("BRANCH_ACTION_ERROR")
-public class BranchStatusModificationInfos extends EquipmentModificationInfos {
+@Schema(description = "Operational status modification")
+@JsonTypeName("OPERATIONAL_STATUS_MODIFICATION")
+@ModificationErrorTypeName("OPERATIONAL_ACTION_ERROR")
+public class OperationalStatusModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Action type")
     private ActionType action;
 
@@ -52,13 +52,13 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
     }
 
     @Override
-    public BranchStatusModificationEntity toEntity() {
-        return new BranchStatusModificationEntity(this);
+    public OperationalStatusModificationEntity toEntity() {
+        return new OperationalStatusModificationEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new BranchStatusModification(this);
+        return new OperationalStatusModification(this);
     }
 
     @Override
@@ -66,29 +66,29 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
         String defaultName;
         switch (action) {
             case LOCKOUT:
-                defaultName = "Lockout ${branchId}";
+                defaultName = "Lockout ${equipmentId}";
                 break;
             case TRIP:
-                defaultName = "Trip ${branchId}";
+                defaultName = "Trip ${equipmentId}";
                 break;
             case ENERGISE_END_ONE:
             case ENERGISE_END_TWO:
-                defaultName = "Energise ${branchId}";
+                defaultName = "Energise ${equipmentId}";
                 break;
             case SWITCH_ON:
-                defaultName = "Switch on ${branchId}";
+                defaultName = "Switch on ${equipmentId}";
                 break;
             default:
                 defaultName = "";
         }
-        return reporter.createSubReporter(getType().name() + "_" + action, defaultName, "branchId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name() + "_" + action, defaultName, "equipmentId", this.getEquipmentId());
     }
 
     @Override
     public void check() {
         super.check();
         if (action == null) {
-            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
+            throw new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY);
         }
     }
 

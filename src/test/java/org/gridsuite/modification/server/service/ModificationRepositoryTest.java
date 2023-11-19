@@ -772,34 +772,34 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testStatusLineModification() {
-        List<BranchStatusModificationEntity> entities = List.of(
-            BranchStatusModificationInfos.builder().equipmentId("idLine1").action(BranchStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine3").action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine4").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine5").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
+        List<OperationalStatusModificationEntity> entities = List.of(
+                OperationalStatusModificationInfos.builder().equipmentId("idLine1").action(OperationalStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
+                OperationalStatusModificationInfos.builder().equipmentId("idLine2").action(OperationalStatusModificationInfos.ActionType.TRIP).build().toEntity(),
+                OperationalStatusModificationInfos.builder().equipmentId("idLine3").action(OperationalStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
+                OperationalStatusModificationInfos.builder().equipmentId("idLine4").action(OperationalStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
+                OperationalStatusModificationInfos.builder().equipmentId("idLine5").action(OperationalStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
         );
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
         assertRequestsCount(1, 3, 1, 0);
 
-        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        List<OperationalStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
             .stream()
-            .map(BranchStatusModificationInfos.class::cast)
-            .sorted(Comparator.comparing(BranchStatusModificationInfos::getEquipmentId))
+            .map(OperationalStatusModificationInfos.class::cast)
+            .sorted(Comparator.comparing(OperationalStatusModificationInfos::getEquipmentId))
             .collect(Collectors.toList());
         assertEquals(5, modificationInfos.size());
 
         assertThat(modificationInfos.get(0))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(0).toModificationInfos());
+            .recursivelyEquals((OperationalStatusModificationInfos) entities.get(0).toModificationInfos());
         assertThat(modificationInfos.get(1))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(1).toModificationInfos());
+            .recursivelyEquals((OperationalStatusModificationInfos) entities.get(1).toModificationInfos());
         assertThat(modificationInfos.get(2))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(2).toModificationInfos());
+            .recursivelyEquals((OperationalStatusModificationInfos) entities.get(2).toModificationInfos());
         assertThat(modificationInfos.get(3))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(3).toModificationInfos());
+            .recursivelyEquals((OperationalStatusModificationInfos) entities.get(3).toModificationInfos());
         assertThat(modificationInfos.get(4))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(4).toModificationInfos());
+            .recursivelyEquals((OperationalStatusModificationInfos) entities.get(4).toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);

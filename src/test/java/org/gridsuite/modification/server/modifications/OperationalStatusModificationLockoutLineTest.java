@@ -11,7 +11,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.OperationalStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
+public class OperationalStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";
     private static final String UPDATE_BRANCH_ID = "line1";
@@ -50,20 +50,20 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
 
     @Override
     protected ModificationInfos buildModification() {
-        return BranchStatusModificationInfos.builder()
+        return OperationalStatusModificationInfos.builder()
                 .stashed(false)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(BranchStatusModificationInfos.ActionType.LOCKOUT).build();
+                .action(OperationalStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return BranchStatusModificationInfos.builder()
+        return OperationalStatusModificationInfos.builder()
                 .stashed(false)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
+                .action(OperationalStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
@@ -80,7 +80,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Test
     public void testCreateWithErrors() throws Exception {
         // line not existing
-        BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
+        OperationalStatusModificationInfos modificationInfos = (OperationalStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("notFound");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -96,7 +96,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().isBadRequest(),
-                    content().string(new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY).getMessage())
+                    content().string(new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY).getMessage())
             );
 
         // modification action not existing
@@ -107,12 +107,12 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
 
         // disconnection error
         modificationInfos.setEquipmentId("line3");
-        modificationInfos.setAction(BranchStatusModificationInfos.ActionType.LOCKOUT);
+        modificationInfos.setAction(OperationalStatusModificationInfos.ActionType.LOCKOUT);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertNull(getNetwork().getLine("line3").getExtension(BranchStatus.class));
-        assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage(),
+        assertLogMessage(new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to disconnect all branch ends").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
 
     }
@@ -120,7 +120,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("OPERATIONAL_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
         assertEquals("LOCKOUT", createdValues.get("action"));
@@ -130,7 +130,7 @@ public class BranchStatusModificationLockoutLineTest extends AbstractNetworkModi
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("OPERATIONAL_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
         assertEquals("SWITCH_ON", updatedValues.get("action"));

@@ -11,7 +11,7 @@ import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.OperationalStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -21,7 +21,7 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATIONAL_EQUIPMENT_ACTION_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNetworkModificationTest {
+public class OperationalStatusModificationEnergiseSideOneLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_LINE_ID = "line2";
 
@@ -46,20 +46,20 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
 
     @Override
     protected ModificationInfos buildModification() {
-        return BranchStatusModificationInfos.builder()
+        return OperationalStatusModificationInfos.builder()
                 .stashed(false)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("vl1")
-                .action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build();
+                .action(OperationalStatusModificationInfos.ActionType.ENERGISE_END_ONE).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return BranchStatusModificationInfos.builder()
+        return OperationalStatusModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("line1")
                 .energizedVoltageLevelId("vl1_bis")
-                .action(BranchStatusModificationInfos.ActionType.TRIP)
+                .action(OperationalStatusModificationInfos.ActionType.TRIP)
                 .build();
     }
 
@@ -84,20 +84,20 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     @Test
     public void testCreateWithErrors() throws Exception {
         // line not existing
-        BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
+        OperationalStatusModificationInfos modificationInfos = (OperationalStatusModificationInfos) buildModification();
         // disconnection error
         modificationInfos.setEquipmentId("line3");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end").getMessage(),
+        assertLogMessage(new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to energise branch end").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
     }
 
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("OPERATIONAL_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("vl1", createdValues.get("energizedVoltageLevelId"));
         assertEquals("ENERGISE_END_ONE", createdValues.get("action"));
@@ -107,7 +107,7 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("OPERATIONAL_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("vl1_bis", updatedValues.get("energizedVoltageLevelId"));
         assertEquals("TRIP", updatedValues.get("action"));

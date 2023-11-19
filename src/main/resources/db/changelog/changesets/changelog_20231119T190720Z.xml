@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1700420856594-29">
+        <createTable tableName="operational_status_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="action" type="VARCHAR(255)"/>
+            <column name="energized_voltage_level_id" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="operational_status_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1700420856594-47">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="operational_status_modification" constraintName="operationalStatusModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1700420856594-48">
+        <dropForeignKeyConstraint baseTableName="BRANCH_STATUS_MODIFICATION" constraintName="BRANCHSTATUSMODIFICATION_ID_FK_CONSTRAINT"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1700420856594-49">
+        <dropTable tableName="BRANCH_STATUS_MODIFICATION"/>
+    </changeSet>
+
+</databaseChangeLog>
