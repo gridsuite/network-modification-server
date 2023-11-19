@@ -66,7 +66,8 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = VoltageInitModificationInfos.class),
     @JsonSubTypes.Type(value = VscCreationInfos.class),
     @JsonSubTypes.Type(value = ConverterStationCreationInfos.class),
-    @JsonSubTypes.Type(value = TabularModificationInfos.class)
+    @JsonSubTypes.Type(value = TabularModificationInfos.class),
+    @JsonSubTypes.Type(value = ByFormulaModificationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor
@@ -86,7 +87,8 @@ public class ModificationInfos {
     private ZonedDateTime date;
 
     @Schema(description = "Modification flag")
-    private Boolean stashed;
+    @Builder.Default
+    private Boolean stashed = false;
 
     @Schema(description = "Message type")
     private String messageType;

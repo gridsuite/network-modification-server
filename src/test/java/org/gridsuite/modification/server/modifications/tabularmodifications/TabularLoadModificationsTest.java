@@ -42,6 +42,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
         return TabularModificationInfos.builder()
                 .modificationType("LOAD_MODIFICATION")
                 .modifications(modifications)
+                .stashed(false)
                 .build();
     }
 
@@ -55,6 +56,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
         return TabularModificationInfos.builder()
                 .modificationType("LOAD_MODIFICATION")
                 .modifications(modifications)
+                .stashed(false)
                 .build();
     }
 
