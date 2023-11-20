@@ -61,8 +61,8 @@ public class NetworkModificationController {
     @Operation(summary = "Get a groups's modification count")
     @ApiResponse(responseCode = "200", description = "Count of group's modifications")
     public ResponseEntity<Integer> getNetworkModificationsCount(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                                @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed) {
-        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsCount(groupUuid, onlyStashed));
+                                                                @Parameter(description = "Stashed modifications") @RequestParam(name = "stashed", required = false, defaultValue = "false") Boolean stashed) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsCount(groupUuid, stashed));
     }
 
     @PostMapping(value = "/groups")

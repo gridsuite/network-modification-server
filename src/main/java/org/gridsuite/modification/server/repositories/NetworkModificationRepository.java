@@ -256,8 +256,8 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public Integer getModificationsCount(@NonNull UUID groupUuid, boolean onlyStashed) {
-        return modificationRepository.countByGroupIdAndStashed(groupUuid, onlyStashed);
+    public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
+        return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
     }
 
     @Transactional(readOnly = true)

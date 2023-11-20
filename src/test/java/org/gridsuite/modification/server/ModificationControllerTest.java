@@ -1357,13 +1357,19 @@ public class ModificationControllerTest {
         MvcResult mvcResult;
         createSomeSwitchModifications(TEST_GROUP_ID, 3);
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
-                .queryParam("onlyStashed", "false"))
+                .queryParam("stashed", "false"))
             .andExpect(status().isOk()).andReturn();
         assertEquals(3, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
 
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
-                .queryParam("onlyStashed", "true"))
+                .queryParam("stashed", "true"))
             .andExpect(status().isOk()).andReturn();
         assertEquals(0, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+
+        //Test for stashed parameter default value
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID))
+            .andExpect(status().isOk()).andReturn();
+        assertEquals(3, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+
     }
 }
