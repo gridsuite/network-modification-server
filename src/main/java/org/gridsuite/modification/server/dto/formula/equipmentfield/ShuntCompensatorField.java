@@ -13,6 +13,10 @@ import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
 
+/**
+ * @author Seddik Yengui <Seddik.yengui at rte-france.com>
+ */
+
 public enum ShuntCompensatorField {
     MAXIMUM_SECTION_COUNT,
     SECTION_COUNT,
