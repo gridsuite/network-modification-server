@@ -10,7 +10,6 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
 import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BranchStatus;
