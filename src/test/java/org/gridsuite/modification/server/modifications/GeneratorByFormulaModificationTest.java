@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
@@ -19,11 +18,8 @@ import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
-import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
@@ -32,7 +28,6 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
 import static org.junit.Assert.assertEquals;
@@ -44,11 +39,6 @@ import static org.junit.Assert.assertNotNull;
 
 @Tag("IntegrationTest")
 public class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTest {
-    private static final UUID FILTER_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final UUID FILTER_ID_3 = UUID.randomUUID();
-    private static final UUID FILTER_ID_4 = UUID.randomUUID();
-    private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final String GENERATOR_ID_1 = "idGenerator";
     private static final String GENERATOR_ID_2 = "v5generator";
     private static final String GENERATOR_ID_3 = "v6generator";
@@ -62,73 +52,34 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
 
     @Test
     public void testCreateWithWarning() throws Exception {
-        UUID filterId = UUID.randomUUID();
-        String equipmentId = "idGenerator";
-        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(equipmentId, 1.0);
-        FilterEquipments filter = getFilterEquipments(filterId, "filterWithWrongId", List.of(identifiableAttributes1), List.of("wrongId"));
-        var filterInfo = FilterInfos.builder()
-                .id(filterId)
-                .name("filterWithWrongId")
-                .build();
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterId))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterInfo))
+                .filters(List.of(filterWithOneWrongId))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
                 .build();
 
-        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
-                .formulaInfosList(List.of(formulaInfos))
-                .identifiableType(IdentifiableType.GENERATOR)
-                .build();
-
-        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-        assertEquals(75, getNetwork().getGenerator(equipmentId).getTargetP(), 0);
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(filterId)), false);
+        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes));
+        assertEquals(75, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
     @Test
     public void testCreateWithError() throws Exception {
-        UUID filterId = UUID.randomUUID();
-        FilterEquipments filter = getFilterEquipments(filterId, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
-        var filterInfo = FilterInfos.builder()
-                .id(filterId)
-                .name("filterWithWrongId")
-                .build();
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterId))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
-
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterInfo))
+                .filters(List.of(filterWithAllWrongId))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
                 .build();
 
-        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
-                .formulaInfosList(List.of(formulaInfos))
-                .identifiableType(IdentifiableType.GENERATOR)
-                .build();
-
-        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(filterId)), false);
+        checkCreateWithError(List.of(formulaInfos));
     }
 
-    void createEquipments() {
-        getNetwork().getVariantManager().setWorkingVariant("variant_1");
+    protected void createEquipments() {
         getNetwork().getGenerator(GENERATOR_ID_1)
                 .setTargetP(100)
                 .setMaxP(500)
@@ -192,7 +143,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         getNetwork().getGenerator(GENERATOR_ID_10).setRatedS(30.);
     }
 
-    List<FilterEquipments> getTestFilters() {
+    protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes gen1 = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         IdentifiableAttributes gen2 = getIdentifiableAttributes(GENERATOR_ID_2, 2.0);
         IdentifiableAttributes gen3 = getIdentifiableAttributes(GENERATOR_ID_3, 2.0);
@@ -214,32 +165,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Override
-    List<FormulaInfos> getFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
-        var filter4 = FilterInfos.builder()
-                .id(FILTER_ID_4)
-                .name("filter4")
-                .build();
-
-        var filter5 = FilterInfos.builder()
-                .id(FILTER_ID_5)
-                .name("filter5")
-                .build();
-
+    protected List<FormulaInfos> getFormulaInfos() {
         FormulaInfos formulaInfos1 = getFormulaInfo(GeneratorField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1, filter2),
                 Operator.ADDITION,
@@ -334,22 +260,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Override
-    List<FormulaInfos> getUpdatedFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
+    protected List<FormulaInfos> getUpdatedFormulaInfos() {
         FormulaInfos formulaInfos1 = FormulaInfos.builder()
                 .editedField(GeneratorField.REACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
@@ -515,5 +426,10 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
 
         assertEquals(60, getNetwork().getGenerator(GENERATOR_ID_9).getRatedS(), 0);
         assertEquals(30, getNetwork().getGenerator(GENERATOR_ID_10).getRatedS(), 0);
+    }
+
+    @Override
+    protected IdentifiableType getIdentifiableType() {
+        return IdentifiableType.GENERATOR;
     }
 }
