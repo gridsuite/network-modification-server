@@ -42,14 +42,14 @@ public enum VoltageLevelField {
             case LOW_VOLTAGE_LIMIT -> voltageLevel.setLowVoltageLimit(newValue);
             case HIGH_VOLTAGE_LIMIT -> voltageLevel.setHighVoltageLimit(newValue);
             case LOW_SHORT_CIRCUIT_CURRENT_LIMIT -> {
-                IdentifiableShortCircuitAdder adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(newValue);
+                IdentifiableShortCircuitAdder<VoltageLevel> adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(newValue);
                 if (identifiableShortCircuit != null) {
                     adder.withIpMax(identifiableShortCircuit.getIpMax());
                 }
                 adder.add();
             }
             case HIGH_SHORT_CIRCUIT_CURRENT_LIMIT -> {
-                IdentifiableShortCircuitAdder adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMax(newValue);
+                IdentifiableShortCircuitAdder<VoltageLevel> adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMax(newValue);
                 if (identifiableShortCircuit != null) {
                     adder.withIpMin(identifiableShortCircuit.getIpMin());
                 }
