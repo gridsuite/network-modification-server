@@ -26,6 +26,7 @@ import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
 
+
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
