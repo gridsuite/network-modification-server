@@ -13,8 +13,10 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensator;
+import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
@@ -23,7 +25,9 @@ import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
 import org.gridsuite.modification.server.service.FilterService;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
@@ -155,6 +159,8 @@ public class ByFormulaModification extends AbstractModification {
             case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
             case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
             case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
+            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);
+            case LOAD -> LoadField.setNewValue((Load) identifiable, formulaInfos.getEditedField(), newValue);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
         }
 

@@ -110,7 +110,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     @Override
     public void testCreate() throws Exception {
         List<FilterEquipments> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -125,7 +125,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     public void testCopy() throws Exception {
 
         List<FilterEquipments> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
