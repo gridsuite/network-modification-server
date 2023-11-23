@@ -79,7 +79,7 @@ public class EquipmentInfosServiceTests {
         assertEquals(equipmentInfos, infosDB.get(0));
         assertEquals(equipmentInfos.getNetworkUuid() + "_" + equipmentInfos.getVariantId() + "_" + equipmentInfos.getId(), infosDB.get(0).getUniqueId());
 
-        // Change names but uniqueIds are same
+        // Change name but uniqueIds are same
         equipmentInfos = EquipmentInfos.builder()
             .networkUuid(NETWORK_UUID)
             .id("id1")
