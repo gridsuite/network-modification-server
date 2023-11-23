@@ -74,8 +74,26 @@ public class EquipmentInfosServiceTests {
                 .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
                 .build();
         equipmentInfosService.addAllEquipmentInfos(List.of(equipmentInfos));
-        assertNotNull(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1).get(0));
-        assertEquals(equipmentInfos, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1).get(0));
+        List<EquipmentInfos> infosDB = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1);
+        assertEquals(1, infosDB.size());
+        assertEquals(equipmentInfos, infosDB.get(0));
+        assertEquals(equipmentInfos.getNetworkUuid() + "_" + equipmentInfos.getVariantId() + "_" + equipmentInfos.getId(), infosDB.get(0).getUniqueId());
+
+        // Change names but uniqueIds are same
+        equipmentInfos = EquipmentInfos.builder()
+            .networkUuid(NETWORK_UUID)
+            .id("id1")
+            .variantId(VARIANT_NAME_1)
+            .name("newName")
+            .type(IdentifiableType.LOAD.name())
+            .voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build()))
+            .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
+            .build();
+        equipmentInfosService.addAllEquipmentInfos(List.of(equipmentInfos));
+        infosDB = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1);
+        assertEquals(1, infosDB.size());
+        assertEquals(equipmentInfos, infosDB.get(0));
+        assertEquals(equipmentInfos.getNetworkUuid() + "_" + equipmentInfos.getVariantId() + "_" + equipmentInfos.getId(), infosDB.get(0).getUniqueId());
 
         equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(List.of(equipmentInfos.getId()), NETWORK_UUID, VARIANT_NAME_1);
         assertEquals(0, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1).size());

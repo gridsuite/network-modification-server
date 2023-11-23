@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.dto.elasticsearch;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -27,7 +28,16 @@ import java.util.UUID;
 @EqualsAndHashCode
 public class BasicEquipmentInfos {
     @Id
-    private String uniqueId;
+    @AccessType(AccessType.Type.PROPERTY)
+    @SuppressWarnings("unused")
+    public String getUniqueId() {
+        return networkUuid + "_" + variantId + "_" + id;
+    }
+
+    @SuppressWarnings("unused")
+    public void setUniqueId(String uniqueId) {
+        // No setter because it a composite value
+    }
 
     @MultiField(
         mainField = @Field(name = "equipmentId", type = FieldType.Text),
