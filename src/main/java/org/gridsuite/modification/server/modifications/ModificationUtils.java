@@ -840,6 +840,16 @@ public final class ModificationUtils {
         }
     }
 
+    public void checkActivePowerZeroOrBetweenMinAndMaxActivePower(AttributeModification<Double> activePowerInfos, AttributeModification<Double> minActivePowerInfos, AttributeModification<Double> maxActivePowerInfos, Double previousMinActivePower, Double previousMaxActivePower, Double previousActivePower, NetworkModificationException.Type exceptionType, String errorMessage) {
+        Double minActivePower = minActivePowerInfos != null ? minActivePowerInfos.getValue() : previousMinActivePower;
+        Double maxActivePower = maxActivePowerInfos != null ? maxActivePowerInfos.getValue() : previousMaxActivePower;
+        Double activePower = activePowerInfos != null ? activePowerInfos.getValue() : previousActivePower;
+
+        if (activePower != 0 && (activePower < minActivePower || activePower > maxActivePower)) {
+            throw new NetworkModificationException(exceptionType, errorMessage + "Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]");
+        }
+    }
+
     private NetworkModificationException makeEquipmentException(NetworkModificationException.Type errorType,
                                                                        String equipmentId,
                                                                        String equipmentName,
