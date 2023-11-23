@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.iidm.network.ShuntCompensator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +20,7 @@ import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -48,6 +50,7 @@ public class ReferenceFieldOrValue {
         Double referenceValue = switch (identifiableType) {
             case GENERATOR -> GeneratorField.getReferenceValue((Generator) identifiable, equipmentField);
             case BATTERY -> BatteryField.getReferenceValue((Battery) identifiable, equipmentField);
+            case SHUNT_COMPENSATOR -> ShuntCompensatorField.getReferenceValue((ShuntCompensator) identifiable, equipmentField);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
                     String.format("Unsupported equipment type : %s", identifiableType.name()));
         };
