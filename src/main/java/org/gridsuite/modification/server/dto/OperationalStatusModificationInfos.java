@@ -23,7 +23,7 @@ import org.gridsuite.modification.server.modifications.OperationalStatusModifica
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATIONAL_STATUS_TYPE_EMPTY;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -35,7 +35,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @ToString(callSuper = true)
 @Schema(description = "Operational status modification")
 @JsonTypeName("OPERATIONAL_STATUS_MODIFICATION")
-@ModificationErrorTypeName("OPERATIONAL_EQUIPMENT_ACTION_ERROR")
+@ModificationErrorTypeName("OPERATIONAL_STATUS_ERROR")
 public class OperationalStatusModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Action type")
     private ActionType action;
@@ -88,7 +88,7 @@ public class OperationalStatusModificationInfos extends EquipmentModificationInf
     public void check() {
         super.check();
         if (action == null) {
-            throw new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY);
+            throw new NetworkModificationException(OPERATIONAL_STATUS_TYPE_EMPTY);
         }
     }
 

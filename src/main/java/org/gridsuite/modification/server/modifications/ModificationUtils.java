@@ -12,11 +12,15 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
 import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
+import com.powsybl.iidm.modification.tripping.BranchTripping;
+import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
+import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.springframework.util.CollectionUtils;
@@ -27,7 +31,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -512,6 +518,39 @@ public final class ModificationUtils {
         }
 
         return null;
+    }
+
+    public Set<Terminal> getTerminalsFromIdentifiable(@NonNull Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch) {
+            Branch<?> branch = (Branch<?>) identifiable;
+            return Stream.of(
+                    branch.getTerminal1(),
+                    branch.getTerminal2()
+            ).collect(Collectors.toSet());
+        } else if (identifiable instanceof ThreeWindingsTransformer) {
+            ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
+            return Stream.of(
+                    w3t.getLeg1().getTerminal(),
+                    w3t.getLeg2().getTerminal(),
+                    w3t.getLeg3().getTerminal()
+            ).collect(Collectors.toSet());
+        } else if (identifiable instanceof HvdcLine) {
+            HvdcLine hvdcLine = (HvdcLine) identifiable;
+            return Stream.of(
+                    hvdcLine.getConverterStation1().getTerminal(),
+                    hvdcLine.getConverterStation2().getTerminal()
+            ).collect(Collectors.toSet());
+        }
+        throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
+    }
+
+    public Tripping getTrippingFromIdentifiable(@NonNull Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch<?> branch) {
+            return new BranchTripping(branch.getId());
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return new ThreeWindingsTransformerTripping(w3t.getId());
+        }
+        throw NetworkModificationException.createOperationalStatusActionTypeUnsupported(OperationalStatusModificationInfos.ActionType.TRIP);
     }
 
     public void disconnectInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {

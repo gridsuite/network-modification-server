@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
@@ -22,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
@@ -65,7 +62,7 @@ public class OperationalStatusModification extends AbstractModification {
                 applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, Branch.Side.TWO);
                 break;
             default:
-                throw NetworkModificationException.createBranchActionTypeUnsupported(modificationInfos.getAction());
+                throw NetworkModificationException.createOperationalStatusActionTypeUnsupported(modificationInfos.getAction());
         }
     }
 
@@ -73,7 +70,7 @@ public class OperationalStatusModification extends AbstractModification {
         if (disconnectAllTerminals(equipment)) {
             equipment.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
         } else {
-            throw new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to disconnect all equipment ends");
+            throw new NetworkModificationException(OPERATIONAL_STATUS_ERROR, "Unable to disconnect all equipment ends");
         }
         subReporter.report(Report.builder()
             .withKey("lockout" + equipmentTypeName + "Applied")
@@ -84,14 +81,10 @@ public class OperationalStatusModification extends AbstractModification {
     }
 
     private void applyTripEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentTypeName, Network network) {
-        Tripping trip = null;
-        if (equipment instanceof Branch<?>) {
-            trip = new BranchTripping(equipment.getId());
-        }
         var switchesToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
-        Objects.requireNonNull(trip).traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
+        ModificationUtils.getInstance().getTrippingFromIdentifiable(equipment).traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
 
         LOGGER.info("Apply Trip on {} {}, switchesToDisconnect: {} terminalsToDisconnect: {} traversedTerminals: {}",
                 equipmentTypeName, equipment.getId(),
@@ -111,7 +104,7 @@ public class OperationalStatusModification extends AbstractModification {
 
         traversedTerminals.stream().map(t -> network.getIdentifiable(t.getConnectable().getId()))
                 .filter(Objects::nonNull)
-                .filter(distinctByKey(b -> b.getId()))  // dont process the same branch more than once
+                .filter(distinctByKey(Identifiable::getId))  // dont process the same branch more than once
                 .forEach(b -> b.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
     }
 
@@ -119,7 +112,7 @@ public class OperationalStatusModification extends AbstractModification {
         if (connectAllTerminals(equipment)) {
             equipment.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
         } else {
-            throw new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to connect all branch ends");
+            throw new NetworkModificationException(OPERATIONAL_STATUS_ERROR, "Unable to connect all branch ends");
         }
 
         subReporter.report(Report.builder()
@@ -137,26 +130,21 @@ public class OperationalStatusModification extends AbstractModification {
             if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
                 branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
             } else {
-                throw new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to energise branch end");
+                throw new NetworkModificationException(OPERATIONAL_STATUS_ERROR, "Unable to energise branch end");
             }
-        }
 
-        subReporter.report(Report.builder()
-                .withKey("energise" + equipmentTypeName + "EndApplied")
-                .withDefaultMessage(equipmentTypeName + " ${id} (id) : energise the side ${side} applied")
-                .withValue("id", equipment.getId())
-                .withValue("side", side.name())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+            subReporter.report(Report.builder()
+                    .withKey("energise" + equipmentTypeName + "EndApplied")
+                    .withDefaultMessage(equipmentTypeName + " ${id} (id) : energise the side ${side} applied")
+                    .withValue("id", equipment.getId())
+                    .withValue("side", side.name())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {
-        boolean res = false;
-        if (equipment instanceof Branch<?>) {
-            Branch<?> branch = (Branch<?>) equipment;
-            return Stream.of(branch.getTerminal1(), branch.getTerminal2()).allMatch(this::disconnectOneTerminal);
-        }
-        return res;
+        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(this::disconnectOneTerminal);
     }
 
     private boolean disconnectOneTerminal(Terminal terminal) {
@@ -164,12 +152,7 @@ public class OperationalStatusModification extends AbstractModification {
     }
 
     private boolean connectAllTerminals(Identifiable<?> equipment) {
-        boolean res = false;
-        if (equipment instanceof Branch<?>) {
-            Branch<?> branch = (Branch<?>) equipment;
-            res = Stream.of(branch.getTerminal1(), branch.getTerminal2()).allMatch(this::connectOneTerminal);
-        }
-        return res;
+        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(this::connectOneTerminal);
     }
 
     private boolean connectOneTerminal(Terminal terminal) {

@@ -74,10 +74,10 @@ public class NetworkModificationException extends PowsyblException {
         TWO_WINDINGS_TRANSFORMER_CREATION_ERROR(HttpStatus.BAD_REQUEST),
         CONNECTION_POSITION_ERROR(HttpStatus.BAD_REQUEST),
         MODIFY_BATTERY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        OPERATIONAL_EQUIPMENT_ACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty equipment action type"),
-        OPERATIONAL_EQUIPMENT_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
-        OPERATIONAL_EQUIPMENT_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        OPERATIONAL_STATUS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        OPERATIONAL_STATUS_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty equipment action type"),
+        OPERATIONAL_STATUS_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
+        OPERATIONAL_STATUS_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_ATTACH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -150,8 +150,8 @@ public class NetworkModificationException extends PowsyblException {
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 
-    public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull OperationalStatusModificationInfos.ActionType type) {
-        return new NetworkModificationException(Type.OPERATIONAL_EQUIPMENT_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
+    public static NetworkModificationException createOperationalStatusActionTypeUnsupported(@NonNull OperationalStatusModificationInfos.ActionType type) {
+        return new NetworkModificationException(Type.OPERATIONAL_STATUS_TYPE_UNSUPPORTED, "The operational status action type : " + type + " is unsupported");
     }
 
     public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {

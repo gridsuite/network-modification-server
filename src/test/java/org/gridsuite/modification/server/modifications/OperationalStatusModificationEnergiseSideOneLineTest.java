@@ -21,7 +21,7 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATIONAL_EQUIPMENT_ACTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATIONAL_STATUS_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,7 +90,7 @@ public class OperationalStatusModificationEnergiseSideOneLineTest extends Abstra
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to energise branch end").getMessage(),
+        assertLogMessage(new NetworkModificationException(OPERATIONAL_STATUS_ERROR, "Unable to energise branch end").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
     }
 

@@ -96,7 +96,7 @@ public class OperationalStatusModificationLockoutLineTest extends AbstractNetwor
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().isBadRequest(),
-                    content().string(new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_TYPE_EMPTY).getMessage())
+                    content().string(new NetworkModificationException(OPERATIONAL_STATUS_TYPE_EMPTY).getMessage())
             );
 
         // modification action not existing
@@ -112,7 +112,7 @@ public class OperationalStatusModificationLockoutLineTest extends AbstractNetwor
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertNull(getNetwork().getLine("line3").getExtension(BranchStatus.class));
-        assertLogMessage(new NetworkModificationException(OPERATIONAL_EQUIPMENT_ACTION_ERROR, "Unable to disconnect all equipment ends").getMessage(),
+        assertLogMessage(new NetworkModificationException(OPERATIONAL_STATUS_ERROR, "Unable to disconnect all equipment ends").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
 
     }
