@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Identifiable;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 

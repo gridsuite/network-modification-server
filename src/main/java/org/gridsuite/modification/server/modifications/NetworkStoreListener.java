@@ -163,24 +163,22 @@ public class NetworkStoreListener implements NetworkListener {
             // update all voltageLevels linked to substation
             linkedVoltageLevels.forEach(vl -> createdEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(vl, updatedSubstation, networkUuid, network.getVariantManager().getWorkingVariantId())));
             // update all equipments linked to each of the voltageLevels
-            linkedVoltageLevels.forEach(vl -> {
-                Iterable<Identifiable<?>> linkedEquipments = Iterables.concat(
+            linkedVoltageLevels.forEach(vl ->
+                Iterables.concat(
                     vl.getConnectables(),
                     vl.getSwitches()
-                );
-                linkedEquipments.forEach(c ->
+                ).forEach(c ->
                     createdEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(c, updatedSubstation, networkUuid, network.getVariantManager().getWorkingVariantId()))
-                );
-            });
+                )
+            );
         }
     }
 
     private void updateEquipmentsLinkedToVoltageLevel(VoltageLevel voltageLevel) {
-        Iterable<Identifiable<?>> linkedEquipments = Iterables.concat(
+        Iterables.concat(
             voltageLevel.getConnectables(),
             voltageLevel.getSwitches()
-        );
-        linkedEquipments.forEach(c ->
+        ).forEach(c ->
             createdEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(c, voltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()))
         );
     }
