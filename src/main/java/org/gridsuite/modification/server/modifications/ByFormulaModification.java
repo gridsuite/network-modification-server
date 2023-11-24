@@ -13,9 +13,11 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensator;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
@@ -27,8 +29,10 @@ import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField
 import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
 import org.gridsuite.modification.server.service.FilterService;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
@@ -132,10 +136,24 @@ public class ByFormulaModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
-        filterEquipments.getIdentifiableAttributes().forEach(attributes -> applyFormula(network,
-                attributes.getId(),
-                formulaInfos,
-                formulaReports));
+        List<String> notEditableEquipments = new ArrayList<>();
+        filterEquipments.getIdentifiableAttributes()
+                .stream()
+                .map(attributes -> network.getIdentifiable(attributes.getId()))
+                .filter(identifiable -> {
+                    boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
+                    if (!isEditableEquipment) {
+                        notEditableEquipments.add(identifiable.getId());
+                    }
+                    return isEditableEquipment;
+                })
+                .forEach(identifiable -> applyFormula(identifiable, formulaInfos, formulaReports, notEditableEquipments));
+
+        formulaReports.add(Report.builder()
+                .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
+                .withDefaultMessage(String.format("      The following equipment were not edited : %s", String.join(", ", notEditableEquipments)))
+                .withSeverity(TypedValue.ERROR_SEVERITY)
+                .build());
     }
 
     @Nullable
@@ -147,53 +165,70 @@ public class ByFormulaModification extends AbstractModification {
         return isValidFilter ? exportFilters : null;
     }
 
-    private void applyFormula(Network network,
-                              String identifiableId,
-                              FormulaInfos formulaInfos,
-                              List<Report> reports) {
-        Identifiable<?> identifiable = network.getIdentifiable(identifiableId);
-        Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
-        Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
-        final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
-        switch (identifiable.getType()) {
-            case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
-            case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
-            case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
-            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);
-            case LOAD -> LoadField.setNewValue((Load) identifiable, formulaInfos.getEditedField(), newValue);
-            default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
+    private boolean isEquipmentEditable(Identifiable<?> identifiable,
+                                        FormulaInfos formulaInfos) {
+        if (formulaInfos.getEditedField() == null) {
+            return false;
         }
 
-        reports.add(Report.builder()
-                .withKey("EquipmentModifiedReport_" + reports.size())
-                .withDefaultMessage(String.format("        %s id : %s, new value of %s : %s",
-                        modificationInfos.getIdentifiableType(),
-                        identifiable.getId(),
-                        formulaInfos.getEditedField(),
-                        newValue))
-                .withSeverity(TypedValue.TRACE_SEVERITY)
-                .build());
-    }
-
-    private Double applyOperation(Operator operator, Double value1, Double value2) {
-        if (value1 == null ||
-            value2 == null) {
-            throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "at least one of the value or referenced field is null");
-        } else {
-            return switch (operator) {
-                case ADDITION -> value1 + value2;
-                case SUBTRACTION -> value1 - value2;
-                case MULTIPLICATION -> value1 * value2;
-                case DIVISION -> {
-                    if (value2 == 0) {
-                        throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
-                                "there is a division by zero in a formula");
-                    } else {
-                        yield value1 / value2;
-                    }
-                }
-                case PERCENTAGE -> value1 * (value2 / 100);
+        if (identifiable.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER) {
+            TwoWindingsTransformerField editedField = TwoWindingsTransformerField.valueOf(formulaInfos.getEditedField());
+            TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) identifiable;
+            return switch (editedField) {
+                case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> twoWindingsTransformer.getRatioTapChanger() != null;
+                case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> twoWindingsTransformer.getPhaseTapChanger() != null;
+                default -> true;
             };
         }
+        return true;
+    }
+
+    private void applyFormula(Identifiable<?> identifiable,
+                              FormulaInfos formulaInfos,
+                              List<Report> reports,
+                              List<String> notEditableEquipments) {
+        Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
+        Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
+        if (value1 == null || value2 == null) {
+            notEditableEquipments.add(identifiable.getId());
+        } else {
+            final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
+            switch (identifiable.getType()) {
+                case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
+                case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
+                case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
+                case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);
+                case LOAD -> LoadField.setNewValue((Load) identifiable, formulaInfos.getEditedField(), newValue);
+                case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) identifiable, formulaInfos.getEditedField(), newValue);
+                default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
+            }
+
+            reports.add(Report.builder()
+                    .withKey("EquipmentModifiedReport_" + reports.size())
+                    .withDefaultMessage(String.format("        %s id : %s, new value of %s : %s",
+                            modificationInfos.getIdentifiableType(),
+                            identifiable.getId(),
+                            formulaInfos.getEditedField(),
+                            newValue))
+                    .withSeverity(TypedValue.TRACE_SEVERITY)
+                    .build());
+        }
+    }
+
+    private Double applyOperation(Operator operator, @NotNull Double value1, @NotNull Double value2) {
+        return switch (operator) {
+            case ADDITION -> value1 + value2;
+            case SUBTRACTION -> value1 - value2;
+            case MULTIPLICATION -> value1 * value2;
+            case DIVISION -> {
+                if (value2 == 0) {
+                    throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
+                            "there is a division by zero in a formula");
+                } else {
+                    yield value1 / value2;
+                }
+            }
+            case PERCENTAGE -> value1 * (value2 / 100);
+        };
     }
 }
