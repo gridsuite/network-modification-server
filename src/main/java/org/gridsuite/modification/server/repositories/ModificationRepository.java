@@ -37,4 +37,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
     Set<GeneratorModificationEntity> findAllReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
+
+    Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 }
