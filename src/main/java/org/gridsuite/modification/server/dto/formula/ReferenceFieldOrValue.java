@@ -54,7 +54,7 @@ public class ReferenceFieldOrValue {
         }
 
         IdentifiableType identifiableType = identifiable.getType();
-        Double referenceValue = switch (identifiableType) {
+        return switch (identifiableType) {
             case GENERATOR -> GeneratorField.getReferenceValue((Generator) identifiable, equipmentField);
             case BATTERY -> BatteryField.getReferenceValue((Battery) identifiable, equipmentField);
             case SHUNT_COMPENSATOR -> ShuntCompensatorField.getReferenceValue((ShuntCompensator) identifiable, equipmentField);
@@ -64,12 +64,5 @@ public class ReferenceFieldOrValue {
             default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
                     String.format("Unsupported equipment type : %s", identifiableType.name()));
         };
-
-        if (referenceValue == null) {
-            throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
-                    String.format("value of %s is null", equipmentField));
-        }
-
-        return referenceValue;
     }
 }
