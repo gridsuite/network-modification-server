@@ -107,53 +107,64 @@ public class ByFormulaModification extends AbstractModification {
                                                 FilterInfos filterInfos) {
         FilterEquipments filterEquipments = exportFilters.get(filterInfos.getId());
 
-        formulaReports.add(Report.builder()
-                .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
-                .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
-                        filterInfos.getName()))
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-
-        formulaReports.add(Report.builder()
-                .withKey("numberOfValidEquipment" + formulaReports.size())
-                .withDefaultMessage(String.format("      Number of equipment modified : %s", filterEquipments.getIdentifiableAttributes().size()))
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-
-        if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
-            String equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
+        if (CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes())) {
             formulaReports.add(Report.builder()
-                    .withKey("filterEquipmentsNotFound_" + formulaReports.size())
-                    .withDefaultMessage(String.format("      Equipment not found : %s",
-                            equipmentIds))
+                    .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                    .withDefaultMessage(String.format("No equipments were found for filter %s",
+                            filterInfos.getName()))
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
+        } else {
+            formulaReports.add(Report.builder()
+                    .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                    .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
+                            filterInfos.getName()))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+
+            formulaReports.add(Report.builder()
+                    .withKey("numberOfValidEquipment" + formulaReports.size())
+                    .withDefaultMessage(String.format("      Number of equipment modified : %s", filterEquipments.getIdentifiableAttributes().size()))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+
+            if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
+                String equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
+                formulaReports.add(Report.builder()
+                        .withKey("filterEquipmentsNotFound_" + formulaReports.size())
+                        .withDefaultMessage(String.format("      Equipment not found : %s",
+                                equipmentIds))
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+            }
+
+            formulaReports.add(Report.builder()
+                    .withKey("editedFieldFilter_" + formulaReports.size())
+                    .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+
+            List<String> notEditableEquipments = new ArrayList<>();
+            filterEquipments.getIdentifiableAttributes()
+                    .stream()
+                    .map(attributes -> network.getIdentifiable(attributes.getId()))
+                    .filter(identifiable -> {
+                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
+                        if (!isEditableEquipment) {
+                            notEditableEquipments.add(identifiable.getId());
+                        }
+                        return isEditableEquipment;
+                    })
+                    .forEach(identifiable -> applyFormula(identifiable, formulaInfos, formulaReports, notEditableEquipments));
+
+            if (!CollectionUtils.isEmpty(notEditableEquipments)) {
+                formulaReports.add(Report.builder()
+                        .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
+                        .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
+                        .withSeverity(TypedValue.ERROR_SEVERITY)
+                        .build());
+            }
         }
-
-        formulaReports.add(Report.builder()
-                .withKey("editedFieldFilter_" + formulaReports.size())
-                .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-
-        List<String> notEditableEquipments = new ArrayList<>();
-        filterEquipments.getIdentifiableAttributes()
-                .stream()
-                .map(attributes -> network.getIdentifiable(attributes.getId()))
-                .filter(identifiable -> {
-                    boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
-                    if (!isEditableEquipment) {
-                        notEditableEquipments.add(identifiable.getId());
-                    }
-                    return isEditableEquipment;
-                })
-                .forEach(identifiable -> applyFormula(identifiable, formulaInfos, formulaReports, notEditableEquipments));
-
-        formulaReports.add(Report.builder()
-                .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
-                .withDefaultMessage(String.format("      The following equipment were not edited : %s", String.join(", ", notEditableEquipments)))
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
     }
 
     @Nullable
