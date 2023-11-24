@@ -67,6 +67,7 @@ public class ModificationElasticsearchTest {
     NetworkStoreService networkStoreService;
 
     @MockBean
+    ReportService reportService;
 
     @Autowired
     private EquipmentInfosRepository equipmentInfosRepository;
