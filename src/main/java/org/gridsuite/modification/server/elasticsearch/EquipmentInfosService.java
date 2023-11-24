@@ -65,7 +65,6 @@ public class EquipmentInfosService {
         addAllEquipmentInfos(
                 equipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantToCloneId).stream()
                         .map(equipmentInfos -> {
-                            equipmentInfos.setUniqueId(null);
                             equipmentInfos.setVariantId(variantId);
                             return equipmentInfos;
                         })
@@ -74,7 +73,6 @@ public class EquipmentInfosService {
         addAllTombstonedEquipmentInfos(
                 tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantToCloneId).stream()
                         .map(tombstonedEquipmentInfos -> {
-                            tombstonedEquipmentInfos.setUniqueId(null);
                             tombstonedEquipmentInfos.setVariantId(variantId);
                             return tombstonedEquipmentInfos;
                         })
