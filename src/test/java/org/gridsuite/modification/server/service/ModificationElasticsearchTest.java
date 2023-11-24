@@ -93,14 +93,14 @@ public class ModificationElasticsearchTest {
         LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
         String loadCreationJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        assertEquals(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName(), "v1load_name");
+        assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
 
         // load modification - assert name modification
         LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, "v1load_newname", null, null, null, null);
         String loadModificationJson = mapper.writeValueAsString(loadModification);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        assertEquals(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName(), "v1load_newname");
+        assertEquals("v1load_newname", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
     }
 
     @Test
@@ -129,7 +129,7 @@ public class ModificationElasticsearchTest {
 
     private void checkSomeEquipmentsVoltageLevel(UUID networkUuid, String variantId, String voltageLevelName) {
         // assert targeted voltage level has been updated
-        assertEquals(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1"), networkUuid, variantId).get(0).getName(), voltageLevelName);
+        assertEquals(voltageLevelName, equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1"), networkUuid, variantId).get(0).getName());
 
         // assert linked load has been updated (linked connectable)
         assertTrue(checkEquipmentHasVoltageLevelWithName(networkUuid, variantId, "v1Load", voltageLevelName));
