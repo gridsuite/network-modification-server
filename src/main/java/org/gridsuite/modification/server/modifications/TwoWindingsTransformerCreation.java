@@ -59,6 +59,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
             ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos2, twoWindingsTransformer.newCurrentLimits2());
         }
 
+        ModificationUtils.getInstance().disconnectBranch(modificationInfos, network.getTwoWindingsTransformer(modificationInfos.getEquipmentId()), subReporter);
     }
 
     private TwoWindingsTransformer create2WTInNodeBreaker(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, Reporter subReporter) {

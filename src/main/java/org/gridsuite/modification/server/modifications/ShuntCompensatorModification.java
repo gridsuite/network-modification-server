@@ -85,7 +85,9 @@ public class ShuntCompensatorModification extends AbstractModification {
 
     private void modifySectionCount(List<Report> reports, ShuntCompensator shuntCompensator) {
         if (modificationInfos.getSectionCount() != null) {
-            reports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(shuntCompensator::setSectionCount, shuntCompensator::getSectionCount, modificationInfos.getSectionCount(), "Section count"));
+            var newSectionCount = modificationInfos.getSectionCount().getValue();
+            reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensator.getSectionCount(), newSectionCount, "Section count"));
+            shuntCompensator.setSectionCount(newSectionCount);
         }
     }
 
@@ -125,6 +127,10 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
 
         if (modificationInfos.getMaxQAtNominalV() != null) {
+            if (modificationInfos.getMaxQAtNominalV().getValue() < 0) {
+                throw new NetworkModificationException(NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        "Qmax at nominal voltage should be greater or equal to 0");
+            }
             double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
             double newSusceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldMaxQAtNominalV, modificationInfos.getMaxQAtNominalV().getValue(), "Qmax available at nominal voltage"));

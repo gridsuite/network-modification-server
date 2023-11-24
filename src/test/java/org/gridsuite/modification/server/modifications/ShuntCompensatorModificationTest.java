@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
@@ -70,6 +71,23 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
                         String.format("Voltage level wrongVLId does not exist in network")).getMessage(),
+                shuntCompensator.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testNegativeQmaxAtNominalV() {
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("v5shunt")
+                .voltageLevelId("v5")
+                .maxQAtNominalV(new AttributeModification<>(-15.0, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Qmax at nominal voltage should be greater or equal to 0")).getMessage(),
                 shuntCompensator.getErrorType().name(), reportService);
     }
 

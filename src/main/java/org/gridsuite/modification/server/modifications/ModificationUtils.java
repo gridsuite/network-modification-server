@@ -17,17 +17,15 @@ import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
-
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.AttributeModification;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -474,32 +472,31 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
-        return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 1);
+        return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
     }
 
+    //TODO rename to buildModificationReport()
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
-        boolean isOldValueDoubleNaN = oldValue instanceof Double && Double.isNaN((Double) oldValue);
-        String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? NO_VALUE : oldValue.toString();
-        boolean isNewValueDoubleNaN = newValue instanceof Double && Double.isNaN((Double) newValue);
-        String newValueString = (newValue == null || isNewValueDoubleNaN) ? NO_VALUE : newValue.toString();
-        StringBuilder indentation = new StringBuilder();
-        for (int i = 0; i < indentationLevel; i++) {
-            indentation.append("    ");
-        }
+        return buildModificationReport(oldValue, newValue, fieldName, indentationLevel, TypedValue.INFO_SEVERITY);
+    }
+
+    static <T> Report buildModificationReport(T oldValue, T newValue, String fieldName, int indentationLevel, TypedValue severity) {
+        final String oldValueString = (oldValue == null || oldValue instanceof Double oldDouble && Double.isNaN(oldDouble))
+                ? NO_VALUE : oldValue.toString();
+        final String newValueString = (newValue == null || newValue instanceof Double newDouble && Double.isNaN(newDouble))
+                ? NO_VALUE : newValue.toString();
+        final String indentation = "\t".repeat(indentationLevel);
         return Report.builder()
-                .withKey("Modification" + fieldName)
-                .withDefaultMessage(indentation.toString() + "${fieldName} : ${oldValue} -> ${newValue}")
+                .withKey("modification-indent" + indentationLevel)
+                .withDefaultMessage(indentation + "${fieldName} : ${oldValue} → ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
                 .withValue("newValue", newValueString)
-                .withSeverity(TypedValue.INFO_SEVERITY)
+                .withSeverity(severity)
                 .build();
     }
 
-    public Terminal getTerminalFromIdentifiable(Network network,
-            String equipmentId,
-            String type,
-            String voltageLevelId) {
+    public Terminal getTerminalFromIdentifiable(Network network, String equipmentId, String type, String voltageLevelId) {
         if (network != null && equipmentId != null && type != null && voltageLevelId != null) {
             Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
 
@@ -524,6 +521,28 @@ public final class ModificationUtils {
             subReporter.report(Report.builder()
                     .withKey("equipmentDisconnected")
                     .withDefaultMessage("Equipment with id=${id} disconnected")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+    }
+
+    public void disconnectBranch(BranchCreationInfos modificationInfos, Branch<?> branch, Reporter subReporter) {
+        // A newly created branch is connected by default on both sides, unless we choose not to do
+        if (!modificationInfos.isConnected1()) {
+            branch.getTerminal1().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("terminal1Disconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected on side 1")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        if (!modificationInfos.isConnected2()) {
+            branch.getTerminal2().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("terminal2Disconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected on side 2")
                     .withValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
@@ -973,6 +992,21 @@ public final class ModificationUtils {
         addToReports(reports, point.getP(), "P" + fieldSuffix);
         addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
         addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
+    }
+
+    public boolean isValidFilter(Reporter subReporter,
+                                 NetworkModificationException.Type errorType,
+                                 Map<UUID, FilterEquipments> exportFilters) {
+        boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
+
+        if (noValidEquipmentId) {
+            String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            return false;
+        }
+
+        return true;
     }
 }
 
