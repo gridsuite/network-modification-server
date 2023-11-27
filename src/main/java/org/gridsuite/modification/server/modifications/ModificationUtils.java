@@ -527,6 +527,28 @@ public final class ModificationUtils {
         }
     }
 
+    public void disconnectBranch(BranchCreationInfos modificationInfos, Branch<?> branch, Reporter subReporter) {
+        // A newly created branch is connected by default on both sides, unless we choose not to do
+        if (!modificationInfos.isConnected1()) {
+            branch.getTerminal1().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("terminal1Disconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected on side 1")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        if (!modificationInfos.isConnected2()) {
+            branch.getTerminal2().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("terminal2Disconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected on side 2")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+    }
+
     public Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
         if (type == null || equipmentId == null) {
             return null;

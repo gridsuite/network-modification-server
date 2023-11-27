@@ -57,14 +57,18 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .ratedS(1.)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
+                .connected1(true)
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("1A")
+                .connected2(true)
                 .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(2147483647).value(671.).build())).build())
                 .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build())
                 .connectionName1("cn201")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connected1(true)
                 .connectionName2("cn202")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connected2(true)
                 .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
                         .lowTapPosition(1)
                         .tapPosition(2)
@@ -306,8 +310,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .seriesResistance(400)
                 .connectionName1("cnid2wt1")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connected1(true)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connected2(true)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos, 1);
@@ -316,8 +322,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
+                .connected1(true)
                 .voltageLevelId2("v4")
                 .busOrBusbarSectionId2("1.A")
+                .connected2(true)
                 .magnetizingConductance(100.0)
                 .magnetizingSusceptance(200.0)
                 .ratedVoltage1(1000)
@@ -331,7 +339,7 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos2, 2);
 
         assertEquals(
-            "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=TWO_WINDINGS_TRANSFORMER_CREATION, date=null, stashed=false, messageType=null, messageValues=null), equipmentId=id2wt1WithRatioTapChanger2), equipmentName=2wtName), seriesResistance=400.0, seriesReactance=300.0, voltageLevelId1=v1, voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, currentLimits1=null, currentLimits2=null, connectionName1=null, connectionDirection1=TOP, connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null), magnetizingConductance=100.0, magnetizingSusceptance=200.0, ratedVoltage1=1000.0, ratedVoltage2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationInfos(super=TapChangerCreationInfos(lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, regulatingTerminalId=v1load, regulatingTerminalType=LOAD, regulatingTerminalVlId=v1, steps=[TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)]), loadTapChangingCapabilities=true, targetV=220.0), phaseTapChanger=null)",
+            "TwoWindingsTransformerCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=TWO_WINDINGS_TRANSFORMER_CREATION, date=null, stashed=false, messageType=null, messageValues=null), equipmentId=id2wt1WithRatioTapChanger2), equipmentName=2wtName), seriesResistance=400.0, seriesReactance=300.0, voltageLevelId1=v1, voltageLevelId2=v4, busOrBusbarSectionId1=1.1, busOrBusbarSectionId2=1.A, currentLimits1=null, currentLimits2=null, connectionName1=null, connectionDirection1=TOP, connectionName2=null, connectionDirection2=TOP, connectionPosition1=null, connectionPosition2=null, connected1=true, connected2=true), magnetizingConductance=100.0, magnetizingSusceptance=200.0, ratedVoltage1=1000.0, ratedVoltage2=1010.0, ratedS=null, ratioTapChanger=RatioTapChangerCreationInfos(super=TapChangerCreationInfos(lowTapPosition=0, tapPosition=1, regulating=true, targetDeadband=null, regulatingTerminalId=v1load, regulatingTerminalType=LOAD, regulatingTerminalVlId=v1, steps=[TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78473, x=39.784725, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78474, x=39.784726, g=0.0, b=0.0, alpha=0.0), TapChangerStepCreationInfos(index=0, rho=1.0, r=39.78475, x=39.784727, g=0.0, b=0.0, alpha=0.0)]), loadTapChangingCapabilities=true, targetV=220.0), phaseTapChanger=null)",
             twoWindingsTransformerCreationInfos2.toString()
         );
 
@@ -341,8 +349,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
+                .connected1(true)
                 .voltageLevelId2("v4")
                 .busOrBusbarSectionId2("1.A")
+                .connected2(true)
                 .magnetizingConductance(100.0)
                 .magnetizingSusceptance(200.0)
                 .ratedVoltage1(1000)
@@ -400,8 +410,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .seriesResistance(400)
                 .connectionName1("cnid2wt1")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connected1(true)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connected2(true)
                 .phaseTapChanger(phaseTapChangerLoadRegulatingCreationInfos)
                 .build();
         testCreateTwoWindingsTransformerInNodeBreaker(twoWindingsTransformerCreationInfos, 1);
@@ -424,8 +436,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
+                .connected1(true)
                 .voltageLevelId2("v4")
                 .busOrBusbarSectionId2("1.A")
+                .connected2(true)
                 .magnetizingConductance(100.0)
                 .magnetizingSusceptance(200.0)
                 .ratedVoltage1(1000)
@@ -458,8 +472,10 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
+                .connected1(true)
                 .voltageLevelId2("v4")
                 .busOrBusbarSectionId2("1.A")
+                .connected2(true)
                 .magnetizingConductance(100.0)
                 .magnetizingSusceptance(200.0)
                 .ratedVoltage1(1000)
