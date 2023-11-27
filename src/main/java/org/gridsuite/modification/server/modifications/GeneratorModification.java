@@ -170,9 +170,17 @@ public class GeneratorModification extends AbstractModification {
     private Reporter modifyGeneratorActiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
                                                            Generator generator, Reporter subReporter) {
         Reporter subReporterLimits = null;
+        Report reportMaxActivePower;
+        Report reportMinActivePower;
 
-        Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
-        Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), "Min active power");
+        if (modificationInfos.getMaxActivePower().getValue() > generator.getMinP()) {
+            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
+            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), "Min active power");
+
+        } else {
+            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), "Min active power");
+            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
+        }
         Report reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), "Rated nominal power");
         if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {
             subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
