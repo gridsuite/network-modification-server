@@ -780,6 +780,41 @@ public final class ModificationUtils {
         reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
     }
 
+    private void modifyExistingActivePowerControl(ActivePowerControl<?> activePowerControl,
+                                                  AttributeModification<Boolean> participateInfo,
+                                                  AttributeModification<Float> droopInfo,
+                                                  List<Report> reports) {
+        double oldDroop = activePowerControl.getDroop();
+        boolean oldParticipate = activePowerControl.isParticipate();
+
+        Optional.ofNullable(participateInfo).ifPresent(info -> {
+            activePowerControl.setParticipate(info.getValue());
+            reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+        });
+
+        Optional.ofNullable(droopInfo).ifPresent(info -> {
+            activePowerControl.setDroop(info.getValue());
+            reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+        });
+    }
+
+    private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
+                                             AttributeModification<Boolean> participateInfo,
+                                             AttributeModification<Float> droopInfo,
+                                             List<Report> reports) {
+        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
+        adder.withParticipate(participate);
+        if (participateInfo != null) {
+            reports.add(buildModificationReport(null, participate, "Participate"));
+        }
+        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
+        adder.withDroop(droop);
+        if (droopInfo != null) {
+            reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+        }
+        adder.add();
+    }
+
     public Reporter modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
                                                        ActivePowerControlAdder<?> activePowerControlAdder,
                                                        AttributeModification<Boolean> participateInfo,
@@ -787,46 +822,10 @@ public final class ModificationUtils {
                                                        Reporter subReporter,
                                                        Reporter subReporterSetpoints) {
         List<Report> reports = new ArrayList<>();
-        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
         if (activePowerControl != null) {
-            double oldDroop = activePowerControl.getDroop();
-            boolean oldParticipate = activePowerControl.isParticipate();
-            if (participateInfo != null) {
-                activePowerControl.setParticipate(participateInfo.getValue());
-                reports.add(ModificationUtils.getInstance().buildModificationReport(oldParticipate,
-                        participateInfo.getValue(),
-                        "Participate"));
-            }
-            if (droopInfo != null) {
-                activePowerControl.setDroop(droop);
-                reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
-                        droop,
-                        "Droop"));
-            }
+            modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
-            // create new active power control extension if not exist
-            if (participateInfo != null) {
-                activePowerControlAdder
-                        .withParticipate(participateInfo.getValue());
-                reports.add(ModificationUtils.getInstance().buildModificationReport(false,
-                        participateInfo.getValue(),
-                        "Participate"));
-            } else {
-                activePowerControlAdder
-                        .withParticipate(false);
-            }
-            if (droopInfo != null) {
-                activePowerControlAdder
-                        .withDroop(droop);
-                reports.add(ModificationUtils.getInstance().buildModificationReport(Double.NaN,
-                        droop,
-                        "Droop"));
-            } else {
-                activePowerControlAdder
-                        .withDroop(Double.NaN);
-            }
-            activePowerControlAdder
-                    .add();
+            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
 
         Reporter subReporterSetpoints2 = subReporterSetpoints;
