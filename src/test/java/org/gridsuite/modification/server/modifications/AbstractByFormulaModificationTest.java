@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
@@ -26,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
@@ -68,6 +70,23 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         createEquipments();
+    }
+
+    @Test
+    public void testByModificationError() throws Exception {
+        // Test with empty list of formulas
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        // Test with empty list of filters in formula
+        FormulaInfos formulaInfos = FormulaInfos.builder()
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
+                .fieldOrValue2(ReferenceFieldOrValue.builder().value(50.).build())
+                .operator(Operator.ADDITION)
+                .filters(List.of())
+                .build();
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos)).build(),
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
     protected void checkCreateWithWarning(List<FormulaInfos> formulaInfos, List<IdentifiableAttributes> existingEquipmentList) throws Exception {
