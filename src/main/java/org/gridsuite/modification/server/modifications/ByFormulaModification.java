@@ -48,9 +48,11 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 public class ByFormulaModification extends AbstractModification {
     private final ByFormulaModificationInfos modificationInfos;
     protected FilterService filterService;
+    private int equipmentNotModifiedCount;
 
     public ByFormulaModification(ByFormulaModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
+        equipmentNotModifiedCount = 0;
     }
 
     @Override
@@ -84,13 +86,39 @@ public class ByFormulaModification extends AbstractModification {
         Map<UUID, FilterEquipments> exportFilters = getUuidFilterEquipmentsMap(network, subReporter, filters);
 
         if (exportFilters != null) {
+            long equipmentCount = exportFilters.values()
+                    .stream()
+                    .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()))
+                    .mapToLong(filterEquipments -> filterEquipments.getIdentifiableAttributes().size())
+                    .sum();
+            long equipmentNotFoundCount = exportFilters.values()
+                    .stream()
+                    .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments()))
+                    .mapToLong(filterEquipments -> filterEquipments.getNotFoundEquipments().size())
+                    .sum();
             Reporter formulaSubReporter = subReporter.createSubReporter("appliedFormulasModifications", "Formulas");
             List<Report> formulaReports = new ArrayList<>();
             modificationInfos.getFormulaInfosList().forEach(formulaInfos ->
                     formulaInfos.getFilters().forEach(filterInfos ->
                             applyFormulaOnFilterEquipments(network, exportFilters, formulaReports, formulaInfos, filterInfos)));
 
-            createReport(subReporter, "byFormulaModification", "new modification by formula", TypedValue.INFO_SEVERITY);
+            createReport(subReporter, "byFormulaModification", "New modification by formula", TypedValue.INFO_SEVERITY);
+            if (equipmentNotModifiedCount == 0 && equipmentNotFoundCount == 0) {
+                createReport(subReporter, "byFormulaModificationALL",
+                        String.format("All equipment have been modified : %s equipment(s)", equipmentCount),
+                        TypedValue.INFO_SEVERITY);
+            } else {
+                if (equipmentNotModifiedCount == equipmentCount) {
+                    createReport(subReporter, "byFormulaModificationNone",
+                            "No equipment have been modified",
+                            TypedValue.ERROR_SEVERITY);
+                } else {
+                    createReport(subReporter, "byFormulaModificationSome",
+                            String.format("Some of the equipment have been modified : %s equipment(s) modified and %s equipment(s) not modified",
+                                    equipmentCount - equipmentNotModifiedCount, equipmentNotModifiedCount + equipmentNotFoundCount),
+                            TypedValue.WARN_SEVERITY);
+                }
+            }
             formulaSubReporter.report(Report.builder()
                     .withKey("appliedFormulasModifications")
                     .withDefaultMessage("  Formulas")
@@ -115,16 +143,46 @@ public class ByFormulaModification extends AbstractModification {
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         } else {
-            formulaReports.add(Report.builder()
-                    .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
-                    .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
-                            filterInfos.getName()))
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+            List<String> notEditableEquipments = new ArrayList<>();
+            List<Report> equipmentsReport = new ArrayList<>();
+            filterEquipments.getIdentifiableAttributes()
+                    .stream()
+                    .map(attributes -> network.getIdentifiable(attributes.getId()))
+                    .filter(identifiable -> {
+                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
+                        if (!isEditableEquipment) {
+                            notEditableEquipments.add(identifiable.getId());
+                        }
+                        return isEditableEquipment;
+                    })
+                    .forEach(identifiable -> applyFormula(identifiable, formulaInfos, equipmentsReport, notEditableEquipments));
+
+            if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
+                formulaReports.add(Report.builder()
+                        .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                        .withDefaultMessage(String.format("No equipment(s) have been modified on filter %s",
+                                filterInfos.getName()))
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+            } else {
+                formulaReports.add(Report.builder()
+                        .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                        .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
+                                filterInfos.getName()))
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+
+                formulaReports.add(Report.builder()
+                        .withKey("numberOfValidEquipment" + formulaReports.size())
+                        .withDefaultMessage(String.format("      Number of equipment modified : %s",
+                                filterEquipments.getIdentifiableAttributes().size() - notEditableEquipments.size()))
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
 
             formulaReports.add(Report.builder()
-                    .withKey("numberOfValidEquipment" + formulaReports.size())
-                    .withDefaultMessage(String.format("      Number of equipment modified : %s", filterEquipments.getIdentifiableAttributes().size()))
+                    .withKey("editedFieldFilter_" + formulaReports.size())
+                    .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
 
@@ -138,32 +196,15 @@ public class ByFormulaModification extends AbstractModification {
                         .build());
             }
 
-            formulaReports.add(Report.builder()
-                    .withKey("editedFieldFilter_" + formulaReports.size())
-                    .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-
-            List<String> notEditableEquipments = new ArrayList<>();
-            filterEquipments.getIdentifiableAttributes()
-                    .stream()
-                    .map(attributes -> network.getIdentifiable(attributes.getId()))
-                    .filter(identifiable -> {
-                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
-                        if (!isEditableEquipment) {
-                            notEditableEquipments.add(identifiable.getId());
-                        }
-                        return isEditableEquipment;
-                    })
-                    .forEach(identifiable -> applyFormula(identifiable, formulaInfos, formulaReports, notEditableEquipments));
-
             if (!CollectionUtils.isEmpty(notEditableEquipments)) {
+                equipmentNotModifiedCount += notEditableEquipments.size();
                 formulaReports.add(Report.builder()
                         .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
                         .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
+            formulaReports.addAll(equipmentsReport);
         }
     }
 
@@ -202,27 +243,43 @@ public class ByFormulaModification extends AbstractModification {
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
         if (value1 == null || value2 == null) {
             notEditableEquipments.add(identifiable.getId());
-        } else {
-            final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
-            switch (identifiable.getType()) {
-                case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
-                case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
-                case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
-                case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);
-                case LOAD -> LoadField.setNewValue((Load) identifiable, formulaInfos.getEditedField(), newValue);
-                case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) identifiable, formulaInfos.getEditedField(), newValue);
-                default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
-            }
-
             reports.add(Report.builder()
                     .withKey("EquipmentModifiedReport_" + reports.size())
-                    .withDefaultMessage(String.format("        %s id : %s, new value of %s : %s",
-                            modificationInfos.getIdentifiableType(),
-                            identifiable.getId(),
-                            formulaInfos.getEditedField(),
-                            newValue))
+                    .withDefaultMessage(String.format("        Cannot modify equipment %s : At least one of the value or referenced field is null",
+                            identifiable.getId()))
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .build());
+        } else {
+            try {
+                final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
+                switch (identifiable.getType()) {
+                    case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
+                    case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
+                    case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
+                    case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);
+                    case LOAD -> LoadField.setNewValue((Load) identifiable, formulaInfos.getEditedField(), newValue);
+                    case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) identifiable, formulaInfos.getEditedField(), newValue);
+                    default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
+                }
+                reports.add(Report.builder()
+                        .withKey("EquipmentModifiedReport_" + reports.size())
+                        .withDefaultMessage(String.format("        %s id : %s, new value of %s : %s",
+                                modificationInfos.getIdentifiableType(),
+                                identifiable.getId(),
+                                formulaInfos.getEditedField(),
+                                newValue))
+                        .withSeverity(TypedValue.TRACE_SEVERITY)
+                        .build());
+            } catch (Exception e) {
+                notEditableEquipments.add(identifiable.getId());
+                reports.add(Report.builder()
+                        .withKey("EquipmentModifiedReport_" + reports.size())
+                        .withDefaultMessage(String.format("        Cannot modify equipment %s : %s",
+                                identifiable.getId(),
+                                e.getMessage()))
+                        .withSeverity(TypedValue.TRACE_SEVERITY)
+                        .build());
+            }
         }
     }
 
