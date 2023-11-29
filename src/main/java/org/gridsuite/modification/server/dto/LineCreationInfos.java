@@ -58,6 +58,6 @@ public class LineCreationInfos extends BranchCreationInfos {
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Creation of line " + getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "Creation of line ${lineId}", "lineId", getEquipmentId());
     }
 }
