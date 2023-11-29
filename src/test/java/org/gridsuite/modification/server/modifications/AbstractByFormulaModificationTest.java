@@ -152,7 +152,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
-    private void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
+    protected void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
                                         NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
         String modificationToCreateJson = mapper.writeValueAsString(byFormulaModificationInfos);
 
@@ -218,11 +218,11 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .build();
     }
 
-    private Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
+    Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
         return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    private String getPath(UUID networkUuid, boolean isRegexPhat) {
+    String getPath(UUID networkUuid, boolean isRegexPhat) {
         if (isRegexPhat) {
             return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
         }

@@ -1,5 +1,6 @@
 package org.gridsuite.modification.server.modifications;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.PhaseTapChangerAdder;
@@ -8,18 +9,23 @@ import com.powsybl.iidm.network.RatioTapChangerAdder;
 import com.powsybl.iidm.network.Substation;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
+import org.junit.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String TWT_ID_1 = "twt1";
@@ -28,6 +34,74 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     private static final String TWT_ID_4 = "twt4";
     private static final String TWT_ID_5 = "twt5";
     private static final String TWT_ID_6 = "twt6";
+
+    @Test
+    public void testModifyTwtWithError() throws Exception {
+        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
+        IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
+        FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_ID_4))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(filter)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+        FormulaInfos formulaInfos = FormulaInfos.builder()
+                .filters(List.of(filter4))
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
+                .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
+                .operator(Operator.ADDITION)
+                .build();
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
+                .identifiableType(getIdentifiableType())
+                .formulaInfosList(List.of(formulaInfos))
+                .build(),
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_4)), false);
+    }
+
+    @Test
+    public void testModifyTwtWithWarning() throws Exception {
+        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_1, 1.);
+        IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_2, 1.);
+        IdentifiableAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_4, 1.);
+        IdentifiableAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_6, 1.);
+        FilterEquipments filterTwt1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
+        FilterEquipments filterTwt2 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes3, identifiableAttributes4), List.of());
+
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        FormulaInfos formulaInfos = FormulaInfos.builder()
+                .filters(List.of(filter1, filter4))
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
+                .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
+                .operator(Operator.ADDITION)
+                .build();
+
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
+                        .identifiableType(getIdentifiableType())
+                        .formulaInfosList(List.of(formulaInfos))
+                        .build(),
+                NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
+        assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
+        assertEquals(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition(), 2);
+        assertEquals(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition(), 5);
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_1, FILTER_ID_4)), false);
+    }
 
     @Override
     protected void createEquipments() {

@@ -998,7 +998,7 @@ public final class ModificationUtils {
                                  NetworkModificationException.Type errorType,
                                  Map<UUID, FilterEquipments> exportFilters) {
         boolean noValidEquipmentId = exportFilters.values().stream()
-                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
+                .allMatch(filterEquipments -> CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()));
 
         if (noValidEquipmentId) {
             String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
