@@ -73,7 +73,6 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
         FilterEquipments filterTwt1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
         FilterEquipments filterTwt2 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes3, identifiableAttributes4), List.of());
 
-
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
