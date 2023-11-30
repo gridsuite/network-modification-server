@@ -132,4 +132,16 @@ public class EquipmentInfos extends BasicEquipmentInfos {
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(linkedEquipment))
             .build();
     }
+
+    public static EquipmentInfos toInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
+        return EquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .id(identifiable.getId())
+            .name(identifiable.getNameOrId())
+            .type(identifiable.getType().name())
+            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
+            .substations(EquipmentInfos.getSubstationsInfos(identifiable))
+            .build();
+    }
 }

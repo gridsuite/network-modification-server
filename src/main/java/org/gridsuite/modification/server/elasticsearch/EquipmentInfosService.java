@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import com.google.common.collect.Lists;
-import com.powsybl.iidm.network.Identifiable;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,19 +87,5 @@ public class EquipmentInfosService {
     public void deleteAll() {
         equipmentInfosRepository.deleteAll();
         tombstonedEquipmentInfosRepository.deleteAll();
-    }
-
-    public void updateEquipment(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
-        EquipmentInfos equipmentToUpdate = EquipmentInfos.builder()
-            .networkUuid(networkUuid)
-            .variantId(variantId)
-            .id(identifiable.getId())
-            .name(identifiable.getNameOrId())
-            .type(identifiable.getType().name())
-            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
-            .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-            .build();
-
-        equipmentInfosRepository.save(equipmentToUpdate);
     }
 }
