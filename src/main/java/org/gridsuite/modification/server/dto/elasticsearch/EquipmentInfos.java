@@ -101,5 +101,4 @@ public class EquipmentInfos extends BasicEquipmentInfos {
                         .name(vl.getSubstation().map(Substation::getNameOrId).orElse(null)).build())
                 .collect(Collectors.toSet());
     }
-
 }
