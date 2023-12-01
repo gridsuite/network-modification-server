@@ -17,7 +17,6 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
 
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -101,17 +100,5 @@ public class EquipmentInfos extends BasicEquipmentInfos {
                         .id(vl.getSubstation().map(Substation::getId).orElse(null))
                         .name(vl.getSubstation().map(Substation::getNameOrId).orElse(null)).build())
                 .collect(Collectors.toSet());
-    }
-
-    public static EquipmentInfos toInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
-        return EquipmentInfos.builder()
-            .networkUuid(networkUuid)
-            .variantId(variantId)
-            .id(identifiable.getId())
-            .name(identifiable.getNameOrId())
-            .type(identifiable.getType().name())
-            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
-            .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-            .build();
     }
 }
