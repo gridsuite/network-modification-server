@@ -239,7 +239,7 @@ public class NetworkStoreListener implements NetworkListener {
                 .networkImpacts(new ArrayList<>(networkImpacts))
                 .build();
     }
-    
+
     private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
         return EquipmentInfos.builder()
             .networkUuid(networkUuid)
