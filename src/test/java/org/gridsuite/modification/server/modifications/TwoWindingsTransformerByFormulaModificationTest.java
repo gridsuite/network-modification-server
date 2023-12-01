@@ -65,6 +65,31 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     }
 
     @Test
+    public void testDivisionByZero() throws Exception {
+        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
+        IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
+        FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_ID_4))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(filter)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        // Test division by 0
+        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
+                .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.).build())
+                .operator(Operator.DIVISION)
+                .filters(List.of(filter4))
+                .build();
+
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_4)), false);
+    }
+
+    @Test
     public void testModifyTwtWithWarning() throws Exception {
         IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_2, 1.);
