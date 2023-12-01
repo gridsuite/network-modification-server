@@ -152,6 +152,7 @@ public class ByFormulaModification extends AbstractModification {
                         boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
                         if (!isEditableEquipment) {
                             notEditableEquipments.add(identifiable.getId());
+                            equipmentNotModifiedCount += 1;
                         }
                         return isEditableEquipment;
                     })
@@ -178,6 +179,14 @@ public class ByFormulaModification extends AbstractModification {
                                 filterEquipments.getIdentifiableAttributes().size() - notEditableEquipments.size()))
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
+
+                if (!CollectionUtils.isEmpty(notEditableEquipments)) {
+                    formulaReports.add(Report.builder()
+                            .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
+                            .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
+                            .withSeverity(TypedValue.WARN_SEVERITY)
+                            .build());
+                }
             }
 
             formulaReports.add(Report.builder()
@@ -196,14 +205,6 @@ public class ByFormulaModification extends AbstractModification {
                         .build());
             }
 
-            if (!CollectionUtils.isEmpty(notEditableEquipments)) {
-                equipmentNotModifiedCount += notEditableEquipments.size();
-                formulaReports.add(Report.builder()
-                        .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
-                        .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
-                        .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
-            }
             formulaReports.addAll(equipmentsReport);
         }
     }
@@ -242,6 +243,7 @@ public class ByFormulaModification extends AbstractModification {
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
         if (value1 == null || value2 == null) {
+            equipmentNotModifiedCount += 1;
             notEditableEquipments.add(identifiable.getId());
             reports.add(Report.builder()
                     .withKey("EquipmentModifiedReport_" + reports.size())
@@ -249,6 +251,9 @@ public class ByFormulaModification extends AbstractModification {
                             identifiable.getId()))
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .build());
+        } else if (value2 == 0 && formulaInfos.getOperator() == Operator.DIVISION) {
+            equipmentNotModifiedCount += 1;
+            notEditableEquipments.add(identifiable.getId());
         } else {
             try {
                 final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
@@ -272,6 +277,7 @@ public class ByFormulaModification extends AbstractModification {
                         .build());
             } catch (Exception e) {
                 notEditableEquipments.add(identifiable.getId());
+                equipmentNotModifiedCount += 1;
                 reports.add(Report.builder()
                         .withKey("EquipmentModifiedReport_" + reports.size())
                         .withDefaultMessage(String.format("        Cannot modify equipment %s : %s",
@@ -288,14 +294,7 @@ public class ByFormulaModification extends AbstractModification {
             case ADDITION -> value1 + value2;
             case SUBTRACTION -> value1 - value2;
             case MULTIPLICATION -> value1 * value2;
-            case DIVISION -> {
-                if (value2 == 0) {
-                    throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
-                            "there is a division by zero in a formula");
-                } else {
-                    yield value1 / value2;
-                }
-            }
+            case DIVISION -> value1 / value2;
             case PERCENTAGE -> value1 * (value2 / 100);
         };
     }
