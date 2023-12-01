@@ -158,54 +158,58 @@ public class ByFormulaModification extends AbstractModification {
                     })
                     .forEach(identifiable -> applyFormula(identifiable, formulaInfos, equipmentsReport, notEditableEquipments));
 
-            if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
-                formulaReports.add(Report.builder()
-                        .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
-                        .withDefaultMessage(String.format("No equipment(s) have been modified on filter %s",
-                                filterInfos.getName()))
-                        .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
-            } else {
-                formulaReports.add(Report.builder()
-                        .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
-                        .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
-                                filterInfos.getName()))
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+            createReports(formulaReports, formulaInfos, filterInfos, filterEquipments, notEditableEquipments);
 
-                formulaReports.add(Report.builder()
-                        .withKey("numberOfValidEquipment" + formulaReports.size())
-                        .withDefaultMessage(String.format("      Number of equipment modified : %s",
-                                filterEquipments.getIdentifiableAttributes().size() - notEditableEquipments.size()))
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+            formulaReports.addAll(equipmentsReport);
+        }
+    }
 
-                if (!CollectionUtils.isEmpty(notEditableEquipments)) {
-                    formulaReports.add(Report.builder()
-                            .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
-                            .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
-                            .withSeverity(TypedValue.WARN_SEVERITY)
-                            .build());
-                }
-            }
-
+    private void createReports(List<Report> formulaReports, FormulaInfos formulaInfos, FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
+        if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
             formulaReports.add(Report.builder()
-                    .withKey("editedFieldFilter_" + formulaReports.size())
-                    .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
+                    .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                    .withDefaultMessage(String.format("No equipment(s) have been modified on filter %s",
+                            filterInfos.getName()))
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
+        } else {
+            formulaReports.add(Report.builder()
+                    .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                    .withDefaultMessage(String.format("Successful application of new modification by formula on filter %s",
+                            filterInfos.getName()))
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
 
-            if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
-                String equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
+            formulaReports.add(Report.builder()
+                    .withKey("numberOfValidEquipment" + formulaReports.size())
+                    .withDefaultMessage(String.format("      Number of equipment modified : %s",
+                            filterEquipments.getIdentifiableAttributes().size() - notEditableEquipments.size()))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+
+            if (!CollectionUtils.isEmpty(notEditableEquipments)) {
                 formulaReports.add(Report.builder()
-                        .withKey("filterEquipmentsNotFound_" + formulaReports.size())
-                        .withDefaultMessage(String.format("      Equipment not found : %s",
-                                equipmentIds))
+                        .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
+                        .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
             }
+        }
 
-            formulaReports.addAll(equipmentsReport);
+        formulaReports.add(Report.builder()
+                .withKey("editedFieldFilter_" + formulaReports.size())
+                .withDefaultMessage(String.format("      Edited field : %s", formulaInfos.getEditedField()))
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+
+        if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
+            String equipmentIds = String.join(", ", filterEquipments.getNotFoundEquipments());
+            formulaReports.add(Report.builder()
+                    .withKey("filterEquipmentsNotFound_" + formulaReports.size())
+                    .withDefaultMessage(String.format("      Equipment not found : %s",
+                            equipmentIds))
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build());
         }
     }
 
