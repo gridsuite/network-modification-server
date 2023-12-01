@@ -151,7 +151,7 @@ public class NetworkStoreListener implements NetworkListener {
             // update substation linked to voltageLevel
             Optional<Substation> linkedSubstation = updatedVoltageLevel.getSubstation();
             if (linkedSubstation.isPresent()) {
-                modifiedEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(linkedSubstation.get(), updatedVoltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()));
+                modifiedEquipments.add(EquipmentInfos.toInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId()));
             }
         } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
             Substation updatedSubstation = network.getSubstation(identifiable.getId());
@@ -162,14 +162,14 @@ public class NetworkStoreListener implements NetworkListener {
     private void updateEquipmentsLinkedToSubstation(Substation substation) {
         Iterable<VoltageLevel> linkedVoltageLevels = substation.getVoltageLevels();
         // update all voltageLevels linked to substation
-        linkedVoltageLevels.forEach(vl -> modifiedEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(vl, substation, networkUuid, network.getVariantManager().getWorkingVariantId())));
+        linkedVoltageLevels.forEach(vl -> modifiedEquipments.add(EquipmentInfos.toInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId())));
         // update all equipments linked to each of the voltageLevels
         linkedVoltageLevels.forEach(vl ->
             Iterables.concat(
                 vl.getConnectables(),
                 vl.getSwitches()
             ).forEach(c ->
-                modifiedEquipments.add(EquipmentInfos.toInfosWithUpdatedSubstationName(c, substation, networkUuid, network.getVariantManager().getWorkingVariantId()))
+                modifiedEquipments.add(EquipmentInfos.toInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()))
             )
         );
     }
@@ -179,7 +179,7 @@ public class NetworkStoreListener implements NetworkListener {
             voltageLevel.getConnectables(),
             voltageLevel.getSwitches()
         ).forEach(c ->
-            modifiedEquipments.add(EquipmentInfos.toInfosWithUpdatedVoltageLevelName(c, voltageLevel, networkUuid, network.getVariantManager().getWorkingVariantId()))
+            modifiedEquipments.add(EquipmentInfos.toInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()))
         );
     }
 
