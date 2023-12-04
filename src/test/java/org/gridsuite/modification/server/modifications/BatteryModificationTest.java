@@ -272,6 +272,7 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
                 batteryModificationInfos.getErrorType().name(), reportService);
 
     }
+
     @Test
     public void testMinQGreaterThanMaxQ() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
