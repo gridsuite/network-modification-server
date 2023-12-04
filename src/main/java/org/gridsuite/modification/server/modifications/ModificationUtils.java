@@ -780,6 +780,41 @@ public final class ModificationUtils {
         reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
     }
 
+    private void modifyExistingActivePowerControl(ActivePowerControl<?> activePowerControl,
+                                                  AttributeModification<Boolean> participateInfo,
+                                                  AttributeModification<Float> droopInfo,
+                                                  List<Report> reports) {
+        double oldDroop = activePowerControl.getDroop();
+        boolean oldParticipate = activePowerControl.isParticipate();
+
+        Optional.ofNullable(participateInfo).ifPresent(info -> {
+            activePowerControl.setParticipate(info.getValue());
+            reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+        });
+
+        Optional.ofNullable(droopInfo).ifPresent(info -> {
+            activePowerControl.setDroop(info.getValue());
+            reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+        });
+    }
+
+    private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
+                                             AttributeModification<Boolean> participateInfo,
+                                             AttributeModification<Float> droopInfo,
+                                             List<Report> reports) {
+        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
+        adder.withParticipate(participate);
+        if (participateInfo != null) {
+            reports.add(buildModificationReport(null, participate, "Participate"));
+        }
+        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
+        adder.withDroop(droop);
+        if (droopInfo != null) {
+            reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+        }
+        adder.add();
+    }
+
     public Reporter modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
                                                        ActivePowerControlAdder<?> activePowerControlAdder,
                                                        AttributeModification<Boolean> participateInfo,
@@ -787,37 +822,11 @@ public final class ModificationUtils {
                                                        Reporter subReporter,
                                                        Reporter subReporterSetpoints) {
         List<Report> reports = new ArrayList<>();
-        double oldDroop = Double.NaN;
-        boolean oldParticipate = false;
-        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
         if (activePowerControl != null) {
-            oldDroop = activePowerControl.getDroop();
-            oldParticipate = activePowerControl.isParticipate();
-        }
-
-        if (participateInfo != null) {
-            activePowerControlAdder
-                    .withParticipate(participateInfo.getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
-                    participateInfo.getValue(),
-                    "Participate"));
+            modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
-            activePowerControlAdder
-                    .withParticipate(oldParticipate);
+            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
-
-        if (droopInfo != null) {
-            activePowerControlAdder
-                    .withDroop(droop);
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
-                    droop,
-                    "Droop"));
-        } else {
-            activePowerControlAdder
-                    .withDroop(oldDroop);
-        }
-        activePowerControlAdder
-                .add();
 
         Reporter subReporterSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !reports.isEmpty()) {
@@ -859,6 +868,16 @@ public final class ModificationUtils {
         Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
         if (minReactivePower > maxReactivePower) {
             throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
+        }
+    }
+
+    public void checkActivePowerZeroOrBetweenMinAndMaxActivePower(AttributeModification<Double> activePowerInfos, AttributeModification<Double> minActivePowerInfos, AttributeModification<Double> maxActivePowerInfos, Double previousMinActivePower, Double previousMaxActivePower, Double previousActivePower, NetworkModificationException.Type exceptionType, String errorMessage) {
+        Double minActivePower = minActivePowerInfos != null ? minActivePowerInfos.getValue() : previousMinActivePower;
+        Double maxActivePower = maxActivePowerInfos != null ? maxActivePowerInfos.getValue() : previousMaxActivePower;
+        Double activePower = activePowerInfos != null ? activePowerInfos.getValue() : previousActivePower;
+
+        if (activePower != 0 && (activePower < minActivePower || activePower > maxActivePower)) {
+            throw new NetworkModificationException(exceptionType, errorMessage + "Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]");
         }
     }
 
