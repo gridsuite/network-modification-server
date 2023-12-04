@@ -253,6 +253,27 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
+    public void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
+        BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
+        Battery battery = getNetwork().getBattery("v3Battery");
+        battery.setTargetP(80.)
+                .setMinP(0.)
+                .setMaxP(100.);
+        batteryModificationInfos.setActivePowerSetpoint(new AttributeModification<>(155.0, OperationType.SET));
+
+        Double minActivePower = batteryModificationInfos.getMinActivePower() != null ? batteryModificationInfos.getMinActivePower().getValue() : battery.getMinP();
+        Double maxActivePower = batteryModificationInfos.getMaxActivePower() != null ? batteryModificationInfos.getMaxActivePower().getValue() : battery.getMaxP();
+        Double activePower = batteryModificationInfos.getActivePowerSetpoint() != null ? batteryModificationInfos.getActivePowerSetpoint().getValue() : battery.getTargetP();
+
+        String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
+                batteryModificationInfos.getErrorType().name(), reportService);
+
+    }
+
+    @Test
     public void testMinQGreaterThanMaxQ() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         Battery battery = getNetwork().getBattery("v3Battery");
