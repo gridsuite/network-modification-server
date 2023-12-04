@@ -545,7 +545,7 @@ public class BuildTest {
                 .connectionPosition(0)
                 .connected(true)
                 .build().toEntity());
-        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity());
+        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -597,8 +597,10 @@ public class BuildTest {
                 .ratedS(1.)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
+                .connected1(true)
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("1A")
+                .connected2(true)
                 .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
                 .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
                 .connectionName1("cn201")

@@ -71,7 +71,7 @@ public class GeneratorModification extends AbstractModification {
         }
     }
 
-    public void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
+    private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
         ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
                 modificationInfos.getActivePowerSetpoint(),
                 modificationInfos.getMinActivePower(),
