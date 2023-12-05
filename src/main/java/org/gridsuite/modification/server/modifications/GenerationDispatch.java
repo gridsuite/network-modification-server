@@ -548,8 +548,18 @@ public class GenerationDispatch extends AbstractModification {
 
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
-                generatorsByRegion.forEach((region, generators) -> report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW.",
-                        Map.of("region", region, "sum", getSumActivePower(generators)), TypedValue.INFO_SEVERITY));
+                generatorsByRegion.forEach((region, generators) -> {
+                    EnumMap<EnergySource, Double> activePowerSumByEnergySource = getActivePowerSumByEnergySource(generators);
+                    report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW (NUCLEAR: ${nuclearSum} MW, THERMAL: ${thermalSum} MW, HYDRO: ${hydroSum} MW, WIND AND SOLAR: ${windAndSolarSum} MW, OTHER: ${otherSum} MW).",
+                            Map.of("region", region,
+                                    "sum", getActivePowerSum(generators),
+                                    "nuclearSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.NUCLEAR)).orElse(0d),
+                                    "thermalSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.THERMAL)).orElse(0d),
+                                    "hydroSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.HYDRO)).orElse(0d),
+                                    "windAndSolarSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.WIND)).orElse(0d) + Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.SOLAR)).orElse(0d),
+                                    "otherSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.OTHER)).orElse(0d)
+                                    ), TypedValue.INFO_SEVERITY);
+                });
             } else {
                 double remainingPowerImbalance = totalAmountSupplyToBeDispatched - realized;
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldNotBeMet", "The supply-demand balance could not be met : the remaining power imbalance is ${remainingPower} MW",
@@ -602,8 +612,17 @@ public class GenerationDispatch extends AbstractModification {
         return propertyNames.stream().anyMatch(REGION_CVG::equals);
     }
 
-    private double getSumActivePower(List<Generator> generators) {
+    private double getActivePowerSum(List<Generator> generators) {
         return generators.stream().mapToDouble(Generator::getTargetP).sum();
+    }
+
+    private EnumMap<EnergySource, Double> getActivePowerSumByEnergySource(List<Generator> generators) {
+        EnumMap<EnergySource, Double> activePowerByEnergySource = new EnumMap<>(EnergySource.class);
+        generators.forEach(generator -> {
+            double previousValue = Optional.ofNullable(activePowerByEnergySource.get(generator.getEnergySource())).orElse(0d);
+            activePowerByEnergySource.put(generator.getEnergySource(), previousValue + generator.getTargetP());
+        });
+        return activePowerByEnergySource;
     }
 
 }
