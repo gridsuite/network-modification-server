@@ -107,6 +107,7 @@ public class ByFormulaModification extends AbstractModification {
                 createReport(subReporter, "byFormulaModificationALL",
                         String.format("All equipment have been modified : %s equipment(s)", equipmentCount),
                         TypedValue.INFO_SEVERITY);
+                report(formulaSubReporter, formulaReports);
             } else {
                 if (equipmentNotModifiedCount == equipmentCount) {
                     createReport(subReporter, "byFormulaModificationNone",
@@ -117,15 +118,19 @@ public class ByFormulaModification extends AbstractModification {
                             String.format("Some of the equipment have been modified : %s equipment(s) modified and %s equipment(s) not modified",
                                     equipmentCount - equipmentNotModifiedCount, equipmentNotModifiedCount + equipmentNotFoundCount),
                             TypedValue.WARN_SEVERITY);
+                    report(formulaSubReporter, formulaReports);
                 }
             }
-            formulaSubReporter.report(Report.builder()
-                    .withKey("appliedFormulasModifications")
-                    .withDefaultMessage("  Formulas")
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            formulaReports.forEach(formulaSubReporter::report);
         }
+    }
+
+    private void report(Reporter formulaSubReporter, List<Report> formulaReports) {
+        formulaSubReporter.report(Report.builder()
+                .withKey("appliedFormulasModifications")
+                .withDefaultMessage("  Formulas")
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+        formulaReports.forEach(formulaSubReporter::report);
     }
 
     private void applyFormulaOnFilterEquipments(Network network,
@@ -158,13 +163,13 @@ public class ByFormulaModification extends AbstractModification {
                     })
                     .forEach(identifiable -> applyFormula(identifiable, formulaInfos, equipmentsReport, notEditableEquipments));
 
-            createReports(formulaReports, formulaInfos, filterInfos, filterEquipments, notEditableEquipments);
+            createFormulaReports(formulaReports, formulaInfos, filterInfos, filterEquipments, notEditableEquipments);
 
             formulaReports.addAll(equipmentsReport);
         }
     }
 
-    private void createReports(List<Report> formulaReports, FormulaInfos formulaInfos, FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
+    private void createFormulaReports(List<Report> formulaReports, FormulaInfos formulaInfos, FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
         if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
             formulaReports.add(Report.builder()
                     .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
