@@ -548,8 +548,18 @@ public class GenerationDispatch extends AbstractModification {
 
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
-                generatorsByRegion.forEach((region, generators) -> report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW.",
-                        Map.of("region", region, "sum", getSumActivePower(generators)), TypedValue.INFO_SEVERITY));
+                generatorsByRegion.forEach((region, generators) -> {
+                    Map<EnergySource, Double> activePowerSumByEnergySource = getActivePowerSumByEnergySource(generators);
+                    report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW (NUCLEAR: ${nuclearSum} MW, THERMAL: ${thermalSum} MW, HYDRO: ${hydroSum} MW, WIND AND SOLAR: ${windAndSolarSum} MW, OTHER: ${otherSum} MW).",
+                            Map.of("region", region,
+                                    "sum", activePowerSumByEnergySource.values().stream().reduce(0d, Double::sum),
+                                    "nuclearSum", activePowerSumByEnergySource.getOrDefault(EnergySource.NUCLEAR, 0d),
+                                    "thermalSum", activePowerSumByEnergySource.getOrDefault(EnergySource.THERMAL, 0d),
+                                    "hydroSum", activePowerSumByEnergySource.getOrDefault(EnergySource.HYDRO, 0d),
+                                    "windAndSolarSum", activePowerSumByEnergySource.getOrDefault(EnergySource.WIND, 0d) + activePowerSumByEnergySource.getOrDefault(EnergySource.SOLAR, 0d),
+                                    "otherSum", activePowerSumByEnergySource.getOrDefault(EnergySource.OTHER, 0d)
+                                    ), TypedValue.INFO_SEVERITY);
+                });
             } else {
                 double remainingPowerImbalance = totalAmountSupplyToBeDispatched - realized;
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldNotBeMet", "The supply-demand balance could not be met : the remaining power imbalance is ${remainingPower} MW",
@@ -602,8 +612,8 @@ public class GenerationDispatch extends AbstractModification {
         return propertyNames.stream().anyMatch(REGION_CVG::equals);
     }
 
-    private double getSumActivePower(List<Generator> generators) {
-        return generators.stream().mapToDouble(Generator::getTargetP).sum();
+    private Map<EnergySource, Double> getActivePowerSumByEnergySource(List<Generator> generators) {
+        return generators.stream().collect(Collectors.toMap(Generator::getEnergySource, Generator::getTargetP, Double::sum));
     }
 
 }
