@@ -119,8 +119,8 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());
-        assertEquals(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition(), 2);
-        assertEquals(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition(), 5);
+        assertEquals(2, getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger().getTapPosition());
+        assertEquals(5, getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger().getTapPosition());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 

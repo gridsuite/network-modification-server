@@ -172,7 +172,7 @@ public class ByFormulaModification extends AbstractModification {
     private void createFormulaReports(List<Report> formulaReports, FormulaInfos formulaInfos, FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
         if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
             formulaReports.add(Report.builder()
-                    .withKey("byFormulaModificationFormulaFilter_" + formulaReports.size())
+                    .withKey("byFormulaModificationFormulaFilterFailed_" + formulaReports.size())
                     .withDefaultMessage(String.format("No equipment(s) have been modified on filter %s",
                             filterInfos.getName()))
                     .withSeverity(TypedValue.WARN_SEVERITY)
@@ -255,7 +255,7 @@ public class ByFormulaModification extends AbstractModification {
             equipmentNotModifiedCount += 1;
             notEditableEquipments.add(identifiable.getId());
             reports.add(Report.builder()
-                    .withKey("EquipmentModifiedReport_" + reports.size())
+                    .withKey("EquipmentModifiedReportError_" + reports.size())
                     .withDefaultMessage(String.format("        Cannot modify equipment %s : At least one of the value or referenced field is null",
                             identifiable.getId()))
                     .withSeverity(TypedValue.TRACE_SEVERITY)
@@ -288,7 +288,7 @@ public class ByFormulaModification extends AbstractModification {
                 notEditableEquipments.add(identifiable.getId());
                 equipmentNotModifiedCount += 1;
                 reports.add(Report.builder()
-                        .withKey("EquipmentModifiedReport_" + reports.size())
+                        .withKey("EquipmentModifiedReportExceptionf_" + reports.size())
                         .withDefaultMessage(String.format("        Cannot modify equipment %s : %s",
                                 identifiable.getId(),
                                 e.getMessage()))
