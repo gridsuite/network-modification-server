@@ -549,15 +549,15 @@ public class GenerationDispatch extends AbstractModification {
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
                 generatorsByRegion.forEach((region, generators) -> {
-                    EnumMap<EnergySource, Double> activePowerSumByEnergySource = getActivePowerSumByEnergySource(generators);
+                    Map<EnergySource, Double> activePowerSumByEnergySource = getActivePowerSumByEnergySource(generators);
                     report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW (NUCLEAR: ${nuclearSum} MW, THERMAL: ${thermalSum} MW, HYDRO: ${hydroSum} MW, WIND AND SOLAR: ${windAndSolarSum} MW, OTHER: ${otherSum} MW).",
                             Map.of("region", region,
-                                    "sum", getActivePowerSum(generators),
-                                    "nuclearSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.NUCLEAR)).orElse(0d),
-                                    "thermalSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.THERMAL)).orElse(0d),
-                                    "hydroSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.HYDRO)).orElse(0d),
-                                    "windAndSolarSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.WIND)).orElse(0d) + Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.SOLAR)).orElse(0d),
-                                    "otherSum", Optional.ofNullable(activePowerSumByEnergySource.get(EnergySource.OTHER)).orElse(0d)
+                                    "sum", activePowerSumByEnergySource.values().stream().reduce(0d, Double::sum),
+                                    "nuclearSum", activePowerSumByEnergySource.getOrDefault(EnergySource.NUCLEAR, 0d),
+                                    "thermalSum", activePowerSumByEnergySource.getOrDefault(EnergySource.THERMAL, 0d),
+                                    "hydroSum", activePowerSumByEnergySource.getOrDefault(EnergySource.HYDRO, 0d),
+                                    "windAndSolarSum", activePowerSumByEnergySource.getOrDefault(EnergySource.WIND, 0d) + activePowerSumByEnergySource.getOrDefault(EnergySource.SOLAR, 0d),
+                                    "otherSum", activePowerSumByEnergySource.getOrDefault(EnergySource.OTHER, 0d)
                                     ), TypedValue.INFO_SEVERITY);
                 });
             } else {
@@ -612,17 +612,8 @@ public class GenerationDispatch extends AbstractModification {
         return propertyNames.stream().anyMatch(REGION_CVG::equals);
     }
 
-    private double getActivePowerSum(List<Generator> generators) {
-        return generators.stream().mapToDouble(Generator::getTargetP).sum();
-    }
-
-    private EnumMap<EnergySource, Double> getActivePowerSumByEnergySource(List<Generator> generators) {
-        EnumMap<EnergySource, Double> activePowerByEnergySource = new EnumMap<>(EnergySource.class);
-        generators.forEach(generator -> {
-            double previousValue = Optional.ofNullable(activePowerByEnergySource.get(generator.getEnergySource())).orElse(0d);
-            activePowerByEnergySource.put(generator.getEnergySource(), previousValue + generator.getTargetP());
-        });
-        return activePowerByEnergySource;
+    private Map<EnergySource, Double> getActivePowerSumByEnergySource(List<Generator> generators) {
+        return generators.stream().collect(Collectors.toMap(Generator::getEnergySource, Generator::getTargetP, Double::sum));
     }
 
 }
