@@ -392,6 +392,28 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
+    public void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        Generator generator = getNetwork().getGenerator("idGenerator");
+        generator.setTargetP(80.)
+                .setMinP(10.)
+                .setMaxP(150.);
+
+        generatorModificationInfos.setActivePowerSetpoint(new AttributeModification<>(110.0, OperationType.SET));
+
+        Double minActivePower = generatorModificationInfos.getMinActivePower() != null ? generatorModificationInfos.getMinActivePower().getValue() : generator.getMinP();
+        Double maxActivePower = generatorModificationInfos.getMaxActivePower() != null ? generatorModificationInfos.getMaxActivePower().getValue() : generator.getMaxP();
+        Double activePower = generatorModificationInfos.getActivePowerSetpoint() != null ? generatorModificationInfos.getActivePowerSetpoint().getValue() : generator.getTargetP();
+
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
+                generatorModificationInfos.getErrorType().name(), reportService);
+
+    }
+
+    @Test
     public void testUnsetAttributes() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
