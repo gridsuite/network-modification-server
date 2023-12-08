@@ -616,7 +616,7 @@ public class GenerationDispatch extends AbstractModification {
         return generators.stream().collect(Collectors.toMap(Generator::getEnergySource, Generator::getTargetP, Double::sum));
     }
 
-    private double round(double value) {
+    private static double round(double value) {
         return Math.round(value * 10) / 10.;
     }
 }
