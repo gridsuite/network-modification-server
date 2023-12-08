@@ -10,18 +10,15 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
@@ -52,54 +49,13 @@ public abstract class AbstractScaling extends AbstractModification {
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
-        // export filters from filter server
-        String workingVariantId = network.getVariantManager().getWorkingVariantId();
-        UUID uuid = ((NetworkImpl) network).getUuid();
-        Map<UUID, FilterEquipments> exportFilters = filterService
-                .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
-                .stream()
-                .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
-                .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
-
-        // collect all filters with wrong equipments ids
-        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
-                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        Boolean noValidEquipmentId = exportFilters.values().stream()
-                .allMatch(filterEquipments -> filterEquipments.getIdentifiableAttributes().isEmpty());
-
-        if (noValidEquipmentId) {
-            String errorMsg = scalingInfos.getErrorType() + ": There is no valid equipment ID among the provided filter(s)";
-            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
-            return;
-        }
-
-        // create report for each wrong filter
-        filterWithWrongEquipmentsIds.values().forEach(f -> {
-            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
-            createReport(subReporter,
-                    "filterEquipmentsNotFound_" + f.getFilterName(),
-                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
-                    TypedValue.WARN_SEVERITY);
-        });
+        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, scalingInfos);
+        if (exportFilters == null) return;
+        Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds = ModificationUtils.getInstance().getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
 
         // apply variations
         scalingInfos.getVariations().forEach(variation -> {
-            variation.getFilters().stream()
-                    .filter(f -> !exportFilters.containsKey(f.getId()))
-                    .forEach(f -> createReport(subReporter,
-                            "filterNotFound",
-                            String.format("Cannot find the following filter: %s", f.getName()),
-                            TypedValue.WARN_SEVERITY));
-
-            List<IdentifiableAttributes> identifiableAttributes = variation.getFilters()
-                    .stream()
-                    .filter(f -> !filterWithWrongEquipmentsIds.containsKey(f.getId()) && exportFilters.containsKey(f.getId()))
-                    .flatMap(f -> exportFilters.get(f.getId())
-                            .getIdentifiableAttributes()
-                            .stream())
-                    .collect(Collectors.toList());
+            List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, filtersWithWrongEquipmentIds, variation.getFilters(), subReporter);
 
             if (CollectionUtils.isEmpty(identifiableAttributes)) {
                 String filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));

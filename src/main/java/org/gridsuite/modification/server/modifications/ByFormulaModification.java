@@ -83,7 +83,7 @@ public class ByFormulaModification extends AbstractModification {
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
-        Map<UUID, FilterEquipments> exportFilters = getUuidFilterEquipmentsMap(network, subReporter, filters);
+        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos);
 
         if (exportFilters != null) {
             long equipmentCount = exportFilters.values()
@@ -216,15 +216,6 @@ public class ByFormulaModification extends AbstractModification {
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         }
-    }
-
-    @Nullable
-    private Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(Network network, Reporter subReporter, Map<UUID, String> filters) {
-        // export filters from filter server
-        Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
-
-        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, modificationInfos.getErrorType(), exportFilters);
-        return isValidFilter ? exportFilters : null;
     }
 
     private boolean isEquipmentEditable(Identifiable<?> identifiable,

@@ -19,6 +19,8 @@ import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.service.FilterService;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -1026,6 +1029,49 @@ public final class ModificationUtils {
         }
 
         return true;
+    }
+
+    public static List<IdentifiableAttributes> getIdentifiableAttributes(Map<UUID, FilterEquipments> exportFilters, Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds, List<FilterInfos> filterInfos, Reporter subReporter) {
+        filterInfos.stream()
+                .filter(f -> !exportFilters.containsKey(f.getId()))
+                .forEach(f -> createReport(subReporter,
+                        "filterNotFound",
+                        String.format("Cannot find the following filter: %s", f.getName()),
+                        TypedValue.WARN_SEVERITY));
+
+        return filterInfos
+                .stream()
+                .filter(f -> !filtersWithWrongEquipmentIds.containsKey(f.getId()) && exportFilters.containsKey(f.getId()))
+                .flatMap(f -> exportFilters.get(f.getId())
+                        .getIdentifiableAttributes()
+                        .stream())
+                .filter(distinctByKey(IdentifiableAttributes::getId))
+                .toList();
+    }
+
+    @Nullable
+    public Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(FilterService filterService, Network network, Reporter subReporter, Map<UUID, String> filters, ModificationInfos modificationInfos) {
+        Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
+
+        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, modificationInfos.getErrorType(), exportFilters);
+        return isValidFilter ? exportFilters : null;
+    }
+
+    public Map<UUID, FilterEquipments> getUuidFilterWrongEquipmentsIdsMap(Reporter subReporter, Map<UUID, FilterEquipments> exportFilters, Map<UUID, String> filters) {
+        // collect all filters with wrong equipments ids
+        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
+                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // create report for each wrong filter
+        filterWithWrongEquipmentsIds.values().forEach(f -> {
+            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
+            createReport(subReporter,
+                    "filterEquipmentsNotFound_" + f.getFilterName(),
+                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
+                    TypedValue.WARN_SEVERITY);
+        });
+        return filterWithWrongEquipmentsIds;
     }
 }
 
