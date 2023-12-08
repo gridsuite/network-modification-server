@@ -493,17 +493,17 @@ public class GenerationDispatch extends AbstractModification {
             // get total value of connected loads in the connected component
             double totalDemand = computeTotalDemand(component, generationDispatchInfos.getLossCoefficient());
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalDemand", "The total demand is : ${totalDemand} MW",
-                Map.of("totalDemand", totalDemand), TypedValue.INFO_SEVERITY);
+                Map.of("totalDemand", round(totalDemand)), TypedValue.INFO_SEVERITY);
 
             // get total supply value for generators with fixed supply
             double totalAmountFixedSupply = computeTotalAmountFixedSupply(network, component, generatorsWithFixedSupply, powerToDispatchReporter);
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalAmountFixedSupply", "The total amount of fixed supply is : ${totalAmountFixedSupply} MW",
-                Map.of("totalAmountFixedSupply", totalAmountFixedSupply), TypedValue.INFO_SEVERITY);
+                Map.of("totalAmountFixedSupply", round(totalAmountFixedSupply)), TypedValue.INFO_SEVERITY);
 
             // compute hvdc balance to other synchronous components
             double hvdcBalance = computeHvdcBalance(component);
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
-                Map.of("hvdcBalance", hvdcBalance), TypedValue.INFO_SEVERITY);
+                Map.of("hvdcBalance", round(hvdcBalance)), TypedValue.INFO_SEVERITY);
 
             double totalAmountSupplyToBeDispatched = totalDemand - totalAmountFixedSupply - hvdcBalance;
             if (totalAmountSupplyToBeDispatched < 0.) {
@@ -512,7 +512,7 @@ public class GenerationDispatch extends AbstractModification {
                 continue;
             } else {
                 report(powerToDispatchReporter, Integer.toString(componentNum), "TotalAmountSupplyToBeDispatched", "The total amount of supply to be dispatched is : ${totalAmountSupplyToBeDispatched} MW",
-                    Map.of("totalAmountSupplyToBeDispatched", totalAmountSupplyToBeDispatched), TypedValue.INFO_SEVERITY);
+                    Map.of("totalAmountSupplyToBeDispatched", round(totalAmountSupplyToBeDispatched)), TypedValue.INFO_SEVERITY);
             }
 
             // get adjustable generators in the component
@@ -563,7 +563,7 @@ public class GenerationDispatch extends AbstractModification {
             } else {
                 double remainingPowerImbalance = totalAmountSupplyToBeDispatched - realized;
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldNotBeMet", "The supply-demand balance could not be met : the remaining power imbalance is ${remainingPower} MW",
-                    Map.of("remainingPower", remainingPowerImbalance), TypedValue.WARN_SEVERITY);
+                    Map.of("remainingPower", round(remainingPowerImbalance)), TypedValue.WARN_SEVERITY);
             }
         }
     }
@@ -616,4 +616,7 @@ public class GenerationDispatch extends AbstractModification {
         return generators.stream().collect(Collectors.toMap(Generator::getEnergySource, Generator::getTargetP, Double::sum));
     }
 
+    private double round(double value) {
+        return Math.round(value * 10) / 10.;
+    }
 }

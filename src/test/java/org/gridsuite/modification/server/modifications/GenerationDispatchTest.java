@@ -416,7 +416,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 177.92000000000002 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 177.9 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
 
         int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
@@ -567,7 +567,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.375 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
         assertLogNthMessage("The active power set point of generator GTH1 has been set to 80.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 2);
         assertLogNthMessage("The active power set point of generator GTH2 has been set to 146.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.625 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.6 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
         int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
