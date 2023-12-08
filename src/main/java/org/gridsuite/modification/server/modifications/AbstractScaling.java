@@ -50,7 +50,9 @@ public abstract class AbstractScaling extends AbstractModification {
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
         Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, scalingInfos);
-        if (exportFilters == null) return;
+        if (exportFilters == null) {
+            return;
+        }
         Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds = ModificationUtils.getInstance().getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
 
         // apply variations

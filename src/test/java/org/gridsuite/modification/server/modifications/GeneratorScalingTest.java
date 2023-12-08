@@ -84,7 +84,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         getNetwork().getGenerator(GENERATOR_ID_10).setTargetP(100).setMaxP(500);
     }
 
-    private List<FilterEquipments> getTestFilters() {
+    private List<FilterEquipments> getTestFilters(boolean testDuplicatedElements) {
         IdentifiableAttributes gen1 = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         IdentifiableAttributes gen2 = getIdentifiableAttributes(GENERATOR_ID_2, 2.0);
         IdentifiableAttributes gen3 = getIdentifiableAttributes(GENERATOR_ID_3, 2.0);
@@ -96,7 +96,8 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         IdentifiableAttributes gen9 = getIdentifiableAttributes(GENERATOR_ID_9, 0.0);
         IdentifiableAttributes gen10 = getIdentifiableAttributes(GENERATOR_ID_10, 9.0);
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(gen1, gen2), List.of());
+        List<IdentifiableAttributes> listFilter1 = testDuplicatedElements ? List.of(gen1, gen2, gen2) : List.of(gen1, gen2);
+        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", listFilter1, List.of());
         FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(gen3, gen4), List.of());
         FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(gen5, gen6), List.of());
         FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(gen7, gen8), List.of());
@@ -108,7 +109,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     @Test
     @Override
     public void testCreate() throws Exception {
-        List<FilterEquipments> filters = getTestFilters();
+        List<FilterEquipments> filters = getTestFilters(false);
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
@@ -128,7 +129,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     @Test
     @Override
     public void testCopy() throws Exception {
-        List<FilterEquipments> filters = getTestFilters();
+        List<FilterEquipments> filters = getTestFilters(false);
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
@@ -259,6 +260,25 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
 
         wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(getNetworkUuid())), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*")), false);
+    }
+
+    @Test
+    public void testCreateWithDuplicatedElements() throws Exception {
+        List<FilterEquipments> filters = getTestFilters(true);
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filters))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        super.testCreate();
+
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+
+        assertEquals(
+                String.format("ScalingInfos(super=ModificationInfos(uuid=null, type=GENERATOR_SCALING, date=null, stashed=false, messageType=null, messageValues=null), variations=[ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1)], variationMode=PROPORTIONAL_TO_PMAX, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter2)], variationMode=REGULAR_DISTRIBUTION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter3)], variationMode=STACKING_UP, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter4)], variationMode=VENTILATION, variationValue=50.0, reactiveVariationMode=null), ScalingVariationInfos(id=null, filters=[FilterInfos(id=%s, name=filter1), FilterInfos(id=%s, name=filter5)], variationMode=PROPORTIONAL, variationValue=50.0, reactiveVariationMode=null)], variationType=DELTA_P)",
+                        FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_4, FILTER_ID_1, FILTER_ID_5),
+                buildModification().toString()
+        );
     }
 
     @Override
