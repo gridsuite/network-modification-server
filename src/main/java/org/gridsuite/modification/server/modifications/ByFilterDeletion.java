@@ -51,6 +51,7 @@ public class ByFilterDeletion extends AbstractModification {
             IdentifiableType.DANGLING_LINE,
             IdentifiableType.STATIC_VAR_COMPENSATOR
             );
+
     public ByFilterDeletion(ByFilterDeletionInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
     }
@@ -67,7 +68,9 @@ public class ByFilterDeletion extends AbstractModification {
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
         Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos);
-        if (exportFilters == null) return;
+        if (exportFilters == null) {
+            return;
+        }
         Map<UUID, FilterEquipments> exportedFiltersWithWrongEquipmentIds = ModificationUtils.getInstance().getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
         List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, exportedFiltersWithWrongEquipmentIds, modificationInfos.getEquipmentFilters(), subReporter);
 
