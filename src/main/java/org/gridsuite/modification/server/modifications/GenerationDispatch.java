@@ -82,6 +82,14 @@ public class GenerationDispatch extends AbstractModification {
         return totalLoad * (1. + lossCoefficient / 100.);
     }
 
+    private static double computeTotalActiveBatteryTargetP(Component component) {
+        Objects.requireNonNull(component);
+        return component.getBusStream().flatMap(Bus::getBatteryStream)
+                .filter(battery -> battery.getTerminal().isConnected())
+                .mapToDouble(Battery::getTargetP)
+                .sum();
+    }
+
     private static double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         double totalAmountFixedSupply = 0.;
         List<Generator> generatorsWithoutSetpointList = new ArrayList<>();
@@ -505,7 +513,11 @@ public class GenerationDispatch extends AbstractModification {
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
                 Map.of("hvdcBalance", round(hvdcBalance)), TypedValue.INFO_SEVERITY);
 
-            double totalAmountSupplyToBeDispatched = totalDemand - totalAmountFixedSupply - hvdcBalance;
+            double activeBatteryTotalTargetP = computeTotalActiveBatteryTargetP(component);
+            report(powerToDispatchReporter, Integer.toString(componentNum), "TotalActiveBatteryTargetP", "The battery balance is : ${batteryBalance} MW",
+                    Map.of("batteryBalance", round(activeBatteryTotalTargetP)), TypedValue.INFO_SEVERITY);
+
+            double totalAmountSupplyToBeDispatched = totalDemand - totalAmountFixedSupply - hvdcBalance - activeBatteryTotalTargetP;
             if (totalAmountSupplyToBeDispatched < 0.) {
                 report(powerToDispatchReporter, Integer.toString(componentNum), "TotalAmountFixedSupplyExceedsTotalDemand", "The total amount of fixed supply exceeds the total demand",
                     Map.of(), TypedValue.WARN_SEVERITY);
