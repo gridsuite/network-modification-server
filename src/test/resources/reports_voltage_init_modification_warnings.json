@@ -53,7 +53,7 @@
           }
         } ]
       }, {
-        "taskKey" : "TransformersModifications",
+        "taskKey" : "2WindingsTransformersModifications",
         "reports" : [ {
           "reportKey" : "2WindingsTransformerNotFound",
           "values" : {
@@ -65,7 +65,10 @@
               "value" : "2WT1"
             }
           }
-        }, {
+        } ]
+      }, {
+        "taskKey" : "3WindingsTransformersModifications",
+        "reports" : [ {
           "reportKey" : "3WindingsTransformerNotFound",
           "values" : {
             "reportSeverity" : {
@@ -202,22 +205,23 @@
   },
   "dics" : {
     "default" : {
-      "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
-      "GeneratorsModifications" : "Generators",
-      "StaticVarCompensatorsModifications" : "Static var compensators",
-      "VscConverterStationsModifications" : "Vsc converter stations",
-      "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
-      "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
-      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
-      "ShuntCompensatorsModifications" : "Shunt compensators",
-      "2WindingsTransformerNotFound" : "2 windings transformer with id=${id} not found",
-      "TransformersModifications" : "Transformers",
       "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
-      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
-      "shuntCompensatorNotFound" : "Shunt compensator with id=${id} not found",
-      "3WindingsTransformerNotFound" : "3 windings transformer with id=${id} not found",
+      "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
       "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
-      "generatorNotFound" : "Generator with id=${id} not found"
+      "GeneratorsModifications" : "Generators",
+      "generatorNotFound" : "Generator with id=${id} not found",
+      "2WindingsTransformersModifications" : "2 windings transformers",
+      "2WindingsTransformerNotFound" : "2 windings transformer with id=${id} not found",
+      "3WindingsTransformersModifications" : "3 windings transformers",
+      "3WindingsTransformerNotFound" : "3 windings transformer with id=${id} not found",
+      "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
+      "VscConverterStationsModifications" : "Vsc converter stations",
+      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
+      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
+      "StaticVarCompensatorsModifications" : "Static var compensators",
+      "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
+      "ShuntCompensatorsModifications" : "Shunt compensators",
+      "shuntCompensatorNotFound" : "Shunt compensator with id=${id} not found"
     }
   }
 }
