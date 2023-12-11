@@ -564,12 +564,12 @@ public class GenerationDispatch extends AbstractModification {
                     Map<EnergySource, Double> activePowerSumByEnergySource = getActivePowerSumByEnergySource(generators);
                     report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW (NUCLEAR: ${nuclearSum} MW, THERMAL: ${thermalSum} MW, HYDRO: ${hydroSum} MW, WIND AND SOLAR: ${windAndSolarSum} MW, OTHER: ${otherSum} MW).",
                             Map.of("region", region,
-                                    "sum", activePowerSumByEnergySource.values().stream().reduce(0d, Double::sum),
-                                    "nuclearSum", activePowerSumByEnergySource.getOrDefault(EnergySource.NUCLEAR, 0d),
-                                    "thermalSum", activePowerSumByEnergySource.getOrDefault(EnergySource.THERMAL, 0d),
-                                    "hydroSum", activePowerSumByEnergySource.getOrDefault(EnergySource.HYDRO, 0d),
-                                    "windAndSolarSum", activePowerSumByEnergySource.getOrDefault(EnergySource.WIND, 0d) + activePowerSumByEnergySource.getOrDefault(EnergySource.SOLAR, 0d),
-                                    "otherSum", activePowerSumByEnergySource.getOrDefault(EnergySource.OTHER, 0d)
+                                    "sum", round(activePowerSumByEnergySource.values().stream().reduce(0d, Double::sum)),
+                                    "nuclearSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.NUCLEAR, 0d)),
+                                    "thermalSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.THERMAL, 0d)),
+                                    "hydroSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.HYDRO, 0d)),
+                                    "windAndSolarSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.WIND, 0d) + round(activePowerSumByEnergySource.getOrDefault(EnergySource.SOLAR, 0d))),
+                                    "otherSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.OTHER, 0d))
                                     ), TypedValue.INFO_SEVERITY);
                 });
             } else {
