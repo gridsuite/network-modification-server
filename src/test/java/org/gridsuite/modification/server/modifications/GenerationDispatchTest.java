@@ -137,7 +137,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         ModificationInfos modification = buildModification();
 
         // same than testGenerationDispatch, with 3 Batteries (in 2nd SC)
-        setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithBatteries.xiidm")));
+        setNetwork(Network.read("testGenerationDispatchWithBatteries.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithBatteries.xiidm")));
         // only 2 are connected
         assertTrue(getNetwork().getBattery(BATTERY1_ID).getTerminal().isConnected());
         assertTrue(getNetwork().getBattery(BATTERY2_ID).getTerminal().isConnected());
