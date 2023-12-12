@@ -66,6 +66,9 @@ public class TabularModification extends AbstractModification {
             case "LOAD_MODIFICATION":
                 defaultMessage = "loads" + defaultMessage;
                 break;
+            case "VOLTAGE_LEVEL_MODIFICATION":
+                defaultMessage = "voltage level" + defaultMessage;
+                break;
             default:
                 defaultMessage = "equipments of unknown type" + defaultMessage;
                 break;
