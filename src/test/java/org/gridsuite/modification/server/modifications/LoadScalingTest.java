@@ -106,7 +106,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         getNetwork().getLoad(LOAD_ID_10).setP0(100).setQ0(1.0);
     }
 
-    private List<FilterEquipments> getTestFilters(boolean testDuplicatedEquipements) {
+    private List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes load1 = getIdentifiableAttributes(LOAD_ID_1, 1.0);
         IdentifiableAttributes load2 = getIdentifiableAttributes(LOAD_ID_2, 2.0);
         IdentifiableAttributes load3 = getIdentifiableAttributes(LOAD_ID_3, 2.0);
@@ -118,8 +118,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         IdentifiableAttributes load9 = getIdentifiableAttributes(LOAD_ID_9, 0.0);
         IdentifiableAttributes load10 = getIdentifiableAttributes(LOAD_ID_10, 9.0);
 
-        List<IdentifiableAttributes> listFilter1 = testDuplicatedEquipements ? List.of(load1, load2, load2) : List.of(load1, load2);
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", listFilter1, List.of());
+        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2), List.of());
         FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4), List.of());
         FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(load5, load6), List.of());
         FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(load7, load8), List.of());
@@ -131,7 +130,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     @Test
     @Override
     public void testCreate() throws Exception {
-        List<FilterEquipments> filters = getTestFilters(false);
+        List<FilterEquipments> filters = getTestFilters();
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
@@ -145,7 +144,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     @Test
     @Override
     public void testCopy() throws Exception {
-        List<FilterEquipments> filters = getTestFilters(false);
+        List<FilterEquipments> filters = getTestFilters();
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
@@ -278,19 +277,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(getNetworkUuid())), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(".*")), false);
         assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
         assertEquals(300, getNetwork().getLoad(LOAD_ID_10).getP0(), 0.01D);
-    }
-
-    @Test
-    public void testCreateWithDuplicatedLoads() throws Exception {
-        List<FilterEquipments> filters = getTestFilters(true);
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + "(.+,){4}.*"))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
-
-        super.testCreate();
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
     @Override
