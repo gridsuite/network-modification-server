@@ -564,7 +564,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.375 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
+        assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.4 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
         assertLogNthMessage("The active power set point of generator GTH1 has been set to 80.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 2);
         assertLogNthMessage("The active power set point of generator GTH2 has been set to 146.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
         assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.6 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
@@ -576,7 +576,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogNthMessage("The active power set point of generator GH1 has been set to 80.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 1);
         assertLogNthMessage("The active power set point of generator GH2 has been set to 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 2);
         assertLogNthMessage("The active power set point of generator GH3 has been set to 126.1 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
-        assertLogNthMessage("The active power set point of generator ABC has been set to 63.900000000000006 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
+        assertLogNthMessage("The active power set point of generator ABC has been set to 63.9 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
         assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
         assertLogMessage("Sum of generator active power setpoints in NORTH region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerNORTH" + secondSynchronousComponentNum, reportService);
