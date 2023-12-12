@@ -23,10 +23,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -34,6 +33,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMess
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,6 +47,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final String GH3_ID = "GH3";
     private static final String GTH1_ID = "GTH1";
     private static final String GTH2_ID = "GTH2";
+    private static final String BATTERY1_ID = "BATTERY1";
+    private static final String BATTERY2_ID = "BATTERY2";
+    private static final String BATTERY3_ID = "BATTERY3";
     private static final String TEST1_ID = "TEST1";
     private static final String GROUP1_ID = "GROUP1";
     private static final String GROUP2_ID = "GROUP2";
@@ -90,11 +93,34 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
             .build();
     }
 
+    private void assertLogReportsForDefaultNetwork(double batteryBalanceOnSc2) {
+        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The battery balance is : 0.0 MW", "TotalActiveBatteryTargetP" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 138.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        // on SC 2, we have to substract the battery balance
+        final double defaultTotalAmount = 330.0;
+        DecimalFormat df = new DecimalFormat("#0.0", new DecimalFormatSymbols(Locale.US));
+        final String totalAmount = df.format(defaultTotalAmount - batteryBalanceOnSc2);
+        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
+        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The battery balance is : " + df.format(batteryBalanceOnSc2) + " MW", "TotalActiveBatteryTargetP" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : " + totalAmount + " MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
+        assertLogMessage("Sum of generator active power setpoints in SOUTH region: " + totalAmount + " MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: " + totalAmount + " MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerSOUTH" + secondSynchronousComponentNum, reportService);
+    }
+
     @Test
     public void testGenerationDispatch() throws Exception {
         ModificationInfos modification = buildModification();
 
-        // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
+        // network with 2 synchronous components, no battery, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
 
         String modificationJson = mapper.writeValueAsString(modification);
@@ -103,22 +129,47 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
         assertNetworkAfterCreationWithStandardLossCoefficient();
 
-        // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 138.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        assertLogReportsForDefaultNetwork(0.);
+    }
 
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in SOUTH region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerSOUTH" + secondSynchronousComponentNum, reportService);
+    @Test
+    public void testGenerationDispatchWithBattery() throws Exception {
+        ModificationInfos modification = buildModification();
+
+        // same than testGenerationDispatch, with 3 Batteries (in 2nd SC)
+        setNetwork(Network.read("testGenerationDispatchWithBatteries.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithBatteries.xiidm")));
+        // only 2 are connected
+        assertTrue(getNetwork().getBattery(BATTERY1_ID).getTerminal().isConnected());
+        assertTrue(getNetwork().getBattery(BATTERY2_ID).getTerminal().isConnected());
+        assertFalse(getNetwork().getBattery(BATTERY3_ID).getTerminal().isConnected());
+        final double batteryTotalTargetP = getNetwork().getBattery(BATTERY1_ID).getTargetP() + getNetwork().getBattery(BATTERY2_ID).getTargetP();
+
+        String modificationJson = mapper.writeValueAsString(modification);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertLogReportsForDefaultNetwork(batteryTotalTargetP);
+    }
+
+    @Test
+    public void testGenerationDispatchWithBatteryConnection() throws Exception {
+        ModificationInfos modification = buildModification();
+
+        // network with 3 Batteries (in 2nd SC)
+        setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithBatteries.xiidm")));
+        // connect the 3rd one
+        assertTrue(getNetwork().getBattery(BATTERY1_ID).getTerminal().isConnected());
+        assertTrue(getNetwork().getBattery(BATTERY2_ID).getTerminal().isConnected());
+        assertFalse(getNetwork().getBattery(BATTERY3_ID).getTerminal().isConnected());
+        assertTrue(getNetwork().getBattery(BATTERY3_ID).getTargetP() > 0);
+        getNetwork().getBattery(BATTERY3_ID).getTerminal().connect();
+        final double batteryTotalTargetP = getNetwork().getBattery(BATTERY1_ID).getTargetP() + getNetwork().getBattery(BATTERY2_ID).getTargetP() + getNetwork().getBattery(BATTERY3_ID).getTargetP();
+
+        String modificationJson = mapper.writeValueAsString(modification);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertLogReportsForDefaultNetwork(batteryTotalTargetP);
     }
 
     @Test
