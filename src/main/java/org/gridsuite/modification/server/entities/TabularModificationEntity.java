@@ -81,7 +81,7 @@ public class TabularModificationEntity extends ModificationEntity {
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
                 break;
             case "VOLTAGE_LEVEL_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList());
+                modifications.addAll(tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList()));
                 break;
             default:
                 break;
