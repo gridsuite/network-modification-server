@@ -67,30 +67,29 @@ public class ByFilterDeletion extends AbstractModification {
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
-        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos);
-        if (exportFilters == null) {
-            return;
-        }
-        Map<UUID, FilterEquipments> exportedFiltersWithWrongEquipmentIds = ModificationUtils.getInstance().getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
-        List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, exportedFiltersWithWrongEquipmentIds, modificationInfos.getEquipmentFilters(), subReporter);
+        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos.getErrorType());
+        if (exportFilters != null) {
+            Map<UUID, FilterEquipments> exportedFiltersWithWrongEquipmentIds = ModificationUtils.getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
+            List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, exportedFiltersWithWrongEquipmentIds, modificationInfos.getEquipmentFilters(), subReporter);
 
-        if (CollectionUtils.isEmpty(identifiableAttributes)) {
-            String filterNames = modificationInfos.getEquipmentFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
-            createReport(subReporter,
-                    "allFiltersWrong",
-                    String.format("All of the following filters have equipments with wrong id : %s", filterNames),
-                    TypedValue.WARN_SEVERITY);
-        } else {
-            applyFilterDeletion(network, subReporter, identifiableAttributes);
-        }
+            if (CollectionUtils.isEmpty(identifiableAttributes)) {
+                String filterNames = modificationInfos.getEquipmentFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
+                createReport(subReporter,
+                        "allFiltersWrong",
+                        String.format("All of the following filters have equipments with wrong id : %s", filterNames),
+                        TypedValue.WARN_SEVERITY);
+            } else {
+                applyFilterDeletion(network, subReporter, identifiableAttributes);
+            }
 
-        subReporter.report(Report.builder()
-                .withKey("equipmentDeleted")
-                .withDefaultMessage("equipment of type=${type} and ids=${ids} deleted")
-                .withValue("type", modificationInfos.getEquipmentType())
-                .withValue("ids", identifiableAttributes.stream().map(IdentifiableAttributes::getId).collect(Collectors.joining(", ")))
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+            subReporter.report(Report.builder()
+                    .withKey("equipmentDeleted")
+                    .withDefaultMessage("equipment of type=${type} and ids=${ids} deleted")
+                    .withValue("type", modificationInfos.getEquipmentType())
+                    .withValue("ids", identifiableAttributes.stream().map(IdentifiableAttributes::getId).collect(Collectors.joining(", ")))
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
     }
 
     private void applyFilterDeletion(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes) {
