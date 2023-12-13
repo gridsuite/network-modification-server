@@ -69,7 +69,7 @@ public class ByFormulaModification extends AbstractModification {
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
-        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos);
+        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos.getErrorType());
 
         if (exportFilters != null) {
             long equipmentCount = exportFilters.values()

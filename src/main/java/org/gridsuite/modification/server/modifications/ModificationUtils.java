@@ -1045,19 +1045,18 @@ public final class ModificationUtils {
                 .flatMap(f -> exportFilters.get(f.getId())
                         .getIdentifiableAttributes()
                         .stream())
-                .filter(distinctByKey(IdentifiableAttributes::getId))
                 .toList();
     }
 
     @Nullable
-    public Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(FilterService filterService, Network network, Reporter subReporter, Map<UUID, String> filters, ModificationInfos modificationInfos) {
+    public static Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(FilterService filterService, Network network, Reporter subReporter, Map<UUID, String> filters, NetworkModificationException.Type errorType) {
         Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
 
-        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, modificationInfos.getErrorType(), exportFilters);
+        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, errorType, exportFilters);
         return isValidFilter ? exportFilters : null;
     }
 
-    public Map<UUID, FilterEquipments> getUuidFilterWrongEquipmentsIdsMap(Reporter subReporter, Map<UUID, FilterEquipments> exportFilters, Map<UUID, String> filters) {
+    public static Map<UUID, FilterEquipments> getUuidFilterWrongEquipmentsIdsMap(Reporter subReporter, Map<UUID, FilterEquipments> exportFilters, Map<UUID, String> filters) {
         // collect all filters with wrong equipments ids
         Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))

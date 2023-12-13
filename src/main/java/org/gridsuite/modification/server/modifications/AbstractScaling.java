@@ -49,27 +49,26 @@ public abstract class AbstractScaling extends AbstractModification {
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
-        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getInstance().getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, scalingInfos);
-        if (exportFilters == null) {
-            return;
+        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, scalingInfos.getErrorType());
+        if (exportFilters != null) {
+            Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds = ModificationUtils.getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
+
+            // apply variations
+            scalingInfos.getVariations().forEach(variation -> {
+                List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, filtersWithWrongEquipmentIds, variation.getFilters(), subReporter);
+
+                if (CollectionUtils.isEmpty(identifiableAttributes)) {
+                    String filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
+                    createReport(subReporter,
+                            "allFiltersWrong",
+                            String.format("All of the following variation's filters have equipments with wrong id : %s", filterNames),
+                            TypedValue.WARN_SEVERITY);
+                } else {
+                    applyVariation(network, subReporter, identifiableAttributes, variation);
+                }
+            });
+            createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
         }
-        Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds = ModificationUtils.getInstance().getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
-
-        // apply variations
-        scalingInfos.getVariations().forEach(variation -> {
-            List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, filtersWithWrongEquipmentIds, variation.getFilters(), subReporter);
-
-            if (CollectionUtils.isEmpty(identifiableAttributes)) {
-                String filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
-                createReport(subReporter,
-                        "allFiltersWrong",
-                        String.format("All of the following variation's filters have equipments with wrong id : %s", filterNames),
-                        TypedValue.WARN_SEVERITY);
-            } else {
-                applyVariation(network, subReporter, identifiableAttributes, variation);
-            }
-        });
-        createReport(subReporter, "scalingCreated", "new scaling created", TypedValue.INFO_SEVERITY);
     }
 
     private void applyVariation(Network network,
