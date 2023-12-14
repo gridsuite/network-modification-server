@@ -70,4 +70,14 @@ public class ByFilterDeletionEntity extends ModificationEntity {
                         .collect(Collectors.toList()))
                 .equipmentType(getEquipmentType()).build();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }
