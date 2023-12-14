@@ -173,7 +173,7 @@ public class GeneratorModification extends AbstractModification {
         Report reportMaxActivePower;
         Report reportMinActivePower;
 
-        if (modificationInfos.getMaxActivePower().getValue() > generator.getMinP()) {
+        if (modificationInfos.getMaxActivePower() != null && modificationInfos.getMaxActivePower().getValue() > generator.getMinP()) {
             reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
             reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), "Min active power");
 
