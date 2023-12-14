@@ -10,30 +10,16 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Battery;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.Load;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ShuntCompensator;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.*;
 import org.gridsuite.modification.server.service.FilterService;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -83,7 +69,7 @@ public class ByFormulaModification extends AbstractModification {
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
-        Map<UUID, FilterEquipments> exportFilters = getUuidFilterEquipmentsMap(network, subReporter, filters);
+        Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos.getErrorType());
 
         if (exportFilters != null) {
             long equipmentCount = exportFilters.values()
@@ -216,15 +202,6 @@ public class ByFormulaModification extends AbstractModification {
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         }
-    }
-
-    @Nullable
-    private Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(Network network, Reporter subReporter, Map<UUID, String> filters) {
-        // export filters from filter server
-        Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
-
-        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, modificationInfos.getErrorType(), exportFilters);
-        return isValidFilter ? exportFilters : null;
     }
 
     private boolean isEquipmentEditable(Identifiable<?> identifiable,
