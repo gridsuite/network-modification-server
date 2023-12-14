@@ -71,7 +71,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("SUBSTATION")
-                .equipmentFilters(List.of(filter1, filter2))
+                .filters(List.of(filter1, filter2))
                 .build();
     }
 
@@ -85,7 +85,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("SUBSTATION")
-                .equipmentFilters(List.of(filter5))
+                .filters(List.of(filter5))
                 .build();
     }
 
@@ -113,7 +113,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("SUBSTATION")
-                .equipmentFilters(List.of(filter1))
+                .filters(List.of(filter1))
                 .build();
 
         List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(SUBSTATION_WRONG_ID_1))));

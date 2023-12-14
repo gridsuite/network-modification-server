@@ -63,17 +63,17 @@ public class ByFilterDeletion extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        var filters = modificationInfos.getEquipmentFilters().stream()
+        var filters = modificationInfos.getFilters().stream()
                 .filter(distinctByKey(FilterInfos::getId))
                 .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
 
         Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReporter, filters, modificationInfos.getErrorType());
         if (exportFilters != null) {
             Map<UUID, FilterEquipments> exportedFiltersWithWrongEquipmentIds = ModificationUtils.getUuidFilterWrongEquipmentsIdsMap(subReporter, exportFilters, filters);
-            List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, exportedFiltersWithWrongEquipmentIds, modificationInfos.getEquipmentFilters(), subReporter);
+            List<IdentifiableAttributes> identifiableAttributes = ModificationUtils.getIdentifiableAttributes(exportFilters, exportedFiltersWithWrongEquipmentIds, modificationInfos.getFilters(), subReporter);
 
             if (CollectionUtils.isEmpty(identifiableAttributes)) {
-                String filterNames = modificationInfos.getEquipmentFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
+                String filterNames = modificationInfos.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
                 createReport(subReporter,
                         "allFiltersWrong",
                         String.format("All of the following filters have equipments with wrong id : %s", filterNames),

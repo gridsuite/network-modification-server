@@ -40,9 +40,9 @@ public class ByFilterDeletionInfos extends ModificationInfos {
     @Schema(description = "Equipment type")
     private String equipmentType;
 
-    @Schema(description = "Equipment filters")
+    @Schema(description = "List of filters")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<FilterInfos> equipmentFilters;
+    private List<FilterInfos> filters;
 
     @Override
     public ByFilterDeletionEntity toEntity() {

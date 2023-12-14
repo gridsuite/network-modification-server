@@ -105,7 +105,7 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("LOAD")
-                .equipmentFilters(List.of(filter1, filter2, filter3, filter4, filter5))
+                .filters(List.of(filter1, filter2, filter3, filter4, filter5))
                 .build();
     }
 
@@ -119,7 +119,7 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("LOAD")
-                .equipmentFilters(List.of(filter5))
+                .filters(List.of(filter5))
                 .build();
     }
 
@@ -147,7 +147,7 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("LOAD")
-                .equipmentFilters(List.of(filter1))
+                .filters(List.of(filter1))
                 .build();
 
         List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(LOAD_WRONG_ID_1)), List.of()));
@@ -175,7 +175,7 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType("LOAD")
-                .equipmentFilters(List.of(filter1))
+                .filters(List.of(filter1))
                 .build();
 
         List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(LOAD_WRONG_ID_1)), List.of(LOAD_WRONG_ID_1)));

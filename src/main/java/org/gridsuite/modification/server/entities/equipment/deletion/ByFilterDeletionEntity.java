@@ -26,16 +26,17 @@ import java.util.stream.Collectors;
 @Getter
 @Entity
 @Table(name = "byFilterDeletion")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "ByFilterDeletion_id_fk_constraint"))
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "by_filter_deletion_id_fk_constraint"))
 public class ByFilterDeletionEntity extends ModificationEntity {
     @Column(name = "equipmentType")
     private String equipmentType;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinTable(
-            joinColumns = @JoinColumn(name = "id"),
-            inverseJoinColumns = @JoinColumn(name = "filterId"))
-    private List<VariationFilterEntity> equipmentFilters;
+            name = "byFilterDeletionFilters",
+            joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "by_filter_deletion_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "filterId"), inverseForeignKey = @ForeignKey(name = "variation_filter_id_fk"))
+    private List<VariationFilterEntity> filters;
 
     public ByFilterDeletionEntity(ByFilterDeletionInfos byFilterDeletionInfos) {
         super(byFilterDeletionInfos);
@@ -50,11 +51,11 @@ public class ByFilterDeletionEntity extends ModificationEntity {
 
     private void assignAttributes(ByFilterDeletionInfos byFilterDeletionInfos) {
         this.equipmentType = byFilterDeletionInfos.getEquipmentType();
-        if (equipmentFilters == null) {
-            this.equipmentFilters = byFilterDeletionInfos.getEquipmentFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
+        if (filters == null) {
+            this.filters = byFilterDeletionInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
         } else {
-            equipmentFilters.clear();
-            equipmentFilters.addAll(byFilterDeletionInfos.getEquipmentFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
+            filters.clear();
+            filters.addAll(byFilterDeletionInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
         }
     }
 
@@ -65,7 +66,7 @@ public class ByFilterDeletionEntity extends ModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
-                .equipmentFilters(this.getEquipmentFilters().stream()
+                .filters(this.getFilters().stream()
                         .map(filter -> new FilterInfos(filter.getFilterId(), filter.getName()))
                         .collect(Collectors.toList()))
                 .equipmentType(getEquipmentType()).build();
