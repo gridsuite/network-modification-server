@@ -71,7 +71,11 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertEquals(380.0, getNetwork().getVoltageLevel("v1").getNominalV(), 0.001);
+        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v1").getLowVoltageLimit(), 0.001);
+        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v1").getHighVoltageLimit(), 0.001);
         assertEquals(225.0, getNetwork().getVoltageLevel("v2").getNominalV(), 0.001);
+        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v2").getLowVoltageLimit(), 0.001);
+        assertEquals(Double.NaN, getNetwork().getVoltageLevel("v2").getHighVoltageLimit(), 0.001);
     }
 
     @Override
