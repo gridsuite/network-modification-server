@@ -9,10 +9,12 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.*;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_NOT_FOUND;
+import com.powsybl.iidm.network.Load;
+import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_NOT_FOUND;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -26,12 +28,17 @@ public class LoadModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         Load load = network.getLoad(modificationInfos.getEquipmentId());
         if (load == null) {
             throw new NetworkModificationException(LOAD_NOT_FOUND,
                     "Load " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        Load load = network.getLoad(modificationInfos.getEquipmentId());
         // modify the load in the network
         modifyLoad(load, modificationInfos, subReporter);
     }

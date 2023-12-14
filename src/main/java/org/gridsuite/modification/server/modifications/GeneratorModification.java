@@ -43,6 +43,9 @@ public class GeneratorModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
+        if (modificationInfos == null) {
+            throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
+        }
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
             // check min max reactive limits
@@ -86,9 +89,6 @@ public class GeneratorModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
-        }
         Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
         // modify the generator in the network
         modifyGenerator(generator, modificationInfos, subReporter);
