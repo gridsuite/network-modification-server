@@ -67,7 +67,21 @@ public class GeneratorModification extends AbstractModification {
                         modificationInfos.getRegulatingTerminalType().getValue(),
                         modificationInfos.getRegulatingTerminalVlId().getValue());
             }
+            checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(modificationInfos, generator, MODIFY_GENERATOR_ERROR, errorMessage);
         }
+    }
+
+    private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
+        ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                modificationInfos.getActivePowerSetpoint(),
+                modificationInfos.getMinActivePower(),
+                modificationInfos.getMaxActivePower(),
+                generator.getMinP(),
+                generator.getMaxP(),
+                generator.getTargetP(),
+                exceptionType,
+                errorMessage
+        );
     }
 
     @Override

@@ -82,6 +82,14 @@ public class GenerationDispatch extends AbstractModification {
         return totalLoad * (1. + lossCoefficient / 100.);
     }
 
+    private static double computeTotalActiveBatteryTargetP(Component component) {
+        Objects.requireNonNull(component);
+        return component.getBusStream().flatMap(Bus::getBatteryStream)
+                .filter(battery -> battery.getTerminal().isConnected())
+                .mapToDouble(Battery::getTargetP)
+                .sum();
+    }
+
     private static double computeTotalAmountFixedSupply(Network network, Component component, List<String> generatorsWithFixedSupply, Reporter reporter) {
         double totalAmountFixedSupply = 0.;
         List<Generator> generatorsWithoutSetpointList = new ArrayList<>();
@@ -306,7 +314,7 @@ public class GenerationDispatch extends AbstractModification {
             report(reporter, suffixKey, "TotalGeneratorSetTargetP", "The active power set points of ${nbUpdatedGenerator} generator${isPlural} have been updated as a result of generation dispatch",
                     Map.of("nbUpdatedGenerator", updatedGenerators.size(), IS_PLURAL, updatedGenerators.size() > 1 ? "s" : ""), TypedValue.INFO_SEVERITY);
             updatedGenerators.forEach(g -> report(reporter, suffixKey, "GeneratorSetTargetP", "The active power set point of generator ${generator} has been set to ${newValue} MW",
-                    Map.of(GENERATOR, g.getId(), "newValue", g.getTargetP()), TypedValue.TRACE_SEVERITY));
+                    Map.of(GENERATOR, g.getId(), "newValue", round(g.getTargetP())), TypedValue.TRACE_SEVERITY));
 
             // report unchanged generators
             int nbUnchangedGenerators = adjustableGenerators.size() - updatedGenerators.size();
@@ -493,26 +501,30 @@ public class GenerationDispatch extends AbstractModification {
             // get total value of connected loads in the connected component
             double totalDemand = computeTotalDemand(component, generationDispatchInfos.getLossCoefficient());
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalDemand", "The total demand is : ${totalDemand} MW",
-                Map.of("totalDemand", totalDemand), TypedValue.INFO_SEVERITY);
+                Map.of("totalDemand", round(totalDemand)), TypedValue.INFO_SEVERITY);
 
             // get total supply value for generators with fixed supply
             double totalAmountFixedSupply = computeTotalAmountFixedSupply(network, component, generatorsWithFixedSupply, powerToDispatchReporter);
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalAmountFixedSupply", "The total amount of fixed supply is : ${totalAmountFixedSupply} MW",
-                Map.of("totalAmountFixedSupply", totalAmountFixedSupply), TypedValue.INFO_SEVERITY);
+                Map.of("totalAmountFixedSupply", round(totalAmountFixedSupply)), TypedValue.INFO_SEVERITY);
 
             // compute hvdc balance to other synchronous components
             double hvdcBalance = computeHvdcBalance(component);
             report(powerToDispatchReporter, Integer.toString(componentNum), "TotalOutwardHvdcFlow", "The HVDC balance is : ${hvdcBalance} MW",
-                Map.of("hvdcBalance", hvdcBalance), TypedValue.INFO_SEVERITY);
+                Map.of("hvdcBalance", round(hvdcBalance)), TypedValue.INFO_SEVERITY);
 
-            double totalAmountSupplyToBeDispatched = totalDemand - totalAmountFixedSupply - hvdcBalance;
+            double activeBatteryTotalTargetP = computeTotalActiveBatteryTargetP(component);
+            report(powerToDispatchReporter, Integer.toString(componentNum), "TotalActiveBatteryTargetP", "The battery balance is : ${batteryBalance} MW",
+                    Map.of("batteryBalance", round(activeBatteryTotalTargetP)), TypedValue.INFO_SEVERITY);
+
+            double totalAmountSupplyToBeDispatched = totalDemand - totalAmountFixedSupply - hvdcBalance - activeBatteryTotalTargetP;
             if (totalAmountSupplyToBeDispatched < 0.) {
                 report(powerToDispatchReporter, Integer.toString(componentNum), "TotalAmountFixedSupplyExceedsTotalDemand", "The total amount of fixed supply exceeds the total demand",
                     Map.of(), TypedValue.WARN_SEVERITY);
                 continue;
             } else {
                 report(powerToDispatchReporter, Integer.toString(componentNum), "TotalAmountSupplyToBeDispatched", "The total amount of supply to be dispatched is : ${totalAmountSupplyToBeDispatched} MW",
-                    Map.of("totalAmountSupplyToBeDispatched", totalAmountSupplyToBeDispatched), TypedValue.INFO_SEVERITY);
+                    Map.of("totalAmountSupplyToBeDispatched", round(totalAmountSupplyToBeDispatched)), TypedValue.INFO_SEVERITY);
             }
 
             // get adjustable generators in the component
@@ -548,12 +560,22 @@ public class GenerationDispatch extends AbstractModification {
 
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldBeMet", "The supply-demand balance could be met",
                     Map.of(), TypedValue.INFO_SEVERITY);
-                generatorsByRegion.forEach((region, generators) -> report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW.",
-                        Map.of("region", region, "sum", getSumActivePower(generators)), TypedValue.INFO_SEVERITY));
+                generatorsByRegion.forEach((region, generators) -> {
+                    Map<EnergySource, Double> activePowerSumByEnergySource = getActivePowerSumByEnergySource(generators);
+                    report(resultReporter, Integer.toString(componentNum), "SumGeneratorActivePower" + region, "Sum of generator active power setpoints in ${region} region: ${sum} MW (NUCLEAR: ${nuclearSum} MW, THERMAL: ${thermalSum} MW, HYDRO: ${hydroSum} MW, WIND AND SOLAR: ${windAndSolarSum} MW, OTHER: ${otherSum} MW).",
+                            Map.of("region", region,
+                                    "sum", round(activePowerSumByEnergySource.values().stream().reduce(0d, Double::sum)),
+                                    "nuclearSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.NUCLEAR, 0d)),
+                                    "thermalSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.THERMAL, 0d)),
+                                    "hydroSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.HYDRO, 0d)),
+                                    "windAndSolarSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.WIND, 0d) + activePowerSumByEnergySource.getOrDefault(EnergySource.SOLAR, 0d)),
+                                    "otherSum", round(activePowerSumByEnergySource.getOrDefault(EnergySource.OTHER, 0d))
+                                    ), TypedValue.INFO_SEVERITY);
+                });
             } else {
                 double remainingPowerImbalance = totalAmountSupplyToBeDispatched - realized;
                 report(resultReporter, Integer.toString(componentNum), "SupplyDemandBalanceCouldNotBeMet", "The supply-demand balance could not be met : the remaining power imbalance is ${remainingPower} MW",
-                    Map.of("remainingPower", remainingPowerImbalance), TypedValue.WARN_SEVERITY);
+                    Map.of("remainingPower", round(remainingPowerImbalance)), TypedValue.WARN_SEVERITY);
             }
         }
     }
@@ -602,8 +624,11 @@ public class GenerationDispatch extends AbstractModification {
         return propertyNames.stream().anyMatch(REGION_CVG::equals);
     }
 
-    private double getSumActivePower(List<Generator> generators) {
-        return generators.stream().mapToDouble(Generator::getTargetP).sum();
+    private Map<EnergySource, Double> getActivePowerSumByEnergySource(List<Generator> generators) {
+        return generators.stream().collect(Collectors.toMap(Generator::getEnergySource, Generator::getTargetP, Double::sum));
     }
 
+    private static double round(double value) {
+        return Math.round(value * 10) / 10.;
+    }
 }
