@@ -150,7 +150,7 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
                 .equipmentFilters(List.of(filter1))
                 .build();
 
-        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(LOAD_WRONG_ID_1))));
+        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(LOAD_WRONG_ID_1)), List.of()));
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+){1}.*"))
                 .willReturn(WireMock.ok()
@@ -162,6 +162,33 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
                 .andExpect(status().isOk());
         assertLogMessage("Connectable not found: wrongId1",
                 byFilterDeletionInfos.getErrorType().name(), reportService);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+    }
+
+    @Test
+    public void testCreateAllFiltersWrong() throws Exception {
+        var filter1 = FilterInfos.builder()
+                .id(FILTER_ID_1)
+                .name("filter1")
+                .build();
+
+        ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
+                .stashed(false)
+                .equipmentType("LOAD")
+                .equipmentFilters(List.of(filter1))
+                .build();
+
+        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(LOAD_WRONG_ID_1)), List.of(LOAD_WRONG_ID_1)));
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+){1}.*"))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filters))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("All of the following filters have equipments with wrong id : filter1",
+                "allFiltersWrong", reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
 
@@ -243,20 +270,21 @@ public class EquipmentByFilterDeletionTest extends AbstractNetworkModificationTe
         IdentifiableAttributes load9 = getIdentifiableAttributes(LOAD_ID_9);
         IdentifiableAttributes load10 = getIdentifiableAttributes(LOAD_ID_10);
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2));
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4));
-        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(load5, load6));
-        FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(load7, load8));
-        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(load9, load10));
+        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2), List.of());
+        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4), List.of());
+        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(load5, load6), List.of());
+        FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(load7, load8), List.of());
+        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(load9, load10), List.of());
 
         return List.of(filter1, filter2, filter3, filter4, filter5);
     }
 
-    private FilterEquipments getFilterEquipments(UUID filterID, String filterName, List<IdentifiableAttributes> identifiableAttributes) {
+    private FilterEquipments getFilterEquipments(UUID filterID, String filterName, List<IdentifiableAttributes> identifiableAttributes, List<String> notFoundEquipments) {
         return FilterEquipments.builder()
                 .filterId(filterID)
                 .filterName(filterName)
                 .identifiableAttributes(identifiableAttributes)
+                .notFoundEquipments(notFoundEquipments)
                 .build();
     }
 

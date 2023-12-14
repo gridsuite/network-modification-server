@@ -36,12 +36,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class VoltageLevelByFilterDeletionTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
     private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final String VOLTAGE_LEVEL_ID_1 = "vl1";
+    private static final String VOLTAGE_LEVEL_ID_1 = "v1";
 
-    private static final String VOLTAGE_LEVEL_ID_2 = "vl2";
+    private static final String VOLTAGE_LEVEL_ID_2 = "v2";
 
-    private static final String VOLTAGE_LEVEL_ID_3 = "vl3";
-    private static final String VOLTAGE_LEVEL_ID_4 = "vl4";
+    private static final String VOLTAGE_LEVEL_ID_3 = "v3";
+    private static final String VOLTAGE_LEVEL_ID_4 = "v4";
 
     public static final String PATH = "/v1/filters/export";
     public static final String VOLTAGE_LEVEL_WRONG_ID_1 = "wrongId1";
