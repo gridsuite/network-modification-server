@@ -33,17 +33,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class SubstationByFilterDeletionTest extends AbstractNetworkModificationTest {
+public class VoltageLevelByFilterDeletionTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
     private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final String SUBSTATION_ID_1 = "s1";
+    private static final String VOLTAGE_LEVEL_ID_1 = "vl1";
 
-    private static final String SUBSTATION_ID_2 = "s2";
+    private static final String VOLTAGE_LEVEL_ID_2 = "vl2";
 
-    private static final String SUBSTATION_ID_3 = "s3";
+    private static final String VOLTAGE_LEVEL_ID_3 = "vl3";
+    private static final String VOLTAGE_LEVEL_ID_4 = "vl4";
 
     public static final String PATH = "/v1/filters/export";
-    public static final String SUBSTATION_WRONG_ID_1 = "wrongId1";
+    public static final String VOLTAGE_LEVEL_WRONG_ID_1 = "wrongId1";
 
     @Before
     public void specificSetUp() {
@@ -70,7 +71,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
 
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("SUBSTATION")
+                .equipmentType("VOLTAGE_LEVEL")
                 .equipmentFilters(List.of(filter1, filter2))
                 .build();
     }
@@ -84,7 +85,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
 
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("SUBSTATION")
+                .equipmentType("VOLTAGE_LEVEL")
                 .equipmentFilters(List.of(filter5))
                 .build();
     }
@@ -112,11 +113,11 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
 
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("SUBSTATION")
+                .equipmentType("VOLTAGE_LEVEL")
                 .equipmentFilters(List.of(filter1))
                 .build();
 
-        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(SUBSTATION_WRONG_ID_1))));
+        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(VOLTAGE_LEVEL_WRONG_ID_1))));
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+){1}.*"))
                 .willReturn(WireMock.ok()
@@ -125,7 +126,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Substation not found: wrongId1",
+        assertLogMessage("Voltage level not found: wrongId1",
                 byFilterDeletionInfos.getErrorType().name(), reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
@@ -146,16 +147,18 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getSubstation(SUBSTATION_ID_1));
-        assertNull(getNetwork().getSubstation(SUBSTATION_ID_2));
-        assertNull(getNetwork().getSubstation(SUBSTATION_ID_3));
+        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_1));
+        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_2));
+        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_3));
+        assertNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_4));
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getSubstation(SUBSTATION_ID_1));
-        assertNotNull(getNetwork().getSubstation(SUBSTATION_ID_2));
-        assertNotNull(getNetwork().getSubstation(SUBSTATION_ID_3));
+        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_1));
+        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_2));
+        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_3));
+        assertNotNull(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_4));
     }
 
     @Override
@@ -163,7 +166,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SUBSTATION", createdValues.get("equipmentType"));
+        assertEquals("VOLTAGE_LEVEL", createdValues.get("equipmentType"));
     }
 
     @Override
@@ -171,7 +174,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SUBSTATION", createdValues.get("equipmentType"));
+        assertEquals("VOLTAGE_LEVEL", createdValues.get("equipmentType"));
     }
 
     private String getPath(UUID networkUuid) {
@@ -183,12 +186,13 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
     }
 
     private List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes substation1 = getIdentifiableAttributes(SUBSTATION_ID_1);
-        IdentifiableAttributes substation2 = getIdentifiableAttributes(SUBSTATION_ID_2);
-        IdentifiableAttributes substation3 = getIdentifiableAttributes(SUBSTATION_ID_3);
+        IdentifiableAttributes vl1 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_1);
+        IdentifiableAttributes vl2 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_2);
+        IdentifiableAttributes vl3 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_3);
+        IdentifiableAttributes vl4 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_4);
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(substation1, substation2));
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(substation3));
+        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(vl1, vl2));
+        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(vl3, vl4));
 
         return List.of(filter1, filter2);
     }
@@ -204,7 +208,7 @@ public class SubstationByFilterDeletionTest extends AbstractNetworkModificationT
     private IdentifiableAttributes getIdentifiableAttributes(String id) {
         return IdentifiableAttributes.builder()
                 .id(id)
-                .type(IdentifiableType.SUBSTATION)
+                .type(IdentifiableType.VOLTAGE_LEVEL)
                 .build();
     }
 }
