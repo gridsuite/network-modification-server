@@ -68,7 +68,6 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
                 .minActivePower(new AttributeModification<>(1., OperationType.SET))
                 .maxActivePower(new AttributeModification<>(102., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
-                .reactiveCapabilityCurvePoints(List.of())
                 .build();
     }
 

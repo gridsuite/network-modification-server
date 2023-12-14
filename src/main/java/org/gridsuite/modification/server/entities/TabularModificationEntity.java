@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.modification.BatteryModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 
@@ -46,6 +47,9 @@ public class TabularModificationEntity extends ModificationEntity {
             case "LOAD_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
                 break;
+            case "BATTERY_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(batteryModificationInfos -> new BatteryModificationEntity((BatteryModificationInfos) batteryModificationInfos)).collect(Collectors.toList());
+                break;
             default:
                 break;
         }
@@ -72,6 +76,9 @@ public class TabularModificationEntity extends ModificationEntity {
         switch (modificationType) {
             case "GENERATOR_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList()));
+                break;
+            case "BATTERY_MODIFICATION":
+                modifications.addAll(tabularModificationInfos.getModifications().stream().map(batteryModificationInfos -> new BatteryModificationEntity((BatteryModificationInfos) batteryModificationInfos)).collect(Collectors.toList()));
                 break;
             case "LOAD_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
