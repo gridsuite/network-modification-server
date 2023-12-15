@@ -33,7 +33,6 @@ public class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest 
 
     private static final String LOAD_ID_4 = "load4";
 
-
     @Before
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
@@ -68,7 +67,7 @@ public class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest 
 
     @Override
     protected String getEquipmentNotFoundMessage() {
-        return "Load not found";
+        return "Connectable not found";
     }
 
     @Override

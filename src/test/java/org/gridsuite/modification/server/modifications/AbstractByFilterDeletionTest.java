@@ -23,9 +23,13 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     protected static final UUID FILTER_ID_1 = UUID.randomUUID();
     protected static final UUID FILTER_ID_2 = UUID.randomUUID();
     private static final String EQUIPMENT_WRONG_ID_1 = "wrongId1";
+
     protected abstract IdentifiableType getIdentifiableType();
+
     protected abstract String getEquipmentNotFoundMessage();
+
     protected abstract List<FilterEquipments> getTestFilters();
+
     public static final String PATH = "/v1/filters/export";
 
     @Test
