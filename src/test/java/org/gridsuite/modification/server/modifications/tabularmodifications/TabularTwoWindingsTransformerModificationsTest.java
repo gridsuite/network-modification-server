@@ -42,7 +42,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
                 buildOneModification("unknownTwt", 1.0)
         );
         return TabularModificationInfos.builder()
-                .modificationType("TWT_MODIFICATION")
+                .modificationType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -55,7 +55,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
                 buildOneModification("trf2", 4.0)
         );
         return TabularModificationInfos.builder()
-                .modificationType("TWT_MODIFICATION")
+                .modificationType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -64,8 +64,6 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
     protected TwoWindingsTransformerModificationInfos buildOneModification(String equipmentId, Double seriesResistance) {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId(equipmentId)
                 .seriesResistance(new AttributeModification<>(seriesResistance, OperationType.SET))
-                .phaseTapChanger(PhaseTapChangerModificationInfos.builder().build()) // null pointer if we don't add it (call on getEnabled)
-                .ratioTapChanger(RatioTapChangerModificationInfos.builder().build()) // null pointer if we don't add it (call on getEnabled)
                 .build();
     }
 
@@ -82,14 +80,12 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
         assertEquals(2.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
     }
 
-    //TODO create AbstractTabularModification and put testCheckSqlRequestsCount and testAllModificationsHaveFailed inside
-
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("TWT_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -97,6 +93,6 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("TWT_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", updatedValues.get("tabularModificationType"));
     }
 }

@@ -68,7 +68,7 @@ public class TabularModification extends AbstractModification {
             case "LOAD_MODIFICATION":
                 defaultMessage = "loads" + defaultMessage;
                 break;
-            case "TWT_MODIFICATION":
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
                 defaultMessage = "two windings transformers" + defaultMessage;
                 break;
             default:

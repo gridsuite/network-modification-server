@@ -47,7 +47,7 @@ public class TabularModificationEntity extends ModificationEntity {
             case "LOAD_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
                 break;
-            case "TWT_MODIFICATION":
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(twtModificationInfos -> new TwoWindingsTransformerModificationEntity((TwoWindingsTransformerModificationInfos) twtModificationInfos)).collect(Collectors.toList());
                 break;
             default:
@@ -80,7 +80,7 @@ public class TabularModificationEntity extends ModificationEntity {
             case "LOAD_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
                 break;
-            case "TWT_MODIFICATION":
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(twtModificationInfos -> new TwoWindingsTransformerModificationEntity((TwoWindingsTransformerModificationInfos) twtModificationInfos)).collect(Collectors.toList()));
                 break;
             default:
