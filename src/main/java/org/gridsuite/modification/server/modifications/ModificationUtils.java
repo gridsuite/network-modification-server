@@ -12,9 +12,6 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
 import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
-import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
-import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
@@ -522,37 +519,25 @@ public final class ModificationUtils {
         return null;
     }
 
-    public Set<Terminal> getTerminalsFromIdentifiable(@NonNull Identifiable<?> identifiable) {
-        if (identifiable instanceof Branch) {
-            Branch<?> branch = (Branch<?>) identifiable;
+    public List<Terminal> getTerminalsFromIdentifiable(@NonNull Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch<?> branch) {
             return Stream.of(
                     branch.getTerminal1(),
                     branch.getTerminal2()
-            ).collect(Collectors.toSet());
-        } else if (identifiable instanceof ThreeWindingsTransformer) {
-            ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
+            ).collect(Collectors.toList());
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
             return Stream.of(
                     w3t.getLeg1().getTerminal(),
                     w3t.getLeg2().getTerminal(),
                     w3t.getLeg3().getTerminal()
-            ).collect(Collectors.toSet());
-        } else if (identifiable instanceof HvdcLine) {
-            HvdcLine hvdcLine = (HvdcLine) identifiable;
+            ).collect(Collectors.toList());
+        } else if (identifiable instanceof HvdcLine hvdcLine) {
             return Stream.of(
                     hvdcLine.getConverterStation1().getTerminal(),
                     hvdcLine.getConverterStation2().getTerminal()
-            ).collect(Collectors.toSet());
+            ).collect(Collectors.toList());
         }
-        throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
-    }
-
-    public Tripping getTrippingFromIdentifiable(@NonNull Identifiable<?> identifiable) {
-        if (identifiable instanceof Branch<?> branch) {
-            return new BranchTripping(branch.getId());
-        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
-            return new ThreeWindingsTransformerTripping(w3t.getId());
-        }
-        throw NetworkModificationException.createOperationalStatusActionTypeUnsupported(OperationalStatusModificationInfos.ActionType.TRIP);
+        throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
 
     public void disconnectInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {

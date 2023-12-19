@@ -150,6 +150,10 @@ public class NetworkModificationException extends PowsyblException {
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 
+    public static NetworkModificationException createEquipmentTypeNotSupported(@NonNull String type) {
+        return new NetworkModificationException(Type.OPERATIONAL_STATUS_TYPE_UNSUPPORTED, "The equipment type : " + type + " is not supported");
+    }
+
     public static NetworkModificationException createOperationalStatusActionTypeUnsupported(@NonNull OperationalStatusModificationInfos.ActionType type) {
         return new NetworkModificationException(Type.OPERATIONAL_STATUS_TYPE_UNSUPPORTED, "The operational status action type : " + type + " is unsupported");
     }

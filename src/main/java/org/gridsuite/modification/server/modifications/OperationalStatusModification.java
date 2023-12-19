@@ -9,9 +9,14 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.iidm.modification.tripping.BranchTripping;
+import com.powsybl.iidm.modification.tripping.HvdcLineTripping;
+import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
+import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BranchStatus;
 import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import lombok.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.OperationalStatusModificationInfos;
 import org.slf4j.Logger;
@@ -46,23 +51,15 @@ public class OperationalStatusModification extends AbstractModification {
 
         String equipmentTypeName = String.valueOf(equipment.getType());
         switch (modificationInfos.getAction()) {
-            case LOCKOUT:
-                applyLockoutEquipment(subReporter, equipment, equipmentTypeName);
-                break;
-            case TRIP:
-                applyTripEquipment(subReporter, equipment, equipmentTypeName, network);
-                break;
-            case SWITCH_ON:
-                applySwitchOnEquipment(subReporter, equipment, equipmentTypeName);
-                break;
-            case ENERGISE_END_ONE:
-                applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, Branch.Side.ONE);
-                break;
-            case ENERGISE_END_TWO:
-                applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, Branch.Side.TWO);
-                break;
-            default:
-                throw NetworkModificationException.createOperationalStatusActionTypeUnsupported(modificationInfos.getAction());
+            case LOCKOUT -> applyLockoutEquipment(subReporter, equipment, equipmentTypeName);
+            case TRIP -> applyTripEquipment(subReporter, equipment, equipmentTypeName, network);
+            case SWITCH_ON -> applySwitchOnEquipment(subReporter, equipment, equipmentTypeName);
+            case ENERGISE_END_ONE ->
+                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, Branch.Side.ONE);
+            case ENERGISE_END_TWO ->
+                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, Branch.Side.TWO);
+            default ->
+                    throw NetworkModificationException.createOperationalStatusActionTypeUnsupported(modificationInfos.getAction());
         }
     }
 
@@ -84,7 +81,7 @@ public class OperationalStatusModification extends AbstractModification {
         var switchesToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
-        ModificationUtils.getInstance().getTrippingFromIdentifiable(equipment).traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
+        getTrippingFromIdentifiable(equipment).traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
 
         LOGGER.info("Apply Trip on {} {}, switchesToDisconnect: {} terminalsToDisconnect: {} traversedTerminals: {}",
                 equipmentTypeName, equipment.getId(),
@@ -124,8 +121,7 @@ public class OperationalStatusModification extends AbstractModification {
     }
 
     private void applyEnergiseEquipmentEnd(Reporter subReporter, Identifiable<?> equipment, String equipmentTypeName, Branch.Side side) {
-        if (equipment instanceof Branch<?>) {
-            Branch<?> branch = (Branch<?>) equipment;
+        if (equipment instanceof Branch<?> branch) {
             Branch.Side oppositeSide = side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE;
             if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
                 branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
@@ -157,5 +153,16 @@ public class OperationalStatusModification extends AbstractModification {
 
     private boolean connectOneTerminal(Terminal terminal) {
         return terminal.isConnected() || terminal.connect();
+    }
+
+    public Tripping getTrippingFromIdentifiable(@NonNull Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch<?> branch) {
+            return new BranchTripping(branch.getId());
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return new ThreeWindingsTransformerTripping(w3t.getId());
+        } else if (identifiable instanceof HvdcLine hvdcLine) {
+            return new HvdcLineTripping(hvdcLine.getId());
+        }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
 }
