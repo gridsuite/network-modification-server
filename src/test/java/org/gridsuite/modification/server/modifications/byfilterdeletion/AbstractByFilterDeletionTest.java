@@ -1,4 +1,4 @@
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 

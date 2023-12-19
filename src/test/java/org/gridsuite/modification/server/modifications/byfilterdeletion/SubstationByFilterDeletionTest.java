@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
@@ -64,6 +64,7 @@ public class SubstationByFilterDeletionTest extends AbstractByFilterDeletionTest
         return "Substation not found";
     }
 
+    @Override
     protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes substation1 = getIdentifiableAttributes(SUBSTATION_ID_1);
         IdentifiableAttributes substation2 = getIdentifiableAttributes(SUBSTATION_ID_2);

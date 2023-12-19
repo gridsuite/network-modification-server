@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
@@ -29,9 +29,6 @@ public class VoltageLevelByFilterDeletionTest extends AbstractByFilterDeletionTe
 
     private static final String VOLTAGE_LEVEL_ID_3 = "v3";
     private static final String VOLTAGE_LEVEL_ID_4 = "v4";
-
-    public static final String PATH = "/v1/filters/export";
-    public static final String VOLTAGE_LEVEL_WRONG_ID_1 = "wrongId1";
 
     @Before
     public void specificSetUp() {
@@ -70,6 +67,7 @@ public class VoltageLevelByFilterDeletionTest extends AbstractByFilterDeletionTe
         return "Voltage level not found";
     }
 
+    @Override
     protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes vl1 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_1);
         IdentifiableAttributes vl2 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_2);
