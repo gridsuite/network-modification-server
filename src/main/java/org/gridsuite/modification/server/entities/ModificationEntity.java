@@ -105,20 +105,4 @@ public class ModificationEntity {
         return toModificationInfos().toEntity();
     }
 
-    //From https://vladmihalcea.com/the-best-way-to-map-a-onetomany-association-with-jpa-and-hibernate/
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof ModificationEntity)) {
-            return false;
-        }
-        return id != null && id.equals(((ModificationEntity) o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }
