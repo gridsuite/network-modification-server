@@ -41,6 +41,9 @@ public class BatteryModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
+        if (modificationInfos == null) {
+            throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
+        }
         if (network.getBattery(modificationInfos.getEquipmentId()) == null) {
             throw new NetworkModificationException(BATTERY_NOT_FOUND, modificationInfos.getEquipmentId());
         }
@@ -74,9 +77,6 @@ public class BatteryModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
-        }
         Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         // modify the battery in the network
         modifyBattery(battery, modificationInfos, subReporter);
