@@ -56,7 +56,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType(getIdentifiableType().toString())
+                .equipmentType(getIdentifiableType())
                 .filters(List.of(filter1))
                 .build();
 
@@ -98,7 +98,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType(getIdentifiableType().toString())
+                .equipmentType(getIdentifiableType())
                 .filters(List.of(filter1))
                 .build();
 
@@ -154,7 +154,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType(getIdentifiableType().toString())
+                .equipmentType(getIdentifiableType())
                 .filters(List.of(filter1, filter2))
                 .build();
     }
@@ -168,7 +168,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType(getIdentifiableType().toString())
+                .equipmentType(getIdentifiableType())
                 .filters(List.of(filter2))
                 .build();
     }
@@ -178,7 +178,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(getIdentifiableType().toString(), createdValues.get("equipmentType"));
+        assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
     }
 
     @Override
@@ -186,6 +186,6 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals(getIdentifiableType().toString(), createdValues.get("equipmentType"));
+        assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
     }
 }

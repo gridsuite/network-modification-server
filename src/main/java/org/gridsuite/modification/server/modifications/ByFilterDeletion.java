@@ -85,7 +85,7 @@ public class ByFilterDeletion extends AbstractModification {
             subReporter.report(Report.builder()
                     .withKey("equipmentDeleted")
                     .withDefaultMessage("equipment of type=${type} and ids=${ids} deleted")
-                    .withValue("type", modificationInfos.getEquipmentType())
+                    .withValue("type", modificationInfos.getEquipmentType().name())
                     .withValue("ids", identifiableAttributes.stream().map(IdentifiableAttributes::getId).collect(Collectors.joining(", ")))
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
@@ -93,7 +93,7 @@ public class ByFilterDeletion extends AbstractModification {
     }
 
     private void applyFilterDeletion(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes) {
-        IdentifiableType identifiableType = IdentifiableType.valueOf(modificationInfos.getEquipmentType());
+        IdentifiableType identifiableType = modificationInfos.getEquipmentType();
         if (CONNECTABLE_EQUIPMENTS.contains(identifiableType)) {
             identifiableAttributes.forEach(identifiableAttribute -> new RemoveFeederBay(identifiableAttribute.getId()).apply(network, true, subReporter));
         } else if (identifiableType == IdentifiableType.VOLTAGE_LEVEL) {

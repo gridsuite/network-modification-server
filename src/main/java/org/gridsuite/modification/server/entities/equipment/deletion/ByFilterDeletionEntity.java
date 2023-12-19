@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
+import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,8 +29,9 @@ import java.util.stream.Collectors;
 @Table(name = "byFilterDeletion")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "by_filter_deletion_id_fk_constraint"))
 public class ByFilterDeletionEntity extends ModificationEntity {
+    @Enumerated(EnumType.STRING)
     @Column(name = "equipmentType")
-    private String equipmentType;
+    private IdentifiableType equipmentType;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinTable(

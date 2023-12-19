@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,7 +39,7 @@ import java.util.Map;
 @ModificationErrorTypeName("BY_FILTER_DELETION_ERROR")
 public class ByFilterDeletionInfos extends ModificationInfos {
     @Schema(description = "Equipment type")
-    private String equipmentType;
+    private IdentifiableType equipmentType;
 
     @Schema(description = "List of filters")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -62,7 +63,7 @@ public class ByFilterDeletionInfos extends ModificationInfos {
     @Override
     public Map<String, String> getMapMessageValues() {
         Map<String, String> mapMessageValues = new HashMap<>();
-        mapMessageValues.put("equipmentType", getEquipmentType());
+        mapMessageValues.put("equipmentType", getEquipmentType().name());
         return mapMessageValues;
     }
 }
