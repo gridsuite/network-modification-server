@@ -100,6 +100,14 @@ public final class NetworkCreation {
         createSwitch(v3, "v3dCompensator", "v3dCompensator", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v3, "v3bCompensator", "v3bCompensator", SwitchKind.BREAKER, true, false, false, 3, 4);
 
+        createBattery(v1, "v1Battery", "v1Battery", 80, 0, 15, 6, 3);
+        createSwitch(v1, "v1dBattery", "v1dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 81);
+        createSwitch(v1, "v1bBattery", "v1bBattery", SwitchKind.BREAKER, true, false, false, 81, 80);
+
+        createBattery(v2, "v2Battery", "v2Battery", 50, 0, 20, 7, 11);
+        createSwitch(v2, "v2dBattery", "v2dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 51);
+        createSwitch(v2, "v2bBattery", "v2bBattery", SwitchKind.BREAKER, true, false, false, 51, 50);
+
         createBattery(v3, "v3Battery", "v3Battery", 6, 0, 10, 1, 1);
         createSwitch(v3, "v3dBattery", "v3dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v3, "v3bBattery", "v3bBattery", SwitchKind.BREAKER, true, false, false, 5, 6);
