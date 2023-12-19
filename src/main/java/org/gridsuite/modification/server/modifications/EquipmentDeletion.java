@@ -34,7 +34,7 @@ public class EquipmentDeletion extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), modificationInfos.getEquipmentId());
+        Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType().name(), modificationInfos.getEquipmentId());
         if (identifiable == null) {
             throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + modificationInfos.getEquipmentId() + " not found or of bad type");
         }
@@ -53,7 +53,7 @@ public class EquipmentDeletion extends AbstractModification {
         subReporter.report(Report.builder()
             .withKey("equipmentDeleted")
             .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
-            .withValue("type", modificationInfos.getEquipmentType())
+            .withValue("type", modificationInfos.getEquipmentType().name())
             .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());

@@ -6,20 +6,21 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
-import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.EquipmentDeletion;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
+import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.EquipmentDeletion;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -34,7 +35,7 @@ import lombok.experimental.SuperBuilder;
 @ModificationErrorTypeName("DELETE_EQUIPMENT_ERROR")
 public class EquipmentDeletionInfos extends EquipmentModificationInfos {
     @Schema(description = "Equipment type")
-    private String equipmentType;
+    private IdentifiableType equipmentType;
 
     @Schema(description = "Equipment specific infos (optional)")
     @JsonInclude(JsonInclude.Include.NON_NULL)
