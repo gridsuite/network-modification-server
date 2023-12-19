@@ -56,6 +56,20 @@ public class BatteryModification extends AbstractModification {
         if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
             ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(batteryPoints, modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
         }
+        checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(modificationInfos, battery, MODIFY_BATTERY_ERROR, errorMessage);
+    }
+
+    private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(BatteryModificationInfos modificationInfos, Battery battery, NetworkModificationException.Type exceptionType, String errorMessage) {
+        ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                modificationInfos.getActivePowerSetpoint(),
+                modificationInfos.getMinActivePower(),
+                modificationInfos.getMaxActivePower(),
+                battery.getMinP(),
+                battery.getMaxP(),
+                battery.getTargetP(),
+                exceptionType,
+                errorMessage
+        );
     }
 
     @Override

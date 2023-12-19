@@ -11,7 +11,10 @@ import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.ShuntCompensator;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.VoltageLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +23,11 @@ import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
+import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
+
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -47,19 +54,15 @@ public class ReferenceFieldOrValue {
         }
 
         IdentifiableType identifiableType = identifiable.getType();
-        Double referenceValue = switch (identifiableType) {
+        return switch (identifiableType) {
             case GENERATOR -> GeneratorField.getReferenceValue((Generator) identifiable, equipmentField);
             case BATTERY -> BatteryField.getReferenceValue((Battery) identifiable, equipmentField);
             case SHUNT_COMPENSATOR -> ShuntCompensatorField.getReferenceValue((ShuntCompensator) identifiable, equipmentField);
+            case VOLTAGE_LEVEL -> VoltageLevelField.getReferenceValue((VoltageLevel) identifiable, equipmentField);
+            case LOAD -> LoadField.getReferenceValue((Load) identifiable, equipmentField);
+            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.getReferenceValue((TwoWindingsTransformer) identifiable, equipmentField);
             default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
                     String.format("Unsupported equipment type : %s", identifiableType.name()));
         };
-
-        if (referenceValue == null) {
-            throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
-                    String.format("value of %s is null", equipmentField));
-        }
-
-        return referenceValue;
     }
 }

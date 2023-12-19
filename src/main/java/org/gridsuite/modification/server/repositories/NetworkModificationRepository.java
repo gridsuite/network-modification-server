@@ -256,6 +256,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
+    public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
+        return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
+    }
+
+    @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
         List<ModificationEntity> entities = modificationRepository.findAllById(uuids);

@@ -1151,7 +1151,7 @@ public class ModificationControllerTest {
         var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID, null);
         var vl = network.getVoltageLevel("v2");
         var vl2 = network2.getVoltageLevel("v2");
-        assertEquals(10, vl.getConnectableCount());
+        assertEquals(11, vl.getConnectableCount());
         assertEquals(0, vl2.getConnectableCount());
         assertNotNull(network.getBusbarSection("1B"));
         assertNotNull(network.getBusbarSection("1.1"));
@@ -1350,5 +1350,26 @@ public class ModificationControllerTest {
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, true, true).size());
         mockMvc.perform(delete("/v1/groups/" + UUID.randomUUID() + "/stashed-modifications").queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
+    }
+
+    @Test
+    public void testGetModificationsCount() throws Exception {
+        MvcResult mvcResult;
+        createSomeSwitchModifications(TEST_GROUP_ID, 3);
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
+                .queryParam("stashed", "false"))
+            .andExpect(status().isOk()).andReturn();
+        assertEquals(3, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
+                .queryParam("stashed", "true"))
+            .andExpect(status().isOk()).andReturn();
+        assertEquals(0, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+
+        //Test for stashed parameter default value
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID))
+            .andExpect(status().isOk()).andReturn();
+        assertEquals(3, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+
     }
 }
