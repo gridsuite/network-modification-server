@@ -71,6 +71,12 @@ public class TabularModification extends AbstractModification {
             case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
                 defaultMessage = "two windings transformers" + defaultMessage;
                 break;
+            case "BATTERY_MODIFICATION":
+                defaultMessage = "batteries" + defaultMessage;
+                break;
+            case "VOLTAGE_LEVEL_MODIFICATION":
+                defaultMessage = "voltage levels" + defaultMessage;
+                break;
             default:
                 defaultMessage = "equipments of unknown type" + defaultMessage;
                 break;
