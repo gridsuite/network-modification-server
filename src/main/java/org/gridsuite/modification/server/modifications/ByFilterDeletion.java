@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
@@ -15,6 +14,7 @@ import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
 import com.powsybl.iidm.modification.topology.RemoveVoltageLevel;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFilterDeletionInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
@@ -40,7 +40,7 @@ public class ByFilterDeletion extends AbstractModification {
 
     protected FilterService filterService;
 
-    private static final EnumSet<IdentifiableType> CONNECTABLE_EQUIPMENTS = EnumSet.of(
+    private static final EnumSet<IdentifiableType> CONNECTABLE_TYPES = EnumSet.of(
             IdentifiableType.LINE,
             IdentifiableType.TWO_WINDINGS_TRANSFORMER,
             IdentifiableType.THREE_WINDINGS_TRANSFORMER,
@@ -79,29 +79,28 @@ public class ByFilterDeletion extends AbstractModification {
                         String.format("All of the following filters have equipments with wrong id : %s", filterNames),
                         TypedValue.WARN_SEVERITY);
             } else {
+                subReporter.report(Report.builder()
+                        .withKey("equipmentDeleted")
+                        .withDefaultMessage("${nbEquipments} equipments of type=${type} will be removed")
+                        .withValue("nbEquipments", identifiableAttributes.stream().map(IdentifiableAttributes::getId).count())
+                        .withValue("type", modificationInfos.getEquipmentType().name())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
                 applyFilterDeletion(network, subReporter, identifiableAttributes);
             }
-
-            subReporter.report(Report.builder()
-                    .withKey("equipmentDeleted")
-                    .withDefaultMessage("equipment of type=${type} and ids=${ids} deleted")
-                    .withValue("type", modificationInfos.getEquipmentType().name())
-                    .withValue("ids", identifiableAttributes.stream().map(IdentifiableAttributes::getId).collect(Collectors.joining(", ")))
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
         }
     }
 
     private void applyFilterDeletion(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes) {
         IdentifiableType identifiableType = modificationInfos.getEquipmentType();
-        if (CONNECTABLE_EQUIPMENTS.contains(identifiableType)) {
+        if (CONNECTABLE_TYPES.contains(identifiableType)) {
             identifiableAttributes.forEach(identifiableAttribute -> new RemoveFeederBay(identifiableAttribute.getId()).apply(network, true, subReporter));
         } else if (identifiableType == IdentifiableType.VOLTAGE_LEVEL) {
             identifiableAttributes.forEach(identifiableAttribute -> new RemoveVoltageLevel(identifiableAttribute.getId()).apply(network, true, subReporter));
         } else if (identifiableType == IdentifiableType.SUBSTATION) {
             identifiableAttributes.forEach(identifiableAttribute -> new RemoveSubstationBuilder().withSubstationId(identifiableAttribute.getId()).build().apply(network, true, subReporter));
         } else {
-            throw new PowsyblException("Unsupported equipment type");
+            throw NetworkModificationException.createEquipmentTypeUnknown(identifiableType.name());
         }
     }
 }
