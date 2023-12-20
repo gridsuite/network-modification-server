@@ -45,15 +45,15 @@ public class TabularModification extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter) {
         AtomicInteger applicationFailuresCount = new AtomicInteger(0);
-        modificationInfos.getModifications().forEach(modificationInfos -> {
+        modificationInfos.getModifications().forEach(modifInfos -> {
             try {
-                AbstractModification modification = modificationInfos.toModification();
+                AbstractModification modification = modifInfos.toModification();
                 modification.check(network);
                 modification.apply(network);
             } catch (PowsyblException e) {
                 applicationFailuresCount.incrementAndGet();
                 subReporter.report(Report.builder()
-                        .withKey(modificationInfos.getType().name() + applicationFailuresCount.get())
+                        .withKey(modifInfos.getType().name() + applicationFailuresCount.get())
                         .withDefaultMessage(e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
