@@ -169,7 +169,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
     }
 
-    private void testWithIccIsssue(Double ipMin, Double ipMax, String reportError) throws Exception {
+    private void testIccWithError(Double ipMin, Double ipMax, String reportError) throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_ko");
         vli.setIpMin(ipMin);
@@ -184,17 +184,17 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testIpMinGreaterThanIpMax() throws Exception {
-        testWithIccIsssue(15.1, 15.0, "IpMin cannot be greater than IpMax");
+        testIccWithError(15.1, 15.0, "IpMin cannot be greater than IpMax");
     }
 
     @Test
     public void testIpMinNegative() throws Exception {
-        testWithIccIsssue(-25.0, 15.0, "IpMin must be positive");
+        testIccWithError(-25.0, 15.0, "IpMin must be positive");
     }
 
     @Test
     public void testIpMaxNegative() throws Exception {
-        testWithIccIsssue(25.0, -15.0, "IpMax must be positive");
+        testIccWithError(25.0, -15.0, "IpMax must be positive");
     }
 
     public void testCreateWithShortCircuitExtension() throws Exception {
