@@ -34,16 +34,42 @@ public class VoltageLevelModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        if (Objects.nonNull(modificationInfos.getIpMin()) && modificationInfos.getIpMin().getValue() < 0) {
-            throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin must be positive");
+        boolean ipMinSet = false;
+        boolean ipMaxSet = false;
+        if (Objects.nonNull(modificationInfos.getIpMin())) {
+            ipMinSet = true;
+            if (modificationInfos.getIpMin().getValue() < 0) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin must be positive");
+            }
         }
-        if (Objects.nonNull(modificationInfos.getIpMax()) && modificationInfos.getIpMax().getValue() < 0) {
-            throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax must be positive");
+        if (Objects.nonNull(modificationInfos.getIpMax())) {
+            ipMaxSet = true;
+            if (modificationInfos.getIpMax().getValue() < 0) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax must be positive");
+            }
         }
-        // check when ipMin/ipMax are both set
-        if (Objects.nonNull(modificationInfos.getIpMin()) && Objects.nonNull(modificationInfos.getIpMax())
-                && modificationInfos.getIpMin().getValue() > modificationInfos.getIpMax().getValue()) {
-            throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
+        if (ipMinSet && ipMaxSet) {
+            if (modificationInfos.getIpMin().getValue() > modificationInfos.getIpMax().getValue()) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
+            }
+        } else if (ipMinSet || ipMaxSet) {
+            // only one Icc set: check with existing VL attributes
+            checkIccValuesAgainstEquipmentInNetwork(network, ipMinSet, ipMaxSet);
+        }
+    }
+
+    private void checkIccValuesAgainstEquipmentInNetwork(Network network, boolean ipMinSet, boolean ipMaxSet) {
+        VoltageLevel existingVoltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getEquipmentId());
+        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = existingVoltageLevel.getExtension(IdentifiableShortCircuit.class);
+        if (Objects.isNull(identifiableShortCircuit)) {
+            if (ipMinSet) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+            }
+        } else {
+            if (ipMinSet && modificationInfos.getIpMin().getValue() > identifiableShortCircuit.getIpMax() ||
+                    ipMaxSet && identifiableShortCircuit.getIpMin() > modificationInfos.getIpMax().getValue()) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
+            }
         }
     }
 

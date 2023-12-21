@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
+import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -122,16 +123,14 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     private void testIpMinIpMaxNotChanged(Double ipMin, Double ipMax, String reportError) throws Exception {
-        // memo current ipMin/Max before VL update
-        final String vlWithIdentifiableShortCircuit = "v3";
-        VoltageLevel voltageLevel = getNetwork().getVoltageLevel(vlWithIdentifiableShortCircuit);
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit1 = voltageLevel.getExtension(IdentifiableShortCircuit.class);
-        assertNotNull(identifiableShortCircuit1);
-        double beforeUpdateIpMin = identifiableShortCircuit1.getIpMin();
-        double beforeUpdateIpMax = identifiableShortCircuit1.getIpMax();
+        final String vlWithBothIcc = "v3";
+        final double beforeUpdateIpMin = 15.0; // cf NetworkCreation.java
+        final double beforeUpdateIpMax = 25.0;
 
-        VoltageLevelModificationInfos vli = (VoltageLevelModificationInfos) buildModification();
-        vli.setEquipmentId(vlWithIdentifiableShortCircuit);
+        VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
+                .stashed(false)
+                .equipmentId(vlWithBothIcc)
+                .build();
         if (ipMin != null) {
             vli.setIpMin(new AttributeModification<>(ipMin, OperationType.SET));
         }
@@ -141,9 +140,10 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         applyModification(vli);
 
         // check the update has not been made
-        VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithIdentifiableShortCircuit);
+        VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithBothIcc);
         assertNotNull(voltageLevelUpdated);
-        identifiableShortCircuit1 = voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class);
+        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit1 = voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class);
+        assertNotNull(identifiableShortCircuit1);
         assertEquals(beforeUpdateIpMin, identifiableShortCircuit1.getIpMin(), 0);
         assertEquals(beforeUpdateIpMax, identifiableShortCircuit1.getIpMax(), 0);
         assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), vli.getErrorType().name(), reportService);
@@ -151,35 +151,89 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
 
     @Test
     public void testIpMinGreaterThanIpMax() throws Exception {
+        // check only modification inputs
         testIpMinIpMaxNotChanged(30.0, 29.0, "IpMin cannot be greater than IpMax");
     }
 
     @Test
     public void testIpMinNegative() throws Exception {
-        testIpMinIpMaxNotChanged(-30.0, null, "IpMin must be positive");
+        // check only modification inputs
+        testIpMinIpMaxNotChanged(-30.0, 0.0, "IpMin must be positive");
     }
 
     @Test
     public void testIpMaxNegative() throws Exception {
-        testIpMinIpMaxNotChanged(null, -12.0, "IpMax must be positive");
+        // check only modification inputs
+        testIpMinIpMaxNotChanged(0.0, -12.0, "IpMax must be positive");
+    }
+
+    @Test
+    public void testIpMinGreaterThanEquipmentIpMax() throws Exception {
+        // check ipMin modification input against equipement ipMax real value (25.0)
+        testIpMinIpMaxNotChanged(30.0, null, "IpMin cannot be greater than IpMax");
+    }
+
+    @Test
+    public void testEquipmentIpMinGreaterThanIpMax() throws Exception {
+        // check ipMax modification input against equipement ipMin real value (15.0)
+        testIpMinIpMaxNotChanged(null, 14.9, "IpMin cannot be greater than IpMax");
     }
 
     @Test
     public void testIpMinEqualsIpMax() throws Exception {
-        final String vlWithIdentifiableShortCircuit = "v3";
+        final String vlWithBothIcc = "v3";
         final double iccValue = 29.0;
         VoltageLevelModificationInfos vli = (VoltageLevelModificationInfos) buildModification();
         vli.setIpMin(new AttributeModification<>(iccValue, OperationType.SET));
         vli.setIpMax(new AttributeModification<>(iccValue, OperationType.SET));
-        vli.setEquipmentId(vlWithIdentifiableShortCircuit);
+        vli.setEquipmentId(vlWithBothIcc);
         applyModification(vli);
 
         // check the update has been made
-        VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithIdentifiableShortCircuit);
+        VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithBothIcc);
         assertNotNull(voltageLevelUpdated);
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit1 = voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class);
+        assertNotNull(identifiableShortCircuit1);
         assertEquals(iccValue, identifiableShortCircuit1.getIpMin(), 0);
         assertEquals(iccValue, identifiableShortCircuit1.getIpMax(), 0);
+    }
+
+    @Test
+    public void testSetIpMinOnEquipmentWithoutExtension() throws Exception {
+        final String vlWithNoIcc = "v2";
+        VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
+                .stashed(false)
+                .equipmentId(vlWithNoIcc)
+                .ipMin(new AttributeModification<>(10.0, OperationType.SET))
+                .build();
+        applyModification(vli);
+        // check the update has not been made
+        VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithNoIcc);
+        assertNotNull(voltageLevelUpdated);
+        assertNull(voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class));
+        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(), vli.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testSetIpMaxOnEquipmentWitOnlyIpMaxExtension() throws Exception {
+        final String vlName = "v2"; // has no ICC
+        getNetwork().getVoltageLevel(vlName)
+                .newExtension(IdentifiableShortCircuitAdder.class).withIpMax(30.0).add();
+
+        final double targetIpMax = 29.0;
+        VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
+                .stashed(false)
+                .equipmentId(vlName)
+                .ipMax(new AttributeModification<>(targetIpMax, OperationType.SET))
+                .build();
+        applyModification(vli);
+        // check the update has been made
+        VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlName);
+        assertNotNull(voltageLevelUpdated);
+        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit1 = voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class);
+        assertNotNull(identifiableShortCircuit1);
+        assertEquals(0, identifiableShortCircuit1.getIpMin(), 0);
+        assertEquals(targetIpMax, identifiableShortCircuit1.getIpMax(), 0);
     }
 
     private void applyModification(VoltageLevelModificationInfos infos) throws Exception {
