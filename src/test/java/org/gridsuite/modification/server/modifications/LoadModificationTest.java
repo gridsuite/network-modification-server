@@ -45,8 +45,8 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
             .equipmentId("v1load")
             .equipmentName(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
-            .activePower(new AttributeModification<>(200.0, OperationType.SET))
-            .reactivePower(new AttributeModification<>(30.0, OperationType.SET))
+            .constantActivePower(new AttributeModification<>(200.0, OperationType.SET))
+            .constantReactivePower(new AttributeModification<>(30.0, OperationType.SET))
             .build();
     }
 
@@ -57,8 +57,8 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
             .stashed(false)
             .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
-            .activePower(new AttributeModification<>(300.0, OperationType.SET))
-            .reactivePower(new AttributeModification<>(50.0, OperationType.SET))
+            .constantActivePower(new AttributeModification<>(300.0, OperationType.SET))
+            .constantReactivePower(new AttributeModification<>(50.0, OperationType.SET))
             .build();
     }
 
