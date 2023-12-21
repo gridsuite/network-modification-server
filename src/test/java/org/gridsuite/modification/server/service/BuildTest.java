@@ -690,7 +690,7 @@ public class BuildTest {
                 .build().toEntity()
         );
         entities2.add(LoadModificationInfos.builder().equipmentId("newLoad")
-            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
+            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).constantActivePower(null).build().toEntity());
         entities2.add(GeneratorModificationInfos.builder()
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
