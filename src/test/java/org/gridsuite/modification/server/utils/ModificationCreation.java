@@ -133,11 +133,11 @@ public final class ModificationCreation {
         }
 
         if (activePower != null) {
-            builder.activePower(AttributeModification.toAttributeModification(activePower, OperationType.SET));
+            builder.constantActivePower(AttributeModification.toAttributeModification(activePower, OperationType.SET));
         }
 
         if (reactivePower != null) {
-            builder.reactivePower(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
+            builder.constantReactivePower(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
         }
 
         return builder.build();
