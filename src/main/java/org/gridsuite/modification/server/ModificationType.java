@@ -23,6 +23,7 @@ public enum ModificationType {
     GENERATOR_CREATION(PreloadingStrategy.NONE),
     GENERATOR_MODIFICATION(PreloadingStrategy.NONE),
     EQUIPMENT_DELETION(PreloadingStrategy.NONE),
+    BY_FILTER_DELETION(PreloadingStrategy.COLLECTION),
     LINE_CREATION(PreloadingStrategy.NONE),
     LINE_MODIFICATION(PreloadingStrategy.NONE),
     TWO_WINDINGS_TRANSFORMER_CREATION(PreloadingStrategy.NONE),

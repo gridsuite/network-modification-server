@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
@@ -16,7 +17,8 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -32,7 +34,7 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("VOLTAGE_LEVEL")
+                .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
                 .equipmentId("v1")
                 .build();
     }
@@ -41,7 +43,7 @@ public class VoltageLevelDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("LINE")
+                .equipmentType(IdentifiableType.LINE)
                 .equipmentId("v2")
                 .build();
     }

@@ -511,7 +511,7 @@ public final class ModificationUtils {
 
     public Terminal getTerminalFromIdentifiable(Network network, String equipmentId, String type, String voltageLevelId) {
         if (network != null && equipmentId != null && type != null && voltageLevelId != null) {
-            Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, IdentifiableType.valueOf(type), equipmentId);
 
             if (identifiable == null) {
                 throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + equipmentId + " not found with type " + type);
@@ -562,12 +562,12 @@ public final class ModificationUtils {
         }
     }
 
-    public Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
+    public Identifiable<?> getEquipmentByIdentifiableType(Network network, IdentifiableType type, String equipmentId) {
         if (type == null || equipmentId == null) {
             return null;
         }
 
-        switch (IdentifiableType.valueOf(type)) {
+        switch (type) {
             case HVDC_LINE:
                 return network.getHvdcLine(equipmentId);
             case LINE:
