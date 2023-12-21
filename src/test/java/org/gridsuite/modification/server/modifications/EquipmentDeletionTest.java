@@ -12,6 +12,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.RemoveSubstation;
 import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -51,7 +52,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("LOAD")
+                .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v1load")
                 .build();
     }
@@ -60,7 +61,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("GENERATOR")
+                .equipmentType(IdentifiableType.GENERATOR)
                 .equipmentId("idGenerator")
                 .build();
     }
@@ -80,7 +81,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("LOAD")
+                .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v5load")
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
@@ -121,7 +122,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 new HvdcLccDeletionInfos(null, shuntData);
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("HVDC_LINE")
+                .equipmentType(IdentifiableType.HVDC_LINE)
                 .equipmentId(hvdcLineName)
                 .equipmentInfos(hvdcLccDeletionInfos)
                 .build();
