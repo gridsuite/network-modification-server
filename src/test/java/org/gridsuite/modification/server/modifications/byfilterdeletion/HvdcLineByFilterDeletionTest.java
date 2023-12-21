@@ -4,12 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.service.FilterService;
@@ -24,14 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 @Tag("IntegrationTest")
-public class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
-    private static final String LOAD_ID_1 = "load1";
-
-    private static final String LOAD_ID_2 = "load2";
-
-    private static final String LOAD_ID_3 = "load3";
-
-    private static final String LOAD_ID_4 = "load4";
+public class HvdcLineByFilterDeletionTest extends AbstractByFilterDeletionTest {
+    private static final String HVDC_LINE_ID_1 = "hvdcLine";
 
     @Before
     public void specificSetUp() {
@@ -41,45 +33,35 @@ public class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest 
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.createLoadNetwork(networkUuid, new NetworkFactoryImpl());
+        return NetworkCreation.create(networkUuid, true);
     }
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertNull(getNetwork().getLoad(LOAD_ID_1));
-        assertNull(getNetwork().getLoad(LOAD_ID_2));
-        assertNull(getNetwork().getLoad(LOAD_ID_3));
-        assertNull(getNetwork().getLoad(LOAD_ID_4));
+        assertNull(getNetwork().getHvdcLine(HVDC_LINE_ID_1));
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
-        assertNotNull(getNetwork().getLoad(LOAD_ID_1));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_2));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_3));
-        assertNotNull(getNetwork().getLoad(LOAD_ID_4));
+        assertNotNull(getNetwork().getHvdcLine(HVDC_LINE_ID_1));
     }
 
     @Override
     protected IdentifiableType getIdentifiableType() {
-        return IdentifiableType.LOAD;
+        return IdentifiableType.HVDC_LINE;
     }
 
     @Override
     protected String getEquipmentNotFoundMessage() {
-        return "Connectable not found: " + EQUIPMENT_WRONG_ID_1;
+        return "Hvdc Line " + EQUIPMENT_WRONG_ID_1 + " not found";
     }
 
     @Override
     protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes load1 = getIdentifiableAttributes(LOAD_ID_1);
-        IdentifiableAttributes load2 = getIdentifiableAttributes(LOAD_ID_2);
-        IdentifiableAttributes load3 = getIdentifiableAttributes(LOAD_ID_3);
-        IdentifiableAttributes load4 = getIdentifiableAttributes(LOAD_ID_4);
+        IdentifiableAttributes hvdc1 = getIdentifiableAttributes(HVDC_LINE_ID_1);
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4), List.of());
+        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(hvdc1), List.of());
 
-        return List.of(filter1, filter2);
+        return List.of(filter1);
     }
 }

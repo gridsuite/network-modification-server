@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationTest {
     protected static final UUID FILTER_ID_1 = UUID.randomUUID();
     protected static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final String EQUIPMENT_WRONG_ID_1 = "wrongId1";
+    protected static final String EQUIPMENT_WRONG_ID_1 = "wrongId1";
 
     protected abstract IdentifiableType getIdentifiableType();
 
@@ -70,7 +70,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertLogMessage(getEquipmentNotFoundMessage() + ": wrongId1",
+        assertLogMessage(getEquipmentNotFoundMessage(),
                 byFilterDeletionInfos.getErrorType().name(), reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
     }
