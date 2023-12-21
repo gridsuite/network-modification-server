@@ -110,7 +110,7 @@ public class ByFilterDeletion extends AbstractModification {
     }
 
     private void removeHvdcLine(Network network, Reporter subReporter, IdentifiableAttributes identifiableAttribute) {
-        HvdcLine hvdcLine = (HvdcLine) ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType().name(), identifiableAttribute.getId());
+        HvdcLine hvdcLine = (HvdcLine) ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), identifiableAttribute.getId());
         if (hvdcLine != null) {
             HvdcConverterStation<?> converterStation1 = hvdcLine.getConverterStation1();
             HvdcConverterStation<?> converterStation2 = hvdcLine.getConverterStation2();

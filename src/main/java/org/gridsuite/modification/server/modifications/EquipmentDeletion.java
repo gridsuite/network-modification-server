@@ -53,7 +53,7 @@ public class EquipmentDeletion extends AbstractModification {
         subReporter.report(Report.builder()
             .withKey("equipmentDeleted")
             .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
-            .withValue("type", modificationInfos.getEquipmentType())
+            .withValue("type", modificationInfos.getEquipmentType().name())
             .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
