@@ -61,7 +61,7 @@ public class SubstationByFilterDeletionTest extends AbstractByFilterDeletionTest
 
     @Override
     protected String getEquipmentNotFoundMessage() {
-        return "Substation not found";
+        return "Substation not found: " + EQUIPMENT_WRONG_ID_1;
     }
 
     @Override

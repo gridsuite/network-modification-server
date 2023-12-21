@@ -64,7 +64,7 @@ public class VoltageLevelByFilterDeletionTest extends AbstractByFilterDeletionTe
 
     @Override
     protected String getEquipmentNotFoundMessage() {
-        return "Voltage level not found";
+        return "Voltage level not found: " + EQUIPMENT_WRONG_ID_1;
     }
 
     @Override

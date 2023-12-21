@@ -10,8 +10,11 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.RemoveFeederBay;
+import com.powsybl.iidm.modification.topology.RemoveHvdcLineBuilder;
 import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
 import com.powsybl.iidm.modification.topology.RemoveVoltageLevel;
+import com.powsybl.iidm.network.HvdcConverterStation;
+import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -99,8 +102,28 @@ public class ByFilterDeletion extends AbstractModification {
             identifiableAttributes.forEach(identifiableAttribute -> new RemoveVoltageLevel(identifiableAttribute.getId()).apply(network, true, subReporter));
         } else if (identifiableType == IdentifiableType.SUBSTATION) {
             identifiableAttributes.forEach(identifiableAttribute -> new RemoveSubstationBuilder().withSubstationId(identifiableAttribute.getId()).build().apply(network, true, subReporter));
+        } else if (identifiableType == IdentifiableType.HVDC_LINE) {
+            identifiableAttributes.forEach(identifiableAttribute -> removeHvdcLine(network, subReporter, identifiableAttribute));
         } else {
             throw NetworkModificationException.createEquipmentTypeUnknown(identifiableType.name());
         }
+    }
+
+    private void removeHvdcLine(Network network, Reporter subReporter, IdentifiableAttributes identifiableAttribute) {
+        HvdcLine hvdcLine = (HvdcLine) ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType().name(), identifiableAttribute.getId());
+        if (hvdcLine != null) {
+            HvdcConverterStation<?> converterStation1 = hvdcLine.getConverterStation1();
+            HvdcConverterStation<?> converterStation2 = hvdcLine.getConverterStation2();
+            if (converterStation1.getHvdcType() == HvdcConverterStation.HvdcType.LCC || converterStation2.getHvdcType() == HvdcConverterStation.HvdcType.LCC) {
+                String hdvcLineId = identifiableAttribute.getId();
+                subReporter.report(Report.builder()
+                        .withKey("SCNotRemoved" + hdvcLineId)
+                        .withDefaultMessage("Shunt compensators were not removed for HVDC line id=${id}")
+                        .withValue("id", identifiableAttribute.getId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+            }
+        }
+        new RemoveHvdcLineBuilder().withHvdcLineId(identifiableAttribute.getId()).build().apply(network, true, subReporter);
     }
 }
