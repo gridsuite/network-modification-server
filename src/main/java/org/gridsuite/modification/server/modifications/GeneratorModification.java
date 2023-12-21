@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -45,6 +45,9 @@ public class GeneratorModification extends AbstractModification {
     public void check(Network network) throws NetworkModificationException {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
+        }
+        if (network.getGenerator(modificationInfos.getEquipmentId()) == null) {
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());

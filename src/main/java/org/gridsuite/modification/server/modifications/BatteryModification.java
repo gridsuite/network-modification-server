@@ -45,7 +45,7 @@ public class BatteryModification extends AbstractModification {
             throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
         }
         if (network.getBattery(modificationInfos.getEquipmentId()) == null) {
-            throw new NetworkModificationException(BATTERY_NOT_FOUND, modificationInfos.getEquipmentId());
+            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
         Battery battery = network.getBattery(modificationInfos.getEquipmentId());
         String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
