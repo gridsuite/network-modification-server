@@ -10,10 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.TwoWindingsTransformerModificationEntity;
@@ -49,10 +46,12 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     private AttributeModification<Double> ratedS;
 
     @Schema(description = "Ratio tap changer")
-    private RatioTapChangerModificationInfos ratioTapChanger;
+    @Builder.Default
+    private RatioTapChangerModificationInfos ratioTapChanger = new RatioTapChangerModificationInfos();
 
     @Schema(description = "Phase tap changer")
-    private PhaseTapChangerModificationInfos phaseTapChanger;
+    @Builder.Default
+    private PhaseTapChangerModificationInfos phaseTapChanger = new PhaseTapChangerModificationInfos();
 
     @Override
     public TwoWindingsTransformerModificationEntity toEntity() {

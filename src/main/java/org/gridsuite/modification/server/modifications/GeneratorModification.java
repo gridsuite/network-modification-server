@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -43,32 +43,33 @@ public class GeneratorModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
-            Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
-            // check min max reactive limits
-            String errorMessage = "Generator '" + modificationInfos.getEquipmentId() + "' : ";
-            if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
-                MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
-                ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_GENERATOR_ERROR, errorMessage);
-            }
-            // check reactive capability curve limits
-            Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-            List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
-            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-            if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
-                ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints, MODIFY_GENERATOR_ERROR, errorMessage);
-            }
-            // check regulated terminal
-            if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
-                    modificationInfos.getRegulatingTerminalVlId() != null) {
-                VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getRegulatingTerminalVlId().getValue());
-                ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
-                        modificationInfos.getRegulatingTerminalId().getValue(),
-                        modificationInfos.getRegulatingTerminalType().getValue(),
-                        modificationInfos.getRegulatingTerminalVlId().getValue());
-            }
-            checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(modificationInfos, generator, MODIFY_GENERATOR_ERROR, errorMessage);
+        if (modificationInfos == null) {
+            throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
         }
+        Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
+        // check min max reactive limits
+        String errorMessage = "Generator '" + modificationInfos.getEquipmentId() + "' : ";
+        if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
+            MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
+            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_GENERATOR_ERROR, errorMessage);
+        }
+        // check reactive capability curve limits
+        Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
+        List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
+        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
+        if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
+            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints, MODIFY_GENERATOR_ERROR, errorMessage);
+        }
+        // check regulated terminal
+        if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
+                modificationInfos.getRegulatingTerminalVlId() != null) {
+            VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getRegulatingTerminalVlId().getValue());
+            ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
+                    modificationInfos.getRegulatingTerminalId().getValue(),
+                    modificationInfos.getRegulatingTerminalType().getValue(),
+                    modificationInfos.getRegulatingTerminalVlId().getValue());
+        }
+        checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(modificationInfos, generator, MODIFY_GENERATOR_ERROR, errorMessage);
     }
 
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
@@ -86,9 +87,6 @@ public class GeneratorModification extends AbstractModification {
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(MODIFY_GENERATOR_ERROR, "Missing required attributes to modify the equipment");
-        }
         Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
         // modify the generator in the network
         modifyGenerator(generator, modificationInfos, subReporter);

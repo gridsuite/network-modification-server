@@ -30,7 +30,7 @@ public class EquipmentAttributeModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         Identifiable<?> identifiable = network.getIdentifiable(modificationInfos.getEquipmentId());
         if (identifiable == null) {
             throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, modificationInfos.getEquipmentId());
@@ -38,6 +38,11 @@ public class EquipmentAttributeModification extends AbstractModification {
         if (identifiable.getType() != modificationInfos.getEquipmentType()) {
             throw new NetworkModificationException(WRONG_EQUIPMENT_TYPE, String.format("Type of '%s' is not %s but %s", modificationInfos.getEquipmentId(), modificationInfos.getEquipmentType(), identifiable.getType()));
         }
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        Identifiable<?> identifiable = network.getIdentifiable(modificationInfos.getEquipmentId());
         if (identifiable instanceof Switch) {
             changeSwitchAttribute((Switch) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
         } else if (identifiable instanceof Injection) {

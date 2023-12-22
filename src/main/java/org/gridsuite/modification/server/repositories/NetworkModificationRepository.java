@@ -307,10 +307,11 @@ public class NetworkModificationRepository {
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            if (!groupEntity.getModifications().isEmpty()) {
-                List<UUID> stashedModifications = groupEntity.getModifications().stream()
-                    .filter(ModificationEntity::getStashed).map(ModificationEntity::getId).collect(Collectors.toList());
-                deleteModifications(groupUuid, stashedModifications);
+            List<UUID> stashedModificationUuids = groupEntity.getModifications().stream()
+                    .filter(modification -> modification != null && modification.getStashed())
+                    .map(ModificationEntity::getId).collect(Collectors.toList());
+            if (!stashedModificationUuids.isEmpty()) {
+                deleteModifications(groupUuid, stashedModificationUuids);
             }
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {

@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2021, RTE (http://www.rte-france.com)
+  Copyright (c) 2023, RTE (http://www.rte-france.com)
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -18,41 +18,52 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.entities.equipment.deletion.EquipmentDeletionEntity;
+import org.gridsuite.modification.server.entities.equipment.deletion.ByFilterDeletionEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.EquipmentDeletion;
+import org.gridsuite.modification.server.modifications.ByFilterDeletion;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Equipment deletion")
-@JsonTypeName("EQUIPMENT_DELETION")
-@ModificationErrorTypeName("DELETE_EQUIPMENT_ERROR")
-public class EquipmentDeletionInfos extends EquipmentModificationInfos {
+@Schema(description = "By filter deletion")
+@JsonTypeName("BY_FILTER_DELETION")
+@ModificationErrorTypeName("BY_FILTER_DELETION_ERROR")
+public class ByFilterDeletionInfos extends ModificationInfos {
     @Schema(description = "Equipment type")
     private IdentifiableType equipmentType;
 
-    @Schema(description = "Equipment specific infos (optional)")
+    @Schema(description = "List of filters")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private AbstractEquipmentDeletionInfos equipmentInfos;
+    private List<FilterInfos> filters;
 
     @Override
-    public EquipmentDeletionEntity toEntity() {
-        return new EquipmentDeletionEntity(this);
+    public ByFilterDeletionEntity toEntity() {
+        return new ByFilterDeletionEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new EquipmentDeletion(this);
+        return new ByFilterDeletion(this);
     }
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Equipment deletion ${equipmentId}", "equipmentId", this.getEquipmentId());
+        return reporter.createSubReporter(getType().name(), "By filter deletion");
+    }
+
+    @Override
+    public Map<String, String> getMapMessageValues() {
+        Map<String, String> mapMessageValues = new HashMap<>();
+        mapMessageValues.put("equipmentType", getEquipmentType().name());
+        return mapMessageValues;
     }
 }

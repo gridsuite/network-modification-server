@@ -45,13 +45,15 @@ public class TabularModification extends AbstractModification {
     @Override
     public void apply(Network network, Reporter subReporter) {
         AtomicInteger applicationFailuresCount = new AtomicInteger(0);
-        modificationInfos.getModifications().forEach(modification -> {
+        modificationInfos.getModifications().forEach(modifInfos -> {
             try {
-                modification.toModification().apply(network);
+                AbstractModification modification = modifInfos.toModification();
+                modification.check(network);
+                modification.apply(network);
             } catch (PowsyblException e) {
                 applicationFailuresCount.incrementAndGet();
                 subReporter.report(Report.builder()
-                        .withKey(modification.getType().name() + applicationFailuresCount.get())
+                        .withKey(modifInfos.getType().name() + applicationFailuresCount.get())
                         .withDefaultMessage(e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
@@ -65,6 +67,9 @@ public class TabularModification extends AbstractModification {
                 break;
             case "LOAD_MODIFICATION":
                 defaultMessage = "loads" + defaultMessage;
+                break;
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
+                defaultMessage = "two windings transformers" + defaultMessage;
                 break;
             case "BATTERY_MODIFICATION":
                 defaultMessage = "batteries" + defaultMessage;
