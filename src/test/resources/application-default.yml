@@ -10,12 +10,13 @@ spring:
     hibernate:
       #to turn off schema validation that fails (because of clob types) and blocks tests even if the schema is compatible
       ddl-auto: none
-logging:
-  level:
-    org.springframework.orm.jpa: WARN
-    org.springframework.transaction: WARN
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+# Uncomment to activate SQL exhaustive logs
+#logging:
+#  level:
+#    org.springframework.orm.jpa: DEBUG
+#    org.springframework.transaction: DEBUG
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 gridsuite:
   services:
     report-server:
