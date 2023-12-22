@@ -156,6 +156,47 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getVoltageLevel("vl_2"));
     }
 
+    @Test
+    public void testIpMinEqualsIpMax() throws Exception {
+        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
+        vli.setEquipmentId("vl_ok");
+        vli.setIpMin(25.0);
+        vli.setIpMax(25.0);
+        String vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // VL is created
+        assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
+    }
+
+    private void testIccWithError(Double ipMin, Double ipMax, String reportError) throws Exception {
+        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
+        vli.setEquipmentId("vl_ko");
+        vli.setIpMin(ipMin);
+        vli.setIpMax(ipMax);
+        String vliJsonObject = mapper.writeValueAsString(vli);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // VL could not have been created
+        assertNull(getNetwork().getVoltageLevel("vl_ko"));
+        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), vli.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testIpMinGreaterThanIpMax() throws Exception {
+        testIccWithError(15.1, 15.0, "IpMin cannot be greater than IpMax");
+    }
+
+    @Test
+    public void testIpMinNegative() throws Exception {
+        testIccWithError(-25.0, 15.0, "IpMin must be positive");
+    }
+
+    @Test
+    public void testIpMaxNegative() throws Exception {
+        testIccWithError(25.0, -15.0, "IpMax must be positive");
+    }
+
     public void testCreateWithShortCircuitExtension() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setIpMin(null);
