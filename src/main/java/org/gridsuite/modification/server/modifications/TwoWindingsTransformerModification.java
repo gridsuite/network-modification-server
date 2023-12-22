@@ -227,12 +227,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             addTapchangerSteps(tapChangerReports, tapChangerModificationInfos, adder);
         } else if (tapChanger != null) {
             for (Object step : tapChanger.getAllSteps().values()) {
-                if (step instanceof RatioTapChangerStep) {
-                    RatioTapChangerStep ratioStep = (RatioTapChangerStep) step;
-                    ((RatioTapChangerAdder) adder).beginStep().setR(ratioStep.getR()).setX(ratioStep.getX()).setG(ratioStep.getG()).setB(ratioStep.getB()).setRho(ratioStep.getRho()).endStep();
-                } else if (step instanceof PhaseTapChangerStep) {
-                    PhaseTapChangerStep phaseStep = (PhaseTapChangerStep) step;
-                    ((PhaseTapChangerAdder) adder).beginStep().setR(phaseStep.getR()).setX(phaseStep.getX()).setG(phaseStep.getG()).setB(phaseStep.getB()).setRho(phaseStep.getRho()).setAlpha(phaseStep.getAlpha()).endStep();
+                if (step instanceof RatioTapChangerStep ratioStep && adder instanceof RatioTapChangerAdder ratioAdder) {
+                    ratioAdder.beginStep().setR(ratioStep.getR()).setX(ratioStep.getX()).setG(ratioStep.getG()).setB(ratioStep.getB()).setRho(ratioStep.getRho()).endStep();
+                } else if (step instanceof PhaseTapChangerStep phaseStep && adder instanceof PhaseTapChangerAdder phaseAdder) {
+                    phaseAdder.beginStep().setR(phaseStep.getR()).setX(phaseStep.getX()).setG(phaseStep.getG()).setB(phaseStep.getB()).setRho(phaseStep.getRho()).setAlpha(phaseStep.getAlpha()).endStep();
                 }
             }
         }
