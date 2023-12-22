@@ -28,12 +28,17 @@ public class SubstationModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         Substation station = network.getSubstation(modificationInfos.getEquipmentId());
         if (station == null) {
             throw new NetworkModificationException(SUBSTATION_NOT_FOUND,
                     "Substation " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        Substation station = network.getSubstation(modificationInfos.getEquipmentId());
 
         // modify the substation in the network
         subReporter.report(Report.builder()
