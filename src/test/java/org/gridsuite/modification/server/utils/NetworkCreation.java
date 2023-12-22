@@ -89,7 +89,7 @@ public final class NetworkCreation {
         createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
-        VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
+        VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0, 15.0, 25.0);
         createBusBarSection(v3, "3A", "3A", 0);
 
         createLoad(v3, "v3load", "v3load", 2, 0., 0., "cn3", 3, ConnectablePosition.Direction.BOTTOM);
