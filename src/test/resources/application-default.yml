@@ -12,10 +12,10 @@ spring:
       ddl-auto: none
 logging:
   level:
-    org.springframework.orm.jpa: WARNING
-    org.springframework.transaction: WARNING
-    org.hibernate.SQL: WARNING
-    org.hibernate.type.descriptor.sql.BasicBinder: WARNING
+    org.springframework.orm.jpa: WARN
+    org.springframework.transaction: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
 gridsuite:
   services:
     report-server:
