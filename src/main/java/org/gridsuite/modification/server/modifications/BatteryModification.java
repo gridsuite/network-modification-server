@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -44,10 +43,7 @@ public class BatteryModification extends AbstractModification {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
         }
-        if (network.getBattery(modificationInfos.getEquipmentId()) == null) {
-            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + modificationInfos.getEquipmentId() + " does not exist in network");
-        }
-        Battery battery = network.getBattery(modificationInfos.getEquipmentId());
+        Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
         if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
             MinMaxReactiveLimits minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimits.class);
