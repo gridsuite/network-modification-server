@@ -32,10 +32,14 @@ public class GroovyScript extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         if (StringUtils.isBlank(modificationInfos.getScript())) {
             throw new NetworkModificationException(GROOVY_SCRIPT_EMPTY);
         }
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
         var conf = new CompilerConfiguration();
         var binding = new Binding();
         binding.setProperty("network", network);
