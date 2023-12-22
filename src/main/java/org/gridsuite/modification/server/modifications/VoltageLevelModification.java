@@ -10,17 +10,16 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -35,20 +34,49 @@ public class VoltageLevelModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getEquipmentId());
-        if (voltageLevel == null) {
-            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
-                    String.format("Voltage level %s does not exist in network", modificationInfos.getEquipmentId()));
+        boolean ipMinSet = false;
+        boolean ipMaxSet = false;
+        if (Objects.nonNull(modificationInfos.getIpMin())) {
+            ipMinSet = true;
+            if (modificationInfos.getIpMin().getValue() < 0) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin must be positive");
+            }
+        }
+        if (Objects.nonNull(modificationInfos.getIpMax())) {
+            ipMaxSet = true;
+            if (modificationInfos.getIpMax().getValue() < 0) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax must be positive");
+            }
+        }
+        if (ipMinSet && ipMaxSet) {
+            if (modificationInfos.getIpMin().getValue() > modificationInfos.getIpMax().getValue()) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
+            }
+        } else if (ipMinSet || ipMaxSet) {
+            // only one Icc set: check with existing VL attributes
+            checkIccValuesAgainstEquipmentInNetwork(network, ipMinSet, ipMaxSet);
+        }
+    }
+
+    private void checkIccValuesAgainstEquipmentInNetwork(Network network, boolean ipMinSet, boolean ipMaxSet) {
+        VoltageLevel existingVoltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getEquipmentId());
+        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = existingVoltageLevel.getExtension(IdentifiableShortCircuit.class);
+        if (Objects.isNull(identifiableShortCircuit)) {
+            if (ipMinSet) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+            }
+        } else {
+            if (ipMinSet && modificationInfos.getIpMin().getValue() > identifiableShortCircuit.getIpMax() ||
+                    ipMaxSet && identifiableShortCircuit.getIpMin() > modificationInfos.getIpMax().getValue()) {
+                throw new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
+            }
         }
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getEquipmentId());
-        modifyVoltageLevel(subReporter, voltageLevel);
-    }
+        VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getEquipmentId());
 
-    private void modifyVoltageLevel(Reporter subReporter, VoltageLevel voltageLevel) {
         subReporter.report(Report.builder()
                 .withKey("voltageLevelModification")
                 .withDefaultMessage("Voltage level with id=${id} modified :")
