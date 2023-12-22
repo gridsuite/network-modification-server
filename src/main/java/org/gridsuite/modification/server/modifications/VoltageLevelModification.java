@@ -34,13 +34,17 @@ public class VoltageLevelModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getEquipmentId());
         if (voltageLevel == null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
                     String.format("Voltage level %s does not exist in network", modificationInfos.getEquipmentId()));
         }
+    }
 
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getEquipmentId());
         modifyVoltageLevel(subReporter, voltageLevel);
     }
 

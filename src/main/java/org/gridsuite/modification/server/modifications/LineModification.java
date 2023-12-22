@@ -28,12 +28,17 @@ public class LineModification extends AbstractBranchModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         Line line = network.getLine(modificationInfos.getEquipmentId());
         if (line == null) {
             throw new NetworkModificationException(LINE_NOT_FOUND,
                     "Line " + modificationInfos.getEquipmentId() + " does not exist in network");
         }
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        Line line = network.getLine(modificationInfos.getEquipmentId());
         // modify the line in the network
         modifyLine(line, modificationInfos, subReporter);
     }
