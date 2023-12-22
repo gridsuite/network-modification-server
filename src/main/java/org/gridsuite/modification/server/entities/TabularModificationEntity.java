@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.Battery
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.TwoWindingsTransformerModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
 
 /**
@@ -48,6 +49,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 break;
             case "LOAD_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
+                break;
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(twtModificationInfos -> new TwoWindingsTransformerModificationEntity((TwoWindingsTransformerModificationInfos) twtModificationInfos)).collect(Collectors.toList());
                 break;
             case "BATTERY_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(batteryModificationInfos -> new BatteryModificationEntity((BatteryModificationInfos) batteryModificationInfos)).collect(Collectors.toList());
@@ -90,6 +94,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 break;
             case "LOAD_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
+                break;
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
+                modifications.addAll(tabularModificationInfos.getModifications().stream().map(twtModificationInfos -> new TwoWindingsTransformerModificationEntity((TwoWindingsTransformerModificationInfos) twtModificationInfos)).collect(Collectors.toList()));
                 break;
             case "VOLTAGE_LEVEL_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList()));

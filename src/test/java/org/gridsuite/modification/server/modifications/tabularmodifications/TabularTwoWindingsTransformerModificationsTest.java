@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,13 +21,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Etienne Homer <etienne.homer at rte-france.com>
+ * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularLoadModificationsTest extends AbstractNetworkModificationTest {
+public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -35,12 +37,12 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build()
+                buildOneModification("trf1", 0.0),
+                buildOneModification("trf2", 1.0),
+                buildOneModification("unknownTwt", 1.0)
         );
         return TabularModificationInfos.builder()
-                .modificationType("LOAD_MODIFICATION")
+                .modificationType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -49,29 +51,33 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build()
+                buildOneModification("trf1", 3.0),
+                buildOneModification("trf2", 4.0)
         );
         return TabularModificationInfos.builder()
-                .modificationType("LOAD_MODIFICATION")
+                .modificationType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
                 .modifications(modifications)
                 .stashed(false)
                 .build();
     }
 
+    protected TwoWindingsTransformerModificationInfos buildOneModification(String equipmentId, Double seriesResistance) {
+        return TwoWindingsTransformerModificationInfos.builder().equipmentId(equipmentId)
+                .seriesResistance(new AttributeModification<>(seriesResistance, OperationType.SET))
+                .build();
+    }
+
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertEquals(300., getNetwork().getLoad("v1load").getQ0(), 0.001);
-        assertEquals(300., getNetwork().getLoad("v2load").getQ0(), 0.001);
-        assertEquals(300., getNetwork().getLoad("v3load").getQ0(), 0.001);
+        assertEquals(0.0, getNetwork().getTwoWindingsTransformer("trf1").getR(), 0.001);
+        assertEquals(1.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
+        assertLogMessage("TWO_WINDINGS_TRANSFORMER_NOT_FOUND : Two windings transformer with ID 'unknownTwt' does not exist in the network", ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION.name() + "1", reportService);
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
-        assertEquals(0., getNetwork().getLoad("v1load").getQ0(), 0.001);
-        assertEquals(0., getNetwork().getLoad("v2load").getQ0(), 0.001);
-        assertEquals(0., getNetwork().getLoad("v3load").getQ0(), 0.001);
+        assertEquals(2.0, getNetwork().getTwoWindingsTransformer("trf1").getR(), 0.001);
+        assertEquals(2.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
     }
 
     @Override
@@ -79,7 +85,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LOAD_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -87,6 +93,6 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LOAD_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", updatedValues.get("tabularModificationType"));
     }
 }

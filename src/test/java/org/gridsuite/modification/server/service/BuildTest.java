@@ -556,7 +556,7 @@ public class BuildTest {
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
-        entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType("SHUNT_COMPENSATOR").build().toEntity());
+        entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType(IdentifiableType.SHUNT_COMPENSATOR).build().toEntity());
         entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
         entities2.add(BranchStatusModificationInfos.builder().equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
         entities2.add(VoltageLevelCreationInfos.builder()
@@ -690,7 +690,7 @@ public class BuildTest {
                 .build().toEntity()
         );
         entities2.add(LoadModificationInfos.builder().equipmentId("newLoad")
-            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).activePower(null).build().toEntity());
+            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).constantActivePower(null).build().toEntity());
         entities2.add(GeneratorModificationInfos.builder()
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
