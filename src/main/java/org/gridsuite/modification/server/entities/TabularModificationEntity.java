@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.BatteryModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LineModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.TwoWindingsTransformerModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
@@ -58,6 +59,9 @@ public class TabularModificationEntity extends ModificationEntity {
             case "VOLTAGE_LEVEL_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList());
                 break;
+            case "LINE_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(lineModificationInfos -> new LineModificationEntity((LineModificationInfos) lineModificationInfos)).collect(Collectors.toList());
+                break;
             default:
                 break;
         }
@@ -96,6 +100,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 break;
             case "VOLTAGE_LEVEL_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList()));
+                break;
+            case "LINE_MODIFICATION":
+                modifications.addAll(tabularModificationInfos.getModifications().stream().map(lineModificationInfos -> new LineModificationEntity((LineModificationInfos) lineModificationInfos)).collect(Collectors.toList()));
                 break;
             default:
                 break;
