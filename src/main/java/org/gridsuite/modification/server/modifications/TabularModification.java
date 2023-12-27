@@ -61,29 +61,16 @@ public class TabularModification extends AbstractModification {
             }
         });
         String defaultMessage = " have been modified";
-        switch (modificationInfos.getModificationType()) {
-            case "GENERATOR_MODIFICATION":
-                defaultMessage = "generators" + defaultMessage;
-                break;
-            case "LOAD_MODIFICATION":
-                defaultMessage = "loads" + defaultMessage;
-                break;
-            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
-                defaultMessage = "two windings transformers" + defaultMessage;
-                break;
-            case "BATTERY_MODIFICATION":
-                defaultMessage = "batteries" + defaultMessage;
-                break;
-            case "VOLTAGE_LEVEL_MODIFICATION":
-                defaultMessage = "voltage levels" + defaultMessage;
-                break;
-            case "LINE_MODIFICATION":
-                defaultMessage = "lines" + defaultMessage;
-                break;
-            default:
-                defaultMessage = "equipments of unknown type" + defaultMessage;
-                break;
-        }
+        defaultMessage = switch (modificationInfos.getModificationType()) {
+            case "GENERATOR_MODIFICATION" -> "generators" + defaultMessage;
+            case "LOAD_MODIFICATION" -> "loads" + defaultMessage;
+            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION" -> "two windings transformers" + defaultMessage;
+            case "BATTERY_MODIFICATION" -> "batteries" + defaultMessage;
+            case "VOLTAGE_LEVEL_MODIFICATION" -> "voltage levels" + defaultMessage;
+            case "SHUNT_COMPENSATOR_MODIFICATION" -> "shunt compensator" + defaultMessage;
+            case "LINE_MODIFICATION" -> "lines" + defaultMessage;
+            default -> "equipments of unknown type" + defaultMessage;
+        };
 
         if (modificationInfos.getModifications().size() == applicationFailuresCount.get()) {
             subReporter.report(Report.builder()
