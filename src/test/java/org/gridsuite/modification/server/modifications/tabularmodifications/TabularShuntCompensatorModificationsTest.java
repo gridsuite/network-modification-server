@@ -38,8 +38,8 @@ public class TabularShuntCompensatorModificationsTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").voltageLevelId("v2").maximumSectionCount(new AttributeModification<>(100, OperationType.SET)).sectionCount(new AttributeModification<>(10, OperationType.SET)).build(),
-                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").voltageLevelId("v5").maximumSectionCount(new AttributeModification<>(200, OperationType.SET)).sectionCount(new AttributeModification<>(20, OperationType.SET)).build()
+                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(100, OperationType.SET)).sectionCount(new AttributeModification<>(10, OperationType.SET)).build(),
+                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(200, OperationType.SET)).sectionCount(new AttributeModification<>(20, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
@@ -51,8 +51,8 @@ public class TabularShuntCompensatorModificationsTest extends AbstractNetworkMod
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").voltageLevelId("v2").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build(),
-                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").voltageLevelId("v5").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build()
+                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build(),
+                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType("SHUNT_COMPENSATOR_MODIFICATION")

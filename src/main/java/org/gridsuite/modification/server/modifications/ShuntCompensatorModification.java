@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -45,18 +44,12 @@ public class ShuntCompensatorModification extends AbstractModification {
             throw new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
                     String.format("Shunt compensator %s does not exist in network", modificationInfos.getEquipmentId()));
         }
-
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
-        if (voltageLevel == null) {
-            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
-                    String.format("Voltage level %s does not exist in network", modificationInfos.getVoltageLevelId()));
-        }
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
         ShuntCompensator shuntCompensator = network.getShuntCompensator(modificationInfos.getEquipmentId());
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
+        VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
 
         subReporter.report(Report.builder()
                 .withKey("shuntCompensatorModification")
