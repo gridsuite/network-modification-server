@@ -51,39 +51,6 @@ public class SubstationModification extends AbstractModification {
         ModificationUtils.getInstance().applyElementaryModifications(station::setName, () -> station.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(station::setCountry, station::getNullableCountry, modificationInfos.getSubstationCountry(), subReporter, "Country");
         // properties
-        if (modificationInfos.getProperties() != null) {
-            modificationInfos.getProperties().forEach(prop -> {
-                if (prop.isDeletionMark()) {
-                    if (station.removeProperty(prop.getName())) {
-                        subReporter.report(Report.builder()
-                                .withKey("propertyDeleted")
-                                .withDefaultMessage("    Property ${name} deleted")
-                                .withValue("name", prop.getName())
-                                .withSeverity(TypedValue.INFO_SEVERITY)
-                                .build());
-                    }
-                } else {
-                    String oldValue = station.setProperty(prop.getName(), prop.getValue());
-                    if (oldValue != null) { // update
-                        subReporter.report(Report.builder()
-                                .withKey("propertyChanged")
-                                .withDefaultMessage("    Property ${name} changed : ${from} -> ${to}")
-                                .withValue("name", prop.getName())
-                                .withValue("from", oldValue)
-                                .withValue("to", prop.getValue())
-                                .withSeverity(TypedValue.INFO_SEVERITY)
-                                .build());
-                    } else { // insert
-                        subReporter.report(Report.builder()
-                                .withKey("propertyAdded")
-                                .withDefaultMessage("    Property ${name} added with value ${value}")
-                                .withValue("name", prop.getName())
-                                .withValue("value", prop.getValue())
-                                .withSeverity(TypedValue.INFO_SEVERITY)
-                                .build());
-                    }
-                }
-            });
-        }
+        PropertiesUtils.applyProperties(station, subReporter, modificationInfos.getProperties());
     }
 }

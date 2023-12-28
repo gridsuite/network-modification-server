@@ -12,7 +12,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 /**
- * @author David Braquart <david.braquart at rte-france.com>
+ * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
@@ -20,8 +20,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "Substation free properties")
-public class SubstationFreePropertyInfos {
+@Schema(description = "Free properties")
+public class FreePropertyInfos {
     @Schema(description = "property name")
     private String name;
 

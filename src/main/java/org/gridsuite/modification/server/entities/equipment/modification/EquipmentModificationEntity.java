@@ -6,13 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+
+import java.util.List;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -23,6 +24,11 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 public class EquipmentModificationEntity extends ModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "equipment_modification_id")
+    @OrderColumn(name = "insert_position")
+    private List<FreePropertyEntity> properties;
 
     protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos) {
         super(equipmentModificationInfos);
@@ -37,5 +43,23 @@ public class EquipmentModificationEntity extends ModificationEntity {
 
     private void assignAttributes(EquipmentModificationInfos equipmentModificationInfos) {
         equipmentId = equipmentModificationInfos.getEquipmentId();
+        List<FreePropertyEntity> newProperties = equipmentModificationInfos.getProperties() == null ? null :
+            equipmentModificationInfos.getProperties().stream()
+                .map(prop -> (FreePropertyEntity) FreePropertyEntity.builder()
+                    .name(prop.getName())
+                    .value(prop.getValue())
+                    .deletionMark(prop.isDeletionMark())
+                    .added(prop.isAdded())
+                    .build())
+                .toList();
+        if (this.properties != null) {
+            // update using the same reference with clear/add (to avoid JPA exception)
+            this.properties.clear();
+            if (newProperties != null) {
+                this.properties.addAll(newProperties);
+            }
+        } else {
+            this.properties = newProperties;
+        }
     }
 }

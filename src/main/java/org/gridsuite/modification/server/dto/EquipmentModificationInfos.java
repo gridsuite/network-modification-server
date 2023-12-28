@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.lang.NonNull;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +16,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,6 +33,10 @@ public class EquipmentModificationInfos extends ModificationInfos {
     @Schema(description = "Equipment ID")
     @NonNull
     private String equipmentId;
+
+    @Schema(description = "free properties")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<FreePropertyInfos> properties;
 
     @Override
     public Map<String, String> getMapMessageValues() {
