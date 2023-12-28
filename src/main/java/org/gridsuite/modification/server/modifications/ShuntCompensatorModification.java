@@ -95,6 +95,10 @@ public class ShuntCompensatorModification extends AbstractModification {
         double oldSwitchedOnSusceptance = oldSusceptancePerSection * shuntCompensator.getSectionCount();
         double oldSwitchedOnQAtNominalV = oldQAtNominalV * shuntCompensator.getSectionCount();
 
+        if (modificationInfos.getShuntCompensatorType() != null || modificationInfos.getMaxQAtNominalV() != null) {
+            modificationInfos.setMaxSusceptance(null);
+        }
+
         // due to cross validation between maximum section count and section count, we need to modify section count first
         // when maximum section count old value is greater than the new one
         if (modificationInfos.getMaximumSectionCount() != null && modificationInfos.getMaximumSectionCount().getValue() < shuntCompensator.getMaximumSectionCount()) {
