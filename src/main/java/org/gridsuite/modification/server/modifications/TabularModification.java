@@ -12,6 +12,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,21 @@ public class TabularModification extends AbstractModification {
     public void check(Network network) throws NetworkModificationException {
         if (modificationInfos == null) {
             throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, "No tabular modification to apply !!");
+        }
+
+        if ("SHUNT_COMPENSATOR_MODIFICATION".equals(modificationInfos.getModificationType())) {
+            for (var modification : modificationInfos.getModifications()) {
+                var shuntModification = (ShuntCompensatorModificationInfos) modification;
+                if (shuntModification.getMaxSusceptance() != null) {
+                    if (shuntModification.getShuntCompensatorType() != null && shuntModification.getMaxQAtNominalV() != null) {
+                        LOGGER.warn("Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance");
+                    } else if (shuntModification.getShuntCompensatorType() != null) {
+                        LOGGER.warn("Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance");
+                    } else if (shuntModification.getMaxQAtNominalV() != null) {
+                        LOGGER.warn("Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance");
+                    }
+                }
+            }
         }
     }
 
