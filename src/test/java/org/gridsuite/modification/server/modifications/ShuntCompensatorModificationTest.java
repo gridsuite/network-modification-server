@@ -76,6 +76,38 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
     @SneakyThrows
     @Test
+    public void testWrongMaximumSectionCount() {
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v5shunt")
+                .sectionCount(new AttributeModification<>(3, OperationType.SET))
+                .maximumSectionCount(new AttributeModification<>(-1, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Maximum section count should be greater or equal to 1")).getMessage(),
+                shuntCompensator.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testWrongSectionCount() {
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v5shunt")
+                .sectionCount(new AttributeModification<>(3, OperationType.SET))
+                .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Section count should be between 1 and Maximum section count")).getMessage(),
+                shuntCompensator.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
     public void testNegativeQmaxAtNominalV() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
@@ -119,7 +151,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testCreateModificationWithSusceptancePerSection() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 0, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);

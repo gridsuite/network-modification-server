@@ -25,8 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
@@ -98,6 +97,31 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage(),
+                modificationToCreate.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testCreateWithMaximumSectionCountError() throws Exception {
+        ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
+        modificationToCreate.setMaximumSectionCount(0);
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1").getMessage(),
+                modificationToCreate.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testCreateWithSectionError() throws Exception {
+        ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
+        modificationToCreate.setMaximumSectionCount(2);
+        modificationToCreate.setSectionCount(3);
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 1 and Maximum section count").getMessage(),
                 modificationToCreate.getErrorType().name(), reportService);
     }
 
