@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.Battery
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LineModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.SubstationModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.TwoWindingsTransformerModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
@@ -66,6 +67,9 @@ public class TabularModificationEntity extends ModificationEntity {
             case "LINE_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(lineModificationInfos -> new LineModificationEntity((LineModificationInfos) lineModificationInfos)).collect(Collectors.toList());
                 break;
+            case "SUBSTATION_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(subStationModificationInfos -> new SubstationModificationEntity((SubstationModificationInfos) subStationModificationInfos)).collect(Collectors.toList());
+                break;
             default:
                 break;
         }
@@ -110,6 +114,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 break;
             case "LINE_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(lineModificationInfos -> new LineModificationEntity((LineModificationInfos) lineModificationInfos)).collect(Collectors.toList()));
+                break;
+            case "SUBSTATION_MODIFICATION":
+                modifications.addAll(tabularModificationInfos.getModifications().stream().map(subStationModificationInfos -> new SubstationModificationEntity((SubstationModificationInfos) subStationModificationInfos)).toList());
                 break;
             default:
                 break;

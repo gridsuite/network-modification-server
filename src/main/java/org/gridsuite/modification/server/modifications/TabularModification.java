@@ -75,6 +75,7 @@ public class TabularModification extends AbstractModification {
             case "VOLTAGE_LEVEL_MODIFICATION" -> "voltage levels" + defaultMessage;
             case "SHUNT_COMPENSATOR_MODIFICATION" -> "shunt compensator" + defaultMessage;
             case "LINE_MODIFICATION" -> "lines" + defaultMessage;
+            case "SUBSTATION_MODIFICATION" -> "substations" + defaultMessage;
             default -> "equipments of unknown type" + defaultMessage;
         };
 
