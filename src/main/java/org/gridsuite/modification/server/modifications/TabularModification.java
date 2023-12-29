@@ -40,37 +40,16 @@ public class TabularModification extends AbstractModification {
         if (modificationInfos == null) {
             throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, "No tabular modification to apply !!");
         }
-
-        if ("SHUNT_COMPENSATOR_MODIFICATION".equals(modificationInfos.getModificationType())) {
-            for (var modification : modificationInfos.getModifications()) {
-                var shuntModification = (ShuntCompensatorModificationInfos) modification;
-                if (shuntModification.getMaxSusceptance() != null) {
-                    if (shuntModification.getShuntCompensatorType() != null && shuntModification.getMaxQAtNominalV() != null) {
-                        LOGGER.warn("Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance");
-                    } else if (shuntModification.getShuntCompensatorType() != null) {
-                        LOGGER.warn("Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance");
-                    } else if (shuntModification.getMaxQAtNominalV() != null) {
-                        LOGGER.warn("Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance");
-                    }
-                }
-            }
-        }
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
         int applicationFailuresCount = 0;
         for (var modifInfos : modificationInfos.getModifications()) {
-            if (modifInfos instanceof ShuntCompensatorModificationInfos shuntModifInfos) {
-                var shuntCompensator = network.getShuntCompensator(shuntModifInfos.getEquipmentId());
-                if (shuntCompensator.getModelType() == ShuntCompensatorModelType.NON_LINEAR) {
+            if (modifInfos instanceof ShuntCompensatorModificationInfos shuntModification) {
+                boolean isModifOK = checkShuntCompensatorModification(network, shuntModification, subReporter);
+                if (!isModifOK) {
                     applicationFailuresCount++;
-                    subReporter.report(Report.builder()
-                            .withKey(shuntCompensator.getId())
-                            .withDefaultMessage("Tabular modification: It is currently not possible to modify non-linear shunt compensator with id " + shuntCompensator.getId())
-                            .withSeverity(TypedValue.ERROR_SEVERITY)
-                            .build());
-                    continue;
                 }
             }
             try {
@@ -121,5 +100,46 @@ public class TabularModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
+    }
+
+    private boolean checkShuntCompensatorModification(
+            Network network,
+            ShuntCompensatorModificationInfos shuntCompensatorModificationInfos,
+            Reporter subReporter
+    ) {
+        var shuntCompensator = network.getShuntCompensator(shuntCompensatorModificationInfos.getEquipmentId());
+        if (shuntCompensator.getModelType() == ShuntCompensatorModelType.NON_LINEAR) {
+            subReporter.report(Report.builder()
+                    .withKey(shuntCompensator.getId())
+                    .withDefaultMessage("Tabular modification: It is currently not possible to modify non-linear shunt compensator with id " + shuntCompensator.getId())
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .build());
+            return false;
+        }
+        if (shuntCompensatorModificationInfos.getMaxSusceptance() != null) {
+            if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null && shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
+                subReporter.report(Report.builder()
+                        .withKey(shuntCompensator.getId())
+                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance for shunt compensator with id "
+                                + shuntCompensator.getId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+            } else if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null) {
+                subReporter.report(Report.builder()
+                        .withKey(shuntCompensator.getId())
+                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance for shunt compensator with id "
+                                + shuntCompensator.getId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+            } else if (shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
+                subReporter.report(Report.builder()
+                        .withKey(shuntCompensator.getId())
+                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance for shunt compensator with id "
+                                + shuntCompensator.getId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
+            }
+        }
+        return true;
     }
 }
