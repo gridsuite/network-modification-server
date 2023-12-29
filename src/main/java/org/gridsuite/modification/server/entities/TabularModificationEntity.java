@@ -54,6 +54,9 @@ public class TabularModificationEntity extends ModificationEntity {
             case "VOLTAGE_LEVEL_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList());
                 break;
+            case "LINE_MODIFICATION":
+                modifications = tabularModificationInfos.getModifications().stream().map(lineModificationInfos -> new LineModificationEntity((LineModificationInfos) lineModificationInfos)).collect(Collectors.toList());
+                break;
             case "SUBSTATION_MODIFICATION":
                 modifications = tabularModificationInfos.getModifications().stream().map(subStationModificationInfos -> new SubstationModificationEntity((SubstationModificationInfos) subStationModificationInfos)).collect(Collectors.toList());
                 break;
@@ -95,6 +98,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 break;
             case "VOLTAGE_LEVEL_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList()));
+                break;
+            case "LINE_MODIFICATION":
+                modifications.addAll(tabularModificationInfos.getModifications().stream().map(lineModificationInfos -> new LineModificationEntity((LineModificationInfos) lineModificationInfos)).collect(Collectors.toList()));
                 break;
             case "SUBSTATION_MODIFICATION":
                 modifications.addAll(tabularModificationInfos.getModifications().stream().map(subStationModificationInfos -> new SubstationModificationEntity((SubstationModificationInfos) subStationModificationInfos)).toList());
