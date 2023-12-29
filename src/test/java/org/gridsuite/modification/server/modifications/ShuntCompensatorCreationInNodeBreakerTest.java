@@ -121,7 +121,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 1 and Maximum section count").getMessage(),
+        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 1 and Maximum section count (2), actual : 3").getMessage(),
                 modificationToCreate.getErrorType().name(), reportService);
     }
 

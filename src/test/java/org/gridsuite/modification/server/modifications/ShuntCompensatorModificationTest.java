@@ -102,8 +102,52 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 1 and Maximum section count")).getMessage(),
+                        String.format("Section count should be between 1 and Maximum section count (1), actual : 3")).getMessage(),
                 shuntCompensator.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testWrongSectionCountChangeSectionCount() {
+        VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+
+        var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
+        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v7shunt")
+                .sectionCount(new AttributeModification<>(3, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Section count should be between 1 and Maximum section count (1), actual : 3")).getMessage(),
+                shuntCompensatorModifications.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testWrongSectionCountChangeMaximumSectionCount() {
+        VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+
+        var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
+        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v7shunt")
+                .sectionCount(new AttributeModification<>(0, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Section count should be between 1 and Maximum section count (1), actual : 0")).getMessage(),
+                shuntCompensatorModifications.getErrorType().name(), reportService);
     }
 
     @SneakyThrows

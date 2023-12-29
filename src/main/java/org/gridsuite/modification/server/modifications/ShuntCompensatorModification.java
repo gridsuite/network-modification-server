@@ -58,7 +58,7 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
 
         if (sectionCount < 1 || maximumSectionCount < 1 || sectionCount > maximumSectionCount) {
-            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, "Section count should be between 1 and Maximum section count");
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, String.format("Section count should be between 1 and Maximum section count (%d), actual : %d", maximumSectionCount, sectionCount));
         }
 
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());

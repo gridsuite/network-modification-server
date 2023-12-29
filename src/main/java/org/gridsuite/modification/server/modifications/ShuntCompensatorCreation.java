@@ -40,7 +40,9 @@ public class ShuntCompensatorCreation extends AbstractModification {
         }
 
         if (modificationInfos.getSectionCount() < 1 || modificationInfos.getSectionCount() > modificationInfos.getMaximumSectionCount()) {
-            throw new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 1 and Maximum section count");
+            throw new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, String.format("Section count should be between 1 and Maximum section count (%d), actual : %d",
+                    modificationInfos.getMaximumSectionCount(),
+                    modificationInfos.getSectionCount()));
         }
         ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
