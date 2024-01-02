@@ -103,7 +103,7 @@ public class TabularModification extends AbstractModification {
         }
     }
 
-    private boolean checkShuntCompensatorModification(
+    public boolean checkShuntCompensatorModification(
             Network network,
             ShuntCompensatorModificationInfos shuntCompensatorModificationInfos,
             Reporter subReporter
