@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
+import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.modifications.TabularModification;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -128,21 +130,30 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
                 .maxSusceptance(AttributeModification.toAttributeModification(10.0, OperationType.SET))
                 .build();
 
-        var tabularModification = TabularModificationInfos
+        var tabularModificationInfos = TabularModificationInfos
                 .builder()
                 .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
+        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
-        boolean result = ((TabularModification) tabularModification.toModification())
-                .checkShuntCompensatorModification(network, shuntModification, reporter);
-
+        boolean result = tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
         assertTrue(result);
-        verify(reporter).report(argThat(report -> report.getValue(Report.REPORT_SEVERITY_KEY) == TypedValue.WARN_SEVERITY));
+
+        shuntModification.setShuntCompensatorType(AttributeModification.toAttributeModification(ShuntCompensatorType.CAPACITOR, OperationType.SET));
+        result = tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
+        assertTrue(result);
+
+        shuntModification.setMaxQAtNominalV(null);
+        result = tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
+        assertTrue(result);
+
+        verify(reporter, times(3)).report(argThat(report -> report.getValue(Report.REPORT_SEVERITY_KEY) == TypedValue.WARN_SEVERITY));
     }
 
     @Test
@@ -153,19 +164,19 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .build();
 
-        var tabularModification = TabularModificationInfos
+        var tabularModificationInfos = TabularModificationInfos
                 .builder()
                 .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
+        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.NON_LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
-        boolean result = ((TabularModification) tabularModification.toModification())
-                .checkShuntCompensatorModification(network, shuntModification, reporter);
-
+        boolean result = tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
         assertFalse(result);
         verify(reporter).report(argThat(report -> report.getValue(Report.REPORT_SEVERITY_KEY) == TypedValue.ERROR_SEVERITY));
     }
@@ -178,19 +189,19 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .build();
 
-        var tabularModification = TabularModificationInfos
+        var tabularModificationInfos = TabularModificationInfos
                 .builder()
                 .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
+        var tabularModification = (TabularModification) tabularModificationInfos.toModification();
+
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
-        boolean result = ((TabularModification) tabularModification.toModification())
-                .checkShuntCompensatorModification(network, shuntModification, reporter);
-
+        boolean result = tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
         assertTrue(result);
         verify(reporter, never()).report(any());
     }
