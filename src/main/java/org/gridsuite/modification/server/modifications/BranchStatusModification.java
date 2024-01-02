@@ -23,8 +23,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_NOT_FOUND;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
@@ -40,12 +40,18 @@ public class BranchStatusModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         String branchId = modificationInfos.getEquipmentId();
         Branch<?> branch = network.getBranch(branchId);
         if (branch == null) {
             throw new NetworkModificationException(BRANCH_NOT_FOUND, branchId);
         }
+    }
+
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        String branchId = modificationInfos.getEquipmentId();
+        Branch<?> branch = network.getBranch(branchId);
 
         String branchTypeName = branch.getType() == IdentifiableType.LINE ? "Line" : "2 windings transformer";
         switch (modificationInfos.getAction()) {
