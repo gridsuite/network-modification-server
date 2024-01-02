@@ -177,10 +177,10 @@ public class NetworkModificationRepository {
         Stream<ModificationEntity> modificationEntity = groupUuids.stream().flatMap(this::getModificationEntityStream);
         if (onlyStashed) {
             return modificationEntity.filter(m -> m.getStashed() == onlyStashed)
-                    .map(ModificationEntity::toModificationInfos)
+                    .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         } else {
-            return modificationEntity.map(ModificationEntity::toModificationInfos)
+            return modificationEntity.map(this::getModificationInfos)
                 .collect(Collectors.toList());
         }
     }
