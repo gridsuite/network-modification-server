@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
