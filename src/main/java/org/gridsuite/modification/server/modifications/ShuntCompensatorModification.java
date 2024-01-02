@@ -44,6 +44,22 @@ public class ShuntCompensatorModification extends AbstractModification {
             throw new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
                     String.format("Shunt compensator %s does not exist in network", modificationInfos.getEquipmentId()));
         }
+
+        int maximumSectionCount = modificationInfos.getMaximumSectionCount() != null
+                ? modificationInfos.getMaximumSectionCount().getValue()
+                : shuntCompensator.getMaximumSectionCount();
+
+        int sectionCount = modificationInfos.getSectionCount() != null
+                ? modificationInfos.getSectionCount().getValue()
+                : shuntCompensator.getSectionCount();
+
+        if (modificationInfos.getMaximumSectionCount() != null && modificationInfos.getMaximumSectionCount().getValue() < 1) {
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1");
+        }
+
+        if (sectionCount < 1 || maximumSectionCount < 1 || sectionCount > maximumSectionCount) {
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, String.format("Section count should be between 1 and Maximum section count (%d), actual : %d", maximumSectionCount, sectionCount));
+        }
     }
 
     @Override
