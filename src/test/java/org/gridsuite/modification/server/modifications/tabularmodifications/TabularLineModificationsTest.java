@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -44,7 +45,7 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
                 LineModificationInfos.builder().equipmentId("unknownLine").shuntSusceptance2(new AttributeModification<>(60., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("LINE_MODIFICATION")
+                .equipmentType(IdentifiableType.LINE)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -60,7 +61,7 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
                 LineModificationInfos.builder().equipmentId("unknownLine").shuntSusceptance2(new AttributeModification<>(50., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("LINE_MODIFICATION")
+                .equipmentType(IdentifiableType.LINE)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -87,7 +88,7 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LINE_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.LINE.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -95,6 +96,6 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LINE_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.LINE.name(), updatedValues.get("tabularModificationType"));
     }
 }
