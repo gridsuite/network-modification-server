@@ -1,0 +1,30 @@
+{
+  "version" : "1.0",
+  "uuid" : "38f23335-32db-4920-ad6f-be13b673b72a",
+  "type" : "TABULAR_MODIFICATION",
+  "date" : "2023-12-29T11:29:24.089680Z",
+  "stashed" : false,
+  "messageType" : "TABULAR_MODIFICATION",
+  "messageValues" : "{\"tabularModificationType\":\"LOAD_MODIFICATION\"}",
+  "modificationType" : "LOAD_MODIFICATION",
+  "modifications" : [ {
+    "version" : "1.0",
+    "uuid" : "d0f3efc0-1e41-4669-98ab-34167641578e",
+    "type" : "LOAD_MODIFICATION",
+    "date" : "2023-12-29T11:29:24.089680Z",
+    "stashed" : false,
+    "equipmentId" : "l1",
+    "loadType" : {
+      "value" : "FICTITIOUS",
+      "op" : "SET"
+    },
+    "constantActivePower" : {
+      "value" : 10.0,
+      "op" : "SET"
+    },
+    "constantReactivePower" : {
+      "value" : 10.0,
+      "op" : "SET"
+    }
+  } ]
+}

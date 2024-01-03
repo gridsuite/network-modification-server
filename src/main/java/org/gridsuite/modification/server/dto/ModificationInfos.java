@@ -77,6 +77,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @ToString
 @Schema(description = "Modification attributes")
 public class ModificationInfos {
+    public static final String VERSION = "1.0";
+
     @Schema(description = "Modification id")
     private UUID uuid;
 
