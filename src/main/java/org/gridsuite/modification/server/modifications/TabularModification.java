@@ -46,15 +46,12 @@ public class TabularModification extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         int applicationFailuresCount = 0;
         for (var modifInfos : modificationInfos.getModifications()) {
-            if (modifInfos instanceof ShuntCompensatorModificationInfos shuntModification) {
-                boolean isModifOK = checkShuntCompensatorModification(network, shuntModification, subReporter);
-                if (!isModifOK) {
-                    applicationFailuresCount++;
-                }
-            }
             try {
                 AbstractModification modification = modifInfos.toModification();
                 modification.check(network);
+                if (modifInfos instanceof ShuntCompensatorModificationInfos shuntModification) {
+                    checkShuntCompensatorModification(network, shuntModification, subReporter);
+                }
                 modification.apply(network);
             } catch (PowsyblException e) {
                 applicationFailuresCount++;
@@ -103,7 +100,7 @@ public class TabularModification extends AbstractModification {
         }
     }
 
-    public boolean checkShuntCompensatorModification(
+    public void checkShuntCompensatorModification(
             Network network,
             ShuntCompensatorModificationInfos shuntCompensatorModificationInfos,
             Reporter subReporter
@@ -115,9 +112,7 @@ public class TabularModification extends AbstractModification {
                     .withDefaultMessage("Tabular modification: It is currently not possible to modify non-linear shunt compensator with id " + shuntCompensator.getId())
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
-            return false;
-        }
-        if (shuntCompensatorModificationInfos.getMaxSusceptance() != null) {
+        } else if (shuntCompensatorModificationInfos.getMaxSusceptance() != null) {
             if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null && shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
                 subReporter.report(Report.builder()
                         .withKey(shuntCompensator.getId())
@@ -141,6 +136,5 @@ public class TabularModification extends AbstractModification {
                         .build());
             }
         }
-        return true;
     }
 }
