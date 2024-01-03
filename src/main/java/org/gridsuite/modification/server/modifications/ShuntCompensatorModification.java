@@ -22,8 +22,7 @@ import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -46,11 +45,28 @@ public class ShuntCompensatorModification extends AbstractModification {
                     String.format("Shunt compensator %s does not exist in network", modificationInfos.getEquipmentId()));
         }
 
+        int maximumSectionCount = modificationInfos.getMaximumSectionCount() != null
+                ? modificationInfos.getMaximumSectionCount().getValue()
+                : shuntCompensator.getMaximumSectionCount();
+
+        int sectionCount = modificationInfos.getSectionCount() != null
+                ? modificationInfos.getSectionCount().getValue()
+                : shuntCompensator.getSectionCount();
+
+        if (modificationInfos.getMaximumSectionCount() != null && modificationInfos.getMaximumSectionCount().getValue() < 1) {
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1");
+        }
+
+        if (sectionCount < 1 || maximumSectionCount < 1 || sectionCount > maximumSectionCount) {
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, String.format("Section count should be between 1 and Maximum section count (%d), actual : %d", maximumSectionCount, sectionCount));
+        }
+
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
         if (voltageLevel == null) {
             throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
                     String.format("Voltage level %s does not exist in network", modificationInfos.getVoltageLevelId()));
         }
+
     }
 
     @Override
