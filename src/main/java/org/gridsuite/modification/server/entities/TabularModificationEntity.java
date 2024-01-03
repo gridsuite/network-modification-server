@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities;
 
+import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,11 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.equipment.modification.BatteryModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.TwoWindingsTransformerModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -32,35 +28,17 @@ import org.gridsuite.modification.server.entities.equipment.modification.Voltage
 @Table(name = "tabular_modification")
 public class TabularModificationEntity extends ModificationEntity {
 
-    @Column(name = "modificationType")
-    private String modificationType;
+    @Column(name = "equipmentType")
+    @Enumerated(EnumType.STRING)
+    private IdentifiableType equipmentType;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
     private List<ModificationEntity> modifications;
 
-    public TabularModificationEntity(TabularModificationInfos tabularModificationInfos) {
+    public TabularModificationEntity(@NonNull TabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
-        modificationType = tabularModificationInfos.getModificationType();
-        switch (modificationType) {
-            case "GENERATOR_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList());
-                break;
-            case "LOAD_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList());
-                break;
-            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(twtModificationInfos -> new TwoWindingsTransformerModificationEntity((TwoWindingsTransformerModificationInfos) twtModificationInfos)).collect(Collectors.toList());
-                break;
-            case "BATTERY_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(batteryModificationInfos -> new BatteryModificationEntity((BatteryModificationInfos) batteryModificationInfos)).collect(Collectors.toList());
-                break;
-            case "VOLTAGE_LEVEL_MODIFICATION":
-                modifications = tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList());
-                break;
-            default:
-                break;
-        }
+        assignAttributes(tabularModificationInfos);
     }
 
     @Override
@@ -70,7 +48,7 @@ public class TabularModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
-                .modificationType(modificationType)
+                .equipmentType(equipmentType)
                 .modifications(modificationsInfos)
                 .build();
     }
@@ -78,28 +56,16 @@ public class TabularModificationEntity extends ModificationEntity {
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        TabularModificationInfos tabularModificationInfos = (TabularModificationInfos) modificationInfos;
-        modificationType = tabularModificationInfos.getModificationType();
-        modifications.clear();
-        switch (modificationType) {
-            case "GENERATOR_MODIFICATION":
-                modifications.addAll(tabularModificationInfos.getModifications().stream().map(generatorModificationInfos -> new GeneratorModificationEntity((GeneratorModificationInfos) generatorModificationInfos)).collect(Collectors.toList()));
-                break;
-            case "BATTERY_MODIFICATION":
-                modifications.addAll(tabularModificationInfos.getModifications().stream().map(batteryModificationInfos -> new BatteryModificationEntity((BatteryModificationInfos) batteryModificationInfos)).collect(Collectors.toList()));
-                break;
-            case "LOAD_MODIFICATION":
-                modifications.addAll(tabularModificationInfos.getModifications().stream().map(loadModificationInfos -> new LoadModificationEntity((LoadModificationInfos) loadModificationInfos)).collect(Collectors.toList()));
-                break;
-            case "TWO_WINDINGS_TRANSFORMER_MODIFICATION":
-                modifications.addAll(tabularModificationInfos.getModifications().stream().map(twtModificationInfos -> new TwoWindingsTransformerModificationEntity((TwoWindingsTransformerModificationInfos) twtModificationInfos)).collect(Collectors.toList()));
-                break;
-            case "VOLTAGE_LEVEL_MODIFICATION":
-                modifications.addAll(tabularModificationInfos.getModifications().stream().map(voltageLevelModificationInfos -> new VoltageLevelModificationEntity((VoltageLevelModificationInfos) voltageLevelModificationInfos)).collect(Collectors.toList()));
-                break;
-            default:
-                break;
-        }
+        assignAttributes((TabularModificationInfos) modificationInfos);
     }
 
+    private void assignAttributes(TabularModificationInfos tabularModificationInfos) {
+        equipmentType = tabularModificationInfos.getEquipmentType();
+        if (modifications == null) {
+            modifications = tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
+        } else {
+            modifications.clear();
+            modifications.addAll(tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList());
+        }
+    }
 }

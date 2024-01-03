@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
@@ -40,7 +41,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
                 LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("LOAD_MODIFICATION")
+                .equipmentType(IdentifiableType.LOAD)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -54,7 +55,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
                 LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("LOAD_MODIFICATION")
+                .equipmentType(IdentifiableType.LOAD)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -79,7 +80,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LOAD_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.LOAD.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -87,6 +88,6 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LOAD_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.LOAD.name(), updatedValues.get("tabularModificationType"));
     }
 }

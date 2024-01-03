@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
@@ -39,7 +40,7 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
                 VoltageLevelModificationInfos.builder().equipmentId("v2").nominalVoltage(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("VOLTAGE_LEVEL_MODIFICATION")
+                .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -52,7 +53,7 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
                 VoltageLevelModificationInfos.builder().equipmentId("v2").nominalVoltage(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("VOLTAGE_LEVEL_MODIFICATION")
+                .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -83,7 +84,7 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("VOLTAGE_LEVEL_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -91,6 +92,6 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("VOLTAGE_LEVEL_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), updatedValues.get("tabularModificationType"));
     }
 }

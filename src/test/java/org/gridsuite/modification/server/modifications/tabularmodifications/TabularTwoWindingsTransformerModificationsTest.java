@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -42,7 +43,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
                 buildOneModification("unknownTwt", 1.0)
         );
         return TabularModificationInfos.builder()
-                .modificationType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
+                .equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -55,7 +56,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
                 buildOneModification("trf2", 4.0)
         );
         return TabularModificationInfos.builder()
-                .modificationType("TWO_WINDINGS_TRANSFORMER_MODIFICATION")
+                .equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -85,7 +86,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -93,6 +94,6 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.TWO_WINDINGS_TRANSFORMER.name(), updatedValues.get("tabularModificationType"));
     }
 }

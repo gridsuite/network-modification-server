@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -47,7 +48,7 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
                 BatteryModificationInfos.builder().equipmentId("unknownBattery").reactivePowerSetpoint(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("BATTERY_MODIFICATION")
+                .equipmentType(IdentifiableType.BATTERY)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -61,7 +62,7 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
                 BatteryModificationInfos.builder().equipmentId("v3Battery").activePowerSetpoint(new AttributeModification<>(6., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("BATTERY_MODIFICATION")
+                .equipmentType(IdentifiableType.BATTERY)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -87,7 +88,7 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("BATTERY_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.BATTERY.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -95,6 +96,6 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("BATTERY_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.BATTERY.name(), updatedValues.get("tabularModificationType"));
     }
 }

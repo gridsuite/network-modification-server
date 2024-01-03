@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -51,7 +52,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("GENERATOR_MODIFICATION")
+                .equipmentType(IdentifiableType.GENERATOR)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -65,7 +66,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("GENERATOR_MODIFICATION")
+                .equipmentType(IdentifiableType.GENERATOR)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -92,7 +93,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
         );
         ModificationInfos modificationInfos = TabularModificationInfos.builder()
-                .modificationType("GENERATOR_MODIFICATION")
+                .equipmentType(IdentifiableType.GENERATOR)
                 .modifications(modifications)
                 .build();
         UUID modificationUuid = saveModification(modificationInfos);
@@ -109,7 +110,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
         );
         modificationInfos = TabularModificationInfos.builder()
-                .modificationType("GENERATOR_MODIFICATION")
+                .equipmentType(IdentifiableType.GENERATOR)
                 .modifications(modifications)
                 .build();
         modificationUuid = saveModification(modificationInfos);
@@ -130,7 +131,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build()
         );
         ModificationInfos modificationInfos = TabularModificationInfos.builder()
-                .modificationType("GENERATOR_MODIFICATION")
+                .equipmentType(IdentifiableType.GENERATOR)
                 .modifications(modifications)
                 .build();
         String modificationToCreateJson = mapper.writeValueAsString(modificationInfos);
@@ -146,7 +147,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("GENERATOR_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.GENERATOR.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
@@ -154,6 +155,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("GENERATOR_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.GENERATOR.name(), updatedValues.get("tabularModificationType"));
     }
 }
