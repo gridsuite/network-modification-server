@@ -20,8 +20,16 @@
     </changeSet>
     <changeSet author="mancinijor" id="migrationProperties_20231228T111008Z-1">
         <sqlFile
+                dbms="!postgresql"
                 encoding="UTF-8"
                 path="migrationProperties_20231228T111008Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+        <sqlFile
+                dbms="postgresql"
+                encoding="UTF-8"
+                path="migrationProperties_pg_20231228T111008Z.sql"
                 relativeToChangelogFile="true"
                 splitStatements="true"
                 stripComments="true"/>
