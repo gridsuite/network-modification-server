@@ -106,6 +106,15 @@ public final class ModificationUtils {
         return vscConverterStation;
     }
 
+    //get hvdcline
+    HvdcLine getHvdcLine(Network network, String hvdcLineId) {
+        HvdcLine hvdcLine = network.getHvdcLine(hvdcLineId);
+        if (hvdcLine == null) {
+            throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + " does not exist in network");
+        }
+        return hvdcLine;
+    }
+
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
         VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {

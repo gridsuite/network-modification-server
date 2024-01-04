@@ -1177,6 +1177,21 @@ public class ModificationRepositoryTest {
     }
 
     @Test
+    public void testVscModification() {
+        var vscModificationEntity = VscModificationInfos.builder()
+            .equipmentId("VSC1")
+                .converterStation1(ConverterStationModificationInfos.builder().equipmentId("C1").build())
+                .converterStation2(ConverterStationModificationInfos.builder().equipmentId("C2").build())
+            .build().toEntity();
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(vscModificationEntity));
+        assertRequestsCount(1, 5, 1, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
+    }
+
+    @Test
     public void testGetModificationCount() {
         var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();

@@ -1,0 +1,98 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="jamalk (generated)" id="1705666768219-29">
+        <createTable tableName="converter_station_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_op" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_value" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_op" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_value" type="VARCHAR(255)"/>
+            <column name="loss_factor_op" type="VARCHAR(255)"/>
+            <column name="loss_factor" type="FLOAT4"/>
+            <column name="maximum_reactive_power_op" type="VARCHAR(255)"/>
+            <column name="maximum_reactive_power" type="FLOAT(53)"/>
+            <column name="minimum_reactive_power_op" type="VARCHAR(255)"/>
+            <column name="minimum_reactive_power" type="FLOAT(53)"/>
+            <column name="reactive_capability_curve_op" type="VARCHAR(255)"/>
+            <column name="reactive_capability_curve" type="BOOLEAN"/>
+            <column name="reactive_power_op" type="VARCHAR(255)"/>
+            <column name="reactive_power" type="FLOAT(53)"/>
+            <column name="voltage_op" type="VARCHAR(255)"/>
+            <column name="voltage" type="FLOAT(53)"/>
+            <column name="voltage_regulation_on_op" type="VARCHAR(255)"/>
+            <column name="voltage_regulation_on" type="BOOLEAN"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="converter_station_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-30">
+        <createTable tableName="converter_station_modification_rcc_points">
+            <column name="converter_station_modification_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="oldp" type="FLOAT(53)"/>
+            <column name="old_qmaxp" type="FLOAT(53)"/>
+            <column name="old_qminp" type="FLOAT(53)"/>
+            <column name="p" type="FLOAT(53)"/>
+            <column name="qmaxp" type="FLOAT(53)"/>
+            <column name="qminp" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-31">
+        <createTable tableName="vsc_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="active_power_op" type="VARCHAR(255)"/>
+            <column name="active_power" type="FLOAT(53)"/>
+            <column name="angle_droop_active_power_control_op" type="VARCHAR(255)"/>
+            <column name="angle_droop_active_power_control" type="BOOLEAN"/>
+            <column name="converters_mode_op" type="VARCHAR(255)"/>
+            <column name="converters_mode" type="VARCHAR(255)"/>
+            <column name="dc_nominal_voltage_op" type="VARCHAR(255)"/>
+            <column name="dc_nominal_voltage" type="FLOAT(53)"/>
+            <column name="dc_resistance_op" type="VARCHAR(255)"/>
+            <column name="dc_resistance" type="FLOAT(53)"/>
+            <column name="droop_op" type="VARCHAR(255)"/>
+            <column name="droop" type="FLOAT4"/>
+            <column name="maximum_active_power_op" type="VARCHAR(255)"/>
+            <column name="maximum_active_power" type="FLOAT(53)"/>
+            <column name="operator_active_power_limit_side1op" type="VARCHAR(255)"/>
+            <column name="operator_active_power_limit_side1" type="FLOAT4"/>
+            <column name="operator_active_power_limit_side2op" type="VARCHAR(255)"/>
+            <column name="operator_active_power_limit_side2" type="FLOAT4"/>
+            <column name="p0op" type="VARCHAR(255)"/>
+            <column name="p0" type="FLOAT4"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="vsc_modificationPK"/>
+            </column>
+            <column name="converter_station_1_id" type="UUID"/>
+            <column name="converter_station_2_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-45">
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_MODIFICATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_modification"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-46">
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_MODIFICATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_modification"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-48">
+        <addForeignKeyConstraint baseColumnNames="converter_station_modification_entity_id" baseTableName="converter_station_modification_rcc_points" constraintName="FKa1d66rwnqihum8e7burnweyr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-49">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="vsc_modification" constraintName="FKo2vpsuh6othc7kfc7hmilkia5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1705666768219-50">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_modification" constraintName="FKryub7wml7674krq1lwhn21jqw" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+<!--  bug in runtime-->
+<!--    <changeSet author="jamalk (generated)" id="1705666768219-52">-->
+<!--        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_modification" constraintName="converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet author="jamalk (generated)" id="1705666768219-53">-->
+<!--        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_modification" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>-->
+<!--    </changeSet>-->
+</databaseChangeLog>

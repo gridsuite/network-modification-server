@@ -46,7 +46,9 @@ public enum ModificationType {
     GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),
     VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION),
     VSC_CREATION(PreloadingStrategy.NONE),
+    VSC_MODIFICATION(PreloadingStrategy.NONE),
     CONVERTER_STATION_CREATION(PreloadingStrategy.NONE),
+    CONVERTER_STATION_MODIFICATION(PreloadingStrategy.NONE),
     TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION),
     BY_FORMULA_MODIFICATION(PreloadingStrategy.COLLECTION);
 

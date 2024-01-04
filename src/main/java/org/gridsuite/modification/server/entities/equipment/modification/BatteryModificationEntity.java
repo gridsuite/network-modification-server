@@ -6,19 +6,16 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-
-import jakarta.persistence.*;
-import org.springframework.util.CollectionUtils;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
@@ -120,13 +117,6 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     }
 
     private BatteryModificationInfos.BatteryModificationInfosBuilder<?, ?> toBatteryModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
-        List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
-            .stream()
-            .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
-                value.getQmaxP(), value.getOldQmaxP(),
-                value.getP(), value.getOldP()))
-            .collect(Collectors.toList()) : null;
 
         return BatteryModificationInfos
                 .builder()
@@ -147,6 +137,6 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .participate(toAttributeModification(getParticipate()))
                 .droop(toAttributeModification(getDroop()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(points);
+                .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveModificationInfos(getReactiveCapabilityCurvePoints()));
     }
 }
