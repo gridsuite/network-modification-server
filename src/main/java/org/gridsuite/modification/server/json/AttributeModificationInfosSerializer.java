@@ -14,8 +14,11 @@ import java.io.IOException;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-class AttributeModificationInfosSerializer {
-    void serialize(String fieldName, AttributeModification<?> modification, JsonGenerator jsonGenerator) throws IOException {
+public class AttributeModificationInfosSerializer {
+    public void serialize(String fieldName, AttributeModification<?> modification, JsonGenerator jsonGenerator) throws IOException {
+        if (modification == null) {
+            return;
+        }
         jsonGenerator.writeFieldName(fieldName);
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField("value", modification.getValue());

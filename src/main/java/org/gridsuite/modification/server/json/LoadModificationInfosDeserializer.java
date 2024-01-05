@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.json;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import org.gridsuite.modification.server.dto.AttributeModification;
+import com.powsybl.iidm.network.LoadType;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 
 import java.io.IOException;
@@ -28,16 +28,13 @@ public class LoadModificationInfosDeserializer extends AbstractInjectionModifica
         while (parser.nextToken() != JsonToken.END_OBJECT) {
             switch (parser.getCurrentName()) {
                 case "loadType":
-                    parser.nextToken();
-                    modificationInfos.setLoadType(parser.readValueAs(AttributeModification.class));
+                    modificationInfos.setLoadType(attributeModificationInfosDeserializer.deserialize(parser, LoadType.class));
                     break;
                 case "constantActivePower":
-                    parser.nextToken();
-                    modificationInfos.setConstantActivePower(parser.readValueAs(AttributeModification.class));
+                    modificationInfos.setConstantActivePower(attributeModificationInfosDeserializer.deserialize(parser, Double.class));
                     break;
                 case "constantReactivePower":
-                    parser.nextToken();
-                    modificationInfos.setConstantReactivePower(parser.readValueAs(AttributeModification.class));
+                    modificationInfos.setConstantReactivePower(attributeModificationInfosDeserializer.deserialize(parser, Double.class));
                     break;
 
                 default:

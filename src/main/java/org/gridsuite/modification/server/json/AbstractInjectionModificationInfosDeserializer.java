@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.json;
 
 import com.fasterxml.jackson.core.JsonParser;
-import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.InjectionModificationInfos;
 
 import java.io.IOException;
@@ -23,13 +22,11 @@ public abstract class AbstractInjectionModificationInfosDeserializer<T extends I
     protected void deserializeAttribute(InjectionModificationInfos modificationInfos, JsonParser parser) throws IOException {
         switch (parser.getCurrentName()) {
             case "voltageLevelId":
-                parser.nextToken();
-                modificationInfos.setVoltageLevelId(parser.readValueAs(AttributeModification.class));
+                modificationInfos.setVoltageLevelId(attributeModificationInfosDeserializer.deserialize(parser, String.class));
                 break;
 
             case "busOrBusbarSectionId":
-                parser.nextToken();
-                modificationInfos.setBusOrBusbarSectionId(parser.readValueAs(AttributeModification.class));
+                modificationInfos.setBusOrBusbarSectionId(attributeModificationInfosDeserializer.deserialize(parser, String.class));
                 break;
 
             default:

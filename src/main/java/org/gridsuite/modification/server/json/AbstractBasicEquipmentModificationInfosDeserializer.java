@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.json;
 
 import com.fasterxml.jackson.core.JsonParser;
-import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.BasicEquipmentModificationInfos;
 
 import java.io.IOException;
@@ -16,6 +15,9 @@ import java.io.IOException;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public abstract class AbstractBasicEquipmentModificationInfosDeserializer<T extends BasicEquipmentModificationInfos> extends AbstractEquipmentModificationInfosDeserializer<T> {
+
+    protected transient AttributeModificationInfosDeserializer attributeModificationInfosDeserializer = new AttributeModificationInfosDeserializer();
+
     protected AbstractBasicEquipmentModificationInfosDeserializer(final Class<T> t) {
         super(t);
     }
@@ -23,8 +25,7 @@ public abstract class AbstractBasicEquipmentModificationInfosDeserializer<T exte
     protected void deserializeAttribute(BasicEquipmentModificationInfos modificationInfos, JsonParser parser) throws IOException {
         switch (parser.getCurrentName()) {
             case "equipmentName":
-                parser.nextToken();
-                modificationInfos.setEquipmentName(parser.readValueAs(AttributeModification.class));
+                modificationInfos.setEquipmentName(attributeModificationInfosDeserializer.deserialize(parser, String.class));
                 break;
 
             default:
