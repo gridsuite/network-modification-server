@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.List;
@@ -20,7 +19,10 @@ import java.util.stream.Collectors;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Builder
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Network modification result")
 public class NetworkModificationResult {
     public enum ApplicationStatus {
