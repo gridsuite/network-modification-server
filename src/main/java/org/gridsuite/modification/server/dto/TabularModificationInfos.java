@@ -37,6 +37,9 @@ import java.util.Map;
 @JsonTypeName("TABULAR_MODIFICATION")
 @ModificationErrorTypeName("TABULAR_MODIFICATION_ERROR")
 public class TabularModificationInfos extends ModificationInfos {
+
+    public static final String TABULAR_EQUIPMENT_TYPE = "tabularEquipmentType";
+
     @Schema(description = "equipment type")
     @NonNull
     private IdentifiableType equipmentType;
@@ -63,7 +66,7 @@ public class TabularModificationInfos extends ModificationInfos {
     @Override
     public Map<String, String> getMapMessageValues() {
         Map<String, String> mapMessageValues = new HashMap<>();
-        mapMessageValues.put("tabularModificationType", getEquipmentType().name());
+        mapMessageValues.put(TABULAR_EQUIPMENT_TYPE, getEquipmentType().name());
         return mapMessageValues;
     }
 }

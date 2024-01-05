@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
+import static org.gridsuite.modification.server.dto.TabularModificationInfos.TABULAR_EQUIPMENT_TYPE;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -147,7 +148,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.GENERATOR.name(), createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.GENERATOR.name(), createdValues.get(TABULAR_EQUIPMENT_TYPE));
     }
 
     @Override
@@ -155,6 +156,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.GENERATOR.name(), updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.GENERATOR.name(), updatedValues.get(TABULAR_EQUIPMENT_TYPE));
     }
 }

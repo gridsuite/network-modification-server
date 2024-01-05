@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.dto.TabularModificationInfos.TABULAR_EQUIPMENT_TYPE;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -84,7 +85,7 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), createdValues.get(TABULAR_EQUIPMENT_TYPE));
     }
 
     @Override
@@ -92,6 +93,6 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), updatedValues.get(TABULAR_EQUIPMENT_TYPE));
     }
 }

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.dto.TabularModificationInfos.TABULAR_EQUIPMENT_TYPE;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -80,7 +81,7 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.LOAD.name(), createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.LOAD.name(), createdValues.get(TABULAR_EQUIPMENT_TYPE));
     }
 
     @Override
@@ -88,6 +89,6 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
         assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.LOAD.name(), updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(IdentifiableType.LOAD.name(), updatedValues.get(TABULAR_EQUIPMENT_TYPE));
     }
 }
