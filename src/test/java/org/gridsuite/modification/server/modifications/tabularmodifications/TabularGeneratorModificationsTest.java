@@ -122,6 +122,13 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 .andReturn();
         // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
         assertSelectCount(3);
+        reset();
+
+        // We get the modifications of the group (so the 2 tabular modifications)
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
+                .andExpect(status().isOk());
+        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
+        assertSelectCount(6);
     }
 
     @Test
