@@ -12,6 +12,7 @@ import lombok.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.AbstractEquipmentDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,8 @@ public class HvdcLccDeletionInfos extends AbstractEquipmentDeletionInfos {
 
     @Builder
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ShuntCompensatorInfos {
         private String id;
         private boolean connectedToHvdc;

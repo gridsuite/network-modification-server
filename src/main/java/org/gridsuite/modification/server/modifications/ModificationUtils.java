@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.service.FilterService;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -64,6 +65,18 @@ public final class ModificationUtils {
 
     public static Double nanIfNull(Double d) {
         return d == null ? Double.NaN : d;
+    }
+
+    public static String toStringIfNotNull(Object o) {
+        return o == null ? null : o.toString();
+    }
+
+    public static ZonedDateTime toDateIfNotNull(String date) {
+        return date == null ? null : ZonedDateTime.parse(date);
+    }
+
+    public static UUID toUuidIfNotNull(String uuid) {
+        return uuid == null ? null : UUID.fromString(uuid);
     }
 
     public VoltageLevel getVoltageLevel(Network network, String voltageLevelId) {

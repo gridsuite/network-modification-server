@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import java.io.IOException;
 
 import static com.fasterxml.jackson.core.JsonToken.START_OBJECT;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.toStringIfNotNull;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -29,9 +30,9 @@ public abstract class AbstractModificationInfosSerializer<T extends Modification
     @Override
     public void serialize(final T modification, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
         jsonGenerator.writeStringField("version", ModificationInfos.VERSION);
-        jsonGenerator.writeStringField("uuid", modification.getUuid().toString());
         jsonGenerator.writeStringField("type", modification.getType().name());
-        jsonGenerator.writeStringField("date", modification.getDate().toString());
+        jsonGenerator.writeStringField("uuid", toStringIfNotNull(modification.getUuid()));
+        jsonGenerator.writeStringField("date", modification.getDate() == null ? null : modification.getDate().toString());
         jsonGenerator.writeBooleanField("stashed", modification.getStashed());
         if (modification.getMessageType() != null) {
             jsonGenerator.writeStringField("messageType", modification.getMessageType());

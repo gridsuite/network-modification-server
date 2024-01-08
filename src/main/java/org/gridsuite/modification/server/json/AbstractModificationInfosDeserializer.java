@@ -11,8 +11,9 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.util.UUID;
+
+import static org.gridsuite.modification.server.modifications.ModificationUtils.toDateIfNotNull;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.toUuidIfNotNull;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -28,11 +29,11 @@ public abstract class AbstractModificationInfosDeserializer<T extends Modificati
                 break;
             case "uuid":
                 parser.nextToken();
-                modificationInfos.setUuid(UUID.fromString(parser.getValueAsString()));
+                modificationInfos.setUuid(toUuidIfNotNull(parser.getValueAsString()));
                 break;
             case "date":
                 parser.nextToken();
-                modificationInfos.setDate(ZonedDateTime.parse(parser.getValueAsString()));
+                modificationInfos.setDate(toDateIfNotNull(parser.getValueAsString()));
                 break;
             case "stashed":
                 parser.nextToken();

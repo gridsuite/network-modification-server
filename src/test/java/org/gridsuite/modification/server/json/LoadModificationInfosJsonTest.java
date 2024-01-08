@@ -11,11 +11,10 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.json.JsonUtil;
 import com.powsybl.commons.test.AbstractConverterTest;
 import com.powsybl.iidm.network.LoadType;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.dto.TabularModificationInfos;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,38 +23,30 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class TabularModificationInfosJsonTest extends AbstractConverterTest {
+public class LoadModificationInfosJsonTest extends AbstractConverterTest {
 
-    private static TabularModificationInfos createVersion1() {
-        return TabularModificationInfos.builder()
-                .uuid(UUID.fromString("38f23335-32db-4920-ad6f-be13b673b72a"))
+    private static LoadModificationInfos createVersion1() {
+        return LoadModificationInfos.builder()
+                .uuid(UUID.fromString("d0f3efc0-1e41-4669-98ab-34167641578e"))
                 .date(ZonedDateTime.parse("2023-12-29T11:29:24.089680Z"))
                 .stashed(false)
-                .messageType(ModificationType.TABULAR_MODIFICATION.name())
-                .messageValues("{\"tabularModificationType\":\"LOAD_MODIFICATION\"}")
-                .modificationType("LOAD_MODIFICATION")
-                .modifications(List.of(
-                        LoadModificationInfos.builder()
-                                .uuid(UUID.fromString("d0f3efc0-1e41-4669-98ab-34167641578e"))
-                                .date(ZonedDateTime.parse("2023-12-29T11:29:24.089680Z"))
-                                .stashed(false)
-                                .equipmentId("l1")
-                                .loadType(AttributeModification.toAttributeModification(LoadType.FICTITIOUS, OperationType.SET))
-                                .constantActivePower(AttributeModification.toAttributeModification(10.0, OperationType.SET))
-                                .constantReactivePower(AttributeModification.toAttributeModification(10.0, OperationType.SET))
-                                .build()
-                ))
+                .equipmentId("l1")
+                .equipmentName(AttributeModification.toAttributeModification("l1_name", OperationType.SET))
+                .voltageLevelId(AttributeModification.toAttributeModification("vl1", OperationType.SET))
+                .busOrBusbarSectionId(AttributeModification.toAttributeModification("vl1_b11", OperationType.SET))
+                .loadType(AttributeModification.toAttributeModification(LoadType.FICTITIOUS, OperationType.SET))
+                .constantActivePower(AttributeModification.toAttributeModification(10.0, OperationType.SET))
+                .constantReactivePower(AttributeModification.toAttributeModification(10.0, OperationType.SET))
                 .build();
     }
 
-    public static void write(TabularModificationInfos modification, Path jsonFile) {
+    public static void write(LoadModificationInfos modification, Path jsonFile) {
         Objects.requireNonNull(modification);
         Objects.requireNonNull(jsonFile);
 
@@ -69,14 +60,14 @@ public class TabularModificationInfosJsonTest extends AbstractConverterTest {
         }
     }
 
-    private static TabularModificationInfos read(InputStream is) throws IOException {
+    private static LoadModificationInfos read(InputStream is) throws IOException {
         Objects.requireNonNull(is);
         ObjectMapper objectMapper = JsonUtil.createObjectMapper();
         objectMapper.registerModule(new ModificationInfosJsonModule());
-        return objectMapper.readValue(is, TabularModificationInfos.class);
+        return objectMapper.readValue(is, LoadModificationInfos.class);
     }
 
-    public static TabularModificationInfos read(Path jsonFile) {
+    public static LoadModificationInfos read(Path jsonFile) {
         Objects.requireNonNull(jsonFile);
         try (InputStream is = Files.newInputStream(jsonFile)) {
             return read(is);
@@ -85,9 +76,9 @@ public class TabularModificationInfosJsonTest extends AbstractConverterTest {
         }
     }
 
-    //@Test
+    @Test
     void roundTripVersion1Test() throws IOException {
-        roundTripTest(createVersion1(), TabularModificationInfosJsonTest::write, TabularModificationInfosJsonTest::read, "/json/TabularModificationInfosVersion1.json");
+        roundTripTest(createVersion1(), LoadModificationInfosJsonTest::write, LoadModificationInfosJsonTest::read, "/json/LoadModificationInfosVersion1.json");
     }
 
 }

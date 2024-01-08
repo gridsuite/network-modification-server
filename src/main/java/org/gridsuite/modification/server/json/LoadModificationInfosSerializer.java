@@ -15,9 +15,7 @@ import java.io.IOException;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class LoadModificationInfosSerializer extends AbstractModificationInfosSerializer<LoadModificationInfos> {
-
-    private final transient AttributeModificationInfosSerializer attributeSerializer = new AttributeModificationInfosSerializer();
+public class LoadModificationInfosSerializer extends AbstractInjectionModificationInfosSerializer<LoadModificationInfos> {
 
     LoadModificationInfosSerializer() {
         super(LoadModificationInfos.class);
@@ -26,7 +24,6 @@ public class LoadModificationInfosSerializer extends AbstractModificationInfosSe
     @Override
     public void serialize(LoadModificationInfos modification, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
         super.serialize(modification, jsonGenerator, serializerProvider);
-        jsonGenerator.writeStringField("equipmentId", modification.getEquipmentId());
         attributeSerializer.serialize("loadType", modification.getLoadType(), jsonGenerator);
         attributeSerializer.serialize("constantActivePower", modification.getConstantActivePower(), jsonGenerator);
         attributeSerializer.serialize("constantReactivePower", modification.getConstantReactivePower(), jsonGenerator);
