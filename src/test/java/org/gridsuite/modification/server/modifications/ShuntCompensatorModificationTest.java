@@ -85,7 +85,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 1 and Maximum section count (1), actual : 3")).getMessage(),
+                        String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
@@ -107,7 +107,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 1 and Maximum section count (1), actual : 3")).getMessage(),
+                        String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
                 shuntCompensatorModifications.getErrorType().name(), reportService);
     }
 
@@ -123,13 +123,13 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v7shunt")
-                .sectionCount(new AttributeModification<>(0, OperationType.SET))
+                .sectionCount(new AttributeModification<>(-1, OperationType.SET))
                 .build();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 1 and Maximum section count (1), actual : 0")).getMessage(),
+                        String.format("Section count should be between 0 and Maximum section count (1), actual : -1")).getMessage(),
                 shuntCompensatorModifications.getErrorType().name(), reportService);
     }
 
