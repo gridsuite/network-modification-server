@@ -42,7 +42,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * @author AJELLAL Ali <ali.ajellal@rte-france.com>
+ * @author SARTORI David <david.sartori_externe@rte-france.com>
  */
 @Tag("IntegrationTest")
 class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
