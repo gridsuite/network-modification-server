@@ -35,9 +35,6 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorModificat
 @ModificationErrorTypeName("MODIFY_SHUNT_COMPENSATOR_ERROR")
 public class ShuntCompensatorModificationInfos extends BasicEquipmentModificationInfos {
 
-    @Schema(description = "voltage level id")
-    private String voltageLevelId;
-
     @Schema(description = "Maximum number of sections")
     private AttributeModification<Integer> maximumSectionCount;
 

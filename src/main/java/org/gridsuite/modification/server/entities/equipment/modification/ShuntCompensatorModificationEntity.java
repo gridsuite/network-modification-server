@@ -35,8 +35,6 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 @Entity
 @Table(name = "shuntCompensatorModification")
 public class ShuntCompensatorModificationEntity extends BasicEquipmentModificationEntity {
-    @Column(name = "voltageLevelId")
-    private String voltageLevelId;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -85,7 +83,6 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
     }
 
     private void assignAttributes(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
-        this.voltageLevelId = shuntCompensatorModificationInfos.getVoltageLevelId();
         this.maximumSectionCount = new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount());
         this.sectionCount = new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount());
         this.maxQAtNominalV = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV());
@@ -104,7 +101,6 @@ public class ShuntCompensatorModificationEntity extends BasicEquipmentModificati
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
-                .voltageLevelId(getVoltageLevelId())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .shuntCompensatorType(toAttributeModification(getShuntCompensatorType()))
