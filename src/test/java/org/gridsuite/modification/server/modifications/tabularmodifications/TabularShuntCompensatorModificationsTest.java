@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
@@ -68,7 +69,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
                 ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(200, OperationType.SET)).sectionCount(new AttributeModification<>(20, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
+                .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -81,7 +82,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
                 ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
+                .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -106,17 +107,17 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", createdValues.get("tabularModificationType"));
+        assertEquals(ModificationType.SHUNT_COMPENSATOR_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", updatedValues.get("tabularModificationType"));
+        assertEquals(ModificationType.SHUNT_COMPENSATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
     @Test
@@ -130,7 +131,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
 
         var tabularModificationInfos = TabularModificationInfos
                 .builder()
-                .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
+                .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
@@ -161,7 +162,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
 
         var tabularModificationInfos = TabularModificationInfos
                 .builder()
-                .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
+                .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
@@ -185,7 +186,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
 
         var tabularModificationInfos = TabularModificationInfos
                 .builder()
-                .modificationType("SHUNT_COMPENSATOR_MODIFICATION")
+                .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
 
