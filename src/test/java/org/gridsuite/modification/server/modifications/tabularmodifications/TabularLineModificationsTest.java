@@ -8,7 +8,6 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.dto.TabularModificationInfos.TABULAR_EQUIPMENT_TYPE;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 
@@ -46,7 +44,7 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
                 LineModificationInfos.builder().equipmentId("unknownLine").shuntSusceptance2(new AttributeModification<>(60., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .equipmentType(IdentifiableType.LINE)
+                .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -62,7 +60,7 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
                 LineModificationInfos.builder().equipmentId("unknownLine").shuntSusceptance2(new AttributeModification<>(50., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .equipmentType(IdentifiableType.LINE)
+                .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -87,16 +85,16 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.LINE.name(), createdValues.get(TABULAR_EQUIPMENT_TYPE));
+        Assertions.assertEquals(ModificationType.LINE_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(IdentifiableType.LINE.name(), updatedValues.get(TABULAR_EQUIPMENT_TYPE));
+        Assertions.assertEquals(ModificationType.LINE_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 }

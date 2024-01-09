@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities;
 
-import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +15,7 @@ import lombok.Setter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 
 /**
@@ -28,9 +28,9 @@ import org.gridsuite.modification.server.dto.*;
 @Table(name = "tabular_modification")
 public class TabularModificationEntity extends ModificationEntity {
 
-    @Column(name = "equipmentType")
+    @Column(name = "modificationType")
     @Enumerated(EnumType.STRING)
-    private IdentifiableType equipmentType;
+    private ModificationType modificationType;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
@@ -48,7 +48,7 @@ public class TabularModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
-                .equipmentType(equipmentType)
+                .modificationType(modificationType)
                 .modifications(modificationsInfos)
                 .build();
     }
@@ -60,7 +60,7 @@ public class TabularModificationEntity extends ModificationEntity {
     }
 
     private void assignAttributes(TabularModificationInfos tabularModificationInfos) {
-        equipmentType = tabularModificationInfos.getEquipmentType();
+        modificationType = tabularModificationInfos.getModificationType();
         if (modifications == null) {
             modifications = tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
         } else {

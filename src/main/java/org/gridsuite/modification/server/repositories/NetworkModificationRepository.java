@@ -153,8 +153,8 @@ public class NetworkModificationRepository {
 
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
-        switch (tabularModificationEntity.getEquipmentType()) {
-            case GENERATOR:
+        switch (tabularModificationEntity.getModificationType()) {
+            case GENERATOR_MODIFICATION:
                 tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
                         new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
                 );

@@ -61,26 +61,26 @@ public class TabularModification extends AbstractModification {
             }
         });
         String defaultMessage = " have been modified";
-        switch (modificationInfos.getEquipmentType()) {
-            case GENERATOR:
+        switch (modificationInfos.getModificationType()) {
+            case GENERATOR_MODIFICATION:
                 defaultMessage = "generators" + defaultMessage;
                 break;
-            case LOAD:
+            case LOAD_MODIFICATION:
                 defaultMessage = "loads" + defaultMessage;
                 break;
-            case TWO_WINDINGS_TRANSFORMER:
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION:
                 defaultMessage = "two windings transformers" + defaultMessage;
                 break;
-            case BATTERY:
+            case BATTERY_MODIFICATION:
                 defaultMessage = "batteries" + defaultMessage;
                 break;
-            case VOLTAGE_LEVEL:
+            case VOLTAGE_LEVEL_MODIFICATION:
                 defaultMessage = "voltage levels" + defaultMessage;
                 break;
-            case LINE:
+            case LINE_MODIFICATION:
                 defaultMessage = "lines" + defaultMessage;
                 break;
-            case SUBSTATION:
+            case SUBSTATION_MODIFICATION:
                 defaultMessage = "substations" + defaultMessage;
                 break;
             default:

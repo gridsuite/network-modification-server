@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.IdentifiableType;
 import lombok.*;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
@@ -38,11 +37,9 @@ import java.util.Map;
 @ModificationErrorTypeName("TABULAR_MODIFICATION_ERROR")
 public class TabularModificationInfos extends ModificationInfos {
 
-    public static final String TABULAR_EQUIPMENT_TYPE = "tabularEquipmentType";
-
-    @Schema(description = "equipment type")
+    @Schema(description = "Modification type")
     @NonNull
-    private IdentifiableType equipmentType;
+    private ModificationType modificationType;
 
     @Schema(description = "modifications")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -66,7 +63,7 @@ public class TabularModificationInfos extends ModificationInfos {
     @Override
     public Map<String, String> getMapMessageValues() {
         Map<String, String> mapMessageValues = new HashMap<>();
-        mapMessageValues.put(TABULAR_EQUIPMENT_TYPE, getEquipmentType().name());
+        mapMessageValues.put("tabularModificationType", getModificationType().name());
         return mapMessageValues;
     }
 }
