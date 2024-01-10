@@ -41,6 +41,9 @@ public class LoadModification extends AbstractModification {
         Load load = network.getLoad(modificationInfos.getEquipmentId());
         // modify the load in the network
         modifyLoad(load, modificationInfos, subReporter);
+
+        // properties
+        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
     }
 
     private void modifyLoad(Load load, LoadModificationInfos loadModificationInfos, Reporter subReporter) {
