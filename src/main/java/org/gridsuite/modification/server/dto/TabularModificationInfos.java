@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -35,11 +36,13 @@ import java.util.Map;
 @JsonTypeName("TABULAR_MODIFICATION")
 @ModificationErrorTypeName("TABULAR_MODIFICATION_ERROR")
 public class TabularModificationInfos extends ModificationInfos {
+
     @Schema(description = "Modification type")
     @NonNull
-    private String modificationType;
+    private ModificationType modificationType;
 
     @Schema(description = "modifications")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ModificationInfos> modifications;
 
     @Override
@@ -60,7 +63,7 @@ public class TabularModificationInfos extends ModificationInfos {
     @Override
     public Map<String, String> getMapMessageValues() {
         Map<String, String> mapMessageValues = new HashMap<>();
-        mapMessageValues.put("tabularModificationType", getModificationType());
+        mapMessageValues.put("tabularModificationType", getModificationType().name());
         return mapMessageValues;
     }
 }

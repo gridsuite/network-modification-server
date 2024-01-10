@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -28,7 +29,7 @@ import static org.junit.Assert.assertEquals;
  */
 @Tag("IntegrationTest")
 public class TabularSubstationModificationsTest extends AbstractNetworkModificationTest {
-    public static final String MODIFICATION_TYPE = "SUBSTATION_MODIFICATION";
+    public static final ModificationType MOFIFICATION_TYPE = ModificationType.SUBSTATION_MODIFICATION;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -43,7 +44,7 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
                 SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).substationCountry(new AttributeModification<>(Country.BE, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType(MODIFICATION_TYPE)
+                .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -56,7 +57,7 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
                 SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).substationCountry(new AttributeModification<>(Country.JP, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType(MODIFICATION_TYPE)
+                .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -81,16 +82,16 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(MODIFICATION_TYPE, createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(MOFIFICATION_TYPE.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(MODIFICATION_TYPE, updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(MOFIFICATION_TYPE.name(), updatedValues.get("tabularModificationType"));
     }
 }
