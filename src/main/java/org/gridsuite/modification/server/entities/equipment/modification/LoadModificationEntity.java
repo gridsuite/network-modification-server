@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
@@ -84,6 +85,11 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
                 .constantActivePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
-                .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()));
+                .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()))
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                    getProperties().stream()
+                        .map(FreePropertyEntity::toInfos)
+                        .toList());
     }
 }
