@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -33,4 +34,13 @@ public class FreePropertyInfos {
 
     @Schema(description = "property added in current modification")
     private boolean added = false;
+
+    public FreePropertyEntity toEntity() {
+        return FreePropertyEntity.builder()
+            .name(getName())
+            .value(getValue())
+            .deletionMark(isDeletionMark())
+            .added(isAdded())
+            .build();
+    }
 }

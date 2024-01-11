@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.EquipmentModificationInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -45,12 +46,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
         equipmentId = equipmentModificationInfos.getEquipmentId();
         List<FreePropertyEntity> newProperties = equipmentModificationInfos.getProperties() == null ? null :
             equipmentModificationInfos.getProperties().stream()
-                .map(prop -> (FreePropertyEntity) FreePropertyEntity.builder()
-                    .name(prop.getName())
-                    .value(prop.getValue())
-                    .deletionMark(prop.isDeletionMark())
-                    .added(prop.isAdded())
-                    .build())
+                .map(FreePropertyInfos::toEntity)
                 .toList();
         if (this.properties != null) {
             // update using the same reference with clear/add (to avoid JPA exception)
