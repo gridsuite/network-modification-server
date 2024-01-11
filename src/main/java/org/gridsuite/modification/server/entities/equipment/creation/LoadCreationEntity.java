@@ -27,11 +27,11 @@ public class LoadCreationEntity extends InjectionCreationEntity {
     @Column(name = "loadType")
     private LoadType loadType;
 
-    @Column(name = "activePower")
-    private double activePower;
+    @Column(name = "p0")
+    private double p0;
 
-    @Column(name = "reactivePower")
-    private double reactivePower;
+    @Column(name = "q0")
+    private double q0;
 
     public LoadCreationEntity(@NonNull LoadCreationInfos loadCreationInfos) {
         super(loadCreationInfos);
@@ -46,8 +46,8 @@ public class LoadCreationEntity extends InjectionCreationEntity {
 
     private void assignAttributes(LoadCreationInfos loadCreationInfos) {
         loadType = loadCreationInfos.getLoadType();
-        activePower = loadCreationInfos.getActivePower();
-        reactivePower = loadCreationInfos.getReactivePower();
+        p0 = loadCreationInfos.getP0();
+        q0 = loadCreationInfos.getQ0();
     }
 
     @Override
@@ -72,7 +72,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .connected(isConnected())
             // load
             .loadType(getLoadType())
-            .activePower(getActivePower())
-            .reactivePower(getReactivePower());
+            .p0(getP0())
+            .q0(getQ0());
     }
 }
