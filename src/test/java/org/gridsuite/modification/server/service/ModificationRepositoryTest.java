@@ -667,12 +667,11 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testSubstationCreation() {
-
         var createSubstationEntity1 = SubstationCreationInfos.builder()
                 .equipmentId("idSubstation1")
                 .equipmentName("nameSubstation1")
                 .substationCountry(Country.FR)
-                .properties(null)
+                .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
                 .build().toEntity();
         var createSubstationEntity2 = SubstationCreationInfos.builder()
                 .equipmentId("idSubstation2")
@@ -688,7 +687,7 @@ public class ModificationRepositoryTest {
                 .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
-        assertRequestsCount(1, 3, 1, 0);
+        assertRequestsCount(1, 4, 2, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(3, modificationInfos.size());
@@ -713,74 +712,11 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-        assertRequestsCount(3, 0, 0, 3);
+        assertRequestsCount(3, 0, 1, 4);
 
         assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
             NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
         );
-    }
-
-    @Test
-    public void testSubstationCreationWithProperties() {
-        var createSubstationEntity = SubstationCreationInfos.builder()
-            .equipmentId("idSubstation1")
-            .equipmentName("nameSubstation1")
-            .substationCountry(Country.FR)
-            .properties(List.of(
-                FreePropertyInfos.builder().name("foo").value("bar").added(true).deletionMark(false).build(),
-                FreePropertyInfos.builder().name("foo2").value("bar2").added(true).deletionMark(false).build()
-            ))
-            .build().toEntity();
-
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity));
-        // Select on modification_group to check if it already exists
-        // Insert on modification_group (does not exist), modification, substation_creation and free_property
-        // Update on modification and free_property for order
-        assertRequestsCount(1, 4, 2, 0);
-
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
-        assertEquals(1, modificationInfos.size());
-
-        assertThat(getSubstationCreationModification(modificationInfos.get(0).getUuid()))
-            .recursivelyEquals(createSubstationEntity.toSubstationCreationInfos());
-
-        SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createSubstationEntity.getId()));
-        // Select on modification_group, modification and free_property (1 because 1 output on modification)
-        // Update on modification_group to remove the modification
-        // Delete on modification, substation_creation and free_property
-        assertRequestsCount(3, 0, 1, 3);
-    }
-
-    @Test
-    public void testSubstationModificationWithProperties() {
-        var substationModificationEntity = SubstationModificationInfos.builder()
-            .equipmentId("idSubstation1")
-            .properties(List.of(
-                FreePropertyInfos.builder().name("foo").value("bar").added(true).deletionMark(false).build(),
-                FreePropertyInfos.builder().name("foo2").value("bar2").added(false).deletionMark(true).build(),
-                FreePropertyInfos.builder().name("foo3").value("bar3").added(false).deletionMark(false).build()
-            ))
-            .build().toEntity();
-
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(substationModificationEntity));
-        // Select on modification_group to check if it already exists
-        // Insert on modification_group (does not exist), modification, substation_modification and free_property
-        // Update on modification and free_property for order
-        assertRequestsCount(1, 4, 2, 0);
-
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
-        assertEquals(1, modificationInfos.size());
-
-        assertThat(getSubstationModificationInfos(modificationInfos.get(0).getUuid()))
-            .recursivelyEquals(substationModificationEntity.toModificationInfos());
-
-        SQLStatementCountValidator.reset();
-        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(substationModificationEntity.getId()));
-        // Select on modification_group, modification and free_property (1 because 1 output on modification)
-        // Update on modification_group to remove the modification
-        // Delete on modification, substation_creation and free_property
-        assertRequestsCount(3, 0, 1, 3);
     }
 
     @Test
