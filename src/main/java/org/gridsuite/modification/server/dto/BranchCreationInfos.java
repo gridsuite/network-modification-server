@@ -66,4 +66,10 @@ public class BranchCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Connection position 2")
     private Integer connectionPosition2;
+
+    @Schema(description = "Connected 1")
+    private boolean connected1;
+
+    @Schema(description = "Connected 2")
+    private boolean connected2;
 }

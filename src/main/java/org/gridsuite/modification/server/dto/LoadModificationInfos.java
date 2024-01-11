@@ -36,10 +36,10 @@ public class LoadModificationInfos extends InjectionModificationInfos {
     private AttributeModification<LoadType> loadType;
 
     @Schema(description = "Active power modification")
-    private AttributeModification<Double> activePower;
+    private AttributeModification<Double> constantActivePower;
 
     @Schema(description = "Reactive power modification")
-    private AttributeModification<Double> reactivePower;
+    private AttributeModification<Double> constantReactivePower;
 
     @Override
     public LoadModificationEntity toEntity() {

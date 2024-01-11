@@ -7,11 +7,13 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,7 +34,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("SUBSTATION")
+                .equipmentType(IdentifiableType.SUBSTATION)
                 .equipmentId("s1")
                 .build();
     }
@@ -41,7 +43,7 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .equipmentType("LINE")
+                .equipmentType(IdentifiableType.LINE)
                 .equipmentId("v2")
                 .build();
     }

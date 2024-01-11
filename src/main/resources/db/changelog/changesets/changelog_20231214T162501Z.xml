@@ -1,0 +1,35 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="bouhoursant (generated)" id="1702571116809-29">
+        <createTable tableName="by_filter_deletion">
+            <column name="equipment_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="by_filter_deletionPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="bouhoursant (generated)" id="1702571116809-30">
+        <createTable tableName="by_filter_deletion_filters">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="bouhoursant (generated)" id="1702571116809-31">
+        <addUniqueConstraint columnNames="filter_id" constraintName="UC_BY_FILTER_DELETION_FILTERSFILTER_ID_COL" tableName="by_filter_deletion_filters"/>
+    </changeSet>
+    <changeSet author="bouhoursant (generated)" id="1702571116809-47">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="by_filter_deletion_filters" constraintName="by_filter_deletion_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="by_filter_deletion" validate="true"/>
+    </changeSet>
+    <changeSet author="bouhoursant (generated)" id="1702571116809-48">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="by_filter_deletion" constraintName="by_filter_deletion_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="bouhoursant (generated)" id="1702571116809-51">
+        <addForeignKeyConstraint baseColumnNames="filter_id" baseTableName="by_filter_deletion_filters" constraintName="variation_filter_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="variation_filter" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

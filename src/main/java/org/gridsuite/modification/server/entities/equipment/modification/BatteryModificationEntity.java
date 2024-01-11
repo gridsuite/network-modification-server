@@ -15,6 +15,8 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -118,15 +120,14 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     }
 
     private BatteryModificationInfos.BatteryModificationInfosBuilder<?, ?> toBatteryModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveModificationInfos> points = null;
-        if (getReactiveCapabilityCurvePoints() != null) {
-            points = getReactiveCapabilityCurvePoints()
-                    .stream()
-                    .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
-                            value.getQmaxP(), value.getOldQmaxP(),
-                            value.getP(), value.getOldP()))
-                    .collect(Collectors.toList());
-        }
+        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
+        List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
+            .stream()
+            .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
+                value.getQmaxP(), value.getOldQmaxP(),
+                value.getP(), value.getOldP()))
+            .collect(Collectors.toList()) : null;
+
         return BatteryModificationInfos
                 .builder()
                 .uuid(getId())
@@ -147,5 +148,4 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
                 .reactiveCapabilityCurvePoints(points);
     }
-
 }

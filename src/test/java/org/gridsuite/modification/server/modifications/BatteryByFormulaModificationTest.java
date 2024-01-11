@@ -7,15 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
@@ -23,7 +19,6 @@ import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField
 import org.junit.Test;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
 import static org.junit.Assert.assertEquals;
@@ -34,11 +29,6 @@ import static org.junit.Assert.assertNotNull;
  */
 
 public class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest {
-    private static final UUID FILTER_ID_1 = UUID.randomUUID();
-    private static final UUID FILTER_ID_2 = UUID.randomUUID();
-    private static final UUID FILTER_ID_3 = UUID.randomUUID();
-    private static final UUID FILTER_ID_4 = UUID.randomUUID();
-    private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final String BATTERY_ID_1 = "v3Battery";
     private static final String BATTERY_ID_2 = "battery2";
     private static final String BATTERY_ID_3 = "battery3";
@@ -48,74 +38,35 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
 
     @Test
     public void testCreateWithWarning() throws Exception {
-        UUID filterId = UUID.randomUUID();
-        String equipmentId = "v3Battery";
-        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(equipmentId, 1.0);
-        FilterEquipments filter = getFilterEquipments(filterId, "filterWithWrongId", List.of(identifiableAttributes1), List.of("wrongId"));
-        var filterInfo = FilterInfos.builder()
-                .id(filterId)
-                .name("filterWithWrongId")
-                .build();
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterId))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterInfo))
+                .filters(List.of(filterWithOneWrongId))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
                 .build();
 
-        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
-                .formulaInfosList(List.of(formulaInfos))
-                .identifiableType(IdentifiableType.BATTERY)
-                .build();
-
-        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
-        assertEquals(75, getNetwork().getBattery(equipmentId).getTargetP(), 0);
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(filterId)), false);
+        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes));
+        assertEquals(75, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
     }
 
     @Test
     public void testCreateWithError() throws Exception {
-        UUID filterId = UUID.randomUUID();
-        FilterEquipments filter = getFilterEquipments(filterId, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
-        var filterInfo = FilterInfos.builder()
-                .id(filterId)
-                .name("filterWithWrongId")
-                .build();
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterId))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
-
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterInfo))
+                .filters(List.of(filterWithAllWrongId))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
                 .build();
 
-        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
-                .formulaInfosList(List.of(formulaInfos))
-                .identifiableType(IdentifiableType.BATTERY)
-                .build();
-
-        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(filterId)), false);
+        checkCreateWithError(List.of(formulaInfos));
     }
 
     @Override
-    void createEquipments() {
-        getNetwork().getVariantManager().setWorkingVariant("variant_1");
+    protected void createEquipments() {
         getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setTargetQ(80);
         getNetwork().getBattery(BATTERY_ID_1).newExtension(ActivePowerControlAdder.class).withDroop(1).add();
 
@@ -131,7 +82,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    List<FilterEquipments> getTestFilters() {
+    protected List<FilterEquipments> getTestFilters() {
         IdentifiableAttributes battery1 = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
         IdentifiableAttributes battery2 = getIdentifiableAttributes(BATTERY_ID_2, 2.0);
         IdentifiableAttributes battery3 = getIdentifiableAttributes(BATTERY_ID_3, 2.0);
@@ -149,32 +100,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    List<FormulaInfos> getFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
-        var filter4 = FilterInfos.builder()
-                .id(FILTER_ID_4)
-                .name("filter4")
-                .build();
-
-        var filter5 = FilterInfos.builder()
-                .id(FILTER_ID_5)
-                .name("filter5")
-                .build();
-
+    protected List<FormulaInfos> getFormulaInfos() {
         ReferenceFieldOrValue maxActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MAXIMUM_ACTIVE_POWER.name()).build();
         ReferenceFieldOrValue minActivePowerRef = ReferenceFieldOrValue.builder().equipmentField(BatteryField.MINIMUM_ACTIVE_POWER.name()).build();
 
@@ -212,27 +138,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    List<FormulaInfos> getUpdatedFormulaInfos() {
-        var filter1 = FilterInfos.builder()
-                .id(FILTER_ID_1)
-                .name("filter1")
-                .build();
-
-        var filter2 = FilterInfos.builder()
-                .id(FILTER_ID_2)
-                .name("filter2")
-                .build();
-
-        var filter3 = FilterInfos.builder()
-                .id(FILTER_ID_3)
-                .name("filter3")
-                .build();
-
-        var filter5 = FilterInfos.builder()
-                .id(FILTER_ID_5)
-                .name("filter5")
-                .build();
-
+    protected List<FormulaInfos> getUpdatedFormulaInfos() {
         FormulaInfos formulaInfos1 = FormulaInfos.builder()
                 .editedField(BatteryField.MAXIMUM_ACTIVE_POWER.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(200.).build())
@@ -304,5 +210,10 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
         assertEquals(4, activePowerControl5.getDroop(), 0);
 
         assertEquals(200, getNetwork().getBattery(BATTERY_ID_6).getMinP(), 0);
+    }
+
+    @Override
+    protected IdentifiableType getIdentifiableType() {
+        return IdentifiableType.BATTERY;
     }
 }

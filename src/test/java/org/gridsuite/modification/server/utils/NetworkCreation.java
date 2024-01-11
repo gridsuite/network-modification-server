@@ -89,7 +89,7 @@ public final class NetworkCreation {
         createStaticVarCompensator(v6, "v6Compensator", "v6Compensator", 5, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
 
         Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
-        VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0);
+        VoltageLevel v3 = createVoltageLevel(s2, "v3", "v3", TopologyKind.NODE_BREAKER, 380.0, 15.0, 25.0);
         createBusBarSection(v3, "3A", "3A", 0);
 
         createLoad(v3, "v3load", "v3load", 2, 0., 0., "cn3", 3, ConnectablePosition.Direction.BOTTOM);
@@ -99,6 +99,14 @@ public final class NetworkCreation {
         createStaticVarCompensator(v3, "v3Compensator", "v3Compensator", 4, StaticVarCompensator.RegulationMode.VOLTAGE, 380., 100, 2, 30);
         createSwitch(v3, "v3dCompensator", "v3dCompensator", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
         createSwitch(v3, "v3bCompensator", "v3bCompensator", SwitchKind.BREAKER, true, false, false, 3, 4);
+
+        createBattery(v1, "v1Battery", "v1Battery", 80, 0, 15, 6, 3);
+        createSwitch(v1, "v1dBattery", "v1dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 81);
+        createSwitch(v1, "v1bBattery", "v1bBattery", SwitchKind.BREAKER, true, false, false, 81, 80);
+
+        createBattery(v2, "v2Battery", "v2Battery", 50, 0, 20, 7, 11);
+        createSwitch(v2, "v2dBattery", "v2dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 51);
+        createSwitch(v2, "v2bBattery", "v2bBattery", SwitchKind.BREAKER, true, false, false, 51, 50);
 
         createBattery(v3, "v3Battery", "v3Battery", 6, 0, 10, 1, 1);
         createSwitch(v3, "v3dBattery", "v3dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 5);

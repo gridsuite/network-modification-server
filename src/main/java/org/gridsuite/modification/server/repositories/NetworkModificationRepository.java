@@ -154,7 +154,7 @@ public class NetworkModificationRepository {
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
-            case "GENERATOR_MODIFICATION":
+            case GENERATOR_MODIFICATION:
                 tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
                         new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
                 );
@@ -177,10 +177,10 @@ public class NetworkModificationRepository {
         Stream<ModificationEntity> modificationEntity = groupUuids.stream().flatMap(this::getModificationEntityStream);
         if (onlyStashed) {
             return modificationEntity.filter(m -> m.getStashed() == onlyStashed)
-                    .map(ModificationEntity::toModificationInfos)
+                    .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         } else {
-            return modificationEntity.map(ModificationEntity::toModificationInfos)
+            return modificationEntity.map(this::getModificationInfos)
                 .collect(Collectors.toList());
         }
     }
@@ -256,6 +256,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
+    public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
+        return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
+    }
+
+    @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
         List<ModificationEntity> entities = modificationRepository.findAllById(uuids);
@@ -302,10 +307,11 @@ public class NetworkModificationRepository {
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            if (!groupEntity.getModifications().isEmpty()) {
-                List<UUID> stashedModifications = groupEntity.getModifications().stream()
-                    .filter(ModificationEntity::getStashed).map(ModificationEntity::getId).collect(Collectors.toList());
-                deleteModifications(groupUuid, stashedModifications);
+            List<UUID> stashedModificationUuids = groupEntity.getModifications().stream()
+                    .filter(modification -> modification != null && modification.getStashed())
+                    .map(ModificationEntity::getId).collect(Collectors.toList());
+            if (!stashedModificationUuids.isEmpty()) {
+                deleteModifications(groupUuid, stashedModificationUuids);
             }
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {

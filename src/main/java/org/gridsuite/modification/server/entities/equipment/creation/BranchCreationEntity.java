@@ -58,6 +58,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "connectionPosition2")
     private Integer connectionPosition2;
 
+    @Column(name = "connected1", columnDefinition = "boolean default true")
+    private boolean connected1;
+
+    @Column(name = "connected2", columnDefinition = "boolean default true")
+    private boolean connected2;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "current_limits_id1",
         referencedColumnName = "id",
@@ -109,5 +115,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         connectionName2 = branchCreationInfos.getConnectionName2();
         connectionPosition1 = branchCreationInfos.getConnectionPosition1();
         connectionPosition2 = branchCreationInfos.getConnectionPosition2();
+        connected1 = branchCreationInfos.isConnected1();
+        connected2 = branchCreationInfos.isConnected2();
     }
 }

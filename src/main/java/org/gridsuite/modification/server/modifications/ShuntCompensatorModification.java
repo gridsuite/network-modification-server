@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -46,17 +46,27 @@ public class ShuntCompensatorModification extends AbstractModification {
                     String.format("Shunt compensator %s does not exist in network", modificationInfos.getEquipmentId()));
         }
 
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
-        if (voltageLevel == null) {
-            throw new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
-                    String.format("Voltage level %s does not exist in network", modificationInfos.getVoltageLevelId()));
+        int maximumSectionCount = modificationInfos.getMaximumSectionCount() != null
+                ? modificationInfos.getMaximumSectionCount().getValue()
+                : shuntCompensator.getMaximumSectionCount();
+
+        int sectionCount = modificationInfos.getSectionCount() != null
+                ? modificationInfos.getSectionCount().getValue()
+                : shuntCompensator.getSectionCount();
+
+        if (modificationInfos.getMaximumSectionCount() != null && modificationInfos.getMaximumSectionCount().getValue() < 1) {
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1");
+        }
+
+        if (sectionCount < 0 || maximumSectionCount < 1 || sectionCount > maximumSectionCount) {
+            throw new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR, String.format("Section count should be between 0 and Maximum section count (%d), actual : %d", maximumSectionCount, sectionCount));
         }
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
         ShuntCompensator shuntCompensator = network.getShuntCompensator(modificationInfos.getEquipmentId());
-        VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getVoltageLevelId());
+        VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
 
         subReporter.report(Report.builder()
                 .withKey("shuntCompensatorModification")
@@ -101,6 +111,10 @@ public class ShuntCompensatorModification extends AbstractModification {
         double oldMaxQAtNominalV = oldQAtNominalV * shuntCompensator.getMaximumSectionCount();
         double oldSwitchedOnSusceptance = oldSusceptancePerSection * shuntCompensator.getSectionCount();
         double oldSwitchedOnQAtNominalV = oldQAtNominalV * shuntCompensator.getSectionCount();
+
+        if (modificationInfos.getShuntCompensatorType() != null || modificationInfos.getMaxQAtNominalV() != null) {
+            modificationInfos.setMaxSusceptance(null);
+        }
 
         // due to cross validation between maximum section count and section count, we need to modify section count first
         // when maximum section count old value is greater than the new one

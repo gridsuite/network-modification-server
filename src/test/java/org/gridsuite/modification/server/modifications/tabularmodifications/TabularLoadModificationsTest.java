@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -35,12 +36,12 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").reactivePower(new AttributeModification<>(300., OperationType.SET)).build()
+                LoadModificationInfos.builder().equipmentId("v1load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v2load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("LOAD_MODIFICATION")
+                .modificationType(ModificationType.LOAD_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -49,12 +50,12 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").reactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").reactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").reactivePower(new AttributeModification<>(500., OperationType.SET)).build()
+                LoadModificationInfos.builder().equipmentId("v1load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v2load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .modificationType("LOAD_MODIFICATION")
+                .modificationType(ModificationType.LOAD_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
                 .build();
@@ -77,16 +78,16 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LOAD_MODIFICATION", createdValues.get("tabularModificationType"));
+        Assertions.assertEquals(ModificationType.LOAD_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("TABULAR_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("LOAD_MODIFICATION", updatedValues.get("tabularModificationType"));
+        Assertions.assertEquals(ModificationType.LOAD_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 }
