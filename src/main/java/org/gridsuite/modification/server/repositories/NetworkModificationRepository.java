@@ -154,7 +154,7 @@ public class NetworkModificationRepository {
     public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
-            case "GENERATOR_MODIFICATION":
+            case GENERATOR_MODIFICATION:
                 tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
                         new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
                 );
@@ -177,10 +177,10 @@ public class NetworkModificationRepository {
         Stream<ModificationEntity> modificationEntity = groupUuids.stream().flatMap(this::getModificationEntityStream);
         if (onlyStashed) {
             return modificationEntity.filter(m -> m.getStashed() == onlyStashed)
-                    .map(ModificationEntity::toModificationInfos)
+                    .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         } else {
-            return modificationEntity.map(ModificationEntity::toModificationInfos)
+            return modificationEntity.map(this::getModificationInfos)
                 .collect(Collectors.toList());
         }
     }

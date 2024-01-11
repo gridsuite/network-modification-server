@@ -6,11 +6,12 @@
  */
 package org.gridsuite.modification.server.utils.elasticsearch;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Component;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import java.util.Map;
 
 /**
  * A class to launch an embedded DB elasticsearch
@@ -31,8 +32,13 @@ public class EmbeddedElasticsearch {
         }
 
         elasticsearchContainer = new ElasticsearchContainer(String.format("%s:%s", ES_DOCKER_IMAGE_NAME, ES_DOCKER_IMAGE_VERSION));
+        Map<String, String> envMap = elasticsearchContainer.getEnvMap();
+        envMap.put("discovery.type", "single-node");
+        envMap.put("LOGSPOUT", "ignore");
         //Els 8 has security enabled by default
-        elasticsearchContainer.getEnvMap().put("xpack.security.enabled", Boolean.FALSE.toString());
+        envMap.put("xpack.security.enabled", Boolean.FALSE.toString());
+        envMap.put("ingest.geoip.downloader.enabled", Boolean.FALSE.toString());
+        envMap.put("ES_JAVA_OPTS", "-Xms128m -Xmx128m");
         elasticsearchContainer.start();
 
         System.setProperty("spring.data.elasticsearch.embedded", Boolean.toString(true));
