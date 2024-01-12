@@ -22,8 +22,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.Substat
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.SubstationModification;
 
-import java.util.List;
-
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
@@ -39,10 +37,6 @@ import java.util.List;
 public class SubstationModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "country modification")
     private AttributeModification<Country> substationCountry;
-
-    @Schema(description = "free properties")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<SubstationFreePropertyInfos> properties;
 
     @Override
     public SubstationModificationEntity toEntity() {

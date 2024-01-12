@@ -13,8 +13,8 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 
 import jakarta.persistence.*;
-import java.util.HashMap;
-import java.util.Map;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -29,13 +29,8 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     @Column(name = "country")
     private Country country;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable
-    private Map<String, String> properties;
-
     private void assignAttributes(SubstationCreationInfos substationCreationInfos) {
         country = substationCreationInfos.getSubstationCountry();
-        properties = substationCreationInfos.getProperties() == null ? null : new HashMap<>(substationCreationInfos.getProperties());
     }
 
     public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
@@ -68,7 +63,10 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationCountry(getCountry())
-                .properties(getProperties() == null || getProperties().size() == 0 ? null : getProperties());
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                    getProperties().stream()
+                        .map(FreePropertyEntity::toInfos)
+                        .toList());
     }
 }
 
