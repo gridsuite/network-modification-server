@@ -40,8 +40,8 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .voltageLevelId("v1")
             .busOrBusbarSectionId("bus1")
             .loadType(LoadType.FICTITIOUS)
-            .activePower(200.0)
-            .reactivePower(30.0)
+            .p0(200.0)
+            .q0(30.0)
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
@@ -56,8 +56,8 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .voltageLevelId("v1Edited")
             .busOrBusbarSectionId("bus1Edited")
             .loadType(LoadType.FICTITIOUS)
-            .activePower(300.0)
-            .reactivePower(50.0)
+            .p0(300.0)
+            .q0(50.0)
             .connectionName("bottom")
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .build();

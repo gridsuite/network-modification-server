@@ -375,8 +375,8 @@ public class BuildTest {
                 .loadType(LoadType.AUXILIARY)
                 .voltageLevelId("vl1")
                 .busOrBusbarSectionId("1.1")
-                .activePower(10.)
-                .reactivePower(20.)
+                .p0(10.)
+                .q0(20.)
                 .connectionName("vn")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .build().toEntity());
@@ -512,10 +512,10 @@ public class BuildTest {
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2).equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build().toEntity());
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0).equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build().toEntity());
 
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).connected(true).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).connected(true).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).connected(true).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).connected(true).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).connected(true).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).connected(true).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).connected(true).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).connected(true).build().toEntity());
 
         Map<String, String> properties = Map.of("DEMO", "Demo1");
         entities1.add(SubstationCreationInfos.builder()
@@ -690,7 +690,7 @@ public class BuildTest {
                 .build().toEntity()
         );
         entities2.add(LoadModificationInfos.builder().equipmentId("newLoad")
-            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).constantActivePower(null).build().toEntity());
+            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).p0(null).build().toEntity());
         entities2.add(GeneratorModificationInfos.builder()
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
@@ -907,7 +907,7 @@ public class BuildTest {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").activePower(10.).reactivePower(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).connected(true).stashed(true).build().toEntity());
+        entities1.add(LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).connected(true).stashed(true).build().toEntity());
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
