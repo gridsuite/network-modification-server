@@ -47,10 +47,10 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.BQ, OperationType.SET))
-            .properties(List.of(SubstationFreePropertyInfos.builder().name("p1").value("v1").build(), // new
-                    SubstationFreePropertyInfos.builder().name("p2").value("v2").build(), // new
-                    SubstationFreePropertyInfos.builder().name("region").value("south").build(), // update
-                    SubstationFreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
+            .properties(List.of(FreePropertyInfos.builder().name("p1").value("v1").build(), // new
+                FreePropertyInfos.builder().name("p2").value("v2").build(), // new
+                FreePropertyInfos.builder().name("region").value("south").build(), // update
+                FreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
             .build();
     }
 
