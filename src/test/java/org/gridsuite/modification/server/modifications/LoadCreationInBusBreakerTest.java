@@ -12,11 +12,13 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,6 +46,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .reactivePower(30.0)
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
+            .properties(List.of(FreePropertyInfos.builder().name("property-name").value("property-value").build()))
             .build();
     }
 
@@ -66,6 +69,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
+        assertEquals("property-value", getNetwork().getLoad("idLoad1").getProperty("property-name"));
     }
 
     @Override
