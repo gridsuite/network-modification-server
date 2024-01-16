@@ -10,9 +10,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 
 /**
- * @author David Braquart <david.braquart at rte-france.com>
+ * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
@@ -20,8 +21,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "Substation free properties")
-public class SubstationFreePropertyInfos {
+@Schema(description = "Free properties")
+public class FreePropertyInfos {
     @Schema(description = "property name")
     private String name;
 
@@ -33,4 +34,13 @@ public class SubstationFreePropertyInfos {
 
     @Schema(description = "property added in current modification")
     private boolean added = false;
+
+    public FreePropertyEntity toEntity() {
+        return FreePropertyEntity.builder()
+            .name(getName())
+            .value(getValue())
+            .deletionMark(isDeletionMark())
+            .added(isAdded())
+            .build();
+    }
 }

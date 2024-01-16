@@ -1,54 +1,39 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="souissimai (generated)" id="1705067177909-29">
-        <addColumn tableName="load_creation">
-            <column name="p0" type="float(53)"/>
-        </addColumn>
+        <renameColumn tableName="load_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="ACTIVE_POWER"
+                      newColumnName="p0" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-30">
-        <addColumn tableName="load_modification">
-            <column name="p0_op" type="varchar(255)"/>
-        </addColumn>
+        <renameColumn tableName="load_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="ACTIVE_POWER_OP"
+                      newColumnName="p0_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-31">
-        <addColumn tableName="load_modification">
-            <column name="p0_value" type="float(53)"/>
-        </addColumn>
+        <renameColumn tableName="load_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="ACTIVE_POWER_VALUE"
+                      newColumnName="p0_value" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-32">
-        <addColumn tableName="load_creation">
-            <column name="q0" type="float(53)"/>
-        </addColumn>
+        <renameColumn tableName="load_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="REACTIVE_POWER"
+                      newColumnName="q0" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-33">
-        <addColumn tableName="load_modification">
-            <column name="q0_op" type="varchar(255)"/>
-        </addColumn>
+        <renameColumn tableName="load_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="REACTIVE_POWER_OP"
+                      newColumnName="q0_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-34">
-        <addColumn tableName="load_modification">
-            <column name="q0_value" type="float(53)"/>
-        </addColumn>
-    </changeSet>
-    <changeSet author="souissimai (generated)" id="1705067177909-52">
-        <dropColumn columnName="ACTIVE_POWER" tableName="LOAD_CREATION"/>
-    </changeSet>
-    <changeSet author="souissimai (generated)" id="1705067177909-53">
-        <dropColumn columnName="ACTIVE_POWER_OP" tableName="LOAD_MODIFICATION"/>
-    </changeSet>
-    <changeSet author="souissimai (generated)" id="1705067177909-54">
-        <dropColumn columnName="ACTIVE_POWER_VALUE" tableName="LOAD_MODIFICATION"/>
-    </changeSet>
-    <changeSet author="souissimai (generated)" id="1705067177909-55">
-        <dropColumn columnName="REACTIVE_POWER" tableName="LOAD_CREATION"/>
-    </changeSet>
-    <changeSet author="souissimai (generated)" id="1705067177909-56">
-        <dropColumn columnName="REACTIVE_POWER_OP" tableName="LOAD_MODIFICATION"/>
-    </changeSet>
-    <changeSet author="souissimai (generated)" id="1705067177909-57">
-        <dropColumn columnName="REACTIVE_POWER_VALUE" tableName="LOAD_MODIFICATION"/>
-    </changeSet>
-   <changeSet author="souissimai (generated)" id="1705067177909-3">
-        <dropPrimaryKey tableName="tabular_modification_modifications"/>
+        <renameColumn tableName="load_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="REACTIVE_POWER_VALUE"
+                      newColumnName="q0_value" />
     </changeSet>
 </databaseChangeLog>

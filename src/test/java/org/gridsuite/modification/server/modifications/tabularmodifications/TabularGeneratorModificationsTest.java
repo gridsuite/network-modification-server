@@ -145,7 +145,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk()).andReturn();
-        assertLogMessage("Tabular modification: No generators have been modified", "tabularModificationError", reportService);
+        assertLogMessage("Tabular modification: No generators have been modified", "tabularGENERATOR_MODIFICATIONError", reportService);
     }
 
     @Override
