@@ -27,7 +27,7 @@ public class TabularModification extends AbstractModification {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TabularModification.class);
 
-    private static final String TABULAR_MODIFICATION_REPORT_KEY = "tabularModification";
+    private static final String TABULAR_MODIFICATION_REPORT_KEY_PREFIX = "tabular";
 
     private final TabularModificationInfos modificationInfos;
 
@@ -63,28 +63,27 @@ public class TabularModification extends AbstractModification {
                 LOGGER.warn(e.getMessage());
             }
         }
-        String defaultMessage = " have been modified";
-        defaultMessage = switch (modificationInfos.getModificationType()) {
-            case GENERATOR_MODIFICATION -> "generators" + defaultMessage;
-            case LOAD_MODIFICATION -> "loads" + defaultMessage;
-            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> "two windings transformers" + defaultMessage;
-            case BATTERY_MODIFICATION -> "batteries" + defaultMessage;
-            case VOLTAGE_LEVEL_MODIFICATION -> "voltage levels" + defaultMessage;
-            case SHUNT_COMPENSATOR_MODIFICATION -> "shunt compensators" + defaultMessage;
-            case LINE_MODIFICATION -> "lines" + defaultMessage;
-            case SUBSTATION_MODIFICATION -> "substations" + defaultMessage;
-            default -> "equipments of unknown type" + defaultMessage;
-        };
+        String defaultMessage = switch (modificationInfos.getModificationType()) {
+            case GENERATOR_MODIFICATION -> "generators";
+            case LOAD_MODIFICATION -> "loads";
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> "two windings transformers";
+            case BATTERY_MODIFICATION -> "batteries";
+            case VOLTAGE_LEVEL_MODIFICATION -> "voltage levels";
+            case SHUNT_COMPENSATOR_MODIFICATION -> "shunt compensators";
+            case LINE_MODIFICATION -> "lines";
+            case SUBSTATION_MODIFICATION -> "substations";
+            default -> "equipments of unknown type";
+        } + " have been modified";
 
         if (modificationInfos.getModifications().size() == applicationFailuresCount) {
             subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_REPORT_KEY + "Error")
+                    .withKey(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name() + "Error")
                     .withDefaultMessage("Tabular modification: No " + defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
         } else if (applicationFailuresCount > 0) {
             subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_REPORT_KEY + "Warning")
+                    .withKey(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name() + "Warning")
                     .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage + " and ${failuresCount} have not been modified")
                     .withValue("modificationsCount", modificationInfos.getModifications().size() - applicationFailuresCount)
                     .withValue("failuresCount", applicationFailuresCount)
@@ -92,7 +91,7 @@ public class TabularModification extends AbstractModification {
                     .build());
         } else {
             subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_REPORT_KEY)
+                    .withKey(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name())
                     .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage)
                     .withValue("modificationsCount", modificationInfos.getModifications().size())
                     .withSeverity(TypedValue.INFO_SEVERITY)
