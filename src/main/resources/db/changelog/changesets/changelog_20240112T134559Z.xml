@@ -3,37 +3,37 @@
     <changeSet author="souissimai (generated)" id="1705067177909-29">
         <renameColumn tableName="load_creation"
                       columnDataType="float(53)"
-                      oldColumnName="ACTIVE_POWER"
+                      oldColumnName="active_power"
                       newColumnName="p0" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-30">
         <renameColumn tableName="load_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="ACTIVE_POWER_OP"
+                      oldColumnName="active_power_op"
                       newColumnName="p0_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-31">
         <renameColumn tableName="load_modification"
                       columnDataType="float(53)"
-                      oldColumnName="ACTIVE_POWER_VALUE"
+                      oldColumnName="active_power_value"
                       newColumnName="p0_value" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-32">
         <renameColumn tableName="load_creation"
                       columnDataType="float(53)"
-                      oldColumnName="REACTIVE_POWER"
+                      oldColumnName="reactive_power"
                       newColumnName="q0" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-33">
         <renameColumn tableName="load_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="REACTIVE_POWER_OP"
+                      oldColumnName="reactive_power_op"
                       newColumnName="q0_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1705067177909-34">
         <renameColumn tableName="load_modification"
                       columnDataType="float(53)"
-                      oldColumnName="REACTIVE_POWER_VALUE"
+                      oldColumnName="reactive_power_value"
                       newColumnName="q0_value" />
     </changeSet>
 </databaseChangeLog>
