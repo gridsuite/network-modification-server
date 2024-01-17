@@ -1,0 +1,75 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="souissimai (generated)" id="1705498363603-29">
+        <renameColumn tableName="two_windings_transformer_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MAGNETIZING_CONDUCTANCE"
+                      newColumnName="g" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-30">
+        <renameColumn tableName="two_windings_transformer_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MAGNETIZING_SUSCEPTANCE"
+                      newColumnName="b" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-31">
+        <renameColumn tableName="two_windings_transformer_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="RATED_VOLTAGE1"
+                      newColumnName="ratedu1" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-32">
+        <renameColumn tableName="two_windings_transformer_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="RATED_VOLTAGE2"
+                      newColumnName="ratedu2" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-33">
+            <renameColumn tableName="two_windings_transformer_modification"
+                          columnDataType="float(53)"
+                          oldColumnName="MAGNETIZING_CONDUCTANCE"
+                          newColumnName="g" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-34">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MAGNETIZING_SUSCEPTANCE"
+                      newColumnName="b" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-35">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MAGNETIZING_SUSCEPTANCE_OP"
+                      newColumnName="b_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-36">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MAGNETIZING_CONDUCTANCE_OP"
+                      newColumnName="g_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-37">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="RATED_VOLTAGE1"
+                      newColumnName="ratedu1" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-38">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="RATED_VOLTAGE1OP"
+                      newColumnName="ratedu1_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-39">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="RATED_VOLTAGE2"
+                      newColumnName="ratedu2" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-40">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="RATED_VOLTAGE2OP"
+                      newColumnName="ratedu2_op" />
+    </changeSet>
+</databaseChangeLog>

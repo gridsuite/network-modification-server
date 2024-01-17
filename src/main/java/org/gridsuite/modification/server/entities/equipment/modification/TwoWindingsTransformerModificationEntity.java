@@ -34,37 +34,37 @@ import jakarta.persistence.*;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerModification_id_fk_constraint"))
 public class TwoWindingsTransformerModificationEntity extends BranchModificationEntity {
 
-    @Column(name = "magnetizingConductance")
+    @Column(name = "g")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "magnetizingConductance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "magnetizingConductanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "g")),
+        @AttributeOverride(name = "opType", column = @Column(name = "gOp"))
     })
-    private DoubleModificationEmbedded magnetizingConductance;
+    private DoubleModificationEmbedded g;
 
-    @Column(name = "magnetizingSusceptance")
+    @Column(name = "b")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "magnetizingSusceptance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "magnetizingSusceptanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "b")),
+        @AttributeOverride(name = "opType", column = @Column(name = "bOp"))
     })
-    private DoubleModificationEmbedded magnetizingSusceptance;
+    private DoubleModificationEmbedded b;
 
-    @Column(name = "ratedVoltage1")
+    @Column(name = "ratedU1")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedVoltage1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedVoltage1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratedU1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratedU1_op"))
     })
-    private DoubleModificationEmbedded ratedVoltage1;
+    private DoubleModificationEmbedded ratedU1;
 
-    @Column(name = "ratedVoltage2")
+    @Column(name = "ratedU2")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedVoltage2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedVoltage2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratedU2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratedU2_op"))
     })
-    private DoubleModificationEmbedded ratedVoltage2;
+    private DoubleModificationEmbedded ratedU2;
 
     @Column(name = "rateds")
     @Embedded
@@ -279,10 +279,10 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     }
 
     private void assignAttributes(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
-        this.magnetizingConductance = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getMagnetizingConductance());
-        this.magnetizingSusceptance = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getMagnetizingSusceptance());
-        this.ratedVoltage1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage1());
-        this.ratedVoltage2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedVoltage2());
+        this.g = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getG());
+        this.b = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getB());
+        this.ratedU1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU1());
+        this.ratedU2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU2());
         this.ratedS = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS());
         this.tapChangerSteps = new ArrayList<>();
         assignTapChangers(twoWindingsTransformerModificationInfos);
@@ -353,10 +353,10 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .seriesResistance(AttributeModification.toAttributeModification(getSeriesResistance()))
                 .seriesReactance(AttributeModification.toAttributeModification(getSeriesReactance()))
-                .magnetizingConductance(AttributeModification.toAttributeModification(getMagnetizingConductance()))
-                .magnetizingSusceptance(AttributeModification.toAttributeModification(getMagnetizingSusceptance()))
-                .ratedVoltage1(AttributeModification.toAttributeModification(getRatedVoltage1()))
-                .ratedVoltage2(AttributeModification.toAttributeModification(getRatedVoltage2()))
+                .g(AttributeModification.toAttributeModification(getG()))
+                .b(AttributeModification.toAttributeModification(getB()))
+                .ratedU1(AttributeModification.toAttributeModification(getRatedU1()))
+                .ratedU2(AttributeModification.toAttributeModification(getRatedU2()))
                 .ratedS(AttributeModification.toAttributeModification(getRatedS()));
 
         if (getCurrentLimits1() != null) {
