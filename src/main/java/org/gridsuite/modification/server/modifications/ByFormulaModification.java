@@ -181,7 +181,7 @@ public class ByFormulaModification extends AbstractModification {
             if (!CollectionUtils.isEmpty(notEditableEquipments)) {
                 formulaReports.add(Report.builder()
                         .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
-                        .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
+                        .withDefaultMessage(String.format("       %s equipment(s) were not modified", notEditableEquipments.size()))
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
             }
