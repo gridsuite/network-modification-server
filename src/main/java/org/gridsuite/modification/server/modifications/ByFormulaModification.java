@@ -140,7 +140,7 @@ public class ByFormulaModification extends AbstractModification {
                     .stream()
                     .map(attributes -> network.getIdentifiable(attributes.getId()))
                     .filter(identifiable -> {
-                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
+                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos, equipmentsReport);
                         if (!isEditableEquipment) {
                             notEditableEquipments.add(identifiable.getId());
                             equipmentNotModifiedCount += 1;
@@ -205,7 +205,8 @@ public class ByFormulaModification extends AbstractModification {
     }
 
     private boolean isEquipmentEditable(Identifiable<?> identifiable,
-                                        FormulaInfos formulaInfos) {
+                                        FormulaInfos formulaInfos,
+                                        List<Report> equipmentsReport) {
         if (formulaInfos.getEditedField() == null) {
             return false;
         }
@@ -214,8 +215,32 @@ public class ByFormulaModification extends AbstractModification {
             TwoWindingsTransformerField editedField = TwoWindingsTransformerField.valueOf(formulaInfos.getEditedField());
             TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) identifiable;
             return switch (editedField) {
-                case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> twoWindingsTransformer.getRatioTapChanger() != null;
-                case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> twoWindingsTransformer.getPhaseTapChanger() != null;
+                case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> {
+                    boolean isEditable = twoWindingsTransformer.getRatioTapChanger() != null;
+                    if (!isEditable) {
+                        equipmentsReport.add(Report.builder()
+                                .withKey("EquipmentModifiedReportError_" + equipmentsReport.size())
+                                .withDefaultMessage(String.format("        Cannot modify field %s of equipment %s : Ratio tab changer is null",
+                                        editedField,
+                                        identifiable.getId()))
+                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .build());
+                    }
+                    yield  isEditable;
+                }
+                case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> {
+                    boolean isEditable = twoWindingsTransformer.getPhaseTapChanger() != null;
+                    if (!isEditable) {
+                        equipmentsReport.add(Report.builder()
+                                .withKey("EquipmentModifiedReportError_" + equipmentsReport.size())
+                                .withDefaultMessage(String.format("        Cannot modify field %s of equipment %s : Phase tab changer is null",
+                                        editedField,
+                                        identifiable.getId()))
+                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .build());
+                    }
+                    yield  isEditable;
+                }
                 default -> true;
             };
         }
