@@ -38,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithErrors() throws Exception {
@@ -115,7 +117,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .reactivePower(60.0)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .connectionName("top")
-            .properties(List.of(FreePropertyInfos.builder().name("property-name").value("property-value").build()))
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -138,7 +140,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
-        assertEquals("property-value", getNetwork().getLoad("idLoad1").getProperty("property-name"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLoad("idLoad1").getProperty(PROPERTY_NAME));
     }
 
     @Override

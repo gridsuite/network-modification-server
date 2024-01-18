@@ -28,6 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.createBusBreaker(networkUuid);
@@ -46,7 +49,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .reactivePower(30.0)
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
-            .properties(List.of(FreePropertyInfos.builder().name("property-name").value("property-value").build()))
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -69,7 +72,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
-        assertEquals("property-value", getNetwork().getLoad("idLoad1").getProperty("property-name"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLoad("idLoad1").getProperty(PROPERTY_NAME));
     }
 
     @Override
