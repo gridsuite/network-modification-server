@@ -181,10 +181,10 @@ public abstract class AbstractBranchModification extends AbstractModification {
     }
 
     protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
-        return branchModificationInfos.getSeriesReactance() != null
-                && branchModificationInfos.getSeriesReactance().getValue() != null
-                || branchModificationInfos.getSeriesResistance() != null
-                && branchModificationInfos.getSeriesResistance().getValue() != null;
+        return branchModificationInfos.getX() != null
+                && branchModificationInfos.getX().getValue() != null
+                || branchModificationInfos.getR() != null
+                && branchModificationInfos.getR().getValue() != null;
     }
 
     protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos,

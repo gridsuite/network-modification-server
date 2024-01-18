@@ -62,15 +62,15 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .build());
 
         // Branch specific fields
-        if (branchModificationInfos.getSeriesResistance() != null && branchModificationInfos.getSeriesResistance().getValue() != null) {
+        if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
-                    branchModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
-            twoWindingsTransformer.setR(branchModificationInfos.getSeriesResistance().getValue());
+                    branchModificationInfos.getR().getValue(), "Series resistance", 1));
+            twoWindingsTransformer.setR(branchModificationInfos.getR().getValue());
         }
-        if (branchModificationInfos.getSeriesReactance() != null && branchModificationInfos.getSeriesReactance().getValue() != null) {
+        if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
-                    branchModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
-            twoWindingsTransformer.setX(branchModificationInfos.getSeriesReactance().getValue());
+                    branchModificationInfos.getX().getValue(), "Series reactance", 1));
+            twoWindingsTransformer.setX(branchModificationInfos.getX().getValue());
         }
 
         // Transformer specific fields

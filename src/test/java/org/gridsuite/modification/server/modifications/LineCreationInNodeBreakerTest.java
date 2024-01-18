@@ -75,14 +75,14 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
-        lineCreationInfos.setSeriesResistance(Double.NaN);
+        lineCreationInfos.setR(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("AC Line 'idLine4': r is invalid", lineCreationInfos.getErrorType().name(), reportService);
 
-        lineCreationInfos.setSeriesResistance(100.0);
-        lineCreationInfos.setSeriesReactance(Double.NaN);
+        lineCreationInfos.setR(100.0);
+        lineCreationInfos.setX(Double.NaN);
         lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -102,8 +102,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         LineCreationInfos lineCreation = LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
-                .seriesResistance(110.0)
-                .seriesReactance(110.0)
+                .r(110.0)
+                .x(110.0)
                 .shuntConductance1(15.0)
                 .shuntSusceptance1(15.0)
                 .shuntConductance2(25.0)
@@ -140,8 +140,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         LineCreationInfos lineCreation = LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
-                .seriesResistance(110.0)
-                .seriesReactance(110.0)
+                .r(110.0)
+                .x(110.0)
                 .shuntConductance1(15.0)
                 .shuntSusceptance1(15.0)
                 .shuntConductance2(25.0)
@@ -184,8 +184,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         LineCreationInfos lineCreation = LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
-                .seriesResistance(110.0)
-                .seriesReactance(110.0)
+                .r(110.0)
+                .x(110.0)
                 .shuntConductance1(15.0)
                 .shuntSusceptance1(15.0)
                 .shuntConductance2(25.0)
@@ -225,7 +225,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), seriesResistance=110.0, seriesReactance=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), shuntConductance1=15.0, shuntSusceptance1=15.0, shuntConductance2=25.0, shuntSusceptance2=25.0)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), shuntConductance1=15.0, shuntSusceptance1=15.0, shuntConductance2=25.0, shuntSusceptance2=25.0)",
             lineCreation.toString()
         );
     }
@@ -241,8 +241,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .shuntConductance1(10.0)
                 .shuntSusceptance1(10.0)
                 .shuntConductance2(20.0)
@@ -266,8 +266,8 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
-                .seriesResistance(110.0)
-                .seriesReactance(110.0)
+                .r(110.0)
+                .x(110.0)
                 .shuntConductance1(15.0)
                 .shuntSusceptance1(15.0)
                 .shuntConductance2(25.0)

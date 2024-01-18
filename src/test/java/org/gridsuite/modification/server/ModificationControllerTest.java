@@ -714,8 +714,8 @@ public class ModificationControllerTest {
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .shuntConductance1(10.0)
                 .shuntSusceptance1(10.0)
                 .shuntConductance2(20.0)
@@ -743,8 +743,8 @@ public class ModificationControllerTest {
         //create a lineAttached
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .equipmentId("attachmentLine")
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
+                .r(50.6)
+                .x(25.3)
                 .build();
 
         LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",

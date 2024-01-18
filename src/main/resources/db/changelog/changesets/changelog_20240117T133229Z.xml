@@ -72,4 +72,76 @@
                       oldColumnName="RATED_VOLTAGE2OP"
                       newColumnName="ratedu2_op" />
     </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-41">
+        <renameColumn tableName="line_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_RESISTANCE"
+                      newColumnName="r" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-42">
+        <renameColumn tableName="line_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_RESISTANCE"
+                      newColumnName="r" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-43">
+        <renameColumn tableName="two_windings_transformer_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_RESISTANCE"
+                      newColumnName="r" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-44">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_RESISTANCE"
+                      newColumnName="r" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-45">
+        <renameColumn tableName="line_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SERIES_RESISTANCE_OP"
+                      newColumnName="r_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-46">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SERIES_RESISTANCE_OP"
+                      newColumnName="r_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-47">
+        <renameColumn tableName="line_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_REACTANCE"
+                      newColumnName="x" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-48">
+        <renameColumn tableName="line_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_REACTANCE"
+                      newColumnName="x" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-49">
+        <renameColumn tableName="two_windings_transformer_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_REACTANCE"
+                      newColumnName="x" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-50">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SERIES_REACTANCE"
+                      newColumnName="x" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-51">
+        <renameColumn tableName="line_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SERIES_REACTANCE_OP"
+                      newColumnName="x_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-52">
+        <renameColumn tableName="two_windings_transformer_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SERIES_REACTANCE_OP"
+                      newColumnName="x_op" />
+    </changeSet>
 </databaseChangeLog>

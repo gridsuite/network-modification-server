@@ -181,8 +181,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // branch
-                .seriesResistance(getSeriesResistance())
-                .seriesReactance(getSeriesReactance())
+                .r(getR())
+                .x(getX())
                 .voltageLevelId1(getVoltageLevelId1())
                 .voltageLevelId2(getVoltageLevelId2())
                 .busOrBusbarSectionId1(getBusOrBusbarSectionId1())

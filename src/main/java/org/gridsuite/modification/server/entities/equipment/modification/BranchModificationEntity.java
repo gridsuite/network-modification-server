@@ -24,17 +24,17 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "seriesResistance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "seriesResistanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "r")),
+        @AttributeOverride(name = "opType", column = @Column(name = "rOp"))
     })
-    private DoubleModificationEmbedded seriesResistance;
+    private DoubleModificationEmbedded r;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "seriesReactance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "seriesReactanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "x")),
+        @AttributeOverride(name = "opType", column = @Column(name = "xOp"))
     })
-    private DoubleModificationEmbedded seriesReactance;
+    private DoubleModificationEmbedded x;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "current_limits_modification_id1",
@@ -65,8 +65,8 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     }
 
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
-        seriesReactance = new DoubleModificationEmbedded(branchModificationInfos.getSeriesReactance());
-        seriesResistance = new DoubleModificationEmbedded(branchModificationInfos.getSeriesResistance());
+        x = new DoubleModificationEmbedded(branchModificationInfos.getX());
+        r = new DoubleModificationEmbedded(branchModificationInfos.getR());
         if (branchModificationInfos.getCurrentLimits1() == null) {
             currentLimits1 = null;
         } else {

@@ -22,11 +22,11 @@ import jakarta.persistence.*;
 @MappedSuperclass
 public class BranchCreationEntity extends EquipmentCreationEntity {
 
-    @Column(name = "seriesResistance")
-    private double seriesResistance;
+    @Column(name = "r")
+    private double r;
 
-    @Column(name = "seriesReactance")
-    private double seriesReactance;
+    @Column(name = "x")
+    private double x;
 
     @Column(name = "voltageLevelId1")
     private String voltageLevelId1;
@@ -93,8 +93,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     }
 
     private void assignAttributes(BranchCreationInfos branchCreationInfos) {
-        seriesReactance = branchCreationInfos.getSeriesReactance();
-        seriesResistance = branchCreationInfos.getSeriesResistance();
+        x = branchCreationInfos.getX();
+        r = branchCreationInfos.getR();
         voltageLevelId1 = branchCreationInfos.getVoltageLevelId1();
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();

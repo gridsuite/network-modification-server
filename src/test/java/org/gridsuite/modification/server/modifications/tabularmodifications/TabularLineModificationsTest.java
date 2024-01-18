@@ -37,8 +37,8 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LineModificationInfos.builder().equipmentId("line1").seriesResistance(new AttributeModification<>(10., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line2").seriesReactance(new AttributeModification<>(20., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").shuntConductance1(new AttributeModification<>(30., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").shuntSusceptance1(new AttributeModification<>(40., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("unknownLine").shuntSusceptance2(new AttributeModification<>(60., OperationType.SET)).build()
@@ -53,8 +53,8 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                LineModificationInfos.builder().equipmentId("line1").seriesResistance(new AttributeModification<>(1., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line2").seriesReactance(new AttributeModification<>(2., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(1., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").shuntConductance1(new AttributeModification<>(3., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").shuntSusceptance1(new AttributeModification<>(4., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("unknownLine").shuntSusceptance2(new AttributeModification<>(50., OperationType.SET)).build()

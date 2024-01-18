@@ -107,8 +107,8 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
                 .setG(twoWindingsTransformerCreationInfos.getG())
                 .setB(twoWindingsTransformerCreationInfos.getB())
-                .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
+                .setR(twoWindingsTransformerCreationInfos.getR())
+                .setX(twoWindingsTransformerCreationInfos.getX())
                 .setRatedU1(twoWindingsTransformerCreationInfos.getRatedU1())
                 .setRatedU2(twoWindingsTransformerCreationInfos.getRatedU2());
 

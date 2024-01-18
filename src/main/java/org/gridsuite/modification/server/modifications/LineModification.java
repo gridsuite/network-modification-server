@@ -56,15 +56,15 @@ public class LineModification extends AbstractBranchModification {
             .withDefaultMessage("Characteristics")
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
-        if (branchModificationInfos.getSeriesResistance() != null && branchModificationInfos.getSeriesResistance().getValue() != null) {
+        if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
-                    branchModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
-            line.setR(branchModificationInfos.getSeriesResistance().getValue());
+                    branchModificationInfos.getR().getValue(), "Series resistance", 1));
+            line.setR(branchModificationInfos.getR().getValue());
         }
-        if (branchModificationInfos.getSeriesReactance() != null && branchModificationInfos.getSeriesReactance().getValue() != null) {
+        if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
-                    branchModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
-            line.setX(branchModificationInfos.getSeriesReactance().getValue());
+                    branchModificationInfos.getX().getValue(), "Series reactance", 1));
+            line.setX(branchModificationInfos.getX().getValue());
         }
 
         LineModificationInfos lineModificationInfos = (LineModificationInfos) branchModificationInfos;
