@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
+import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 
 public final class NetworkUtil {
 
@@ -35,6 +36,13 @@ public final class NetworkUtil {
             .setTopologyKind(topology)
             .setNominalV(vNom)
             .add();
+    }
+
+    public static VoltageLevel createVoltageLevel(Substation s, String id, String name,
+                                                  TopologyKind topology, double vNom, double ipMin, double ipMax) {
+        VoltageLevel vl = createVoltageLevel(s, id, name, topology, vNom);
+        vl.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(ipMin).withIpMax(ipMax).add();
+        return vl;
     }
 
     public static void createBusBarSection(VoltageLevel vl, String id, String name, int node) {
@@ -323,7 +331,7 @@ public final class NetworkUtil {
             .setG(g)
             .setP0(p0)
             .setQ0(q0)
-            .setUcteXnodeCode(ucteXnodeCode)
+            .setPairingKey(ucteXnodeCode)
             .setNode(node)
             .add();
     }

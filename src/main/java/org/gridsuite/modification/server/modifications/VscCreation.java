@@ -180,6 +180,10 @@ public class VscCreation extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
+        if (!converterStationCreationInfos.isConnected()) {
+            vscConverterStation.getTerminal().disconnect();
+        }
+
         return vscConverterStation;
     }
 
@@ -310,6 +314,14 @@ public class VscCreation extends AbstractModification {
         if (converterStationCreationInfos.getConnectionPosition() != null) {
             connectivityReports.add(ModificationUtils.getInstance()
                     .buildCreationReport(converterStationCreationInfos.getConnectionPosition(), "Connection position"));
+        }
+        if (!converterStationCreationInfos.isConnected()) {
+            connectivityReports.add(Report.builder()
+                    .withKey("equipmentDisconnected")
+                    .withDefaultMessage("    Equipment with id=${id} disconnected")
+                    .withValue("id", converterStationCreationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
         }
         ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", "Connectivity");
     }

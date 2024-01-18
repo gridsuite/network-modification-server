@@ -6,13 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
+import com.powsybl.iidm.network.IdentifiableType;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import jakarta.persistence.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -23,8 +24,9 @@ import jakarta.persistence.*;
 @Table(name = "equipmentDeletion")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "equipmentDeletion_id_fk_constraint"))
 public class EquipmentDeletionEntity extends EquipmentModificationEntity {
+    @Enumerated(EnumType.STRING)
     @Column(name = "equipmentType")
-    private String equipmentType;
+    private IdentifiableType equipmentType;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "additional_equipment_deletion_entity_id",
@@ -57,6 +59,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
         if (equipmentInfos != null) {

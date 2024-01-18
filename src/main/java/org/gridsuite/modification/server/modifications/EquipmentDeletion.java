@@ -33,12 +33,16 @@ public class EquipmentDeletion extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void check(Network network) throws NetworkModificationException {
         Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), modificationInfos.getEquipmentId());
         if (identifiable == null) {
             throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + modificationInfos.getEquipmentId() + " not found or of bad type");
         }
+    }
 
+    @Override
+    public void apply(Network network, Reporter subReporter) {
+        Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), modificationInfos.getEquipmentId());
         if (identifiable instanceof Connectable) {
             new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof HvdcLine) {
@@ -46,13 +50,14 @@ public class EquipmentDeletion extends AbstractModification {
         } else if (identifiable instanceof VoltageLevel) {
             new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
         } else if (identifiable instanceof Substation) {
-            new RemoveSubstation(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
+            RemoveSubstation rs = new RemoveSubstationBuilder().withSubstationId(modificationInfos.getEquipmentId()).build();
+            rs.apply(network, true, subReporter);
         }
 
         subReporter.report(Report.builder()
             .withKey("equipmentDeleted")
             .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
-            .withValue("type", modificationInfos.getEquipmentType())
+            .withValue("type", modificationInfos.getEquipmentType().name())
             .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());

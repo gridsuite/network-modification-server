@@ -7,9 +7,14 @@
 package org.gridsuite.modification.server.repositories;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -24,6 +29,14 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     //TODO This doesn't return a proper entity, it's actually just a DTO:
     //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
     //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
-    @Query(value = "SELECT new ModificationEntity(m.id, m.date, m.stashed) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
+
+    @EntityGraph(attributePaths = {"modifications", "modifications.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
+    Optional<TabularModificationEntity> findAllWithReactiveCapabilityCurvePointsById(UUID id);
+
+    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
+    Set<GeneratorModificationEntity> findAllReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
+
+    Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 }

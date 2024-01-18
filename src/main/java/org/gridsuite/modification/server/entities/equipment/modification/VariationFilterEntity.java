@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Index;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,7 +28,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "VariationFilter")
+@Table(name = "VariationFilter", indexes = @Index(name = "formula_id_idx", columnList = "formula_id"))
 public class VariationFilterEntity {
 
     @Id

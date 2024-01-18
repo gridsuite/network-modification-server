@@ -81,6 +81,10 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
 
+    public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashed) {
+        return networkModificationRepository.getModificationsCount(groupUuid, stashed);
+    }
+
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
@@ -163,7 +167,10 @@ public class NetworkModificationService {
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false);
+                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
+                        .stream()
+                        .filter(m -> !m.getStashed())
+                        .collect(Collectors.toList());
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -198,6 +205,12 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
+    public void deleteNetworkModifications(UUID groupUuid, boolean onlyStashed) {
+        if (networkModificationRepository.deleteModifications(groupUuid, onlyStashed) == 0) {
+            throw new NetworkModificationException(NOTHING_TO_DELETE);
+        }
+    }
+
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
@@ -212,7 +225,7 @@ public class NetworkModificationService {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
             .filter(m -> !m.getStashed())
-            .map(ModificationEntity::toModificationInfos)
+            .map(networkModificationRepository::getModificationInfos)
             .collect(Collectors.toList());
 
         PreloadingStrategy preloadingStrategy = movedModifications.stream()
@@ -247,7 +260,7 @@ public class NetworkModificationService {
         if (!modificationEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, modificationEntities);
 
-            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(networkModificationRepository::getModificationInfos).collect(Collectors.toList());
 
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()
                 .map(ModificationInfos::getType)
@@ -271,7 +284,7 @@ public class NetworkModificationService {
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
-        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(ModificationEntity::copy).collect(Collectors.toList());
+        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(m -> networkModificationRepository.getModificationInfos(m).toEntity()).collect(Collectors.toList());
         return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
     }
 
@@ -293,4 +306,5 @@ public class NetworkModificationService {
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
     }
+
 }

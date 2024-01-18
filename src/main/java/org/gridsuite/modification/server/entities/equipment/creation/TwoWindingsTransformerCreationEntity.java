@@ -177,25 +177,30 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
+                // branch
                 .seriesResistance(getSeriesResistance())
                 .seriesReactance(getSeriesReactance())
+                .voltageLevelId1(getVoltageLevelId1())
+                .voltageLevelId2(getVoltageLevelId2())
+                .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
+                .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
+                .connectionName1(getConnectionName1())
+                .connectionName2(getConnectionName2())
+                .connectionDirection1(getConnectionDirection1())
+                .connectionDirection2(getConnectionDirection2())
+                .connectionPosition1(getConnectionPosition1())
+                .connectionPosition2(getConnectionPosition2())
+                .connected1(isConnected1())
+                .connected2(isConnected2())
+                // 2WT
                 .magnetizingConductance(getMagnetizingConductance())
                 .magnetizingSusceptance(getMagnetizingSusceptance())
                 .ratedVoltage1(getRatedVoltage1())
                 .ratedVoltage2(getRatedVoltage2())
-                .ratedS(getRatedS())
-                .voltageLevelId1(getVoltageLevelId1())
-                .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
-                .voltageLevelId2(getVoltageLevelId2())
-                .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
-                .connectionName1(getConnectionName1())
-                .connectionDirection1(getConnectionDirection1())
-                .connectionName2(getConnectionName2())
-                .connectionDirection2(getConnectionDirection2())
-                .connectionPosition1(getConnectionPosition1())
-                .connectionPosition2(getConnectionPosition2());
+                .ratedS(getRatedS());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

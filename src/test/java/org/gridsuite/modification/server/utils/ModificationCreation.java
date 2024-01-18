@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.EnergySource;
+import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.*;
@@ -23,6 +24,7 @@ public final class ModificationCreation {
 
     public static VoltageLevelCreationInfos getCreationVoltageLevel(String substationId, String voltageLevelId, String voltageLevelName) {
         return VoltageLevelCreationInfos.builder()
+            .stashed(false)
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
             .substationId(substationId)
@@ -39,6 +41,7 @@ public final class ModificationCreation {
 
     public static BatteryCreationInfos getCreationBattery(String vlId, String batteryId, String batteryName, String busOrBusbarSectionId) {
         return BatteryCreationInfos.builder()
+                .stashed(false)
                 .equipmentId(batteryId)
                 .equipmentName(batteryName)
                 .voltageLevelId(vlId)
@@ -62,6 +65,7 @@ public final class ModificationCreation {
     public static GeneratorCreationInfos getCreationGenerator(String vlId, String generatorId, String generatorName, String busOrBusbarSectionId,
                                                               String regulatingTerminalId, String regulatingTerminalType, String regulatingTerminalVlId) {
         return GeneratorCreationInfos.builder()
+            .stashed(false)
             .equipmentId(generatorId)
             .equipmentName(generatorName)
             .voltageLevelId(vlId)
@@ -90,5 +94,62 @@ public final class ModificationCreation {
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
+    }
+
+    public static LoadCreationInfos getCreationLoad(String vlId, String loadId, String loadName, String busOrBusBarSectionId, LoadType loadType) {
+        return LoadCreationInfos.builder()
+            .stashed(false)
+            .equipmentId(loadId)
+            .equipmentName(loadName)
+            .voltageLevelId(vlId)
+            .busOrBusbarSectionId(busOrBusBarSectionId)
+            .loadType(loadType)
+            .activePower(100.0)
+            .reactivePower(20.0)
+            .connectionName("top")
+            .connectionDirection(ConnectablePosition.Direction.TOP)
+            .build();
+    }
+
+    public static LoadModificationInfos getModificationLoad(String loadId, String vlId, String loadName, String busOrBusbarSectionId, LoadType loadType, Long activePower, Long reactivePower) {
+        LoadModificationInfos.LoadModificationInfosBuilder builder = LoadModificationInfos.builder()
+            .stashed(false)
+            .equipmentId(loadId);
+
+        if (loadName != null) {
+            builder.equipmentName(AttributeModification.toAttributeModification(loadName, OperationType.SET));
+        }
+
+        if (vlId != null) {
+            builder.voltageLevelId(AttributeModification.toAttributeModification(vlId, OperationType.SET));
+        }
+
+        if (busOrBusbarSectionId != null) {
+            builder.busOrBusbarSectionId(AttributeModification.toAttributeModification(busOrBusbarSectionId, OperationType.SET));
+        }
+
+        if (loadType != null) {
+            builder.loadType(AttributeModification.toAttributeModification(LoadType.UNDEFINED, OperationType.SET));
+        }
+
+        if (activePower != null) {
+            builder.constantActivePower(AttributeModification.toAttributeModification(activePower, OperationType.SET));
+        }
+
+        if (reactivePower != null) {
+            builder.constantReactivePower(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
+        }
+
+        return builder.build();
+    }
+
+    public static VoltageLevelModificationInfos getModificationVoltageLevel(String vlId, String vlName) {
+        VoltageLevelModificationInfos.VoltageLevelModificationInfosBuilder builder = VoltageLevelModificationInfos.builder()
+            .stashed(false)
+            .equipmentId(vlId);
+
+        builder.equipmentName(AttributeModification.toAttributeModification(vlName, OperationType.SET));
+
+        return builder.build();
     }
 }

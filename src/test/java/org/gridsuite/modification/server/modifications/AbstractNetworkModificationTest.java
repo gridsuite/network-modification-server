@@ -65,7 +65,7 @@ If you want to add a test specific to a modification, add it in its own class.
 @SpringBootTest
 @DisableElasticsearch
 @AutoConfigureMockMvc
-abstract class AbstractNetworkModificationTest {
+public abstract class AbstractNetworkModificationTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkModificationTest.class);
 
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
@@ -105,16 +105,12 @@ abstract class AbstractNetworkModificationTest {
 
         modificationRepository.deleteAll();
 
-        initMocks();
+        when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
+        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
 
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockUtils = new WireMockUtils(wireMockServer);
         wireMockServer.start();
-    }
-
-    private void initMocks() {
-        when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
-        when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
     }
 
     @After
@@ -147,6 +143,9 @@ abstract class AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertAfterNetworkModificationCreation();
+
+        ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
     @Test
@@ -187,9 +186,12 @@ abstract class AbstractNetworkModificationTest {
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
         ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
+
+        ModificationInfos updatedModificationwithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
+
     }
 
     @Test
@@ -234,7 +236,7 @@ abstract class AbstractNetworkModificationTest {
         MvcResult mvcResult;
         String resultAsString;
         // get all modifications for the given group of a network
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", groupUuid).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<ModificationInfos> modificationsTestGroupId = mapper.readValue(resultAsString, new TypeReference<>() { });
@@ -284,4 +286,12 @@ abstract class AbstractNetworkModificationTest {
     protected abstract void assertAfterNetworkModificationCreation();
 
     protected abstract void assertAfterNetworkModificationDeletion();
+
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("{}", modificationInfos.getMessageValues());
+    }
+
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("{}", modificationInfos.getMessageValues());
+    }
 }

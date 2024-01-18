@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
@@ -36,15 +35,17 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorModificat
 @ModificationErrorTypeName("MODIFY_SHUNT_COMPENSATOR_ERROR")
 public class ShuntCompensatorModificationInfos extends BasicEquipmentModificationInfos {
 
-    @Schema(description = "voltage level id")
-    private String voltageLevelId;
+    @Schema(description = "Maximum number of sections")
+    private AttributeModification<Integer> maximumSectionCount;
 
-    @Schema(description = "Susceptance per section")
-    private AttributeModification<Double> susceptancePerSection;
+    @Schema(description = "Section count")
+    private AttributeModification<Integer> sectionCount;
 
-    @JsonProperty("qAtNominalV")
-    @Schema(description = "Q at Nominal Voltage")
-    private AttributeModification<Double> qAtNominalV;
+    @Schema(description = "Maximal susceptance available")
+    private AttributeModification<Double> maxSusceptance;
+
+    @Schema(description = "Qmax available at nominal voltage")
+    private AttributeModification<Double> maxQAtNominalV;
 
     @Schema(description = "Shunt Compensator Type")
     private AttributeModification<ShuntCompensatorType> shuntCompensatorType;

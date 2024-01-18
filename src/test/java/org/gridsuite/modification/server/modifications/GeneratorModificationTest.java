@@ -7,10 +7,12 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -18,10 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
@@ -41,6 +40,7 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return GeneratorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
@@ -77,7 +77,8 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return GeneratorModificationInfos.builder()
-                .equipmentId("idGenerator")
+                .equipmentId("idGeneratorEdited")
+                .stashed(false)
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
@@ -391,6 +392,28 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
+    public void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        Generator generator = getNetwork().getGenerator("idGenerator");
+        generator.setTargetP(80.)
+                .setMinP(10.)
+                .setMaxP(150.);
+
+        generatorModificationInfos.setActivePowerSetpoint(new AttributeModification<>(110.0, OperationType.SET));
+
+        Double minActivePower = generatorModificationInfos.getMinActivePower() != null ? generatorModificationInfos.getMinActivePower().getValue() : generator.getMinP();
+        Double maxActivePower = generatorModificationInfos.getMaxActivePower() != null ? generatorModificationInfos.getMaxActivePower().getValue() : generator.getMaxP();
+        Double activePower = generatorModificationInfos.getActivePowerSetpoint() != null ? generatorModificationInfos.getActivePowerSetpoint().getValue() : generator.getTargetP();
+
+        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
+                generatorModificationInfos.getErrorType().name(), reportService);
+
+    }
+
+    @Test
     public void testUnsetAttributes() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
@@ -411,5 +434,21 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
 
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGeneratorEdited", createdValues.get("equipmentId"));
     }
 }

@@ -7,10 +7,12 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,6 +30,7 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBran
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,6 +45,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     @Override
     protected ModificationInfos buildModification() {
         return TwoWindingsTransformerCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
                 .seriesResistance(1.)
@@ -52,8 +57,10 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .ratedS(1.)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
+                .connected1(true)
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
+                .connected2(true)
                 .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build())
                 .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build())
                 .connectionName1("cn201")
@@ -146,6 +153,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return TwoWindingsTransformerCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
                 .seriesResistance(2.3)
@@ -304,12 +312,15 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .build();
         // create new 2wt in voltage level with bus/breaker topology
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("id2wt1")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
+                .connected1(true)
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
+                .connected2(true)
                 .magnetizingConductance(100.0)
                 .magnetizingSusceptance(200.0)
                 .ratedVoltage1(1000)
@@ -321,12 +332,15 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos2 = TwoWindingsTransformerCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("id2wt1WithRatioTapChanger2")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
+                .connected1(true)
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
+                .connected2(true)
                 .magnetizingConductance(100.0)
                 .magnetizingSusceptance(200.0)
                 .ratedVoltage1(1000)
@@ -356,6 +370,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .steps(getTapChangerSteps())
                 .build();
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = TwoWindingsTransformerCreationInfos.builder()
+                .stashed(false)
                 .equipmentId("id2wt1WithPhaseTapChanger")
                 .equipmentName("2wtName")
                 .voltageLevelId1("v1")
@@ -370,8 +385,10 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .seriesResistance(400)
                 .connectionName1("cnid2wt1")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
+                .connected1(true)
                 .connectionName2("cnid2wt2")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
+                .connected2(true)
                 .phaseTapChanger(phaseTapChangerCreationInfos)
                 .build();
         testCreateTwoWindingsTransformerInBusBreaker(twoWindingsTransformerCreationInfos, 1);
@@ -414,6 +431,22 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                         .rho(1.)
                         .build()
         );
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TWO_WINDINGS_TRANSFORMER_CREATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("new2wt", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("TWO_WINDINGS_TRANSFORMER_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("new2wtUpdate", updatedValues.get("equipmentId"));
     }
 }
 

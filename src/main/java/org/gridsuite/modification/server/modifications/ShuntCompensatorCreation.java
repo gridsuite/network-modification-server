@@ -12,7 +12,6 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
-import org.apache.commons.lang3.ObjectUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
@@ -35,6 +34,16 @@ public class ShuntCompensatorCreation extends AbstractModification {
         if (network.getShuntCompensator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
+
+        if (modificationInfos.getMaximumSectionCount() < 1) {
+            throw new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1");
+        }
+
+        if (modificationInfos.getSectionCount() < 0 || modificationInfos.getSectionCount() > modificationInfos.getMaximumSectionCount()) {
+            throw new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, String.format("Section count should be between 0 and Maximum section count (%d), actual : %d",
+                    modificationInfos.getMaximumSectionCount(),
+                    modificationInfos.getSectionCount()));
+        }
         ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
     }
@@ -43,12 +52,12 @@ public class ShuntCompensatorCreation extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         // create the shunt compensator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
-        if (modificationInfos.getSusceptancePerSection() == null) {
-            Double susceptancePerSection = modificationInfos.getQAtNominalV() / Math.pow(voltageLevel.getNominalV(), 2);
-            modificationInfos.setSusceptancePerSection(
+        if (modificationInfos.getMaxSusceptance() == null) {
+            Double maxSusceptance = (modificationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2);
+            modificationInfos.setMaxSusceptance(
                     modificationInfos.getShuntCompensatorType() == ShuntCompensatorType.CAPACITOR
-                            ? susceptancePerSection
-                            : -susceptancePerSection);
+                            ? maxSusceptance
+                            : -maxSusceptance);
         }
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             ShuntCompensatorAdder shuntCompensatorAdder = createShuntAdderInNodeBreaker(voltageLevel, modificationInfos);
@@ -71,6 +80,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
+        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getShuntCompensator(modificationInfos.getEquipmentId()), subReporter);
     }
 
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
@@ -78,25 +88,15 @@ public class ShuntCompensatorCreation extends AbstractModification {
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()
                 .setId(shuntCompensatorInfos.getEquipmentId())
                 .setName(shuntCompensatorInfos.getEquipmentName())
-                .setSectionCount(determinateSectionCountModification(shuntCompensatorInfos));
+                .setSectionCount(shuntCompensatorInfos.getSectionCount());
 
         /* when we create non-linear shunt, this is where we branch ;) */
         shuntAdder.newLinearModel()
-                .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-                .setMaximumSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getMaximumNumberOfSections(), 1))
+                .setBPerSection(shuntCompensatorInfos.getMaxSusceptance() / shuntCompensatorInfos.getMaximumSectionCount())
+                .setMaximumSectionCount(shuntCompensatorInfos.getMaximumSectionCount())
                 .add();
 
         return shuntAdder;
-    }
-
-    private int determinateSectionCountModification(ShuntCompensatorCreationInfos shuntCompensatorInfos) {
-        if (shuntCompensatorInfos.getSusceptancePerSection() != null) {
-            return modificationInfos.getSusceptancePerSection() == 0 ? 0 : 1;
-        }
-        if (shuntCompensatorInfos.getQAtNominalV() != null) {
-            return modificationInfos.getQAtNominalV() == 0 ? 0 : 1;
-        }
-        return 0;
     }
 
     private void createShuntInBusBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
@@ -105,12 +105,12 @@ public class ShuntCompensatorCreation extends AbstractModification {
         voltageLevel.newShuntCompensator()
             .setId(shuntCompensatorInfos.getEquipmentId())
             .setName(shuntCompensatorInfos.getEquipmentName())
-            .setSectionCount(determinateSectionCountModification(shuntCompensatorInfos))
+            .setSectionCount(shuntCompensatorInfos.getSectionCount())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
             .newLinearModel()
-            .setBPerSection(shuntCompensatorInfos.getSusceptancePerSection())
-            .setMaximumSectionCount(ObjectUtils.defaultIfNull(shuntCompensatorInfos.getMaximumNumberOfSections(), 1))
+            .setBPerSection(shuntCompensatorInfos.getMaxSusceptance() / shuntCompensatorInfos.getMaximumSectionCount())
+            .setMaximumSectionCount(shuntCompensatorInfos.getMaximumSectionCount())
             .add()
             .add();
     }

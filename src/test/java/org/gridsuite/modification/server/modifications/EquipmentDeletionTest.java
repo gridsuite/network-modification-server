@@ -11,6 +11,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.iidm.modification.topology.RemoveSubstation;
+import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -26,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,7 +51,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
-                .equipmentType("LOAD")
+                .stashed(false)
+                .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v1load")
                 .build();
     }
@@ -56,7 +60,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
-                .equipmentType("GENERATOR")
+                .stashed(false)
+                .equipmentType(IdentifiableType.GENERATOR)
                 .equipmentId("idGenerator")
                 .build();
     }
@@ -75,7 +80,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     public void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
-                .equipmentType("LOAD")
+                .stashed(false)
+                .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v5load")
                 .build();
         String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
@@ -115,7 +121,8 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 new HvdcLccDeletionInfos(shuntData, null) :
                 new HvdcLccDeletionInfos(null, shuntData);
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
-                .equipmentType("HVDC_LINE")
+                .stashed(false)
+                .equipmentType(IdentifiableType.HVDC_LINE)
                 .equipmentId(hvdcLineName)
                 .equipmentInfos(hvdcLccDeletionInfos)
                 .build();
@@ -161,8 +168,24 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     @Test
     public void testRemoveUnknownSubstation() {
         Network network = Network.create("empty", "test");
-        RemoveSubstation removeSubstation = new RemoveSubstation("unknownSubstation");
+        RemoveSubstation removeSubstation = new RemoveSubstationBuilder().withSubstationId("unknownSubstation").build();
         PowsyblException e = assertThrows(PowsyblException.class, () -> removeSubstation.apply(network, true, Reporter.NO_OP));
         assertEquals("Substation not found: unknownSubstation", e.getMessage());
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v1load", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("idGenerator", createdValues.get("equipmentId"));
     }
 }

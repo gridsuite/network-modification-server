@@ -69,6 +69,9 @@ public class BatteryCreation extends AbstractModification {
         } else {
             createBatteryInBusBreaker(voltageLevel, modificationInfos, subReporter);
         }
+        if (!modificationInfos.isConnected()) {
+            network.getBattery(modificationInfos.getEquipmentId()).getTerminal().disconnect();
+        }
     }
 
     private void createBatteryInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Network network, Reporter subReporter) {
@@ -89,7 +92,7 @@ public class BatteryCreation extends AbstractModification {
         algo.apply(network, true, subReporter);
 
         var battery = ModificationUtils.getInstance().getBattery(network, batteryCreationInfos.getEquipmentId());
-        addExtensionsToBattery(batteryCreationInfos, battery, voltageLevel, subReporter);
+        addExtensionsToBattery(batteryCreationInfos, battery, subReporter);
     }
 
     private BatteryAdder createBatteryAdderInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos) {
@@ -118,7 +121,7 @@ public class BatteryCreation extends AbstractModification {
                 .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()))
                 .add();
 
-        addExtensionsToBattery(batteryCreationInfos, battery, voltageLevel, subReporter);
+        addExtensionsToBattery(batteryCreationInfos, battery, subReporter);
 
         subReporter.report(Report.builder()
                 .withKey("batteryCreated")
@@ -128,8 +131,7 @@ public class BatteryCreation extends AbstractModification {
                 .build());
     }
 
-    private void addExtensionsToBattery(BatteryCreationInfos batteryCreationInfos, Battery battery,
-                                          VoltageLevel voltageLevel, Reporter subReporter) {
+    private void addExtensionsToBattery(BatteryCreationInfos batteryCreationInfos, Battery battery, Reporter subReporter) {
         if (batteryCreationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(subReporter, batteryCreationInfos.getEquipmentName(), "Name");
         }
@@ -171,6 +173,14 @@ public class BatteryCreation extends AbstractModification {
             if (batteryCreationInfos.getConnectionPosition() != null) {
                 connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(batteryCreationInfos.getConnectionPosition(), "Connection position"));
+            }
+            if (!batteryCreationInfos.isConnected()) {
+                connectivityReports.add(Report.builder()
+                        .withKey("equipmentDisconnected")
+                        .withDefaultMessage("    Equipment with id=${id} disconnected")
+                        .withValue("id", batteryCreationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
             }
             ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
         }

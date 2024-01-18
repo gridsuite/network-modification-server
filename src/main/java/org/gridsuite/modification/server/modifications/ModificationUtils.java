@@ -17,18 +17,19 @@ import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
-
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.service.FilterService;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -255,8 +256,18 @@ public final class ModificationUtils {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR,
                     "Coupling between same bus bar section is not allowed");
         }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && voltageLevelCreationInfos.getIpMin() < 0) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMin must be positive");
+        }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMax()) && voltageLevelCreationInfos.getIpMax() < 0) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax must be positive");
+        }
         if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
+        }
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.nonNull(voltageLevelCreationInfos.getIpMax())
+            && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
+            throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
         }
     }
 
@@ -474,34 +485,33 @@ public final class ModificationUtils {
     }
 
     public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
-        return buildModificationReportWithIndentation(oldValue, newValue, fieldName, 1);
+        return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
     }
 
+    //TODO rename to buildModificationReport()
     public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
-        boolean isOldValueDoubleNaN = oldValue instanceof Double && Double.isNaN((Double) oldValue);
-        String oldValueString = (oldValue == null || isOldValueDoubleNaN) ? NO_VALUE : oldValue.toString();
-        boolean isNewValueDoubleNaN = newValue instanceof Double && Double.isNaN((Double) newValue);
-        String newValueString = (newValue == null || isNewValueDoubleNaN) ? NO_VALUE : newValue.toString();
-        StringBuilder indentation = new StringBuilder();
-        for (int i = 0; i < indentationLevel; i++) {
-            indentation.append("    ");
-        }
+        return buildModificationReport(oldValue, newValue, fieldName, indentationLevel, TypedValue.INFO_SEVERITY);
+    }
+
+    static <T> Report buildModificationReport(T oldValue, T newValue, String fieldName, int indentationLevel, TypedValue severity) {
+        final String oldValueString = (oldValue == null || oldValue instanceof Double oldDouble && Double.isNaN(oldDouble))
+                ? NO_VALUE : oldValue.toString();
+        final String newValueString = (newValue == null || newValue instanceof Double newDouble && Double.isNaN(newDouble))
+                ? NO_VALUE : newValue.toString();
+        final String indentation = "\t".repeat(indentationLevel);
         return Report.builder()
-                .withKey("Modification" + fieldName)
-                .withDefaultMessage(indentation.toString() + "${fieldName} : ${oldValue} -> ${newValue}")
+                .withKey("modification-indent" + indentationLevel)
+                .withDefaultMessage(indentation + "${fieldName} : ${oldValue} → ${newValue}")
                 .withValue("fieldName", fieldName)
                 .withValue("oldValue", oldValueString)
                 .withValue("newValue", newValueString)
-                .withSeverity(TypedValue.INFO_SEVERITY)
+                .withSeverity(severity)
                 .build();
     }
 
-    public Terminal getTerminalFromIdentifiable(Network network,
-            String equipmentId,
-            String type,
-            String voltageLevelId) {
+    public Terminal getTerminalFromIdentifiable(Network network, String equipmentId, String type, String voltageLevelId) {
         if (network != null && equipmentId != null && type != null && voltageLevelId != null) {
-            Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, type, equipmentId);
+            Identifiable<?> identifiable = getEquipmentByIdentifiableType(network, IdentifiableType.valueOf(type), equipmentId);
 
             if (identifiable == null) {
                 throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=" + equipmentId + " not found with type " + type);
@@ -517,12 +527,47 @@ public final class ModificationUtils {
         return null;
     }
 
-    public Identifiable<?> getEquipmentByIdentifiableType(Network network, String type, String equipmentId) {
+    public void disconnectInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
+        // A newly created injection is connected by default, unless we choose not to do
+        if (!modificationInfos.isConnected()) {
+            injection.getTerminal().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("equipmentDisconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+    }
+
+    public void disconnectBranch(BranchCreationInfos modificationInfos, Branch<?> branch, Reporter subReporter) {
+        // A newly created branch is connected by default on both sides, unless we choose not to do
+        if (!modificationInfos.isConnected1()) {
+            branch.getTerminal1().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("terminal1Disconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected on side 1")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        if (!modificationInfos.isConnected2()) {
+            branch.getTerminal2().disconnect();
+            subReporter.report(Report.builder()
+                    .withKey("terminal2Disconnected")
+                    .withDefaultMessage("Equipment with id=${id} disconnected on side 2")
+                    .withValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+    }
+
+    public Identifiable<?> getEquipmentByIdentifiableType(Network network, IdentifiableType type, String equipmentId) {
         if (type == null || equipmentId == null) {
             return null;
         }
 
-        switch (IdentifiableType.valueOf(type)) {
+        switch (type) {
             case HVDC_LINE:
                 return network.getHvdcLine(equipmentId);
             case LINE:
@@ -748,6 +793,41 @@ public final class ModificationUtils {
         reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
     }
 
+    private void modifyExistingActivePowerControl(ActivePowerControl<?> activePowerControl,
+                                                  AttributeModification<Boolean> participateInfo,
+                                                  AttributeModification<Float> droopInfo,
+                                                  List<Report> reports) {
+        double oldDroop = activePowerControl.getDroop();
+        boolean oldParticipate = activePowerControl.isParticipate();
+
+        Optional.ofNullable(participateInfo).ifPresent(info -> {
+            activePowerControl.setParticipate(info.getValue());
+            reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+        });
+
+        Optional.ofNullable(droopInfo).ifPresent(info -> {
+            activePowerControl.setDroop(info.getValue());
+            reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+        });
+    }
+
+    private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
+                                             AttributeModification<Boolean> participateInfo,
+                                             AttributeModification<Float> droopInfo,
+                                             List<Report> reports) {
+        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
+        adder.withParticipate(participate);
+        if (participateInfo != null) {
+            reports.add(buildModificationReport(null, participate, "Participate"));
+        }
+        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
+        adder.withDroop(droop);
+        if (droopInfo != null) {
+            reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+        }
+        adder.add();
+    }
+
     public Reporter modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
                                                        ActivePowerControlAdder<?> activePowerControlAdder,
                                                        AttributeModification<Boolean> participateInfo,
@@ -755,37 +835,11 @@ public final class ModificationUtils {
                                                        Reporter subReporter,
                                                        Reporter subReporterSetpoints) {
         List<Report> reports = new ArrayList<>();
-        double oldDroop = Double.NaN;
-        boolean oldParticipate = false;
-        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
         if (activePowerControl != null) {
-            oldDroop = activePowerControl.getDroop();
-            oldParticipate = activePowerControl.isParticipate();
-        }
-
-        if (participateInfo != null) {
-            activePowerControlAdder
-                    .withParticipate(participateInfo.getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(activePowerControl != null ? activePowerControl.isParticipate() : null,
-                    participateInfo.getValue(),
-                    "Participate"));
+            modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
-            activePowerControlAdder
-                    .withParticipate(oldParticipate);
+            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
-
-        if (droopInfo != null) {
-            activePowerControlAdder
-                    .withDroop(droop);
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop,
-                    droop,
-                    "Droop"));
-        } else {
-            activePowerControlAdder
-                    .withDroop(oldDroop);
-        }
-        activePowerControlAdder
-                .add();
 
         Reporter subReporterSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !reports.isEmpty()) {
@@ -827,6 +881,16 @@ public final class ModificationUtils {
         Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
         if (minReactivePower > maxReactivePower) {
             throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
+        }
+    }
+
+    public void checkActivePowerZeroOrBetweenMinAndMaxActivePower(AttributeModification<Double> activePowerInfos, AttributeModification<Double> minActivePowerInfos, AttributeModification<Double> maxActivePowerInfos, Double previousMinActivePower, Double previousMaxActivePower, Double previousActivePower, NetworkModificationException.Type exceptionType, String errorMessage) {
+        Double minActivePower = minActivePowerInfos != null ? minActivePowerInfos.getValue() : previousMinActivePower;
+        Double maxActivePower = maxActivePowerInfos != null ? maxActivePowerInfos.getValue() : previousMaxActivePower;
+        Double activePower = activePowerInfos != null ? activePowerInfos.getValue() : previousActivePower;
+
+        if (activePower != 0 && (activePower < minActivePower || activePower > maxActivePower)) {
+            throw new NetworkModificationException(exceptionType, errorMessage + "Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]");
         }
     }
 
@@ -960,6 +1024,63 @@ public final class ModificationUtils {
         addToReports(reports, point.getP(), "P" + fieldSuffix);
         addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
         addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
+    }
+
+    public boolean isValidFilter(Reporter subReporter,
+                                 NetworkModificationException.Type errorType,
+                                 Map<UUID, FilterEquipments> exportFilters) {
+        boolean noValidEquipmentId = exportFilters.values().stream()
+                .allMatch(filterEquipments -> CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()));
+
+        if (noValidEquipmentId) {
+            String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            return false;
+        }
+
+        return true;
+    }
+
+    public static List<IdentifiableAttributes> getIdentifiableAttributes(Map<UUID, FilterEquipments> exportFilters, Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds, List<FilterInfos> filterInfos, Reporter subReporter) {
+        filterInfos.stream()
+                .filter(f -> !exportFilters.containsKey(f.getId()))
+                .forEach(f -> createReport(subReporter,
+                        "filterNotFound",
+                        String.format("Cannot find the following filter: %s", f.getName()),
+                        TypedValue.WARN_SEVERITY));
+
+        return filterInfos
+                .stream()
+                .filter(f -> !filtersWithWrongEquipmentIds.containsKey(f.getId()) && exportFilters.containsKey(f.getId()))
+                .flatMap(f -> exportFilters.get(f.getId())
+                        .getIdentifiableAttributes()
+                        .stream())
+                .toList();
+    }
+
+    @Nullable
+    public static Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(FilterService filterService, Network network, Reporter subReporter, Map<UUID, String> filters, NetworkModificationException.Type errorType) {
+        Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
+
+        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, errorType, exportFilters);
+        return isValidFilter ? exportFilters : null;
+    }
+
+    public static Map<UUID, FilterEquipments> getUuidFilterWrongEquipmentsIdsMap(Reporter subReporter, Map<UUID, FilterEquipments> exportFilters, Map<UUID, String> filters) {
+        // collect all filters with wrong equipments ids
+        Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
+                .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // create report for each wrong filter
+        filterWithWrongEquipmentsIds.values().forEach(f -> {
+            var equipmentIds = String.join(", ", f.getNotFoundEquipments());
+            createReport(subReporter,
+                    "filterEquipmentsNotFound_" + f.getFilterName(),
+                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
+                    TypedValue.WARN_SEVERITY);
+        });
+        return filterWithWrongEquipmentsIds;
     }
 }
 

@@ -7,9 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,20 +43,22 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     @Override
     protected ModificationInfos buildModification() {
         return SubstationModificationInfos.builder()
+            .stashed(false)
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.BQ, OperationType.SET))
-            .properties(List.of(SubstationFreePropertyInfos.builder().name("p1").value("v1").build(), // new
-                    SubstationFreePropertyInfos.builder().name("p2").value("v2").build(), // new
-                    SubstationFreePropertyInfos.builder().name("region").value("south").build(), // update
-                    SubstationFreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
+            .properties(List.of(FreePropertyInfos.builder().name("p1").value("v1").build(), // new
+                FreePropertyInfos.builder().name("p2").value("v2").build(), // new
+                FreePropertyInfos.builder().name("region").value("south").build(), // update
+                FreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
             .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return SubstationModificationInfos.builder()
-            .equipmentId("s3")
+            .equipmentId("s3Edited")
+            .stashed(false)
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
             .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
             .properties(null)
@@ -96,5 +101,21 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", infos.getErrorType().name(), reportService);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SUBSTATION_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("s3", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SUBSTATION_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("s3Edited", updatedValues.get("equipmentId"));
     }
 }

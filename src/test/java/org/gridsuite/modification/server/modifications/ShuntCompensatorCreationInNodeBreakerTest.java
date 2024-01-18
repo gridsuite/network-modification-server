@@ -7,8 +7,10 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
@@ -20,14 +22,15 @@ import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CONNECTION_POSITION_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,11 +45,13 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Override
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
+                .stashed(false)
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneId")
                 .equipmentName("hop")
-                .maximumNumberOfSections(1)
-                .susceptancePerSection(0.)
+                .maximumSectionCount(10)
+                .sectionCount(6)
+                .maxSusceptance(0.)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .connectionName("cn")
@@ -58,11 +63,13 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
+                .stashed(false)
                 .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
-                .maximumNumberOfSections(1)
-                .susceptancePerSection(0.)
+                .maximumSectionCount(20)
+                .sectionCount(3)
+                .maxSusceptance(0.)
                 .voltageLevelId("v4")
                 .busOrBusbarSectionId("1.A")
                 .connectionName("cnEdited")
@@ -94,6 +101,31 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Test
+    public void testCreateWithMaximumSectionCountError() throws Exception {
+        ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
+        modificationToCreate.setMaximumSectionCount(0);
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1").getMessage(),
+                modificationToCreate.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testCreateWithSectionError() throws Exception {
+        ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
+        modificationToCreate.setMaximumSectionCount(2);
+        modificationToCreate.setSectionCount(3);
+
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 0 and Maximum section count (2), actual : 3").getMessage(),
+                modificationToCreate.getErrorType().name(), reportService);
+    }
+
+    @Test
     public void testCreateWithExistingConnectionPosition() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setConnectionPosition(2);
@@ -107,8 +139,8 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     @Test
     public void testCreateWithQAtNominalV() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
-        dto.setSusceptancePerSection(null);
-        dto.setQAtNominalV(80.0);
+        dto.setMaxSusceptance(null);
+        dto.setMaxQAtNominalV(80.0);
         //CAPACITOR test
         dto.setShuntCompensatorType(ShuntCompensatorType.CAPACITOR);
         String modificationToCreateJson = mapper.writeValueAsString(dto);
@@ -125,5 +157,21 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
             .andExpect(status().isOk()).andReturn();
         createdModification = (ShuntCompensatorCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
         assertThat(createdModification).recursivelyEquals(dto);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneId", updatedValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
     }
 }

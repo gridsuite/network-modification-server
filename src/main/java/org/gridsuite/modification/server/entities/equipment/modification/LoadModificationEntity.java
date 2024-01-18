@@ -61,10 +61,10 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     private void assignAttributes(LoadModificationInfos loadModificationInfos) {
         this.loadTypeValue = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getValue() : null;
         this.loadTypeOp = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getOp() : null;
-        this.activePowerValue = loadModificationInfos.getActivePower() != null ? loadModificationInfos.getActivePower().getValue() : null;
-        this.activePowerOp = loadModificationInfos.getActivePower() != null ? loadModificationInfos.getActivePower().getOp() : null;
-        this.reactivePowerValue = loadModificationInfos.getReactivePower() != null ? loadModificationInfos.getReactivePower().getValue() : null;
-        this.reactivePowerOp = loadModificationInfos.getReactivePower() != null ? loadModificationInfos.getReactivePower().getOp() : null;
+        this.activePowerValue = loadModificationInfos.getConstantActivePower() != null ? loadModificationInfos.getConstantActivePower().getValue() : null;
+        this.activePowerOp = loadModificationInfos.getConstantActivePower() != null ? loadModificationInfos.getConstantActivePower().getOp() : null;
+        this.reactivePowerValue = loadModificationInfos.getConstantReactivePower() != null ? loadModificationInfos.getConstantReactivePower().getValue() : null;
+        this.reactivePowerOp = loadModificationInfos.getConstantReactivePower() != null ? loadModificationInfos.getConstantReactivePower().getOp() : null;
     }
 
     @Override
@@ -77,12 +77,13 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
-                .activePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
-                .reactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()));
+                .constantActivePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
+                .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()));
     }
 }

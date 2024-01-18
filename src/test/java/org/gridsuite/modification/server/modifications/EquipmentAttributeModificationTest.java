@@ -6,10 +6,13 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -19,6 +22,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,6 +31,7 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmpt
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,6 +45,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         UUID modificationUuid = UUID.randomUUID();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .uuid(modificationUuid)
             .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .equipmentId("equipmentId")
@@ -47,9 +53,10 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, date=2021-02-19T00:00Z, stashed=null), equipmentId=equipmentId), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00Z, stashed=false, messageType=null, messageValues=null), equipmentId=equipmentId, properties=null), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -128,6 +135,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     public void testWithErrors() throws Exception {
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("close") // bad
             .equipmentAttributeValue(true)
@@ -158,6 +166,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected EquipmentAttributeModificationInfos buildModification() {
         return EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -168,6 +177,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected EquipmentAttributeModificationInfos buildModificationUpdate() {
         return EquipmentAttributeModificationInfos.builder()
+            .stashed(false)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)
@@ -183,5 +193,25 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         assertFalse(getNetwork().getSwitch("v1b1").isOpen());
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("open", createdValues.get("equipmentAttributeName"));
+        assertEquals("v1b1", createdValues.get("equipmentId"));
+        assertEquals("true", createdValues.get("equipmentAttributeValue"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("open", createdValues.get("equipmentAttributeName"));
+        assertEquals("v1b1Edited", createdValues.get("equipmentId"));
+        assertEquals("false", createdValues.get("equipmentAttributeValue"));
     }
 }

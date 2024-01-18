@@ -44,14 +44,13 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>26</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>28</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <assertj.version>3.24.2</assertj.version>
-        <powsybl-network-store.version>1.4.0</powsybl-network-store.version>
     </properties>
 
     <build>
@@ -144,14 +143,11 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-client</artifactId>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <version>${powsybl-network-store.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-network-store-iidm-impl</artifactId>
-            <version>${powsybl-network-store.version}</version>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <version>1.7.0</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -175,7 +171,7 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
         <dependency>

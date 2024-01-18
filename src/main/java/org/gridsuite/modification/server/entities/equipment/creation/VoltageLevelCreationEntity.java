@@ -81,7 +81,8 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     public VoltageLevelCreationInfos toVoltageLevelCreationInfos() {
-        return toVoltageLevelCreationInfosBuilder().build();
+        return toVoltageLevelCreationInfosBuilder()
+                .build();
     }
 
     private VoltageLevelCreationInfos.VoltageLevelCreationInfosBuilder<?, ?> toVoltageLevelCreationInfosBuilder() {
@@ -92,6 +93,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .builder()
                 .uuid(getId())
                 .date(getDate())
+                .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationId(getSubstationId())

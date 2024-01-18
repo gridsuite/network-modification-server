@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.google.common.collect.Iterables;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -39,6 +40,8 @@ public class NetworkStoreListener implements NetworkListener {
     private final List<String> deletedEquipmentsIds = new ArrayList<>();
 
     private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
+
+    private final List<EquipmentInfos> modifiedEquipments = new ArrayList<>();
 
     private final Set<SimpleElementImpact> networkSimpleElementImpacts = new LinkedHashSet<>();
 
@@ -89,11 +92,6 @@ public class NetworkStoreListener implements NetworkListener {
         return network;
     }
 
-    @Override
-    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable);
-    }
-
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
         networkSimpleElementImpacts.add(
                 SimpleElementImpact.builder()
@@ -121,8 +119,65 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
+    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
+        addSimpleModificationImpact(identifiable);
+        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+    }
+
+    @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
+        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+    }
+
+    private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
+        modifiedEquipments.add(toEquipmentInfos(identifiable, networkUuid, variantId));
+
+        // because all each equipment carry its linked voltage levels/substations name within its document
+        // if attribute is "name" and identifiable type is VOLTAGE_LEVEL or SUBSTATION, we need to update all equipments linked to it
+        if (attribute.equals("name") && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
+            updateLinkedEquipments(identifiable);
+        }
+    }
+
+    private void updateLinkedEquipments(Identifiable<?> identifiable) {
+        if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
+            VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
+            // update all equipments linked to voltageLevel
+            updateEquipmentsLinkedToVoltageLevel(updatedVoltageLevel);
+            // update substation linked to voltageLevel
+            Optional<Substation> linkedSubstation = updatedVoltageLevel.getSubstation();
+            if (linkedSubstation.isPresent()) {
+                modifiedEquipments.add(toEquipmentInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId()));
+            }
+        } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
+            Substation updatedSubstation = network.getSubstation(identifiable.getId());
+            updateEquipmentsLinkedToSubstation(updatedSubstation);
+        }
+    }
+
+    private void updateEquipmentsLinkedToSubstation(Substation substation) {
+        Iterable<VoltageLevel> linkedVoltageLevels = substation.getVoltageLevels();
+        // update all voltageLevels linked to substation
+        linkedVoltageLevels.forEach(vl -> modifiedEquipments.add(toEquipmentInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId())));
+        // update all equipments linked to each of the voltageLevels
+        linkedVoltageLevels.forEach(vl ->
+            Iterables.concat(
+                vl.getConnectables(),
+                vl.getSwitches()
+            ).forEach(c ->
+                modifiedEquipments.add(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()))
+            )
+        );
+    }
+
+    private void updateEquipmentsLinkedToVoltageLevel(VoltageLevel voltageLevel) {
+        Iterables.concat(
+            voltageLevel.getConnectables(),
+            voltageLevel.getSwitches()
+        ).forEach(c ->
+            modifiedEquipments.add(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()))
+        );
     }
 
     @Override
@@ -176,6 +231,18 @@ public class NetworkStoreListener implements NetworkListener {
         return collectNetworkImpacts(networkSimpleElementImpacts);
     }
 
+    private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
+        return EquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(variantId)
+            .id(identifiable.getId())
+            .name(identifiable.getNameOrId())
+            .type(identifiable.getType().name())
+            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
+            .substations(EquipmentInfos.getSubstationsInfos(identifiable))
+            .build();
+    }
+
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
         Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(deletedEquipmentsIds, networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
@@ -197,6 +264,7 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
         equipmentInfosService.addAllEquipmentInfos(createdEquipments);
+        equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
     }
 
     private Set<AbstractBaseImpact> collectNetworkImpacts(Set<SimpleElementImpact> impacts) {

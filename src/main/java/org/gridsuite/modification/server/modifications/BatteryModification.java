@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -41,10 +40,10 @@ public class BatteryModification extends AbstractModification {
 
     @Override
     public void check(Network network) throws NetworkModificationException {
-        if (network.getBattery(modificationInfos.getEquipmentId()) == null) {
-            throw new NetworkModificationException(BATTERY_NOT_FOUND, modificationInfos.getEquipmentId());
+        if (modificationInfos == null) {
+            throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
         }
-        Battery battery = network.getBattery(modificationInfos.getEquipmentId());
+        Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
         if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
             MinMaxReactiveLimits minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimits.class);
@@ -56,13 +55,24 @@ public class BatteryModification extends AbstractModification {
         if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
             ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(batteryPoints, modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
         }
+        checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(modificationInfos, battery, MODIFY_BATTERY_ERROR, errorMessage);
+    }
+
+    private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(BatteryModificationInfos modificationInfos, Battery battery, NetworkModificationException.Type exceptionType, String errorMessage) {
+        ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                modificationInfos.getActivePowerSetpoint(),
+                modificationInfos.getMinActivePower(),
+                modificationInfos.getMaxActivePower(),
+                battery.getMinP(),
+                battery.getMaxP(),
+                battery.getTargetP(),
+                exceptionType,
+                errorMessage
+        );
     }
 
     @Override
     public void apply(Network network, Reporter subReporter) {
-        if (modificationInfos == null) {
-            throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
-        }
         Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         // modify the battery in the network
         modifyBattery(battery, modificationInfos, subReporter);

@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.VoltageLevel;
@@ -16,12 +17,14 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
 
+import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
@@ -43,47 +46,107 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testEquipmentWithWrongId() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("wrong id")
                 .build();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
-                        String.format("Shunt compensator wrong id does not exist in network")).getMessage(),
+                        "Shunt compensator wrong id does not exist in network").getMessage(),
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
     @Test
-    public void testWrongVoltageLevelId() {
+    public void testWrongMaximumSectionCount() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v5shunt")
-                .voltageLevelId("wrongVLId")
+                .sectionCount(new AttributeModification<>(3, OperationType.SET))
+                .maximumSectionCount(new AttributeModification<>(-1, OperationType.SET))
                 .build();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND,
-                        String.format("Voltage level wrongVLId does not exist in network")).getMessage(),
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Maximum section count should be greater or equal to 1")).getMessage(),
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
     @Test
-    public void testShuntCompensatorWithMultipleSections() {
-        var shuntCompensator = getNetwork().getShuntCompensator("v5shunt");
-
-        ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+    public void testWrongSectionCount() {
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v5shunt")
-                .voltageLevelId("v5")
-                .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
+                .sectionCount(new AttributeModification<>(3, OperationType.SET))
+                .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
                 .build();
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationInfos)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
+                shuntCompensator.getErrorType().name(), reportService);
+    }
 
-        assertLogMessage("It is currently not possible to modify the multi sections shunt compensator with id=v5shunt",
-                "shuntCompensatorModificationMultiSections", reportService);
+    @SneakyThrows
+    @Test
+    public void testWrongSectionCountChangeSectionCount() {
+        VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+
+        var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
+        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v7shunt")
+                .sectionCount(new AttributeModification<>(3, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
+                shuntCompensatorModifications.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testWrongSectionCountChangeMaximumSectionCount() {
+        VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+
+        var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
+        var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v7shunt")
+                .sectionCount(new AttributeModification<>(-1, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        String.format("Section count should be between 0 and Maximum section count (1), actual : -1")).getMessage(),
+                shuntCompensatorModifications.getErrorType().name(), reportService);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testNegativeQmaxAtNominalV() {
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("v5shunt")
+                .maxQAtNominalV(new AttributeModification<>(-15.0, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
+                        "Qmax at nominal voltage should be greater or equal to 0").getMessage(),
+                shuntCompensator.getErrorType().name(), reportService);
     }
 
     @SneakyThrows
@@ -98,8 +161,8 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
-                .voltageLevelId("v5")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
                 .build();
 
@@ -113,7 +176,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Test
     public void testCreateModificationWithSusceptancePerSection() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 0, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
@@ -121,16 +184,35 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
 
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
-                .voltageLevelId("v5")
-                .susceptancePerSection(AttributeModification.toAttributeModification(3.0, OperationType.SET))
+                .maxSusceptance(AttributeModification.toAttributeModification(3.0, OperationType.SET))
                 .build();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         assertEquals(3.0, model.getBPerSection(), 0);
-        assertEquals(1, shuntCompensator.getSectionCount());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testCreateModificationWithSections() {
+        var shuntCompensatorToModify = getNetwork().getShuntCompensator("v5shunt");
+        var model = shuntCompensatorToModify.getModel(ShuntCompensatorLinearModel.class);
+        assertNotNull(model);
+
+        var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .equipmentId("v5shunt")
+                .maximumSectionCount(AttributeModification.toAttributeModification(3, OperationType.SET))
+                .sectionCount(AttributeModification.toAttributeModification(2, OperationType.SET))
+                .build();
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensator)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertEquals(3, shuntCompensatorToModify.getMaximumSectionCount());
+        assertEquals(2, shuntCompensatorToModify.getSectionCount());
     }
 
     @SneakyThrows
@@ -142,16 +224,16 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         createShuntCompensator(v6, "v8shunt", "v8shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v8shunt", 50, ConnectablePosition.Direction.BOTTOM);
 
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
                         .equipmentId("v7shunt")
-                        .voltageLevelId("v5")
-                        .qAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
+                        .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
                         .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
                         .build();
 
         ShuntCompensatorModificationInfos modificationInfos2 = ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v8shunt")
-                .voltageLevelId("v6")
-                .qAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
+                .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
                 .build();
 
@@ -178,10 +260,12 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         createShuntCompensator(v2, "v7shunt", "v7shunt", 15, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         return ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
-                .qAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
-                .voltageLevelId("v2")
+                .maxQAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
+                .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
+                .sectionCount(new AttributeModification<>(1, OperationType.SET))
                 .build();
 
     }
@@ -189,9 +273,9 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorModificationInfos.builder()
+                .stashed(false)
                 .equipmentId("v2shunt")
-                .voltageLevelId("v2")
-                .susceptancePerSection(new AttributeModification<>(0.5, OperationType.SET))
+                .maxSusceptance(new AttributeModification<>(0.5, OperationType.SET))
                 .build();
     }
 
@@ -209,5 +293,21 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);
         assertEquals(1.0, model.getBPerSection(), 0);
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v7shunt", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    @SneakyThrows
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("v2shunt", updatedValues.get("equipmentId"));
     }
 }

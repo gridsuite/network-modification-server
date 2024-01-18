@@ -1,0 +1,49 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="yenguised (generated)" id="1699447534016-31">
+        <createTable tableName="by_formula_modification">
+            <column name="identifiable_type" type="SMALLINT"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="by_formula_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-32">
+        <createTable tableName="formula">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="formulaPK"/>
+            </column>
+            <column name="edited_field" type="VARCHAR(255)"/>
+            <column name="equipment_field1" type="VARCHAR(255)"/>
+            <column name="equipment_field2" type="VARCHAR(255)"/>
+            <column name="operator" type="SMALLINT"/>
+            <column name="value1" type="FLOAT(53)"/>
+            <column name="value2" type="FLOAT(53)"/>
+            <column name="by_formula_modification_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-33">
+        <addColumn tableName="variation_filter">
+            <column name="formula_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-48">
+        <createIndex indexName="by_formula_modification_id_idx" tableName="formula">
+            <column name="by_formula_modification_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-49">
+        <createIndex indexName="formula_id_idx" tableName="variation_filter">
+            <column name="formula_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-50">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="by_formula_modification" constraintName="FKi5ixueu8vr5d2fv6lgpvmuasp" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-52">
+        <addForeignKeyConstraint baseColumnNames="by_formula_modification_id" baseTableName="formula" constraintName="by_formula_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="by_formula_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="yenguised (generated)" id="1699447534016-55">
+        <addForeignKeyConstraint baseColumnNames="formula_id" baseTableName="variation_filter" constraintName="formula_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="formula" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
