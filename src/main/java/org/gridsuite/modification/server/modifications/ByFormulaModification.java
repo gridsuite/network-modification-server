@@ -226,7 +226,7 @@ public class ByFormulaModification extends AbstractModification {
                                 .withSeverity(TypedValue.TRACE_SEVERITY)
                                 .build());
                     }
-                    yield  isEditable;
+                    yield isEditable;
                 }
                 case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> {
                     boolean isEditable = twoWindingsTransformer.getPhaseTapChanger() != null;
@@ -239,7 +239,7 @@ public class ByFormulaModification extends AbstractModification {
                                 .withSeverity(TypedValue.TRACE_SEVERITY)
                                 .build());
                     }
-                    yield  isEditable;
+                    yield isEditable;
                 }
                 default -> true;
             };
