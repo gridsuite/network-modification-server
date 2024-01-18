@@ -34,7 +34,7 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 @Getter
 @Entity
 @Table(name = "shuntCompensatorModification")
-public class ShuntCompensatorModificationEntity extends BasicEquipmentModificationEntity {
+public class ShuntCompensatorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
