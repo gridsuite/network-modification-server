@@ -105,8 +105,37 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_WITH_ONE_WRONG_ID)), false);
     }
 
-    protected void checkCreateWithError(List<FormulaInfos> formulaInfos) throws Exception {
+    protected void checkCreateWithError(List<FormulaInfos> formulaInfos, List<FilterEquipments> filterEquipments) throws Exception {
+        String filterIds = filterEquipments.stream()
+                .map(FilterEquipments::getFilterId)
+                .map(UUID::toString)
+                .collect(Collectors.joining(","));
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterIds))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filterEquipments))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .formulaInfosList(formulaInfos)
+                .identifiableType(getIdentifiableType())
+                .build();
+
+        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        wireMockUtils.verifyGetRequest(stubId,
+                PATH,
+                handleQueryParams(getNetworkUuid(), filterEquipments.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())),
+                false);
+    }
+
+    @Test
+    public void testModificationWithAllWrongEquipmentIds() throws Exception {
         FilterEquipments filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
+
+        List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
+                .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
+                .toList();
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ALL_WRONG_IDS))
                 .willReturn(WireMock.ok()

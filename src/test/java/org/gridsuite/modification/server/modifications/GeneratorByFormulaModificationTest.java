@@ -66,19 +66,6 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         assertEquals(75, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
-    @Test
-    public void testCreateWithError() throws Exception {
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithAllWrongId))
-                .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
-                .build();
-
-        checkCreateWithError(List.of(formulaInfos));
-    }
-
     protected void createEquipments() {
         getNetwork().getGenerator(GENERATOR_ID_1)
                 .setTargetP(100)

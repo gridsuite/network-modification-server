@@ -40,11 +40,6 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
         IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
         FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_ID_4))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
@@ -52,16 +47,11 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .operator(Operator.ADDITION)
                 .build();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
-                .identifiableType(getIdentifiableType())
-                .formulaInfosList(List.of(formulaInfos))
-                .build(),
-                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        checkCreateWithError(List.of(formulaInfos), List.of(filter));
 
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
-
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_4)), false);
     }
 
     @Test
