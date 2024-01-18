@@ -26,7 +26,9 @@ import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -450,5 +452,51 @@ public class GeneratorModificationTest extends AbstractNetworkModificationTest {
         assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idGeneratorEdited", createdValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setConnected(new AttributeModification<>(false, OperationType.SET));
+
+        Generator existingGenerator = getNetwork().getGenerator("idGenerator");
+        if (!existingGenerator.getTerminal().isConnected()) {
+            existingGenerator.getTerminal().connect();
+        }
+        assertTrue(existingGenerator.getTerminal().isConnected());
+
+        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // now disconnected
+        assertFalse(existingGenerator.getTerminal().isConnected());
+
+        // try to modify again => no change on connection state
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertFalse(existingGenerator.getTerminal().isConnected());
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
+        generatorModificationInfos.setConnected(new AttributeModification<>(true, OperationType.SET));
+
+        Generator existingGenerator = getNetwork().getGenerator("idGenerator");
+        if (existingGenerator.getTerminal().isConnected()) {
+            existingGenerator.getTerminal().disconnect();
+        }
+        assertFalse(existingGenerator.getTerminal().isConnected());
+
+        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // now connected
+        assertTrue(existingGenerator.getTerminal().isConnected());
+
+        // try to modify again => no change on connection state
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertTrue(existingGenerator.getTerminal().isConnected());
     }
 }

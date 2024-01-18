@@ -275,6 +275,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .connected(toAttributeModification(getConnected()))
                 .energySource(toAttributeModification(getEnergySource()))
                 .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
                 .maxActivePower(toAttributeModification(getMaxActivePower()))
