@@ -56,6 +56,6 @@ public class LoadModification extends AbstractModification {
         ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, loadModificationInfos.getConstantActivePower(), subReporter, "Constant active power");
         ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, loadModificationInfos.getConstantReactivePower(), subReporter, "Constant reactive power");
 
-        // TODO connectivity modification
+        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, load);
     }
 }

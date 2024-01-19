@@ -17,6 +17,8 @@ import org.gridsuite.modification.server.dto.OperationType;
 
 import jakarta.persistence.*;
 
+import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
+
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
  */
@@ -82,6 +84,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .connected(toAttributeModification(getConnected()))
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
                 .constantActivePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
                 .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()));

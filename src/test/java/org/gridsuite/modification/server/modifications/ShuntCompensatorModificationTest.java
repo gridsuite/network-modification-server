@@ -8,9 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -27,8 +25,9 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -309,5 +308,57 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v2shunt", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        ShuntCompensatorModificationInfos shuntModificationInfos =
+                ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("v2shunt")
+                        .connected(new AttributeModification<>(false, OperationType.SET))
+                        .build();
+        ShuntCompensator existingShunt = getNetwork().getShuntCompensator("v2shunt");
+        if (!existingShunt.getTerminal().isConnected()) {
+            existingShunt.getTerminal().connect();
+        }
+        assertTrue(existingShunt.getTerminal().isConnected());
+
+        String generatorModificationInfosJson = mapper.writeValueAsString(shuntModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // now disconnected
+        assertFalse(existingShunt.getTerminal().isConnected());
+
+        // try to modify again => no change on connection state
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertFalse(existingShunt.getTerminal().isConnected());
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        ShuntCompensatorModificationInfos shuntModificationInfos =
+                ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("v2shunt")
+                        .connected(new AttributeModification<>(true, OperationType.SET))
+                        .build();
+        ShuntCompensator existingShunt = getNetwork().getShuntCompensator("v2shunt");
+        if (existingShunt.getTerminal().isConnected()) {
+            existingShunt.getTerminal().disconnect();
+        }
+        assertFalse(existingShunt.getTerminal().isConnected());
+
+        String generatorModificationInfosJson = mapper.writeValueAsString(shuntModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // now connected
+        assertTrue(existingShunt.getTerminal().isConnected());
+
+        // try to modify again => no change on connection state
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertTrue(existingShunt.getTerminal().isConnected());
     }
 }

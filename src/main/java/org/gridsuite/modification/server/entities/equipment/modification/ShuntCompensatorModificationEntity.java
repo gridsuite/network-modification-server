@@ -10,11 +10,13 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
 
 import jakarta.persistence.AttributeOverride;
@@ -103,6 +105,9 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
+                .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .connected(IAttributeModificationEmbeddable.toAttributeModification(getConnected()))
                 .shuntCompensatorType(toAttributeModification(getShuntCompensatorType()))
                 .maxQAtNominalV(toAttributeModification(getMaxQAtNominalV()))
                 .maxSusceptance(toAttributeModification(getMaxSusceptance()))
