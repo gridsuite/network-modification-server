@@ -85,6 +85,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(formulaInfosWithNoFilters).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
+        // Test with editedField = null
         FormulaInfos formulaInfosWithNoEditedField = FormulaInfos.builder()
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(50.).build())

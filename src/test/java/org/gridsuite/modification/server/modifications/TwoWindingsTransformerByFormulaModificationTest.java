@@ -37,6 +37,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
     @Test
     public void testModifyTwtWithError() throws Exception {
+        // Test modifying ratio tab changer field when ratio tab changer is null
         IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
         FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
@@ -52,6 +53,23 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
+
+        // Test modifying phase tab changer field when phase tab changer is null
+        IdentifiableAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
+        IdentifiableAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
+        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(identifiableAttributes3, identifiableAttributes4), List.of());
+        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+                .filters(List.of(filter1))
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
+                .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
+                .operator(Operator.ADDITION)
+                .build();
+
+        checkCreateWithError(List.of(formulaInfos2), List.of(filter2));
+
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
     }
 
     @Test
