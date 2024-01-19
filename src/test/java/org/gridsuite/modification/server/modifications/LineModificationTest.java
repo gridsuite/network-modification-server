@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
@@ -356,5 +357,52 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line1", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        changeBranchConnectionState(getNetwork().getLine("line1"), false);
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        changeBranchConnectionState(getNetwork().getLine("line1"), true);
+    }
+
+    private void changeBranchConnectionState(Branch<?> existingEquipment, boolean expectedState) throws Exception {
+        BranchModificationInfos modificationInfos = (BranchModificationInfos) buildModification();
+        modificationInfos.setConnected1(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setConnected2(new AttributeModification<>(expectedState, OperationType.SET));
+
+        if (expectedState) {
+            if (existingEquipment.getTerminal1().isConnected()) {
+                existingEquipment.getTerminal1().disconnect();
+            }
+            if (existingEquipment.getTerminal2().isConnected()) {
+                existingEquipment.getTerminal2().disconnect();
+            }
+        } else {
+            if (!existingEquipment.getTerminal1().isConnected()) {
+                existingEquipment.getTerminal1().connect();
+            }
+            if (!existingEquipment.getTerminal2().isConnected()) {
+                existingEquipment.getTerminal2().connect();
+            }
+        }
+        assertEquals(!expectedState, existingEquipment.getTerminal1().isConnected());
+        assertEquals(!expectedState, existingEquipment.getTerminal2().isConnected());
+
+        String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // connection state has changed
+        assertEquals(expectedState, existingEquipment.getTerminal1().isConnected());
+        assertEquals(expectedState, existingEquipment.getTerminal2().isConnected());
+
+        // try to modify again => no change on connection state
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertEquals(expectedState, existingEquipment.getTerminal1().isConnected());
+        assertEquals(expectedState, existingEquipment.getTerminal2().isConnected());
     }
 }

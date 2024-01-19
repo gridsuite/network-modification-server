@@ -350,14 +350,14 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         }
         assertFalse(existingShunt.getTerminal().isConnected());
 
-        String generatorModificationInfosJson = mapper.writeValueAsString(shuntModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        String modificationInfosJson = mapper.writeValueAsString(shuntModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // now connected
         assertTrue(existingShunt.getTerminal().isConnected());
 
         // try to modify again => no change on connection state
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertTrue(existingShunt.getTerminal().isConnected());
     }
