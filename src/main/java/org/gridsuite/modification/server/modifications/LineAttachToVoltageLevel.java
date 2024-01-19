@@ -66,10 +66,10 @@ public class LineAttachToVoltageLevel extends AbstractModification {
                 .setName(attachmentLineInfos.getEquipmentName())
                 .setR(attachmentLineInfos.getR())
                 .setX(attachmentLineInfos.getX())
-                .setG1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntConductance1()))
-                .setB1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntSusceptance1()))
-                .setG2(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntConductance2()))
-                .setB2(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getShuntSusceptance2()));
+                .setG1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getG1()))
+                .setB1(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getB1()))
+                .setG2(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getG2()))
+                .setB2(ModificationUtils.getInstance().zeroIfNull(attachmentLineInfos.getB2()));
 
         CreateLineOnLine algo = new CreateLineOnLineBuilder()
                 .withPositionPercent(modificationInfos.getPercent())

@@ -234,10 +234,10 @@ public class BuildTest {
                         .equipmentName("newLine")
                         .r(1.0)
                         .x(2.0)
-                        .shuntConductance1(3.0)
-                        .shuntSusceptance1(4.0)
-                        .shuntConductance2(5.0)
-                        .shuntSusceptance2(6.0)
+                        .g1(3.0)
+                        .b1(4.0)
+                        .g2(5.0)
+                        .b2(6.0)
                         .voltageLevelId1("v1")
                         .busOrBusbarSectionId1("1.1")
                         .voltageLevelId2("v2")
@@ -387,10 +387,10 @@ public class BuildTest {
                 .equipmentName("newLine")
                 .r(1.0)
                 .x(2.0)
-                .shuntConductance1(3.0)
-                .shuntSusceptance1(4.0)
-                .shuntConductance2(5.0)
-                .shuntSusceptance2(6.0)
+                .g1(3.0)
+                .b1(4.0)
+                .g2(5.0)
+                .b2(6.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v2")
@@ -407,10 +407,10 @@ public class BuildTest {
                 .equipmentName("newLine2")
                 .r(1.0)
                 .x(2.0)
-                .shuntConductance1(3.0)
-                .shuntSusceptance1(4.0)
-                .shuntConductance2(5.0)
-                .shuntSusceptance2(6.0)
+                .g1(3.0)
+                .b1(4.0)
+                .g2(5.0)
+                .b2(6.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v1")
@@ -545,7 +545,7 @@ public class BuildTest {
                 .connectionPosition(0)
                 .connected(true)
                 .build().toEntity());
-        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build().toEntity());
+        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));

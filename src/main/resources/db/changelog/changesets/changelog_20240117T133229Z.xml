@@ -144,4 +144,76 @@
                       oldColumnName="SERIES_REACTANCE_OP"
                       newColumnName="x_op" />
     </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-53">
+        <renameColumn tableName="line_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_SUSCEPTANCE1"
+                      newColumnName="b1" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-54">
+        <renameColumn tableName="line_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_SUSCEPTANCE2"
+                      newColumnName="b2" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-55">
+        <renameColumn tableName="line_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_CONDUCTANCE1"
+                      newColumnName="g1" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-56">
+        <renameColumn tableName="line_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_CONDUCTANCE2"
+                      newColumnName="g2" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-57">
+        <renameColumn tableName="line_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_SUSCEPTANCE1"
+                      newColumnName="b1" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-58">
+        <renameColumn tableName="line_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_SUSCEPTANCE2"
+                      newColumnName="b2" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-59">
+        <renameColumn tableName="line_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_CONDUCTANCE1"
+                      newColumnName="g1" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-60">
+        <renameColumn tableName="line_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="SHUNT_CONDUCTANCE2"
+                      newColumnName="g2" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-61">
+        <renameColumn tableName="line_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SHUNT_SUSCEPTANCE1OP"
+                      newColumnName="b1op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-62">
+        <renameColumn tableName="line_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SHUNT_SUSCEPTANCE2OP"
+                      newColumnName="b2op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-63">
+        <renameColumn tableName="line_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SHUNT_CONDUCTANCE1OP"
+                      newColumnName="g1op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1705498363603-64">
+        <renameColumn tableName="line_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="SHUNT_CONDUCTANCE2OP"
+                      newColumnName="g2op" />
+    </changeSet>
 </databaseChangeLog>

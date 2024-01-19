@@ -85,10 +85,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .busOrBusbarSectionId2("bus2")
                 .build();
 
-        lineCreationInfosNoShunt.setShuntConductance1(50.0);
-        lineCreationInfosNoShunt.setShuntConductance2(null);
-        lineCreationInfosNoShunt.setShuntSusceptance1(null);
-        lineCreationInfosNoShunt.setShuntSusceptance2(60.0);
+        lineCreationInfosNoShunt.setG1(50.0);
+        lineCreationInfosNoShunt.setG2(null);
+        lineCreationInfosNoShunt.setB1(null);
+        lineCreationInfosNoShunt.setB2(60.0);
 
         String lineCreationInfosNoShuntJson = mapper.writeValueAsString(lineCreationInfosNoShunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
@@ -207,10 +207,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .equipmentName("nameLine1")
             .r(100.0)
             .x(100.0)
-            .shuntConductance1(10.0)
-            .shuntSusceptance1(10.0)
-            .shuntConductance2(20.0)
-            .shuntSusceptance2(20.0)
+            .g1(10.0)
+            .b1(10.0)
+            .g2(20.0)
+            .b2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("bus1")
             .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
@@ -228,10 +228,10 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .equipmentName("nameLineEdited1")
             .r(200.0)
             .x(200.0)
-            .shuntConductance1(20.0)
-            .shuntSusceptance1(20.0)
-            .shuntConductance2(30.0)
-            .shuntSusceptance2(30.0)
+            .g1(20.0)
+            .b1(20.0)
+            .g2(30.0)
+            .b2(30.0)
             .voltageLevelId1("v2")
             .busOrBusbarSectionId1("bus3")
             .voltageLevelId2("v3")

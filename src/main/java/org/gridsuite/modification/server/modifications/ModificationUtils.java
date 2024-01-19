@@ -368,10 +368,10 @@ public final class ModificationUtils {
                 .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
                 .setR(lineCreationInfos.getR())
                 .setX(lineCreationInfos.getX())
-                .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
-                .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
-                .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
-                .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
+                .setG1(lineCreationInfos.getG1() != null ? lineCreationInfos.getG1() : 0.0)
+                .setB1(lineCreationInfos.getB1() != null ? lineCreationInfos.getB1() : 0.0)
+                .setG2(lineCreationInfos.getG2() != null ? lineCreationInfos.getG2() : 0.0)
+                .setB2(lineCreationInfos.getB2() != null ? lineCreationInfos.getB2() : 0.0);
 
         // lineAdder completion by topology
         setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Branch.Side.ONE, withSwitch1);

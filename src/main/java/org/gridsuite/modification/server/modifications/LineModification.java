@@ -75,58 +75,58 @@ public class LineModification extends AbstractBranchModification {
 
     private void modifySide1Characteristics(Line line, LineModificationInfos lineModificationInfos,
             Reporter characteristicsReporter) {
-        if (lineModificationInfos.getShuntConductance1() != null && lineModificationInfos.getShuntConductance1().getValue() != null
-                || lineModificationInfos.getShuntSusceptance1() != null && lineModificationInfos.getShuntSusceptance1().getValue() != null) {
+        if (lineModificationInfos.getG1() != null && lineModificationInfos.getG1().getValue() != null
+                || lineModificationInfos.getB1() != null && lineModificationInfos.getB1().getValue() != null) {
             Reporter side1Reporter = characteristicsReporter.createSubReporter("side1Characteristics", "Side 1");
             side1Reporter.report(Report.builder()
                     .withKey("side1CharacteristicsModification")
                     .withDefaultMessage("    Side 1")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
-            if (lineModificationInfos.getShuntConductance1() != null && lineModificationInfos.getShuntConductance1().getValue() != null) {
+            if (lineModificationInfos.getG1() != null && lineModificationInfos.getG1().getValue() != null) {
                 //convert reported value from siemens to microsiemens
-                double shuntConductance1ToReport = lineModificationInfos.getShuntConductance1().getValue() * Math.pow(10, 6);
+                double shuntConductance1ToReport = lineModificationInfos.getG1().getValue() * Math.pow(10, 6);
                 double oldShuntConductance1ToReport = line.getG1() * Math.pow(10, 6);
                 side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance1ToReport,
                     shuntConductance1ToReport, "Shunt conductance", 2));
-                line.setG1(lineModificationInfos.getShuntConductance1().getValue());
+                line.setG1(lineModificationInfos.getG1().getValue());
             }
-            if (lineModificationInfos.getShuntSusceptance1() != null && lineModificationInfos.getShuntSusceptance1().getValue() != null) {
+            if (lineModificationInfos.getB1() != null && lineModificationInfos.getB1().getValue() != null) {
                 //convert reported value from siemens to microsiemens
-                double shuntSusceptance1ToReport = lineModificationInfos.getShuntSusceptance1().getValue() * Math.pow(10, 6);
+                double shuntSusceptance1ToReport = lineModificationInfos.getB1().getValue() * Math.pow(10, 6);
                 double oldShuntSusceptance1ToReport = line.getB1() * Math.pow(10, 6);
                 side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance1ToReport,
                     shuntSusceptance1ToReport, "Shunt susceptance", 2));
-                line.setB1(lineModificationInfos.getShuntSusceptance1().getValue());
+                line.setB1(lineModificationInfos.getB1().getValue());
             }
         }
     }
 
     private void modifySide2Characteristics(Line line, LineModificationInfos lineModificationInfos,
             Reporter characteristicsReporter) {
-        if (lineModificationInfos.getShuntConductance2() != null && lineModificationInfos.getShuntConductance2().getValue() != null
-                || lineModificationInfos.getShuntSusceptance2() != null && lineModificationInfos.getShuntSusceptance2().getValue() != null) {
+        if (lineModificationInfos.getG2() != null && lineModificationInfos.getG2().getValue() != null
+                || lineModificationInfos.getB2() != null && lineModificationInfos.getB2().getValue() != null) {
             Reporter side2Reporter = characteristicsReporter.createSubReporter("side2Characteristics", "Side 2");
             side2Reporter.report(Report.builder()
                     .withKey("side2CharacteristicsModification")
                     .withDefaultMessage("    Side 2")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
-            if (lineModificationInfos.getShuntConductance2() != null && lineModificationInfos.getShuntConductance2().getValue() != null) {
+            if (lineModificationInfos.getG2() != null && lineModificationInfos.getG2().getValue() != null) {
                 // convert reported value from siemens to microsiemens
-                double shuntConductance2ToReport = lineModificationInfos.getShuntConductance2().getValue() * Math.pow(10, 6);
+                double shuntConductance2ToReport = lineModificationInfos.getG2().getValue() * Math.pow(10, 6);
                 double oldShuntConductance2ToReport = line.getG2() * Math.pow(10, 6);
                 side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance2ToReport,
                     shuntConductance2ToReport, "Shunt conductance", 2));
-                line.setG2(lineModificationInfos.getShuntConductance2().getValue());
+                line.setG2(lineModificationInfos.getG2().getValue());
             }
-            if (lineModificationInfos.getShuntSusceptance2() != null && lineModificationInfos.getShuntSusceptance2().getValue() != null) {
+            if (lineModificationInfos.getB2() != null && lineModificationInfos.getB2().getValue() != null) {
                 // convert reported value from siemens to microsiemens
-                double shuntSusceptance2ToReport = lineModificationInfos.getShuntSusceptance2().getValue() * Math.pow(10, 6);
+                double shuntSusceptance2ToReport = lineModificationInfos.getB2().getValue() * Math.pow(10, 6);
                 double oldShuntSusceptance2ToReport = line.getB2() * Math.pow(10, 6);
                 side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance2ToReport,
                     shuntSusceptance2ToReport, "Shunt susceptance", 2));
-                line.setB2(lineModificationInfos.getShuntSusceptance2().getValue());
+                line.setB2(lineModificationInfos.getB2().getValue());
             }
         }
     }
@@ -135,14 +135,14 @@ public class LineModification extends AbstractBranchModification {
     protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) branchModificationInfos;
         return super.characteristicsModified(branchModificationInfos)
-                || lineModificationInfos.getShuntConductance1() != null
-                        && lineModificationInfos.getShuntConductance1().getValue() != null
-                || lineModificationInfos.getShuntSusceptance1() != null
-                        && lineModificationInfos.getShuntSusceptance1().getValue() != null
-                || lineModificationInfos.getShuntConductance2() != null
-                        && lineModificationInfos.getShuntConductance2().getValue() != null
-                || lineModificationInfos.getShuntSusceptance2() != null
-                        && lineModificationInfos.getShuntSusceptance2().getValue() != null;
+                || lineModificationInfos.getG1() != null
+                        && lineModificationInfos.getG1().getValue() != null
+                || lineModificationInfos.getB1() != null
+                        && lineModificationInfos.getB1().getValue() != null
+                || lineModificationInfos.getG2() != null
+                        && lineModificationInfos.getG2().getValue() != null
+                || lineModificationInfos.getB2() != null
+                        && lineModificationInfos.getB2().getValue() != null;
     }
 
 }
