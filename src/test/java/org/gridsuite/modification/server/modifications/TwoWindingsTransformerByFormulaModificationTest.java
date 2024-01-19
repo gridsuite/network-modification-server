@@ -71,6 +71,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.).build())
                 .operator(Operator.DIVISION)
                 .filters(List.of(filter4))
+                .editedField(TwoWindingsTransformerField.SERIES_RESISTANCE.name())
                 .build();
 
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),

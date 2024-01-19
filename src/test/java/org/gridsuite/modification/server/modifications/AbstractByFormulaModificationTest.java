@@ -72,18 +72,26 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
     @Test
     public void testByModificationError() throws Exception {
+        //Test with modification = null
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(null)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
         // Test with empty list of formulas
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with empty list of filters in formula
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+        List<FormulaInfos> formulaInfosWithNoFilters = getFormulaInfos().stream().peek(formula -> formula.setFilters(List.of())).toList();
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(formulaInfosWithNoFilters).build(),
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        FormulaInfos formulaInfosWithNoEditedField = FormulaInfos.builder()
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(50.).build())
                 .operator(Operator.ADDITION)
                 .filters(List.of())
                 .build();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos)).build(),
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfosWithNoEditedField)).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
