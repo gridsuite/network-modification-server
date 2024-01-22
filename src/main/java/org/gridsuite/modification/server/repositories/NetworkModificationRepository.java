@@ -161,8 +161,7 @@ public class NetworkModificationRepository {
         }
     }
 
-    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
-        TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
+    public TabularModificationEntity loadTabularModificationSubEntities(TabularModificationEntity tabularModificationEntity) {
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
                 generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
@@ -174,8 +173,8 @@ public class NetworkModificationRepository {
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
-        if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+        if (modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
+            return loadTabularModificationSubEntities(tabularModificationEntity).toModificationInfos();
         }
         return modificationEntity.toModificationInfos();
     }
