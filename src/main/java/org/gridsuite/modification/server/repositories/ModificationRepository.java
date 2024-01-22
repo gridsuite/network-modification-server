@@ -32,11 +32,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
-    @EntityGraph(attributePaths = {"modifications", "modifications.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Optional<TabularModificationEntity> findAllWithReactiveCapabilityCurvePointsById(UUID id);
-
-    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Set<GeneratorModificationEntity> findAllReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
+    @Query(value = "SELECT modifications_id from tabular_modification_modifications where tabular_modification_entity_id= ?1", nativeQuery = true)
+    List<UUID> findSubModificationsIds(UUID uuid);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 }

@@ -12,6 +12,8 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +34,25 @@ public class NetworkModificationRepository {
 
     private final ModificationRepository modificationRepository;
 
+    private final GeneratorModificationRepository generatorModificationRepository;
+
+    private final LoadModificationRepository loadModificationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository, GeneratorModificationRepository generatorModificationRepository, LoadModificationRepository loadModificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
+        this.loadModificationRepository = loadModificationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteAll() {
         modificationRepository.deleteAll();
         modificationGroupRepository.deleteAll();
+        generatorModificationRepository.deleteAll();
+        loadModificationRepository.deleteAll();
     }
 
     @Transactional // To have all create in the same transaction (atomic)
@@ -155,10 +165,10 @@ public class NetworkModificationRepository {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-                );
-                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
+//                tabularModificationEntity = generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
+//                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
+//                );
+                generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
                 break;
             default:
                 break;
@@ -191,7 +201,25 @@ public class NetworkModificationRepository {
         if (!optionalModificationEntity.isPresent()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
         }
-        return getModificationInfos(optionalModificationEntity.get());
+        ModificationEntity modificationEntity = optionalModificationEntity.get();
+        if(modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
+            List<ModificationEntity> entities = new ArrayList<>();
+            List<UUID> ids = modificationRepository.findSubModificationsIds(modificationUuid);
+            switch (tabularModificationEntity.getModificationType()) {
+                case GENERATOR_MODIFICATION -> {
+                    List<GeneratorModificationEntity> generatorModificationEntities = generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(ids);
+                    entities.addAll(generatorModificationEntities);
+                }
+                case LOAD_MODIFICATION -> {
+                    List<LoadModificationEntity> loadModificationEntities = loadModificationRepository.findAllById(ids);
+                    entities.addAll(loadModificationEntities);
+
+                }
+            }
+            tabularModificationEntity.setModifications(entities);
+            return getModificationInfos(tabularModificationEntity);
+        }
+        return getModificationInfos(modificationEntity);
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)

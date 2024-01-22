@@ -7,21 +7,20 @@
 package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -62,10 +61,10 @@ public class TabularModificationEntity extends ModificationEntity {
     private void assignAttributes(TabularModificationInfos tabularModificationInfos) {
         modificationType = tabularModificationInfos.getModificationType();
         if (modifications == null) {
-            modifications = tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
+            modifications = tabularModificationInfos.getModifications().stream().map(modificationInfos -> modificationInfos.toEntity()).toList();
         } else {
             modifications.clear();
-            modifications.addAll(tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList());
+            modifications.addAll(tabularModificationInfos.getModifications().stream().map(modificationInfos -> modificationInfos.toEntity()).toList());
         }
     }
 }
