@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>

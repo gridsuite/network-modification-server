@@ -12,8 +12,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -198,7 +196,7 @@ public class NetworkModificationRepository {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
         }
         ModificationEntity modificationEntity = optionalModificationEntity.get();
-        if(modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
+        if (modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
             List<ModificationEntity> entities = new ArrayList<>();
             List<UUID> ids = modificationRepository.findSubModificationsIds(modificationUuid);
             switch (tabularModificationEntity.getModificationType()) {
