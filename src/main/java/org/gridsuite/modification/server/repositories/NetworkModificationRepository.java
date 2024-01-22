@@ -165,9 +165,6 @@ public class NetworkModificationRepository {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-//                tabularModificationEntity = generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-//                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-//                );
                 generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
                 break;
             default:
@@ -206,15 +203,8 @@ public class NetworkModificationRepository {
             List<ModificationEntity> entities = new ArrayList<>();
             List<UUID> ids = modificationRepository.findSubModificationsIds(modificationUuid);
             switch (tabularModificationEntity.getModificationType()) {
-                case GENERATOR_MODIFICATION -> {
-                    List<GeneratorModificationEntity> generatorModificationEntities = generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(ids);
-                    entities.addAll(generatorModificationEntities);
-                }
-                case LOAD_MODIFICATION -> {
-                    List<LoadModificationEntity> loadModificationEntities = loadModificationRepository.findAllById(ids);
-                    entities.addAll(loadModificationEntities);
-
-                }
+                case GENERATOR_MODIFICATION -> entities.addAll(generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(ids));
+                case LOAD_MODIFICATION -> entities.addAll(loadModificationRepository.findAllById(ids));
             }
             tabularModificationEntity.setModifications(entities);
             return getModificationInfos(tabularModificationEntity);
