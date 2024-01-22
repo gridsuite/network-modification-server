@@ -60,10 +60,10 @@ public class TabularModificationEntity extends ModificationEntity {
     private void assignAttributes(TabularModificationInfos tabularModificationInfos) {
         modificationType = tabularModificationInfos.getModificationType();
         if (modifications == null) {
-            modifications = tabularModificationInfos.getModifications().stream().map(modificationInfos -> modificationInfos.toEntity()).toList();
+            modifications = tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
         } else {
             modifications.clear();
-            modifications.addAll(tabularModificationInfos.getModifications().stream().map(modificationInfos -> modificationInfos.toEntity()).toList());
+            modifications.addAll(tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList());
         }
     }
 }
