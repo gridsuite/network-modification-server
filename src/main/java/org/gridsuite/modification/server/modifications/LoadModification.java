@@ -40,21 +40,24 @@ public class LoadModification extends AbstractModification {
     public void apply(Network network, Reporter subReporter) {
         Load load = network.getLoad(modificationInfos.getEquipmentId());
         // modify the load in the network
-        modifyLoad(load, modificationInfos, subReporter);
+        modifyLoad(load, subReporter);
     }
 
-    private void modifyLoad(Load load, LoadModificationInfos loadModificationInfos, Reporter subReporter) {
+    private void modifyLoad(Load load, Reporter subReporter) {
         subReporter.report(Report.builder()
             .withKey("loadModification")
             .withDefaultMessage("Load with id=${id} modified :")
-            .withValue("id", loadModificationInfos.getEquipmentId())
+            .withValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
 
-        ModificationUtils.getInstance().applyElementaryModifications(load::setName, () -> load.getOptionalName().orElse("No value"), loadModificationInfos.getEquipmentName(), subReporter, "Name");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, loadModificationInfos.getLoadType(), subReporter, "Type");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, loadModificationInfos.getConstantActivePower(), subReporter, "Constant active power");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, loadModificationInfos.getConstantReactivePower(), subReporter, "Constant reactive power");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setName, () -> load.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReporter, "Type");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getConstantActivePower(), subReporter, "Constant active power");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getConstantReactivePower(), subReporter, "Constant reactive power");
+
+        // properties
+        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
 
         // TODO connectivity modification
     }
