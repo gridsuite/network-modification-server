@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithErrors() throws Exception {
@@ -113,6 +117,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .reactivePower(60.0)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .connectionName("top")
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -135,6 +140,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLoad("idLoad1").getProperty(PROPERTY_NAME));
     }
 
     @Override
