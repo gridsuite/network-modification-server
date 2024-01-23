@@ -12,26 +12,27 @@ import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.LoadModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 public class LoadModificationTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -47,6 +48,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
             .p0(new AttributeModification<>(200.0, OperationType.SET))
             .q0(new AttributeModification<>(30.0, OperationType.SET))
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -70,6 +72,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         assertEquals(200.0, modifiedLoad.getP0(), 0.0);
         assertEquals(30.0, modifiedLoad.getQ0(), 0.0);
         assertEquals("nameLoad1", modifiedLoad.getNameOrId());
+        assertEquals(PROPERTY_VALUE, modifiedLoad.getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -80,6 +83,7 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0.0, modifiedLoad.getP0(), 0.0);
         assertEquals(0.0, modifiedLoad.getQ0(), 0.0);
         assertEquals("v1load", modifiedLoad.getNameOrId());
+        assertNull(modifiedLoad.getProperty(PROPERTY_NAME));
     }
 
     @Test

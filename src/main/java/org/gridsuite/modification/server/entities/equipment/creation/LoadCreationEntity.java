@@ -14,6 +14,8 @@ import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -73,6 +75,11 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             // load
             .loadType(getLoadType())
             .p0(getP0())
-            .q0(getQ0());
+            .q0(getQ0())
+            // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                getProperties().stream()
+                    .map(FreePropertyEntity::toInfos)
+                    .toList());
     }
 }

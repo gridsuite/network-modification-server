@@ -89,10 +89,6 @@ public class ModificationRepositoryTest {
         return (SubstationCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
-    private SubstationModificationInfos getSubstationModificationInfos(UUID modificationUuid) {
-        return (SubstationModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
-    }
-
     private VoltageLevelCreationInfos getVoltageLevelCreationModification(UUID modificationUuid) {
         return (VoltageLevelCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
