@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
@@ -87,6 +88,11 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .connected(toAttributeModification(getConnected()))
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
                 .constantActivePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
-                .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()));
+                .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()))
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                    getProperties().stream()
+                        .map(FreePropertyEntity::toInfos)
+                        .toList());
     }
 }

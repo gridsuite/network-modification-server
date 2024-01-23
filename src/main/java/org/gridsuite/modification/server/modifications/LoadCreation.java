@@ -64,6 +64,10 @@ public class LoadCreation extends AbstractModification {
         }
         reportElementaryCreations(subReporter);
         ModificationUtils.getInstance().disconnectCreatedInjection(modificationInfos, network.getLoad(modificationInfos.getEquipmentId()), subReporter);
+
+        // properties
+        Load load = network.getLoad(modificationInfos.getEquipmentId());
+        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
     }
 
     private void reportElementaryCreations(Reporter subReporter) {
