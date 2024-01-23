@@ -24,13 +24,11 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class LoadModificationTest extends AbstractNetworkModificationTest {
+public class LoadModificationTest extends AbstractInjectionModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -112,47 +110,11 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testDisconnection() throws Exception {
-        LoadModificationInfos loadModificationInfos = (LoadModificationInfos) buildModification();
-        loadModificationInfos.setConnected(new AttributeModification<>(false, OperationType.SET));
-
-        Load existingLoad = getNetwork().getLoad("v1load");
-        if (!existingLoad.getTerminal().isConnected()) {
-            existingLoad.getTerminal().connect();
-        }
-        assertTrue(existingLoad.getTerminal().isConnected());
-
-        String generatorModificationInfosJson = mapper.writeValueAsString(loadModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        // now disconnected
-        assertFalse(existingLoad.getTerminal().isConnected());
-
-        // try to modify again => no change on connection state
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertFalse(existingLoad.getTerminal().isConnected());
+        assertChangeConnectionState(getNetwork().getLoad("v1load"), false);
     }
 
     @Test
     public void testConnection() throws Exception {
-        LoadModificationInfos loadModificationInfos = (LoadModificationInfos) buildModification();
-        loadModificationInfos.setConnected(new AttributeModification<>(true, OperationType.SET));
-
-        Load existingLoad = getNetwork().getLoad("v1load");
-        if (existingLoad.getTerminal().isConnected()) {
-            existingLoad.getTerminal().disconnect();
-        }
-        assertFalse(existingLoad.getTerminal().isConnected());
-
-        String modificationInfosJson = mapper.writeValueAsString(loadModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        // now connected
-        assertTrue(existingLoad.getTerminal().isConnected());
-
-        // try to modify again => no change on connection state
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertTrue(existingLoad.getTerminal().isConnected());
+        assertChangeConnectionState(getNetwork().getLoad("v1load"), true);
     }
 }

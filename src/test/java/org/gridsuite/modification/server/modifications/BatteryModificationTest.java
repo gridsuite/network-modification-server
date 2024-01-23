@@ -26,13 +26,11 @@ import java.util.stream.IntStream;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class BatteryModificationTest extends AbstractNetworkModificationTest {
+public class BatteryModificationTest extends AbstractInjectionModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -337,47 +335,11 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testDisconnection() throws Exception {
-        BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
-        batteryModificationInfos.setConnected(new AttributeModification<>(false, OperationType.SET));
-
-        Battery existingBattery = getNetwork().getBattery("v3Battery");
-        if (!existingBattery.getTerminal().isConnected()) {
-            existingBattery.getTerminal().connect();
-        }
-        assertTrue(existingBattery.getTerminal().isConnected());
-
-        String generatorModificationInfosJson = mapper.writeValueAsString(batteryModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        // now disconnected
-        assertFalse(existingBattery.getTerminal().isConnected());
-
-        // try to modify again => no change on connection state
-        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertFalse(existingBattery.getTerminal().isConnected());
+        assertChangeConnectionState(getNetwork().getBattery("v3Battery"), false);
     }
 
     @Test
     public void testConnection() throws Exception {
-        BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
-        batteryModificationInfos.setConnected(new AttributeModification<>(true, OperationType.SET));
-
-        Battery existingBattery = getNetwork().getBattery("v3Battery");
-        if (existingBattery.getTerminal().isConnected()) {
-            existingBattery.getTerminal().disconnect();
-        }
-        assertFalse(existingBattery.getTerminal().isConnected());
-
-        String modificationInfosJson = mapper.writeValueAsString(batteryModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        // now connected
-        assertTrue(existingBattery.getTerminal().isConnected());
-
-        // try to modify again => no change on connection state
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertTrue(existingBattery.getTerminal().isConnected());
+        assertChangeConnectionState(getNetwork().getBattery("v3Battery"), true);
     }
 }
