@@ -8,7 +8,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
@@ -361,16 +360,16 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testDisconnection() throws Exception {
-        changeBranchConnectionState(getNetwork().getLine("line1"), false);
+        changeLineConnectionState(getNetwork().getLine("line1"), false);
     }
 
     @Test
     public void testConnection() throws Exception {
-        changeBranchConnectionState(getNetwork().getLine("line1"), true);
+        changeLineConnectionState(getNetwork().getLine("line1"), true);
     }
 
-    private void changeBranchConnectionState(Branch<?> existingEquipment, boolean expectedState) throws Exception {
-        BranchModificationInfos modificationInfos = (BranchModificationInfos) buildModification();
+    private void changeLineConnectionState(Line existingEquipment, boolean expectedState) throws Exception {
+        LineModificationInfos modificationInfos = (LineModificationInfos) buildModification();
         modificationInfos.setConnected1(new AttributeModification<>(expectedState, OperationType.SET));
         modificationInfos.setConnected2(new AttributeModification<>(expectedState, OperationType.SET));
 
