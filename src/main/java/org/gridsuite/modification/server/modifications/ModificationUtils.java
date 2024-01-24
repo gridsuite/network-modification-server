@@ -854,24 +854,33 @@ public final class ModificationUtils {
         return subReporterSetpoints2;
     }
 
-    public void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> equipmentPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
-                                         NetworkModificationException.Type exceptionType, String errorMessage) {
-        IntStream.range(0, modificationPoints.size())
-                .forEach(i -> {
-                    ReactiveCapabilityCurve.Point oldPoint = equipmentPoints.get(i);
-                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
-                    Double oldMaxQ = Double.NaN;
-                    Double oldMinQ = Double.NaN;
-                    if (oldPoint != null) {
-                        oldMaxQ = oldPoint.getMaxQ();
-                        oldMinQ = oldPoint.getMinQ();
-                    }
-                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
-                    if (maxQ < minQ) {
-                        throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
-                    }
-                });
+    public void checkMaxQGreaterThanMinQ(
+            List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
+            NetworkModificationException.Type exceptionType, String errorMessage
+    ) {
+        for (var point : modificationPoints) {
+            double maxQ = Double.NaN;
+            double minQ = Double.NaN;
+
+            if (point.getQmaxP() != null) {
+                maxQ = point.getQmaxP();
+            } else if (point.getOldQmaxP() != null) {
+                maxQ = point.getOldQmaxP();
+            }
+
+            if (point.getQminP() != null) {
+                minQ = point.getQminP();
+            } else if (point.getOldQminP() != null) {
+                minQ = point.getOldQminP();
+            }
+
+            if (maxQ < minQ) {
+                throw new NetworkModificationException(
+                    exceptionType,
+                    errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ
+                );
+            }
+        }
     }
 
     public void checkMaxReactivePowerGreaterThanMinReactivePower(MinMaxReactiveLimits minMaxReactiveLimits, AttributeModification<Double> minimumReactivePowerInfo, AttributeModification<Double> maximumReactivePowerInfo, NetworkModificationException.Type exceptionType, String errorMessage) {
