@@ -53,8 +53,8 @@ public class LoadModification extends AbstractModification {
 
         ModificationUtils.getInstance().applyElementaryModifications(load::setName, () -> load.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReporter, "Type");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getConstantActivePower(), subReporter, "Constant active power");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getConstantReactivePower(), subReporter, "Constant reactive power");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getP0(), subReporter, "Constant active power");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getQ0(), subReporter, "Constant reactive power");
 
         // properties
         PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
