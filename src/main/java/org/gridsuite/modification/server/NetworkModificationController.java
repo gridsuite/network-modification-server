@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -153,14 +154,14 @@ public class NetworkModificationController {
     }
 
     @DeleteMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Delete network modifications")
+    @Operation(summary = "Delete network modifications. If owned by a group, then groupUuid must be provided.")
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids", required = false) List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
-            @Parameter(description = "delete only stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed) {
+            @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
+            @Parameter(description = "Delete only stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed) {
 
-        if (networkModificationUuids == null || networkModificationUuids.isEmpty()) {
+        if (CollectionUtils.isEmpty(networkModificationUuids)) {
             networkModificationService.deleteNetworkModifications(groupUuid, onlyStashed);
         } else {
             networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
@@ -216,6 +217,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createModificationInGroup(modificationsInfos));
     }
 
+    @PostMapping(value = "/network-modifications/{modificationUuid}/duplicate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Duplicate a modification without group ownership")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The modification has been created")})
+    public ResponseEntity<UUID> duplicateModification(@Parameter(description = "source modification UUID to duplicate") @PathVariable("modificationUuid") UUID sourceModificationUuid) {
+        return ResponseEntity.ok().body(networkModificationService.duplicateModification(sourceModificationUuid));
+    }
+
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
@@ -223,7 +231,7 @@ public class NetworkModificationController {
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
-        if (stashed) {
+        if (Boolean.TRUE.equals(stashed)) {
             networkModificationService.stashNetworkModifications(networkModificationUuids);
         } else {
             networkModificationService.restoreNetworkModifications(networkModificationUuids);

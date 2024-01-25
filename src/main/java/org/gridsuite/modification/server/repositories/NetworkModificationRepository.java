@@ -119,6 +119,17 @@ public class NetworkModificationRepository {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public UUID duplicateModification(@NonNull UUID sourceModificationUuid) {
+        Optional<ModificationEntity> optionalModificationEntity = modificationRepository.findById(sourceModificationUuid);
+        if (!optionalModificationEntity.isPresent()) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, sourceModificationUuid.toString());
+        }
+        // try other way : entity:copy
+        ModificationInfos newModificationInfos = optionalModificationEntity.get().toModificationInfos();
+        return modificationRepository.save(newModificationInfos.toEntity()).getId();
+    }
+
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
@@ -229,11 +240,21 @@ public class NetworkModificationRepository {
 
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
-                .filter(m -> uuids.contains(m.getId()))
-                .collect(Collectors.toList());
-        modifications.forEach(groupEntity::removeModification);
+        List<ModificationEntity> modifications;
+        if (groupUuid != null) {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            modifications = getModificationEntityStream(groupUuid)
+                    .filter(m -> uuids.contains(m.getId()))
+                    .collect(Collectors.toList());
+            modifications.forEach(groupEntity::removeModification);
+        } else {
+            modifications = modificationRepository.findAllById(uuids);
+            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
+            if (optionalModificationWithGroup.isPresent()) {
+                throw new NetworkModificationException(MODIFICATION_DELETION_ERROR,
+                    String.format("%s is owned by group %s", optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId().toString()));
+            }
+        }
         int count = modifications.size();
         this.modificationRepository.deleteAll(modifications);
         return count;

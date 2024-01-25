@@ -205,7 +205,7 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(UUID groupUuid, boolean onlyStashed) {
+    public void deleteNetworkModifications(@NonNull UUID groupUuid, boolean onlyStashed) {
         if (networkModificationRepository.deleteModifications(groupUuid, onlyStashed) == 0) {
             throw new NetworkModificationException(NOTHING_TO_DELETE);
         }
@@ -292,6 +292,10 @@ public class NetworkModificationService {
         UUID groupUuid = UUID.randomUUID();
         networkModificationRepository.saveModifications(groupUuid, List.of(modificationsInfos.toEntity()));
         return groupUuid;
+    }
+
+    public UUID duplicateModification(@NonNull UUID sourceModificationUuid) {
+        return networkModificationRepository.duplicateModification(sourceModificationUuid);
     }
 
     @Transactional
