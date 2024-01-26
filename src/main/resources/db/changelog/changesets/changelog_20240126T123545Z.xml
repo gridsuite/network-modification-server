@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="souissimai (generated)" id="1706272561275-29">
+        <renameColumn tableName="voltage_level_creation_entity"
+                      columnDataType="float(53)"
+                      oldColumnName="nominal_voltage"
+                      newColumnName="nominalv" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1706272561275-30">
+        <renameColumn tableName="voltage_level_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="nominal_voltage"
+                      newColumnName="nominalv" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1706272561275-31">
+        <renameColumn tableName="voltage_level_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="nominal_voltage_op"
+                      newColumnName="nominalv_op" />
+    </changeSet>
+</databaseChangeLog>

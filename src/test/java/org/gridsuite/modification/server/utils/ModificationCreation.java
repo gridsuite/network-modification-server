@@ -28,7 +28,7 @@ public final class ModificationCreation {
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
             .substationId(substationId)
-            .nominalVoltage(379.1)
+            .nominalV(379.1)
             .lowVoltageLimit(0.0)
             .highVoltageLimit(10.0)
             .ipMin(0.0)
