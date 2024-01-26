@@ -32,6 +32,7 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 public class ByFormulaModification extends AbstractModification {
+    public static final String EQUIPMENT_MODIFIED_REPORT_ERROR = "EquipmentModifiedReportError_";
     private final ByFormulaModificationInfos modificationInfos;
     protected FilterService filterService;
     private int equipmentNotModifiedCount;
@@ -219,7 +220,7 @@ public class ByFormulaModification extends AbstractModification {
                     boolean isEditable = twoWindingsTransformer.getRatioTapChanger() != null;
                     if (!isEditable) {
                         equipmentsReport.add(Report.builder()
-                                .withKey("EquipmentModifiedReportError_" + equipmentsReport.size())
+                                .withKey(EQUIPMENT_MODIFIED_REPORT_ERROR + equipmentsReport.size())
                                 .withDefaultMessage(String.format("        Cannot modify field %s of equipment %s : Ratio tab changer is null",
                                         editedField,
                                         identifiable.getId()))
@@ -232,7 +233,7 @@ public class ByFormulaModification extends AbstractModification {
                     boolean isEditable = twoWindingsTransformer.getPhaseTapChanger() != null;
                     if (!isEditable) {
                         equipmentsReport.add(Report.builder()
-                                .withKey("EquipmentModifiedReportError_" + equipmentsReport.size())
+                                .withKey(EQUIPMENT_MODIFIED_REPORT_ERROR + equipmentsReport.size())
                                 .withDefaultMessage(String.format("        Cannot modify field %s of equipment %s : Phase tab changer is null",
                                         editedField,
                                         identifiable.getId()))
@@ -257,7 +258,7 @@ public class ByFormulaModification extends AbstractModification {
             equipmentNotModifiedCount += 1;
             notEditableEquipments.add(identifiable.getId());
             reports.add(Report.builder()
-                    .withKey("EquipmentModifiedReportError_" + reports.size())
+                    .withKey(EQUIPMENT_MODIFIED_REPORT_ERROR + reports.size())
                     .withDefaultMessage(String.format("        Cannot modify equipment %s : At least one of the value or referenced field is null",
                             identifiable.getId()))
                     .withSeverity(TypedValue.TRACE_SEVERITY)
