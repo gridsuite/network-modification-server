@@ -12,11 +12,13 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,6 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.createBusBreaker(networkUuid);
@@ -40,10 +45,11 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .voltageLevelId("v1")
             .busOrBusbarSectionId("bus1")
             .loadType(LoadType.FICTITIOUS)
-            .activePower(200.0)
-            .reactivePower(30.0)
+            .p0(200.0)
+            .q0(30.0)
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -56,8 +62,8 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .voltageLevelId("v1Edited")
             .busOrBusbarSectionId("bus1Edited")
             .loadType(LoadType.FICTITIOUS)
-            .activePower(300.0)
-            .reactivePower(50.0)
+            .p0(300.0)
+            .q0(50.0)
             .connectionName("bottom")
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .build();
@@ -66,6 +72,7 @@ public class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLoad("idLoad1").getProperty(PROPERTY_NAME));
     }
 
     @Override
