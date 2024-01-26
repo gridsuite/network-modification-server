@@ -9,7 +9,9 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 
 import com.powsybl.iidm.network.SwitchKind;
 
@@ -87,9 +89,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         List<CouplingDeviceInfos> couplingDeviceInfos = couplingDevices.stream()
                 .map(cde -> new CouplingDeviceInfos(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
                 .collect(Collectors.toList());
-        IdentifiableShortCircuitInfos identifiableShortCircuit = new IdentifiableShortCircuitInfos();
-        identifiableShortCircuit.setIpMin(getIpMin());
-        identifiableShortCircuit.setIpMax(getIpMax());
         return VoltageLevelCreationInfos
                 .builder()
                 .uuid(getId())

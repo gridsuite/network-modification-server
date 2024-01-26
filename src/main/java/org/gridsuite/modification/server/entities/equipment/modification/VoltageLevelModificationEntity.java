@@ -38,7 +38,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "nominalV")),
-        @AttributeOverride(name = "opType", column = @Column(name = "nominalVOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "nominalV_Op"))
     })
     private DoubleModificationEmbedded nominalVoltage;
 
