@@ -38,10 +38,10 @@ public class LoadCreationInfos extends InjectionCreationInfos {
     private LoadType loadType;
 
     @Schema(description = "Active power")
-    private double activePower;
+    private double p0;
 
     @Schema(description = "Reactive power")
-    private double reactivePower;
+    private double q0;
 
     @Override
     public LoadCreationEntity toEntity() {
