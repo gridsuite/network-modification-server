@@ -66,7 +66,7 @@ public class EquipmentModificationRepositories {
         return generatorModificationRepository;
     }
 
-    public List<ModificationEntity> findSubEntities (ModificationType modificationType, List<UUID> ids) {
+    public List<ModificationEntity> findSubEntities(ModificationType modificationType, List<UUID> ids) {
         List<ModificationEntity> subEntities = new ArrayList<>();
         switch (modificationType) {
             case GENERATOR_MODIFICATION -> subEntities.addAll(generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(ids));
