@@ -36,9 +36,9 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(300., OperationType.SET)).build()
+                LoadModificationInfos.builder().equipmentId("v1load").q0(new AttributeModification<>(300., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v2load").q0(new AttributeModification<>(300., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v3load").q0(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LOAD_MODIFICATION)
@@ -50,9 +50,9 @@ public class TabularLoadModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                LoadModificationInfos.builder().equipmentId("v1load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v2load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                LoadModificationInfos.builder().equipmentId("v3load").constantReactivePower(new AttributeModification<>(500., OperationType.SET)).build()
+                LoadModificationInfos.builder().equipmentId("v1load").q0(new AttributeModification<>(500., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v2load").q0(new AttributeModification<>(500., OperationType.SET)).build(),
+                LoadModificationInfos.builder().equipmentId("v3load").q0(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LOAD_MODIFICATION)
