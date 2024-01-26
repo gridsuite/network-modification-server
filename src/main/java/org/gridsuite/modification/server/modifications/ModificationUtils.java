@@ -307,7 +307,7 @@ public final class ModificationUtils {
             .setId(voltageLevelCreationInfos.getEquipmentId())
             .setName(voltageLevelCreationInfos.getEquipmentName())
             .setTopologyKind(TopologyKind.NODE_BREAKER)
-            .setNominalV(voltageLevelCreationInfos.getNominalVoltage())
+            .setNominalV(voltageLevelCreationInfos.getNominalV())
             .add();
 
         if (voltageLevelCreationInfos.getLowVoltageLimit() != null) {

@@ -33,7 +33,7 @@ import org.gridsuite.modification.server.modifications.VoltageLevelModification;
 @ModificationErrorTypeName("MODIFY_VOLTAGE_LEVEL_ERROR")
 public class VoltageLevelModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "nominal voltage in kV")
-    private AttributeModification<Double> nominalVoltage;
+    private AttributeModification<Double> nominalV;
 
     @Schema(description = "low voltage limit in kV")
     private AttributeModification<Double> lowVoltageLimit;

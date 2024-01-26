@@ -37,8 +37,8 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 public class VoltageLevelModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "nominalVoltage")),
-        @AttributeOverride(name = "opType", column = @Column(name = "nominalVoltageOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "nominalV")),
+        @AttributeOverride(name = "opType", column = @Column(name = "nominalVOp"))
     })
     private DoubleModificationEmbedded nominalVoltage;
 
@@ -82,7 +82,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     }
 
     private void assignAttributes(VoltageLevelModificationInfos voltageLevelModificationInfos) {
-        this.nominalVoltage = new DoubleModificationEmbedded(voltageLevelModificationInfos.getNominalVoltage());
+        this.nominalVoltage = new DoubleModificationEmbedded(voltageLevelModificationInfos.getNominalV());
         this.lowVoltageLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getLowVoltageLimit());
         this.highVoltageLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighVoltageLimit());
         this.ipMin = new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMin());
@@ -101,7 +101,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .date(getDate())
                 .stashed(getStashed())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .nominalVoltage(toAttributeModification(getNominalVoltage()))
+                .nominalV(toAttributeModification(getNominalVoltage()))
                 .lowVoltageLimit(toAttributeModification(getLowVoltageLimit()))
                 .highVoltageLimit(toAttributeModification(getHighVoltageLimit()))
                 .ipMin(toAttributeModification(this.getIpMin()))

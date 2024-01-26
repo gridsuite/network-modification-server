@@ -40,7 +40,7 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     private String substationId;
 
     @Schema(description = "nominal voltage in kV")
-    private double nominalVoltage;
+    private double nominalV;
 
     @Schema(description = "low voltage limit in kV")
     private Double lowVoltageLimit;
