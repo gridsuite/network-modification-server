@@ -9,9 +9,10 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Injection;
 import org.gridsuite.modification.server.dto.*;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,11 +22,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public abstract class AbstractInjectionModificationTest extends AbstractNetworkModificationTest {
-    protected void assertChangeConnectionState(Injection<?> existingEquipment, boolean expectedState) throws Exception {
+    void assertChangeConnectionState(Injection<?> existingEquipment, boolean expectedState) throws Exception {
         assertChangeConnectionState(existingEquipment, (InjectionModificationInfos) buildModification(), expectedState);
     }
 
-    protected void assertChangeConnectionState(Injection<?> existingEquipment, InjectionModificationInfos modificationInfos, boolean expectedState) throws Exception {
+    void assertChangeConnectionState(Injection<?> existingEquipment, InjectionModificationInfos modificationInfos, boolean expectedState) throws Exception {
         modificationInfos.setConnected(new AttributeModification<>(expectedState, OperationType.SET));
 
         if (expectedState) {
@@ -37,17 +38,17 @@ public abstract class AbstractInjectionModificationTest extends AbstractNetworkM
                 existingEquipment.getTerminal().connect();
             }
         }
-        Assertions.assertEquals(!expectedState, existingEquipment.getTerminal().isConnected());
+        assertThat(existingEquipment.getTerminal().isConnected()).isNotEqualTo(expectedState);
 
         String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        // connection state has changed
-        Assertions.assertEquals(expectedState, existingEquipment.getTerminal().isConnected());
+        // connection state has changed as expected
+        assertThat(existingEquipment.getTerminal().isConnected()).isEqualTo(expectedState);
 
         // try to modify again => no change on connection state
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        Assertions.assertEquals(expectedState, existingEquipment.getTerminal().isConnected());
+        assertThat(existingEquipment.getTerminal().isConnected()).isEqualTo(expectedState);
     }
 }
