@@ -82,7 +82,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         testNetworkModificationsCount(getGroupId(), 4);
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
-        loadCreationInfos.setActivePower(Double.NaN);
+        loadCreationInfos.setP0(Double.NaN);
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -113,8 +113,8 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1B")
             .loadType(LoadType.AUXILIARY)
-            .activePower(100.0)
-            .reactivePower(60.0)
+            .p0(100.0)
+            .q0(60.0)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .connectionName("top")
             .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
@@ -130,8 +130,8 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .voltageLevelId("v2Edited")
             .busOrBusbarSectionId("1BEdited")
             .loadType(LoadType.AUXILIARY)
-            .activePower(200.0)
-            .reactivePower(90.0)
+            .p0(200.0)
+            .q0(90.0)
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .connectionName("topEdited")
             .build();

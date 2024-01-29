@@ -838,8 +838,8 @@ public class ModificationControllerTest {
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .loadType(LoadType.AUXILIARY)
-                .activePower(100.0)
-                .reactivePower(60.0)
+                .p0(100.0)
+                .q0(60.0)
                 .connectionDirection(ConnectablePosition.Direction.BOTTOM)
                 .connectionName("bottom")
                 .build();

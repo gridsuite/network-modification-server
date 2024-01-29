@@ -34,19 +34,19 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationType loadTypeOp;
 
-    @Column(name = "activePowerValue")
-    private Double activePowerValue;
+    @Column(name = "p0_value")
+    private Double p0Value;
 
-    @Column(name = "activePowerOp")
+    @Column(name = "p0_op")
     @Enumerated(EnumType.STRING)
-    private OperationType activePowerOp;
+    private OperationType p0Op;
 
-    @Column(name = "reactivePowerValue")
-    private Double reactivePowerValue;
+    @Column(name = "q0_value")
+    private Double q0Value;
 
-    @Column(name = "reactivePowerOp")
+    @Column(name = "q0_Op")
     @Enumerated(EnumType.STRING)
-    private OperationType reactivePowerOp;
+    private OperationType q0Op;
 
     public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos) {
         super(loadModificationInfos);
@@ -62,10 +62,10 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     private void assignAttributes(LoadModificationInfos loadModificationInfos) {
         this.loadTypeValue = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getValue() : null;
         this.loadTypeOp = loadModificationInfos.getLoadType() != null ? loadModificationInfos.getLoadType().getOp() : null;
-        this.activePowerValue = loadModificationInfos.getConstantActivePower() != null ? loadModificationInfos.getConstantActivePower().getValue() : null;
-        this.activePowerOp = loadModificationInfos.getConstantActivePower() != null ? loadModificationInfos.getConstantActivePower().getOp() : null;
-        this.reactivePowerValue = loadModificationInfos.getConstantReactivePower() != null ? loadModificationInfos.getConstantReactivePower().getValue() : null;
-        this.reactivePowerOp = loadModificationInfos.getConstantReactivePower() != null ? loadModificationInfos.getConstantReactivePower().getOp() : null;
+        this.p0Value = loadModificationInfos.getP0() != null ? loadModificationInfos.getP0().getValue() : null;
+        this.p0Op = loadModificationInfos.getP0() != null ? loadModificationInfos.getP0().getOp() : null;
+        this.q0Value = loadModificationInfos.getQ0() != null ? loadModificationInfos.getQ0().getValue() : null;
+        this.q0Op = loadModificationInfos.getQ0() != null ? loadModificationInfos.getQ0().getOp() : null;
     }
 
     @Override
@@ -84,8 +84,8 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
-                .constantActivePower(AttributeModification.toAttributeModification(getActivePowerValue(), getActivePowerOp()))
-                .constantReactivePower(AttributeModification.toAttributeModification(getReactivePowerValue(), getReactivePowerOp()))
+                .p0(AttributeModification.toAttributeModification(getP0Value(), getP0Op()))
+                .q0(AttributeModification.toAttributeModification(getQ0Value(), getQ0Op()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
