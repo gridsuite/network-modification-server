@@ -86,6 +86,8 @@ public class LineModificationEntity extends BranchModificationEntity {
             .stashed(getStashed())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+            .connected1(toAttributeModification(getConnected1()))
+            .connected2(toAttributeModification(getConnected2()))
             .seriesResistance(toAttributeModification(getSeriesResistance()))
             .seriesReactance(toAttributeModification(getSeriesReactance()))
             .shuntConductance1(toAttributeModification(getShuntConductance1()))

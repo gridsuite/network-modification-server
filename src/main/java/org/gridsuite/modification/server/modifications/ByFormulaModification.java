@@ -32,6 +32,7 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 public class ByFormulaModification extends AbstractModification {
+    public static final String EQUIPMENT_MODIFIED_REPORT_ERROR = "EquipmentModifiedReportError_";
     private final ByFormulaModificationInfos modificationInfos;
     protected FilterService filterService;
     private int equipmentNotModifiedCount;
@@ -140,7 +141,7 @@ public class ByFormulaModification extends AbstractModification {
                     .stream()
                     .map(attributes -> network.getIdentifiable(attributes.getId()))
                     .filter(identifiable -> {
-                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos);
+                        boolean isEditableEquipment = isEquipmentEditable(identifiable, formulaInfos, equipmentsReport);
                         if (!isEditableEquipment) {
                             notEditableEquipments.add(identifiable.getId());
                             equipmentNotModifiedCount += 1;
@@ -181,7 +182,7 @@ public class ByFormulaModification extends AbstractModification {
             if (!CollectionUtils.isEmpty(notEditableEquipments)) {
                 formulaReports.add(Report.builder()
                         .withKey("NotEditedEquipmentsFilter_" + formulaReports.size())
-                        .withDefaultMessage(String.format("      The following equipment were not modified : %s", String.join(", ", notEditableEquipments)))
+                        .withDefaultMessage(String.format("       %s equipment(s) were not modified", notEditableEquipments.size()))
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
             }
@@ -205,7 +206,8 @@ public class ByFormulaModification extends AbstractModification {
     }
 
     private boolean isEquipmentEditable(Identifiable<?> identifiable,
-                                        FormulaInfos formulaInfos) {
+                                        FormulaInfos formulaInfos,
+                                        List<Report> equipmentsReport) {
         if (formulaInfos.getEditedField() == null) {
             return false;
         }
@@ -214,8 +216,32 @@ public class ByFormulaModification extends AbstractModification {
             TwoWindingsTransformerField editedField = TwoWindingsTransformerField.valueOf(formulaInfos.getEditedField());
             TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) identifiable;
             return switch (editedField) {
-                case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> twoWindingsTransformer.getRatioTapChanger() != null;
-                case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> twoWindingsTransformer.getPhaseTapChanger() != null;
+                case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> {
+                    boolean isEditable = twoWindingsTransformer.getRatioTapChanger() != null;
+                    if (!isEditable) {
+                        equipmentsReport.add(Report.builder()
+                                .withKey(EQUIPMENT_MODIFIED_REPORT_ERROR + equipmentsReport.size())
+                                .withDefaultMessage(String.format("        Cannot modify field %s of equipment %s : Ratio tab changer is null",
+                                        editedField,
+                                        identifiable.getId()))
+                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .build());
+                    }
+                    yield isEditable;
+                }
+                case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> {
+                    boolean isEditable = twoWindingsTransformer.getPhaseTapChanger() != null;
+                    if (!isEditable) {
+                        equipmentsReport.add(Report.builder()
+                                .withKey(EQUIPMENT_MODIFIED_REPORT_ERROR + equipmentsReport.size())
+                                .withDefaultMessage(String.format("        Cannot modify field %s of equipment %s : Phase tab changer is null",
+                                        editedField,
+                                        identifiable.getId()))
+                                .withSeverity(TypedValue.TRACE_SEVERITY)
+                                .build());
+                    }
+                    yield isEditable;
+                }
                 default -> true;
             };
         }
@@ -232,7 +258,7 @@ public class ByFormulaModification extends AbstractModification {
             equipmentNotModifiedCount += 1;
             notEditableEquipments.add(identifiable.getId());
             reports.add(Report.builder()
-                    .withKey("EquipmentModifiedReportError_" + reports.size())
+                    .withKey(EQUIPMENT_MODIFIED_REPORT_ERROR + reports.size())
                     .withDefaultMessage(String.format("        Cannot modify equipment %s : At least one of the value or referenced field is null",
                             identifiable.getId()))
                     .withSeverity(TypedValue.TRACE_SEVERITY)

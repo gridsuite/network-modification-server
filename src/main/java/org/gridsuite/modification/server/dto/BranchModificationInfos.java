@@ -35,4 +35,9 @@ public class BranchModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "Current limits Side 2")
     private CurrentLimitsModificationInfos currentLimits2;
 
+    @Schema(description = "Connected 1")
+    private AttributeModification<Boolean> connected1;
+
+    @Schema(description = "Connected 2")
+    private AttributeModification<Boolean> connected2;
 }
