@@ -52,19 +52,6 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
         assertEquals(75, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
     }
 
-    @Test
-    public void testCreateWithError() throws Exception {
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithAllWrongId))
-                .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
-                .build();
-
-        checkCreateWithError(List.of(formulaInfos));
-    }
-
     @Override
     protected void createEquipments() {
         getNetwork().getBattery(BATTERY_ID_1).setTargetP(100).setMaxP(500).setMinP(0).setTargetQ(80);

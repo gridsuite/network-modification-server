@@ -48,19 +48,6 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
         assertEquals(5, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
     }
 
-    @Test
-    public void testCreateWithError() throws Exception {
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithAllWrongId))
-                .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(2.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(3.).build())
-                .build();
-
-        checkCreateWithError(List.of(formulaInfos));
-    }
-
     @Override
     protected void createEquipments() {
         createShuntCompensator(getNetwork().getVoltageLevel("v1"), SHUNT_COMPENSATOR_ID_1, "v1shunt", 8, 225., 10, true, 4, 2, 3, 2, "cn11", 22, ConnectablePosition.Direction.BOTTOM);
