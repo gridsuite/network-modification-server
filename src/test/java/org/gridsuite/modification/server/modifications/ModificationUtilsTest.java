@@ -21,10 +21,10 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  * @author David SARTORI <david.sartori_externe at rte-france.com>
  */
 
-public class ModificationUtilsTest {
+class ModificationUtilsTest {
 
     @Test
-    public void testCheckMaxQGreaterThanMinQ() {
+    void testCheckMaxQGreaterThanMinQ() {
         var point1 = ReactiveCapabilityCurveModificationInfos.builder().oldQminP(2.0).oldQmaxP(1.0).qminP(10.0).qmaxP(20.0).build();
         ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point1),
