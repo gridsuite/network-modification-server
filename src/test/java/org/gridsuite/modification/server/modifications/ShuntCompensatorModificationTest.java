@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
-public class ShuntCompensatorModificationTest extends AbstractNetworkModificationTest {
+public class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -309,5 +309,25 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v2shunt", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        ShuntCompensatorModificationInfos shuntModificationInfos =
+                ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("v2shunt")
+                        .build();
+        assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, false);
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        ShuntCompensatorModificationInfos shuntModificationInfos =
+                ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("v2shunt")
+                        .build();
+        assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, true);
     }
 }

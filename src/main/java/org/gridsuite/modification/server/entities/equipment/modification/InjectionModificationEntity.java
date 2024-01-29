@@ -6,16 +6,19 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.InjectionModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.MappedSuperclass;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 
 /**
  * @author Nicolas Noir <nicolas.noir at rte-france.com>
@@ -38,6 +41,13 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     @Enumerated(EnumType.STRING)
     private OperationType busOrBusbarSectionIdOp;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connected")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectedOp"))
+    })
+    private BooleanModificationEmbedded connected;
+
     protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes(modificationInfos);
@@ -54,5 +64,6 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
         this.voltageLevelIdOp = modificationInfos.getVoltageLevelId() != null ? modificationInfos.getVoltageLevelId().getOp() : null;
         this.busOrBusbarSectionIdValue = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getValue() : null;
         this.busOrBusbarSectionIdOp = modificationInfos.getBusOrBusbarSectionId() != null ? modificationInfos.getBusOrBusbarSectionId().getOp() : null;
+        this.connected = modificationInfos.getConnected() != null ? new BooleanModificationEmbedded(modificationInfos.getConnected()) : null;
     }
 }

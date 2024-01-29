@@ -357,4 +357,51 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line1", updatedValues.get("equipmentId"));
     }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        changeLineConnectionState(getNetwork().getLine("line1"), false);
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        changeLineConnectionState(getNetwork().getLine("line1"), true);
+    }
+
+    private void changeLineConnectionState(Line existingEquipment, boolean expectedState) throws Exception {
+        LineModificationInfos modificationInfos = (LineModificationInfos) buildModification();
+        modificationInfos.setConnected1(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setConnected2(new AttributeModification<>(expectedState, OperationType.SET));
+
+        if (expectedState) {
+            if (existingEquipment.getTerminal1().isConnected()) {
+                existingEquipment.getTerminal1().disconnect();
+            }
+            if (existingEquipment.getTerminal2().isConnected()) {
+                existingEquipment.getTerminal2().disconnect();
+            }
+        } else {
+            if (!existingEquipment.getTerminal1().isConnected()) {
+                existingEquipment.getTerminal1().connect();
+            }
+            if (!existingEquipment.getTerminal2().isConnected()) {
+                existingEquipment.getTerminal2().connect();
+            }
+        }
+        assertThat(existingEquipment.getTerminal1().isConnected()).isNotEqualTo(expectedState);
+        assertThat(existingEquipment.getTerminal2().isConnected()).isNotEqualTo(expectedState);
+
+        String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // connection state has changed as expected
+        assertThat(existingEquipment.getTerminal1().isConnected()).isEqualTo(expectedState);
+        assertThat(existingEquipment.getTerminal2().isConnected()).isEqualTo(expectedState);
+
+        // try to modify again => no change on connection state
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertThat(existingEquipment.getTerminal1().isConnected()).isEqualTo(expectedState);
+        assertThat(existingEquipment.getTerminal2().isConnected()).isEqualTo(expectedState);
+    }
 }

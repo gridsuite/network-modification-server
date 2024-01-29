@@ -28,4 +28,7 @@ public class InjectionModificationInfos extends BasicEquipmentModificationInfos 
 
     @Schema(description = "Bus id modification")
     private AttributeModification<String> busOrBusbarSectionId;
+
+    @Schema(description = "Connected")
+    private AttributeModification<Boolean> connected;
 }
