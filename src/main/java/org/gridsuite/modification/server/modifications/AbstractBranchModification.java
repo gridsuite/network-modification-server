@@ -76,6 +76,20 @@ public abstract class AbstractBranchModification extends AbstractModification {
             ModificationUtils.getInstance().reportModifications(limitsReporter, side2LimitsReports, "side2LimitsModification",
                     "    Side 2");
         }
+        if (branchModificationInfos.getConnected1() != null) {
+            updateConnection(branch, Branch.Side.ONE, modificationInfos.getConnected1().getValue());
+        }
+        if (branchModificationInfos.getConnected2() != null) {
+            updateConnection(branch, Branch.Side.TWO, modificationInfos.getConnected2().getValue());
+        }
+    }
+
+    private void updateConnection(Branch<?> branch, Branch.Side side, Boolean connectionChange) {
+        if (branch.getTerminal(side).isConnected() && Boolean.FALSE.equals(connectionChange)) {
+            branch.getTerminal(side).disconnect();
+        } else if (!branch.getTerminal(side).isConnected() && Boolean.TRUE.equals(connectionChange)) {
+            branch.getTerminal(side).connect();
+        }
     }
 
     protected void modifyCurrentLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder, CurrentLimits currentLimits, List<Report> limitsReports) {

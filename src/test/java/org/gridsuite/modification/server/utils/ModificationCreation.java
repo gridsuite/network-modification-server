@@ -104,8 +104,8 @@ public final class ModificationCreation {
             .voltageLevelId(vlId)
             .busOrBusbarSectionId(busOrBusBarSectionId)
             .loadType(loadType)
-            .activePower(100.0)
-            .reactivePower(20.0)
+            .p0(100.0)
+            .q0(20.0)
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
@@ -133,11 +133,11 @@ public final class ModificationCreation {
         }
 
         if (activePower != null) {
-            builder.constantActivePower(AttributeModification.toAttributeModification(activePower, OperationType.SET));
+            builder.p0(AttributeModification.toAttributeModification(activePower, OperationType.SET));
         }
 
         if (reactivePower != null) {
-            builder.constantReactivePower(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
+            builder.q0(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
         }
 
         return builder.build();

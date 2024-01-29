@@ -80,6 +80,8 @@ public class ShuntCompensatorModification extends AbstractModification {
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.LINEAR) {
             applyModificationOnLinearModel(subReporter, shuntCompensator, voltageLevel);
         }
+
+        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, shuntCompensator);
     }
 
     private void modifyMaximumSectionCount(List<Report> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {

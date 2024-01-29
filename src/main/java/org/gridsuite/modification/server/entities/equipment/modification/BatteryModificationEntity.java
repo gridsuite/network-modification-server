@@ -137,6 +137,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .connected(toAttributeModification(getConnected()))
                 .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
                 .maxActivePower(toAttributeModification(getMaxActivePower()))
                 .minActivePower(toAttributeModification(getMinActivePower()))

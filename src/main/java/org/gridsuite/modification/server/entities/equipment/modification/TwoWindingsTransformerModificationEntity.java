@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
 
+import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
+
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
@@ -351,6 +353,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .connected1(toAttributeModification(getConnected1()))
+                .connected2(toAttributeModification(getConnected2()))
                 .r(AttributeModification.toAttributeModification(getR()))
                 .x(AttributeModification.toAttributeModification(getX()))
                 .g(AttributeModification.toAttributeModification(getG()))
