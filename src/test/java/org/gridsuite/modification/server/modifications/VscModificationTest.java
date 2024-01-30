@@ -22,7 +22,9 @@ import java.util.stream.IntStream;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
+/**
+ * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
+ */
 @Tag("IntegrationTest")
 public class VscModificationTest extends AbstractNetworkModificationTest {
     @Override

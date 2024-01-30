@@ -14,6 +14,9 @@ import org.gridsuite.modification.server.entities.equipment.modification.VscModi
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.VscModification;
 
+/**
+ * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
+ */
 @SuperBuilder
 @NoArgsConstructor
 @Data

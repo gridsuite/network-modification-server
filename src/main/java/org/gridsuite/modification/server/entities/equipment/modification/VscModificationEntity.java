@@ -13,7 +13,9 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
-
+/**
+ * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
+ */
 @NoArgsConstructor
 @Getter
 @Entity

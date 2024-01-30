@@ -25,7 +25,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
 
 /**
- * Created by Kheyyad Jamal <Kheyyad.jamal at rte-france.com>
+ * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
 
 public class VscModification extends AbstractModification {

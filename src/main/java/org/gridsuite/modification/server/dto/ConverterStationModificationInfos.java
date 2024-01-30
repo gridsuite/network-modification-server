@@ -12,6 +12,9 @@ import org.gridsuite.modification.server.entities.equipment.modification.Convert
 
 import java.util.List;
 
+/**
+ * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
+ */
 @SuperBuilder
 @NoArgsConstructor
 @Getter

@@ -14,6 +14,10 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
+/**
+ * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
+ */
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
