@@ -149,6 +149,7 @@ public class VscModification extends AbstractModification {
                 && modificationInfos.getDroop() == null
                 && modificationInfos.getP0() == null;
     }
+
     private void hvdcAngleDroopActivePowerControlAdder(HvdcLine hvdcLine, Reporter subReporter) {
         List<Report> reports = new ArrayList<>();
 

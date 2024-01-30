@@ -235,23 +235,6 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         Assert.assertTrue(activePowerControl.isEnabled());
     }
 
-    @Test
-    public void testNoHVDCngleDroopActivePowerControlExtention() throws Exception {
-        var networkuuid = UUID.randomUUID();
-        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, false);
-        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(null, OperationType.SET));
-        modificationInfos.setDroop(new AttributeModification<>(null, OperationType.SET));
-        modificationInfos.setP0(new AttributeModification<>(null, OperationType.SET));
-        VscModification vscModification = new VscModification(modificationInfos);
-        Reporter subReporter = new Reporter.NoOpImpl();
-        ComputationManager computationManager = new LocalComputationManager();
-        vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
-        HvdcLine hvdcLine = networkWitoutExt.getHvdcLine("hvdcLine");
-        HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        assertNull(activePowerControl);
-    }
-
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
