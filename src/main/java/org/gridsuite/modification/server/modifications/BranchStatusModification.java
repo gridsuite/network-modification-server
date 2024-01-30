@@ -11,8 +11,8 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.OperatingStatus;
+import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.slf4j.Logger;
@@ -65,10 +65,10 @@ public class BranchStatusModification extends AbstractModification {
                 applySwitchOnBranch(subReporter, branch, branchTypeName);
                 break;
             case ENERGISE_END_ONE:
-                applyEnergiseBranchEnd(subReporter, branch, branchTypeName, Branch.Side.ONE);
+                applyEnergiseBranchEnd(subReporter, branch, branchTypeName, TwoSides.ONE);
                 break;
             case ENERGISE_END_TWO:
-                applyEnergiseBranchEnd(subReporter, branch, branchTypeName, Branch.Side.TWO);
+                applyEnergiseBranchEnd(subReporter, branch, branchTypeName, TwoSides.TWO);
                 break;
             default:
                 throw NetworkModificationException.createBranchActionTypeUnsupported(modificationInfos.getAction());
@@ -77,7 +77,7 @@ public class BranchStatusModification extends AbstractModification {
 
     private void applyLockoutBranch(Reporter subReporter, Branch<?> branch, String branchTypeName) {
         if (disconnectAllTerminals(branch)) {
-            branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.PLANNED_OUTAGE).add();
+            branch.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.PLANNED_OUTAGE).add();
         } else {
             throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to disconnect all branch ends");
         }
@@ -115,12 +115,12 @@ public class BranchStatusModification extends AbstractModification {
         traversedTerminals.stream().map(t -> network.getBranch(t.getConnectable().getId()))
                 .filter(Objects::nonNull)
                 .filter(distinctByKey(b -> b.getId()))  // dont process the same branch more than once
-                .forEach(b -> ((Branch<?>) b).newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.FORCED_OUTAGE).add());
+                .forEach(b -> ((Branch<?>) b).newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.FORCED_OUTAGE).add());
     }
 
     private void applySwitchOnBranch(Reporter subReporter, Branch<?> branch, String branchTypeName) {
         if (connectAllTerminals(branch)) {
-            branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+            branch.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
         } else {
             throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to connect all branch ends");
         }
@@ -133,10 +133,10 @@ public class BranchStatusModification extends AbstractModification {
                 .build());
     }
 
-    private void applyEnergiseBranchEnd(Reporter subReporter, Branch<?> branch, String branchTypeName, Branch.Side side) {
-        Branch.Side oppositeSide = side == Branch.Side.ONE ? Branch.Side.TWO : Branch.Side.ONE;
+    private void applyEnergiseBranchEnd(Reporter subReporter, Branch<?> branch, String branchTypeName, TwoSides side) {
+        TwoSides oppositeSide = side == TwoSides.ONE ? TwoSides.TWO : TwoSides.ONE;
         if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
-            branch.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.IN_OPERATION).add();
+            branch.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
         } else {
             throw new NetworkModificationException(BRANCH_ACTION_ERROR, "Unable to energise branch end");
         }
