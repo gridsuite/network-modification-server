@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
@@ -13,6 +14,7 @@ import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.LoadScalingInfos;
@@ -28,7 +30,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
@@ -54,7 +55,7 @@ public class LoadScaling extends AbstractScaling {
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
             var asked = getAsked(scalingVariationInfos, sum);
             var done = scale(network, scalingVariationInfos, asked, ventilationScalable);
-            createReport(subReporter, "scalingApplied", String.format("Successfully scaling variation in ventilation mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
+            reportScaling(subReporter, scalingVariationInfos.getVariationMode(), asked, done);
         }
     }
 
@@ -78,7 +79,7 @@ public class LoadScaling extends AbstractScaling {
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, regularDistributionScalable);
-        createReport(subReporter, "scalingApplied", String.format("Successfully scaling variation in regular Distribution mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
+        reportScaling(subReporter, scalingVariationInfos.getVariationMode(), asked, done);
     }
 
     @Override
@@ -101,7 +102,7 @@ public class LoadScaling extends AbstractScaling {
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, proportionalScalable);
-        createReport(subReporter, "scalingApplied", String.format("Successfully scaling variation in proportional mode with variation value asked is %s and variation done is %s", asked, done), TypedValue.INFO_SEVERITY);
+        reportScaling(subReporter, scalingVariationInfos.getVariationMode(), asked, done);
     }
 
     @Override
@@ -139,4 +140,14 @@ public class LoadScaling extends AbstractScaling {
         return Scalable.onLoad(id, -Double.MAX_VALUE, Double.MAX_VALUE);
     }
 
+    private void reportScaling(Reporter subReporter, VariationMode variationMode, double askedValue, double actualValue) {
+        subReporter.report(Report.builder()
+                .withKey("scalingApplied")
+                .withDefaultMessage("Successfully scaling variation in ${variationMode} mode with variation value asked is ${askedValue} and variation done is ${actualValue}")
+                .withValue("variationMode", variationMode.name())
+                .withValue("askedValue", askedValue)
+                .withValue("actualValue", actualValue)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
+    }
 }

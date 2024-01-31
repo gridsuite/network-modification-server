@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
@@ -28,7 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.modification.scalable.ScalingParameters.Priority.RESPECT_OF_VOLUME_ASKED;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -162,10 +162,14 @@ public class GeneratorScaling extends AbstractScaling {
     private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable, ScalingParameters scalingParameters) {
         double asked = getAsked(scalingVariationInfos, sum);
         double done = scalable.scale(network, asked, scalingParameters);
-        createReport(subReporter,
-                "scalingApplied",
-                String.format("successfully scaled for mode %s with variation value asked is %s. variation done is  %s", scalingVariationInfos.getVariationMode(), asked, done),
-                TypedValue.INFO_SEVERITY);
+        subReporter.report(Report.builder()
+                .withKey("scalingApplied")
+                .withDefaultMessage("successfully scaled for mode ${scalingMode} with variation value asked is ${askedValue}. variation done is  ${actualValue}")
+                .withValue("scalingMode", scalingVariationInfos.getVariationMode().name())
+                .withValue("askedValue", asked)
+                .withValue("actualValue", done)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
     }
 
     @Override
