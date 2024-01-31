@@ -84,7 +84,7 @@ public class GeneratorScaling extends AbstractScaling {
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
 
@@ -107,7 +107,7 @@ public class GeneratorScaling extends AbstractScaling {
         AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
         AtomicReference<Double> targetPSum = new AtomicReference<>(0D);
         List<Generator> generators = identifiableAttributes
-                .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
+                .stream().map(attribute -> network.getGenerator(attribute.getId())).toList();
         Map<String, Double> maxPMap = new HashMap<>();
         List<Double> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
@@ -132,7 +132,7 @@ public class GeneratorScaling extends AbstractScaling {
                                            ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Generator> generators = identifiableAttributes
-                .stream().map(attribute -> network.getGenerator(attribute.getId())).collect(Collectors.toList());
+                .stream().map(attribute -> network.getGenerator(attribute.getId())).toList();
         List<Double> percentages = new ArrayList<>();
         Map<String, Double> targetPMap = new HashMap<>();
         List<Scalable> scalables = new ArrayList<>();

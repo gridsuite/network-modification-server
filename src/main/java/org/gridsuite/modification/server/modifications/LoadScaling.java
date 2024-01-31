@@ -29,8 +29,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_SCALING_ERROR;
-
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
@@ -65,7 +63,7 @@ public class LoadScaling extends AbstractScaling {
                 .stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
 
@@ -85,7 +83,7 @@ public class LoadScaling extends AbstractScaling {
     @Override
     protected void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         List<Load> loads = identifiableAttributes
-                .stream().map(attribute -> network.getLoad(attribute.getId())).collect(Collectors.toList());
+                .stream().map(attribute -> network.getLoad(attribute.getId())).toList();
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
         List<Double> percentages = new ArrayList<>();
@@ -118,14 +116,12 @@ public class LoadScaling extends AbstractScaling {
     }
 
     private double scale(Network network, ScalingVariationInfos scalingVariationInfos, double asked, Scalable proportionalScalable) {
-        switch (scalingVariationInfos.getReactiveVariationMode()) {
-            case CONSTANT_Q:
-                return proportionalScalable.scale(network, asked, new ScalingParameters().setScalingConvention(Scalable.ScalingConvention.LOAD));
-            case TAN_PHI_FIXED:
-                return proportionalScalable.scale(network, asked, new ScalingParameters().setScalingConvention(Scalable.ScalingConvention.LOAD).setConstantPowerFactor(true));
-            default:
-                throw new NetworkModificationException(LOAD_SCALING_ERROR, "Reactive Variation mode not recognised");
-        }
+        return switch (scalingVariationInfos.getReactiveVariationMode()) {
+            case CONSTANT_Q ->
+                    proportionalScalable.scale(network, asked, new ScalingParameters().setScalingConvention(Scalable.ScalingConvention.LOAD));
+            case TAN_PHI_FIXED ->
+                    proportionalScalable.scale(network, asked, new ScalingParameters().setScalingConvention(Scalable.ScalingConvention.LOAD).setConstantPowerFactor(true));
+        };
     }
 
     @Override
