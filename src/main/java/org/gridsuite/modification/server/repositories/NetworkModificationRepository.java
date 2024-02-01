@@ -205,9 +205,7 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                groupEntity.getModifications().forEach(modificationEntity -> {
-                    deleteModification(modificationEntity);
-                });
+                groupEntity.getModifications().forEach(this::deleteModification);
             }
             this.modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
@@ -239,7 +237,7 @@ public class NetworkModificationRepository {
         }
         modifications.forEach(groupEntity::removeModification);
         int count = modifications.size();
-        modifications.forEach(modificationEntity -> deleteModification(modificationEntity));
+        modifications.forEach(this::deleteModification);
         return count;
     }
 
