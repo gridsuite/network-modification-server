@@ -8,14 +8,19 @@ package org.gridsuite.modification.server.repositories.equipmentmodification;
 
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Repository
-public interface VoltageLevelModificationRepository extends JpaRepository<VoltageLevelModificationEntity, UUID> {
-
+public interface VoltageLevelModificationRepository extends JpaRepository<VoltageLevelModificationEntity, UUID>, EquipmentModificationRepository {
+    @Modifying
+    @Query(value = "DELETE FROM voltage_level_modification WHERE id IN ?1", nativeQuery = true)
+    void deleteSubModificationsByIds(List<UUID> ids);
 }

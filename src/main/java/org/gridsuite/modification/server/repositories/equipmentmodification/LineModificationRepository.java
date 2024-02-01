@@ -19,7 +19,7 @@ import java.util.UUID;
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Repository
-public interface LineModificationRepository extends JpaRepository<LineModificationEntity, UUID> {
+public interface LineModificationRepository extends JpaRepository<LineModificationEntity, UUID>, EquipmentModificationRepository {
     @Modifying
     @Query(value = "DELETE FROM line_modification WHERE id IN ?1", nativeQuery = true)
     void deleteSubModificationsByIds(List<UUID> ids);
