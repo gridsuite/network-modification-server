@@ -24,7 +24,4 @@ public interface GeneratorModificationRepository extends JpaRepository<Generator
 
     @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
     List<GeneratorModificationEntity> findAllWithReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
-
-    @EntityGraph(attributePaths = {"modifications", "modifications.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Optional<TabularModificationEntity> findAllWithReactiveCapabilityCurvePointsById(UUID id);
 }
