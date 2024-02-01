@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -31,4 +32,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findSubModificationsIds(UUID uuid);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
+
+    @Modifying
+    @Query(value = "DELETE FROM modification WHERE id IN ?1", nativeQuery = true)
+    void deleteModificationByIds(List<UUID> ids);
+
 }

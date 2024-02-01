@@ -2,6 +2,7 @@ package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.gridsuite.modification.server.repositories.equipmentmodification.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,8 @@ import java.util.UUID;
 
 @Repository
 public class EquipmentModificationRepositories {
+
+    private final ModificationRepository modificationRepository;
 
     private final BatteryModificationRepository batteryModificationRepository;
 
@@ -31,6 +34,7 @@ public class EquipmentModificationRepositories {
     private final VoltageLevelModificationRepository voltageLevelModificationRepository;
 
     public EquipmentModificationRepositories(
+            ModificationRepository modificationRepository,
             BatteryModificationRepository batteryModificationRepository,
             GeneratorModificationRepository generatorModificationRepository,
             LineModificationRepository lineModificationRepository,
@@ -40,6 +44,7 @@ public class EquipmentModificationRepositories {
             TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
             VoltageLevelModificationRepository voltageLevelModificationRepository
     ) {
+        this.modificationRepository = modificationRepository;
         this.batteryModificationRepository = batteryModificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
         this.lineModificationRepository = lineModificationRepository;
@@ -52,6 +57,7 @@ public class EquipmentModificationRepositories {
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteAll() {
+        modificationRepository.deleteAll();
         batteryModificationRepository.deleteAll();
         generatorModificationRepository.deleteAll();
         lineModificationRepository.deleteAll();
@@ -105,5 +111,10 @@ public class EquipmentModificationRepositories {
                 return null;
             }
         }
+    }
+
+    public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
+        modificationRepository.deleteModificationByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
+//        getRepositoryByModificationType(tabularModificationEntity.getModificationType()).deleteSubModificationsByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
     }
 }

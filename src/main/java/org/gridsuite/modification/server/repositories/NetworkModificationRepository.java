@@ -205,7 +205,14 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+                groupEntity.getModifications().forEach(modificationEntity -> {
+                    if (modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
+                        equipmentModificationRepositories.deleteTabularModification(tabularModificationEntity);
+                    } else {
+                        modificationRepository.delete(modificationEntity);
+                    }
+                });
+//                modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
             }
             this.modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
