@@ -206,11 +206,7 @@ public class NetworkModificationRepository {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
                 groupEntity.getModifications().forEach(modificationEntity -> {
-                    if (modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
-                        equipmentModificationRepositories.deleteTabularModification(tabularModificationEntity);
-                    } else {
-                        modificationRepository.delete(modificationEntity);
-                    }
+                    deleteModification(modificationEntity);
                 });
             }
             this.modificationGroupRepository.delete(groupEntity);
@@ -219,6 +215,14 @@ public class NetworkModificationRepository {
                 return;
             }
             throw e;
+        }
+    }
+
+    private void deleteModification(ModificationEntity modificationEntity) {
+        if (modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
+            equipmentModificationRepositories.deleteTabularModification(tabularModificationEntity);
+        } else {
+            modificationRepository.delete(modificationEntity);
         }
     }
 
@@ -235,7 +239,7 @@ public class NetworkModificationRepository {
         }
         modifications.forEach(groupEntity::removeModification);
         int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
+        modifications.forEach(modificationEntity -> deleteModification(modificationEntity));
         return count;
     }
 
