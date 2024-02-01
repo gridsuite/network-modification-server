@@ -59,6 +59,6 @@ public class LoadModification extends AbstractModification {
         // properties
         PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
 
-        // TODO connectivity modification
+        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, load);
     }
 }

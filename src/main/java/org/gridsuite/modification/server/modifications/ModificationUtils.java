@@ -527,7 +527,7 @@ public final class ModificationUtils {
         return null;
     }
 
-    public void disconnectInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
+    public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
         // A newly created injection is connected by default, unless we choose not to do
         if (!modificationInfos.isConnected()) {
             injection.getTerminal().disconnect();
@@ -537,6 +537,16 @@ public final class ModificationUtils {
                     .withValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
+        }
+    }
+
+    public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection) {
+        if (modificationInfos.getConnected() != null) {
+            if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getConnected().getValue())) {
+                injection.getTerminal().disconnect();
+            } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue())) {
+                injection.getTerminal().connect();
+            }
         }
     }
 

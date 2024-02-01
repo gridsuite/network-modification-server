@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class BatteryModificationTest extends AbstractNetworkModificationTest {
+public class BatteryModificationTest extends AbstractInjectionModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -331,5 +331,15 @@ public class BatteryModificationTest extends AbstractNetworkModificationTest {
         assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBatteryEdited", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        assertChangeConnectionState(getNetwork().getBattery("v3Battery"), false);
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        assertChangeConnectionState(getNetwork().getBattery("v3Battery"), true);
     }
 }

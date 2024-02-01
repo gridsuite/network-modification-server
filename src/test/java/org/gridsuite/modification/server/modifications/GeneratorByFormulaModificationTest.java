@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import org.gridsuite.modification.server.dto.FilterEquipments;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
@@ -67,16 +68,19 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Test
-    public void testCreateWithError() throws Exception {
+    public void testWithNullReferenceFieldOrValue() throws Exception {
+        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
+        FilterEquipments filterEquipments = getFilterEquipments(FILTER_ID_1, "filter1", List.of(identifiableAttributes), List.of());
+
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithAllWrongId))
+                .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1")))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
+                .fieldOrValue2(ReferenceFieldOrValue.builder().build())
                 .build();
 
-        checkCreateWithError(List.of(formulaInfos));
+        checkCreateWithError(List.of(formulaInfos), List.of(filterEquipments));
     }
 
     protected void createEquipments() {

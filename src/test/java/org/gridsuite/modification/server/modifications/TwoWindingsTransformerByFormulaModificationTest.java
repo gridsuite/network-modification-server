@@ -37,14 +37,10 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
     @Test
     public void testModifyTwtWithError() throws Exception {
+        // Test modifying ratio tab changer field when ratio tab changer is null
         IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
         FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_ID_4))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
@@ -52,16 +48,28 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .operator(Operator.ADDITION)
                 .build();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
-                .identifiableType(getIdentifiableType())
-                .formulaInfosList(List.of(formulaInfos))
-                .build(),
-                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        checkCreateWithError(List.of(formulaInfos), List.of(filter));
 
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_4)), false);
+        // Test modifying phase tab changer field when phase tab changer is null
+        IdentifiableAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
+        IdentifiableAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
+        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(identifiableAttributes3, identifiableAttributes4), List.of());
+        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+                .filters(List.of(filter1))
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
+                .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
+                .operator(Operator.ADDITION)
+                .build();
+
+        checkCreateWithError(List.of(formulaInfos2), List.of(filter2));
+
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
     }
 
     @Test
@@ -81,6 +89,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.).build())
                 .operator(Operator.DIVISION)
                 .filters(List.of(filter4))
+                .editedField(TwoWindingsTransformerField.SERIES_RESISTANCE.name())
                 .build();
 
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
