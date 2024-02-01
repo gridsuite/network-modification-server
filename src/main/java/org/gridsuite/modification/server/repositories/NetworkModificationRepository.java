@@ -212,7 +212,7 @@ public class NetworkModificationRepository {
                         modificationRepository.delete(modificationEntity);
                     }
                 });
-            }git
+            }
             this.modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
