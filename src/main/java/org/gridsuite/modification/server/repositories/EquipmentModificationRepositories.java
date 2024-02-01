@@ -75,7 +75,7 @@ public class EquipmentModificationRepositories {
         return subEntities;
     }
 
-    public JpaRepository getRepositoryByModificationType(ModificationType modificationType) {
+    public JpaRepository<? extends ModificationEntity, UUID> getRepositoryByModificationType(ModificationType modificationType) {
         switch (modificationType) {
             case BATTERY_MODIFICATION -> {
                 return batteryModificationRepository;
