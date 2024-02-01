@@ -27,7 +27,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
-    @Query(value = "SELECT modifications_id from tabular_modification_modifications where tabular_modification_entity_id= ?1", nativeQuery = true)
+    @Query(value = "SELECT cast(modifications_id as varchar) from tabular_modification_modifications where tabular_modification_entity_id= ?1", nativeQuery = true)
     List<UUID> findSubModificationsIds(UUID uuid);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
