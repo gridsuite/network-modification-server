@@ -6,14 +6,12 @@
  */
 package org.gridsuite.modification.server.repositories.equipmentmodification;
 
-import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
