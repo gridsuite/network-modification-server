@@ -4,5 +4,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface EquipmentModificationRepository {
-    void deleteSubModificationsByIds(List<UUID> ids);
+    void deleteSubModificationsByIds(List<UUID> subModificationIds, UUID tabularModificationId);
 }

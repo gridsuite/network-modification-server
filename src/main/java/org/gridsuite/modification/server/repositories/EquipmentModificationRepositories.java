@@ -55,7 +55,7 @@ public class EquipmentModificationRepositories {
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
     }
 
-    @Transactional // To have the 2 delete in the same transaction (atomic)
+    @Transactional
     public void deleteAll() {
         modificationRepository.deleteAll();
         batteryModificationRepository.deleteAll();
@@ -114,8 +114,7 @@ public class EquipmentModificationRepositories {
     }
 
     public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
-        ((EquipmentModificationRepository) getRepositoryByModificationType(tabularModificationEntity.getModificationType())).deleteSubModificationsByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
-        modificationRepository.deleteTabularModificationInJoinTableByIds(tabularModificationEntity.getId());
-        modificationRepository.deleteModificationByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
+        List<UUID> subModificationsIds = modificationRepository.findSubModificationsIds(tabularModificationEntity.getId());
+        ((EquipmentModificationRepository) getRepositoryByModificationType(tabularModificationEntity.getModificationType())).deleteSubModificationsByIds(subModificationsIds, tabularModificationEntity.getId());
     }
 }

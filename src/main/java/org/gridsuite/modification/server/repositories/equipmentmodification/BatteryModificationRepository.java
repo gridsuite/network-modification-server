@@ -20,8 +20,14 @@ import java.util.UUID;
  */
 @Repository
 public interface BatteryModificationRepository extends JpaRepository<BatteryModificationEntity, UUID>, EquipmentModificationRepository {
-
+    @Override
     @Modifying
-    @Query(value = "DELETE FROM battery_modification WHERE id IN ?1", nativeQuery = true)
-    void deleteSubModificationsByIds(List<UUID> ids);
+    @Query(value = "BEGIN;" +
+            "ALTER TABLE modification DISABLE TRIGGER ALL;" +
+            "DELETE FROM battery_modification WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
+            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "ALTER TABLE modification ENABLE TRIGGER ALL;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteSubModificationsByIds(List<UUID> subModificationIds, UUID tabularModificationId);
 }

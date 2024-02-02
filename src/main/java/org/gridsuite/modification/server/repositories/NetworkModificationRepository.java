@@ -249,7 +249,6 @@ public class NetworkModificationRepository {
         modifications.forEach(groupEntity::removeModification);
 
         int count = modifications.size();
-//        this.modificationRepository.deleteAll(modifications);
         modifications.forEach(this::deleteModification);
         return count;
     }
