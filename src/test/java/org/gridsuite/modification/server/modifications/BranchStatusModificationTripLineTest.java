@@ -8,7 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.extensions.OperatingStatus;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Tag;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
-import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
+import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
+import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
@@ -28,8 +28,8 @@ public class BranchStatusModificationTripLineTest extends AbstractNetworkModific
 
     private static final String TARGET_LINE_ID = "line2";
     private static final String UPDATE_BRANCH_ID = "line1";
-    private static final BranchStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
-    private static final BranchStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
+    private static final OperatingStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
+    private static final OperatingStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {

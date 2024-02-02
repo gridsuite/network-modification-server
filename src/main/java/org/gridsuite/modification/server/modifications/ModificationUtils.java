@@ -374,15 +374,15 @@ public final class ModificationUtils {
                 .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
 
         // lineAdder completion by topology
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Branch.Side.ONE, withSwitch1);
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Branch.Side.TWO, withSwitch2);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, TwoSides.ONE, withSwitch1);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, TwoSides.TWO, withSwitch2);
 
         return lineAdder;
     }
 
     void setBranchAdderNodeOrBus(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos,
-                                 Branch.Side side, boolean withSwitch) {
-        String busOrBusbarSectionId = (side == Branch.Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
+                                 TwoSides side, boolean withSwitch) {
+        String busOrBusbarSectionId = (side == TwoSides.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
         if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
             setBranchAdderBusBreaker(branchAdder, voltageLevel, side, busOrBusbarSectionId);
         } else {
@@ -392,11 +392,11 @@ public final class ModificationUtils {
         }
     }
 
-    private void setBranchAdderBusBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
+    private void setBranchAdderBusBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, TwoSides side, String busId) {
         Bus bus = getBusBreakerBus(voltageLevel, busId);
 
         // complete the lineAdder
-        if (side == Branch.Side.ONE) {
+        if (side == TwoSides.ONE) {
             branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
         } else {
             branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
@@ -404,7 +404,7 @@ public final class ModificationUtils {
     }
 
     private void setBranchAdderNodeBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel,
-                                           BranchCreationInfos branchCreationInfos, Branch.Side side,
+                                           BranchCreationInfos branchCreationInfos, TwoSides side,
                                            String currentBusBarSectionId) {
         // create cell switches
         String sideSuffix = side != null ? "_" + side.name() : "";
@@ -415,7 +415,7 @@ public final class ModificationUtils {
             sideSuffix);
 
         // complete the lineAdder
-        if (side == Branch.Side.ONE) {
+        if (side == TwoSides.ONE) {
             branchAdder.setNode1(nodeNum);
         } else {
             branchAdder.setNode2(nodeNum);
