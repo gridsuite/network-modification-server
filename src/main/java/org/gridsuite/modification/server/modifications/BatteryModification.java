@@ -95,6 +95,7 @@ public class BatteryModification extends AbstractModification {
 
         modifyBatteryLimitsAttributes(modificationInfos, battery, subReporter);
         modifyBatterySetpointsAttributes(modificationInfos, battery, subReporter);
+        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, battery);
     }
 
     private void modifyBatterySetpointsAttributes(BatteryModificationInfos modificationInfos,
