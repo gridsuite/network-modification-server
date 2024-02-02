@@ -219,9 +219,8 @@ public class NetworkModificationRepository {
     private void deleteModification(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity tabularModificationEntity) {
             equipmentModificationRepositories.deleteTabularModification(tabularModificationEntity);
-        } else {
-            modificationRepository.delete(modificationEntity);
         }
+        modificationRepository.delete(modificationEntity);
     }
 
     @Transactional
@@ -248,8 +247,10 @@ public class NetworkModificationRepository {
                 .filter(m -> uuids.contains(m.getId()))
                 .collect(Collectors.toList());
         modifications.forEach(groupEntity::removeModification);
+
         int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
+//        this.modificationRepository.deleteAll(modifications);
+        modifications.forEach(this::deleteModification);
         return count;
     }
 

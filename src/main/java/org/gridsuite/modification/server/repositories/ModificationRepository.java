@@ -37,4 +37,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "DELETE FROM modification WHERE id IN ?1", nativeQuery = true)
     void deleteModificationByIds(List<UUID> ids);
 
+    @Modifying
+    @Query(value = "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?1", nativeQuery = true)
+    void deleteTabularModificationInJoinTableByIds(UUID id);
 }

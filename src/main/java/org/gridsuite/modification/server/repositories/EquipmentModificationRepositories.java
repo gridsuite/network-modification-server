@@ -114,7 +114,8 @@ public class EquipmentModificationRepositories {
     }
 
     public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
-        modificationRepository.deleteModificationByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
         ((EquipmentModificationRepository) getRepositoryByModificationType(tabularModificationEntity.getModificationType())).deleteSubModificationsByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
+        modificationRepository.deleteTabularModificationInJoinTableByIds(tabularModificationEntity.getId());
+        modificationRepository.deleteModificationByIds(modificationRepository.findSubModificationsIds(tabularModificationEntity.getId()));
     }
 }
