@@ -20,6 +20,10 @@ import java.util.UUID;
  */
 @Repository
 public interface LineModificationRepository extends JpaRepository<LineModificationEntity, UUID>, EquipmentModificationRepository {
+    // To disable trigger is a bad practice and in production, the postgres user of the application will not be allowed to change the schema.
+    // This code is just an example of how fixing the following problem :
+    // When we want to delete a tabular modification, we need to execute a delete statement with thousands of ids on the 'modification' table.
+    // But as the 'modification' table is referenced up to now by 40 foreign key constraints (it will be about 300 later), all the triggers make the delete statement execution quite slow (about 3-4 seconds).
     @Override
     @Modifying
     @Query(value = "BEGIN;" +
