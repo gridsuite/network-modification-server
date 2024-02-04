@@ -101,7 +101,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
-        assertSelectCount(3);
+        assertSelectCount(4);
 
         modifications = List.of(
                 GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
@@ -119,7 +119,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
-        assertSelectCount(3);
+        assertSelectCount(4);
         reset();
 
         // We get the modifications of the group (so the 2 tabular modifications)
