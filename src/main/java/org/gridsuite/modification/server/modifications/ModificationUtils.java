@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -525,6 +526,27 @@ public final class ModificationUtils {
         }
 
         return null;
+    }
+
+    public List<Terminal> getTerminalsFromIdentifiable(Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch<?> branch) {
+            return Stream.of(
+                    branch.getTerminal1(),
+                    branch.getTerminal2()
+            ).collect(Collectors.toList());
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return Stream.of(
+                    w3t.getLeg1().getTerminal(),
+                    w3t.getLeg2().getTerminal(),
+                    w3t.getLeg3().getTerminal()
+            ).collect(Collectors.toList());
+        } else if (identifiable instanceof HvdcLine hvdcLine) {
+            return Stream.of(
+                    hvdcLine.getConverterStation1().getTerminal(),
+                    hvdcLine.getConverterStation2().getTerminal()
+            ).collect(Collectors.toList());
+        }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
 
     public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {

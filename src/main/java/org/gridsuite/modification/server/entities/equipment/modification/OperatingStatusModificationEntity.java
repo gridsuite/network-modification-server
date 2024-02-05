@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
@@ -20,36 +20,36 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "branchStatusModification")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "branchStatusModification_id_fk_constraint"))
-public class BranchStatusModificationEntity extends EquipmentModificationEntity {
+@Table(name = "operatingStatusModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "operatingStatusModification_id_fk_constraint"))
+public class OperatingStatusModificationEntity extends EquipmentModificationEntity {
 
     @Column(name = "action")
     @Enumerated(EnumType.STRING)
-    private BranchStatusModificationInfos.ActionType action;
+    private OperatingStatusModificationInfos.ActionType action;
 
     @Column
     private String energizedVoltageLevelId;
 
-    public BranchStatusModificationEntity(@NonNull BranchStatusModificationInfos branchStatusModificationInfos) {
-        super(branchStatusModificationInfos);
-        assignAttributes(branchStatusModificationInfos);
+    public OperatingStatusModificationEntity(@NonNull OperatingStatusModificationInfos operatingStatusModificationInfos) {
+        super(operatingStatusModificationInfos);
+        assignAttributes(operatingStatusModificationInfos);
     }
 
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((BranchStatusModificationInfos) modificationInfos);
+        assignAttributes((OperatingStatusModificationInfos) modificationInfos);
     }
 
-    private void assignAttributes(BranchStatusModificationInfos branchStatusModificationInfos) {
-        action = branchStatusModificationInfos.getAction();
-        energizedVoltageLevelId = branchStatusModificationInfos.getEnergizedVoltageLevelId();
+    private void assignAttributes(OperatingStatusModificationInfos operatingStatusModificationInfos) {
+        action = operatingStatusModificationInfos.getAction();
+        energizedVoltageLevelId = operatingStatusModificationInfos.getEnergizedVoltageLevelId();
     }
 
     @Override
-    public BranchStatusModificationInfos toModificationInfos() {
-        return BranchStatusModificationInfos
+    public OperatingStatusModificationInfos toModificationInfos() {
+        return OperatingStatusModificationInfos
             .builder()
             .uuid(getId())
             .date(getDate())
