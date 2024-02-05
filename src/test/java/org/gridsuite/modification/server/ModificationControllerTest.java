@@ -329,7 +329,7 @@ public class ModificationControllerTest {
                         .queryParam("uuids", uuidString)
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
-        assertEquals(true, modificationRepository.getModificationInfo(UUID.fromString(uuidString)).getStashed());
+        assertEquals(true, modificationRepository.getModificationInfos(UUID.fromString(uuidString)).getStashed());
     }
 
     @Test

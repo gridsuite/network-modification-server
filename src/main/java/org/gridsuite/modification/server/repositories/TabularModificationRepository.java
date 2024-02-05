@@ -2,17 +2,18 @@ package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.gridsuite.modification.server.repositories.equipmentmodification.*;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Repository
-public class EquipmentModificationRepositories {
+public class TabularModificationRepository {
+
+    private final ModificationRepository modificationRepository;
 
     private final BatteryModificationRepository batteryModificationRepository;
 
@@ -30,16 +31,17 @@ public class EquipmentModificationRepositories {
 
     private final VoltageLevelModificationRepository voltageLevelModificationRepository;
 
-    public EquipmentModificationRepositories(
-            BatteryModificationRepository batteryModificationRepository,
-            GeneratorModificationRepository generatorModificationRepository,
-            LineModificationRepository lineModificationRepository,
-            LoadModificationRepository loadModificationRepository,
-            ShuntCompensatorModificationRepository shuntCompensatorModificationRepository,
-            SubstationModificationRepository substationModificationRepository,
-            TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
-            VoltageLevelModificationRepository voltageLevelModificationRepository
+    public TabularModificationRepository(
+        ModificationRepository modificationRepository, BatteryModificationRepository batteryModificationRepository,
+        GeneratorModificationRepository generatorModificationRepository,
+        LineModificationRepository lineModificationRepository,
+        LoadModificationRepository loadModificationRepository,
+        ShuntCompensatorModificationRepository shuntCompensatorModificationRepository,
+        SubstationModificationRepository substationModificationRepository,
+        TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
+        VoltageLevelModificationRepository voltageLevelModificationRepository
     ) {
+        this.modificationRepository = modificationRepository;
         this.batteryModificationRepository = batteryModificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
         this.lineModificationRepository = lineModificationRepository;
@@ -62,20 +64,16 @@ public class EquipmentModificationRepositories {
         voltageLevelModificationRepository.deleteAll();
     }
 
-    public GeneratorModificationRepository getGeneratorModificationRepository() {
-        return generatorModificationRepository;
+    public void fillSubEntities(TabularModificationEntity tabularModificationEntity) {
+        List<UUID> ids = modificationRepository.findSubModificationsIds(tabularModificationEntity.getId());
+        List<ModificationEntity> modifications = getRepositoryByModificationType(tabularModificationEntity.getModificationType()).findAllEagerlyByIdIn(ids)
+            .stream()
+            .map(m -> (ModificationEntity) m)
+            .toList();
+        tabularModificationEntity.setModifications(modifications);
     }
 
-    public List<ModificationEntity> findSubEntities(ModificationType modificationType, List<UUID> ids) {
-        List<ModificationEntity> subEntities = new ArrayList<>();
-        switch (modificationType) {
-            case GENERATOR_MODIFICATION -> subEntities.addAll(generatorModificationRepository.findAllWithReactiveCapabilityCurvePointsByIdIn(ids));
-            default -> subEntities.addAll(getRepositoryByModificationType(modificationType).findAllById(ids));
-        }
-        return subEntities;
-    }
-
-    public JpaRepository<? extends ModificationEntity, UUID> getRepositoryByModificationType(ModificationType modificationType) {
+    private EagerNetworkModificationRepository<? extends ModificationEntity> getRepositoryByModificationType(ModificationType modificationType) {
         switch (modificationType) {
             case BATTERY_MODIFICATION -> {
                 return batteryModificationRepository;
@@ -101,9 +99,7 @@ public class EquipmentModificationRepositories {
             case VOLTAGE_LEVEL_MODIFICATION -> {
                 return voltageLevelModificationRepository;
             }
-            default -> {
-                return null;
-            }
+            default -> throw new TabularModificationRepositoryException("Type " + modificationType + " should not be present in tabular modifications.");
         }
     }
 }

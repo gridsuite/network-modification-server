@@ -70,55 +70,55 @@ public class ModificationRepositoryTest {
     }
 
     public EquipmentAttributeModificationInfos getEquipmentAttributeModification(UUID modificationUuid) {
-        return (EquipmentAttributeModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (EquipmentAttributeModificationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private LoadCreationInfos getLoadCreationModification(UUID modificationUuid) {
-        return (LoadCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (LoadCreationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private GeneratorCreationInfos getGeneratorCreationModification(UUID modificationUuid) {
-        return (GeneratorCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (GeneratorCreationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private LineCreationInfos getLineCreationModification(UUID modificationUuid) {
-        return (LineCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (LineCreationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private SubstationCreationInfos getSubstationCreationModification(UUID modificationUuid) {
-        return (SubstationCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (SubstationCreationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private VoltageLevelCreationInfos getVoltageLevelCreationModification(UUID modificationUuid) {
-        return (VoltageLevelCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (VoltageLevelCreationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     public GroovyScriptInfos getGroovyScript(UUID modificationUuid) {
-        return (GroovyScriptInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (GroovyScriptInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID modificationUuid) {
-        return (ShuntCompensatorCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (ShuntCompensatorCreationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private LineSplitWithVoltageLevelInfos getLineSplitWithVoltageLevelModification(UUID modificationUuid) {
-        return (LineSplitWithVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (LineSplitWithVoltageLevelInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private LineAttachToVoltageLevelInfos getLineAttachToVoltageLevelModification(UUID modificationUuid) {
-        return (LineAttachToVoltageLevelInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (LineAttachToVoltageLevelInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private LinesAttachToSplitLinesInfos getLinesAttachToSplitLinesModification(UUID modificationUuid) {
-        return (LinesAttachToSplitLinesInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (LinesAttachToSplitLinesInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private DeleteVoltageLevelOnLineInfos getDeleteVoltageLevelOnLineModification(UUID modificationUuid) {
-        return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (DeleteVoltageLevelOnLineInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     private VoltageInitModificationInfos getVoltageInitModification(UUID modificationUuid) {
-        return (VoltageInitModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+        return (VoltageInitModificationInfos) networkModificationRepository.getModificationInfos(modificationUuid);
     }
 
     @Test

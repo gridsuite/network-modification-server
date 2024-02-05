@@ -18,8 +18,9 @@ import java.util.UUID;
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Repository
-public interface GeneratorModificationRepository extends JpaRepository<GeneratorModificationEntity, UUID> {
+public interface GeneratorModificationRepository extends JpaRepository<GeneratorModificationEntity, UUID>, EagerNetworkModificationRepository<GeneratorModificationEntity> {
 
-    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<GeneratorModificationEntity> findAllWithReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
+    @Override
+    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints", "properties"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<GeneratorModificationEntity> findAllEagerlyByIdIn(List<UUID> ids);
 }

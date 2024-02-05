@@ -78,7 +78,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getModificationInfo(networkModificationUuid);
+        return networkModificationRepository.getModificationInfos(networkModificationUuid);
     }
 
     public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashed) {
@@ -225,7 +225,7 @@ public class NetworkModificationService {
         List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
             .stream()
             .filter(m -> !m.getStashed())
-            .map(networkModificationRepository::getModificationInfos)
+            .map(ModificationEntity::toModificationInfos)
             .collect(Collectors.toList());
 
         PreloadingStrategy preloadingStrategy = movedModifications.stream()
@@ -260,7 +260,9 @@ public class NetworkModificationService {
         if (!modificationEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, modificationEntities);
 
-            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(networkModificationRepository::getModificationInfos).collect(Collectors.toList());
+            List<ModificationInfos> modificationInfos = modificationEntities.stream()
+                .map(ModificationEntity::toModificationInfos) // We save the modifications so they are fully loaded already
+                .collect(Collectors.toList());
 
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()
                 .map(ModificationInfos::getType)
@@ -284,7 +286,7 @@ public class NetworkModificationService {
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
-        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(m -> networkModificationRepository.getModificationInfos(m).toEntity()).collect(Collectors.toList());
+        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(m -> m.toModificationInfos().toEntity()).collect(Collectors.toList());
         return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
     }
 
