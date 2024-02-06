@@ -21,6 +21,6 @@ import java.util.UUID;
 public interface BatteryModificationRepository extends JpaRepository<BatteryModificationEntity, UUID>, EagerNetworkModificationRepository<BatteryModificationEntity> {
 
     @Override
-    @EntityGraph(attributePaths = "properties", type = EntityGraph.EntityGraphType.LOAD)
+    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints", "properties"}, type = EntityGraph.EntityGraphType.LOAD)
     List<BatteryModificationEntity> findAllEagerlyByIdIn(List<UUID> ids);
 }
