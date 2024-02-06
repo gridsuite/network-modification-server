@@ -14,14 +14,20 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.utils.ApiUtils;
+import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -93,5 +99,49 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         Assertions.assertEquals(MOFIFICATION_TYPE.name(), updatedValues.get("tabularModificationType"));
+    }
+
+    @Test
+    public void testSqlRequestsCountOnGetModification() throws Exception {
+        UUID tabularWith1ModificationUuid = createTabularSubstationModification(1);
+        reset();
+        ApiUtils.getModification(mockMvc, tabularWith1ModificationUuid); // Getting one tabular modification with one sub-modification
+        assertSelectCount(3);
+
+        UUID tabularWith3ModificationUuid = createTabularSubstationModification(3);
+        reset();
+        ApiUtils.getModification(mockMvc, tabularWith3ModificationUuid); // Getting one tabular modification with three sub-modifications
+        assertSelectCount(3);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
+        createTabularSubstationModification(1);
+        createTabularSubstationModification(3);
+
+        reset();
+        ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
+        assertSelectCount(6);
+    }
+
+    private UUID createTabularSubstationModification(int qty) {
+        ModificationInfos tabularModification = TabularModificationInfos.builder()
+            .modificationType(ModificationType.SUBSTATION_MODIFICATION)
+            .modifications(createSubstationModificationList(qty))
+            .build();
+        return saveModification(tabularModification);
+    }
+
+    private List<ModificationInfos> createSubstationModificationList(int qty) {
+        List<ModificationInfos> modifications = new ArrayList<>();
+        for (int i = 0; i <= qty; i++) {
+            modifications.add(
+                SubstationModificationInfos.builder()
+                    .equipmentId(UUID.randomUUID().toString())
+                    .properties(List.of(ModificationCreation.getFreeProperty()))
+                    .build()
+            );
+        }
+        return modifications;
     }
 }
