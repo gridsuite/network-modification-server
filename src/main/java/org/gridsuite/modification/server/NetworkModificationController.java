@@ -217,11 +217,11 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createModificationInGroup(modificationsInfos));
     }
 
-    @PostMapping(value = "/network-modifications/{modificationUuid}/duplicate", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Duplicate a modification without group ownership")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The modification has been created")})
-    public ResponseEntity<UUID> duplicateModification(@Parameter(description = "source modification UUID to duplicate") @PathVariable("modificationUuid") UUID sourceModificationUuid) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateModification(sourceModificationUuid));
+    @PostMapping(value = "/network-modifications/duplicate", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Duplicate some modifications without group ownership")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids sorted list")})
+    public ResponseEntity<List<UUID>> duplicateModifications(@Parameter(description = "source modifications uuids sorted list to duplicate") @RequestBody List<UUID> sortedSourceModificationUuids) {
+        return ResponseEntity.ok().body(networkModificationService.duplicateModifications(sortedSourceModificationUuids));
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -258,5 +258,13 @@ public class NetworkModificationController {
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/network-modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get modifications metadata")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "metadata used to describe modification elements"),
+        @ApiResponse(responseCode = "404", description = "The modification list does not exists")})
+    public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
     }
 }

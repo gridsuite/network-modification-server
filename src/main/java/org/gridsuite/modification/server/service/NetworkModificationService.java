@@ -294,8 +294,8 @@ public class NetworkModificationService {
         return groupUuid;
     }
 
-    public UUID duplicateModification(@NonNull UUID sourceModificationUuid) {
-        return networkModificationRepository.duplicateModification(sourceModificationUuid);
+    public List<UUID> duplicateModifications(List<UUID> sortedSourceModificationUuids) {
+        return networkModificationRepository.duplicateModifications(sortedSourceModificationUuids);
     }
 
     @Transactional
@@ -311,4 +311,7 @@ public class NetworkModificationService {
         networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
     }
 
+    public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
+        return networkModificationRepository.getModificationsMetadata(ids);
+    }
 }

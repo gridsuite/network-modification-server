@@ -7,8 +7,10 @@
 package org.gridsuite.modification.server.repositories;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
@@ -120,14 +122,14 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public UUID duplicateModification(@NonNull UUID sourceModificationUuid) {
-        Optional<ModificationEntity> optionalModificationEntity = modificationRepository.findById(sourceModificationUuid);
-        if (!optionalModificationEntity.isPresent()) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, sourceModificationUuid.toString());
-        }
-        // try other way : entity:copy
-        ModificationInfos newModificationInfos = optionalModificationEntity.get().toModificationInfos();
-        return modificationRepository.save(newModificationInfos.toEntity()).getId();
+    public List<UUID> duplicateModifications(List<UUID> sortedSourceModificationUuids) {
+        List<ModificationEntity> sourceModifications = modificationRepository.findAllById(sortedSourceModificationUuids);
+        // This is important to sort because findAllById does not guarantee we'll get the entities as in sourceModificationUuids order.
+        // In deed this function must return the new entities uuids in the same order as we got them in sourceModificationUuids.
+        List<ModificationEntity> copySortedEntities = sourceModifications.stream()
+                .sorted(Comparator.comparing(ModificationEntity::getId))
+                .map(ModificationEntity::copy).toList();
+        return modificationRepository.saveAll(copySortedEntities).stream().map(ModificationEntity::getId).toList();
     }
 
     @Transactional(readOnly = true)
@@ -148,15 +150,15 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        Stream<ModificationEntity> modificationEntitySteam = modificationRepository
+        Stream<ModificationEntity> modificationEntityStream = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
         if (onlyStashed) {
-            return modificationEntitySteam.filter(m -> m.getStashed())
+            return modificationEntityStream.filter(m -> m.getStashed())
                     .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         } else {
-            return modificationEntitySteam
+            return modificationEntityStream
                     .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         }
@@ -340,5 +342,17 @@ public class NetworkModificationRepository {
             }
             throw e;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationMetadata> getModificationsMetadata(List<UUID> uuids) {
+        // custom query to read only the required fields (id/type)
+        return modificationRepository.findMetadataIn(uuids)
+            .stream()
+            .map(entity -> ModificationMetadata.builder()
+                    .id(entity.getId())
+                    .type(ModificationType.valueOf(entity.getType()))
+                    .build())
+            .toList();
     }
 }
