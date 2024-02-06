@@ -18,6 +18,8 @@ import java.util.Arrays;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public final class ModificationCreation {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     private ModificationCreation() {
     }
@@ -151,5 +153,9 @@ public final class ModificationCreation {
         builder.equipmentName(AttributeModification.toAttributeModification(vlName, OperationType.SET));
 
         return builder.build();
+    }
+
+    public static FreePropertyInfos getFreeProperty() {
+        return FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build();
     }
 }

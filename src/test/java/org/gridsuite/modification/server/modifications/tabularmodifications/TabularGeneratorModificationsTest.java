@@ -13,12 +13,15 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.utils.ApiUtils;
+import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,9 +30,7 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -87,46 +88,48 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testCheckSqlRequestsCount() throws Exception {
-        List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
-        );
-        ModificationInfos modificationInfos = TabularModificationInfos.builder()
-                .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(modifications)
-                .build();
-        UUID modificationUuid = saveModification(modificationInfos);
+    public void testSqlRequestsCountOnGetModification() throws Exception {
+        UUID tabularWith1ModificationUuid = createTabularGeneratorModification(1);
         reset();
-
-        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+        ApiUtils.getModification(mockMvc, tabularWith1ModificationUuid); // Getting one tabular modification with one sub-modification
         assertSelectCount(3);
 
-        modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
-        );
-        modificationInfos = TabularModificationInfos.builder()
-                .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(modifications)
-                .build();
-        modificationUuid = saveModification(modificationInfos);
+        UUID tabularWith3ModificationUuid = createTabularGeneratorModification(3);
         reset();
-
-        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
+        ApiUtils.getModification(mockMvc, tabularWith3ModificationUuid); // Getting one tabular modification with three sub-modifications
         assertSelectCount(3);
-        reset();
+    }
 
-        // We get the modifications of the group (so the 2 tabular modifications)
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
-                .andExpect(status().isOk());
-        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
+    @Test
+    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
+        createTabularGeneratorModification(1);
+        createTabularGeneratorModification(3);
+
+        reset();
+        ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
         assertSelectCount(6);
+    }
+
+    private UUID createTabularGeneratorModification(int qty) {
+        ModificationInfos tabularModification = TabularModificationInfos.builder()
+            .modificationType(ModificationType.GENERATOR_MODIFICATION)
+            .modifications(createGeneratorModificationList(qty))
+            .build();
+        return saveModification(tabularModification);
+    }
+
+    private List<ModificationInfos> createGeneratorModificationList(int qty) {
+        List<ModificationInfos> modifications = new ArrayList<>();
+        for (int i = 0; i <= qty; i++) {
+            modifications.add(
+                GeneratorModificationInfos.builder()
+                    .equipmentId(UUID.randomUUID().toString())
+                    .maxActivePower(new AttributeModification<>(300., OperationType.SET))
+                    .properties(List.of(ModificationCreation.getFreeProperty()))
+                    .build()
+            );
+        }
+        return modifications;
     }
 
     @Test

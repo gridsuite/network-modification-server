@@ -7,10 +7,7 @@
 package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +19,7 @@ import org.gridsuite.modification.server.dto.*;
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Entity
