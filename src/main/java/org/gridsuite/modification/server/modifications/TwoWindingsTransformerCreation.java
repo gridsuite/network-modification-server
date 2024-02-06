@@ -117,8 +117,8 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         }
 
         // BranchAdder completion by topology
-        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Branch.Side.ONE, withSwitch1);
-        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Branch.Side.TWO, withSwitch2);
+        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, TwoSides.ONE, withSwitch1);
+        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, TwoSides.TWO, withSwitch2);
 
         return twoWindingsTransformerAdder;
     }
