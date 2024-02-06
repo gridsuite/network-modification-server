@@ -167,7 +167,7 @@ public class NetworkModificationService {
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
+                    modificationsByGroup = networkModificationRepository.getModificationsInfos(groupUuid, false)
                         .stream()
                         .filter(m -> !m.getStashed())
                         .collect(Collectors.toList());
