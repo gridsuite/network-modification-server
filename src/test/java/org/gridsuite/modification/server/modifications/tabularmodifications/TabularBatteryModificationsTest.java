@@ -16,11 +16,8 @@ import org.gridsuite.modification.server.dto.BatteryModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
-import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
-import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 
@@ -29,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 
@@ -38,7 +33,7 @@ import static org.junit.Assert.assertEquals;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
+public class TabularBatteryModificationsTest extends AbstractTabularModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -104,30 +99,8 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
         Assertions.assertEquals(ModificationType.BATTERY_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
-    @Test
-    public void testSqlRequestsCountOnGetModification() throws Exception {
-        UUID tabularWith1ModificationUuid = createTabularBatteryModification(1);
-        reset();
-        ApiUtils.getModification(mockMvc, tabularWith1ModificationUuid); // Getting one tabular modification with one sub-modification
-        assertSelectCount(3);
-
-        UUID tabularWith3ModificationUuid = createTabularBatteryModification(3);
-        reset();
-        ApiUtils.getModification(mockMvc, tabularWith3ModificationUuid); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(3);
-    }
-
-    @Test
-    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
-        createTabularBatteryModification(1);
-        createTabularBatteryModification(3);
-
-        reset();
-        ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(6);
-    }
-
-    private UUID createTabularBatteryModification(int qty) {
+    @Override
+    protected UUID createTabularModification(int qty) {
         ModificationInfos tabularModification = TabularModificationInfos.builder()
             .modificationType(ModificationType.BATTERY_MODIFICATION)
             .modifications(createBatteryModificationList(qty))
@@ -137,7 +110,7 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
 
     private List<ModificationInfos> createBatteryModificationList(int qty) {
         List<ModificationInfos> modifications = new ArrayList<>();
-        for (int i = 0; i <= qty; i++) {
+        for (int i = 0; i < qty; i++) {
             modifications.add(
                 BatteryModificationInfos.builder()
                     .equipmentId(UUID.randomUUID().toString())

@@ -12,8 +12,6 @@ import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
-import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -26,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest {
+public class TabularGeneratorModificationsTest extends AbstractTabularModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -87,30 +83,8 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertEquals(1000., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
     }
 
-    @Test
-    public void testSqlRequestsCountOnGetModification() throws Exception {
-        UUID tabularWith1ModificationUuid = createTabularGeneratorModification(1);
-        reset();
-        ApiUtils.getModification(mockMvc, tabularWith1ModificationUuid); // Getting one tabular modification with one sub-modification
-        assertSelectCount(3);
-
-        UUID tabularWith3ModificationUuid = createTabularGeneratorModification(3);
-        reset();
-        ApiUtils.getModification(mockMvc, tabularWith3ModificationUuid); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(3);
-    }
-
-    @Test
-    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
-        createTabularGeneratorModification(1);
-        createTabularGeneratorModification(3);
-
-        reset();
-        ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(6);
-    }
-
-    private UUID createTabularGeneratorModification(int qty) {
+    @Override
+    protected UUID createTabularModification(int qty) {
         ModificationInfos tabularModification = TabularModificationInfos.builder()
             .modificationType(ModificationType.GENERATOR_MODIFICATION)
             .modifications(createGeneratorModificationList(qty))
@@ -120,7 +94,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     private List<ModificationInfos> createGeneratorModificationList(int qty) {
         List<ModificationInfos> modifications = new ArrayList<>();
-        for (int i = 0; i <= qty; i++) {
+        for (int i = 0; i < qty; i++) {
             modifications.add(
                 GeneratorModificationInfos.builder()
                     .equipmentId(UUID.randomUUID().toString())
