@@ -128,13 +128,12 @@ public class NetworkModificationRepository {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
-    @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
             if (onlyMetadata) {
                 return getModificationsMetadata(groupUuid, onlyStashed);
             }
-            return onlyStashed ? getModificationsInfos(groupUuid, true) : getModificationsInfos(groupUuid);
+            return onlyStashed ? getModificationsInfosNonTransactional(groupUuid, true) : getModificationsInfos(groupUuid);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -166,6 +165,10 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModificationsInfos(UUID groupUuid, boolean stashed) {
+        return getModificationsInfosNonTransactional(groupUuid, stashed);
+    }
+
+    private List<ModificationInfos> getModificationsInfosNonTransactional(UUID groupUuid, boolean stashed) {
         return getModificationEntityStream(groupUuid)
             .filter(m -> m.getStashed() == stashed)
             .map(this::getModificationInfos)
