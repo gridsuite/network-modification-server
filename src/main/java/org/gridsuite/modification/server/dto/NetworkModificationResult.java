@@ -54,10 +54,10 @@ public class NetworkModificationResult {
     public Set<String> getImpactedSubstationsIds() {
         Set<String> ids = new TreeSet<>();
         networkImpacts.stream().forEach(impact -> {
-            if (impact instanceof SimpleElementImpact) {
-                ids.addAll(((SimpleElementImpact) impact).getSubstationIds());
+            if (impact instanceof SimpleElementImpact simpleImpact) {
+                ids.addAll(simpleImpact.getSubstationIds());
             } else if (impact instanceof CollectionElementImpact) {
-                // DO nothing;
+                // TODO: Do nothing for now
             }
         });
         return ids;
