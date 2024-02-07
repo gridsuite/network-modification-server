@@ -54,15 +54,15 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    @Value("${powsybl-ws.impacts.collection-threshold:50}")
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService) {
+                                         ReportService reportService, FilterService filterService, @Value("${powsybl-ws.impacts.collection-threshold:50}") Integer collectionThreshold) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
+        this.collectionThreshold = collectionThreshold;
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
