@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 
 /**
  * This class describes a collection type network impact
- * This type of network impact describes an impact on multiple items and the list of associated substations
+ * This type of network impact describes an impact on multiple items of the same IdentifiableType
  *
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
