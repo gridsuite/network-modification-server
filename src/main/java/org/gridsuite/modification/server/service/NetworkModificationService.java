@@ -130,7 +130,7 @@ public class NetworkModificationService {
                                                                          @NonNull ModificationInfos modificationInfos) {
         NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, modificationInfos.getType().getStrategy());
 
-        networkModificationRepository.saveModifications(groupUuid, List.of(modificationInfos.toEntity()));
+        saveModifications(groupUuid, modificationInfos);
 
         return networkInfos.isVariantPresent() ?
             Optional.of(modificationApplicator.applyModifications(List.of(modificationInfos), networkInfos, reportInfos)) :
@@ -167,7 +167,7 @@ public class NetworkModificationService {
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(groupUuid, false)
+                    modificationsByGroup = networkModificationRepository.getModificationsInfos(groupUuid)
                         .stream()
                         .filter(m -> !m.getStashed())
                         .collect(Collectors.toList());
@@ -245,7 +245,7 @@ public class NetworkModificationService {
 
     public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
-            networkModificationRepository.saveModifications(groupUuid, networkModificationRepository.copyModificationsEntities(sourceGroupUuid));
+            saveModifications(groupUuid, networkModificationRepository.getModificationsInfos(sourceGroupUuid, false));
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                 return;
@@ -254,16 +254,9 @@ public class NetworkModificationService {
         }
     }
 
-    private Optional<NetworkModificationResult> saveAndApplyModifications(UUID targetGroupUuid,
-                                                                          UUID networkUuid, String variantId,
-                                                                          ReportInfos reportInfos, List<ModificationEntity> modificationEntities) {
-        if (!modificationEntities.isEmpty()) {
-            networkModificationRepository.saveModifications(targetGroupUuid, modificationEntities);
-
-            List<ModificationInfos> modificationInfos = modificationEntities.stream()
-                .map(ModificationEntity::toModificationInfos) // We save the modifications so they are fully loaded already
-                .collect(Collectors.toList());
-
+    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId,
+                                                                   ReportInfos reportInfos, List<ModificationInfos> modificationInfos) {
+        if (!modificationInfos.isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()
                 .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
@@ -281,32 +274,42 @@ public class NetworkModificationService {
         return Optional.empty();
     }
 
-    @Transactional
     public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
-        List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
-        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(m -> m.toModificationInfos().toEntity()).collect(Collectors.toList());
-        return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
+        saveModifications(targetGroupUuid, modificationInfos);
+        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
     public UUID createModificationInGroup(@NonNull ModificationInfos modificationsInfos) {
         UUID groupUuid = UUID.randomUUID();
-        networkModificationRepository.saveModifications(groupUuid, List.of(modificationsInfos.toEntity()));
+        saveModifications(groupUuid, modificationsInfos);
         return groupUuid;
     }
 
-    @Transactional
-    public Optional<NetworkModificationResult> duplicateModificationsInGroup(UUID targetGroupUuid,
-                                                                             UUID networkUuid, String variantId,
-                                                                             ReportInfos reportInfos,
-                                                                             UUID originGroupUuid) {
-        List<ModificationEntity> duplicatedModificationsEntities = networkModificationRepository.copyModificationsEntities(originGroupUuid);
-        return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
+    public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
+                                                                      UUID networkUuid, String variantId,
+                                                                      ReportInfos reportInfos,
+                                                                      UUID originGroupUuid) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(originGroupUuid, false);
+        saveModifications(targetGroupUuid, modificationInfos);
+        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
     }
 
+    private void saveModifications(UUID groupUuid, ModificationInfos modificationInfos) {
+        saveModifications(groupUuid, List.of(modificationInfos));
+    }
+
+    private void saveModifications(UUID groupUuid, List<ModificationInfos> modificationInfos) {
+        List<ModificationEntity> modificationEntities = modificationInfos
+            .stream()
+            .map(ModificationInfos::toEntity)
+            .toList();
+        networkModificationRepository.saveModifications(groupUuid, modificationEntities);
+    }
 }

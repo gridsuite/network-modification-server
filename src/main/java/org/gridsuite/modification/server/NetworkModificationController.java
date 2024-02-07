@@ -240,7 +240,7 @@ public class NetworkModificationController {
                                                                                              @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
                                                                                              @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
                                                                                              @Parameter(description = "origin group UUID, from where modifications are copied") @RequestParam(value = "duplicateFrom") UUID originGroupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateModificationsInGroup(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), originGroupUuid));
+        return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), originGroupUuid));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")

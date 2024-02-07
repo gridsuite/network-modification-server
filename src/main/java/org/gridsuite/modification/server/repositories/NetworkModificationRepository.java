@@ -131,7 +131,10 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(groupUuid, onlyStashed);
+            if (onlyMetadata) {
+                return getModificationsMetadata(groupUuid, onlyStashed);
+            }
+            return onlyStashed ? getModificationsInfos(groupUuid, true) : getModificationsInfos(groupUuid);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -155,16 +158,26 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationInfos> getModificationsInfos(UUID groupUuid, boolean onlyStashed) {
-        Stream<ModificationEntity> modificationEntities = getModificationEntityStream(groupUuid);
-        if (onlyStashed) {
-            return modificationEntities.filter(m -> m.getStashed() == onlyStashed)
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
-        } else {
-            return modificationEntities.map(this::getModificationInfos)
-                .collect(Collectors.toList());
-        }
+    public List<ModificationInfos> getModificationsInfos(UUID groupUuid) {
+        return getModificationEntityStream(groupUuid)
+            .map(this::getModificationInfos)
+            .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModificationsInfos(UUID groupUuid, boolean stashed) {
+        return getModificationEntityStream(groupUuid)
+            .filter(m -> m.getStashed() == stashed)
+            .map(this::getModificationInfos)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getModificationsInfos(List<UUID> modificationUuids) {
+        return modificationRepository.findAllByIdIn(modificationUuids)
+            .stream()
+            .map(this::getModificationInfos)
+            .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -242,19 +255,6 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
         return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
-        // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
-        List<ModificationEntity> entities = modificationRepository.findAllById(uuids);
-        entities.sort(Comparator.comparing(e -> uuids.indexOf(e.getId())));
-        return entities;
-    }
-
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList());
     }
 
     @Transactional
