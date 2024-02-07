@@ -719,7 +719,7 @@ public class BuildTest {
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         // LOAD and SWITCH equipments are Collection impacted
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 22, Set.of("newSubstation", "s1"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 22, Set.of(IdentifiableType.LOAD, IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -865,7 +865,7 @@ public class BuildTest {
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
         // SWITCH equipments are Collection impacted
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 22, Set.of("newSubstation", "s1"));
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 22, Set.of(IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
         buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
