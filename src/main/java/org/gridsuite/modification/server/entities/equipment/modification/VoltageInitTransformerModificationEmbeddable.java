@@ -7,15 +7,14 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import com.powsybl.iidm.network.ThreeWindingsTransformer;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import com.powsybl.iidm.network.ThreeSides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -34,5 +33,5 @@ public class VoltageInitTransformerModificationEmbeddable {
 
     @Column
     @Enumerated(EnumType.STRING)
-    private ThreeWindingsTransformer.Side legSide;
+    private ThreeSides legSide;
 }
