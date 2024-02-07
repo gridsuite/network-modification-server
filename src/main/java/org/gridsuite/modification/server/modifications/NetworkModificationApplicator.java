@@ -112,23 +112,15 @@ public class NetworkModificationApplicator {
         return getApplicationStatus(reporter);
     }
 
-    @SuppressWarnings("squid:S1181")
     private void apply(AbstractModification modification, Network network, Reporter subReporter) {
-        try {
-            // check input data but don't change the network
-            modification.check(network);
+        // check input data but don't change the network
+        modification.check(network);
 
-            // init application context
-            modification.initApplicationContext(this);
+        // init application context
+        modification.initApplicationContext(this);
 
-            // apply all changes on the network
-            modification.apply(network, subReporter);
-        } catch (Error e) {
-            // TODO remove this catch with powsybl 5.2.0
-            // Powsybl can raise Error
-            // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
-            throw new PowsyblException(e);
-        }
+        // apply all changes on the network
+        modification.apply(network, subReporter);
     }
 
     private void handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {

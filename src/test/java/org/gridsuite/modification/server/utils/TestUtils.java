@@ -15,8 +15,8 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.OperatingStatus;
+import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.server.service.ReportService;
@@ -27,27 +27,14 @@ import org.springframework.cloud.stream.binder.test.OutputDestination;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.verify;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -111,20 +98,20 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static void assertBranchStatus(Network network, String branchName, BranchStatus.Status status) {
+    public static void assertBranchStatus(Network network, String branchName, OperatingStatus.Status status) {
         assertNotNull(network);
         Branch<?> branch = network.getBranch(branchName);
         assertNotNull(branch);
-        BranchStatus branchStatus = branch.getExtensionByName("branchStatus");
-        assertNotNull(branchStatus);
-        assertEquals(status, branchStatus.getStatus());
+        OperatingStatus operatingStatus = branch.getExtensionByName("operatingStatus");
+        assertNotNull(operatingStatus);
+        assertEquals(status, operatingStatus.getStatus());
     }
 
     @SuppressWarnings("unchecked")
-    public static void setBranchStatus(Network network, String branchName, BranchStatus.Status status) {
+    public static void setBranchStatus(Network network, String branchName, OperatingStatus.Status status) {
         Branch<?> branch = network.getBranch(branchName);
         assertNotNull(branch);
-        branch.newExtension(BranchStatusAdder .class).withStatus(status).add();
+        branch.newExtension(OperatingStatusAdder.class).withStatus(status).add();
     }
 
     public static String resourceToString(String resource) throws IOException {

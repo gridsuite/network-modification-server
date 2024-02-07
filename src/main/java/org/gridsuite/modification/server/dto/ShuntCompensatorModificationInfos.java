@@ -33,7 +33,7 @@ import org.gridsuite.modification.server.modifications.ShuntCompensatorModificat
 @Schema(description = "Shunt compensator modification")
 @JsonTypeName("SHUNT_COMPENSATOR_MODIFICATION")
 @ModificationErrorTypeName("MODIFY_SHUNT_COMPENSATOR_ERROR")
-public class ShuntCompensatorModificationInfos extends BasicEquipmentModificationInfos {
+public class ShuntCompensatorModificationInfos extends InjectionModificationInfos {
 
     @Schema(description = "Maximum number of sections")
     private AttributeModification<Integer> maximumSectionCount;

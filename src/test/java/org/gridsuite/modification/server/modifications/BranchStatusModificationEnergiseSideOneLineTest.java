@@ -83,10 +83,19 @@ public class BranchStatusModificationEnergiseSideOneLineTest extends AbstractNet
 
     @Test
     public void testCreateWithErrors() throws Exception {
-        // line not existing
+        // Add a line that can't be disconnected
+        Line line = getNetwork().newLine()
+                .setId("cantdisconnect")
+                .setVoltageLevel1("v1")
+                .setVoltageLevel2("v3")
+                .setNode1(0)
+                .setNode2(0)
+                .setX(12)
+                .setR(7)
+                .add();
+        assertNotNull(line);
         BranchStatusModificationInfos modificationInfos = (BranchStatusModificationInfos) buildModification();
-        // disconnection error
-        modificationInfos.setEquipmentId("line3");
+        modificationInfos.setEquipmentId("cantdisconnect");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
