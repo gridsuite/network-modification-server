@@ -3,7 +3,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
@@ -14,7 +13,6 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ConverterStationModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VscModificationInfos;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,11 +40,9 @@ public class VscModification extends AbstractModification {
             ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, converterStationModificationInfos.getMinimumReactivePower(), converterStationModificationInfos.getMaximumReactivePower(), MODIFY_VSC_ERROR, errorMessage);
         }
 
-        Collection<ReactiveCapabilityCurve.Point> points = vscConverterStation.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? vscConverterStation.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-        List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = converterStationModificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
-            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(batteryPoints, modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
+        if (modificationPoints != null) {
+            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
         }
     }
 
@@ -64,7 +60,7 @@ public class VscModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, boolean throwException, ComputationManager computationManager, Reporter subReporter) {
+    public void apply(Network network, Reporter subReporter) {
         HvdcLine hvdcLine = ModificationUtils.getInstance().getHvdcLine(network, modificationInfos.getEquipmentId());
         modifyVsc(network, hvdcLine, modificationInfos, subReporter);
     }
