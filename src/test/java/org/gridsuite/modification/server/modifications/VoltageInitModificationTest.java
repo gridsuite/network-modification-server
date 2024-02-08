@@ -7,19 +7,9 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.ThreeWindingsTransformer;
-import com.powsybl.iidm.network.VoltageLevel;
-import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitShuntCompensatorModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitStaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitVscConverterStationModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -120,21 +110,21 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(2)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .legSide(ThreeSides.TWO)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3wtNotFound")
-                    .legSide(ThreeWindingsTransformer.Side.THREE)
+                    .legSide(ThreeSides.THREE)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3wtNotFound")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .legSide(ThreeSides.ONE)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .legSide(ThreeSides.ONE)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
@@ -207,7 +197,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(2)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
