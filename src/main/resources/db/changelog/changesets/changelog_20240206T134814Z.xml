@@ -1,0 +1,36 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lecuyerfra (generated)" id="1707227330534-29">
+        <createTable tableName="tabular_creation">
+            <column name="creation_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_creationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1707227330534-30">
+        <createTable tableName="tabular_creation_creations">
+            <column name="tabular_creation_entity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_creation_creationsPK"/>
+            </column>
+            <column name="creations_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creations_order" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_creation_creationsPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1707227330534-39">
+        <addUniqueConstraint columnNames="creations_id" constraintName="UC_TABULAR_CREATION_CREATIONSCREATIONS_ID_COL" tableName="tabular_creation_creations"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1707227330534-47">
+        <addForeignKeyConstraint baseColumnNames="creations_id" baseTableName="tabular_creation_creations" constraintName="FKelukcx22jydneoe391uq4jylk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1707227330534-48">
+        <addForeignKeyConstraint baseColumnNames="tabular_creation_entity_id" baseTableName="tabular_creation_creations" constraintName="FKfwrws133a9sgryhp0cb5skt0i" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tabular_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="lecuyerfra (generated)" id="1707227330534-49">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="tabular_creation" constraintName="FKtl1p2yavkv7bvs33v3srdepc4" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
