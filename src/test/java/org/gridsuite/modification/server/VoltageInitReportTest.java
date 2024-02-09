@@ -12,7 +12,7 @@ import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.commons.reporter.ReporterModelDeserializer;
 import com.powsybl.commons.reporter.ReporterModelJsonModule;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ThreeWindingsTransformer;
+import com.powsybl.iidm.network.ThreeSides;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.NetworkStoreServicePublic;
 import com.powsybl.network.store.client.PreloadingStrategy;
@@ -44,7 +44,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -120,7 +120,7 @@ class VoltageInitReportTest {
                     VoltageInitGeneratorModificationInfos.builder().generatorId("G2").voltageSetpoint(226.).build()))
                 .transformers(List.of(
                     VoltageInitTransformerModificationInfos.builder().transformerId("2WT1").ratioTapChangerPosition(3).build(),
-                    VoltageInitTransformerModificationInfos.builder().transformerId("3WT1").ratioTapChangerPosition(1).legSide(ThreeWindingsTransformer.Side.TWO).build()))
+                    VoltageInitTransformerModificationInfos.builder().transformerId("3WT1").ratioTapChangerPosition(1).legSide(ThreeSides.TWO).build()))
                 .staticVarCompensators(List.of(
                     VoltageInitStaticVarCompensatorModificationInfos.builder().staticVarCompensatorId("SVC1").reactivePowerSetpoint(50.).build(),
                     VoltageInitStaticVarCompensatorModificationInfos.builder().staticVarCompensatorId("SVC2").voltageSetpoint(374.).build()))

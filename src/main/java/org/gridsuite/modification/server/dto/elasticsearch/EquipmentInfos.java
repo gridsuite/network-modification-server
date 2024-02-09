@@ -78,9 +78,9 @@ public class EquipmentInfos extends BasicEquipmentInfos {
         } else if (identifiable instanceof ThreeWindingsTransformer) {
             ThreeWindingsTransformer w3t = (ThreeWindingsTransformer) identifiable;
             return Stream.of(
-                w3t.getTerminal(ThreeWindingsTransformer.Side.ONE).getVoltageLevel(),
-                w3t.getTerminal(ThreeWindingsTransformer.Side.TWO).getVoltageLevel(),
-                w3t.getTerminal(ThreeWindingsTransformer.Side.THREE).getVoltageLevel()
+                w3t.getTerminal(ThreeSides.ONE).getVoltageLevel(),
+                w3t.getTerminal(ThreeSides.TWO).getVoltageLevel(),
+                w3t.getTerminal(ThreeSides.THREE).getVoltageLevel()
             ).collect(Collectors.toSet());
         }
 
