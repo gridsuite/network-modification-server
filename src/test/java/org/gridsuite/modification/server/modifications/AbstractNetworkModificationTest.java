@@ -18,6 +18,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -126,6 +127,10 @@ public abstract class AbstractNetworkModificationTest {
         }
     }
 
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        // nothing to check by default
+    }
+
     @Test
     public void testCreate() throws Exception {
         MvcResult mvcResult;
@@ -137,6 +142,7 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
+        assertResultImpacts(networkModificationResult.get().getNetworkImpacts());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 

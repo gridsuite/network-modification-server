@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
@@ -34,6 +35,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,6 +64,11 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
     public static final String PATH = "/v1/filters/export";
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        assertThat(impacts).containsExactlyInAnyOrder(createCollectionElementImpact(getIdentifiableType()));
+    }
 
     @Before
     public void specificSetUp() {

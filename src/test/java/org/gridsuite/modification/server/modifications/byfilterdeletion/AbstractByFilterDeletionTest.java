@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -32,6 +33,11 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     protected abstract List<FilterEquipments> getTestFilters();
 
     public static final String PATH = "/v1/filters/export";
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        // TODO later
+    }
 
     @Test
     @Override
