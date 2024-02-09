@@ -271,6 +271,14 @@ public class NetworkStoreListener implements NetworkListener {
         // keep Deletion impacts separatly
         Set<AbstractBaseImpact> resImpacts = impacts.stream().filter(i -> i.getImpactType() == ImpactType.DELETION).collect(Collectors.toSet());
 
+        // compute substations impact
+        if (impacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet()).size() >= collectionThreshold) {
+            resImpacts.add(CollectionElementImpact.builder()
+                    .impactType(ImpactType.COLLECTION)
+                    .elementType(IdentifiableType.SUBSTATION)
+                    .build());
+        }
+
         // then filter those DELETION impacts for the next part and the collection impact computation
         Set<SimpleElementImpact> filteredImpacts = impacts.stream()
             .filter(i -> i.getImpactType() != ImpactType.DELETION)
