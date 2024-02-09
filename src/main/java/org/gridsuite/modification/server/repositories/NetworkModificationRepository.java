@@ -122,14 +122,23 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<UUID> duplicateModifications(List<UUID> sortedSourceModificationUuids) {
-        List<ModificationEntity> sourceModifications = modificationRepository.findAllById(sortedSourceModificationUuids);
-        // This is important to sort because findAllById does not guarantee we'll get the entities as in sourceModificationUuids order.
-        // In deed this function must return the new entities uuids in the same order as we got them in sourceModificationUuids.
-        List<ModificationEntity> copySortedEntities = sourceModifications.stream()
-                .sorted(Comparator.comparing(ModificationEntity::getId))
-                .map(ModificationEntity::copy).toList();
-        return modificationRepository.saveAll(copySortedEntities).stream().map(ModificationEntity::getId).toList();
+    public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
+        List<ModificationEntity> sourceEntities = modificationRepository.findAllById(sourceModificationUuids);
+        // findAllById does not keep sourceModificationUuids order, but
+        // sourceEntities, copyEntities, newEntities have the same order.
+        List<ModificationEntity> copyEntities = sourceEntities.stream()
+                .map(ModificationEntity::copy)
+                .toList();
+        List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
+
+        Map<UUID, UUID> ids = new HashMap<>();
+        // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
+        Iterator<ModificationEntity> sourceIterator = sourceEntities.iterator();
+        Iterator<ModificationEntity> newIterator = newEntities.iterator();
+        while (sourceIterator.hasNext() && newIterator.hasNext()) {
+            ids.put(sourceIterator.next().getId(), newIterator.next().getId());
+        }
+        return ids;
     }
 
     @Transactional(readOnly = true)
@@ -253,8 +262,8 @@ public class NetworkModificationRepository {
             modifications = modificationRepository.findAllById(uuids);
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
-                throw new NetworkModificationException(MODIFICATION_DELETION_ERROR,
-                    String.format("%s is owned by group %s", optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId().toString()));
+                throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
+                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId().toString()));
             }
         }
         int count = modifications.size();

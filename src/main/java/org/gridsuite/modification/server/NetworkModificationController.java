@@ -21,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -219,8 +220,8 @@ public class NetworkModificationController {
 
     @PostMapping(value = "/network-modifications/duplicate", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Duplicate some modifications without group ownership")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids sorted list")})
-    public ResponseEntity<List<UUID>> duplicateModifications(@Parameter(description = "source modifications uuids sorted list to duplicate") @RequestBody List<UUID> sortedSourceModificationUuids) {
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids mapped with their source uuid")})
+    public ResponseEntity<Map<UUID, UUID>> duplicateModifications(@Parameter(description = "source modifications uuids list to duplicate") @RequestBody List<UUID> sortedSourceModificationUuids) {
         return ResponseEntity.ok().body(networkModificationService.duplicateModifications(sortedSourceModificationUuids));
     }
 
