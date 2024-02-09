@@ -221,8 +221,8 @@ public class NetworkModificationController {
     @PostMapping(value = "/network-modifications/duplicate", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Duplicate some modifications without group ownership")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids mapped with their source uuid")})
-    public ResponseEntity<Map<UUID, UUID>> duplicateModifications(@Parameter(description = "source modifications uuids list to duplicate") @RequestBody List<UUID> sortedSourceModificationUuids) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateModifications(sortedSourceModificationUuids));
+    public ResponseEntity<Map<UUID, UUID>> duplicateModifications(@Parameter(description = "source modifications uuids list to duplicate") @RequestBody List<UUID> sourceModificationUuids) {
+        return ResponseEntity.ok().body(networkModificationService.duplicateModifications(sourceModificationUuids));
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)

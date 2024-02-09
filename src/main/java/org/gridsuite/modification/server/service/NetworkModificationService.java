@@ -294,8 +294,8 @@ public class NetworkModificationService {
         return groupUuid;
     }
 
-    public Map<UUID, UUID> duplicateModifications(List<UUID> sortedSourceModificationUuids) {
-        return networkModificationRepository.duplicateModifications(sortedSourceModificationUuids);
+    public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
+        return networkModificationRepository.duplicateModifications(sourceModificationUuids);
     }
 
     @Transactional

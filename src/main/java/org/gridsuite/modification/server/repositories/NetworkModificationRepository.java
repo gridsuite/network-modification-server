@@ -131,8 +131,8 @@ public class NetworkModificationRepository {
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
-        Map<UUID, UUID> ids = new HashMap<>();
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
+        Map<UUID, UUID> ids = new HashMap<>();
         Iterator<ModificationEntity> sourceIterator = sourceEntities.iterator();
         Iterator<ModificationEntity> newIterator = newEntities.iterator();
         while (sourceIterator.hasNext() && newIterator.hasNext()) {
