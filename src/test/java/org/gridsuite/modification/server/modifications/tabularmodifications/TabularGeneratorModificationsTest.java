@@ -13,23 +13,26 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.utils.ApiUtils;
+import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -87,46 +90,38 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testCheckSqlRequestsCount() throws Exception {
-        List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
-        );
-        ModificationInfos modificationInfos = TabularModificationInfos.builder()
-                .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(modifications)
-                .build();
-        UUID modificationUuid = saveModification(modificationInfos);
+    public void testSqlRequestsCountOnGetModification() throws Exception {
+        Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
+        ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
+        assertSelectCount(4); // starts from 4
+        assertThat(tabularWith1Modification.getRight())
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(tabularWith1ModificationInfos);
 
-        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        assertSelectCount(4);
-
-        modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
-        );
-        modificationInfos = TabularModificationInfos.builder()
-                .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(modifications)
-                .build();
-        modificationUuid = saveModification(modificationInfos);
+        Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
+        ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
+        assertSelectCount(6); // starts from 6
+        assertThat(tabularWith3Modification.getRight())
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(tabularWith3ModificationInfos);
+    }
 
-        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
-        assertSelectCount(4);
+    @Test
+    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
+        Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
+        Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
+
         reset();
-
-        // We get the modifications of the group (so the 2 tabular modifications)
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
-                .andExpect(status().isOk());
-        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
-        assertSelectCount(10);
+        List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
+        assertSelectCount(10); // starts from 10
+        assertThat(List.of(tabularWith1Modification.getRight(), tabularWith3Modification.getRight()))
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(tabularModifications);
     }
 
     @Test
@@ -162,5 +157,32 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         Assertions.assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
+    }
+
+    private Pair<UUID, ModificationInfos> createTabularGeneratorModification(int qty) {
+        ModificationInfos tabularModification = TabularModificationInfos.builder()
+            .modificationType(ModificationType.GENERATOR_MODIFICATION)
+            .modifications(createGeneratorModificationList(qty))
+            .build();
+        UUID uuid = saveModification(tabularModification);
+        tabularModification.setUuid(uuid);
+        return Pair.of(uuid, tabularModification);
+    }
+
+    private List<ModificationInfos> createGeneratorModificationList(int qty) {
+        return IntStream.range(0, qty)
+            .mapToObj(i ->
+                (ModificationInfos) GeneratorModificationInfos.builder()
+                    .equipmentId(UUID.randomUUID().toString())
+                    .maxActivePower(new AttributeModification<>(300., OperationType.SET))
+                    .properties(List.of(
+                        ModificationCreation.getFreeProperty(),
+                        ModificationCreation.getFreeProperty("test", "value")))
+                    .reactiveCapabilityCurvePoints(List.of(
+                        ReactiveCapabilityCurveModificationInfos.builder().p(10.).oldP(15.).build(),
+                        ReactiveCapabilityCurveModificationInfos.builder().qmaxP(12.).oldQmaxP(17.).build(),
+                        ReactiveCapabilityCurveModificationInfos.builder().qminP(5.).qmaxP(5.).p(5.).build()))
+                    .build())
+            .toList();
     }
 }
