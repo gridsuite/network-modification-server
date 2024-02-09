@@ -72,18 +72,27 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
     @Test
     public void testByModificationError() throws Exception {
+        //Test with modification = null
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(null)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
         // Test with empty list of formulas
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with empty list of filters in formula
-        FormulaInfos formulaInfos = FormulaInfos.builder()
+        List<FormulaInfos> formulaInfosWithNoFilters = getFormulaInfos().stream().peek(formula -> formula.setFilters(List.of())).toList();
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(formulaInfosWithNoFilters).build(),
+                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        // Test with editedField = null
+        FormulaInfos formulaInfosWithNoEditedField = FormulaInfos.builder()
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(50.).build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(50.).build())
                 .operator(Operator.ADDITION)
                 .filters(List.of())
                 .build();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos)).build(),
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfosWithNoEditedField)).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
@@ -105,8 +114,37 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_WITH_ONE_WRONG_ID)), false);
     }
 
-    protected void checkCreateWithError(List<FormulaInfos> formulaInfos) throws Exception {
+    protected void checkCreateWithError(List<FormulaInfos> formulaInfos, List<FilterEquipments> filterEquipments) throws Exception {
+        String filterIds = filterEquipments.stream()
+                .map(FilterEquipments::getFilterId)
+                .map(UUID::toString)
+                .collect(Collectors.joining(","));
+
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterIds))
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(filterEquipments))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .formulaInfosList(formulaInfos)
+                .identifiableType(getIdentifiableType())
+                .build();
+
+        checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        wireMockUtils.verifyGetRequest(stubId,
+                PATH,
+                handleQueryParams(getNetworkUuid(), filterEquipments.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())),
+                false);
+    }
+
+    @Test
+    public void testModificationWithAllWrongEquipmentIds() throws Exception {
         FilterEquipments filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
+
+        List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
+                .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
+                .toList();
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ALL_WRONG_IDS))
                 .willReturn(WireMock.ok()

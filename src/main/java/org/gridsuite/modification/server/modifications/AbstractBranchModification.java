@@ -10,10 +10,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.CurrentLimits;
-import com.powsybl.iidm.network.CurrentLimitsAdder;
-import com.powsybl.iidm.network.LoadingLimits;
+import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
@@ -75,6 +72,20 @@ public abstract class AbstractBranchModification extends AbstractModification {
                     "    Side 1");
             ModificationUtils.getInstance().reportModifications(limitsReporter, side2LimitsReports, "side2LimitsModification",
                     "    Side 2");
+        }
+        if (branchModificationInfos.getConnected1() != null) {
+            updateConnection(branch, TwoSides.ONE, modificationInfos.getConnected1().getValue());
+        }
+        if (branchModificationInfos.getConnected2() != null) {
+            updateConnection(branch, TwoSides.TWO, modificationInfos.getConnected2().getValue());
+        }
+    }
+
+    private void updateConnection(Branch<?> branch, TwoSides side, Boolean connectionChange) {
+        if (branch.getTerminal(side).isConnected() && Boolean.FALSE.equals(connectionChange)) {
+            branch.getTerminal(side).disconnect();
+        } else if (!branch.getTerminal(side).isConnected() && Boolean.TRUE.equals(connectionChange)) {
+            branch.getTerminal(side).connect();
         }
     }
 

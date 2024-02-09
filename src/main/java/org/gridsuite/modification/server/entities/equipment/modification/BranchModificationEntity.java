@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
 import jakarta.persistence.*;
@@ -52,6 +53,20 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         ), nullable = true)
     private CurrentLimitsModificationEntity currentLimits2;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connected1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connected1Op"))
+    })
+    private BooleanModificationEmbedded connected1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connected2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connected2Op"))
+    })
+    private BooleanModificationEmbedded connected2;
+
     protected BranchModificationEntity(BranchModificationInfos branchModificationInfos) {
         super(branchModificationInfos);
         assignAttributes(branchModificationInfos);
@@ -77,5 +92,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         } else {
             currentLimits2 = branchModificationInfos.getCurrentLimits2().toEntity();
         }
+        this.connected1 = branchModificationInfos.getConnected1() != null ? new BooleanModificationEmbedded(branchModificationInfos.getConnected1()) : null;
+        this.connected2 = branchModificationInfos.getConnected2() != null ? new BooleanModificationEmbedded(branchModificationInfos.getConnected2()) : null;
     }
 }

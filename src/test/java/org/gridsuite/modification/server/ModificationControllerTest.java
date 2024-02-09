@@ -1269,7 +1269,7 @@ public class ModificationControllerTest {
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()

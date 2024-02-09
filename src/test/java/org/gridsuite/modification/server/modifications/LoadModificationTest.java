@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class LoadModificationTest extends AbstractNetworkModificationTest {
+public class LoadModificationTest extends AbstractInjectionModificationTest {
     private static String PROPERTY_NAME = "property-name";
     private static String PROPERTY_VALUE = "property-value";
 
@@ -113,5 +113,15 @@ public class LoadModificationTest extends AbstractNetworkModificationTest {
         assertEquals("LOAD_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v1loadEdited", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        assertChangeConnectionState(getNetwork().getLoad("v1load"), false);
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        assertChangeConnectionState(getNetwork().getLoad("v1load"), true);
     }
 }
