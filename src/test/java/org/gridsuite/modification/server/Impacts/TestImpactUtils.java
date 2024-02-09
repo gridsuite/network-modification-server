@@ -167,6 +167,10 @@ public final class TestImpactUtils {
             createElementImpact(impactType, IdentifiableType.SWITCH, disconnectorId2, Set.of(substationId2))
         );
         if (impactType == ImpactType.CREATION) {
+            // During a creation of a 2WT we use the TapChangerAdder which set the tapChangerAttributes to the 2WT
+            // This setRatioTapChanger/setPhaseTapChanger calling generates a notifyUpdate for the newly created 2WT
+            // Then we must add a MODIFICATION impact on this newly created 2WT.
+            // TODO fix this
             impacts.add(createElementImpact(ImpactType.MODIFICATION, branchType, branchId, new TreeSet<>(List.of(substationId1, substationId2)))); // case with newtapChanger
         }
         if (impactType == ImpactType.DELETION) {
