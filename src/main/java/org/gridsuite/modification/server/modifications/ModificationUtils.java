@@ -543,9 +543,13 @@ public final class ModificationUtils {
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection) {
         if (modificationInfos.getConnected() != null) {
             if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getConnected().getValue())) {
-                injection.getTerminal().disconnect();
-            } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue())) {
-                injection.getTerminal().connect();
+                if (!injection.getTerminal().disconnect()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                            String.format("Could not disconnect equipment '%s'", injection.getId()));
+                }
+            } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue()) && !injection.getTerminal().connect()) {
+                throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not connect equipment '%s'", injection.getId()));
             }
         }
     }
