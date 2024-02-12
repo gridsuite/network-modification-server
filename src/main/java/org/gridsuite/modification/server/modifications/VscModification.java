@@ -6,6 +6,7 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import io.micrometer.common.lang.NonNull;
@@ -92,13 +93,7 @@ public class VscModification extends AbstractModification {
             ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setConvertersMode, hvdcLine::getConvertersMode, modificationInfos.getConvertersMode(), subReporter, "ConvertersMode");
         }
 
-        if (modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2() != null ||
-                modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1() != null) {
-            hvdcLine.newExtension(HvdcOperatorActivePowerRangeAdder.class)
-                    .withOprFromCS1toCS2(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2().getValue())
-                    .withOprFromCS2toCS1(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1().getValue())
-                    .add();
-        }
+        operatorActivePowerLimit(hvdcLine, modificationInfos, subReporter);
 
         hvdcAngleDroopActivePowerControlAdder(hvdcLine, subReporter);
 
@@ -115,6 +110,55 @@ public class VscModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
+    }
+
+    private static void operatorActivePowerLimit(HvdcLine hvdcLine, VscModificationInfos modificationInfos, Reporter subReporter) {
+        List<Report> reports = new ArrayList<>();
+        if (modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2() != null ||
+                modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1() != null) {
+            var operatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
+            if (operatorActivePowerRange != null) {
+                modifyOperatorActiveRange(modificationInfos, operatorActivePowerRange, reports);
+
+            } else {
+                createOperatorActiveRangeExt(hvdcLine, modificationInfos, reports);
+            }
+        }
+        reports.forEach(subReporter::report);
+    }
+
+    private static void modifyOperatorActiveRange(VscModificationInfos modificationInfos, HvdcOperatorActivePowerRange operatorActivePowerRange, List<Report> reports) {
+        var oldCs1ToCs2 = operatorActivePowerRange.getOprFromCS1toCS2();
+        var oldCs2ToCs1 = operatorActivePowerRange.getOprFromCS2toCS1();
+        Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2()).ifPresent(info -> {
+            if (info.getValue() != null) {
+                operatorActivePowerRange.setOprFromCS1toCS2(info.getValue());
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldCs1ToCs2, info.getValue(), "OprFromCS1toCS2"));
+            }
+        });
+        Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1()).ifPresent(info -> {
+            if (info.getValue() != null) {
+                operatorActivePowerRange.setOprFromCS2toCS1(info.getValue());
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldCs2ToCs1, info.getValue(), "OprFromCS2toCS1"));
+            }
+        });
+    }
+
+    private static void createOperatorActiveRangeExt(HvdcLine hvdcLine, VscModificationInfos modificationInfos, List<Report> reports) {
+        var hvdcOperatorActivePowerRangeAddr = hvdcLine.newExtension(HvdcOperatorActivePowerRangeAdder.class);
+        Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2()).ifPresent(info -> {
+            if (info.getValue() != null) {
+                hvdcOperatorActivePowerRangeAddr.withOprFromCS1toCS2(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2().getValue());
+                reports.add(ModificationUtils.getInstance().buildModificationReport(null, info.getValue(), "OprFromCS1toCS2"));
+            }
+        });
+        Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1()).ifPresent(info -> {
+            if (info.getValue() != null) {
+                hvdcOperatorActivePowerRangeAddr.withOprFromCS2toCS1(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1().getValue());
+                reports.add(ModificationUtils.getInstance().buildModificationReport(null, info.getValue(), "OprFromCS2toCS1"));
+            }
+        });
+        hvdcOperatorActivePowerRangeAddr.add();
     }
 
     private void modifyExistingHvdcAngleDroopActivePowerControl(HvdcAngleDroopActivePowerControl hvdcAngleDroopActivePowerControl, List<Report> reports) {
