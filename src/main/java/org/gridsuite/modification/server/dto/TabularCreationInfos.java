@@ -43,7 +43,7 @@ public class TabularCreationInfos extends ModificationInfos {
     @NonNull
     private ModificationType creationType;
 
-    @Schema(description = "creations")
+    @Schema(description = "Creations")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ModificationInfos> creations;
 
