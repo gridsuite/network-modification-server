@@ -35,7 +35,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @ToString(callSuper = true)
 @Schema(description = "Operating status modification")
 @JsonTypeName("OPERATING_STATUS_MODIFICATION")
-@ModificationErrorTypeName("OPERATING_ACTION_ERROR")
+@ModificationErrorTypeName("EQUIPMENT_ACTION_ERROR")
 public class OperatingStatusModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Action type")
     private ActionType action;

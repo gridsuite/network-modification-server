@@ -9,10 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.modification.tripping.BranchTripping;
-import com.powsybl.iidm.modification.tripping.HvdcLineTripping;
-import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
-import com.powsybl.iidm.modification.tripping.Tripping;
+import com.powsybl.iidm.modification.tripping.*;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
@@ -43,9 +40,9 @@ public class OperatingStatusModification extends AbstractModification {
     @Override
     public void check(Network network) throws NetworkModificationException {
         String equipmentId = modificationInfos.getEquipmentId();
-        Identifiable<?> equipment = network.getBranch(equipmentId);
+        Identifiable<?> equipment = network.getIdentifiable(equipmentId);
         if (equipment == null) {
-            throw new NetworkModificationException(OPERATING_NOT_FOUND, equipmentId);
+            throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
         }
     }
 
@@ -75,7 +72,7 @@ public class OperatingStatusModification extends AbstractModification {
         if (disconnectAllTerminals(equipment)) {
             equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.PLANNED_OUTAGE).add();
         } else {
-            throw new NetworkModificationException(OPERATING_ACTION_ERROR, "Unable to disconnect all equipment ends");
+            throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to disconnect all equipment ends");
         }
         subReporter.report(Report.builder()
                 .withKey("lockout" + equipmentTypeName + "Applied")
@@ -117,7 +114,7 @@ public class OperatingStatusModification extends AbstractModification {
         if (connectAllTerminals(equipment)) {
             equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
         } else {
-            throw new NetworkModificationException(OPERATING_ACTION_ERROR, "Unable to connect all equipment ends");
+            throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to connect all equipment ends");
         }
 
         subReporter.report(Report.builder()
@@ -134,7 +131,7 @@ public class OperatingStatusModification extends AbstractModification {
             if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
                 branch.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
             } else {
-                throw new NetworkModificationException(OPERATING_ACTION_ERROR, "Unable to energise equipment end");
+                throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to energise equipment end");
             }
 
             subReporter.report(Report.builder()
@@ -170,6 +167,8 @@ public class OperatingStatusModification extends AbstractModification {
             return new ThreeWindingsTransformerTripping(w3t.getId());
         } else if (identifiable instanceof HvdcLine hvdcLine) {
             return new HvdcLineTripping(hvdcLine.getId());
+        } else if (identifiable instanceof DanglingLine danglingLine) {
+            return new DanglingLineTripping(danglingLine.getId());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
