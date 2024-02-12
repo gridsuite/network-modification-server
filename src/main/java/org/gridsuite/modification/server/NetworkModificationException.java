@@ -75,9 +75,9 @@ public class NetworkModificationException extends PowsyblException {
         CONNECTION_POSITION_ERROR(HttpStatus.BAD_REQUEST),
         MODIFY_BATTERY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_ACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        OPERATING_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty equipment action type"),
-        OPERATING_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
-        OPERATING_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty equipment action type"),
+        EQUIPMENT_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
+        EQUIPMENT_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         EQUIPMENT_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -156,7 +156,7 @@ public class NetworkModificationException extends PowsyblException {
     }
 
     public static NetworkModificationException createOperatingStatusActionTypeUnsupported(@NonNull OperatingStatusModificationInfos.ActionType type) {
-        return new NetworkModificationException(Type.OPERATING_ACTION_TYPE_UNSUPPORTED, "The operating action type : " + type + " is unsupported");
+        return new NetworkModificationException(Type.EQUIPMENT_ACTION_TYPE_UNSUPPORTED, "The operating action type : " + type + " is unsupported");
     }
 
     public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {

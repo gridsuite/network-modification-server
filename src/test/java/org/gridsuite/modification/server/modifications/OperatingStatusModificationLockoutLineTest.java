@@ -98,7 +98,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().isBadRequest(),
-                    content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage())
+                    content().string(new NetworkModificationException(EQUIPMENT_ACTION_TYPE_EMPTY).getMessage())
             );
 
         // modification action not existing

@@ -23,7 +23,7 @@ import org.gridsuite.modification.server.modifications.OperatingStatusModificati
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_ACTION_TYPE_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ACTION_TYPE_EMPTY;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -88,7 +88,7 @@ public class OperatingStatusModificationInfos extends EquipmentModificationInfos
     public void check() {
         super.check();
         if (action == null) {
-            throw new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY);
+            throw new NetworkModificationException(EQUIPMENT_ACTION_TYPE_EMPTY);
         }
     }
 

@@ -545,10 +545,6 @@ public final class ModificationUtils {
                     hvdcLine.getConverterStation1().getTerminal(),
                     hvdcLine.getConverterStation2().getTerminal()
             ).collect(Collectors.toList());
-        } else if (identifiable instanceof DanglingLine danglingLine) {
-            return Stream.of(
-                    danglingLine.getTerminal()
-            ).collect(Collectors.toList());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }

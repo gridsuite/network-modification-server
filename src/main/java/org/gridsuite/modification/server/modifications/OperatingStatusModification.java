@@ -167,8 +167,6 @@ public class OperatingStatusModification extends AbstractModification {
             return new ThreeWindingsTransformerTripping(w3t.getId());
         } else if (identifiable instanceof HvdcLine hvdcLine) {
             return new HvdcLineTripping(hvdcLine.getId());
-        } else if (identifiable instanceof DanglingLine danglingLine) {
-            return new DanglingLineTripping(danglingLine.getId());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
