@@ -209,7 +209,11 @@ public class NetworkModificationRepository {
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
-        if (modificationEntity instanceof TabularModificationEntity) {
+        return getModificationInfos(modificationEntity, true);
+    }
+
+    public ModificationInfos getModificationInfos(ModificationEntity modificationEntity, boolean improveTabularLoading) {
+        if (improveTabularLoading && modificationEntity instanceof TabularModificationEntity) {
             return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
         } else if (modificationEntity instanceof TabularCreationEntity) {
             return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();

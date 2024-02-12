@@ -260,7 +260,7 @@ public class NetworkModificationService {
         if (!modificationEntities.isEmpty()) {
             networkModificationRepository.saveModifications(targetGroupUuid, modificationEntities);
 
-            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(networkModificationRepository::getModificationInfos).collect(Collectors.toList());
+            List<ModificationInfos> modificationInfos = modificationEntities.stream().map(m -> networkModificationRepository.getModificationInfos(m, false)).collect(Collectors.toList());
 
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()
                 .map(ModificationInfos::getType)
@@ -284,7 +284,7 @@ public class NetworkModificationService {
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationEntity> modificationsEntities = networkModificationRepository.getModificationsEntities(modificationsUuids);
-        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(m -> networkModificationRepository.getModificationInfos(m).toEntity()).collect(Collectors.toList());
+        List<ModificationEntity> duplicatedModificationsEntities = modificationsEntities.stream().map(m -> networkModificationRepository.getModificationInfos(m, false).toEntity()).collect(Collectors.toList());
         return saveAndApplyModifications(targetGroupUuid, networkUuid, variantId, reportInfos, duplicatedModificationsEntities);
     }
 
