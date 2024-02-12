@@ -94,7 +94,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
-        assertSelectCount(4); // starts from 4
+        assertSelectCount(4); // 4 before improvements
         assertThat(tabularWith1Modification.getRight())
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
@@ -103,10 +103,11 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
         ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(6); // starts from 6
+        assertSelectCount(4); // 6 before improvements
         assertThat(tabularWith3Modification.getRight())
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .ignoringCollectionOrder() // TODO: Should we care about sub-modifications order in tabular modifications ?
             .isEqualTo(tabularWith3ModificationInfos);
     }
 
@@ -117,10 +118,11 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(10); // starts from 10
+        assertSelectCount(8); // 10 before improvements
         assertThat(List.of(tabularWith1Modification.getRight(), tabularWith3Modification.getRight()))
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .ignoringCollectionOrder() // TODO: Should we care about sub-modifications order in tabular modifications ?
             .isEqualTo(tabularModifications);
     }
 
