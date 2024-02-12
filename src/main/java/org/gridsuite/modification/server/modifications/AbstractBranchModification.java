@@ -104,9 +104,15 @@ public abstract class AbstractBranchModification extends AbstractModification {
     private boolean updateConnection(Branch<?> branch, TwoSides side, Boolean connectionChange) {
         boolean done = true;
         if (branch.getTerminal(side).isConnected() && Boolean.FALSE.equals(connectionChange)) {
-            done = branch.getTerminal(side).disconnect();
+            branch.getTerminal(side).disconnect();
+            if (branch.getTerminal(side).isConnected()) {
+                done = false;
+            }
         } else if (!branch.getTerminal(side).isConnected() && Boolean.TRUE.equals(connectionChange)) {
-            done = branch.getTerminal(side).connect();
+            branch.getTerminal(side).connect();
+            if (!branch.getTerminal(side).isConnected()) {
+                done = false;
+            }
         }
         return done;
     }
