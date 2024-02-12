@@ -263,8 +263,7 @@ public class NetworkModificationController {
 
     @GetMapping(value = "/network-modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get modifications metadata")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "metadata used to describe modification elements"),
-        @ApiResponse(responseCode = "404", description = "The modification list does not exists")})
+    @ApiResponse(responseCode = "200", description = "List of metadata used to describe modification elements")
     public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
     }
