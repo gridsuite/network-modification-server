@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
+import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -177,10 +178,10 @@ public class NetworkModificationRepository {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
+                tabularModificationEntity = modificationRepository.findTabularModificationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
                         new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
                 );
-                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
+                modificationRepository.findAllModificationsWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
                 break;
             default:
                 break;
@@ -188,9 +189,26 @@ public class NetworkModificationRepository {
         return tabularModificationEntity;
     }
 
+    public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
+        TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
+        switch (tabularCreationEntity.getCreationType()) {
+            case GENERATOR_CREATION:
+                tabularCreationEntity = modificationRepository.findTabularCreationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
+                    new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
+                );
+                modificationRepository.findAllCreationsWithReactiveCapabilityCurvePointsByIdIn(tabularCreationEntity.getCreations().stream().map(ModificationEntity::getId).toList());
+                break;
+            default:
+                break;
+        }
+        return tabularCreationEntity;
+    }
+
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
             return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+        } else if (modificationEntity instanceof TabularCreationEntity) {
+            return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
         }
         return modificationEntity.toModificationInfos();
     }
