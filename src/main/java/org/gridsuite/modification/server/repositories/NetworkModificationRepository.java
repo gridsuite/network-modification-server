@@ -11,10 +11,12 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +38,13 @@ public class NetworkModificationRepository {
     private final ModificationRepository modificationRepository;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
+    private final GeneratorModificationRepository generatorModificationRepository;
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository,
+                                         GeneratorModificationRepository generatorModificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -174,19 +179,20 @@ public class NetworkModificationRepository {
         }
     }
 
-    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
+    public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                tabularModificationEntity = modificationRepository.findTabularModificationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-                );
-                modificationRepository.findAllModificationsWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
-                break;
+                List<UUID> generatorIds = modificationRepository.findSubModificationsIds(modificationEntity.getId());
+                List<GeneratorModificationEntity> generatorModifications = generatorModificationRepository.findAllByIdIn(generatorIds);
+                List<GeneratorModificationEntity> orderedGeneratorModifications = generatorIds
+                    .stream()
+                    .map(uuid -> generatorModifications.stream().filter(g -> uuid.equals(g.getId())).toList().get(0))
+                    .toList();
+                return tabularModificationEntity.toModificationInfos(orderedGeneratorModifications);
             default:
-                break;
+                return tabularModificationEntity.toModificationInfos();
         }
-        return tabularModificationEntity;
     }
 
     public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
@@ -206,7 +212,7 @@ public class NetworkModificationRepository {
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+            return loadTabularModificationSubEntities(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
             return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
         }

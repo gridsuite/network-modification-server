@@ -256,6 +256,31 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         return toGeneratorModificationInfosBuilder().build();
     }
 
+    @Override
+    public GeneratorModificationInfos toTabularModificationInfos() {
+        return GeneratorModificationInfos.builder()
+            .uuid(getId())
+            .date(getDate())
+            .stashed(getStashed())
+            .equipmentId(getEquipmentId())
+            .connected(toAttributeModification(getConnected()))
+            .energySource(toAttributeModification(getEnergySource()))
+            .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
+            .maxActivePower(toAttributeModification(getMaxActivePower()))
+            .minActivePower(toAttributeModification(getMinActivePower()))
+            .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
+            .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
+            .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
+            .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
+            .plannedActivePowerSetPoint(toAttributeModification(getPlannedActivePowerSetPoint()))
+            .marginalCost(toAttributeModification(getMarginalCost()))
+            .plannedOutageRate(toAttributeModification(getPlannedOutageRate()))
+            .forcedOutageRate(toAttributeModification(getForcedOutageRate()))
+            .transientReactance(toAttributeModification(getTransientReactance()))
+            .stepUpTransformerReactance(toAttributeModification(getStepUpTransformerReactance()))
+            .build();
+    }
+
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
         List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
         List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()

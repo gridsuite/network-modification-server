@@ -91,6 +91,10 @@ public class ModificationEntity {
         return ModificationInfos.fromEntity(this);
     }
 
+    public ModificationInfos toTabularModificationInfos() {
+        return toModificationInfos();
+    }
+
     public void update(ModificationInfos modificationInfos) {
         // Basic attributes are immutable in the database
         if (modificationInfos == null) {

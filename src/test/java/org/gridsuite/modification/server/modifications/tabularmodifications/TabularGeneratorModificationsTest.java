@@ -14,7 +14,6 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.ApiUtils;
-import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -48,10 +47,10 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build()
+            GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+            GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+            GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+            GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -63,9 +62,9 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
+            GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
+            GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
+            GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -94,7 +93,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
-        assertSelectCount(4); // starts from 4
+        assertSelectCount(3); // 4 before improvements
         assertThat(tabularWith1Modification.getRight())
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
@@ -103,7 +102,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
         ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(6); // starts from 6
+        assertSelectCount(3); // 6 before improvements
         assertThat(tabularWith3Modification.getRight())
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
@@ -117,7 +116,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(10); // starts from 10
+        assertSelectCount(6); // 10 before improvements
         assertThat(List.of(tabularWith1Modification.getRight(), tabularWith3Modification.getRight()))
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
@@ -175,13 +174,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                 (ModificationInfos) GeneratorModificationInfos.builder()
                     .equipmentId(UUID.randomUUID().toString())
                     .maxActivePower(new AttributeModification<>(300., OperationType.SET))
-                    .properties(List.of(
-                        ModificationCreation.getFreeProperty(),
-                        ModificationCreation.getFreeProperty("test", "value")))
-                    .reactiveCapabilityCurvePoints(List.of(
-                        ReactiveCapabilityCurveModificationInfos.builder().p(10.).oldP(15.).build(),
-                        ReactiveCapabilityCurveModificationInfos.builder().qmaxP(12.).oldQmaxP(17.).build(),
-                        ReactiveCapabilityCurveModificationInfos.builder().qminP(5.).qmaxP(5.).p(5.).build()))
                     .build())
             .toList();
     }
