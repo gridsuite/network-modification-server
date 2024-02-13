@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -37,6 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -78,6 +83,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                         new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -124,6 +130,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertNotNull(getNetwork().getGenerator("idGenerator1"));
         assertEquals(1, getNetwork().getVoltageLevel("v2").getGeneratorStream()
                 .filter(transformer -> transformer.getId().equals("idGenerator1")).count());
+        assertEquals(PROPERTY_VALUE, getNetwork().getGenerator("idGenerator1").getProperty(PROPERTY_NAME));
     }
 
     @Override
