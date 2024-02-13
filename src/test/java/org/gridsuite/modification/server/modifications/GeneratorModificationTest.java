@@ -26,12 +26,16 @@ import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 public class GeneratorModificationTest extends AbstractInjectionModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -71,6 +75,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
                 .qPercent(new AttributeModification<>(0.1, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -119,6 +124,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getStepUpTransformerX());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedGenerator.getReactiveLimits().getKind());
+        assertEquals(PROPERTY_VALUE, modifiedGenerator.getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -134,6 +140,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         assertEquals(1000.0, generator.getMaxP());
         assertEquals(Double.NaN, generator.getRatedS());
         assertEquals(ReactiveLimitsKind.MIN_MAX, generator.getReactiveLimits().getKind());
+        assertNull(generator.getProperty(PROPERTY_NAME));
     }
 
     @Test
