@@ -33,6 +33,8 @@ public class OperatingStatusModification extends AbstractModification {
     private final OperatingStatusModificationInfos modificationInfos;
     private static final Logger LOGGER = LoggerFactory.getLogger(OperatingStatusModification.class);
 
+    private static final String APPLIED = "Applied";
+
     public OperatingStatusModification(OperatingStatusModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
     }
@@ -75,7 +77,7 @@ public class OperatingStatusModification extends AbstractModification {
             throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to disconnect all equipment ends");
         }
         subReporter.report(Report.builder()
-                .withKey("lockout" + equipmentTypeName + "Applied")
+                .withKey("lockout" + equipmentTypeName + APPLIED)
                 .withDefaultMessage(equipmentTypeName + " ${id} (id) : lockout applied")
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
@@ -98,7 +100,7 @@ public class OperatingStatusModification extends AbstractModification {
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
         subReporter.report(Report.builder()
-                .withKey("trip" + equipmentTypeName + "Applied")
+                .withKey("trip" + equipmentTypeName + APPLIED)
                 .withDefaultMessage(equipmentTypeName + " ${id} (id) : trip applied")
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
@@ -118,7 +120,7 @@ public class OperatingStatusModification extends AbstractModification {
         }
 
         subReporter.report(Report.builder()
-                .withKey("switchOn" + equipmentTypeName + "Applied")
+                .withKey("switchOn" + equipmentTypeName + APPLIED)
                 .withDefaultMessage(equipmentTypeName + " ${id} (id) : switch on applied")
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)

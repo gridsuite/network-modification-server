@@ -71,8 +71,7 @@ public class OperatingStatusModificationInfos extends EquipmentModificationInfos
             case TRIP:
                 defaultName = "Trip ${equipmentId}";
                 break;
-            case ENERGISE_END_ONE:
-            case ENERGISE_END_TWO:
+            case ENERGISE_END_ONE, ENERGISE_END_TWO:
                 defaultName = "Energise ${equipmentId}";
                 break;
             case SWITCH_ON:
