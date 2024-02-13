@@ -142,6 +142,7 @@ public class OperatingStatusModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(equipment.getClass().getSimpleName());
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {
@@ -163,10 +164,6 @@ public class OperatingStatusModification extends AbstractModification {
     public Tripping getTrippingFromIdentifiable(Identifiable<?> identifiable) {
         if (identifiable instanceof Branch<?> branch) {
             return new BranchTripping(branch.getId());
-        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
-            return new ThreeWindingsTransformerTripping(w3t.getId());
-        } else if (identifiable instanceof HvdcLine hvdcLine) {
-            return new HvdcLineTripping(hvdcLine.getId());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
