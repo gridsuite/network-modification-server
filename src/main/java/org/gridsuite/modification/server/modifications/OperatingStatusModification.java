@@ -56,42 +56,42 @@ public class OperatingStatusModification extends AbstractModification {
             throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipmentId);
         }
 
-        String equipmentTypeName = String.valueOf(equipment.getType());
+        String equipmentType = String.valueOf(equipment.getType());
         switch (modificationInfos.getAction()) {
-            case LOCKOUT -> applyLockoutEquipment(subReporter, equipment, equipmentTypeName);
-            case TRIP -> applyTripEquipment(subReporter, equipment, equipmentTypeName, network);
-            case SWITCH_ON -> applySwitchOnEquipment(subReporter, equipment, equipmentTypeName);
+            case LOCKOUT -> applyLockoutEquipment(subReporter, equipment, equipmentType);
+            case TRIP -> applyTripEquipment(subReporter, equipment, equipmentType, network);
+            case SWITCH_ON -> applySwitchOnEquipment(subReporter, equipment, equipmentType);
             case ENERGISE_END_ONE ->
-                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, TwoSides.ONE);
+                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentType, TwoSides.ONE);
             case ENERGISE_END_TWO ->
-                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentTypeName, TwoSides.TWO);
+                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentType, TwoSides.TWO);
             default ->
-                    throw NetworkModificationException.createOperatingStatusActionTypeUnsupported(modificationInfos.getAction());
+                    throw NetworkModificationException.createOperatingActionTypeUnsupported(modificationInfos.getAction());
         }
     }
 
-    private void applyLockoutEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentTypeName) {
+    private void applyLockoutEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentType) {
         if (disconnectAllTerminals(equipment)) {
             equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.PLANNED_OUTAGE).add();
         } else {
-            throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to disconnect all equipment ends");
+            throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to disconnect all equipment ends");
         }
         subReporter.report(Report.builder()
-                .withKey("lockout" + equipmentTypeName + APPLIED)
-                .withDefaultMessage(equipmentTypeName + " ${id} (id) : lockout applied")
+                .withKey("lockout" + equipmentType + APPLIED)
+                .withDefaultMessage(equipmentType + " ${id} (id) : lockout applied")
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
 
-    private void applyTripEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentTypeName, Network network) {
+    private void applyTripEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentType, Network network) {
         var switchesToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
         getTrippingFromIdentifiable(equipment).traverse(network, switchesToDisconnect, terminalsToDisconnect, traversedTerminals);
 
         LOGGER.info("Apply Trip on {} {}, switchesToDisconnect: {} terminalsToDisconnect: {} traversedTerminals: {}",
-                equipmentTypeName, equipment.getId(),
+                equipmentType, equipment.getId(),
                 switchesToDisconnect.stream().map(Identifiable::getId).collect(Collectors.toList()),
                 terminalsToDisconnect.stream().map(Terminal::getConnectable).map(Identifiable::getId).collect(Collectors.toList()),
                 traversedTerminals.stream().map(Terminal::getConnectable).map(Identifiable::getId).collect(Collectors.toList()));
@@ -100,8 +100,8 @@ public class OperatingStatusModification extends AbstractModification {
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
         subReporter.report(Report.builder()
-                .withKey("trip" + equipmentTypeName + APPLIED)
-                .withDefaultMessage(equipmentTypeName + " ${id} (id) : trip applied")
+                .withKey("trip" + equipmentType + APPLIED)
+                .withDefaultMessage(equipmentType + " ${id} (id) : trip applied")
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
@@ -112,38 +112,42 @@ public class OperatingStatusModification extends AbstractModification {
                 .forEach(b -> b.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.FORCED_OUTAGE).add());
     }
 
-    private void applySwitchOnEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentTypeName) {
-        if (connectAllTerminals(equipment)) {
-            equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
-        } else {
-            throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to connect all equipment ends");
-        }
+    private void applySwitchOnEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentType) {
+        if (equipment instanceof Branch<?>) {
+            if (connectAllTerminals(equipment)) {
+                equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
+            } else {
+                throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to connect all equipment ends");
+            }
 
-        subReporter.report(Report.builder()
-                .withKey("switchOn" + equipmentTypeName + APPLIED)
-                .withDefaultMessage(equipmentTypeName + " ${id} (id) : switch on applied")
-                .withValue("id", equipment.getId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+            subReporter.report(Report.builder()
+                    .withKey("switchOn" + equipmentType + APPLIED)
+                    .withDefaultMessage(equipmentType + " ${id} (id) : switch on applied")
+                    .withValue("id", equipment.getId())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .build());
+        }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(equipment.getClass().getSimpleName());
     }
 
-    private void applyEnergiseEquipmentEnd(Reporter subReporter, Identifiable<?> equipment, String equipmentTypeName, TwoSides side) {
+    private void applyEnergiseEquipmentEnd(Reporter subReporter, Identifiable<?> equipment, String equipmentType, TwoSides side) {
         if (equipment instanceof Branch<?> branch) {
             TwoSides oppositeSide = side == TwoSides.ONE ? TwoSides.TWO : TwoSides.ONE;
             if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
                 branch.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
             } else {
-                throw new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to energise equipment end");
+                throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end");
             }
 
             subReporter.report(Report.builder()
-                    .withKey("energise" + equipmentTypeName + "EndApplied")
-                    .withDefaultMessage(equipmentTypeName + " ${id} (id) : energise the side ${side} applied")
+                    .withKey("energise" + equipmentType + "EndApplied")
+                    .withDefaultMessage(equipmentType + " ${id} (id) : energise the side ${side} applied")
                     .withValue("id", equipment.getId())
                     .withValue("side", side.name())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(equipment.getClass().getSimpleName());
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {

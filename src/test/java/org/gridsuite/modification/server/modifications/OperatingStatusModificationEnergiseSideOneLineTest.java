@@ -21,7 +21,7 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ACTION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_STATUS_MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,7 +99,7 @@ public class OperatingStatusModificationEnergiseSideOneLineTest extends Abstract
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(EQUIPMENT_ACTION_ERROR, "Unable to energise equipment end").getMessage(),
+        assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
     }
 

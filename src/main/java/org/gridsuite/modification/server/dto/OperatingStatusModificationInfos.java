@@ -23,7 +23,7 @@ import org.gridsuite.modification.server.modifications.OperatingStatusModificati
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_ACTION_TYPE_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_ACTION_TYPE_EMPTY;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -35,7 +35,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @ToString(callSuper = true)
 @Schema(description = "Operating status modification")
 @JsonTypeName("OPERATING_STATUS_MODIFICATION")
-@ModificationErrorTypeName("EQUIPMENT_ACTION_ERROR")
+@ModificationErrorTypeName("OPERATING_STATUS_MODIFICATION_ERROR")
 public class OperatingStatusModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Action type")
     private ActionType action;
@@ -63,23 +63,12 @@ public class OperatingStatusModificationInfos extends EquipmentModificationInfos
 
     @Override
     public Reporter createSubReporter(ReporterModel reporter) {
-        String defaultName;
-        switch (action) {
-            case LOCKOUT:
-                defaultName = "Lockout ${equipmentId}";
-                break;
-            case TRIP:
-                defaultName = "Trip ${equipmentId}";
-                break;
-            case ENERGISE_END_ONE, ENERGISE_END_TWO:
-                defaultName = "Energise ${equipmentId}";
-                break;
-            case SWITCH_ON:
-                defaultName = "Switch on ${equipmentId}";
-                break;
-            default:
-                defaultName = "";
-        }
+        String defaultName = switch (action) {
+            case LOCKOUT -> "Lockout ${equipmentId}";
+            case TRIP -> "Trip ${equipmentId}";
+            case ENERGISE_END_ONE, ENERGISE_END_TWO -> "Energise ${equipmentId}";
+            case SWITCH_ON -> "Switch on ${equipmentId}";
+        };
         return reporter.createSubReporter(getType().name() + "_" + action, defaultName, "equipmentId", this.getEquipmentId());
     }
 
@@ -87,7 +76,7 @@ public class OperatingStatusModificationInfos extends EquipmentModificationInfos
     public void check() {
         super.check();
         if (action == null) {
-            throw new NetworkModificationException(EQUIPMENT_ACTION_TYPE_EMPTY);
+            throw new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY);
         }
     }
 
