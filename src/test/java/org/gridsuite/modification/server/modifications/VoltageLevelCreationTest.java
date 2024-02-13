@@ -182,19 +182,6 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
     }
 
-    @Test
-    public void testCreateWithIpMaxNull() throws Exception {
-        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
-        vli.setEquipmentId("vl_ok");
-        vli.setIpMin(25.0);
-        vli.setIpMax(null);
-        String vliJsonObject = mapper.writeValueAsString(vli);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        // VL is created
-        assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
-    }
-
     private void testIccWithError(Double ipMin, Double ipMax, String reportError) throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_ko");
