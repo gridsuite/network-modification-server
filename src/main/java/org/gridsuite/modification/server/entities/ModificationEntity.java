@@ -70,6 +70,11 @@ public class ModificationEntity {
         this.messageValues = messageValues;
     }
 
+    public ModificationEntity(UUID id, String type) {
+        this.id = id;
+        this.type = type;
+    }
+
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
