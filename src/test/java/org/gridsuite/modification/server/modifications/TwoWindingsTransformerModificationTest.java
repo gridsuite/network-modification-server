@@ -11,6 +11,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.LoadingLimits;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
+import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.TwoSides;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
 import lombok.SneakyThrows;
@@ -20,9 +22,12 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
@@ -569,6 +574,49 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("trf1Edited", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testChangeConnectionStatus() {
+        changeConnectionState(getNetwork().getTwoWindingsTransformer("trf1"), TwoSides.ONE, true, false, "Could not disconnect equipment 'trf1' on side ONE");
+        changeConnectionState(getNetwork().getTwoWindingsTransformer("trf1"), TwoSides.TWO, true, false, "Could not disconnect equipment 'trf1' on side TWO");
+        changeConnectionState(getNetwork().getTwoWindingsTransformer("trf2"), TwoSides.TWO, true, true, null);
+    }
+
+    @SneakyThrows
+    private void changeConnectionState(TwoWindingsTransformer existingEquipment, TwoSides side, boolean actualState, boolean expectedState, String errorMessage) {
+        Terminal terminal = existingEquipment.getTerminal(side);
+        assertThat(terminal.isConnected()).isEqualTo(actualState);
+
+        TwoWindingsTransformerModificationInfos modificationInfos =
+                TwoWindingsTransformerModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId(existingEquipment.getId())
+                        .connected1(side == TwoSides.ONE ? new AttributeModification<>(expectedState, OperationType.SET) : null)
+                        .connected2(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
+                        .build();
+        String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        Optional<NetworkModificationResult> modifResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(modifResult.isPresent());
+
+        if (!Objects.isNull(errorMessage)) {
+            // change not applied
+            assertThat(terminal.isConnected()).isNotEqualTo(expectedState);
+            assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, modifResult.get().getApplicationStatus());
+            assertLogMessage("BRANCH_MODIFICATION_ERROR : " + errorMessage, "MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR", reportService);
+        } else {
+            // connection state has changed as expected
+            assertThat(terminal.isConnected()).isEqualTo(expectedState);
+            assertEquals(NetworkModificationResult.ApplicationStatus.ALL_OK, modifResult.get().getApplicationStatus());
+
+            // try to modify again => no change on connection state
+            mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+            assertThat(terminal.isConnected()).isEqualTo(expectedState);
+        }
     }
 }
 

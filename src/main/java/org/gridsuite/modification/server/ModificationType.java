@@ -48,6 +48,7 @@ public enum ModificationType {
     VSC_CREATION(PreloadingStrategy.NONE),
     CONVERTER_STATION_CREATION(PreloadingStrategy.NONE),
     TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION),
+    TABULAR_CREATION(PreloadingStrategy.COLLECTION),
     BY_FORMULA_MODIFICATION(PreloadingStrategy.COLLECTION);
 
     private final PreloadingStrategy strategy;
