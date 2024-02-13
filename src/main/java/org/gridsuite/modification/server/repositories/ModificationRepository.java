@@ -34,6 +34,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
+    List<ModificationEntity> findMetadataIn(List<UUID> uuids);
+
     @EntityGraph(attributePaths = {"modifications", "modifications.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
     Optional<TabularModificationEntity> findTabularModificationWithReactiveCapabilityCurvePointsById(UUID id);
 
