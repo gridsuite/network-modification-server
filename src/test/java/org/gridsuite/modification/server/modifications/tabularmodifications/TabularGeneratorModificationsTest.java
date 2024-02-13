@@ -107,7 +107,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertThat(tabularWith3Modification.getRight())
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
-            .ignoringCollectionOrder() // TODO: Should we care about sub-modifications order in tabular modifications ?
             .isEqualTo(tabularWith3ModificationInfos);
     }
 
@@ -122,7 +121,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertThat(List.of(tabularWith1Modification.getRight(), tabularWith3Modification.getRight()))
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
-            .ignoringCollectionOrder() // TODO: Should we care about sub-modifications order in tabular modifications ?
             .isEqualTo(tabularModifications);
     }
 

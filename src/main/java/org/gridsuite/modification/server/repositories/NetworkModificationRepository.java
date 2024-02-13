@@ -11,6 +11,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularCreationEntity;
@@ -178,19 +179,28 @@ public class NetworkModificationRepository {
         }
     }
 
-    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
+    public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationsIds(modificationEntity.getId());
                 List<GeneratorModificationEntity> generatorModifications = generatorModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids);
                 generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids); // It will load it directly in the previous list
-                tabularModificationEntity.setModifications(generatorModifications.stream().map(m -> (ModificationEntity) m).toList());
-                break;
+                List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
+                    .stream()
+                    .map(uuid -> generatorModifications.stream().filter(g -> uuid.equals(g.getId())).toList().get(0))
+                    .toList();
+                return new TabularModificationInfos(
+                    tabularModificationEntity.getId(),
+                    tabularModificationEntity.getDate(),
+                    tabularModificationEntity.getStashed(),
+                    tabularModificationEntity.getModificationType(),
+                    orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList()
+                );
             default:
                 break;
         }
-        return tabularModificationEntity;
+        return tabularModificationEntity.toModificationInfos();
     }
 
     public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
@@ -214,7 +224,7 @@ public class NetworkModificationRepository {
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity, boolean improveTabularLoading) {
         if (improveTabularLoading && modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+            return loadTabularModificationSubEntities(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
             return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
         }
