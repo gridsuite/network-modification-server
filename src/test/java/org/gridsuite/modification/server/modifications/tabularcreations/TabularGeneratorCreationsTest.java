@@ -191,7 +191,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(8);
+        assertSelectCount(4);
         reset();
 
         // We get the modifications of the group (so the 2 tabular creations)
