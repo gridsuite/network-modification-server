@@ -566,8 +566,16 @@ public final class ModificationUtils {
         if (modificationInfos.getConnected() != null) {
             if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getConnected().getValue())) {
                 injection.getTerminal().disconnect();
+                if (injection.getTerminal().isConnected()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not disconnect equipment '%s'", injection.getId()));
+                }
             } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue())) {
                 injection.getTerminal().connect();
+                if (!injection.getTerminal().isConnected()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not connect equipment '%s'", injection.getId()));
+                }
             }
         }
     }
