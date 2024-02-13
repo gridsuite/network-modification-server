@@ -142,7 +142,6 @@ public class OperatingStatusModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        throw NetworkModificationException.createEquipmentTypeNotSupported(equipment.getClass().getSimpleName());
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {
