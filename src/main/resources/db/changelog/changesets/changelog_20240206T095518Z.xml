@@ -1,7 +1,18 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="rehiligha (generated)" id="1707213335782-29">
-    <!-- Rename the table from 'branch_status_modification' to 'operating_status_modification' -->
-    <renameTable oldTableName="branch_status_modification" newTableName="operating_status_modification"/>
+    <changeSet author="rehiligha" id="1707213335782-29">
+        <!-- Rename the table from 'branch_status_modification' to 'operating_status_modification' -->
+        <renameTable oldTableName="branch_status_modification" newTableName="operating_status_modification"/>
+    </changeSet>
+    <changeSet author="rehiligha" id="1707213335782-30">
+        <!-- Drop the existing primary key constraint and foreign key constraint -->
+        <dropPrimaryKey tableName="operating_status_modification" constraintName="branch_status_modificationPK"/>
+        <dropForeignKeyConstraint baseTableName="operating_status_modification" constraintName="branchStatusModification_id_fk_constraint"/>
+
+        <!-- Add a new primary key constraint -->
+        <addPrimaryKey tableName="operating_status_modification" columnNames="id" constraintName="operating_status_modificationPK"/>
+
+        <!-- Add a new foreign key constraint with the updated table name -->
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="operating_status_modification" constraintName="operatingStatusModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
