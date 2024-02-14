@@ -22,11 +22,9 @@ import org.springframework.lang.NonNull;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.experimental.SuperBuilder;
 
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -46,12 +44,6 @@ public class TabularModificationInfos extends ModificationInfos {
     @Schema(description = "modifications")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ModificationInfos> modifications;
-
-    public TabularModificationInfos(UUID uuid, ZonedDateTime date, Boolean stashed, @NonNull ModificationType modificationType, List<ModificationInfos> modifications) {
-        super(uuid, date, stashed);
-        this.modificationType = modificationType;
-        this.modifications = modifications;
-    }
 
     @Override
     public ModificationEntity toEntity() {

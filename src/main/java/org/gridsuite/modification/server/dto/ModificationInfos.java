@@ -98,12 +98,6 @@ public class ModificationInfos {
     @Schema(description = "Message values")
     private String messageValues;
 
-    public ModificationInfos(UUID uuid, ZonedDateTime date, Boolean stashed) {
-        this.uuid = uuid;
-        this.date = date;
-        this.stashed = stashed;
-    }
-
     // Only for metadata
     public static ModificationInfos fromEntity(@NonNull ModificationEntity entity) {
         ModificationInfos modificationInfos = ModificationInfos.builder()

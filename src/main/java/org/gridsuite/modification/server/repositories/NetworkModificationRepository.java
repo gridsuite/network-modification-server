@@ -199,13 +199,13 @@ public class NetworkModificationRepository {
                     .stream()
                     .map(generatorModifications::get)
                     .toList();
-                return new TabularModificationInfos(
-                    tabularModificationEntity.getId(),
-                    tabularModificationEntity.getDate(),
-                    tabularModificationEntity.getStashed(),
-                    tabularModificationEntity.getModificationType(),
-                    orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList()
-                );
+                return TabularModificationInfos.builder()
+                    .uuid(tabularModificationEntity.getId())
+                    .date(tabularModificationEntity.getDate())
+                    .stashed(tabularModificationEntity.getStashed())
+                    .modificationType(tabularModificationEntity.getModificationType())
+                    .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                    .build();
             default:
                 break;
         }
