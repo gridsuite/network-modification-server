@@ -47,9 +47,9 @@ public class ElementImpactTest {
 
         List<AbstractBaseImpact> impacts = List.of(creationImpact, modificationImpact, deletionImpact);
 
-        assertEquals("{\"impactType\":\"CREATION\",\"elementType\":\"LINE\",\"elementId\":\"lineId\",\"substationIds\":[\"s1\",\"s2\"]}", mapper.writeValueAsString(creationImpact));
-        assertEquals("{\"impactType\":\"MODIFICATION\",\"elementType\":\"LOAD\",\"elementId\":\"loadId\",\"substationIds\":[\"s3\"]}", mapper.writeValueAsString(modificationImpact));
-        assertEquals("{\"impactType\":\"DELETION\",\"elementType\":\"GENERATOR\",\"elementId\":\"generatorId\",\"substationIds\":[\"s4\"]}", mapper.writeValueAsString(deletionImpact));
+        assertEquals("{\"impactType\":\"SIMPLE\",\"elementType\":\"LINE\",\"simpleImpactType\":\"CREATION\",\"elementId\":\"lineId\",\"substationIds\":[\"s1\",\"s2\"]}", mapper.writeValueAsString(creationImpact));
+        assertEquals("{\"impactType\":\"SIMPLE\",\"elementType\":\"LOAD\",\"simpleImpactType\":\"MODIFICATION\",\"elementId\":\"loadId\",\"substationIds\":[\"s3\"]}", mapper.writeValueAsString(modificationImpact));
+        assertEquals("{\"impactType\":\"SIMPLE\",\"elementType\":\"GENERATOR\",\"simpleImpactType\":\"DELETION\",\"elementId\":\"generatorId\",\"substationIds\":[\"s4\"]}", mapper.writeValueAsString(deletionImpact));
 
         NetworkModificationResult result = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
@@ -70,7 +70,7 @@ public class ElementImpactTest {
 
         HashSet<AbstractBaseImpact> impactsSet = new HashSet<>(List.of(creationImpact, creationImpact, creationImpact));
 
-        assertEquals("[{\"impactType\":\"CREATION\",\"elementType\":\"LINE\",\"elementId\":\"lineId\",\"substationIds\":[\"s1\",\"s2\"]}]", mapper.writeValueAsString(impactsSet));
+        assertEquals("[{\"impactType\":\"SIMPLE\",\"elementType\":\"LINE\",\"simpleImpactType\":\"CREATION\",\"elementId\":\"lineId\",\"substationIds\":[\"s1\",\"s2\"]}]", mapper.writeValueAsString(impactsSet));
     }
 
     @Test

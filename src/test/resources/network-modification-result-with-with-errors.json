@@ -3,8 +3,9 @@
   "lastGroupApplicationStatus": "WITH_ERRORS",
   "networkImpacts": [
     {
-      "impactType": "CREATION",
+      "impactType": "SIMPLE",
       "elementType": "LINE",
+      "simpleImpactType": "CREATION",
       "elementId": "lineId",
       "substationIds": [
         "s1",
@@ -12,16 +13,18 @@
       ]
     },
     {
-      "impactType": "MODIFICATION",
+      "impactType": "SIMPLE",
       "elementType": "LOAD",
+      "simpleImpactType": "MODIFICATION",
       "elementId": "loadId",
       "substationIds": [
         "s3"
       ]
     },
     {
-      "impactType": "DELETION",
+      "impactType": "SIMPLE",
       "elementType": "GENERATOR",
+      "simpleImpactType": "DELETION",
       "elementId": "generatorId",
       "substationIds": [
         "s4"

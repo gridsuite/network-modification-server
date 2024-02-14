@@ -27,9 +27,22 @@ import java.util.Set;
 @ToString
 public class SimpleElementImpact extends AbstractBaseImpact {
 
+    public enum SimpleImpactType {
+        CREATION,
+        MODIFICATION,
+        DELETION
+    }
+
+    private SimpleImpactType simpleImpactType;
+
     /** The impacted element ID */
     private String elementId;
 
     /** The impacted substations IDs */
     private Set<String> substationIds;
+
+    @Override
+    public ImpactType getImpactType() {
+        return ImpactType.SIMPLE;
+    }
 }

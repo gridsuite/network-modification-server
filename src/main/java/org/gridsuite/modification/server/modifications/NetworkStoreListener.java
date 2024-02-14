@@ -14,7 +14,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact.ImpactType;
+import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
@@ -95,11 +95,11 @@ public class NetworkStoreListener implements NetworkListener {
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
         networkSimpleElementImpacts.add(
                 SimpleElementImpact.builder()
-                        .impactType(ImpactType.MODIFICATION)
-                        .elementType(identifiable.getType())
-                        .elementId(identifiable.getId())
-                        .substationIds(getSubstationIds(identifiable))
-                        .build()
+                    .simpleImpactType(SimpleImpactType.MODIFICATION)
+                    .elementType(identifiable.getType())
+                    .elementId(identifiable.getId())
+                    .substationIds(getSubstationIds(identifiable))
+                    .build()
         );
     }
 
@@ -193,7 +193,7 @@ public class NetworkStoreListener implements NetworkListener {
             .build());
         networkSimpleElementImpacts.add(
             SimpleElementImpact.builder()
-                .impactType(ImpactType.CREATION)
+                .simpleImpactType(SimpleImpactType.CREATION)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -206,7 +206,7 @@ public class NetworkStoreListener implements NetworkListener {
         deletedEquipmentsIds.add(identifiable.getId());
         networkSimpleElementImpacts.add(
             SimpleElementImpact.builder()
-                .impactType(ImpactType.DELETION)
+                .simpleImpactType(SimpleImpactType.DELETION)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -269,19 +269,18 @@ public class NetworkStoreListener implements NetworkListener {
 
     private Set<AbstractBaseImpact> collectNetworkImpacts(Set<SimpleElementImpact> impacts) {
         // keep Deletion impacts separatly
-        Set<AbstractBaseImpact> resImpacts = impacts.stream().filter(i -> i.getImpactType() == ImpactType.DELETION).collect(Collectors.toSet());
+        Set<AbstractBaseImpact> resImpacts = impacts.stream().filter(i -> i.getSimpleImpactType() == SimpleImpactType.DELETION).collect(Collectors.toSet());
 
         // compute substations impact
         if (impacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet()).size() >= collectionThreshold) {
             resImpacts.add(CollectionElementImpact.builder()
-                    .impactType(ImpactType.COLLECTION)
                     .elementType(IdentifiableType.SUBSTATION)
                     .build());
         }
 
         // then filter those DELETION impacts for the next part and the collection impact computation
         Set<SimpleElementImpact> filteredImpacts = impacts.stream()
-            .filter(i -> i.getImpactType() != ImpactType.DELETION)
+            .filter(i -> i.getSimpleImpactType() != SimpleImpactType.DELETION)
             .collect(Collectors.toSet());
         Set<IdentifiableType> impactTypes = filteredImpacts.stream()
             .map(i -> i.getElementType()).collect(Collectors.toSet());
@@ -292,7 +291,6 @@ public class NetworkStoreListener implements NetworkListener {
             // compare using a threshold (ex: if nbLoadImpacts >= 50)
             if (typedNetworkImpacts.size() >= collectionThreshold) {
                 resImpacts.add(CollectionElementImpact.builder()
-                    .impactType(ImpactType.COLLECTION)
                     .elementType(type)
                     .build());
             } else {
