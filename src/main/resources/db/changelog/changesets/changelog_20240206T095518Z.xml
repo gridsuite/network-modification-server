@@ -6,8 +6,8 @@
     </changeSet>
     <changeSet author="rehiligha" id="1707213335782-30">
         <!-- Drop the existing primary key constraint and foreign key constraint -->
-        <dropPrimaryKey tableName="operating_status_modification" constraintName="branch_status_modificationPK"/>
         <dropForeignKeyConstraint baseTableName="operating_status_modification" constraintName="branchStatusModification_id_fk_constraint"/>
+        <dropPrimaryKey tableName="operating_status_modification" constraintName="branch_status_modificationPK"/>
 
         <!-- Add a new primary key constraint -->
         <addPrimaryKey tableName="operating_status_modification" columnNames="id" constraintName="operating_status_modificationPK"/>
