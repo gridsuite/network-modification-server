@@ -304,7 +304,7 @@ public class NetworkModificationRepository {
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
-                    optionalModificationWithGroup.get().getId(), Objects.requireNonNull(optionalModificationWithGroup.get().getGroup().getId())));
+                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId()));
             }
         }
         int count = modifications.size();
