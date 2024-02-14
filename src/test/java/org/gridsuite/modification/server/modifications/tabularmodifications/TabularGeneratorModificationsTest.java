@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.modifications.AbstractNetworkModificati
 import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
@@ -24,7 +25,10 @@ import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
@@ -95,33 +99,178 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
         assertSelectCount(4); // 4 before improvements
-        assertThat(tabularWith1Modification.getRight())
-            .usingRecursiveComparison()
-            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
-            .isEqualTo(tabularWith1ModificationInfos);
+        assertTabularModificationsEquals(tabularWith1Modification.getRight(), tabularWith1ModificationInfos);
 
         Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
         ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
         assertSelectCount(4); // 6 before improvements
-        assertThat(tabularWith3Modification.getRight())
-            .usingRecursiveComparison()
-            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
-            .isEqualTo(tabularWith3ModificationInfos);
+        assertTabularModificationsEquals(tabularWith3Modification.getRight(), tabularWith3ModificationInfos);
     }
 
     @Test
     public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
-        Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
-        Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
 
         reset();
         List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
         assertSelectCount(8); // 10 before improvements
-        assertThat(List.of(tabularWith1Modification.getRight(), tabularWith3Modification.getRight()))
-            .usingRecursiveComparison()
-            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
-            .isEqualTo(tabularModifications);
+        assertTabularModificationsEquals(modifications.stream().map(Pair::getRight).toList(), tabularModifications);
+    }
+
+    /*
+    POST /v1/groups SQL requests analysis
+    First we select the modifications to copy:
+    - Too many selects...
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification_group to create the new group
+    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
+    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
+    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
+    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
+    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    Then modifications order is set:
+    - 1 update in modification for orders (batchSize: number of tabular modifications)
+    Then relation between tabular modifications and sub-modifications are set:
+    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    (optional) Then order of sub-modifications relations are set:
+    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+     */
+    @Test
+    public void testSqlRequestsCountOnPostGroups() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
+        TestUtils.assertRequestsCount(13, 8, 2, 0); // (13, 8, 2, 0) before improvements
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPostGroups2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
+        TestUtils.assertRequestsCount(95, 9, 2, 0); // (95, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    /*
+    PUT /v1/groups/{groupUuid}/duplications SQL requests analysis
+    First we select the modifications to copy:
+    - Too many selects...
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification_group to create the new group
+    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
+    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
+    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
+    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
+    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    Then modifications order is set:
+    - 1 update in modification for orders (batchSize: number of tabular modifications)
+    Then relation between tabular modifications and sub-modifications are set:
+    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    (optional) Then order of sub-modifications relations are set:
+    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+     */
+    @Test
+    public void testSqlRequestsCountOnPutGroupsDuplications() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+        TestUtils.assertRequestsCount(19, 8, 2, 0); // (19, 8, 2, 0) before improvements
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPutGroupsDuplications2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+        TestUtils.assertRequestsCount(107, 9, 2, 0); // (107, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    /*
+    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+    First we select the modifications to copy:
+    - Too many selects...
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification_group to create the new group
+    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
+    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
+    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
+    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
+    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    Then modifications order is set:
+    - 1 update in modification for orders (batchSize: number of tabular modifications)
+    Then relation between tabular modifications and sub-modifications are set:
+    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    (optional) Then order of sub-modifications relations are set:
+    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+     */
+    @Test
+    public void testSqlRequestsCountOnPutGroupsWithCopy() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
+        TestUtils.assertRequestsCount(14, 8, 2, 0); // (14, 8, 2, 0) before improvements
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPutGroupsWithCopy2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
+        TestUtils.assertRequestsCount(26, 9, 2, 0); // (26, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    /*
+    POST /v1/network-modifications/duplicate SQL requests analysis
+    First we select the modifications to copy:
+    - Too many selects...
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
+    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
+    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
+    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
+    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    Then relation between tabular modifications and sub-modifications are set:
+    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    (optional) Then order of sub-modifications relations are set:
+    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+     */
+    @Test
+    public void testSqlRequestsCountOnPostNetworkModificationsDuplicate() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+
+        reset();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+        TestUtils.assertRequestsCount(11, 7, 1, 0); // (11, 7, 1, 0) before improvements
+        assertTabularModificationsEquals(modifications, idsMapping);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPostNetworkModificationsDuplicate2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+
+        reset();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+        TestUtils.assertRequestsCount(93, 8, 1, 0); // (93, 8, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
+        assertTabularModificationsEquals(modifications, idsMapping);
     }
 
     @Test
@@ -159,6 +308,22 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         Assertions.assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
+    private List<Pair<UUID, ModificationInfos>> createFewTabularModifications() {
+        Pair<UUID, ModificationInfos> tabular1 = createTabularGeneratorModification(1);
+        Pair<UUID, ModificationInfos> tabular2 = createTabularGeneratorModification(3);
+
+        return List.of(tabular1, tabular2);
+    }
+
+    private List<Pair<UUID, ModificationInfos>> createMoreTabularModifications() {
+        Pair<UUID, ModificationInfos> tabular1 = createTabularGeneratorModification(1);
+        Pair<UUID, ModificationInfos> tabular2 = createTabularGeneratorModification(3);
+        Pair<UUID, ModificationInfos> tabular3 = createTabularGeneratorModification(10);
+        Pair<UUID, ModificationInfos> tabular4 = createTabularGeneratorModification(30);
+
+        return List.of(tabular1, tabular2, tabular3, tabular4);
+    }
+
     private Pair<UUID, ModificationInfos> createTabularGeneratorModification(int qty) {
         ModificationInfos tabularModification = TabularModificationInfos.builder()
             .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -184,5 +349,46 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
                         ReactiveCapabilityCurveModificationInfos.builder().qminP(5.).qmaxP(5.).p(5.).build()))
                     .build())
             .toList();
+    }
+
+    private void assertTabularModificationsEquals(List<Pair<UUID, ModificationInfos>> expectedModifications, UUID groupUuid) throws Exception {
+        List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, groupUuid);
+        assertTabularModificationsEquals(expectedModifications.stream().map(Pair::getRight).toList(), tabularModifications);
+    }
+
+    private void assertTabularModificationsEquals(List<Pair<UUID, ModificationInfos>> expectedModifications, Map<UUID, UUID> idsMapping) {
+        Map<UUID, ModificationInfos> retrievedModifications = idsMapping.values()
+            .stream()
+            .map(id -> {
+                try {
+                    return ApiUtils.getModification(mockMvc, id);
+                } catch (Exception e) {
+                    return null; // Not important, comparison will fail if some modification fetch fails
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(
+                ModificationInfos::getUuid,
+                Function.identity()
+            ));
+        List<ModificationInfos> sourceModifications = expectedModifications.stream().map(Pair::getRight).toList();
+        // Ordering the retrieved list based on the source <-> target mapping
+        List<ModificationInfos> targetModifications = sourceModifications.stream().map(m -> retrievedModifications.get(idsMapping.get(m.getUuid()))).toList();
+
+        assertTabularModificationsEquals(sourceModifications, targetModifications);
+    }
+
+    private void assertTabularModificationsEquals(List<ModificationInfos> expectedModifications, List<ModificationInfos> modificationInfos) {
+        assertThat(expectedModifications)
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(modificationInfos);
+    }
+
+    private void assertTabularModificationsEquals(ModificationInfos expectedModificationInfos, ModificationInfos modificationInfos) {
+        assertThat(expectedModificationInfos)
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(modificationInfos);
     }
 }

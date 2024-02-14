@@ -133,7 +133,7 @@ public class NetworkModificationRepository {
         // findAllById does not keep sourceModificationUuids order, but
         // sourceEntities, copyEntities, newEntities have the same order.
         List<ModificationEntity> copyEntities = sourceEntities.stream()
-                .map(ModificationEntity::copy)
+                .map(ModificationEntity::copy) // TODO: use the optimization for tabular modifications
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
@@ -343,7 +343,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList());
+        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList()); // TODO: use the optimization for tabular modifications
     }
 
     @Transactional
