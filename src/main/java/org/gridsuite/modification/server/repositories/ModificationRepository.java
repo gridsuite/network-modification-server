@@ -36,7 +36,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
 
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
-    List<UUID> findSubModificationsIds(UUID uuid);
+    List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
 
     @EntityGraph(attributePaths = {"creations", "creations.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
     Optional<TabularCreationEntity> findTabularCreationWithReactiveCapabilityCurvePointsById(UUID id);

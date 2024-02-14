@@ -183,7 +183,8 @@ public class NetworkModificationRepository {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                List<UUID> subModificationsUuids = modificationRepository.findSubModificationsIds(modificationEntity.getId());
+                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+                // We retrieve generator modifications by generatorModificationRepository and store them as a map by IDs to re-order them later on
                 Map<UUID, GeneratorModificationEntity> generatorModifications = generatorModificationRepository
                     .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
                     .stream()
@@ -191,7 +192,9 @@ public class NetworkModificationRepository {
                         ModificationEntity::getId,
                         Function.identity()
                     ));
-                generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids); // It will load it directly in the previous list
+                // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
+                generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+                // Then we can re-order the list of GeneratorModificationEntity based on ordered list of IDs
                 List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
                     .stream()
                     .map(generatorModifications::get)
