@@ -49,6 +49,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void modifyTwoWindingsTransformer(TwoWindingsTransformer twoWindingsTransformer, BranchModificationInfos twoWindingsTransformerModificationInfos, Reporter subReporter, Network network) {
         modifyBranch(twoWindingsTransformer, twoWindingsTransformerModificationInfos, subReporter, "twoWindingsTransformerModification", "TwoWindingsTransformer with id=${id} modified :");
         addTapChangersToTwoWindingsTransformer(network, (TwoWindingsTransformerModificationInfos) modificationInfos, twoWindingsTransformer, subReporter);
+        PropertiesUtils.applyProperties(twoWindingsTransformer, subReporter, modificationInfos.getProperties());
     }
 
     @Override

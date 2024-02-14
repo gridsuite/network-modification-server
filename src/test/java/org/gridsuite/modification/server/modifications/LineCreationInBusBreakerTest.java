@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithErrors() throws Exception {
@@ -217,6 +222,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -242,6 +248,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLine("idLine1").getProperty(PROPERTY_NAME));
     }
 
     @Override

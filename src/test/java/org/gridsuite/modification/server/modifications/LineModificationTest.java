@@ -36,6 +36,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 public class LineModificationTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -64,6 +68,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                                 .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -118,7 +123,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals(32, temporaryLimit.getAcceptableDuration());
         assertEquals("name32", temporaryLimit.getName());
         assertEquals(42.0, temporaryLimit.getValue());
-
+        assertEquals(PROPERTY_VALUE, modifiedLine.getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -133,6 +138,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals(2.0, line.getB2());
         assertNull(line.getNullableCurrentLimits1());
         assertNull(line.getNullableCurrentLimits2());
+        assertNull(line.getProperty(PROPERTY_NAME));
     }
 
     @Test

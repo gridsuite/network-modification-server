@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
@@ -361,7 +362,12 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .magnetizingSusceptance(AttributeModification.toAttributeModification(getMagnetizingSusceptance()))
                 .ratedVoltage1(AttributeModification.toAttributeModification(getRatedVoltage1()))
                 .ratedVoltage2(AttributeModification.toAttributeModification(getRatedVoltage2()))
-                .ratedS(AttributeModification.toAttributeModification(getRatedS()));
+                .ratedS(AttributeModification.toAttributeModification(getRatedS()))
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

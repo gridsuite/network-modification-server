@@ -14,6 +14,9 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -200,7 +203,12 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .magnetizingSusceptance(getMagnetizingSusceptance())
                 .ratedVoltage1(getRatedVoltage1())
                 .ratedVoltage2(getRatedVoltage2())
-                .ratedS(getRatedS());
+                .ratedS(getRatedS())
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

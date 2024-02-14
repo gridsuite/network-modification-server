@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithBadVariant() throws Exception {
@@ -257,6 +259,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
                 .connectionDirection2(ConnectablePosition.Direction.BOTTOM)
                 .connectionPosition1(0)
                 .connectionPosition2(0)
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -290,6 +293,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLine("idLine").getProperty(PROPERTY_NAME));
     }
 
     @Override

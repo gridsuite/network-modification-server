@@ -15,6 +15,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -93,8 +94,12 @@ public class LineModificationEntity extends BranchModificationEntity {
             .shuntConductance1(toAttributeModification(getShuntConductance1()))
             .shuntSusceptance1(toAttributeModification(getShuntSusceptance1()))
             .shuntConductance2(toAttributeModification(getShuntConductance2()))
-            .shuntSusceptance2(toAttributeModification(getShuntSusceptance2()));
-
+            .shuntSusceptance2(toAttributeModification(getShuntSusceptance2()))
+             // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
         }
