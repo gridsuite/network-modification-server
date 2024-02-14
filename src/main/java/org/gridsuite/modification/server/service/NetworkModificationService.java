@@ -205,7 +205,7 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(UUID groupUuid, boolean onlyStashed) {
+    public void deleteNetworkModifications(@NonNull UUID groupUuid, boolean onlyStashed) {
         if (networkModificationRepository.deleteModifications(groupUuid, onlyStashed) == 0) {
             throw new NetworkModificationException(NOTHING_TO_DELETE);
         }
@@ -294,6 +294,10 @@ public class NetworkModificationService {
         return groupUuid;
     }
 
+    public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
+        return networkModificationRepository.duplicateModifications(sourceModificationUuids);
+    }
+
     @Transactional
     public Optional<NetworkModificationResult> duplicateModificationsInGroup(UUID targetGroupUuid,
                                                                              UUID networkUuid, String variantId,
@@ -307,4 +311,7 @@ public class NetworkModificationService {
         networkModificationRepository.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
     }
 
+    public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
+        return networkModificationRepository.getModificationsMetadata(ids);
+    }
 }

@@ -57,7 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = LineSplitWithVoltageLevelInfos.class),
     @JsonSubTypes.Type(value = LineAttachToVoltageLevelInfos.class),
     @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class),
-    @JsonSubTypes.Type(value = BranchStatusModificationInfos.class),
+    @JsonSubTypes.Type(value = OperatingStatusModificationInfos.class),
     @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class),
     @JsonSubTypes.Type(value = GeneratorScalingInfos.class),
     @JsonSubTypes.Type(value = LoadScalingInfos.class),
@@ -71,6 +71,7 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = ByFormulaModificationInfos.class),
     @JsonSubTypes.Type(value = VscModificationInfos.class),
     @JsonSubTypes.Type(value = ConverterStationModificationInfos.class),
+    @JsonSubTypes.Type(value = TabularCreationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor

@@ -771,34 +771,34 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testStatusLineModification() {
-        List<BranchStatusModificationEntity> entities = List.of(
-            BranchStatusModificationInfos.builder().equipmentId("idLine1").action(BranchStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine3").action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine4").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine5").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
+        List<OperatingStatusModificationEntity> entities = List.of(
+            OperatingStatusModificationInfos.builder().equipmentId("idLine1").action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine2").action(OperatingStatusModificationInfos.ActionType.TRIP).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine3").action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine4").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine5").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
         );
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
         assertRequestsCount(1, 3, 1, 0);
 
-        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        List<OperatingStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
             .stream()
-            .map(BranchStatusModificationInfos.class::cast)
-            .sorted(Comparator.comparing(BranchStatusModificationInfos::getEquipmentId))
+            .map(OperatingStatusModificationInfos.class::cast)
+            .sorted(Comparator.comparing(OperatingStatusModificationInfos::getEquipmentId))
             .collect(Collectors.toList());
         assertEquals(5, modificationInfos.size());
 
         assertThat(modificationInfos.get(0))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(0).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(0).toModificationInfos());
         assertThat(modificationInfos.get(1))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(1).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(1).toModificationInfos());
         assertThat(modificationInfos.get(2))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(2).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(2).toModificationInfos());
         assertThat(modificationInfos.get(3))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(3).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(3).toModificationInfos());
         assertThat(modificationInfos.get(4))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(4).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(4).toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);

@@ -12,7 +12,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,11 +34,20 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
+    List<ModificationEntity> findMetadataIn(List<UUID> uuids);
+
     @EntityGraph(attributePaths = {"modifications", "modifications.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Optional<TabularModificationEntity> findAllWithReactiveCapabilityCurvePointsById(UUID id);
+    Optional<TabularModificationEntity> findTabularModificationWithReactiveCapabilityCurvePointsById(UUID id);
 
     @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Set<GeneratorModificationEntity> findAllReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
+    Set<GeneratorModificationEntity> findAllModificationsWithReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
+
+    @EntityGraph(attributePaths = {"creations", "creations.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
+    Optional<TabularCreationEntity> findTabularCreationWithReactiveCapabilityCurvePointsById(UUID id);
+
+    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
+    Set<GeneratorCreationEntity> findAllCreationsWithReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 }
