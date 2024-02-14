@@ -184,11 +184,17 @@ public class NetworkModificationRepository {
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationsIds(modificationEntity.getId());
-                List<GeneratorModificationEntity> generatorModifications = generatorModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids);
+                Map<UUID, GeneratorModificationEntity> generatorModifications = generatorModificationRepository
+                    .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
+                    .stream()
+                    .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        Function.identity()
+                    ));
                 generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids); // It will load it directly in the previous list
                 List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
                     .stream()
-                    .map(uuid -> generatorModifications.stream().filter(g -> uuid.equals(g.getId())).toList().get(0))
+                    .map(generatorModifications::get)
                     .toList();
                 return new TabularModificationInfos(
                     tabularModificationEntity.getId(),
@@ -295,7 +301,7 @@ public class NetworkModificationRepository {
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
-                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId().toString()));
+                    optionalModificationWithGroup.get().getId(), Objects.requireNonNull(optionalModificationWithGroup.get().getGroup().getId())));
             }
         }
         int count = modifications.size();
