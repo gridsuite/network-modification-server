@@ -228,27 +228,35 @@ public class VscModification extends AbstractModification {
         if (converterStationModificationInfos == null) {
             return;
         }
+
+        Reporter converterStationReporter = subReporter.createSubReporter("Converter Station", "Converter station ${id} modified", "id", converterStation.getId());
+        converterStationReporter.report(Report.builder()
+                .withKey("converter station modification")
+                .withDefaultMessage("Converter Station with id=${id} modified :")
+                .withValue("id", converterStation.getId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .build());
         if (converterStationModificationInfos.getEquipmentName() != null && converterStationModificationInfos.getEquipmentName().getValue() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setName, () -> converterStation.getOptionalName().orElse("No value"), converterStationModificationInfos.getEquipmentName(), subReporter, "Name");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setName, () -> converterStation.getOptionalName().orElse("No value"), converterStationModificationInfos.getEquipmentName(), converterStationReporter, "Name");
         }
 
         if (converterStationModificationInfos.getLossFactor() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setLossFactor, converterStation::getLossFactor, converterStationModificationInfos.getLossFactor(), subReporter, "LossFactor");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setLossFactor, converterStation::getLossFactor, converterStationModificationInfos.getLossFactor(), converterStationReporter, "LossFactor");
         }
 
         if (converterStationModificationInfos.getReactivePower() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setReactivePowerSetpoint, converterStation::getReactivePowerSetpoint, converterStationModificationInfos.getReactivePower(), subReporter, "ReactivePower");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setReactivePowerSetpoint, converterStation::getReactivePowerSetpoint, converterStationModificationInfos.getReactivePower(), converterStationReporter, "ReactivePower");
         }
 
         if (converterStationModificationInfos.getVoltageRegulationOn() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setVoltageRegulatorOn, converterStation::isVoltageRegulatorOn, converterStationModificationInfos.getVoltageRegulationOn(), subReporter, "VoltageRegulationOn");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setVoltageRegulatorOn, converterStation::isVoltageRegulatorOn, converterStationModificationInfos.getVoltageRegulationOn(), converterStationReporter, "VoltageRegulationOn");
         }
 
         if (converterStationModificationInfos.getVoltage() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setVoltageSetpoint, converterStation::getVoltageSetpoint, converterStationModificationInfos.getVoltage(), subReporter, "Voltage");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setVoltageSetpoint, converterStation::getVoltageSetpoint, converterStationModificationInfos.getVoltage(), converterStationReporter, "Voltage");
         }
 
-        modifyVscReactiveLimitsAttributes(converterStationModificationInfos, converterStation, subReporter, subReporter);
+        modifyVscReactiveLimitsAttributes(converterStationModificationInfos, converterStation, converterStationReporter, converterStationReporter);
     }
 
     private void modifyVscReactiveCapabilityCurvePoints(ConverterStationModificationInfos modificationInfos,
