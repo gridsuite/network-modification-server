@@ -121,7 +121,10 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     /*
     POST /v1/groups SQL requests analysis
     First we select the modifications to copy:
-    - Too many selects...
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 1 select on group to check if it exists before the save
     Then we insert the new modifications in the new group:
     - 1 insert in modification_group to create the new group
     - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
@@ -143,7 +146,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(13, 8, 2, 0); // (13, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(9, 8, 2, 0); // (13, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -154,14 +157,17 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(95, 9, 2, 0); // (95, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(15, 9, 2, 0); // (95, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
     /*
     PUT /v1/groups/{groupUuid}/duplications SQL requests analysis
     First we select the modifications to copy:
-    - Too many selects...
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 1 select on group to check if it exists before the save
     Then we insert the new modifications in the new group:
     - 1 insert in modification_group to create the new group
     - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
@@ -183,7 +189,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        TestUtils.assertRequestsCount(19, 8, 2, 0); // (19, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(9, 8, 2, 0); // (19, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -194,14 +200,16 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        TestUtils.assertRequestsCount(107, 9, 2, 0); // (107, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(15, 9, 2, 0); // (107, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
     /*
     PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
     First we select the modifications to copy:
-    - Too many selects...
+    - 1 select to find modifications of this group
+    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 1 select on group to check if it exists before the save
     Then we insert the new modifications in the new group:
     - 1 insert in modification_group to create the new group
     - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
@@ -223,7 +231,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(14, 8, 2, 0); // (14, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(8, 8, 2, 0); // (14, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -234,14 +242,15 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(26, 9, 2, 0); // (26, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(14, 9, 2, 0); // (26, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
     /*
     POST /v1/network-modifications/duplicate SQL requests analysis
     First we select the modifications to copy:
-    - Too many selects...
+    - 1 select to find modifications of this group
+    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
     Then we insert the new modifications in the new group:
     - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
     - 1 insert in tabular_modification (batchSize: number of tabular modifications)
@@ -259,7 +268,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-        TestUtils.assertRequestsCount(11, 7, 1, 0); // (11, 7, 1, 0) before improvements
+        TestUtils.assertRequestsCount(7, 7, 1, 0); // (11, 7, 1, 0) before improvements
         assertTabularModificationsEquals(modifications, idsMapping);
     }
 
@@ -269,7 +278,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
         reset();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-        TestUtils.assertRequestsCount(93, 8, 1, 0); // (93, 8, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
+        TestUtils.assertRequestsCount(13, 8, 1, 0); // (93, 8, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
         assertTabularModificationsEquals(modifications, idsMapping);
     }
 
