@@ -542,7 +542,13 @@ public final class ModificationUtils {
             return Stream.of(
                     branch.getTerminal1(),
                     branch.getTerminal2()
-            ).collect(Collectors.toList());
+            ).toList();
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return Stream.of(
+                    w3t.getLeg1().getTerminal(),
+                    w3t.getLeg2().getTerminal(),
+                    w3t.getLeg3().getTerminal()
+            ).toList();
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }

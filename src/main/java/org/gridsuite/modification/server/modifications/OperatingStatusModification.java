@@ -10,6 +10,7 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
+import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
 import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
@@ -173,6 +174,8 @@ public class OperatingStatusModification extends AbstractModification {
     public Tripping getTrippingFromIdentifiable(Identifiable<?> identifiable) {
         if (identifiable instanceof Branch<?> branch) {
             return new BranchTripping(branch.getId());
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return new ThreeWindingsTransformerTripping(w3t.getId());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
