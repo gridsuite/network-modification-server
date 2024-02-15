@@ -65,7 +65,7 @@ public final class TestImpactUtils {
         assertEquals(ApplicationStatus.ALL_OK, networkModificationResult.get().getApplicationStatus());
         assertEquals(new TreeSet<>(substationIds), networkModificationResult.get().getImpactedSubstationsIds());
         assertEquals(nbImpacts, networkModificationResult.get().getNetworkImpacts().size());
-        assertTrue(networkModificationResult.get().getNetworkImpacts().containsAll(collectionImpactElementTypes.stream().map(t -> createCollectionElementImpact(t)).toList()));
+        assertThat(networkModificationResult.get().getNetworkImpacts()).containsAll(collectionImpactElementTypes.stream().map(TestImpactUtils::createCollectionElementImpact).toList());
     }
 
     public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<AbstractBaseImpact> elementImpactsExpected) throws JsonProcessingException {
