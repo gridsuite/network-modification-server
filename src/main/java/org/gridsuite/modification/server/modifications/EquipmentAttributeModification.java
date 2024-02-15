@@ -97,7 +97,7 @@ public class EquipmentAttributeModification extends AbstractModification {
 
     // TODO remove only for switch
     private void changeLineAttribute(Line line, String attributeName, Object attributeValue, Reporter reporter) {
-        if (attributeName.equals("branchStatus")) {
+        if (attributeName.equals("operatingStatus")) {
             line.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.valueOf((String) attributeValue)).add();
             reporter.report(Report.builder()
                 .withKey("lineStatusChanged")

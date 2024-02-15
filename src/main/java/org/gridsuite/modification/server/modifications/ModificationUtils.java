@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -527,6 +528,16 @@ public final class ModificationUtils {
         return null;
     }
 
+    public List<Terminal> getTerminalsFromIdentifiable(Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch<?> branch) {
+            return Stream.of(
+                    branch.getTerminal1(),
+                    branch.getTerminal2()
+            ).collect(Collectors.toList());
+        }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
+    }
+
     public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
         // A newly created injection is connected by default, unless we choose not to do
         if (!modificationInfos.isConnected()) {
@@ -544,8 +555,16 @@ public final class ModificationUtils {
         if (modificationInfos.getConnected() != null) {
             if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getConnected().getValue())) {
                 injection.getTerminal().disconnect();
+                if (injection.getTerminal().isConnected()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not disconnect equipment '%s'", injection.getId()));
+                }
             } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue())) {
                 injection.getTerminal().connect();
+                if (!injection.getTerminal().isConnected()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not connect equipment '%s'", injection.getId()));
+                }
             }
         }
     }
