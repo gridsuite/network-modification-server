@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 public class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -51,6 +55,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
                 .highVoltageLimit(new AttributeModification<>(50D, OperationType.SET))
                 .ipMax(new AttributeModification<>(0.8, OperationType.SET))
                 .ipMin(new AttributeModification<>(0.7, OperationType.SET))
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -80,6 +85,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         assertEquals(50D, voltageLevel.getHighVoltageLimit(), 0);
         assertEquals(0.8, identifiableShortCircuit.getIpMax(), 0);
         assertEquals(0.7, identifiableShortCircuit.getIpMin(), 0);
+        assertEquals(PROPERTY_VALUE, getNetwork().getVoltageLevel("v1").getProperty(PROPERTY_NAME));
     }
 
     @Override

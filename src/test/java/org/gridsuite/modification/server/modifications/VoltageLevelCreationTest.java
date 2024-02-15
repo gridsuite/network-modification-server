@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.SwitchKind;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,6 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -45,7 +49,9 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        return ModificationCreation.getCreationVoltageLevel("s2", "vlId", "vlName");
+        VoltageLevelCreationInfos voltageLevel = ModificationCreation.getCreationVoltageLevel("s2", "vlId", "vlName");
+        voltageLevel.setProperties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()));
+        return voltageLevel;
     }
 
     @Override
@@ -76,6 +82,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getBusbarSection("vlId_2_2"));
         assertTrue(getNetwork().getSubstation("s2").getVoltageLevelStream().anyMatch(vl -> vl.getId().equals("vlId")));
         assertEquals(1, getNetwork().getSubstation("s2").getVoltageLevelStream().filter(vl -> vl.getId().equals("vlId")).count());
+        assertEquals(PROPERTY_VALUE, getNetwork().getVoltageLevel("vlId").getProperty(PROPERTY_NAME));
     }
 
     @Override

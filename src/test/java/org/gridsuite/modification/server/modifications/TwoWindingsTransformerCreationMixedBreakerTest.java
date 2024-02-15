@@ -31,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -140,6 +142,7 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
                                         .build()
                         ))
                         .build())
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -262,6 +265,7 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
         assertEquals(4, getNetwork().getTwoWindingsTransformer("id2wt1").getRatioTapChanger().getStepCount());
         assertEquals(3, getNetwork().getTwoWindingsTransformer("id2wt1").getPhaseTapChanger().getStepCount());
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("id2wt1").getPhaseTapChanger().getRegulationMode());
+        assertEquals(PROPERTY_VALUE, getNetwork().getTwoWindingsTransformer("id2wt1").getProperty(PROPERTY_NAME));
     }
 
     @Override
