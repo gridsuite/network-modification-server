@@ -97,11 +97,8 @@ public class VscModification extends AbstractModification {
 
         hvdcAngleDroopActivePowerControlAdder(hvdcLine, subReporter);
 
-        VscConverterStation converterStation1 = ModificationUtils.getInstance().getVscConverterStation(network, modificationInfos.getConverterStation1().getEquipmentId());
-        VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, modificationInfos.getConverterStation2().getEquipmentId());
-
-        modifyConverterStation(converterStation1, modificationInfos.getConverterStation1(), subReporter);
-        modifyConverterStation(converterStation2, modificationInfos.getConverterStation2(), subReporter);
+        modifyConverterStation(network, modificationInfos.getConverterStation1(), subReporter);
+        modifyConverterStation(network, modificationInfos.getConverterStation2(), subReporter);
 
         subReporter.report(Report.builder()
                 .withKey("vscModification")
@@ -184,7 +181,7 @@ public class VscModification extends AbstractModification {
         });
     }
 
-    private boolean checkIfChangeRequestedOnDropActiveControl() {
+    public boolean checkIfChangeRequestedOnDropActiveControl() {
         return modificationInfos.getAngleDroopActivePowerControl() == null
                 && modificationInfos.getDroop() == null
                 && modificationInfos.getP0() == null;
@@ -224,10 +221,11 @@ public class VscModification extends AbstractModification {
         reports.forEach(subReporter::report);
     }
 
-    private void modifyConverterStation(VscConverterStation converterStation, ConverterStationModificationInfos converterStationModificationInfos, Reporter subReporter) {
+    private void modifyConverterStation(Network network, ConverterStationModificationInfos converterStationModificationInfos, Reporter subReporter) {
         if (converterStationModificationInfos == null) {
             return;
         }
+        VscConverterStation converterStation = ModificationUtils.getInstance().getVscConverterStation(network, converterStationModificationInfos.getEquipmentId());
 
         Reporter converterStationReporter = subReporter.createSubReporter("Converter Station", "Converter station ${id} modified", "id", converterStation.getId());
         converterStationReporter.report(Report.builder()

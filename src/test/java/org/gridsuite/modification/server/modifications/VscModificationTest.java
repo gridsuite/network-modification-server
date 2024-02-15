@@ -8,6 +8,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Assert;
@@ -219,10 +220,12 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testUnchangedHVDCngleDroopActivePowerControl() throws Exception {
+    public void testUnchangedHVDCangleDroopActivePowerControl() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
+        modificationInfos.setConverterStation1(null);
+        modificationInfos.setConverterStation2(null);
         modificationInfos.setAngleDroopActivePowerControl(null);
         modificationInfos.setDroop(null);
         modificationInfos.setP0(null);
@@ -243,5 +246,27 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         assertEquals("VSC_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testIscheckIfChangeRequestedOnDropActiveControl() {
+        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
+        modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
+        VscModification vscModification = new VscModification(modificationInfos);
+        Assert.assertFalse(vscModification.checkIfChangeRequestedOnDropActiveControl());
+    }
+    @Test
+    public void testDtoContainRequiredData(){
+        VscModificationInfos modificationInfos = VscModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("hvdcLine")
+                .build();
+
+        var networkuuid = UUID.randomUUID();
+        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
+        VscModification vscModification = new VscModification(modificationInfos);
+        Assert.assertThrows(NetworkModificationException.class, () -> {
+            vscModification.check(networkWitoutExt);
+        });
     }
 }
