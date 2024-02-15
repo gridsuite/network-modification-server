@@ -120,24 +120,34 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     /*
     POST /v1/groups SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
     First we select the modifications to copy:
     - 1 select on group to check if it exists
     - 1 select to find modifications of this group
-    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
     - 1 select on group to check if it exists before the save
     Then we insert the new modifications in the new group:
     - 1 insert in modification_group to create the new group
-    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
-    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
-    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
-    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
-    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
     Then modifications order is set:
-    - 1 update in modification for orders (batchSize: number of tabular modifications)
+    - 2 updates in modification for orders
     Then relation between tabular modifications and sub-modifications are set:
-    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
     (optional) Then order of sub-modifications relations are set:
-    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
     public void testSqlRequestsCountOnPostGroups() throws Exception {
@@ -163,24 +173,34 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     /*
     PUT /v1/groups/{groupUuid}/duplications SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
     First we select the modifications to copy:
     - 1 select on group to check if it exists
     - 1 select to find modifications of this group
-    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
     - 1 select on group to check if it exists before the save
     Then we insert the new modifications in the new group:
     - 1 insert in modification_group to create the new group
-    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
-    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
-    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
-    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
-    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
     Then modifications order is set:
-    - 1 update in modification for orders (batchSize: number of tabular modifications)
+    - 2 updates in modification for orders
     Then relation between tabular modifications and sub-modifications are set:
-    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
     (optional) Then order of sub-modifications relations are set:
-    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
     public void testSqlRequestsCountOnPutGroupsDuplications() throws Exception {
@@ -206,23 +226,33 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     /*
     PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
     First we select the modifications to copy:
     - 1 select to find modifications of this group
-    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
     - 1 select on group to check if it exists before the save
     Then we insert the new modifications in the new group:
     - 1 insert in modification_group to create the new group
-    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
-    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
-    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
-    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
-    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
     Then modifications order is set:
-    - 1 update in modification for orders (batchSize: number of tabular modifications)
+    - 2 updates in modification for orders
     Then relation between tabular modifications and sub-modifications are set:
-    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
     (optional) Then order of sub-modifications relations are set:
-    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
     public void testSqlRequestsCountOnPutGroupsWithCopy() throws Exception {
@@ -248,19 +278,31 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     /*
     POST /v1/network-modifications/duplicate SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
     First we select the modifications to copy:
     - 1 select to find modifications of this group
-    - 3 select per generator tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
     Then we insert the new modifications in the new group:
-    - 1 insert in modification for tabular modifications (batchSize: number of tabular modifications)
-    - 1 insert in tabular_modification (batchSize: number of tabular modifications)
-    - 1 insert in modification for sub-modifications (batchSize: number of sub-modifications)
-    - 1 insert in sub-modification table (batchSize: number of sub-modifications)
-    - (optional) 1 insert in sub-modification relation tables (batchSize: number of sub-modifications)
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
+    Then modifications order is set:
+    - 2 updates in modification for orders
     Then relation between tabular modifications and sub-modifications are set:
-    - 1 insert in tabular_modification_modifications for the relation (batchSize: number of sub-modifications)
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
     (optional) Then order of sub-modifications relations are set:
-    - 1 update in sub-modifications relation for the relation (batchSize: number of sub-modifications)
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
     public void testSqlRequestsCountOnPostNetworkModificationsDuplicate() throws Exception {
