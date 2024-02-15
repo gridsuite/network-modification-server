@@ -67,7 +67,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        assertThat(impacts).containsExactlyInAnyOrder(createCollectionElementImpact(getIdentifiableType()));
+        assertThat(impacts).containsExactly(createCollectionElementImpact(getIdentifiableType()));
     }
 
     @Before
