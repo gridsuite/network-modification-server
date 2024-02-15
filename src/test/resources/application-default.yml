@@ -4,18 +4,18 @@ spring:
     properties:
       dialect: org.hibernate.dialect.H2Dialect
       hibernate:
-        format_sql: true
-        generate_statistics: true
+        '[format_sql]': true
+        '[generate_statistics]': true
         dialect: org.hibernate.dialect.H2Dialect
     hibernate:
       #to turn off schema validation that fails (because of clob types) and blocks tests even if the schema is compatible
       ddl-auto: none
 logging:
-  level:
-    org.springframework.orm.jpa: INFO
-    org.springframework.transaction: INFO
-    org.hibernate.SQL: INFO
-    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+  level: 
+    '[org.springframework.orm.jpa]': INFO
+    '[org.springframework.transaction]': INFO
+    '[org.hibernate.SQL]': INFO
+    '[org.hibernate.type.descriptor.sql.BasicBinder]': INFO
 gridsuite:
   services:
     report-server:
@@ -28,7 +28,8 @@ powsybl-ws:
     vendor: h2:mem
     query: ;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     hostPort: ":"
-  impacts:
+
+impacts:
     collection-threshold: 5
 
 

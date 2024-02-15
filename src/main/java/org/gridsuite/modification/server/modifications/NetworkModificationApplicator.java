@@ -57,7 +57,7 @@ public class NetworkModificationApplicator {
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService, @Value("${powsybl-ws.impacts.collection-threshold:50}") Integer collectionThreshold) {
+                                         ReportService reportService, FilterService filterService, @Value("${impacts.collection-threshold:50}") Integer collectionThreshold) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
