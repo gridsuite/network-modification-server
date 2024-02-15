@@ -132,7 +132,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        assertThat(impacts).containsExactlyInAnyOrder(createCollectionElementImpact(IdentifiableType.LOAD));
+        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.LOAD));
     }
 
     @Test

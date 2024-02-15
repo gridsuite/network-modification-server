@@ -110,7 +110,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        assertThat(impacts).containsExactlyInAnyOrder(createCollectionElementImpact(IdentifiableType.GENERATOR));
+        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.GENERATOR));
     }
 
     @Test
