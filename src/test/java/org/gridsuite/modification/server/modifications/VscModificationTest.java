@@ -255,8 +255,9 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         VscModification vscModification = new VscModification(modificationInfos);
         Assert.assertFalse(vscModification.checkIfChangeRequestedOnDropActiveControl());
     }
+
     @Test
-    public void testDtoContainRequiredData(){
+    public void testDtoContainRequiredData() {
         VscModificationInfos modificationInfos = VscModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("hvdcLine")
@@ -265,8 +266,6 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModification vscModification = new VscModification(modificationInfos);
-        Assert.assertThrows(NetworkModificationException.class, () -> {
-            vscModification.check(networkWitoutExt);
-        });
+        Assert.assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
     }
 }
