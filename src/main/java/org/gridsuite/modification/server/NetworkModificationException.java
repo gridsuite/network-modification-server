@@ -9,7 +9,7 @@ package org.gridsuite.modification.server;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.springframework.http.HttpStatus;
 
 import java.util.Objects;
@@ -32,7 +32,6 @@ public class NetworkModificationException extends PowsyblException {
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
-        BRANCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         BATTERY_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -78,10 +77,11 @@ public class NetworkModificationException extends PowsyblException {
         INJECTION_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CONNECTION_POSITION_ERROR(HttpStatus.BAD_REQUEST),
         MODIFY_BATTERY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BRANCH_ACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
-        BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
-        BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        OPERATING_STATUS_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        OPERATING_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty operating action type"),
+        OPERATING_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
+        OPERATING_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_ATTACH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -155,8 +155,12 @@ public class NetworkModificationException extends PowsyblException {
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 
-    public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
-        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
+    public static NetworkModificationException createEquipmentTypeNotSupported(@NonNull String type) {
+        return new NetworkModificationException(Type.EQUIPMENT_TYPE_UNSUPPORTED, "The equipment type : " + type + " is not supported");
+    }
+
+    public static NetworkModificationException createOperatingActionTypeUnsupported(@NonNull OperatingStatusModificationInfos.ActionType type) {
+        return new NetworkModificationException(Type.OPERATING_ACTION_TYPE_UNSUPPORTED, "The operating action type : " + type + " is unsupported");
     }
 
     public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {

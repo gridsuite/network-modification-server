@@ -98,7 +98,7 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static void assertBranchStatus(Network network, String branchName, OperatingStatus.Status status) {
+    public static void assertOperatingStatus(Network network, String branchName, OperatingStatus.Status status) {
         assertNotNull(network);
         Branch<?> branch = network.getBranch(branchName);
         assertNotNull(branch);
@@ -108,7 +108,7 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static void setBranchStatus(Network network, String branchName, OperatingStatus.Status status) {
+    public static void setOperatingStatus(Network network, String branchName, OperatingStatus.Status status) {
         Branch<?> branch = network.getBranch(branchName);
         assertNotNull(branch);
         branch.newExtension(OperatingStatusAdder.class).withStatus(status).add();
