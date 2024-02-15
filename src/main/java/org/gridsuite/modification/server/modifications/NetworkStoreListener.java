@@ -43,7 +43,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<EquipmentInfos> modifiedEquipments = new ArrayList<>();
 
-    private final Set<SimpleElementImpact> networkSimpleElementImpacts = new LinkedHashSet<>();
+    private final Set<SimpleElementImpact> networkElementImpacts = new LinkedHashSet<>();
 
     private Integer collectionThreshold;
 
@@ -93,7 +93,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
-        networkSimpleElementImpacts.add(
+        networkElementImpacts.add(
                 SimpleElementImpact.builder()
                     .simpleImpactType(SimpleImpactType.MODIFICATION)
                     .elementType(identifiable.getType())
@@ -191,7 +191,7 @@ public class NetworkStoreListener implements NetworkListener {
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
             .build());
-        networkSimpleElementImpacts.add(
+        networkElementImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(SimpleImpactType.CREATION)
                 .elementType(identifiable.getType())
@@ -204,7 +204,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         deletedEquipmentsIds.add(identifiable.getId());
-        networkSimpleElementImpacts.add(
+        networkElementImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(SimpleImpactType.DELETION)
                 .elementType(identifiable.getType())
@@ -228,7 +228,7 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        return collectNetworkImpacts(networkSimpleElementImpacts);
+        return collectNetworkImpacts(networkElementImpacts);
     }
 
     private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
