@@ -18,13 +18,11 @@ import java.util.Set;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Setter
-@Getter
 @SuperBuilder
+@Data
+@AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString
 public class SimpleElementImpact extends AbstractBaseImpact {
 
     public enum SimpleImpactType {

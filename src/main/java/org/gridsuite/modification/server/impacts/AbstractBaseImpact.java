@@ -29,13 +29,10 @@ import lombok.experimental.SuperBuilder;
     @JsonSubTypes.Type(value = SimpleElementImpact.class, name = "SIMPLE"),
     @JsonSubTypes.Type(value = CollectionElementImpact.class, name = "COLLECTION")
 })
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Setter
-@Getter
 @SuperBuilder
+@Data
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@ToString
 public abstract class AbstractBaseImpact {
 
 

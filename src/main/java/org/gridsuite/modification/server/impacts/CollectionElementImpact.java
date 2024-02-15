@@ -15,12 +15,11 @@ import lombok.experimental.SuperBuilder;
  *
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
-@Setter
-@Getter
 @SuperBuilder
+@Data
+// @AllArgsConstructor // TODO activate if one member is added
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString
 public class CollectionElementImpact extends AbstractBaseImpact {
     @Override
     public ImpactType getImpactType() {
