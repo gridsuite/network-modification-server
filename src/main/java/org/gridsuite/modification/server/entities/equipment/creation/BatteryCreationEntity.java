@@ -36,26 +36,26 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "reactiveCapabilityCurve")
     private Boolean reactiveCapabilityCurve;
 
-    @Column(name = "minimumReactivePower")
-    private Double minimumReactivePower;
+    @Column(name = "minQ")
+    private Double minQ;
 
-    @Column(name = "maximumReactivePower")
-    private Double maximumReactivePower;
+    @Column(name = "maxQ")
+    private Double maxQ;
 
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint;
+    private double activePowerSetpoint; //targetP
 
-    @Column(name = "reactivePowerSetpoint")
+    @Column(name = "reactivePowerSetpoint") //targetQ
     private Double reactivePowerSetpoint;
 
-    @Column(name = "participate")
+    @Column(name = "participate")//
     private Boolean participate;
 
-    @Column(name = "droop")
+    @Column(name = "droop")//
     private Float droop;
 
     public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
@@ -73,8 +73,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.minP = batteryCreationInfos.getMinP();
         this.maxP = batteryCreationInfos.getMaxP();
         this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();
-        this.minimumReactivePower = batteryCreationInfos.getMinimumReactivePower();
-        this.maximumReactivePower = batteryCreationInfos.getMaximumReactivePower();
+        this.minQ = batteryCreationInfos.getMinQ();
+        this.maxQ = batteryCreationInfos.getMaxQ();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryCreationInfos.getReactiveCapabilityCurvePoints());
         this.activePowerSetpoint = batteryCreationInfos.getActivePowerSetpoint();
         this.reactivePowerSetpoint = batteryCreationInfos.getReactivePowerSetpoint();
@@ -122,8 +122,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .minP(getMinP())
                 .maxP(getMaxP())
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
-                .minimumReactivePower(this.getMinimumReactivePower())
-                .maximumReactivePower(this.getMaximumReactivePower())
+                .minQ(this.getMinQ())
+                .maxQ(this.getMaxQ())
                 .reactiveCapabilityCurvePoints(points)
                 .activePowerSetpoint(getActivePowerSetpoint())
                 .reactivePowerSetpoint(getReactivePowerSetpoint())

@@ -62,14 +62,14 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private FloatModificationEmbedded droop;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minimumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "minimumReactivePowerOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minQ")), @AttributeOverride(name = "opType", column = @Column(name = "minQOp"))
     })
-    private DoubleModificationEmbedded minimumReactivePower;
+    private DoubleModificationEmbedded minQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maximumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "maximumReactivePowerOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxQ")), @AttributeOverride(name = "opType", column = @Column(name = "maxQOp"))
     })
-    private DoubleModificationEmbedded maximumReactivePower;
+    private DoubleModificationEmbedded maxQ;
 
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType", column = @Column(name = "reactiveCapabilityCurveOp"))
@@ -96,8 +96,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
         this.maxP = batteryModificationInfos.getMaxP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxP()) : null;
         this.activePowerSetpoint = batteryModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getActivePowerSetpoint()) : null;
         this.reactivePowerSetpoint = batteryModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getReactivePowerSetpoint()) : null;
-        this.minimumReactivePower = batteryModificationInfos.getMinimumReactivePower() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinimumReactivePower()) : null;
-        this.maximumReactivePower = batteryModificationInfos.getMaximumReactivePower() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaximumReactivePower()) : null;
+        this.minQ = batteryModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinQ()) : null;
+        this.maxQ = batteryModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxQ()) : null;
         this.participate = batteryModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getParticipate()) : null;
         this.droop = batteryModificationInfos.getDroop() != null ? new FloatModificationEmbedded(batteryModificationInfos.getDroop()) : null;
         this.reactiveCapabilityCurve = batteryModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getReactiveCapabilityCurve()) : null;
@@ -142,8 +142,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .maxP(toAttributeModification(getMaxP()))
                 .minP(toAttributeModification(getMinP()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
-                .minimumReactivePower(toAttributeModification(getMinimumReactivePower()))
-                .maximumReactivePower(toAttributeModification(getMaximumReactivePower()))
+                .minQ(toAttributeModification(getMinQ()))
+                .maxQ(toAttributeModification(getMaxQ()))
                 .participate(toAttributeModification(getParticipate()))
                 .droop(toAttributeModification(getDroop()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))

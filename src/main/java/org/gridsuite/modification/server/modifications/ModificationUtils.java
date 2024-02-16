@@ -917,12 +917,12 @@ public final class ModificationUtils {
                                             String equipmentId,
                                             String equipmentName) {
         // check min max reactive limits
-        if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
-            if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
+        if (modificationInfos.getMinQ() != null && modificationInfos.getMaxQ() != null) {
+            if (Double.isNaN(modificationInfos.getMinQ())) {
                 throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum reactive power is not set");
-            } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
+            } else if (Double.isNaN(modificationInfos.getMaxQ())) {
                 throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is not set");
-            } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
+            } else if (modificationInfos.getMaxQ() < modificationInfos.getMinQ()) {
                 throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is expected to be greater than or equal to minimum reactive power");
             }
         }
@@ -967,18 +967,18 @@ public final class ModificationUtils {
                                                   ReactiveLimitsHolder reactiveLimitsHolder,
                                                   Reporter subReporter) {
         List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
-        if (batteryCreationInfos.getMinimumReactivePower() != null && batteryCreationInfos.getMaximumReactivePower() != null) {
+        if (batteryCreationInfos.getMinQ() != null && batteryCreationInfos.getMaxQ() != null) {
             reactiveLimitsHolder.newMinMaxReactiveLimits()
-                    .setMinQ(batteryCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(batteryCreationInfos.getMaximumReactivePower())
+                    .setMinQ(batteryCreationInfos.getMinQ())
+                    .setMaxQ(batteryCreationInfos.getMaxQ())
                     .add();
 
             minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                    batteryCreationInfos.getMinimumReactivePower(),
+                    batteryCreationInfos.getMinQ(),
                     MIN_REACTIVE_POWER_FIELDNAME));
 
             minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                    batteryCreationInfos.getMaximumReactivePower(),
+                    batteryCreationInfos.getMaxQ(),
                     MAX_REACTIVE_POWER_FIELDNAME));
 
             Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);

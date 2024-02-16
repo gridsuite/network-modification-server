@@ -53,10 +53,10 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Float> droop;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;

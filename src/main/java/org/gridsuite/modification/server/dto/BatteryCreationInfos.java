@@ -44,10 +44,10 @@ public class BatteryCreationInfos extends InjectionCreationInfos implements Reac
     private double maxP;
 
     @Schema(description = "Minimum reactive power")
-    private Double minimumReactivePower;
+    private Double minQ;
 
     @Schema(description = "Maximum reactive power")
-    private Double maximumReactivePower;
+    private Double maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;

@@ -45,9 +45,9 @@ public class BatteryModification extends AbstractModification {
         }
         Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
-        if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
+        if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinQ() != null || modificationInfos.getMaxQ() != null)) {
             MinMaxReactiveLimits minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimits.class);
-            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_BATTERY_ERROR, errorMessage);
+            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinQ(), modificationInfos.getMaxQ(), MODIFY_BATTERY_ERROR, errorMessage);
         }
         Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
@@ -188,8 +188,8 @@ public class BatteryModification extends AbstractModification {
         }
         ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
                 newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
-                modificationInfos.getMinimumReactivePower(),
-                modificationInfos.getMaximumReactivePower());
+                modificationInfos.getMinQ(),
+                modificationInfos.getMaxQ());
     }
 
     private Reporter modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,
