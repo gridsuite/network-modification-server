@@ -52,10 +52,10 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
                 .busOrBusbarSectionId("1B")
                 .minP(100.0)
                 .maxP(600.0)
-                .activePowerSetpoint(400.)
-                .reactivePowerSetpoint(50.)
-                .minimumReactivePower(20.0)
-                .maximumReactivePower(25.0)
+                .targetP(400.)
+                .targetQ(50.)
+                .minQ(20.0)
+                .maxQ(25.0)
                 .droop(5f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
@@ -76,10 +76,10 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
                 .busOrBusbarSectionId("bus1")
                 .minP(101.0)
                 .maxP(601.0)
-                .activePowerSetpoint(401.)
-                .reactivePowerSetpoint(51.)
-                .minimumReactivePower(23.0)
-                .maximumReactivePower(26.0)
+                .targetP(401.)
+                .targetQ(51.)
+                .minQ(23.0)
+                .maxQ(26.0)
                 .droop(6f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
@@ -146,7 +146,7 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
         // invalid min max reactive limit
         batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setReactiveCapabilityCurve(false);
-        batteryCreationInfos.setMinimumReactivePower(Double.NaN);
+        batteryCreationInfos.setMinQ(Double.NaN);
 
         batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -156,7 +156,7 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
 
         batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setReactiveCapabilityCurve(false);
-        batteryCreationInfos.setMaximumReactivePower(Double.NaN);
+        batteryCreationInfos.setMaxQ(Double.NaN);
 
         batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -166,8 +166,8 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
 
         batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setReactiveCapabilityCurve(false);
-        batteryCreationInfos.setMinimumReactivePower(200.);
-        batteryCreationInfos.setMaximumReactivePower(100.);
+        batteryCreationInfos.setMinQ(200.);
+        batteryCreationInfos.setMaxQ(100.);
 
         batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

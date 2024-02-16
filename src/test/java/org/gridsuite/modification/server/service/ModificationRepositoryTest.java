@@ -285,7 +285,7 @@ public class ModificationRepositoryTest {
                 .plannedActivePowerSetPoint(20.)
                 .marginalCost(20.)
                 .plannedOutageRate(20.).forcedOutageRate(20.)
-                .minimumReactivePower(30.).maximumReactivePower(50.)
+                .minQ(30.).maxQ(50.)
                 .participate(true).droop(8f).transientReactance(37.)
                 .stepUpTransformerReactance(46.).regulatingTerminalId("testTerminalId1")
                 .regulatingTerminalType("LINE").regulatingTerminalVlId("idVlTest1")

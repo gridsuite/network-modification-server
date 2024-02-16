@@ -61,8 +61,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .voltageSetpoint(225.)
                 .stepUpTransformerReactance(60.0)
                 .transientReactance(61.0)
-                .minimumReactivePower(20.0)
-                .maximumReactivePower(25.0)
+                .minQ(20.0)
+                .maxQ(25.0)
                 .plannedActivePowerSetPoint(111.)
                 .marginalCost(0.40)
                 .plannedOutageRate(.45)
@@ -99,8 +99,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .voltageSetpoint(226.)
                 .stepUpTransformerReactance(61.0)
                 .transientReactance(62.0)
-                .minimumReactivePower(23.0)
-                .maximumReactivePower(26.0)
+                .minQ(23.0)
+                .maxQ(26.0)
                 .plannedActivePowerSetPoint(222.)
                 .marginalCost(0.50)
                 .plannedOutageRate(.85)
@@ -175,7 +175,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         // invalid min max reactive limit
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
-        generatorCreationInfos.setMinimumReactivePower(Double.NaN);
+        generatorCreationInfos.setMinQ(Double.NaN);
 
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -185,7 +185,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
-        generatorCreationInfos.setMaximumReactivePower(Double.NaN);
+        generatorCreationInfos.setMaxQ(Double.NaN);
 
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -195,8 +195,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
-        generatorCreationInfos.setMinimumReactivePower(200.);
-        generatorCreationInfos.setMaximumReactivePower(100.);
+        generatorCreationInfos.setMinQ(200.);
+        generatorCreationInfos.setMaxQ(100.);
 
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

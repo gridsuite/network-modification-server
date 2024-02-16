@@ -536,7 +536,7 @@ public class BuildTest {
                 .plannedActivePowerSetPoint(80.)
                 .marginalCost(82.)
                 .plannedOutageRate(83.).forcedOutageRate(84.)
-                .minimumReactivePower(20.).maximumReactivePower(50.)
+                .minQ(20.).maxQ(50.)
                 .participate(true).droop(9F).transientReactance(35.)
                 .stepUpTransformerReactance(25.).regulatingTerminalId("v2load")
                 .regulatingTerminalType("LOAD").regulatingTerminalVlId("v2")

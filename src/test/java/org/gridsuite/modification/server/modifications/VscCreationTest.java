@@ -81,9 +81,9 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .voltageRegulationOn(false)
                 .reactivePower(23.)
                 .reactiveCapabilityCurve(false)
-                .maximumReactivePower(66.)
+                .maxQ(66.)
                 .lossFactor(4F)
-                .minimumReactivePower(55.)
+                .minQ(55.)
                 .voltage(34.)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1.1")
@@ -246,7 +246,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setConnectionPosition(35);
         converterStationCreationInfos.setReactiveCapabilityCurve(false);
-        converterStationCreationInfos.setMinimumReactivePower(Double.NaN);
+        converterStationCreationInfos.setMinQ(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
@@ -259,7 +259,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setConnectionPosition(66);
         converterStationCreationInfos.setReactiveCapabilityCurve(false);
-        converterStationCreationInfos.setMaximumReactivePower(Double.NaN);
+        converterStationCreationInfos.setMaxQ(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
@@ -272,8 +272,8 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setConnectionPosition(15);
         converterStationCreationInfos.setReactiveCapabilityCurve(false);
-        converterStationCreationInfos.setMinimumReactivePower(200.);
-        converterStationCreationInfos.setMaximumReactivePower(100.);
+        converterStationCreationInfos.setMinQ(200.);
+        converterStationCreationInfos.setMaxQ(100.);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);

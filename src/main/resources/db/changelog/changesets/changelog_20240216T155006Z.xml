@@ -1,0 +1,111 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="souissimai (generated)" id="1708098615603-29">
+        <renameColumn tableName="battery_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MAX_ACTIVE_POWER"
+                      newColumnName="maxp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-30">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MAX_ACTIVE_POWER"
+                      newColumnName="maxp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-31">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MAX_ACTIVE_POWER_op"
+                      newColumnName="maxp_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-32">
+        <renameColumn tableName="battery_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-33">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-34">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MAXIMUM_REACTIVE_POWER_op"
+                      newColumnName="maxq_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-35">
+        <renameColumn tableName="battery_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MIN_ACTIVE_POWER"
+                      newColumnName="minp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-36">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MIN_ACTIVE_POWER"
+                      newColumnName="minp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-37">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MIN_ACTIVE_POWER_op"
+                      newColumnName="minp_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-38">
+        <renameColumn tableName="battery_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-39">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-40">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MINIMUM_REACTIVE_POWER_op"
+                      newColumnName="minq_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-41">
+        <renameColumn tableName="battery_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="ACTIVE_POWER_SETPOINT"
+                      newColumnName="targetp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-42">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="ACTIVE_POWER_SETPOINT"
+                      newColumnName="targetp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-43">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="ACTIVE_POWER_SETPOINT_op"
+                      newColumnName="targetp_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-44">
+        <renameColumn tableName="battery_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      newColumnName="targetq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-45">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      newColumnName="targetq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-46">
+        <renameColumn tableName="battery_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="REACTIVE_POWER_SETPOINT_op"
+                      newColumnName="targetq_op" />
+    </changeSet>
+</databaseChangeLog>
