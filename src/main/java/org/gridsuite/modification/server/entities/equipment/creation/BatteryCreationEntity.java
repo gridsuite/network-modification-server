@@ -27,19 +27,19 @@ import java.util.stream.Collectors;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryCreation_id_fk_constraint"))
 public class BatteryCreationEntity extends InjectionCreationEntity {
 
-    @Column(name = "minActivePower")//minP
-    private double minActivePower;
+    @Column(name = "minP")
+    private double minP;
 
-    @Column(name = "maxActivePower")//maxp
-    private double maxActivePower;
+    @Column(name = "maxP")
+    private double maxP;
 
-    @Column(name = "reactiveCapabilityCurve")//do not change
+    @Column(name = "reactiveCapabilityCurve")
     private Boolean reactiveCapabilityCurve;
 
-    @Column(name = "minimumReactivePower")//minQ
+    @Column(name = "minimumReactivePower")
     private Double minimumReactivePower;
 
-    @Column(name = "maximumReactivePower")//maxQ
+    @Column(name = "maximumReactivePower")
     private Double maximumReactivePower;
 
     @ElementCollection
@@ -47,15 +47,15 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint;//targetP
+    private double activePowerSetpoint;
 
-    @Column(name = "reactivePowerSetpoint")//targetQ
+    @Column(name = "reactivePowerSetpoint")
     private Double reactivePowerSetpoint;
 
-    @Column(name = "participate")//
+    @Column(name = "participate")
     private Boolean participate;
 
-    @Column(name = "droop")//
+    @Column(name = "droop")
     private Float droop;
 
     public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
@@ -70,8 +70,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private void assignAttributes(BatteryCreationInfos batteryCreationInfos) {
-        this.minActivePower = batteryCreationInfos.getMinActivePower();
-        this.maxActivePower = batteryCreationInfos.getMaxActivePower();
+        this.minP = batteryCreationInfos.getMinP();
+        this.maxP = batteryCreationInfos.getMaxP();
         this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();
         this.minimumReactivePower = batteryCreationInfos.getMinimumReactivePower();
         this.maximumReactivePower = batteryCreationInfos.getMaximumReactivePower();
@@ -119,8 +119,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .connectionPosition(getConnectionPosition())
                 .connected(isConnected())
                 // battery
-                .minActivePower(getMinActivePower())
-                .maxActivePower(getMaxActivePower())
+                .minP(getMinP())
+                .maxP(getMaxP())
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
                 .minimumReactivePower(this.getMinimumReactivePower())
                 .maximumReactivePower(this.getMaximumReactivePower())
