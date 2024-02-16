@@ -35,10 +35,10 @@ import java.util.List;
 @ModificationErrorTypeName("MODIFY_BATTERY_ERROR")
 public class BatteryModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Minimum active power")
-    private AttributeModification<Double> minActivePower;
+    private AttributeModification<Double> minP;
 
     @Schema(description = "Maximum active power")
-    private AttributeModification<Double> maxActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Active power set point")
     private AttributeModification<Double> activePowerSetpoint;
