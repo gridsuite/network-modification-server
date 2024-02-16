@@ -32,24 +32,24 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryModification_id_fk_constraint"))
 public class BatteryModificationEntity extends InjectionModificationEntity {
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minP")), @AttributeOverride(name = "opType", column = @Column(name = "minPOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minP")), @AttributeOverride(name = "opType", column = @Column(name = "minpOp"))
     })
     private DoubleModificationEmbedded minP;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxP")), @AttributeOverride(name = "opType", column = @Column(name = "maxPOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxP")), @AttributeOverride(name = "opType", column = @Column(name = "maxpOp"))
     })
     private DoubleModificationEmbedded maxP;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "activePowerSetpoint")), @AttributeOverride(name = "opType", column = @Column(name = "activePowerSetpointOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "targetP")), @AttributeOverride(name = "opType", column = @Column(name = "targetpOp"))
     })
-    private DoubleModificationEmbedded activePowerSetpoint;
+    private DoubleModificationEmbedded targetP;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactivePowerSetpoint")), @AttributeOverride(name = "opType", column = @Column(name = "reactivePowerSetpointOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "targetQ")), @AttributeOverride(name = "opType", column = @Column(name = "targetqOp"))
     })
-    private DoubleModificationEmbedded reactivePowerSetpoint;
+    private DoubleModificationEmbedded targetQ;
 
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "participate")), @AttributeOverride(name = "opType", column = @Column(name = "participateOp"))
@@ -62,12 +62,12 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private FloatModificationEmbedded droop;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minQ")), @AttributeOverride(name = "opType", column = @Column(name = "minQOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minQ")), @AttributeOverride(name = "opType", column = @Column(name = "minqOp"))
     })
     private DoubleModificationEmbedded minQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxQ")), @AttributeOverride(name = "opType", column = @Column(name = "maxQOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxQ")), @AttributeOverride(name = "opType", column = @Column(name = "maxqOp"))
     })
     private DoubleModificationEmbedded maxQ;
 
@@ -94,8 +94,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private void assignAttributes(BatteryModificationInfos batteryModificationInfos) {
         this.minP = batteryModificationInfos.getMinP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinP()) : null;
         this.maxP = batteryModificationInfos.getMaxP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxP()) : null;
-        this.activePowerSetpoint = batteryModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getActivePowerSetpoint()) : null;
-        this.reactivePowerSetpoint = batteryModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getReactivePowerSetpoint()) : null;
+        this.targetP = batteryModificationInfos.getTargetP() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getTargetP()) : null;
+        this.targetQ = batteryModificationInfos.getTargetQ() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getTargetQ()) : null;
         this.minQ = batteryModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMinQ()) : null;
         this.maxQ = batteryModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxQ()) : null;
         this.participate = batteryModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getParticipate()) : null;
@@ -138,10 +138,10 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
                 .connected(toAttributeModification(getConnected()))
-                .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
+                .targetP(toAttributeModification(getTargetP()))
                 .maxP(toAttributeModification(getMaxP()))
                 .minP(toAttributeModification(getMinP()))
-                .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
+                .targetQ(toAttributeModification(getTargetQ()))
                 .minQ(toAttributeModification(getMinQ()))
                 .maxQ(toAttributeModification(getMaxQ()))
                 .participate(toAttributeModification(getParticipate()))

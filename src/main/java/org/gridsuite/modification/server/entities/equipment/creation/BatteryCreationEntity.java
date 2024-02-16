@@ -46,11 +46,11 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
-    @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint; //targetP
+    @Column(name = "targetP")
+    private double targetP;
 
-    @Column(name = "reactivePowerSetpoint") //targetQ
-    private Double reactivePowerSetpoint;
+    @Column(name = "targetQ")
+    private Double targetQ;
 
     @Column(name = "participate")//
     private Boolean participate;
@@ -76,8 +76,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.minQ = batteryCreationInfos.getMinQ();
         this.maxQ = batteryCreationInfos.getMaxQ();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryCreationInfos.getReactiveCapabilityCurvePoints());
-        this.activePowerSetpoint = batteryCreationInfos.getActivePowerSetpoint();
-        this.reactivePowerSetpoint = batteryCreationInfos.getReactivePowerSetpoint();
+        this.targetP = batteryCreationInfos.getTargetP();
+        this.targetQ = batteryCreationInfos.getTargetQ();
         this.participate = batteryCreationInfos.getParticipate();
         this.droop = batteryCreationInfos.getDroop();
     }
@@ -125,8 +125,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .minQ(this.getMinQ())
                 .maxQ(this.getMaxQ())
                 .reactiveCapabilityCurvePoints(points)
-                .activePowerSetpoint(getActivePowerSetpoint())
-                .reactivePowerSetpoint(getReactivePowerSetpoint())
+                .targetP(getTargetP())
+                .targetQ(getTargetQ())
                 .participate(getParticipate())
                 .droop(getDroop());
     }

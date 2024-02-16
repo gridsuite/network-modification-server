@@ -53,10 +53,10 @@ public class BatteryCreationInfos extends InjectionCreationInfos implements Reac
     private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
 
     @Schema(description = "Active power set point")
-    private double activePowerSetpoint;
+    private double targetP;
 
     @Schema(description = "Reactive power set point")
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 
     @Schema(description = "Participate")
     private Boolean participate;

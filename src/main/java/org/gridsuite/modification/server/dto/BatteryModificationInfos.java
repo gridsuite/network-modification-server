@@ -41,10 +41,10 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Double> maxP;
 
     @Schema(description = "Active power set point")
-    private AttributeModification<Double> activePowerSetpoint;
+    private AttributeModification<Double> targetP;
 
     @Schema(description = "Reactive power set point")
-    private AttributeModification<Double> reactivePowerSetpoint;
+    private AttributeModification<Double> targetQ;
 
     @Schema(description = "Participate")
     private AttributeModification<Boolean> participate;

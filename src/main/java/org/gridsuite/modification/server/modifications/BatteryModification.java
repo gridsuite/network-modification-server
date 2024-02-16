@@ -60,7 +60,7 @@ public class BatteryModification extends AbstractModification {
 
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(BatteryModificationInfos modificationInfos, Battery battery, NetworkModificationException.Type exceptionType, String errorMessage) {
         ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
-                modificationInfos.getActivePowerSetpoint(),
+                modificationInfos.getTargetP(),
                 modificationInfos.getMinP(),
                 modificationInfos.getMaxP(),
                 battery.getMinP(),
@@ -97,8 +97,8 @@ public class BatteryModification extends AbstractModification {
 
     private void modifyBatterySetpointsAttributes(BatteryModificationInfos modificationInfos,
                                                   Battery battery, Reporter subReporter) {
-        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getActivePowerSetpoint(), "Active power");
-        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getTargetP(), "Active power");
+        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getTargetQ(), "Reactive power");
         Reporter subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
             subReporterSetpoints = subReporter.createSubReporter(SETPOINTS, SETPOINTS);

@@ -102,8 +102,8 @@ public class BatteryCreation extends AbstractModification {
                 .setName(batteryCreationInfos.getEquipmentName())
                 .setMinP(batteryCreationInfos.getMinP())
                 .setMaxP(batteryCreationInfos.getMaxP())
-                .setTargetP(batteryCreationInfos.getActivePowerSetpoint())
-                .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()));
+                .setTargetP(batteryCreationInfos.getTargetP())
+                .setTargetQ(nanIfNull(batteryCreationInfos.getTargetQ()));
     }
 
     private void createBatteryInBusBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Reporter subReporter) {
@@ -117,8 +117,8 @@ public class BatteryCreation extends AbstractModification {
                 .setName(batteryCreationInfos.getEquipmentName())
                 .setMinP(batteryCreationInfos.getMinP())
                 .setMaxP(batteryCreationInfos.getMaxP())
-                .setTargetP(batteryCreationInfos.getActivePowerSetpoint())
-                .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()))
+                .setTargetP(batteryCreationInfos.getTargetP())
+                .setTargetQ(nanIfNull(batteryCreationInfos.getTargetQ()))
                 .add();
 
         addExtensionsToBattery(batteryCreationInfos, battery, subReporter);
@@ -145,10 +145,10 @@ public class BatteryCreation extends AbstractModification {
     private Reporter reportBatterySetPoints(BatteryCreationInfos batteryCreationInfos, Reporter subReporter) {
         List<Report> setPointReports = new ArrayList<>();
         setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(batteryCreationInfos.getActivePowerSetpoint(), "Active power"));
-        if (batteryCreationInfos.getReactivePowerSetpoint() != null) {
+                .buildCreationReport(batteryCreationInfos.getTargetP(), "Active power"));
+        if (batteryCreationInfos.getTargetQ() != null) {
             setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(batteryCreationInfos.getReactivePowerSetpoint(), "Reactive power"));
+                .buildCreationReport(batteryCreationInfos.getTargetQ(), "Reactive power"));
         }
         return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
     }
