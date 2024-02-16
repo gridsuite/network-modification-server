@@ -61,8 +61,8 @@ public class BatteryModification extends AbstractModification {
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(BatteryModificationInfos modificationInfos, Battery battery, NetworkModificationException.Type exceptionType, String errorMessage) {
         ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
                 modificationInfos.getActivePowerSetpoint(),
-                modificationInfos.getMinActivePower(),
-                modificationInfos.getMaxActivePower(),
+                modificationInfos.getMinP(),
+                modificationInfos.getMaxP(),
                 battery.getMinP(),
                 battery.getMaxP(),
                 battery.getTargetP(),
@@ -135,8 +135,8 @@ public class BatteryModification extends AbstractModification {
     private Reporter modifyBatteryActiveLimitsAttributes(BatteryModificationInfos modificationInfos,
                                                          Battery battery, Reporter subReporter) {
         Reporter subReporterLimits = null;
-        Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
-        Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinActivePower(), "Min active power");
+        Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxP(), "Max active power");
+        Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinP(), "Min active power");
         if (reportMaxActivePower != null || reportMinActivePower != null) {
             subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
             subReporterLimits.report(Report.builder()

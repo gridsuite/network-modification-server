@@ -100,8 +100,8 @@ public class BatteryCreation extends AbstractModification {
         return voltageLevel.newBattery()
                 .setId(batteryCreationInfos.getEquipmentId())
                 .setName(batteryCreationInfos.getEquipmentName())
-                .setMinP(batteryCreationInfos.getMinActivePower())
-                .setMaxP(batteryCreationInfos.getMaxActivePower())
+                .setMinP(batteryCreationInfos.getMinP())
+                .setMaxP(batteryCreationInfos.getMaxP())
                 .setTargetP(batteryCreationInfos.getActivePowerSetpoint())
                 .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()));
     }
@@ -115,8 +115,8 @@ public class BatteryCreation extends AbstractModification {
                 .setConnectableBus(bus.getId())
                 .setId(batteryCreationInfos.getEquipmentId())
                 .setName(batteryCreationInfos.getEquipmentName())
-                .setMinP(batteryCreationInfos.getMinActivePower())
-                .setMaxP(batteryCreationInfos.getMaxActivePower())
+                .setMinP(batteryCreationInfos.getMinP())
+                .setMaxP(batteryCreationInfos.getMaxP())
                 .setTargetP(batteryCreationInfos.getActivePowerSetpoint())
                 .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()))
                 .add();
@@ -195,10 +195,10 @@ public class BatteryCreation extends AbstractModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            batteryCreationInfos.getMinActivePower(), "Min active power"));
+            batteryCreationInfos.getMinP(), "Min active power"));
 
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            batteryCreationInfos.getMaxActivePower(), "Max active power"));
+            batteryCreationInfos.getMaxP(), "Max active power"));
 
         ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
         return subReporterLimits;

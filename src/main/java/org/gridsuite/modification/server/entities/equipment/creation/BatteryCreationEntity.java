@@ -27,19 +27,19 @@ import java.util.stream.Collectors;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryCreation_id_fk_constraint"))
 public class BatteryCreationEntity extends InjectionCreationEntity {
 
-    @Column(name = "minActivePower")
+    @Column(name = "minActivePower")//minP
     private double minActivePower;
 
-    @Column(name = "maxActivePower")
+    @Column(name = "maxActivePower")//maxp
     private double maxActivePower;
 
-    @Column(name = "reactiveCapabilityCurve")
+    @Column(name = "reactiveCapabilityCurve")//do not change
     private Boolean reactiveCapabilityCurve;
 
-    @Column(name = "minimumReactivePower")
+    @Column(name = "minimumReactivePower")//minQ
     private Double minimumReactivePower;
 
-    @Column(name = "maximumReactivePower")
+    @Column(name = "maximumReactivePower")//maxQ
     private Double maximumReactivePower;
 
     @ElementCollection
@@ -47,15 +47,15 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint;
+    private double activePowerSetpoint;//targetP
 
-    @Column(name = "reactivePowerSetpoint")
+    @Column(name = "reactivePowerSetpoint")//targetQ
     private Double reactivePowerSetpoint;
 
-    @Column(name = "participate")
+    @Column(name = "participate")//
     private Boolean participate;
 
-    @Column(name = "droop")
+    @Column(name = "droop")//
     private Float droop;
 
     public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
