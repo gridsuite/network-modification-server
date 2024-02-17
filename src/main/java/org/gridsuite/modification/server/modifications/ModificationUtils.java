@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 
@@ -374,15 +375,15 @@ public final class ModificationUtils {
                 .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
 
         // lineAdder completion by topology
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, Branch.Side.ONE, withSwitch1);
-        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, Branch.Side.TWO, withSwitch2);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, TwoSides.ONE, withSwitch1);
+        setBranchAdderNodeOrBus(lineAdder, voltageLevel2, lineCreationInfos, TwoSides.TWO, withSwitch2);
 
         return lineAdder;
     }
 
     void setBranchAdderNodeOrBus(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, BranchCreationInfos branchCreationInfos,
-                                 Branch.Side side, boolean withSwitch) {
-        String busOrBusbarSectionId = (side == Branch.Side.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
+                                 TwoSides side, boolean withSwitch) {
+        String busOrBusbarSectionId = (side == TwoSides.ONE) ? branchCreationInfos.getBusOrBusbarSectionId1() : branchCreationInfos.getBusOrBusbarSectionId2();
         if (voltageLevel.getTopologyKind() == TopologyKind.BUS_BREAKER) {
             setBranchAdderBusBreaker(branchAdder, voltageLevel, side, busOrBusbarSectionId);
         } else {
@@ -392,11 +393,11 @@ public final class ModificationUtils {
         }
     }
 
-    private void setBranchAdderBusBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, Branch.Side side, String busId) {
+    private void setBranchAdderBusBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel, TwoSides side, String busId) {
         Bus bus = getBusBreakerBus(voltageLevel, busId);
 
         // complete the lineAdder
-        if (side == Branch.Side.ONE) {
+        if (side == TwoSides.ONE) {
             branchAdder.setBus1(bus.getId()).setConnectableBus1(bus.getId());
         } else {
             branchAdder.setBus2(bus.getId()).setConnectableBus2(bus.getId());
@@ -404,7 +405,7 @@ public final class ModificationUtils {
     }
 
     private void setBranchAdderNodeBreaker(BranchAdder<?, ?> branchAdder, VoltageLevel voltageLevel,
-                                           BranchCreationInfos branchCreationInfos, Branch.Side side,
+                                           BranchCreationInfos branchCreationInfos, TwoSides side,
                                            String currentBusBarSectionId) {
         // create cell switches
         String sideSuffix = side != null ? "_" + side.name() : "";
@@ -415,7 +416,7 @@ public final class ModificationUtils {
             sideSuffix);
 
         // complete the lineAdder
-        if (side == Branch.Side.ONE) {
+        if (side == TwoSides.ONE) {
             branchAdder.setNode1(nodeNum);
         } else {
             branchAdder.setNode2(nodeNum);
@@ -527,6 +528,22 @@ public final class ModificationUtils {
         return null;
     }
 
+    public List<Terminal> getTerminalsFromIdentifiable(Identifiable<?> identifiable) {
+        if (identifiable instanceof Branch<?> branch) {
+            return Stream.of(
+                    branch.getTerminal1(),
+                    branch.getTerminal2()
+            ).toList();
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return Stream.of(
+                    w3t.getLeg1().getTerminal(),
+                    w3t.getLeg2().getTerminal(),
+                    w3t.getLeg3().getTerminal()
+            ).toList();
+        }
+        throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
+    }
+
     public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
         // A newly created injection is connected by default, unless we choose not to do
         if (!modificationInfos.isConnected()) {
@@ -544,8 +561,16 @@ public final class ModificationUtils {
         if (modificationInfos.getConnected() != null) {
             if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getConnected().getValue())) {
                 injection.getTerminal().disconnect();
+                if (injection.getTerminal().isConnected()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not disconnect equipment '%s'", injection.getId()));
+                }
             } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue())) {
                 injection.getTerminal().connect();
+                if (!injection.getTerminal().isConnected()) {
+                    throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
+                        String.format("Could not connect equipment '%s'", injection.getId()));
+                }
             }
         }
     }
@@ -864,24 +889,33 @@ public final class ModificationUtils {
         return subReporterSetpoints2;
     }
 
-    public void checkMaxQGreaterThanMinQ(List<ReactiveCapabilityCurve.Point> equipmentPoints, List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
-                                         NetworkModificationException.Type exceptionType, String errorMessage) {
-        IntStream.range(0, modificationPoints.size())
-                .forEach(i -> {
-                    ReactiveCapabilityCurve.Point oldPoint = equipmentPoints.get(i);
-                    ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
-                    Double oldMaxQ = Double.NaN;
-                    Double oldMinQ = Double.NaN;
-                    if (oldPoint != null) {
-                        oldMaxQ = oldPoint.getMaxQ();
-                        oldMinQ = oldPoint.getMinQ();
-                    }
-                    var maxQ = newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ;
-                    var minQ = newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ;
-                    if (maxQ < minQ) {
-                        throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
-                    }
-                });
+    public void checkMaxQGreaterThanMinQ(
+            List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
+            NetworkModificationException.Type exceptionType, String errorMessage
+    ) {
+        for (var point : modificationPoints) {
+            double maxQ = Double.NaN;
+            double minQ = Double.NaN;
+
+            if (point.getMaxQ() != null) {
+                maxQ = point.getMaxQ();
+            } else if (point.getOldMaxQ() != null) {
+                maxQ = point.getOldMaxQ();
+            }
+
+            if (point.getMinQ() != null) {
+                minQ = point.getMinQ();
+            } else if (point.getOldMinQ() != null) {
+                minQ = point.getOldMinQ();
+            }
+
+            if (maxQ < minQ) {
+                throw new NetworkModificationException(
+                    exceptionType,
+                    errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ
+                );
+            }
+        }
     }
 
     public void checkMaxReactivePowerGreaterThanMinReactivePower(MinMaxReactiveLimits minMaxReactiveLimits, AttributeModification<Double> minimumReactivePowerInfo, AttributeModification<Double> maximumReactivePowerInfo, NetworkModificationException.Type exceptionType, String errorMessage) {

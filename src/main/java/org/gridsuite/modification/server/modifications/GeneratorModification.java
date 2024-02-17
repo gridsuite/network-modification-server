@@ -9,8 +9,23 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.MinMaxReactiveLimits;
+import com.powsybl.iidm.network.MinMaxReactiveLimitsAdder;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveCapabilityCurve;
+import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
+import com.powsybl.iidm.network.ReactiveLimits;
+import com.powsybl.iidm.network.ReactiveLimitsKind;
+import com.powsybl.iidm.network.Terminal;
+import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
+import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -18,13 +33,12 @@ import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageRegulationType;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -54,11 +68,9 @@ public class GeneratorModification extends AbstractModification {
             ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_GENERATOR_ERROR, errorMessage);
         }
         // check reactive capability curve limits
-        Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-        List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
-            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(generatorPoints, modificationPoints, MODIFY_GENERATOR_ERROR, errorMessage);
+        if (modificationPoints != null) {
+            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_GENERATOR_ERROR, errorMessage);
         }
         // check regulated terminal
         if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
@@ -111,6 +123,7 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorStartUpAttributes(modificationInfos, generator, subReporter);
 
         ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, generator);
+        PropertiesUtils.applyProperties(generator, subReporter, modificationInfos.getProperties());
     }
 
     private void modifyGeneratorShortCircuitAttributes(GeneratorModificationInfos modificationInfos,

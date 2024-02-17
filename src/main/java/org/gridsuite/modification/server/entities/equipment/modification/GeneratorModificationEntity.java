@@ -7,16 +7,14 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import com.powsybl.iidm.network.EnergySource;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
 
-import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -300,6 +298,11 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(points);
+                .reactiveCapabilityCurvePoints(points)
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }

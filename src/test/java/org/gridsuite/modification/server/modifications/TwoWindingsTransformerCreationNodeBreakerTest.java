@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -539,11 +540,14 @@ public class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetwo
         String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
+        TwoWindingsTransformer twoWindingsTransformer = getNetwork().getTwoWindingsTransformer(transformerId);
+        assertNotNull(twoWindingsTransformer);  // transformer was created
+        int disconnector1Node1 = twoWindingsTransformer.getTerminal1().getNodeBreakerView().getNode() + 1;
+        int disconnector2Node1 = twoWindingsTransformer.getTerminal2().getNodeBreakerView().getNode() + 1;
         testBranchCreationImpacts(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, transformerId,
-            twoWindingsTransformerCreationInfos.getEquipmentId() + "1_BREAKER", twoWindingsTransformerCreationInfos.getEquipmentId() + "1_DISCONNECTOR", "s1",
-            twoWindingsTransformerCreationInfos.getEquipmentId() + "2_BREAKER", twoWindingsTransformerCreationInfos.getEquipmentId() + "2_DISCONNECTOR", "s1"
+            twoWindingsTransformerCreationInfos.getEquipmentId() + "1_BREAKER", twoWindingsTransformerCreationInfos.getEquipmentId() + "1_DISCONNECTOR_" + disconnector1Node1 + "_0", "s1",
+            twoWindingsTransformerCreationInfos.getEquipmentId() + "2_BREAKER", twoWindingsTransformerCreationInfos.getEquipmentId() + "2_DISCONNECTOR_" + disconnector2Node1 + "_0", "s1"
         );
-        assertNotNull(getNetwork().getTwoWindingsTransformer(transformerId));  // transformer was created
         testNetworkModificationsCount(getGroupId(), actualSize);
     }
 

@@ -7,14 +7,16 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.EnergySource;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
-import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -198,6 +200,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .qPercent(getQPercent())
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
             .transientReactance(getTransientReactance())
-            .stepUpTransformerReactance(getStepUpTransformerReactance());
+            .stepUpTransformerReactance(getStepUpTransformerReactance())
+            // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                   getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }

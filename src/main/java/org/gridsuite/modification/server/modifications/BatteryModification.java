@@ -9,16 +9,21 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Battery;
+import com.powsybl.iidm.network.MinMaxReactiveLimits;
+import com.powsybl.iidm.network.MinMaxReactiveLimitsAdder;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveCapabilityCurve;
+import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
+import com.powsybl.iidm.network.ReactiveLimits;
+import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -49,11 +54,9 @@ public class BatteryModification extends AbstractModification {
             MinMaxReactiveLimits minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimits.class);
             ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinQ(), modificationInfos.getMaxQ(), MODIFY_BATTERY_ERROR, errorMessage);
         }
-        Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-        List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (!CollectionUtils.isEmpty(points) && modificationPoints != null) {
-            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(batteryPoints, modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
+        if (modificationPoints != null) {
+            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
         }
         checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(modificationInfos, battery, MODIFY_BATTERY_ERROR, errorMessage);
     }
