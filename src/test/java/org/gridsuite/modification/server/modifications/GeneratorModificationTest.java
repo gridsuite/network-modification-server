@@ -385,10 +385,10 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                             oldMaxQ = oldPoint.getMaxQ();
                             oldMinQ = oldPoint.getMinQ();
                         }
-                        newPoint.setQminP(300.0);
-                        newPoint.setOldQmaxP(250.0);
-                        maxQ.set(newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ);
-                        minQ.set(newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ);
+                        newPoint.setMinQ(300.0);
+                        newPoint.setMaxQ(250.0);
+                        maxQ.set(newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ);
+                        minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
         }
         String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);

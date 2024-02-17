@@ -108,4 +108,88 @@
                       oldColumnName="REACTIVE_POWER_SETPOINT_op"
                       newColumnName="targetq_op" />
     </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-47">
+        <renameColumn tableName="battery_creation_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMAXP"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-48">
+        <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMAXP"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-49">
+        <renameColumn tableName="converter_station_creation_rcc_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMAXP"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-50">
+        <renameColumn tableName="generator_creation_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMAXP"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-51">
+        <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMAXP"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-52">
+        <renameColumn tableName="battery_creation_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMINP"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-53">
+        <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMINP"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-54">
+        <renameColumn tableName="converter_station_creation_rcc_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMINP"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-55">
+        <renameColumn tableName="generator_creation_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMINP"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-56">
+        <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="QMINP"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-57">
+        <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="OLD_QMAXP"
+                      newColumnName="old_maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-58">
+        <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="OLD_QMAXP"
+                      newColumnName="old_maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-59">
+        <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="OLD_QMINP"
+                      newColumnName="old_minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-60">
+        <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
+                      columnDataType="float(53)"
+                      oldColumnName="OLD_QMINP"
+                      newColumnName="old_minq" />
+    </changeSet>
 </databaseChangeLog>

@@ -91,8 +91,8 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                     .forEach(i -> {
                         var point = batteryPoints.get(i);
                         var modificationPoint = modificationPoints.get(i);
-                        assertEquals(modificationPoint.getQmaxP(), point.getMaxQ());
-                        assertEquals(modificationPoint.getQminP(), point.getMinQ());
+                        assertEquals(modificationPoint.getMaxQ(), point.getMaxQ());
+                        assertEquals(modificationPoint.getMinQ(), point.getMinQ());
                         assertEquals(modificationPoint.getP(), point.getP());
                     });
         }
@@ -304,10 +304,10 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                             oldMaxQ = oldPoint.getMaxQ();
                             oldMinQ = oldPoint.getMinQ();
                         }
-                        newPoint.setQminP(300.0);
-                        newPoint.setOldQmaxP(250.0);
-                        maxQ.set(newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ);
-                        minQ.set(newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ);
+                        newPoint.setMinQ(300.0);
+                        newPoint.setOldMaxQ(250.0);
+                        maxQ.set(newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ);
+                        minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
         }
         String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
