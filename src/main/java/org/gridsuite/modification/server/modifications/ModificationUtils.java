@@ -721,8 +721,8 @@ public final class ModificationUtils {
             oldMinQ = oldPoint.getMinQ();
             oldP = oldPoint.getP();
         }
-        var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-        var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+        var maxQ = newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ;
+        var minQ = newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ;
         var p = newPoint.getP() != null ? newPoint.getP() : oldP;
 
         adder.beginPoint()
@@ -876,8 +876,8 @@ public final class ModificationUtils {
                         oldMaxQ = oldPoint.getMaxQ();
                         oldMinQ = oldPoint.getMinQ();
                     }
-                    var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-                    var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+                    var maxQ = newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ;
+                    var minQ = newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ;
                     if (maxQ < minQ) {
                         throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxQ + " is expected to be greater than or equal to minimum reactive power " + minQ);
                     }
@@ -938,9 +938,9 @@ public final class ModificationUtils {
                         ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
                         if (Double.isNaN(newPoint.getP())) {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "P is not set in a reactive capability curve limits point");
-                        } else if (Double.isNaN(newPoint.getQminP())) {
+                        } else if (Double.isNaN(newPoint.getMinQ())) {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "min Q is not set in a reactive capability curve limits point");
-                        } else if (Double.isNaN(newPoint.getQmaxP())) {
+                        } else if (Double.isNaN(newPoint.getMaxQ())) {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "max Q is not set in a reactive capability curve limits point");
                         }
                     });
@@ -1027,13 +1027,13 @@ public final class ModificationUtils {
                                                            List<Report> reports,
                                                            String fieldSuffix) {
         adder.beginPoint()
-                .setMaxQ(point.getQmaxP())
-                .setMinQ(point.getQminP())
+                .setMaxQ(point.getMaxQ())
+                .setMinQ(point.getMinQ())
                 .setP(point.getP())
                 .endPoint();
         addToReports(reports, point.getP(), "P" + fieldSuffix);
-        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
-        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
+        addToReports(reports, point.getMinQ(), "QminP" + fieldSuffix);
+        addToReports(reports, point.getMaxQ(), "QmaxP" + fieldSuffix);
     }
 
     public boolean isValidFilter(Reporter subReporter,

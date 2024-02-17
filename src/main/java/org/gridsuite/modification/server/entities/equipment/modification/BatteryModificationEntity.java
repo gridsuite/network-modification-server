@@ -108,8 +108,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
             List<ReactiveCapabilityCurveModificationInfos> points) {
         return points == null ? null
                 : points.stream()
-                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getQminP(), point.getOldQminP(),
-                        point.getQmaxP(), point.getOldQmaxP(), point.getP(),
+                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
+                        point.getMaxQ(), point.getOldMaxQ(), point.getP(),
                         point.getOldP()))
                 .toList();
     }
@@ -123,8 +123,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
         List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
         List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
             .stream()
-            .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
-                value.getQmaxP(), value.getOldQmaxP(),
+            .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
+                value.getMaxQ(), value.getOldMaxQ(),
                 value.getP(), value.getOldP()))
             .collect(Collectors.toList()) : null;
 

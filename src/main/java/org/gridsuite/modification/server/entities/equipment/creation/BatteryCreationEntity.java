@@ -85,8 +85,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
             List<ReactiveCapabilityCurveCreationInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
-                        point.getQmaxP(),
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                        point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
@@ -99,8 +99,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
         List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
-                        value.getQmaxP(),
+                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
+                        value.getMaxQ(),
                         value.getP()))
                 .collect(Collectors.toList()) : null;
 

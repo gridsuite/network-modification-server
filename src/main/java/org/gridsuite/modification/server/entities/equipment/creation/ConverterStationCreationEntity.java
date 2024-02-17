@@ -108,8 +108,8 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
             List<ReactiveCapabilityCurveCreationInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
-                        point.getQmaxP(),
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                        point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
@@ -122,8 +122,8 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
         return pointsEmbeddable.stream()
                 .map(pointEmbeddable -> ReactiveCapabilityCurveCreationInfos.builder()
                         .p(pointEmbeddable.getP())
-                        .qmaxP(pointEmbeddable.getQmaxP())
-                        .qminP(pointEmbeddable.getQminP())
+                        .maxQ(pointEmbeddable.getMaxQ())
+                        .minQ(pointEmbeddable.getMinQ())
                         .build())
                 .collect(Collectors.toList());
     }
