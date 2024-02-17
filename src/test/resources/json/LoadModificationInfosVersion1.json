@@ -1,0 +1,32 @@
+{
+  "version" : "1.0",
+  "type" : "LOAD_MODIFICATION",
+  "uuid" : "d0f3efc0-1e41-4669-98ab-34167641578e",
+  "date" : "2023-12-29T11:29:24.089680Z",
+  "stashed" : false,
+  "equipmentId" : "l1",
+  "equipmentName" : {
+    "value" : "l1_name",
+    "op" : "SET"
+  },
+  "voltageLevelId" : {
+    "value" : "vl1",
+    "op" : "SET"
+  },
+  "busOrBusbarSectionId" : {
+    "value" : "vl1_b11",
+    "op" : "SET"
+  },
+  "loadType" : {
+    "value" : "FICTITIOUS",
+    "op" : "SET"
+  },
+  "constantActivePower" : {
+    "value" : 10.0,
+    "op" : "SET"
+  },
+  "constantReactivePower" : {
+    "value" : 10.0,
+    "op" : "SET"
+  }
+}

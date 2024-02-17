@@ -197,7 +197,11 @@
             <artifactId>powsybl-config-test</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-commons-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
