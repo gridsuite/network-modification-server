@@ -11,10 +11,12 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,11 +37,14 @@ public class NetworkModificationRepository {
 
     private final ModificationRepository modificationRepository;
 
+    private final GeneratorModificationRepository generatorModificationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository, GeneratorModificationRepository generatorModificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -50,10 +55,23 @@ public class NetworkModificationRepository {
 
     @Transactional // To have all create in the same transaction (atomic)
     // TODO Remove transaction when errors will no longer be sent to the front
+    // This method should be package-private and not used as API of the service as it uses ModificationEntity and
+    // we want to encapsulate the use of Entity related objects to this service.
+    // Nevertheless We have to keep it public for transactional annotation.
     public void saveModifications(UUID groupUuid, List<? extends ModificationEntity> modifications) {
+        saveModificationsNonTransactional(groupUuid, modifications);
+    }
+
+    @Transactional // To have all create in the same transaction (atomic)
+    // TODO Remove transaction when errors will no longer be sent to the front
+    public void saveModificationInfos(UUID groupUuid, List<? extends ModificationInfos> modifications) {
+        saveModificationsNonTransactional(groupUuid, modifications.stream().map(ModificationInfos::toEntity).toList());
+    }
+
+    private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
         var modificationGroupEntity = this.modificationGroupRepository
-                .findById(groupUuid)
-                .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
+            .findById(groupUuid)
+            .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
         modifications.forEach(m -> {
             modificationGroupEntity.addModification(m);
             // We need here to call the save() method on the modification entity cause the ids of the ModificationEntity's are used in further treatments in the same transaction.
@@ -128,7 +146,8 @@ public class NetworkModificationRepository {
         // findAllById does not keep sourceModificationUuids order, but
         // sourceEntities, copyEntities, newEntities have the same order.
         List<ModificationEntity> copyEntities = sourceEntities.stream()
-                .map(ModificationEntity::copy)
+                .map(this::getModificationInfos)
+                .map(ModificationInfos::toEntity)
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
@@ -174,19 +193,37 @@ public class NetworkModificationRepository {
         }
     }
 
-    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
+    public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                tabularModificationEntity = modificationRepository.findTabularModificationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-                );
-                modificationRepository.findAllModificationsWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
-                break;
+                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+                // We retrieve generator modifications by generatorModificationRepository and store them as a map by IDs to re-order them later on
+                Map<UUID, GeneratorModificationEntity> generatorModifications = generatorModificationRepository
+                    .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
+                    .stream()
+                    .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        Function.identity()
+                    ));
+                // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
+                generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+                // Then we can re-order the list of GeneratorModificationEntity based on ordered list of IDs
+                List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
+                    .stream()
+                    .map(generatorModifications::get)
+                    .toList();
+                return TabularModificationInfos.builder()
+                    .uuid(tabularModificationEntity.getId())
+                    .date(tabularModificationEntity.getDate())
+                    .stashed(tabularModificationEntity.getStashed())
+                    .modificationType(tabularModificationEntity.getModificationType())
+                    .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                    .build();
             default:
                 break;
         }
-        return tabularModificationEntity;
+        return tabularModificationEntity.toModificationInfos();
     }
 
     public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
@@ -206,7 +243,7 @@ public class NetworkModificationRepository {
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+            return loadTabularModificationSubEntities(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
             return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
         }
@@ -281,7 +318,7 @@ public class NetworkModificationRepository {
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
-                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId().toString()));
+                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId()));
             }
         }
         int count = modifications.size();
@@ -311,16 +348,20 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
+    public List<ModificationInfos> getModificationsInfos(@NonNull List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
-        List<ModificationEntity> entities = modificationRepository.findAllById(uuids);
-        entities.sort(Comparator.comparing(e -> uuids.indexOf(e.getId())));
-        return entities;
+        Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
+            .stream()
+            .collect(Collectors.toMap(
+                ModificationEntity::getId,
+                Function.identity()
+            ));
+        return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList());
+    public List<ModificationInfos> getActiveModificationsInfos(@NonNull UUID groupUuid) {
+        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::getModificationInfos).toList();
     }
 
     @Transactional
