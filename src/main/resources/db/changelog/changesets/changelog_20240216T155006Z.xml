@@ -198,31 +198,31 @@
                       oldColumnName="max_active_power"
                       newColumnName="maxp" />
     </changeSet>
-    <changeSet author="souissimai (generated)" id="1708098615603-61">
+    <changeSet author="souissimai (generated)" id="1708098615603-62">
         <renameColumn tableName="generator_creation"
                       columnDataType="float(53)"
                       oldColumnName="min_active_power"
                       newColumnName="minp" />
     </changeSet>
-    <changeSet author="souissimai (generated)" id="1708098615603-62">
+    <changeSet author="souissimai (generated)" id="1708098615603-63">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
                       oldColumnName="max_active_power"
                       newColumnName="maxp" />
     </changeSet>
-    <changeSet author="souissimai (generated)" id="1708098615603-63">
+    <changeSet author="souissimai (generated)" id="1708098615603-64">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
                       oldColumnName="max_active_power_op"
                       newColumnName="maxp_op" />
     </changeSet>
-    <changeSet author="souissimai (generated)" id="1708098615603-64">
+    <changeSet author="souissimai (generated)" id="1708098615603-65">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
                       oldColumnName="min_active_power"
                       newColumnName="minp" />
     </changeSet>
-    <changeSet author="souissimai (generated)" id="1708098615603-65">
+    <changeSet author="souissimai (generated)" id="1708098615603-66">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
                       oldColumnName="min_active_power_op"
