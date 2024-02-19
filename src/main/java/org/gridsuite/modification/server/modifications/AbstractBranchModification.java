@@ -10,10 +10,8 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Branch;
-import com.powsybl.iidm.network.CurrentLimits;
-import com.powsybl.iidm.network.CurrentLimitsAdder;
-import com.powsybl.iidm.network.LoadingLimits;
+import com.powsybl.iidm.network.*;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
@@ -21,6 +19,9 @@ import org.gridsuite.modification.server.dto.TemporaryLimitModificationType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_MODIFICATION_ERROR;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -76,20 +77,44 @@ public abstract class AbstractBranchModification extends AbstractModification {
             ModificationUtils.getInstance().reportModifications(limitsReporter, side2LimitsReports, "side2LimitsModification",
                     "    Side 2");
         }
-        if (branchModificationInfos.getConnected1() != null) {
-            updateConnection(branch, Branch.Side.ONE, modificationInfos.getConnected1().getValue());
+
+        updateConnections(branch, branchModificationInfos);
+    }
+
+    private void updateConnections(Branch<?> branch, BranchModificationInfos branchModificationInfos) {
+        List<TwoSides> errorSides = new ArrayList<>();
+        List<String> errorTypes = new ArrayList<>();
+        if (branchModificationInfos.getConnected1() != null && !updateConnection(branch, TwoSides.ONE, modificationInfos.getConnected1().getValue())) {
+            errorSides.add(TwoSides.ONE);
+            errorTypes.add(Boolean.TRUE.equals(modificationInfos.getConnected1().getValue()) ? "connect" : "disconnect");
         }
-        if (branchModificationInfos.getConnected2() != null) {
-            updateConnection(branch, Branch.Side.TWO, modificationInfos.getConnected2().getValue());
+        if (branchModificationInfos.getConnected2() != null && !updateConnection(branch, TwoSides.TWO, modificationInfos.getConnected2().getValue())) {
+            errorSides.add(TwoSides.TWO);
+            errorTypes.add(Boolean.TRUE.equals(modificationInfos.getConnected2().getValue()) ? "connect" : "disconnect");
+        }
+        if (!errorSides.isEmpty()) {
+            throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR,
+                String.format("Could not %s equipment '%s' on side %s",
+                    errorTypes.stream().distinct().collect(Collectors.joining("/")),
+                    branch.getId(),
+                    errorSides.stream().map(Enum::toString).collect(Collectors.joining("/"))));
         }
     }
 
-    private void updateConnection(Branch<?> branch, Branch.Side side, Boolean connectionChange) {
+    private boolean updateConnection(Branch<?> branch, TwoSides side, Boolean connectionChange) {
+        boolean done = true;
         if (branch.getTerminal(side).isConnected() && Boolean.FALSE.equals(connectionChange)) {
             branch.getTerminal(side).disconnect();
+            if (branch.getTerminal(side).isConnected()) {
+                done = false;
+            }
         } else if (!branch.getTerminal(side).isConnected() && Boolean.TRUE.equals(connectionChange)) {
             branch.getTerminal(side).connect();
+            if (!branch.getTerminal(side).isConnected()) {
+                done = false;
+            }
         }
+        return done;
     }
 
     protected void modifyCurrentLimits(CurrentLimitsModificationInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder, CurrentLimits currentLimits, List<Report> limitsReports) {
@@ -195,10 +220,10 @@ public abstract class AbstractBranchModification extends AbstractModification {
     }
 
     protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
-        return branchModificationInfos.getSeriesReactance() != null
-                && branchModificationInfos.getSeriesReactance().getValue() != null
-                || branchModificationInfos.getSeriesResistance() != null
-                && branchModificationInfos.getSeriesResistance().getValue() != null;
+        return branchModificationInfos.getX() != null
+                && branchModificationInfos.getX().getValue() != null
+                || branchModificationInfos.getR() != null
+                && branchModificationInfos.getR().getValue() != null;
     }
 
     protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos,

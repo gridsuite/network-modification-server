@@ -408,10 +408,10 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testLineCreation() {
-        var createLineEntity1 = LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").seriesResistance(1.0).seriesReactance(1.1).shuntConductance1(10.0).shuntSusceptance1(11.0).shuntConductance2(100.0).shuntSusceptance2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
-        var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").seriesResistance(2.0).seriesReactance(2.2).shuntConductance1(20.0).shuntSusceptance1(22.0).shuntConductance2(200.0).shuntSusceptance2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
-        var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(30.0).shuntSusceptance1(33.0).shuntConductance2(300.0).shuntSusceptance2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
-        var createLineEntity4 = LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").seriesResistance(3.0).seriesReactance(3.3).shuntConductance1(null).shuntSusceptance1(null).shuntConductance2(null).shuntSusceptance2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
+        var createLineEntity1 = LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").r(1.0).x(1.1).g1(10.0).b1(11.0).g2(100.0).b2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
+        var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").r(2.0).x(2.2).g1(20.0).b1(22.0).g2(200.0).b2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
+        var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").r(3.0).x(3.3).g1(30.0).b1(33.0).g2(300.0).b2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
+        var createLineEntity4 = LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").r(3.0).x(3.3).g1(null).b1(null).g2(null).b2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLineEntity1, createLineEntity2, createLineEntity3, createLineEntity4));
         assertRequestsCount(1, 4, 1, 0);
@@ -771,34 +771,34 @@ public class ModificationRepositoryTest {
 
     @Test
     public void testStatusLineModification() {
-        List<BranchStatusModificationEntity> entities = List.of(
-            BranchStatusModificationInfos.builder().equipmentId("idLine1").action(BranchStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine3").action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine4").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
-            BranchStatusModificationInfos.builder().equipmentId("idLine5").action(BranchStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
+        List<OperatingStatusModificationEntity> entities = List.of(
+            OperatingStatusModificationInfos.builder().equipmentId("idLine1").action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine2").action(OperatingStatusModificationInfos.ActionType.TRIP).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine3").action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine4").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
+            OperatingStatusModificationInfos.builder().equipmentId("idLine5").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
         );
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
         assertRequestsCount(1, 3, 1, 0);
 
-        List<BranchStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        List<OperatingStatusModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
             .stream()
-            .map(BranchStatusModificationInfos.class::cast)
-            .sorted(Comparator.comparing(BranchStatusModificationInfos::getEquipmentId))
+            .map(OperatingStatusModificationInfos.class::cast)
+            .sorted(Comparator.comparing(OperatingStatusModificationInfos::getEquipmentId))
             .collect(Collectors.toList());
         assertEquals(5, modificationInfos.size());
 
         assertThat(modificationInfos.get(0))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(0).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(0).toModificationInfos());
         assertThat(modificationInfos.get(1))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(1).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(1).toModificationInfos());
         assertThat(modificationInfos.get(2))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(2).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(2).toModificationInfos());
         assertThat(modificationInfos.get(3))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(3).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(3).toModificationInfos());
         assertThat(modificationInfos.get(4))
-            .recursivelyEquals((BranchStatusModificationInfos) entities.get(4).toModificationInfos());
+            .recursivelyEquals((OperatingStatusModificationInfos) entities.get(4).toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
@@ -864,8 +864,8 @@ public class ModificationRepositoryTest {
     public void testLineAttachToVoltageLevel() {
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .equipmentId("attachmentLineId")
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
+                .r(50.6)
+                .x(25.3)
                 .build();
         LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelInfos.builder()
                 .lineToAttachToId("lineId0")
@@ -1118,7 +1118,7 @@ public class ModificationRepositoryTest {
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()

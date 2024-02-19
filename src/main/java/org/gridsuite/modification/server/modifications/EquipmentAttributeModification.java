@@ -10,8 +10,8 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.OperatingStatus;
+import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 
@@ -97,8 +97,8 @@ public class EquipmentAttributeModification extends AbstractModification {
 
     // TODO remove only for switch
     private void changeLineAttribute(Line line, String attributeName, Object attributeValue, Reporter reporter) {
-        if (attributeName.equals("branchStatus")) {
-            line.newExtension(BranchStatusAdder.class).withStatus(BranchStatus.Status.valueOf((String) attributeValue)).add();
+        if (attributeName.equals("operatingStatus")) {
+            line.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.valueOf((String) attributeValue)).add();
             reporter.report(Report.builder()
                 .withKey("lineStatusChanged")
                 .withDefaultMessage("Branch with id=${id} status changed")

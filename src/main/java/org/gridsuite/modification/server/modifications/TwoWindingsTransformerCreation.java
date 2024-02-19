@@ -105,20 +105,20 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 .setName(twoWindingsTransformerCreationInfos.getEquipmentName())
                 .setVoltageLevel1(twoWindingsTransformerCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(twoWindingsTransformerCreationInfos.getVoltageLevelId2())
-                .setG(twoWindingsTransformerCreationInfos.getMagnetizingConductance())
-                .setB(twoWindingsTransformerCreationInfos.getMagnetizingSusceptance())
-                .setR(twoWindingsTransformerCreationInfos.getSeriesResistance())
-                .setX(twoWindingsTransformerCreationInfos.getSeriesReactance())
-                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedVoltage1())
-                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedVoltage2());
+                .setG(twoWindingsTransformerCreationInfos.getG())
+                .setB(twoWindingsTransformerCreationInfos.getB())
+                .setR(twoWindingsTransformerCreationInfos.getR())
+                .setX(twoWindingsTransformerCreationInfos.getX())
+                .setRatedU1(twoWindingsTransformerCreationInfos.getRatedU1())
+                .setRatedU2(twoWindingsTransformerCreationInfos.getRatedU2());
 
         if (twoWindingsTransformerCreationInfos.getRatedS() != null) {
             twoWindingsTransformerAdder.setRatedS(twoWindingsTransformerCreationInfos.getRatedS());
         }
 
         // BranchAdder completion by topology
-        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, Branch.Side.ONE, withSwitch1);
-        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, Branch.Side.TWO, withSwitch2);
+        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel1, twoWindingsTransformerCreationInfos, TwoSides.ONE, withSwitch1);
+        ModificationUtils.getInstance().setBranchAdderNodeOrBus(branchAdder, voltageLevel2, twoWindingsTransformerCreationInfos, TwoSides.TWO, withSwitch2);
 
         return twoWindingsTransformerAdder;
     }

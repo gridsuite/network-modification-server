@@ -7,84 +7,88 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.BranchStatus;
+import com.powsybl.iidm.network.Terminal;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Map;
 import java.util.UUID;
 
-import static com.powsybl.iidm.network.extensions.BranchStatus.Status.FORCED_OUTAGE;
-import static com.powsybl.iidm.network.extensions.BranchStatus.Status.PLANNED_OUTAGE;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
-public class BranchStatusModificationTrip2WTransformerTest extends AbstractNetworkModificationTest {
+public class OperatingStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
 
-    private static final String TARGET_BRANCH_ID = "trf1";
-    private static final String UPDATE_BRANCH_ID = "line1"; // it is not a 2WT, but is does not matter
-    private static final BranchStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
-    private static final BranchStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
+    private static final String TARGET_LINE_ID = "line2";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
-        // force a branch status different from the expected one, after testCreate
-        TestUtils.setBranchStatus(network, TARGET_BRANCH_ID, OTHER_BRANCH_STATUS);
+        // force a disconnection for all terminals (must be reconnected after testCreate)
+        Line line = network.getLine(TARGET_LINE_ID);
+        assertNotNull(line);
+        line.getTerminals().stream().forEach(Terminal::disconnect);
         return network;
     }
 
     @Override
     protected ModificationInfos buildModification() {
-        return BranchStatusModificationInfos.builder()
+        return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .equipmentId(TARGET_BRANCH_ID)
+                .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(BranchStatusModificationInfos.ActionType.TRIP).build();
+                .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return BranchStatusModificationInfos.builder()
-                .stashed(false)
-                .equipmentId(UPDATE_BRANCH_ID)
+        return OperatingStatusModificationInfos.builder()
+                .equipmentId("line1Edited")
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
-                .action(BranchStatusModificationInfos.ActionType.SWITCH_ON).build();
+                .stashed(false)
+                .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
     }
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        TestUtils.assertBranchStatus(getNetwork(), TARGET_BRANCH_ID, TARGET_BRANCH_STATUS);
+        // terminals are now all connected
+        Line line = getNetwork().getLine(TARGET_LINE_ID);
+        assertNotNull(line);
+        assertTrue(line.getTerminals().stream().allMatch(Terminal::isConnected));
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
-        // back to init status
-        TestUtils.assertBranchStatus(getNetwork(), TARGET_BRANCH_ID, OTHER_BRANCH_STATUS);
+        // back to init state : no more connected terminals
+        Line line = getNetwork().getLine(TARGET_LINE_ID);
+        assertNotNull(line);
+        assertTrue(line.getTerminals().stream().noneMatch(Terminal::isConnected));
     }
 
     @Override
     @SneakyThrows
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
-        assertEquals("TRIP", createdValues.get("action"));
-        assertEquals("trf1", createdValues.get("equipmentId"));
+        assertEquals("SWITCH_ON", createdValues.get("action"));
+        assertEquals("line2", createdValues.get("equipmentId"));
     }
 
     @Override
     @SneakyThrows
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("BRANCH_STATUS_MODIFICATION", modificationInfos.getMessageType());
+        assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("SWITCH_ON", updatedValues.get("action"));
-        assertEquals("line1", updatedValues.get("equipmentId"));
+        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("line1Edited", updatedValues.get("equipmentId"));
     }
 }

@@ -63,7 +63,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
 
     protected TwoWindingsTransformerModificationInfos buildOneModification(String equipmentId, Double seriesResistance) {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId(equipmentId)
-                .seriesResistance(new AttributeModification<>(seriesResistance, OperationType.SET))
+                .r(new AttributeModification<>(seriesResistance, OperationType.SET))
                 .build();
     }
 

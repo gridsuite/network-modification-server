@@ -40,8 +40,8 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
         return LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId(lineName)
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
+                .r(50.6)
+                .x(25.3)
                 .build();
     }
 
