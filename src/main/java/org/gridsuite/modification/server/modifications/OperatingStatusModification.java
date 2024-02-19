@@ -10,6 +10,7 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
+import com.powsybl.iidm.modification.tripping.HvdcLineTripping;
 import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
 import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
@@ -22,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_STATUS_MODIFICATION_ERROR;
@@ -95,9 +95,9 @@ public class OperatingStatusModification extends AbstractModification {
 
         LOGGER.info("Apply Trip on {} {}, switchesToDisconnect: {} terminalsToDisconnect: {} traversedTerminals: {}",
                 equipmentType, equipment.getId(),
-                switchesToDisconnect.stream().map(Identifiable::getId).collect(Collectors.toList()),
-                terminalsToDisconnect.stream().map(Terminal::getConnectable).map(Identifiable::getId).collect(Collectors.toList()),
-                traversedTerminals.stream().map(Terminal::getConnectable).map(Identifiable::getId).collect(Collectors.toList()));
+                switchesToDisconnect.stream().map(Identifiable::getId).toList(),
+                terminalsToDisconnect.stream().map(Terminal::getConnectable).map(Identifiable::getId).toList(),
+                traversedTerminals.stream().map(Terminal::getConnectable).map(Identifiable::getId).toList());
 
         switchesToDisconnect.forEach(sw -> sw.setOpen(true));
         terminalsToDisconnect.forEach(Terminal::disconnect);
@@ -176,6 +176,8 @@ public class OperatingStatusModification extends AbstractModification {
             return new BranchTripping(branch.getId());
         } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
             return new ThreeWindingsTransformerTripping(w3t.getId());
+        } else if (identifiable instanceof HvdcLine hvdcLine) {
+            return new HvdcLineTripping(hvdcLine.getId());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
