@@ -52,8 +52,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
                 .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(false, OperationType.SET))
-                .minActivePower(new AttributeModification<>(0., OperationType.SET))
-                .maxActivePower(new AttributeModification<>(100., OperationType.SET))
+                .minP(new AttributeModification<>(0., OperationType.SET))
+                .maxP(new AttributeModification<>(100., OperationType.SET))
                 .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
                 .voltageRegulationType(
                         new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
@@ -90,8 +90,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
                 .voltageSetpoint(new AttributeModification<>(49.0, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-                .minActivePower(new AttributeModification<>(1., OperationType.SET))
-                .maxActivePower(new AttributeModification<>(102., OperationType.SET))
+                .minP(new AttributeModification<>(1., OperationType.SET))
+                .maxP(new AttributeModification<>(102., OperationType.SET))
                 .ratedNominalPower(new AttributeModification<>(221., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                 .voltageRegulationType(
@@ -216,8 +216,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         generatorModificationInfos = (GeneratorModificationInfos) buildModification();
         generatorModificationInfos.setEnergySource(null);
         generatorModificationInfos.setEquipmentName(null);
-        generatorModificationInfos.setMinActivePower(null);
-        generatorModificationInfos.setMaxActivePower(null);
+        generatorModificationInfos.setMinP(null);
+        generatorModificationInfos.setMaxP(null);
         generatorModificationInfos.setRatedNominalPower(null);
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -408,8 +408,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
 
         generatorModificationInfos.setActivePowerSetpoint(new AttributeModification<>(110.0, OperationType.SET));
 
-        Double minActivePower = generatorModificationInfos.getMinActivePower() != null ? generatorModificationInfos.getMinActivePower().getValue() : generator.getMinP();
-        Double maxActivePower = generatorModificationInfos.getMaxActivePower() != null ? generatorModificationInfos.getMaxActivePower().getValue() : generator.getMaxP();
+        Double minActivePower = generatorModificationInfos.getMinP() != null ? generatorModificationInfos.getMinP().getValue() : generator.getMinP();
+        Double maxActivePower = generatorModificationInfos.getMaxP() != null ? generatorModificationInfos.getMaxP().getValue() : generator.getMaxP();
         Double activePower = generatorModificationInfos.getActivePowerSetpoint() != null ? generatorModificationInfos.getActivePowerSetpoint().getValue() : generator.getTargetP();
 
         String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
