@@ -11,10 +11,12 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,11 +37,14 @@ public class NetworkModificationRepository {
 
     private final ModificationRepository modificationRepository;
 
+    private final GeneratorModificationRepository generatorModificationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository, GeneratorModificationRepository generatorModificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -174,19 +179,37 @@ public class NetworkModificationRepository {
         }
     }
 
-    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
+    public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                tabularModificationEntity = modificationRepository.findTabularModificationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-                );
-                modificationRepository.findAllModificationsWithReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
-                break;
+                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+                // We retrieve generator modifications by generatorModificationRepository and store them as a map by IDs to re-order them later on
+                Map<UUID, GeneratorModificationEntity> generatorModifications = generatorModificationRepository
+                    .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
+                    .stream()
+                    .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        Function.identity()
+                    ));
+                // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
+                generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+                // Then we can re-order the list of GeneratorModificationEntity based on ordered list of IDs
+                List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
+                    .stream()
+                    .map(generatorModifications::get)
+                    .toList();
+                return TabularModificationInfos.builder()
+                    .uuid(tabularModificationEntity.getId())
+                    .date(tabularModificationEntity.getDate())
+                    .stashed(tabularModificationEntity.getStashed())
+                    .modificationType(tabularModificationEntity.getModificationType())
+                    .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                    .build();
             default:
                 break;
         }
-        return tabularModificationEntity;
+        return tabularModificationEntity.toModificationInfos();
     }
 
     public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
@@ -206,7 +229,7 @@ public class NetworkModificationRepository {
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+            return loadTabularModificationSubEntities(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
             return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
         }
@@ -281,7 +304,7 @@ public class NetworkModificationRepository {
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
-                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId().toString()));
+                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId()));
             }
         }
         int count = modifications.size();
