@@ -24,10 +24,10 @@ import lombok.experimental.SuperBuilder;
 public class BranchModificationInfos extends BasicEquipmentModificationInfos {
 
     @Schema(description = "Series resistance")
-    private AttributeModification<Double> seriesResistance;
+    private AttributeModification<Double> r;
 
     @Schema(description = "Series reactance")
-    private AttributeModification<Double> seriesReactance;
+    private AttributeModification<Double> x;
 
     @Schema(description = "Current limits Side 1")
     private CurrentLimitsModificationInfos currentLimits1;

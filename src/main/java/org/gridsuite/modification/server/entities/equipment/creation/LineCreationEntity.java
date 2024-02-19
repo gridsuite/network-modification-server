@@ -23,17 +23,17 @@ import jakarta.persistence.*;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "lineCreation_id_fk_constraint"))
 public class LineCreationEntity extends BranchCreationEntity {
 
-    @Column(name = "shuntConductance1")
-    private Double shuntConductance1;
+    @Column(name = "g1")
+    private Double g1;
 
-    @Column(name = "shuntSusceptance1")
-    private Double shuntSusceptance1;
+    @Column(name = "b1")
+    private Double b1;
 
-    @Column(name = "shuntConductance2")
-    private Double shuntConductance2;
+    @Column(name = "g2")
+    private Double g2;
 
-    @Column(name = "shuntSusceptance2")
-    private Double shuntSusceptance2;
+    @Column(name = "b2")
+    private Double b2;
 
     public LineCreationEntity(LineCreationInfos lineCreationInfos) {
         super(lineCreationInfos);
@@ -48,10 +48,10 @@ public class LineCreationEntity extends BranchCreationEntity {
     }
 
     private void assignAttributes(LineCreationInfos lineCreationInfos) {
-        shuntConductance1 = lineCreationInfos.getShuntConductance1();
-        shuntSusceptance1 = lineCreationInfos.getShuntSusceptance1();
-        shuntConductance2 = lineCreationInfos.getShuntConductance2();
-        shuntSusceptance2 = lineCreationInfos.getShuntSusceptance2();
+        g1 = lineCreationInfos.getG1();
+        b1 = lineCreationInfos.getB1();
+        g2 = lineCreationInfos.getG2();
+        b2 = lineCreationInfos.getB2();
     }
 
     @Override
@@ -68,8 +68,8 @@ public class LineCreationEntity extends BranchCreationEntity {
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // branch
-            .seriesResistance(getSeriesResistance())
-            .seriesReactance(getSeriesReactance())
+            .r(getR())
+            .x(getX())
             .voltageLevelId1(getVoltageLevelId1())
             .voltageLevelId2(getVoltageLevelId2())
             .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
@@ -83,10 +83,10 @@ public class LineCreationEntity extends BranchCreationEntity {
             .connected1(isConnected1())
             .connected2(isConnected2())
             // line
-            .shuntConductance1(getShuntConductance1())
-            .shuntSusceptance1(getShuntSusceptance1())
-            .shuntConductance2(getShuntConductance2())
-            .shuntSusceptance2(getShuntSusceptance2());
+            .g1(getG1())
+            .b1(getB1())
+            .g2(getG2())
+            .b2(getB2());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

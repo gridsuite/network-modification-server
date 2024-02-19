@@ -26,10 +26,10 @@ import lombok.experimental.SuperBuilder;
 public class BranchCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Series resistance")
-    private double seriesResistance;
+    private double r;
 
     @Schema(description = "Series reactance")
-    private double seriesReactance;
+    private double x;
 
     @Schema(description = "Voltage level id Side 1")
     private String voltageLevelId1;
