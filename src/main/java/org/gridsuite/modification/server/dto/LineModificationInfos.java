@@ -35,16 +35,16 @@ import org.gridsuite.modification.server.modifications.LineModification;
 public class LineModificationInfos extends BranchModificationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
-    private AttributeModification<Double> shuntConductance1;
+    private AttributeModification<Double> g1;
 
     @Schema(description = "Shunt susceptance Side 1")
-    private AttributeModification<Double> shuntSusceptance1;
+    private AttributeModification<Double> b1;
 
     @Schema(description = "Shunt conductance Side 2")
-    private AttributeModification<Double> shuntConductance2;
+    private AttributeModification<Double> g2;
 
     @Schema(description = "Shunt susceptance Side 2")
-    private AttributeModification<Double> shuntSusceptance2;
+    private AttributeModification<Double> b2;
 
     @Override
     public LineModificationEntity toEntity() {

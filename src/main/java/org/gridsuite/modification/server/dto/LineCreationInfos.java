@@ -35,16 +35,16 @@ import org.gridsuite.modification.server.modifications.LineCreation;
 public class LineCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
-    private Double shuntConductance1;
+    private Double g1;
 
     @Schema(description = "Shunt susceptance Side 1")
-    private Double shuntSusceptance1;
+    private Double b1;
 
     @Schema(description = "Shunt conductance Side 2")
-    private Double shuntConductance2;
+    private Double g2;
 
     @Schema(description = "Shunt susceptance Side 2")
-    private Double shuntSusceptance2;
+    private Double b2;
 
     @Override
     public LineCreationEntity toEntity() {

@@ -31,16 +31,16 @@ import org.gridsuite.modification.server.modifications.TwoWindingsTransformerMod
 public class TwoWindingsTransformerModificationInfos extends BranchModificationInfos {
 
     @Schema(description = "Magnetizing conductance")
-    private AttributeModification<Double> magnetizingConductance;
+    private AttributeModification<Double> g;
 
     @Schema(description = "Magnetizing susceptance")
-    private AttributeModification<Double> magnetizingSusceptance;
+    private AttributeModification<Double> b;
 
     @Schema(description = "Side 1 rated voltage")
-    private AttributeModification<Double> ratedVoltage1;
+    private AttributeModification<Double> ratedU1;
 
     @Schema(description = "Side 2 rated voltage")
-    private AttributeModification<Double> ratedVoltage2;
+    private AttributeModification<Double> ratedU2;
 
     @Schema(description = "Rated conductance in Siemens")
     private AttributeModification<Double> ratedS;
