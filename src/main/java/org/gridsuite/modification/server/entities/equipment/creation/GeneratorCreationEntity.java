@@ -32,43 +32,43 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "energySource")
     private EnergySource energySource;
 
-    @Column(name = "minActivePower")
-    private double minActivePower;
+    @Column(name = "minP")
+    private double minP;
 
-    @Column(name = "maxActivePower")
-    private double maxActivePower;
+    @Column(name = "maxP")
+    private double maxP;
 
-    @Column(name = "ratedNominalPower")
+    @Column(name = "ratedNominalPower") //getRatedS
     private Double ratedNominalPower;
 
     @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint;
+    private double activePowerSetpoint; //targetP
 
-    @Column(name = "reactivePowerSetpoint")
+    @Column(name = "reactivePowerSetpoint") //targetQ
     private Double reactivePowerSetpoint;
 
     @Column(name = "voltageRegulationOn")
-    private boolean voltageRegulationOn;
+    private boolean voltageRegulationOn; //
 
     @Column(name = "voltageSetpoint")
-    private Double voltageSetpoint;
+    private Double voltageSetpoint; //targetV
 
     @Column(name = "plannedActivePowerSetPoint")
     private Double plannedActivePowerSetPoint;
 
-    @Column(name = "marginalCost")
+    @Column(name = "marginalCost") //
     private Double marginalCost;
 
-    @Column(name = "plannedOutageRate")
+    @Column(name = "plannedOutageRate") //
     private Double plannedOutageRate;
 
-    @Column(name = "forcedOutageRate")
+    @Column(name = "forcedOutageRate") //
     private Double forcedOutageRate;
 
-    @Column(name = "minimumReactivePower")
+    @Column(name = "minimumReactivePower") //minQ
     private Double minimumReactivePower;
 
-    @Column(name = "maximumReactivePower")
+    @Column(name = "maximumReactivePower") //maxQ
     private Double maximumReactivePower;
 
     @Column(name = "participate")
@@ -77,11 +77,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "droop")
     private Float droop;
 
-    @Column(name = "transientReactance")
+    @Column(name = "transientReactance") //getDirectTransX
     private Double transientReactance;
 
     @Column(name = "stepUpTransformerReactance")
-    private Double stepUpTransformerReactance;
+    private Double stepUpTransformerReactance; //stepUpTransformerX
 
     @Column(name = "regulatingTerminalId")
     private String regulatingTerminalId;
@@ -92,7 +92,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "regulatingTerminalVlId")
     private String regulatingTerminalVlId;
 
-    @Column(name = "qPercent")
+    @Column(name = "qPercent") //
     private Double qPercent;
 
     @Column(name = "reactiveCapabilityCurve")
@@ -115,8 +115,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
 
     private void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
         this.energySource = generatorCreationInfos.getEnergySource();
-        this.minActivePower = generatorCreationInfos.getMinActivePower();
-        this.maxActivePower = generatorCreationInfos.getMaxActivePower();
+        this.minP = generatorCreationInfos.getMinP();
+        this.maxP = generatorCreationInfos.getMaxP();
         this.ratedNominalPower = generatorCreationInfos.getRatedNominalPower();
         this.activePowerSetpoint = generatorCreationInfos.getActivePowerSetpoint();
         this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
@@ -178,8 +178,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .connected(isConnected())
             // generator
             .energySource(getEnergySource())
-            .minActivePower(getMinActivePower())
-            .maxActivePower(getMaxActivePower())
+            .minP(getMinP())
+            .maxP(getMaxP())
             .ratedNominalPower(getRatedNominalPower())
             .activePowerSetpoint(getActivePowerSetpoint())
             .reactivePowerSetpoint(getReactivePowerSetpoint())

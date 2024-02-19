@@ -87,8 +87,8 @@ public class GeneratorModification extends AbstractModification {
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
         ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
                 modificationInfos.getActivePowerSetpoint(),
-                modificationInfos.getMinActivePower(),
-                modificationInfos.getMaxActivePower(),
+                modificationInfos.getMinP(),
+                modificationInfos.getMaxP(),
                 generator.getMinP(),
                 generator.getMaxP(),
                 generator.getTargetP(),
@@ -200,13 +200,13 @@ public class GeneratorModification extends AbstractModification {
         Report reportMaxActivePower;
         Report reportMinActivePower;
 
-        if (modificationInfos.getMaxActivePower() != null && modificationInfos.getMaxActivePower().getValue() > generator.getMinP()) {
-            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
-            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), "Min active power");
+        if (modificationInfos.getMaxP() != null && modificationInfos.getMaxP().getValue() > generator.getMinP()) {
+            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxP(), "Max active power");
+            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinP(), "Min active power");
 
         } else {
-            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinActivePower(), "Min active power");
-            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
+            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinP(), "Min active power");
+            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxP(), "Max active power");
         }
         Report reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), "Rated nominal power");
         if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {

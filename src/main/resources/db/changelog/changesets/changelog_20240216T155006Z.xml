@@ -3,19 +3,19 @@
     <changeSet author="souissimai (generated)" id="1708098615603-29">
         <renameColumn tableName="battery_creation"
                       columnDataType="float(53)"
-                      oldColumnName="MAX_ACTIVE_POWER"
+                      oldColumnName="max_active_power"
                       newColumnName="maxp" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-30">
         <renameColumn tableName="battery_modification"
                       columnDataType="float(53)"
-                      oldColumnName="MAX_ACTIVE_POWER"
+                      oldColumnName="max_active_power"
                       newColumnName="maxp" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-31">
         <renameColumn tableName="battery_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="MAX_ACTIVE_POWER_op"
+                      oldColumnName="max_active_power_op"
                       newColumnName="maxp_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-32">
@@ -39,19 +39,19 @@
     <changeSet author="souissimai (generated)" id="1708098615603-35">
         <renameColumn tableName="battery_creation"
                       columnDataType="float(53)"
-                      oldColumnName="MIN_ACTIVE_POWER"
+                      oldColumnName="min_active_power"
                       newColumnName="minp" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-36">
         <renameColumn tableName="battery_modification"
                       columnDataType="float(53)"
-                      oldColumnName="MIN_ACTIVE_POWER"
+                      oldColumnName="min_active_power"
                       newColumnName="minp" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-37">
         <renameColumn tableName="battery_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="MIN_ACTIVE_POWER_op"
+                      oldColumnName="min_active_power_op"
                       newColumnName="minp_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-38">
@@ -192,4 +192,40 @@
                       oldColumnName="OLD_QMINP"
                       newColumnName="old_minq" />
     </changeSet>
-</databaseChangeLog>
+    <changeSet author="souissimai (generated)" id="1708098615603-61">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="max_active_power"
+                      newColumnName="maxp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-61">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="min_active_power"
+                      newColumnName="minp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-62">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="max_active_power"
+                      newColumnName="maxp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-63">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="max_active_power_op"
+                      newColumnName="maxp_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-64">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="min_active_power"
+                      newColumnName="minp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-65">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="min_active_power_op"
+                      newColumnName="minp_op" />
+    </changeSet>
+ </databaseChangeLog>

@@ -57,8 +57,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .energySource(EnergySource.HYDRO)
-                .minActivePower(100.0)
-                .maxActivePower(600.0)
+                .minP(100.0)
+                .maxP(600.0)
                 .ratedNominalPower(10.)
                 .activePowerSetpoint(400.)
                 .reactivePowerSetpoint(50.)
@@ -96,8 +96,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
                 .energySource(EnergySource.SOLAR)
-                .minActivePower(101.0)
-                .maxActivePower(601.0)
+                .minP(101.0)
+                .maxP(601.0)
                 .ratedNominalPower(11.)
                 .activePowerSetpoint(401.)
                 .reactivePowerSetpoint(51.)
@@ -172,7 +172,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         generatorCreationInfos.setVoltageLevelId("v2");
 
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        generatorCreationInfos.setMinActivePower(Double.NaN);
+        generatorCreationInfos.setMinP(Double.NaN);
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

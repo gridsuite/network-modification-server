@@ -121,8 +121,8 @@ public class GeneratorCreation extends AbstractModification {
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
-            .setMinP(generatorCreationInfos.getMinActivePower())
-            .setMaxP(generatorCreationInfos.getMaxActivePower())
+            .setMinP(generatorCreationInfos.getMinP())
+            .setMaxP(generatorCreationInfos.getMaxP())
             .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
@@ -164,8 +164,8 @@ public class GeneratorCreation extends AbstractModification {
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
-            .setMinP(generatorCreationInfos.getMinActivePower())
-            .setMaxP(generatorCreationInfos.getMaxActivePower())
+            .setMinP(generatorCreationInfos.getMinP())
+            .setMaxP(generatorCreationInfos.getMaxP())
             .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
@@ -285,10 +285,10 @@ public class GeneratorCreation extends AbstractModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            generatorCreationInfos.getMinActivePower(), "Min active power"));
+            generatorCreationInfos.getMinP(), "Min active power"));
 
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            generatorCreationInfos.getMaxActivePower(), "Max active power"));
+            generatorCreationInfos.getMaxP(), "Max active power"));
 
         if (generatorCreationInfos.getRatedNominalPower() != null) {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(

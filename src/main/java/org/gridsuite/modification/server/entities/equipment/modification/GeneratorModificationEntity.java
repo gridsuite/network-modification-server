@@ -39,17 +39,17 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "minActivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "minActivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "minP")),
+        @AttributeOverride(name = "opType", column = @Column(name = "minpOp"))
     })
-    private DoubleModificationEmbedded minActivePower;
+    private DoubleModificationEmbedded minP;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "maxActivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "maxActivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "maxP")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maxpOp"))
     })
-    private DoubleModificationEmbedded maxActivePower;
+    private DoubleModificationEmbedded maxP;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -215,8 +215,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     private void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
         this.energySource = generatorModificationInfos.getEnergySource() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource()) : null;
-        this.minActivePower = generatorModificationInfos.getMinActivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower()) : null;
-        this.maxActivePower = generatorModificationInfos.getMaxActivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower()) : null;
+        this.minP = generatorModificationInfos.getMinP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinP()) : null;
+        this.maxP = generatorModificationInfos.getMaxP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxP()) : null;
         this.ratedNominalPower = generatorModificationInfos.getRatedNominalPower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getRatedNominalPower()) : null;
         this.activePowerSetpoint = generatorModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint()) : null;
         this.reactivePowerSetpoint = generatorModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint()) : null;
@@ -276,8 +276,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .connected(toAttributeModification(getConnected()))
                 .energySource(toAttributeModification(getEnergySource()))
                 .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
-                .maxActivePower(toAttributeModification(getMaxActivePower()))
-                .minActivePower(toAttributeModification(getMinActivePower()))
+                .maxP(toAttributeModification(getMaxP()))
+                .minP(toAttributeModification(getMinP()))
                 .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))

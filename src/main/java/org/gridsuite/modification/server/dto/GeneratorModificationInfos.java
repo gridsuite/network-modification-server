@@ -40,10 +40,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<EnergySource> energySource;
 
     @Schema(description = "Minimum active power")
-    private AttributeModification<Double> minActivePower;
+    private AttributeModification<Double> minP;
 
     @Schema(description = "Maximum active power")
-    private AttributeModification<Double> maxActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Rated nominal power")
     private AttributeModification<Double> ratedNominalPower;
