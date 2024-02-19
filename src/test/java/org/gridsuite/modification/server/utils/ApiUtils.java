@@ -11,14 +11,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,6 +46,56 @@ public final class ApiUtils {
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), ModificationInfos.class);
+    }
+
+    public static void postGroups(MockMvc mockMvc, UUID originGroupUuid, UUID targetGroupUuid) throws Exception {
+        mockMvc.perform(
+                post("/v1/groups")
+                    .param("groupUuid", targetGroupUuid.toString())
+                    .param("duplicateFrom", originGroupUuid.toString())
+            )
+            .andExpectAll(status().isOk());
+    }
+
+    public static Optional<NetworkModificationResult> putGroupsDuplications(MockMvc mockMvc, UUID originGroupUuid, UUID targetGroupUuid, UUID networkUuid) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(
+                put("/v1/groups/{groupUuid}/duplications", targetGroupUuid)
+                    .param("networkUuid", networkUuid.toString())
+                    .param("reporterId", UUID.randomUUID().toString())
+                    .param("duplicateFrom", originGroupUuid.toString())
+                    .param("reportUuid", UUID.randomUUID().toString())
+                    .param("variantId", UUID.randomUUID().toString())
+            )
+            .andExpectAll(status().isOk())
+            .andReturn();
+        return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    public static Optional<NetworkModificationResult> putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(
+                put("/v1/groups/{groupUuid}", targetGroupUuid)
+                    .param("action", "COPY")
+                    .param("networkUuid", networkUuid.toString())
+                    .param("reporterId", UUID.randomUUID().toString())
+                    .param("reportUuid", UUID.randomUUID().toString())
+                    .param("variantId", UUID.randomUUID().toString())
+                    .contentType("application/json")
+                    .content(new ObjectMapper().writeValueAsString(modificationUuids))
+            )
+            .andExpectAll(status().isOk())
+            .andReturn();
+        return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    public static Map<UUID, UUID> postNetworkModificationsDuplicate(MockMvc mockMvc, List<UUID> modificationUuids) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(
+                post("/v1/network-modifications/duplicate")
+                    .contentType("application/json")
+                    .content(new ObjectMapper().writeValueAsString(modificationUuids))
+            )
+            .andExpectAll(status().isOk())
+            .andReturn();
+        return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
     }
 
     private static ObjectMapper getObjectMapper() {
