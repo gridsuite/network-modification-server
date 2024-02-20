@@ -62,49 +62,49 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .build());
 
         // Branch specific fields
-        if (branchModificationInfos.getSeriesResistance() != null && branchModificationInfos.getSeriesResistance().getValue() != null) {
+        if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
-                    branchModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
-            twoWindingsTransformer.setR(branchModificationInfos.getSeriesResistance().getValue());
+                    branchModificationInfos.getR().getValue(), "Series resistance", 1));
+            twoWindingsTransformer.setR(branchModificationInfos.getR().getValue());
         }
-        if (branchModificationInfos.getSeriesReactance() != null && branchModificationInfos.getSeriesReactance().getValue() != null) {
+        if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
-                    branchModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
-            twoWindingsTransformer.setX(branchModificationInfos.getSeriesReactance().getValue());
+                    branchModificationInfos.getX().getValue(), "Series reactance", 1));
+            twoWindingsTransformer.setX(branchModificationInfos.getX().getValue());
         }
 
         // Transformer specific fields
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) branchModificationInfos;
-        if (twoWindingsTransformerModificationInfos.getMagnetizingConductance() != null && twoWindingsTransformerModificationInfos.getMagnetizingConductance().getValue() != null) {
+        if (twoWindingsTransformerModificationInfos.getG() != null && twoWindingsTransformerModificationInfos.getG().getValue() != null) {
             // convert reported value from siemens to microsiemens
             double oldMagnetizingConductanceToReport = twoWindingsTransformer.getG() * Math.pow(10, 6);
-            double newMagnetizingConductanceToReport = twoWindingsTransformerModificationInfos.getMagnetizingConductance().getValue() * Math.pow(10, 6);
+            double newMagnetizingConductanceToReport = twoWindingsTransformerModificationInfos.getG().getValue() * Math.pow(10, 6);
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingConductanceToReport,
                     newMagnetizingConductanceToReport, "Magnetizing conductance", 1));
-            twoWindingsTransformer.setG(twoWindingsTransformerModificationInfos.getMagnetizingConductance().getValue());
+            twoWindingsTransformer.setG(twoWindingsTransformerModificationInfos.getG().getValue());
         }
-        if (twoWindingsTransformerModificationInfos.getMagnetizingSusceptance() != null && twoWindingsTransformerModificationInfos.getMagnetizingSusceptance().getValue() != null) {
+        if (twoWindingsTransformerModificationInfos.getB() != null && twoWindingsTransformerModificationInfos.getB().getValue() != null) {
             // convert reported value from siemens to microsiemens
             double oldMagnetizingSusceptanceToReport = twoWindingsTransformer.getB() * Math.pow(10, 6);
-            double newMagnetizingSusceptanceToReport = twoWindingsTransformerModificationInfos.getMagnetizingSusceptance().getValue() * Math.pow(10, 6);
+            double newMagnetizingSusceptanceToReport = twoWindingsTransformerModificationInfos.getB().getValue() * Math.pow(10, 6);
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingSusceptanceToReport,
                     newMagnetizingSusceptanceToReport, "Magnetizing susceptance", 1));
-            twoWindingsTransformer.setB(twoWindingsTransformerModificationInfos.getMagnetizingSusceptance().getValue());
+            twoWindingsTransformer.setB(twoWindingsTransformerModificationInfos.getB().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedS() != null && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedS(),
                     twoWindingsTransformerModificationInfos.getRatedS().getValue(), "Rated nominal power", 1));
             twoWindingsTransformer.setRatedS(twoWindingsTransformerModificationInfos.getRatedS().getValue());
         }
-        if (twoWindingsTransformerModificationInfos.getRatedVoltage1() != null && twoWindingsTransformerModificationInfos.getRatedVoltage1().getValue() != null) {
+        if (twoWindingsTransformerModificationInfos.getRatedU1() != null && twoWindingsTransformerModificationInfos.getRatedU1().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU1(),
-                    twoWindingsTransformerModificationInfos.getRatedVoltage1().getValue(), "Rated Voltage (Side 1)", 1));
-            twoWindingsTransformer.setRatedU1(twoWindingsTransformerModificationInfos.getRatedVoltage1().getValue());
+                    twoWindingsTransformerModificationInfos.getRatedU1().getValue(), "Rated Voltage (Side 1)", 1));
+            twoWindingsTransformer.setRatedU1(twoWindingsTransformerModificationInfos.getRatedU1().getValue());
         }
-        if (twoWindingsTransformerModificationInfos.getRatedVoltage2() != null && twoWindingsTransformerModificationInfos.getRatedVoltage2().getValue() != null) {
+        if (twoWindingsTransformerModificationInfos.getRatedU2() != null && twoWindingsTransformerModificationInfos.getRatedU2().getValue() != null) {
             characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU2(),
-                    twoWindingsTransformerModificationInfos.getRatedVoltage2().getValue(), "Rated Voltage (Side 2)", 1));
-            twoWindingsTransformer.setRatedU2(twoWindingsTransformerModificationInfos.getRatedVoltage2().getValue());
+                    twoWindingsTransformerModificationInfos.getRatedU2().getValue(), "Rated Voltage (Side 2)", 1));
+            twoWindingsTransformer.setRatedU2(twoWindingsTransformerModificationInfos.getRatedU2().getValue());
         }
     }
 
@@ -423,14 +423,14 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) branchModificationInfos;
         return super.characteristicsModified(branchModificationInfos)
-            || twoWindingsTransformerModificationInfos.getMagnetizingConductance() != null
-            && twoWindingsTransformerModificationInfos.getMagnetizingConductance().getValue() != null
-            || twoWindingsTransformerModificationInfos.getMagnetizingSusceptance() != null
-            && twoWindingsTransformerModificationInfos.getMagnetizingSusceptance().getValue() != null
-            || twoWindingsTransformerModificationInfos.getRatedVoltage1() != null
-            && twoWindingsTransformerModificationInfos.getRatedVoltage1().getValue() != null
-            || twoWindingsTransformerModificationInfos.getRatedVoltage2() != null
-            && twoWindingsTransformerModificationInfos.getRatedVoltage2().getValue() != null
+            || twoWindingsTransformerModificationInfos.getG() != null
+            && twoWindingsTransformerModificationInfos.getG().getValue() != null
+            || twoWindingsTransformerModificationInfos.getB() != null
+            && twoWindingsTransformerModificationInfos.getB().getValue() != null
+            || twoWindingsTransformerModificationInfos.getRatedU1() != null
+            && twoWindingsTransformerModificationInfos.getRatedU1().getValue() != null
+            || twoWindingsTransformerModificationInfos.getRatedU2() != null
+            && twoWindingsTransformerModificationInfos.getRatedU2().getValue() != null
             || twoWindingsTransformerModificationInfos.getRatedS() != null
             && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null;
     }
