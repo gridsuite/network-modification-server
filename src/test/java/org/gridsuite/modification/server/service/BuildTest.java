@@ -521,7 +521,7 @@ public class BuildTest {
         entities1.add(SubstationCreationInfos.builder()
                 .equipmentId("newSubstation")
                 .equipmentName("newSubstation")
-                .substationCountry(Country.FR)
+                .country(Country.FR)
                 .properties(properties)
                 .build().toEntity());
 

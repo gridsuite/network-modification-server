@@ -36,7 +36,7 @@ import org.gridsuite.modification.server.modifications.SubstationCreation;
 public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Substation country")
-    private Country substationCountry;
+    private Country country;
 
     @Override
     public SubstationCreationEntity toEntity() {

@@ -36,7 +36,7 @@ import org.gridsuite.modification.server.modifications.SubstationModification;
 @ModificationErrorTypeName("MODIFY_SUBSTATION_ERROR")
 public class SubstationModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "country modification")
-    private AttributeModification<Country> substationCountry;
+    private AttributeModification<Country> country;
 
     @Override
     public SubstationModificationEntity toEntity() {
