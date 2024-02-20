@@ -1128,7 +1128,7 @@ public class ModificationControllerTest {
     }
 
     private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
-        for (AbstractBaseImpact impact : expectedImpacts ) {
+        for (AbstractBaseImpact impact : expectedImpacts) {
             if (impact instanceof SimpleElementImpact simpleImpact) {
                 // Equipment has been removed from network
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
@@ -1141,7 +1141,7 @@ public class ModificationControllerTest {
                 // Not all equipments of this collection impact type have been added as TombstonedEquipmentInfos in ElasticSearch
                 // There is no equipmentType in the TombstonedEquipmentInfos entity
             }
-        };
+        }
 
         TestImpactUtils.testElementImpacts(mapper, networkModificationResultAsString, expectedImpacts);
     }
