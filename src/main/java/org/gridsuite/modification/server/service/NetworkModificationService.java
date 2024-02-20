@@ -218,26 +218,27 @@ public class NetworkModificationService {
 
     @Transactional
     public Optional<NetworkModificationResult> moveModifications(UUID groupUuid, UUID originGroupUuid,
-                                                                 UUID before, UUID networkUuid, String variantId,
+                                                                 UUID beforeModificationUuid, UUID networkUuid, String variantId,
                                                                  ReportInfos reportInfos, List<UUID> modificationsToMove,
                                                                  boolean canBuildNode) {
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid)
             .stream()
             .filter(m -> !m.getStashed())
             .map(networkModificationRepository::getModificationInfos)
             .collect(Collectors.toList());
 
-        PreloadingStrategy preloadingStrategy = movedModifications.stream()
-                .map(ModificationInfos::getType)
-                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
-        NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
-
-        if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) { // TODO remove canBuildNode and return NetworkDamages() ?
+        if (canBuildNode && !movedModifications.isEmpty()) { // TODO remove canBuildNode ?
             // try to apply the moved modifications (incremental mode)
-            return Optional.of(modificationApplicator.applyModifications(
-                    movedModifications,
-                    networkInfos,
-                    reportInfos));
+            PreloadingStrategy preloadingStrategy = movedModifications.stream()
+                    .map(ModificationInfos::getType)
+                    .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+            NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
+            if (networkInfos.isVariantPresent()) {
+                return Optional.of(modificationApplicator.applyModifications(
+                        movedModifications,
+                        networkInfos,
+                        reportInfos));
+            }
         }
         return Optional.empty();
     }
