@@ -272,7 +272,7 @@ public class NetworkStoreListener implements NetworkListener {
         Set<AbstractBaseImpact> resImpacts = impacts.stream().filter(i -> i.getSimpleImpactType() == SimpleImpactType.DELETION).collect(Collectors.toSet());
 
         // compute substations impact
-        if (impacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet()).size() >= collectionThreshold) {
+        if (impacts.stream().flatMap(i -> i.getSubstationIds().stream()).distinct().count() >= collectionThreshold) {
             resImpacts.add(CollectionElementImpact.builder()
                     .elementType(IdentifiableType.SUBSTATION)
                     .build());

@@ -1127,26 +1127,20 @@ public class ModificationControllerTest {
         assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private void testDeletionCollectionElementImpacts(CollectionElementImpact impact) {
-        // Not all equipments of this type have been removed from network
-        // Not all equipments have been added as TombstonedEquipmentInfos in ElasticSearch
-    }
-
-    private void testDeletionSimpleElementImpacts(SimpleElementImpact impact) {
-        // Equipment has been removed from network
-        assertNull(network.getIdentifiable(impact.getElementId()));
-
-        // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch
-        assertTrue(existTombstonedEquipmentInfos(impact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-    }
-
     private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
         expectedImpacts.forEach(impact -> {
 
-            if (impact instanceof SimpleElementImpact) {
-                testDeletionSimpleElementImpacts((SimpleElementImpact) impact);
+            if (impact instanceof SimpleElementImpact simpleImpact) {
+                // Equipment has been removed from network
+                assertNull(network.getIdentifiable(simpleImpact.getElementId()));
+
+                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch
+                assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
             } else if (impact instanceof CollectionElementImpact) {
-                testDeletionCollectionElementImpacts((CollectionElementImpact) impact);
+                // Hard to check because
+                // Not all equipments of this collection impact type have been removed from the network
+                // Not all equipments of this collection impact type have been added as TombstonedEquipmentInfos in ElasticSearch
+                // There is no equipmentType in the TombstonedEquipmentInfos entity
             }
         });
 

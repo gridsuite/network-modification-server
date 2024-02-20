@@ -48,6 +48,7 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -128,7 +129,6 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // nothing to check by default
     }
 
     @Test
