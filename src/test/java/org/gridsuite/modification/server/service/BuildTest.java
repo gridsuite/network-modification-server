@@ -232,12 +232,12 @@ public class BuildTest {
                 LineCreationInfos.builder()
                         .equipmentId("newLine")
                         .equipmentName("newLine")
-                        .seriesResistance(1.0)
-                        .seriesReactance(2.0)
-                        .shuntConductance1(3.0)
-                        .shuntSusceptance1(4.0)
-                        .shuntConductance2(5.0)
-                        .shuntSusceptance2(6.0)
+                        .r(1.0)
+                        .x(2.0)
+                        .g1(3.0)
+                        .b1(4.0)
+                        .g2(5.0)
+                        .b2(6.0)
                         .voltageLevelId1("v1")
                         .busOrBusbarSectionId1("1.1")
                         .voltageLevelId2("v2")
@@ -385,12 +385,12 @@ public class BuildTest {
         equipmentsToAdd.add(LineCreationInfos.builder()
                 .equipmentId("newLine")
                 .equipmentName("newLine")
-                .seriesResistance(1.0)
-                .seriesReactance(2.0)
-                .shuntConductance1(3.0)
-                .shuntSusceptance1(4.0)
-                .shuntConductance2(5.0)
-                .shuntSusceptance2(6.0)
+                .r(1.0)
+                .x(2.0)
+                .g1(3.0)
+                .b1(4.0)
+                .g2(5.0)
+                .b2(6.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v2")
@@ -405,12 +405,12 @@ public class BuildTest {
         equipmentsToAdd.add(LineCreationInfos.builder()
                 .equipmentId("newLine2")
                 .equipmentName("newLine2")
-                .seriesResistance(1.0)
-                .seriesReactance(2.0)
-                .shuntConductance1(3.0)
-                .shuntSusceptance1(4.0)
-                .shuntConductance2(5.0)
-                .shuntSusceptance2(6.0)
+                .r(1.0)
+                .x(2.0)
+                .g1(3.0)
+                .b1(4.0)
+                .g2(5.0)
+                .b2(6.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
                 .voltageLevelId2("v1")
@@ -507,7 +507,7 @@ public class BuildTest {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("branchStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity());
+        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity());
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("idGenerator").equipmentAttributeName("targetP").equipmentAttributeValue(50.).equipmentType(IdentifiableType.GENERATOR).build().toEntity());
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2).equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build().toEntity());
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0).equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build().toEntity());
@@ -545,7 +545,7 @@ public class BuildTest {
                 .connectionPosition(0)
                 .connected(true)
                 .build().toEntity());
-        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").seriesResistance(1.0).seriesReactance(2.0).shuntConductance1(3.0).shuntSusceptance1(4.0).shuntConductance2(5.0).shuntSusceptance2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build().toEntity());
+        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build().toEntity());
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -558,7 +558,7 @@ public class BuildTest {
 
         entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType(IdentifiableType.SHUNT_COMPENSATOR).build().toEntity());
         entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
-        entities2.add(BranchStatusModificationInfos.builder().equipmentId("line2").action(BranchStatusModificationInfos.ActionType.TRIP).build().toEntity());
+        entities2.add(OperatingStatusModificationInfos.builder().equipmentId("line2").action(OperatingStatusModificationInfos.ActionType.TRIP).build().toEntity());
         entities2.add(VoltageLevelCreationInfos.builder()
                 .equipmentId("vl9")
                 .equipmentName("vl9")
@@ -588,12 +588,12 @@ public class BuildTest {
         entities2.add(TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
-                .seriesResistance(1.)
-                .seriesReactance(2.)
-                .magnetizingConductance(3.)
-                .magnetizingSusceptance(4.)
-                .ratedVoltage1(5.)
-                .ratedVoltage2(6.)
+                .r(1.)
+                .x(2.)
+                .g(3.)
+                .b(4.)
+                .ratedU1(5.)
+                .ratedU2(6.)
                 .ratedS(1.)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("1.1")
@@ -727,12 +727,12 @@ public class BuildTest {
         // test all modifications have been made on variant VARIANT_ID
         network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
         assertTrue(network.getSwitch("v1d1").isOpen());
-        OperatingStatus<Line> branchStatus = network.getLine("line1").getExtension(OperatingStatus.class);
-        assertNotNull(branchStatus);
-        assertEquals(OperatingStatus.Status.PLANNED_OUTAGE, branchStatus.getStatus());
-        branchStatus = network.getLine("line2").getExtension(OperatingStatus.class);
-        assertNotNull(branchStatus);
-        assertEquals(OperatingStatus.Status.FORCED_OUTAGE, branchStatus.getStatus());
+        OperatingStatus<Line> operatingStatus = network.getLine("line1").getExtension(OperatingStatus.class);
+        assertNotNull(operatingStatus);
+        assertEquals(OperatingStatus.Status.PLANNED_OUTAGE, operatingStatus.getStatus());
+        operatingStatus = network.getLine("line2").getExtension(OperatingStatus.class);
+        assertNotNull(operatingStatus);
+        assertEquals(OperatingStatus.Status.FORCED_OUTAGE, operatingStatus.getStatus());
 
         assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
@@ -934,7 +934,7 @@ public class BuildTest {
     public void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
             EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity(),
-            EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("branchStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity()
+            EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity()
         );
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID

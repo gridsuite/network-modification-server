@@ -105,9 +105,4 @@ public class ModificationEntity {
         this.setMessageType(modificationInfos.getType().name());
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
-
-    public ModificationEntity copy() {
-        return toModificationInfos().toEntity();
-    }
-
 }

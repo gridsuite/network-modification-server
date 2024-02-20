@@ -40,7 +40,7 @@ public enum ModificationType {
     LINES_ATTACH_TO_SPLIT_LINES(PreloadingStrategy.NONE),
     GENERATOR_SCALING(PreloadingStrategy.COLLECTION),
     LOAD_SCALING(PreloadingStrategy.COLLECTION),
-    BRANCH_STATUS_MODIFICATION(PreloadingStrategy.NONE),
+    OPERATING_STATUS_MODIFICATION(PreloadingStrategy.NONE),
     DELETE_VOLTAGE_LEVEL_ON_LINE(PreloadingStrategy.NONE),
     DELETE_ATTACHING_LINE(PreloadingStrategy.NONE),
     GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),

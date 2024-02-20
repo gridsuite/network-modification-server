@@ -19,6 +19,7 @@ import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -251,8 +252,9 @@ public abstract class AbstractNetworkModificationTest {
 
     /** Save a network modification into the repository and return its UUID. */
     protected UUID saveModification(ModificationInfos modificationInfos) {
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(modificationInfos.toEntity()));
-        return modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getUuid();
+        ModificationEntity entity = modificationInfos.toEntity();
+        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(entity));
+        return entity.getId();
     }
 
     protected Network getNetwork() {
