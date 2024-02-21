@@ -27,7 +27,7 @@ public class VoltageInitGeneratorModificationInfos {
     private String generatorId;
 
     @Schema(description = "Voltage set point")
-    private Double voltageSetpoint;
+    private Double targetV;
 
     @Schema(description = "Reactive power set point")
     private Double reactivePowerSetpoint;

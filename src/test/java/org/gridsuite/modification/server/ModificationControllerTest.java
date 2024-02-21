@@ -1259,7 +1259,7 @@ public class ModificationControllerTest {
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G2")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()

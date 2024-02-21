@@ -50,7 +50,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
-                .voltageSetpoint(new AttributeModification<>(48.0, OperationType.SET))
+                .targetV(new AttributeModification<>(48.0, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(false, OperationType.SET))
                 .minP(new AttributeModification<>(0., OperationType.SET))
                 .maxP(new AttributeModification<>(100., OperationType.SET))
@@ -88,7 +88,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
                 .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
-                .voltageSetpoint(new AttributeModification<>(49.0, OperationType.SET))
+                .targetV(new AttributeModification<>(49.0, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
                 .minP(new AttributeModification<>(1., OperationType.SET))
                 .maxP(new AttributeModification<>(102., OperationType.SET))
@@ -425,7 +425,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // Unset TargetV
-        generatorModificationInfos.setVoltageSetpoint(new AttributeModification<>(null, OperationType.UNSET));
+        generatorModificationInfos.setTargetV(new AttributeModification<>(null, OperationType.UNSET));
 
         String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -434,7 +434,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
 
         //Unset TargetQ (voltage regulation needs to be turned on and voltage setpoint to have a value)
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
-        generatorModificationInfos.setVoltageSetpoint(new AttributeModification<>(44.0, OperationType.SET));
+        generatorModificationInfos.setTargetV(new AttributeModification<>(44.0, OperationType.SET));
         generatorModificationInfos.setReactivePowerSetpoint(new AttributeModification<>(null, OperationType.UNSET));
         generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))

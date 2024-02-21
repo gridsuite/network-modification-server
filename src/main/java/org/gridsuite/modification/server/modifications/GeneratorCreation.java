@@ -127,7 +127,7 @@ public class GeneratorCreation extends AbstractModification {
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()));
+            .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()));
 
         if (terminal != null) {
             generatorAdder.setRegulatingTerminal(terminal);
@@ -170,7 +170,7 @@ public class GeneratorCreation extends AbstractModification {
             .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
             .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()))
+            .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()))
             .add();
 
         addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
@@ -198,7 +198,7 @@ public class GeneratorCreation extends AbstractModification {
         List<Report> voltageReports = new ArrayList<>();
         voltageReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("VoltageRegulationOn", modificationInfos.isVoltageRegulationOn()));
-        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getTargetV(), "Voltage"));
         if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
                 generatorCreationInfos.getRegulatingTerminalType() != null) {
             Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),

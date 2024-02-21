@@ -532,7 +532,7 @@ public class BuildTest {
                 .busOrBusbarSectionId("1A").minP(0)
                 .maxP(500).ratedNominalPower(1.)
                 .activePowerSetpoint(100).reactivePowerSetpoint(50.)
-                .voltageRegulationOn(true).voltageSetpoint(225.)
+                .voltageRegulationOn(true).targetV(225.)
                 .plannedActivePowerSetPoint(80.)
                 .marginalCost(82.)
                 .plannedOutageRate(83.).forcedOutageRate(84.)

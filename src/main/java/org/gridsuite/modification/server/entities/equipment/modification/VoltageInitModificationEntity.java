@@ -89,14 +89,14 @@ public class VoltageInitModificationEntity extends ModificationEntity {
 
     public static List<VoltageInitGeneratorModificationEmbeddable> toEmbeddableVoltageInitGenerators(List<VoltageInitGeneratorModificationInfos> generators) {
         return generators == null ? null : generators.stream()
-            .map(generator -> new VoltageInitGeneratorModificationEmbeddable(generator.getGeneratorId(), generator.getVoltageSetpoint(), generator.getReactivePowerSetpoint()))
+            .map(generator -> new VoltageInitGeneratorModificationEmbeddable(generator.getGeneratorId(), generator.getTargetV(), generator.getReactivePowerSetpoint()))
             .collect(Collectors.toList());
     }
 
     private List<VoltageInitGeneratorModificationInfos> toGeneratorsModification(List<VoltageInitGeneratorModificationEmbeddable> generators) {
         return generators != null ? generators
             .stream()
-            .map(generator -> new VoltageInitGeneratorModificationInfos(generator.getGeneratorId(), generator.getVoltageSetpoint(), generator.getReactivePowerSetpoint()))
+            .map(generator -> new VoltageInitGeneratorModificationInfos(generator.getGeneratorId(), generator.getTargetV(), generator.getReactivePowerSetpoint()))
             .collect(Collectors.toList()) : null;
     }
 

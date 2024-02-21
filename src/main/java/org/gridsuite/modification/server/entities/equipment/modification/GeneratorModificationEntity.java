@@ -81,10 +81,10 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageSetpoint")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageSetpointOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "targetV")),
+        @AttributeOverride(name = "opType", column = @Column(name = "targetvOp"))
     })
-    private DoubleModificationEmbedded voltageSetpoint;
+    private DoubleModificationEmbedded targetV;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -221,7 +221,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.activePowerSetpoint = generatorModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint()) : null;
         this.reactivePowerSetpoint = generatorModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint()) : null;
         this.voltageRegulationOn = generatorModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn()) : null;
-        this.voltageSetpoint = generatorModificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint()) : null;
+        this.targetV = generatorModificationInfos.getTargetV() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTargetV()) : null;
         this.plannedActivePowerSetPoint = generatorModificationInfos.getPlannedActivePowerSetPoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint()) : null;
         this.marginalCost = generatorModificationInfos.getMarginalCost() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost()) : null;
         this.plannedOutageRate = generatorModificationInfos.getPlannedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate()) : null;
@@ -281,7 +281,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
                 .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-                .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
+                .targetV(toAttributeModification(getTargetV()))
                 .plannedActivePowerSetPoint(toAttributeModification(getPlannedActivePowerSetPoint()))
                 .marginalCost(toAttributeModification(getMarginalCost()))
                 .plannedOutageRate(toAttributeModification(getPlannedOutageRate()))

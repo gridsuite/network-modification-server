@@ -92,7 +92,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("newGen")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()
@@ -183,7 +183,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
-                    .voltageSetpoint(370.)
+                    .targetV(370.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("v5generator")

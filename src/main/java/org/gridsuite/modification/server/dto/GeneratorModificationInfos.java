@@ -58,7 +58,7 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Boolean> voltageRegulationOn;
 
     @Schema(description = "Voltage set point")
-    private AttributeModification<Double> voltageSetpoint;
+    private AttributeModification<Double> targetV;
 
     @Schema(description = "Planning active power set point")
     private AttributeModification<Double> plannedActivePowerSetPoint;

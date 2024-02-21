@@ -396,10 +396,10 @@ public class GeneratorModification extends AbstractModification {
         List<Report> voltageRegulationReports = new ArrayList<>();
 
         Report reportVoltageSetpoint = null;
-        if (modificationInfos.getVoltageSetpoint() != null) {
-            if (modificationInfos.getVoltageSetpoint().getOp() == OperationType.SET) {
+        if (modificationInfos.getTargetV() != null) {
+            if (modificationInfos.getTargetV().getOp() == OperationType.SET) {
                 reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-                    modificationInfos.getVoltageSetpoint(), "Voltage");
+                    modificationInfos.getTargetV(), "Voltage");
             } else {
                 reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
             }
@@ -428,7 +428,7 @@ public class GeneratorModification extends AbstractModification {
         }
 
         //TargetQ and TargetV are unset after voltage regulation have been dealt with otherwise it can cause unwanted validations exceptions
-        if (modificationInfos.getVoltageSetpoint() != null && modificationInfos.getVoltageSetpoint().getOp() == OperationType.UNSET) {
+        if (modificationInfos.getTargetV() != null && modificationInfos.getTargetV().getOp() == OperationType.UNSET) {
             generator.setTargetV(Double.NaN);
         }
 

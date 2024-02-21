@@ -78,16 +78,16 @@ public class VoltageInitModification extends AbstractModification {
                     .withDefaultMessage("Generator with id=${id} not found")
                     .withValue("id", m.getGeneratorId())
                     .withSeverity(TypedValue.WARN_SEVERITY).build());
-            } else if (m.getVoltageSetpoint() != null || m.getReactivePowerSetpoint() != null) {
+            } else if (m.getTargetV() != null || m.getReactivePowerSetpoint() != null) {
                 modificationsCount++;
                 reports.add(Report.builder().withKey("generatorModification")
                     .withDefaultMessage("Generator with id=${id} modified :")
                     .withValue("id", m.getGeneratorId())
                     .withSeverity(TypedValue.TRACE_SEVERITY).build());
-                if (m.getVoltageSetpoint() != null) {
+                if (m.getTargetV() != null) {
                     final double oldTargetV = generator.getTargetV();
-                    generator.setTargetV(m.getVoltageSetpoint());
-                    reports.add(ModificationUtils.buildModificationReport(oldTargetV, m.getVoltageSetpoint(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
+                    generator.setTargetV(m.getTargetV());
+                    reports.add(ModificationUtils.buildModificationReport(oldTargetV, m.getTargetV(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
                 }
                 if (m.getReactivePowerSetpoint() != null) {
                     final double oldTargetQ = generator.getTargetQ();

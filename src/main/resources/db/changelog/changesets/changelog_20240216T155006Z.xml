@@ -228,4 +228,28 @@
                       oldColumnName="min_active_power_op"
                       newColumnName="minp_op" />
     </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-67">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="voltage_setpoint"
+                      newColumnName="targetv" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-68">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="voltage_setpoint"
+                      newColumnName="targetv" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-69">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="voltage_setpoint_op"
+                      newColumnName="targetv_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-70">
+        <renameColumn tableName="voltage_init_generators_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="voltage_setpoint"
+                      newColumnName="targetv" />
+    </changeSet>
  </databaseChangeLog>
