@@ -367,12 +367,12 @@ public final class ModificationUtils {
                 .setName(lineCreationInfos.getEquipmentName())
                 .setVoltageLevel1(lineCreationInfos.getVoltageLevelId1())
                 .setVoltageLevel2(lineCreationInfos.getVoltageLevelId2())
-                .setR(lineCreationInfos.getSeriesResistance())
-                .setX(lineCreationInfos.getSeriesReactance())
-                .setG1(lineCreationInfos.getShuntConductance1() != null ? lineCreationInfos.getShuntConductance1() : 0.0)
-                .setB1(lineCreationInfos.getShuntSusceptance1() != null ? lineCreationInfos.getShuntSusceptance1() : 0.0)
-                .setG2(lineCreationInfos.getShuntConductance2() != null ? lineCreationInfos.getShuntConductance2() : 0.0)
-                .setB2(lineCreationInfos.getShuntSusceptance2() != null ? lineCreationInfos.getShuntSusceptance2() : 0.0);
+                .setR(lineCreationInfos.getR())
+                .setX(lineCreationInfos.getX())
+                .setG1(lineCreationInfos.getG1() != null ? lineCreationInfos.getG1() : 0.0)
+                .setB1(lineCreationInfos.getB1() != null ? lineCreationInfos.getB1() : 0.0)
+                .setG2(lineCreationInfos.getG2() != null ? lineCreationInfos.getG2() : 0.0)
+                .setB2(lineCreationInfos.getB2() != null ? lineCreationInfos.getB2() : 0.0);
 
         // lineAdder completion by topology
         setBranchAdderNodeOrBus(lineAdder, voltageLevel1, lineCreationInfos, TwoSides.ONE, withSwitch1);
@@ -533,7 +533,13 @@ public final class ModificationUtils {
             return Stream.of(
                     branch.getTerminal1(),
                     branch.getTerminal2()
-            ).collect(Collectors.toList());
+            ).toList();
+        } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
+            return Stream.of(
+                    w3t.getLeg1().getTerminal(),
+                    w3t.getLeg2().getTerminal(),
+                    w3t.getLeg3().getTerminal()
+            ).toList();
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }

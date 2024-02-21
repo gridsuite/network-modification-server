@@ -78,12 +78,12 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified1", OperationType.SET))
-                .seriesReactance(new AttributeModification<>(1.1, OperationType.SET))
-                .seriesResistance(new AttributeModification<>(2.1, OperationType.SET))
-                .shuntConductance1(new AttributeModification<>(11.1, OperationType.SET))
-                .shuntSusceptance1(new AttributeModification<>(12.1, OperationType.SET))
-                .shuntConductance2(new AttributeModification<>(13.1, OperationType.SET))
-                .shuntSusceptance2(new AttributeModification<>(14.1, OperationType.SET))
+                .x(new AttributeModification<>(1.1, OperationType.SET))
+                .r(new AttributeModification<>(2.1, OperationType.SET))
+                .g1(new AttributeModification<>(11.1, OperationType.SET))
+                .b1(new AttributeModification<>(12.1, OperationType.SET))
+                .g2(new AttributeModification<>(13.1, OperationType.SET))
+                .b2(new AttributeModification<>(14.1, OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(21.1)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -175,7 +175,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
         // Modify Series Reactance
-        lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
+        lineModificationInfos.setX(new AttributeModification<>(1.0, OperationType.SET));
 
         String modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
@@ -187,8 +187,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Series Resistance
-        lineModificationInfos.setSeriesReactance(null);
-        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
+        lineModificationInfos.setX(null);
+        lineModificationInfos.setR(new AttributeModification<>(2.0, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -199,8 +199,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Conductance1
-        lineModificationInfos.setSeriesResistance(null);
-        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
+        lineModificationInfos.setR(null);
+        lineModificationInfos.setG1(new AttributeModification<>(11.0, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -211,8 +211,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Susceptance1
-        lineModificationInfos.setShuntConductance1(null);
-        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
+        lineModificationInfos.setG1(null);
+        lineModificationInfos.setB1(new AttributeModification<>(12.0, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -223,8 +223,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Conductance2
-        lineModificationInfos.setShuntSusceptance1(null);
-        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
+        lineModificationInfos.setB1(null);
+        lineModificationInfos.setG2(new AttributeModification<>(13.0, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -235,8 +235,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify Shunt Susceptance2
-        lineModificationInfos.setShuntConductance2(null);
-        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
+        lineModificationInfos.setG2(null);
+        lineModificationInfos.setB2(new AttributeModification<>(14.0, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -247,7 +247,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // no modification
-        lineModificationInfos.setShuntSusceptance2(null);
+        lineModificationInfos.setB2(null);
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -258,12 +258,12 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
         // Modify all
-        lineModificationInfos.setSeriesReactance(new AttributeModification<>(1.0, OperationType.SET));
-        lineModificationInfos.setSeriesResistance(new AttributeModification<>(2.0, OperationType.SET));
-        lineModificationInfos.setShuntConductance1(new AttributeModification<>(11.0, OperationType.SET));
-        lineModificationInfos.setShuntSusceptance1(new AttributeModification<>(12.0, OperationType.SET));
-        lineModificationInfos.setShuntConductance2(new AttributeModification<>(13.0, OperationType.SET));
-        lineModificationInfos.setShuntSusceptance2(new AttributeModification<>(14.0, OperationType.SET));
+        lineModificationInfos.setX(new AttributeModification<>(1.0, OperationType.SET));
+        lineModificationInfos.setX(new AttributeModification<>(2.0, OperationType.SET));
+        lineModificationInfos.setG1(new AttributeModification<>(11.0, OperationType.SET));
+        lineModificationInfos.setB1(new AttributeModification<>(12.0, OperationType.SET));
+        lineModificationInfos.setG2(new AttributeModification<>(13.0, OperationType.SET));
+        lineModificationInfos.setB2(new AttributeModification<>(14.0, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(lineModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)

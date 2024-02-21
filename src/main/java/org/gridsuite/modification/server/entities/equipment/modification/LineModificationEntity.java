@@ -29,31 +29,31 @@ public class LineModificationEntity extends BranchModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "shuntConductance1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "shuntConductance1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "g1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "g1Op"))
     })
-    private DoubleModificationEmbedded shuntConductance1;
+    private DoubleModificationEmbedded g1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "shuntSusceptance1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "shuntSusceptance1Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "b1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "b1Op"))
     })
-    private DoubleModificationEmbedded shuntSusceptance1;
+    private DoubleModificationEmbedded b1;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "shuntConductance2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "shuntConductance2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "g2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "g2Op"))
     })
-    private DoubleModificationEmbedded shuntConductance2;
+    private DoubleModificationEmbedded g2;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "shuntSusceptance2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "shuntSusceptance2Op"))
+        @AttributeOverride(name = "value", column = @Column(name = "b2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "b2Op"))
     })
-    private DoubleModificationEmbedded shuntSusceptance2;
+    private DoubleModificationEmbedded b2;
 
     public LineModificationEntity(LineModificationInfos lineModificationInfos) {
         super(lineModificationInfos);
@@ -68,10 +68,10 @@ public class LineModificationEntity extends BranchModificationEntity {
     }
 
     private void assignAttributes(LineModificationInfos lineModificationInfos) {
-        shuntConductance1 = new DoubleModificationEmbedded(lineModificationInfos.getShuntConductance1());
-        shuntSusceptance1 = new DoubleModificationEmbedded(lineModificationInfos.getShuntSusceptance1());
-        shuntConductance2 = new DoubleModificationEmbedded(lineModificationInfos.getShuntConductance2());
-        shuntSusceptance2 = new DoubleModificationEmbedded(lineModificationInfos.getShuntSusceptance2());
+        g1 = new DoubleModificationEmbedded(lineModificationInfos.getG1());
+        b1 = new DoubleModificationEmbedded(lineModificationInfos.getB1());
+        g2 = new DoubleModificationEmbedded(lineModificationInfos.getG2());
+        b2 = new DoubleModificationEmbedded(lineModificationInfos.getB2());
     }
 
     @Override
@@ -89,12 +89,12 @@ public class LineModificationEntity extends BranchModificationEntity {
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .connected1(toAttributeModification(getConnected1()))
             .connected2(toAttributeModification(getConnected2()))
-            .seriesResistance(toAttributeModification(getSeriesResistance()))
-            .seriesReactance(toAttributeModification(getSeriesReactance()))
-            .shuntConductance1(toAttributeModification(getShuntConductance1()))
-            .shuntSusceptance1(toAttributeModification(getShuntSusceptance1()))
-            .shuntConductance2(toAttributeModification(getShuntConductance2()))
-            .shuntSusceptance2(toAttributeModification(getShuntSusceptance2()))
+            .r(toAttributeModification(getR()))
+            .x(toAttributeModification(getX()))
+            .g1(toAttributeModification(getG1()))
+            .b1(toAttributeModification(getB1()))
+            .g2(toAttributeModification(getG2()))
+            .b2(toAttributeModification(getB2()))
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
