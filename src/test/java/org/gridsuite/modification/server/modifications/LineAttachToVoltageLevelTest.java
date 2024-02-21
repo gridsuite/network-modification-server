@@ -50,7 +50,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("newVoltageLevel")
                 .equipmentName("NewVoltageLevel")
-                .nominalVoltage(379.3)
+                .nominalV(379.3)
                 .substationId("s1")
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)
