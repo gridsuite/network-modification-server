@@ -19,7 +19,6 @@ import org.gridsuite.modification.server.dto.*;
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @Entity
