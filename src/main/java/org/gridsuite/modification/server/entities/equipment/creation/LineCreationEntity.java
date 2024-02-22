@@ -14,8 +14,6 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
-import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
