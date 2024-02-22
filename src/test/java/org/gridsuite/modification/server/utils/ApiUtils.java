@@ -16,10 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -96,6 +93,59 @@ public final class ApiUtils {
             .andExpectAll(status().isOk())
             .andReturn();
         return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+    }
+
+    public static void deleteGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
+        mockMvc.perform(delete("/v1/groups/{groupUuid}", groupUuid)).andExpectAll(status().isOk());
+    }
+
+    public static void deleteStashedInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
+        mockMvc.perform(delete("/v1/groups/{groupUuid}/stashed-modifications", groupUuid)).andExpectAll(status().isOk());
+    }
+
+    public static void deleteStashedInGroupBis(MockMvc mockMvc, UUID groupUuid) throws Exception {
+        mockMvc.perform(
+                delete("/v1/network-modifications")
+                    .param("groupUuid", groupUuid.toString())
+                    .param("onlyStashed", "true")
+            )
+            .andExpectAll(status().isOk());
+    }
+
+    public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
+        mockMvc.perform(
+                delete("/v1/network-modifications")
+                    .param("groupUuid", groupUuid.toString())
+                    .param("onlyStashed", "false")
+            )
+            .andExpectAll(status().isOk());
+    }
+
+    public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid, List<UUID> uuids) throws Exception {
+        mockMvc.perform(
+                delete("/v1/network-modifications")
+                    .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
+                    .param("groupUuid", groupUuid.toString())
+            )
+            .andExpectAll(status().isOk());
+    }
+
+    public static void deleteNetworkModifications(MockMvc mockMvc, List<UUID> uuids) throws Exception {
+        mockMvc.perform(
+                delete("/v1/network-modifications")
+                    .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
+            )
+            .andExpectAll(status().isOk());
+    }
+
+    public static void stashNetworkModifications(MockMvc mockMvc, List<UUID> uuids) throws Exception {
+        mockMvc.perform(
+                put("/v1/network-modifications")
+                    .param("uuids", uuids.stream().map(Objects::toString).toList().toArray(new String[0]))
+                    .param("groupUuid", UUID.randomUUID().toString())
+                    .param("stashed", "true")
+            )
+            .andExpectAll(status().isOk());
     }
 
     private static ObjectMapper getObjectMapper() {
