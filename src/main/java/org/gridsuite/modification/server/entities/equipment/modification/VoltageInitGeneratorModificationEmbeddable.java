@@ -30,5 +30,5 @@ public class VoltageInitGeneratorModificationEmbeddable {
     private Double targetV;
 
     @Column
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 }

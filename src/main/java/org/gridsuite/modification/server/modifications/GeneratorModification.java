@@ -86,7 +86,7 @@ public class GeneratorModification extends AbstractModification {
 
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
         ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
-                modificationInfos.getActivePowerSetpoint(),
+                modificationInfos.getTargetP(),
                 modificationInfos.getMinP(),
                 modificationInfos.getMaxP(),
                 generator.getMinP(),
@@ -208,7 +208,7 @@ public class GeneratorModification extends AbstractModification {
             reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinP(), "Min active power");
             reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxP(), "Max active power");
         }
-        Report reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedNominalPower(), "Rated nominal power");
+        Report reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedS(), "Rated nominal power");
         if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {
             subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
             subReporterLimits.report(Report.builder()
@@ -432,7 +432,7 @@ public class GeneratorModification extends AbstractModification {
             generator.setTargetV(Double.NaN);
         }
 
-        if (modificationInfos.getReactivePowerSetpoint() != null && modificationInfos.getReactivePowerSetpoint().getOp() == OperationType.UNSET) {
+        if (modificationInfos.getTargetQ() != null && modificationInfos.getTargetQ().getOp() == OperationType.UNSET) {
             generator.setTargetQ(Double.NaN);
         }
 
@@ -451,11 +451,11 @@ public class GeneratorModification extends AbstractModification {
 
     private void modifyGeneratorSetpointsAttributes(GeneratorModificationInfos modificationInfos,
                                                     Generator generator, Reporter subReporter) {
-        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetP, generator::getTargetP, modificationInfos.getActivePowerSetpoint(), "Active power");
+        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetP, generator::getTargetP, modificationInfos.getTargetP(), "Active power");
         Report reportReactivePower = null;
-        if (modificationInfos.getReactivePowerSetpoint() != null) {
-            if (modificationInfos.getReactivePowerSetpoint().getOp() == OperationType.SET) {
-                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+        if (modificationInfos.getTargetQ() != null) {
+            if (modificationInfos.getTargetQ().getOp() == OperationType.SET) {
+                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getTargetQ(), "Reactive power");
             } else {
                 reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
             }

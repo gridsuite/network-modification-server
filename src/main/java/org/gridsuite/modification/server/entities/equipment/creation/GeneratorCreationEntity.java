@@ -38,14 +38,14 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "maxP")
     private double maxP;
 
-    @Column(name = "ratedNominalPower") //getRatedS
-    private Double ratedNominalPower;
+    @Column(name = "ratedS")
+    private Double ratedS;
 
-    @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint; //targetP
+    @Column(name = "targetP")
+    private double targetP;
 
-    @Column(name = "reactivePowerSetpoint") //targetQ
-    private Double reactivePowerSetpoint;
+    @Column(name = "targetQ")
+    private Double targetQ;
 
     @Column(name = "voltageRegulationOn")
     private boolean voltageRegulationOn; //
@@ -117,9 +117,9 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.energySource = generatorCreationInfos.getEnergySource();
         this.minP = generatorCreationInfos.getMinP();
         this.maxP = generatorCreationInfos.getMaxP();
-        this.ratedNominalPower = generatorCreationInfos.getRatedNominalPower();
-        this.activePowerSetpoint = generatorCreationInfos.getActivePowerSetpoint();
-        this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
+        this.ratedS = generatorCreationInfos.getRatedS();
+        this.targetP = generatorCreationInfos.getTargetP();
+        this.targetQ = generatorCreationInfos.getTargetQ();
         this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
         this.targetV = generatorCreationInfos.getTargetV();
         this.plannedActivePowerSetPoint = generatorCreationInfos.getPlannedActivePowerSetPoint();
@@ -180,9 +180,9 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .energySource(getEnergySource())
             .minP(getMinP())
             .maxP(getMaxP())
-            .ratedNominalPower(getRatedNominalPower())
-            .activePowerSetpoint(getActivePowerSetpoint())
-            .reactivePowerSetpoint(getReactivePowerSetpoint())
+            .ratedS(getRatedS())
+            .targetP(getTargetP())
+            .targetQ(getTargetQ())
             .voltageRegulationOn(isVoltageRegulationOn())
             .targetV(getTargetV())
             .plannedActivePowerSetPoint(getPlannedActivePowerSetPoint())

@@ -123,9 +123,9 @@ public class GeneratorCreation extends AbstractModification {
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setMinP(generatorCreationInfos.getMinP())
             .setMaxP(generatorCreationInfos.getMaxP())
-            .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
-            .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
+            .setRatedS(nanIfNull(generatorCreationInfos.getRatedS()))
+            .setTargetP(generatorCreationInfos.getTargetP())
+            .setTargetQ(nanIfNull(generatorCreationInfos.getTargetQ()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()));
 
@@ -166,9 +166,9 @@ public class GeneratorCreation extends AbstractModification {
             .setConnectableBus(bus.getId())
             .setMinP(generatorCreationInfos.getMinP())
             .setMaxP(generatorCreationInfos.getMaxP())
-            .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
-            .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
+            .setRatedS(nanIfNull(generatorCreationInfos.getRatedS()))
+            .setTargetP(generatorCreationInfos.getTargetP())
+            .setTargetQ(nanIfNull(generatorCreationInfos.getTargetQ()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
             .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()))
             .add();
@@ -186,10 +186,10 @@ public class GeneratorCreation extends AbstractModification {
     private Reporter reportGeneratorSetPoints(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         List<Report> setPointReports = new ArrayList<>();
         setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(generatorCreationInfos.getActivePowerSetpoint(), "Active power"));
-        if (generatorCreationInfos.getReactivePowerSetpoint() != null) {
+                .buildCreationReport(generatorCreationInfos.getTargetP(), "Active power"));
+        if (generatorCreationInfos.getTargetQ() != null) {
             setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(generatorCreationInfos.getReactivePowerSetpoint(), "Reactive power"));
+                .buildCreationReport(generatorCreationInfos.getTargetQ(), "Reactive power"));
         }
         return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
     }
@@ -290,9 +290,9 @@ public class GeneratorCreation extends AbstractModification {
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             generatorCreationInfos.getMaxP(), "Max active power"));
 
-        if (generatorCreationInfos.getRatedNominalPower() != null) {
+        if (generatorCreationInfos.getRatedS() != null) {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                generatorCreationInfos.getRatedNominalPower(), "Rated nominal power"));
+                generatorCreationInfos.getRatedS(), "Rated nominal power"));
         }
         ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
         return subReporterLimits;

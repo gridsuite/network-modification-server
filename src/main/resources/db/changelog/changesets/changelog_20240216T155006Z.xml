@@ -252,4 +252,64 @@
                       oldColumnName="voltage_setpoint"
                       newColumnName="targetv" />
     </changeSet>
- </databaseChangeLog>
+    <changeSet author="souissimai (generated)" id="1708098615603-71">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="rated_nominal_power"
+                      newColumnName="rateds" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-72">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="rated_nominal_power"
+                      newColumnName="rateds" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-73">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="rated_nominal_power_op"
+                      newColumnName="rateds_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-74">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="ACTIVE_POWER_SETPOINT"
+                      newColumnName="targetp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-75">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="ACTIVE_POWER_SETPOINT"
+                      newColumnName="targetp" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-76">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="ACTIVE_POWER_SETPOINT_op"
+                      newColumnName="targetp_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-77">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      newColumnName="targetq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-78">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      newColumnName="targetq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-79">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="REACTIVE_POWER_SETPOINT_op"
+                      newColumnName="targetq_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-80">
+        <renameColumn tableName="voltage_init_generators_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="reactive_power_setpoint"
+                      newColumnName="targetQ" />
+    </changeSet>
+</databaseChangeLog>

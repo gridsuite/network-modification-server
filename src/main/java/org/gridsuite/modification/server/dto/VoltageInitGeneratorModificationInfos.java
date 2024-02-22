@@ -30,5 +30,5 @@ public class VoltageInitGeneratorModificationInfos {
     private Double targetV;
 
     @Schema(description = "Reactive power set point")
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 }

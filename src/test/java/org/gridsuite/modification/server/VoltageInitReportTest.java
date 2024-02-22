@@ -116,7 +116,7 @@ class VoltageInitReportTest {
                 .date(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
                 .stashed(false)
                 .generators(List.of(
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("G1").reactivePowerSetpoint(10.).build(),
+                    VoltageInitGeneratorModificationInfos.builder().generatorId("G1").targetQ(10.).build(),
                     VoltageInitGeneratorModificationInfos.builder().generatorId("G2").targetV(226.).build()))
                 .transformers(List.of(
                     VoltageInitTransformerModificationInfos.builder().transformerId("2WT1").ratioTapChangerPosition(3).build(),

@@ -46,13 +46,13 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Double> maxP;
 
     @Schema(description = "Rated nominal power")
-    private AttributeModification<Double> ratedNominalPower;
+    private AttributeModification<Double> ratedS;
 
     @Schema(description = "Active power set point")
-    private AttributeModification<Double> activePowerSetpoint;
+    private AttributeModification<Double> targetP;
 
     @Schema(description = "Reactive power set point")
-    private AttributeModification<Double> reactivePowerSetpoint;
+    private AttributeModification<Double> targetQ;
 
     @Schema(description = "Voltage regulation on")
     private AttributeModification<Boolean> voltageRegulationOn;

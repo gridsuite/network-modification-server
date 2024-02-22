@@ -48,13 +48,13 @@ public class GeneratorCreationInfos extends InjectionCreationInfos implements Re
     private double maxP;
 
     @Schema(description = "Rated nominal power")
-    private Double ratedNominalPower;
+    private Double ratedS;
 
     @Schema(description = "Active power set point")
-    private double activePowerSetpoint;
+    private double targetP;
 
     @Schema(description = "Reactive power set point")
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 
     @Schema(description = "Voltage regulation on")
     private boolean voltageRegulationOn;

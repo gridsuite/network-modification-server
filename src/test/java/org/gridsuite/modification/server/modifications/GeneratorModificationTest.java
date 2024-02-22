@@ -48,13 +48,13 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
-                .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
-                .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
+                .targetP(new AttributeModification<>(80.0, OperationType.SET))
+                .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .targetV(new AttributeModification<>(48.0, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(false, OperationType.SET))
                 .minP(new AttributeModification<>(0., OperationType.SET))
                 .maxP(new AttributeModification<>(100., OperationType.SET))
-                .ratedNominalPower(new AttributeModification<>(220., OperationType.SET))
+                .ratedS(new AttributeModification<>(220., OperationType.SET))
                 .voltageRegulationType(
                         new AttributeModification<>(VoltageRegulationType.DISTANT, OperationType.SET))
                 .plannedActivePowerSetPoint(new AttributeModification<>(10., OperationType.SET))
@@ -86,13 +86,13 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .stashed(false)
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
-                .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
-                .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
+                .targetP(new AttributeModification<>(81.0, OperationType.SET))
+                .targetQ(new AttributeModification<>(41.0, OperationType.SET))
                 .targetV(new AttributeModification<>(49.0, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
                 .minP(new AttributeModification<>(1., OperationType.SET))
                 .maxP(new AttributeModification<>(102., OperationType.SET))
-                .ratedNominalPower(new AttributeModification<>(221., OperationType.SET))
+                .ratedS(new AttributeModification<>(221., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                 .voltageRegulationType(
                                 new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
@@ -218,7 +218,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         generatorModificationInfos.setEquipmentName(null);
         generatorModificationInfos.setMinP(null);
         generatorModificationInfos.setMaxP(null);
-        generatorModificationInfos.setRatedNominalPower(null);
+        generatorModificationInfos.setRatedS(null);
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -299,8 +299,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
 
         // no modification in setpoints
         generatorModificationInfos = (GeneratorModificationInfos) buildModification();
-        generatorModificationInfos.setActivePowerSetpoint(null);
-        generatorModificationInfos.setReactivePowerSetpoint(null);
+        generatorModificationInfos.setTargetP(null);
+        generatorModificationInfos.setTargetQ(null);
         generatorModificationInfos.setVoltageRegulationOn(null);
         generatorModificationInfos.setParticipate(null);
 
@@ -406,11 +406,11 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .setMinP(10.)
                 .setMaxP(150.);
 
-        generatorModificationInfos.setActivePowerSetpoint(new AttributeModification<>(110.0, OperationType.SET));
+        generatorModificationInfos.setTargetP(new AttributeModification<>(110.0, OperationType.SET));
 
         Double minActivePower = generatorModificationInfos.getMinP() != null ? generatorModificationInfos.getMinP().getValue() : generator.getMinP();
         Double maxActivePower = generatorModificationInfos.getMaxP() != null ? generatorModificationInfos.getMaxP().getValue() : generator.getMaxP();
-        Double activePower = generatorModificationInfos.getActivePowerSetpoint() != null ? generatorModificationInfos.getActivePowerSetpoint().getValue() : generator.getTargetP();
+        Double activePower = generatorModificationInfos.getTargetP() != null ? generatorModificationInfos.getTargetP().getValue() : generator.getTargetP();
 
         String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -435,7 +435,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         //Unset TargetQ (voltage regulation needs to be turned on and voltage setpoint to have a value)
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
         generatorModificationInfos.setTargetV(new AttributeModification<>(44.0, OperationType.SET));
-        generatorModificationInfos.setReactivePowerSetpoint(new AttributeModification<>(null, OperationType.UNSET));
+        generatorModificationInfos.setTargetQ(new AttributeModification<>(null, OperationType.UNSET));
         generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
