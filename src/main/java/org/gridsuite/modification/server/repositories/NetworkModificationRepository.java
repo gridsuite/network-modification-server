@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,6 +46,12 @@ public class NetworkModificationRepository {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
+    }
+
+    public enum StashOption {
+        STASHED,
+        UNSTASHED,
+        ANY
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -84,6 +91,22 @@ public class NetworkModificationRepository {
     @Transactional
     // TODO Remove transaction when errors will no longer be sent to the front
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
+
+        if (originGroupUuid.equals(destinationGroupUuid)) {
+            List<ModificationEntity> modificationEntities = getModificationsMetadataEntities(originGroupUuid, StashOption.UNSTASHED);
+            Map<UUID, ModificationEntity> originModifications = modificationEntities.stream()
+                    .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+            List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
+            if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
+            }
+
+            List<ModificationEntity> newList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
+            AtomicInteger index = new AtomicInteger(0);
+            newList.forEach(m -> this.modificationRepository.setOrderById(index.getAndIncrement(), m.getId()));
+            return List.of();
+        }
+
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
 
         Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
@@ -178,19 +201,24 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
+    public List<ModificationEntity> getModificationsMetadataEntities(UUID groupUuid, StashOption stashOption) {
         Stream<ModificationEntity> modificationEntityStream = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
-        if (onlyStashed) {
-            return modificationEntityStream.filter(m -> m.getStashed())
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
+        if (stashOption == StashOption.ANY) {
+            return modificationEntityStream.collect(Collectors.toList());
         } else {
-            return modificationEntityStream
-                    .map(this::getModificationInfos)
+            boolean stashValue = stashOption == StashOption.STASHED;
+            return modificationEntityStream.filter(m -> m.getStashed() == stashValue)
                     .collect(Collectors.toList());
         }
+    }
+
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
+        StashOption stashOption = onlyStashed ? StashOption.STASHED : StashOption.ANY;
+        return getModificationsMetadataEntities(groupUuid, stashOption).stream()
+                .map(this::getModificationInfos)
+                .collect(Collectors.toList());
     }
 
     public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
