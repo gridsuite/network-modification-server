@@ -61,7 +61,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .equipmentId("VoltageLevelIdEdited")
                 .equipmentName("VoltageLevelEdited")
                 .substationId("s2")
-                .nominalVoltage(385)
+                .nominalV(385)
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)
                 .ipMin(0.0)

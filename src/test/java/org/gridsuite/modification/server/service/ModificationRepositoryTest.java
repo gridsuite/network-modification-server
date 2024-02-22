@@ -721,7 +721,7 @@ public class ModificationRepositoryTest {
                 .equipmentId("idVL1")
                 .equipmentName("VLName")
                 .substationId("s1")
-                .nominalVoltage(379.0)
+                .nominalV(379.0)
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)
                 .ipMin(0.0)
@@ -755,7 +755,7 @@ public class ModificationRepositoryTest {
     private VoltageLevelCreationInfos makeAVoltageLevelInfos() {
 
         VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
-                .substationId("s1").nominalVoltage(379.0).equipmentId("idVL1").equipmentName("VLName")
+                .substationId("s1").nominalV(379.0).equipmentId("idVL1").equipmentName("VLName")
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)
                 .ipMin(0.0)
