@@ -61,15 +61,15 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .marginalCost(new AttributeModification<>(0.1, OperationType.SET))
                 .plannedOutageRate(new AttributeModification<>(.30, OperationType.SET))
                 .forcedOutageRate(new AttributeModification<>(.40, OperationType.SET))
-                .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
-                .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+                .minQ(new AttributeModification<>(-100., OperationType.SET))
+                .maxQ(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
                         new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.1),
                         new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 200., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
-                .transientReactance(new AttributeModification<>(0.1, OperationType.SET))
-                .stepUpTransformerReactance(new AttributeModification<>(0.1, OperationType.SET))
+                .directTransX(new AttributeModification<>(0.1, OperationType.SET))
+                .stepUpTransformerX(new AttributeModification<>(0.1, OperationType.SET))
                 .regulatingTerminalId(new AttributeModification<>("v2load", OperationType.SET))
                 .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
                 .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
@@ -149,8 +149,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
 
         //setting ReactiveCapabilityCurve to false with null min and max reactive limits
         generatorModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
-        generatorModificationInfos.setMaximumReactivePower(null);
-        generatorModificationInfos.setMinimumReactivePower(null);
+        generatorModificationInfos.setMaxQ(null);
+        generatorModificationInfos.setMinQ(null);
         //setting ReactiveCapabilityCurvePoints for the generator we are modifying
         Generator generator = getNetwork().getGenerator("idGenerator");
         generator.newReactiveCapabilityCurve()
@@ -176,7 +176,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         testNetworkModificationsCount(getGroupId(), 1);
 
         // Modifying only min reactive limit
-        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-200., OperationType.SET));
+        generatorModificationInfos.setMinQ(new AttributeModification<>(-200., OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -188,8 +188,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         testNetworkModificationsCount(getGroupId(), 2);
 
         // Modifying only max reactive limit
-        generatorModificationInfos.setMinimumReactivePower(null);
-        generatorModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
+        generatorModificationInfos.setMinQ(null);
+        generatorModificationInfos.setMaxQ(new AttributeModification<>(200., OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -201,7 +201,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         testNetworkModificationsCount(getGroupId(), 3);
 
         // Modifying both min and max reactive limits
-        generatorModificationInfos.setMinimumReactivePower(new AttributeModification<>(-1.1, OperationType.SET));
+        generatorModificationInfos.setMinQ(new AttributeModification<>(-1.1, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -232,7 +232,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // setting transient reactance to null, modifying only step up transformer reactance
-        generatorModificationInfos.setTransientReactance(null);
+        generatorModificationInfos.setDirectTransX(null);
         String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -244,8 +244,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         testNetworkModificationsCount(getGroupId(), 1);
 
         // setting step up transformer reactance to null, modifying only transient reactance
-        generatorModificationInfos.setTransientReactance(new AttributeModification<>(1.1, OperationType.SET));
-        generatorModificationInfos.setStepUpTransformerReactance(null);
+        generatorModificationInfos.setDirectTransX(new AttributeModification<>(1.1, OperationType.SET));
+        generatorModificationInfos.setStepUpTransformerX(null);
         modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))

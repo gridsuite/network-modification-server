@@ -325,18 +325,18 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createGeneratorShortCircuit(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
-        if (generatorCreationInfos.getTransientReactance() != null) {
+        if (generatorCreationInfos.getDirectTransX() != null) {
             List<Report> shortCircuitReports = new ArrayList<>();
             try {
                 GeneratorShortCircuitAdder shortCircuitAdder = generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withDirectTransX(generatorCreationInfos.getTransientReactance());
-                if (generatorCreationInfos.getStepUpTransformerReactance() != null) {
-                    shortCircuitAdder.withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance());
+                    .withDirectTransX(generatorCreationInfos.getDirectTransX());
+                if (generatorCreationInfos.getStepUpTransformerX() != null) {
+                    shortCircuitAdder.withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerX());
                 }
                 shortCircuitAdder.add();
-                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getTransientReactance(), "Transient reactance"));
-                if (generatorCreationInfos.getStepUpTransformerReactance() != null) {
-                    shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getStepUpTransformerReactance(), "Transformer reactance"));
+                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getDirectTransX(), "Transient reactance"));
+                if (generatorCreationInfos.getStepUpTransformerX() != null) {
+                    shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getStepUpTransformerX(), "Transformer reactance"));
                 }
             } catch (PowsyblException e) {
                 shortCircuitReports.add(Report.builder()

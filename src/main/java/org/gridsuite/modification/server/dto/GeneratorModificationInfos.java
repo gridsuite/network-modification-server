@@ -73,10 +73,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Double> forcedOutageRate;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
@@ -88,10 +88,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Float> droop;
 
     @Schema(description = "Transient reactance")
-    private AttributeModification<Double> transientReactance;
+    private AttributeModification<Double> directTransX;
 
     @Schema(description = "Step up transformer reactance")
-    private AttributeModification<Double> stepUpTransformerReactance;
+    private AttributeModification<Double> stepUpTransformerX;
 
     @Schema(description = "Voltage Regulation type")
     private AttributeModification<VoltageRegulationType> voltageRegulationType;

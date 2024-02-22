@@ -63,9 +63,9 @@ public class GeneratorModification extends AbstractModification {
         Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
         // check min max reactive limits
         String errorMessage = "Generator '" + modificationInfos.getEquipmentId() + "' : ";
-        if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
+        if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinQ() != null || modificationInfos.getMaxQ() != null)) {
             MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
-            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_GENERATOR_ERROR, errorMessage);
+            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinQ(), modificationInfos.getMaxQ(), MODIFY_GENERATOR_ERROR, errorMessage);
         }
         // check reactive capability curve limits
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
@@ -134,36 +134,36 @@ public class GeneratorModification extends AbstractModification {
         Double oldStepUpTransformerReactance = generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : Double.NaN;
         // Either transient reactance or step-up transformer reactance are modified or
         // both
-        if (modificationInfos.getTransientReactance() != null
-                && modificationInfos.getStepUpTransformerReactance() != null) {
+        if (modificationInfos.getDirectTransX() != null
+                && modificationInfos.getStepUpTransformerX() != null) {
             generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withDirectTransX(modificationInfos.getTransientReactance().getValue())
-                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
+                    .withDirectTransX(modificationInfos.getDirectTransX().getValue())
+                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerX().getValue())
                     .add();
             reports.add(ModificationUtils.getInstance().buildModificationReport(
                     oldTransientReactance,
-                    modificationInfos.getTransientReactance().getValue(),
+                    modificationInfos.getDirectTransX().getValue(),
                     "Transient reactance"));
             reports.add(ModificationUtils.getInstance().buildModificationReport(
                     oldStepUpTransformerReactance,
-                    modificationInfos.getStepUpTransformerReactance().getValue(),
+                    modificationInfos.getStepUpTransformerX().getValue(),
                     "Transformer reactance"));
 
-        } else if (modificationInfos.getTransientReactance() != null) {
+        } else if (modificationInfos.getDirectTransX() != null) {
             generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withDirectTransX(modificationInfos.getTransientReactance().getValue())
+                    .withDirectTransX(modificationInfos.getDirectTransX().getValue())
                     .add();
             reports.add(ModificationUtils.getInstance().buildModificationReport(
                     oldTransientReactance,
-                    modificationInfos.getTransientReactance().getValue(),
+                    modificationInfos.getDirectTransX().getValue(),
                     "Transient reactance"));
-        } else if (modificationInfos.getStepUpTransformerReactance() != null) {
+        } else if (modificationInfos.getStepUpTransformerX() != null) {
             generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerReactance().getValue())
+                    .withStepUpTransformerX(modificationInfos.getStepUpTransformerX().getValue())
                     .add();
             reports.add(ModificationUtils.getInstance().buildModificationReport(
                     oldStepUpTransformerReactance,
-                    modificationInfos.getStepUpTransformerReactance().getValue(),
+                    modificationInfos.getStepUpTransformerX().getValue(),
                     "Transformer reactance"));
         }
         ModificationUtils.getInstance().reportModifications(subReporter, reports, "shortCircuitAttributesModified", "Short-circuit");
@@ -182,8 +182,8 @@ public class GeneratorModification extends AbstractModification {
         }
         ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
                 newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
-                modificationInfos.getMinimumReactivePower(),
-                modificationInfos.getMaximumReactivePower());
+                modificationInfos.getMinQ(),
+                modificationInfos.getMaxQ());
     }
 
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,

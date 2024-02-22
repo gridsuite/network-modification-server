@@ -65,11 +65,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "forcedOutageRate") //
     private Double forcedOutageRate;
 
-    @Column(name = "minimumReactivePower") //minQ
-    private Double minimumReactivePower;
+    @Column(name = "minQ")
+    private Double minQ;
 
-    @Column(name = "maximumReactivePower") //maxQ
-    private Double maximumReactivePower;
+    @Column(name = "maxQ")
+    private Double maxQ;
 
     @Column(name = "participate")
     private Boolean participate;
@@ -77,11 +77,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "droop")
     private Float droop;
 
-    @Column(name = "transientReactance") //getDirectTransX
-    private Double transientReactance;
+    @Column(name = "directTransX")
+    private Double directTransX;
 
-    @Column(name = "stepUpTransformerReactance")
-    private Double stepUpTransformerReactance; //stepUpTransformerX
+    @Column(name = "stepUpTransformerX")
+    private Double stepUpTransformerX;
 
     @Column(name = "regulatingTerminalId")
     private String regulatingTerminalId;
@@ -92,7 +92,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "regulatingTerminalVlId")
     private String regulatingTerminalVlId;
 
-    @Column(name = "qPercent") //
+    @Column(name = "qPercent")
     private Double qPercent;
 
     @Column(name = "reactiveCapabilityCurve")
@@ -126,12 +126,12 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.marginalCost = generatorCreationInfos.getMarginalCost();
         this.plannedOutageRate = generatorCreationInfos.getPlannedOutageRate();
         this.forcedOutageRate = generatorCreationInfos.getForcedOutageRate();
-        this.minimumReactivePower = generatorCreationInfos.getMinQ();
-        this.maximumReactivePower = generatorCreationInfos.getMaxQ();
+        this.minQ = generatorCreationInfos.getMinQ();
+        this.maxQ = generatorCreationInfos.getMaxQ();
         this.participate = generatorCreationInfos.getParticipate();
         this.droop = generatorCreationInfos.getDroop();
-        this.transientReactance = generatorCreationInfos.getTransientReactance();
-        this.stepUpTransformerReactance = generatorCreationInfos.getStepUpTransformerReactance();
+        this.directTransX = generatorCreationInfos.getDirectTransX();
+        this.stepUpTransformerX = generatorCreationInfos.getStepUpTransformerX();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints());
         this.regulatingTerminalId = generatorCreationInfos.getRegulatingTerminalId();
         this.regulatingTerminalType = generatorCreationInfos.getRegulatingTerminalType();
@@ -189,18 +189,18 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .marginalCost(getMarginalCost())
             .plannedOutageRate(getPlannedOutageRate())
             .forcedOutageRate(getForcedOutageRate())
-            .minQ(this.getMinimumReactivePower())
+            .minQ(this.getMinQ())
             .participate(getParticipate())
             .droop(getDroop())
-            .maxQ(this.getMaximumReactivePower())
+            .maxQ(this.getMaxQ())
             .reactiveCapabilityCurvePoints(points)
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
             .qPercent(getQPercent())
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
-            .transientReactance(getTransientReactance())
-            .stepUpTransformerReactance(getStepUpTransformerReactance())
+            .directTransX(getDirectTransX())
+            .stepUpTransformerX(getStepUpTransformerX())
             // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                    getProperties().stream()

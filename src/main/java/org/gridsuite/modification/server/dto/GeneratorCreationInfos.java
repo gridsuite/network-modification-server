@@ -90,10 +90,10 @@ public class GeneratorCreationInfos extends InjectionCreationInfos implements Re
     private Float droop;
 
     @Schema(description = "Transient reactance")
-    private Double transientReactance;
+    private Double directTransX;
 
     @Schema(description = "Step up transformer reactance")
-    private Double stepUpTransformerReactance;
+    private Double stepUpTransformerX;
 
     @Schema(description = "Regulating terminal equipment id")
     private String regulatingTerminalId;

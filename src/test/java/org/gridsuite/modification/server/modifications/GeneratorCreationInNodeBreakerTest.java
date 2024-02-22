@@ -64,8 +64,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .targetQ(50.)
                 .voltageRegulationOn(true)
                 .targetV(225.)
-                .stepUpTransformerReactance(60.0)
-                .transientReactance(61.0)
+                .stepUpTransformerX(60.0)
+                .directTransX(61.0)
                 .minQ(20.0)
                 .maxQ(25.0)
                 .plannedActivePowerSetPoint(111.)
@@ -103,8 +103,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .targetQ(51.)
                 .voltageRegulationOn(true)
                 .targetV(226.)
-                .stepUpTransformerReactance(61.0)
-                .transientReactance(62.0)
+                .stepUpTransformerX(61.0)
+                .directTransX(62.0)
                 .minQ(23.0)
                 .maxQ(26.0)
                 .plannedActivePowerSetPoint(222.)
@@ -249,7 +249,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     public void testCreateWithShortCircuitErrors() throws Exception {
         // invalid short circuit transient reactance
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
-        generatorCreationInfos.setTransientReactance(Double.NaN);
+        generatorCreationInfos.setDirectTransX(Double.NaN);
 
         String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

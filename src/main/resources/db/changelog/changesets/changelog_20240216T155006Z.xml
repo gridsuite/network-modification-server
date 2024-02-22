@@ -312,4 +312,76 @@
                       oldColumnName="reactive_power_setpoint"
                       newColumnName="targetQ" />
     </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-81">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-82">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-83">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MINIMUM_REACTIVE_POWER_op"
+                      newColumnName="minq_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-84">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-85">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-86">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="MAXIMUM_REACTIVE_POWER_op"
+                      newColumnName="maxq_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-87">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="TRANSIENT_REACTANCE"
+                      newColumnName="direct_transx" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-88">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="TRANSIENT_REACTANCE"
+                      newColumnName="direct_transx" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-89">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="TRANSIENT_REACTANCE_OP"
+                      newColumnName="direct_transx_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-90">
+        <renameColumn tableName="generator_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="STEP_UP_TRANSFORMER_REACTANCE"
+                      newColumnName="step_up_transformerx" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-91">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="STEP_UP_TRANSFORMER_REACTANCE"
+                      newColumnName="step_up_transformerx" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1708098615603-92">
+        <renameColumn tableName="generator_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="STEP_UP_TRANSFORMER_REACTANCE_OP"
+                      newColumnName="step_up_transformerx_op" />
+    </changeSet>
 </databaseChangeLog>

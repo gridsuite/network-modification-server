@@ -58,7 +58,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(8D).forcedOutageRate(3D)
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
-                .transientReactance(5D).stepUpTransformerReactance(45D)
+                .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
@@ -69,7 +69,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(300).targetQ(400D).voltageRegulationOn(false)
                 .plannedActivePowerSetPoint(200D).forcedOutageRate(3D)
                 .minQ(7D).participate(false)
-                .stepUpTransformerReactance(45D)
+                .stepUpTransformerX(45D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
@@ -86,7 +86,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(700).targetQ(20D).voltageRegulationOn(true).targetV(373D)
                 .marginalCost(5D).plannedOutageRate(8D)
                 .participate(false)
-                .transientReactance(5D)
+                .directTransX(5D)
                 .regulatingTerminalId("v5load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v5").qPercent(75D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
@@ -115,7 +115,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(80D).marginalCost(3D).plannedOutageRate(12D).forcedOutageRate(1D)
                 .minQ(13D).maxQ(11D).participate(false)
-                .transientReactance(8D).stepUpTransformerReactance(44D)
+                .directTransX(8D).stepUpTransformerX(44D)
                 .regulatingTerminalId("v5load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v5").qPercent(37D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
@@ -126,7 +126,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(350).targetQ(10D).voltageRegulationOn(false)
                 .marginalCost(25D).plannedOutageRate(18D)
                 .participate(true).droop(5F)
-                .transientReactance(3D)
+                .directTransX(3D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(75D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build()
@@ -175,7 +175,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(8D).forcedOutageRate(3D)
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
-                .transientReactance(5D).stepUpTransformerReactance(45D)
+                .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
                 .reactiveCapabilityCurve(false)
                 .build()
@@ -211,7 +211,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(8D).forcedOutageRate(3D)
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
-                .transientReactance(5D).stepUpTransformerReactance(45D)
+                .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
@@ -222,7 +222,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(300).targetQ(400D).voltageRegulationOn(false)
                 .plannedActivePowerSetPoint(200D).forcedOutageRate(3D)
                 .minQ(7D).participate(false)
-                .stepUpTransformerReactance(45D)
+                .stepUpTransformerX(45D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build()
         );
@@ -249,7 +249,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(8D).forcedOutageRate(3D)
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
-                .transientReactance(5D).stepUpTransformerReactance(45D)
+                .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
                 .reactiveCapabilityCurve(false)
                 .build(),
@@ -260,7 +260,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(8D).forcedOutageRate(3D)
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
-                .transientReactance(5D).stepUpTransformerReactance(45D)
+                .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
                 .reactiveCapabilityCurve(false)
                 .build(),
@@ -271,7 +271,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
                 .plannedActivePowerSetPoint(70D).marginalCost(5D).plannedOutageRate(8D).forcedOutageRate(3D)
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
-                .transientReactance(5D).stepUpTransformerReactance(45D)
+                .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
                 .reactiveCapabilityCurve(false)
                 .build()
