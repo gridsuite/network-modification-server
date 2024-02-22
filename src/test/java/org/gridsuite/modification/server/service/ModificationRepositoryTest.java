@@ -1114,6 +1114,7 @@ public class ModificationRepositoryTest {
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("2WT1")
                     .ratioTapChangerPosition(3)
+                    .ratioTapChangerTargetV(225.)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3WT1")
@@ -1143,6 +1144,7 @@ public class ModificationRepositoryTest {
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
+                    .targetV(225.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v5shunt")
@@ -1153,6 +1155,7 @@ public class ModificationRepositoryTest {
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
+                    .targetV(380.)
                     .build()))
             .build().toEntity();
 

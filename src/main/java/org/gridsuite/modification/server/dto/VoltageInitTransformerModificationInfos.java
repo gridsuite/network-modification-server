@@ -30,6 +30,9 @@ public class VoltageInitTransformerModificationInfos {
     @Schema(description = "Ratio tap changer position")
     private Integer ratioTapChangerPosition;
 
+    @Schema(description = "Ratio tap changer target voltage")
+    private Double ratioTapChangerTargetV;
+
     @Schema(description = "3 windings transformer leg side")
     private ThreeSides legSide;
 }

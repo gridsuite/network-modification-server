@@ -32,6 +32,9 @@ public class VoltageInitTransformerModificationEmbeddable {
     private Integer ratioTapChangerPosition;
 
     @Column
+    private Double ratioTapChangerTargetV;
+
+    @Column
     @Enumerated(EnumType.STRING)
     private ThreeSides legSide;
 }
