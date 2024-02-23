@@ -48,7 +48,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     private Double targetQ;
 
     @Column(name = "voltageRegulationOn")
-    private boolean voltageRegulationOn; //
+    private boolean voltageRegulationOn;
 
     @Column(name = "targetV")
     private Double targetV;
@@ -56,13 +56,13 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "plannedActivePowerSetPoint")
     private Double plannedActivePowerSetPoint;
 
-    @Column(name = "marginalCost") //
+    @Column(name = "marginalCost")
     private Double marginalCost;
 
-    @Column(name = "plannedOutageRate") //
+    @Column(name = "plannedOutageRate")
     private Double plannedOutageRate;
 
-    @Column(name = "forcedOutageRate") //
+    @Column(name = "forcedOutageRate")
     private Double forcedOutageRate;
 
     @Column(name = "minQ")

@@ -52,10 +52,10 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "targetQ")
     private Double targetQ;
 
-    @Column(name = "participate")//
+    @Column(name = "participate")
     private Boolean participate;
 
-    @Column(name = "droop")//
+    @Column(name = "droop")
     private Float droop;
 
     public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
