@@ -43,11 +43,6 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
         modification.setGroup(this);
     }
 
-    public void removeModification(ModificationEntity modification) {
-        modifications.remove(modification);
-        modification.setGroup(null);
-    }
-
     public void setModifications(List<ModificationEntity> modifications) {
         this.modifications = modifications;
         modifications.forEach(modification ->
