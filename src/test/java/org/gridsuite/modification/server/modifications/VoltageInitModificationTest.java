@@ -128,6 +128,18 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .ratioTapChangerPosition(1)
                     .ratioTapChangerTargetV(220.)
                     .legSide(ThreeSides.ONE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(null)
+                    .ratioTapChangerTargetV(220.)
+                    .legSide(ThreeSides.TWO)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(2)
+                    .ratioTapChangerTargetV(null)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
