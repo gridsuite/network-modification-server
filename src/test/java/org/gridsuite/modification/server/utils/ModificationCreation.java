@@ -18,6 +18,8 @@ import java.util.Arrays;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public final class ModificationCreation {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     private ModificationCreation() {
     }
@@ -28,7 +30,7 @@ public final class ModificationCreation {
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
             .substationId(substationId)
-            .nominalVoltage(379.1)
+            .nominalV(379.1)
             .lowVoltageLimit(0.0)
             .highVoltageLimit(10.0)
             .ipMin(0.0)
@@ -151,5 +153,13 @@ public final class ModificationCreation {
         builder.equipmentName(AttributeModification.toAttributeModification(vlName, OperationType.SET));
 
         return builder.build();
+    }
+
+    public static FreePropertyInfos getFreeProperty() {
+        return getFreeProperty(PROPERTY_NAME, PROPERTY_VALUE);
+    }
+
+    public static FreePropertyInfos getFreeProperty(String name, String value) {
+        return FreePropertyInfos.builder().name(name).value(value).build();
     }
 }

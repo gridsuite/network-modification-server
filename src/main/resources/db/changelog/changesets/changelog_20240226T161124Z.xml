@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="jamalk (generated)" id="1706602661209-29">
+    <changeSet author="jamalk (generated)" id="1708963903677-29">
         <createTable tableName="converter_station_modification">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name_op" type="VARCHAR(255)"/>
@@ -30,7 +30,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-30">
+    <changeSet author="jamalk (generated)" id="1708963903677-30">
         <createTable tableName="converter_station_modification_rcc_points">
             <column name="converter_station_modification_entity_id" type="UUID">
                 <constraints nullable="false"/>
@@ -43,7 +43,7 @@
             <column name="qminp" type="FLOAT(53)"/>
         </createTable>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-31">
+    <changeSet author="jamalk (generated)" id="1708963903677-31">
         <createTable tableName="vsc_modification">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name_op" type="VARCHAR(255)"/>
@@ -75,64 +75,22 @@
             <column name="converter_station_2_id" type="UUID"/>
         </createTable>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-32">
-        <addUniqueConstraint columnNames="additional_equipment_deletion_entity_id" constraintName="UC_EQUIPMENT_DELETIONADDITIONAL_EQUIPMENT_DELETION_ENTITY_ID_COL" tableName="equipment_deletion"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-33">
-        <addUniqueConstraint columnNames="line_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELLINE_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-34">
-        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-35">
-        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID1_COL" tableName="line_creation"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-36">
-        <addUniqueConstraint columnNames="current_limits_id2" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID2_COL" tableName="line_creation"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-37">
-        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID1_COL" tableName="line_modification"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-38">
-        <addUniqueConstraint columnNames="current_limits_modification_id2" constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID2_COL" tableName="line_modification"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-39">
-        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-40">
-        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID1_COL" tableName="two_windings_transformer_creation"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-41">
-        <addUniqueConstraint columnNames="current_limits_id2" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID2_COL" tableName="two_windings_transformer_creation"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-42">
-        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="UC_TWO_WINDINGS_TRANSFORMER_MODIFICATIONCURRENT_LIMITS_MODIFICA" tableName="two_windings_transformer_modification"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-43">
-        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_creation"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-44">
-        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_creation"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-45">
+    <changeSet author="jamalk (generated)" id="1708963903677-45">
         <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_MODIFICATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_modification"/>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-46">
+    <changeSet author="jamalk (generated)" id="1708963903677-46">
         <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_MODIFICATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_modification"/>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-47">
-        <createIndex indexName="IX_tabular_modification_modificationsPK" tableName="tabular_modification_modifications" unique="true">
-            <column name="tabular_modification_entity_id"/>
-            <column name="modifications_order"/>
-        </createIndex>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-49">
-        <addForeignKeyConstraint baseColumnNames="converter_station_modification_entity_id" baseTableName="converter_station_modification_rcc_points" constraintName="FKa1d66rwnqihum8e7burnweyr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-50">
+    <changeSet author="jamalk (generated)" id="1708963903677-50">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="vsc_modification" constraintName="FKo2vpsuh6othc7kfc7hmilkia5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1706602661209-51">
+    <changeSet author="jamalk (generated)" id="1708963903677-51">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_modification" constraintName="FKryub7wml7674krq1lwhn21jqw" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
+<!-- <changeSet author="jamalk (generated)" id="1708963903677-53">
+        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_modification" constraintName="converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1708963903677-54">
+        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_modification" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet> -->
 </databaseChangeLog>

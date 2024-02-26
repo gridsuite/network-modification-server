@@ -40,7 +40,6 @@ public class VscModification extends AbstractModification {
             MinMaxReactiveLimits minMaxReactiveLimits = vscConverterStation.getReactiveLimits(MinMaxReactiveLimits.class);
             ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, converterStationModificationInfos.getMinimumReactivePower(), converterStationModificationInfos.getMaximumReactivePower(), MODIFY_VSC_ERROR, errorMessage);
         }
-
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = converterStationModificationInfos.getReactiveCapabilityCurvePoints();
         if (modificationPoints != null) {
             ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
