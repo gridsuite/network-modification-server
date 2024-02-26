@@ -35,7 +35,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     private String substationId;
 
     @Column
-    private double nominalVoltage;
+    private double nominalV;
 
     @Column
     private Double lowVoltageLimit;
@@ -97,7 +97,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationId(getSubstationId())
-                .nominalVoltage(getNominalVoltage())
+                .nominalV(getNominalV())
                 .lowVoltageLimit(getLowVoltageLimit())
                 .highVoltageLimit(getHighVoltageLimit())
                 .ipMin(getIpMin())
@@ -116,7 +116,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     private void assignAttributes(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         this.substationId = voltageLevelCreationInfos.getSubstationId();
-        this.nominalVoltage = voltageLevelCreationInfos.getNominalVoltage();
+        this.nominalV = voltageLevelCreationInfos.getNominalV();
         this.lowVoltageLimit = voltageLevelCreationInfos.getLowVoltageLimit();
         this.highVoltageLimit = voltageLevelCreationInfos.getHighVoltageLimit();
         this.ipMin = voltageLevelCreationInfos.getIpMin();
