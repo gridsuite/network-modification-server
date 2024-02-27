@@ -109,7 +109,7 @@ public final class TestUtils {
 
     @SuppressWarnings("unchecked")
     public static void setOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
-        Identifiable<?> identifiable  = network.getIdentifiable(identifiableName);
+        Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
         assertNotNull(identifiable);
         identifiable.newExtension(OperatingStatusAdder.class).withStatus(status).add();
     }
