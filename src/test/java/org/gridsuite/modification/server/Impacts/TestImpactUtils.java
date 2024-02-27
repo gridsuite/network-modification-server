@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.junit.Assert.assertEquals;
@@ -87,13 +88,13 @@ public final class TestImpactUtils {
         testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
-    public static void testElementImpact(SimpleImpactType impactType, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
+    public static void testElementImpact(SimpleImpactType type, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
-            .networkImpacts(List.of(createElementImpact(impactType, elementType, elementId, new HashSet<>(substationIds))))
+            .networkImpacts(createSubstationImpacts(new HashSet<>(substationIds)))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
@@ -128,11 +129,8 @@ public final class TestImpactUtils {
     }
 
     public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
-        List<AbstractBaseImpact> impacts = List.of(
-            createElementImpact(SimpleImpactType.CREATION, elementType, elementId, new TreeSet<>(substationIds)),
-            createElementImpact(SimpleImpactType.MODIFICATION, elementType, elementId, new TreeSet<>(substationIds)) // case with newCurrentLimits1/newtapChanger
-        );
-        testElementImpacts(mapper, resultAsString, impacts);
+        List<AbstractBaseImpact> substationsImpacts = createSubstationImpacts(substationIds);
+        testElementImpacts(mapper, resultAsString, substationsImpacts);
     }
 
     public static void testBranchDeletionImpacts(ObjectMapper mapper, String resultAsString,
@@ -142,7 +140,7 @@ public final class TestImpactUtils {
         testBranchImpacts(mapper, SimpleImpactType.DELETION, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
     }
 
-    public static void testBranchImpacts(ObjectMapper mapper, SimpleImpactType impactType, String resultAsString,
+    public static void testBranchImpacts(ObjectMapper mapper, SimpleImpactType type, String resultAsString,
                                          IdentifiableType branchType, String branchId,
                                          String breakerId1, String disconnectorId1, String substationId1,
                                          String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
@@ -151,34 +149,29 @@ public final class TestImpactUtils {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
-            .networkImpacts(createBranchImpacts(impactType, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
+            .networkImpacts(createBranchImpacts(type, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
 
-    private static List<AbstractBaseImpact> createBranchImpacts(SimpleImpactType impactType, IdentifiableType branchType, String branchId,
+    private static List<AbstractBaseImpact> createBranchImpacts(SimpleImpactType type, IdentifiableType branchType, String branchId,
                                                                  String breakerId1, String disconnectorId1, String substationId1,
                                                                  String breakerId2, String disconnectorId2, String substationId2) {
-        LinkedList<AbstractBaseImpact> impacts = new LinkedList<>(List.of(createElementImpact(impactType, branchType, branchId, new HashSet<>(List.of(substationId1, substationId2)))));
-        List<SimpleElementImpact> switchImpacts = List.of(
-            createElementImpact(impactType, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
-            createElementImpact(impactType, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),
-            createElementImpact(impactType, IdentifiableType.SWITCH, breakerId2, Set.of(substationId2)),
-            createElementImpact(impactType, IdentifiableType.SWITCH, disconnectorId2, Set.of(substationId2))
-        );
-        if (impactType == SimpleImpactType.CREATION) {
-            // During a creation of a 2WT we use the TapChangerAdder which set the tapChangerAttributes to the 2WT
-            // This setRatioTapChanger/setPhaseTapChanger calling generates a notifyUpdate for the newly created 2WT
-            // Then we must add a MODIFICATION impact on this newly created 2WT.
-            // TODO fix this
-            impacts.add(createElementImpact(SimpleImpactType.MODIFICATION, branchType, branchId, new TreeSet<>(List.of(substationId1, substationId2)))); // case with newtapChanger
-        }
-        if (impactType == SimpleImpactType.DELETION) {
+        LinkedList<AbstractBaseImpact> impacts = new LinkedList<>();
+        if (type == SimpleImpactType.DELETION) {
+            List<SimpleElementImpact> switchImpacts = List.of(
+                createElementImpact(SimpleImpactType.DELETION, branchType, branchId, new HashSet<>(List.of(substationId1, substationId2))),
+                createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
+                createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),
+                createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId2, Set.of(substationId2)),
+                createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId2, Set.of(substationId2))
+            );
             impacts.addAll(0, switchImpacts);
         } else {
-            impacts.addAll(switchImpacts);
+            Set<String> substationIds = new HashSet<>();
+            substationIds.addAll(List.of(substationId1, substationId2));
+            impacts.addAll(createSubstationImpacts(substationIds));
         }
-
         return impacts;
     }
 
@@ -217,6 +210,11 @@ public final class TestImpactUtils {
         return new ArrayList<>(deletedIdentifiables.stream().map(identifiable -> createDeletionImpactType(identifiable.getLeft(), identifiable.getRight(), impactedSubstationIds)).toList());
     }
 
+    public static List<AbstractBaseImpact> createSubstationImpacts(Set<String> substationIds) {
+        return substationIds.stream().map(id -> createElementImpact(SimpleImpactType.MODIFICATION, IdentifiableType.SUBSTATION, id, Set.of(id)))
+                                    .collect(Collectors.toList());
+    }
+
     public static SimpleElementImpact createCreationImpactType(IdentifiableType elementType, String elementId, Set<String> substationIds) {
         return createElementImpact(SimpleImpactType.CREATION, elementType, elementId, substationIds);
     }
@@ -229,9 +227,9 @@ public final class TestImpactUtils {
         return createElementImpact(SimpleImpactType.MODIFICATION, elementType, elementId, substationIds);
     }
 
-    private static SimpleElementImpact createElementImpact(SimpleImpactType impactType, IdentifiableType elementType, String elementId, Set<String> substationIds) {
+    private static SimpleElementImpact createElementImpact(SimpleImpactType type, IdentifiableType elementType, String elementId, Set<String> substationIds) {
         return SimpleElementImpact.builder()
-            .simpleImpactType(impactType)
+            .simpleImpactType(type)
             .elementType(elementType)
             .elementId(elementId)
             .substationIds(substationIds).build();

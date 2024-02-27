@@ -31,9 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -68,12 +66,12 @@ public class NetworkModificationApplicator {
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
-        Set<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
         return
             NetworkModificationResult.builder()
                 .applicationStatus(groupApplicationStatus)
                 .lastGroupApplicationStatus(groupApplicationStatus)
-                .networkImpacts(new ArrayList<>(networkImpacts))
+                .networkImpacts(networkImpacts)
                 .build();
     }
 
@@ -83,11 +81,11 @@ public class NetworkModificationApplicator {
                 modificationInfosGroups.stream()
                         .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
                         .toList();
-        Set<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
         return NetworkModificationResult.builder()
                 .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
                 .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
-                .networkImpacts(new ArrayList<>(networkImpacts))
+                .networkImpacts(networkImpacts)
                 .build();
     }
 

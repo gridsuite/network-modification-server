@@ -14,9 +14,9 @@ import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,7 +43,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<EquipmentInfos> modifiedEquipments = new ArrayList<>();
 
-    private final Set<SimpleElementImpact> networkElementImpacts = new LinkedHashSet<>();
+    private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
     private Integer collectionThreshold;
 
@@ -93,7 +93,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
-        networkElementImpacts.add(
+        simpleImpacts.add(
                 SimpleElementImpact.builder()
                     .simpleImpactType(SimpleImpactType.MODIFICATION)
                     .elementType(identifiable.getType())
@@ -191,7 +191,7 @@ public class NetworkStoreListener implements NetworkListener {
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
             .build());
-        networkElementImpacts.add(
+        simpleImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(SimpleImpactType.CREATION)
                 .elementType(identifiable.getType())
@@ -204,7 +204,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         deletedEquipmentsIds.add(identifiable.getId());
-        networkElementImpacts.add(
+        simpleImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(SimpleImpactType.DELETION)
                 .elementType(identifiable.getType())
@@ -219,7 +219,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public Set<AbstractBaseImpact> flushNetworkModifications() {
+    public List<AbstractBaseImpact> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
@@ -228,7 +228,7 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        return collectNetworkImpacts(networkElementImpacts);
+        return flushNetworkImpacts();
     }
 
     private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
@@ -267,38 +267,58 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
     }
 
-    private Set<AbstractBaseImpact> collectNetworkImpacts(Set<SimpleElementImpact> impacts) {
-        // keep Deletion impacts separatly
-        Set<AbstractBaseImpact> resImpacts = impacts.stream().filter(i -> i.getSimpleImpactType() == SimpleImpactType.DELETION).collect(Collectors.toSet());
-
-        // compute substations impact
-        if (impacts.stream().flatMap(i -> i.getSubstationIds().stream()).distinct().count() >= collectionThreshold) {
-            resImpacts.add(CollectionElementImpact.builder()
+    private List<AbstractBaseImpact> flushNetworkImpacts() {
+        if (isAllNetworkImpacted()) {
+            return List.of(CollectionElementImpact.builder()
                     .elementType(IdentifiableType.SUBSTATION)
                     .build());
         }
 
-        // then filter those DELETION impacts for the next part and the collection impact computation
-        Set<SimpleElementImpact> filteredImpacts = impacts.stream()
-            .filter(i -> i.getSimpleImpactType() != SimpleImpactType.DELETION)
-            .collect(Collectors.toSet());
-        Set<IdentifiableType> impactTypes = filteredImpacts.stream()
-            .map(i -> i.getElementType()).collect(Collectors.toSet());
+        return new ArrayList<>(reduceNetworkImpacts());
+    }
 
-        impactTypes.forEach(type -> {
-            // get SimpleElementimpacts of this equipment type
-            Set<SimpleElementImpact> typedNetworkImpacts = filteredImpacts.stream().filter(i -> type == i.getElementType()).collect(Collectors.toSet());
-            // compare using a threshold (ex: if nbLoadImpacts >= 50)
-            if (typedNetworkImpacts.size() >= collectionThreshold) {
-                resImpacts.add(CollectionElementImpact.builder()
-                    .elementType(type)
+    private boolean isAllNetworkImpacted() {
+        Set<String> allImpactedSubstationsIds = simpleImpacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet());
+        return allImpactedSubstationsIds.size() >= collectionThreshold;
+    }
+
+    private Set<AbstractBaseImpact> reduceNetworkImpacts() {
+        Set<AbstractBaseImpact> reducedImpacts = new HashSet<>();
+        Set<String> impactedSubstationsIds = new HashSet<>();
+
+        // Impacts type collection
+        Arrays.stream(IdentifiableType.values()).forEach(elementType -> {
+            Set<SimpleElementImpact> impacts = getSimpleImpacts(elementType);
+            if (impacts.size() >= collectionThreshold) {
+                reducedImpacts.add(CollectionElementImpact.builder()
+                    .elementType(elementType)
                     .build());
             } else {
-                // otherwise add the Simple Element impacts
-                resImpacts.addAll(typedNetworkImpacts);
+                impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet()));
             }
         });
-        return resImpacts;
+
+        // Impacts type simple for substation only
+        reducedImpacts.addAll(impactedSubstationsIds.stream().map(id ->
+            SimpleElementImpact.builder()
+                .simpleImpactType(SimpleImpactType.MODIFICATION)
+                .elementType(IdentifiableType.SUBSTATION)
+                .elementId(id)
+                .substationIds(Set.of(id))
+                .build()
+        ).collect(Collectors.toSet()));
+
+        // Impacts type simple for deletion only
+        reducedImpacts.addAll(simpleImpacts.stream().filter(i -> i.getSimpleImpactType() == SimpleImpactType.DELETION).collect(Collectors.toSet()));
+
+        return reducedImpacts;
+    }
+
+    private Set<SimpleElementImpact> getSimpleImpacts(IdentifiableType elementType) {
+        return simpleImpacts.stream()
+                .filter(i -> i.getSimpleImpactType() != SimpleImpactType.DELETION)
+                .filter(i -> i.getElementType() == elementType)
+                .collect(Collectors.toSet());
     }
 
 }

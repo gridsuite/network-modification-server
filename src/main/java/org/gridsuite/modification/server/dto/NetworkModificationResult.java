@@ -54,7 +54,7 @@ public class NetworkModificationResult {
 
     public Set<String> getImpactedSubstationsIds() {
         return networkImpacts.stream()
-            .filter(impact -> impact.getImpactType() == ImpactType.SIMPLE)
+            .filter(impact -> impact.getType() == ImpactType.SIMPLE)
             .flatMap(impact -> ((SimpleElementImpact) impact).getSubstationIds().stream())
             .collect(Collectors.toCollection(TreeSet::new)); // using TreeSet to keep natural order
     }
