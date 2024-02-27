@@ -19,15 +19,15 @@ import org.junit.jupiter.api.Tag;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
+import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
-public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetworkModificationTest {
+public class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_HVDC_LINE_ID = "hvdcLine";
 
-    private static final OperatingStatus.Status TARGET_HVDC_LINE_STATUS = FORCED_OUTAGE;
+    private static final OperatingStatus.Status TARGET_HVDC_LINE_STATUS = PLANNED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -43,7 +43,7 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
                 .stashed(false)
                 .equipmentId(TARGET_HVDC_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
+                .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
                 .stashed(false)
                 .equipmentId("hvdcLineEdited")
                 .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
+                .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
     @Override
@@ -72,7 +72,7 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
-        assertEquals("TRIP", createdValues.get("action"));
+        assertEquals("LOCKOUT", createdValues.get("action"));
         assertEquals("hvdcLine", createdValues.get("equipmentId"));
     }
 
@@ -82,7 +82,7 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("LOCKOUT", updatedValues.get("action"));
         assertEquals("hvdcLineEdited", updatedValues.get("equipmentId"));
     }
 }

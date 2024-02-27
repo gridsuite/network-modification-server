@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class OperatingStatusModificationTrip2WTransformerTest extends AbstractNetworkModificationTest {
 
     private static final String TARGET_BRANCH_ID = "trf1";
-    private static final String UPDATE_BRANCH_ID = "line1"; // it is not a 2WT, but is does not matter
+    private static final String UPDATE_BRANCH_ID = "trf1Edited";
     private static final OperatingStatus.Status TARGET_BRANCH_STATUS = FORCED_OUTAGE;
     private static final OperatingStatus.Status OTHER_BRANCH_STATUS = PLANNED_OUTAGE;
 
@@ -54,7 +54,7 @@ public class OperatingStatusModificationTrip2WTransformerTest extends AbstractNe
                 .stashed(false)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
-                .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
+                .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class OperatingStatusModificationTrip2WTransformerTest extends AbstractNe
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("SWITCH_ON", updatedValues.get("action"));
-        assertEquals("line1", updatedValues.get("equipmentId"));
+        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("trf1Edited", updatedValues.get("equipmentId"));
     }
 }

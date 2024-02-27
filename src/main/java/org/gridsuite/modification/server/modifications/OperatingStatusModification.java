@@ -109,9 +109,10 @@ public class OperatingStatusModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
-        traversedTerminals.stream().map(t -> network.getIdentifiable(t.getConnectable().getId()))
+        traversedTerminals.stream()
+                .map(t -> network.getIdentifiable(getId(t, equipment)))
                 .filter(Objects::nonNull)
-                .filter(distinctByKey(Identifiable::getId))  // dont process the same equipment more than once
+                .filter(distinctByKey(Identifiable::getId))
                 .forEach(b -> b.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.FORCED_OUTAGE).add());
     }
 
@@ -180,5 +181,15 @@ public class OperatingStatusModification extends AbstractModification {
             return new HvdcLineTripping(hvdcLine.getId());
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
+    }
+
+    private String getId(Terminal terminal, Identifiable<?> equipment) {
+        if (equipment instanceof Branch<?> || equipment instanceof ThreeWindingsTransformer) {
+            return terminal.getConnectable().getId();
+        } else if (equipment instanceof HvdcLine) {
+            return terminal.getConnectable().getTerminals().stream().toString();
+        } else {
+            throw new NetworkModificationException(EQUIPMENT_NOT_FOUND, equipment.getId());
+        }
     }
 }
