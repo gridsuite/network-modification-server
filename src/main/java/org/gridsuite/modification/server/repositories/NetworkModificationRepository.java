@@ -304,9 +304,10 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+                deleteModifications(groupEntity.getModifications().stream().filter(Objects::nonNull).toList());
+                groupEntity.getModifications().clear();
             }
-            this.modificationGroupRepository.delete(groupEntity);
+            modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return;
@@ -318,17 +319,12 @@ public class NetworkModificationRepository {
     @Transactional
     public int deleteModifications(UUID groupUuid, boolean onlyStashed) {
         ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications;
-        if (onlyStashed) {
-            modifications = getModificationEntityStream(groupUuid)
-                .filter(ModificationEntity::getStashed)
-                .collect(Collectors.toList());
-        } else {
-            modifications = getModificationEntityStream(groupUuid).collect(Collectors.toList());
-        }
-        modifications.forEach(groupEntity::removeModification);
+        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
+            .filter(m -> !onlyStashed || m.getStashed())
+            .toList();
+        groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
         int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
+        deleteModifications(modifications);
         return count;
     }
 
@@ -340,7 +336,7 @@ public class NetworkModificationRepository {
             modifications = getModificationEntityStream(groupUuid)
                     .filter(m -> uuids.contains(m.getId()))
                     .collect(Collectors.toList());
-            modifications.forEach(groupEntity::removeModification);
+            groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
         } else {
             modifications = modificationRepository.findAllById(uuids);
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
@@ -350,7 +346,7 @@ public class NetworkModificationRepository {
             }
         }
         int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
+        deleteModifications(modifications);
         return count;
     }
 
@@ -426,11 +422,13 @@ public class NetworkModificationRepository {
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            List<UUID> stashedModificationUuids = groupEntity.getModifications().stream()
-                    .filter(modification -> modification != null && modification.getStashed())
-                    .map(ModificationEntity::getId).collect(Collectors.toList());
-            if (!stashedModificationUuids.isEmpty()) {
-                deleteModifications(groupUuid, stashedModificationUuids);
+            List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
+                .filter(Objects::nonNull)
+                .filter(ModificationEntity::getStashed)
+                .toList();
+            if (!modifications.isEmpty()) {
+                groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
+                deleteModifications(modifications);
             }
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
@@ -450,5 +448,30 @@ public class NetworkModificationRepository {
                     .type(ModificationType.valueOf(entity.getType()))
                     .build())
             .toList();
+    }
+
+    private void deleteModifications(List<ModificationEntity> modificationEntities) {
+        // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
+        // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
+        // efficient so no need to dig deeper about that for now.
+        modificationEntities.forEach(m -> {
+            if (m instanceof TabularModificationEntity tabularModificationEntity) {
+                deleteTabularModification(tabularModificationEntity);
+            } else {
+                modificationRepository.delete(m);
+            }
+        });
+    }
+
+    public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
+        switch (tabularModificationEntity.getModificationType()) {
+            case GENERATOR_MODIFICATION:
+                List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(tabularModificationEntity.getId());
+                generatorModificationRepository.deleteTabularModification(subModificationsIds, tabularModificationEntity.getId());
+                break;
+            default:
+                modificationRepository.delete(tabularModificationEntity);
+                break;
+        }
     }
 }
