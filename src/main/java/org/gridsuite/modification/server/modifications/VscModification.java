@@ -36,14 +36,8 @@ public class VscModification extends AbstractModification {
 
     public void checkConverterStation(@NonNull ConverterStationModificationInfos converterStationModificationInfos, @NonNull VscConverterStation vscConverterStation) {
         String errorMessage = "Converter station '" + converterStationModificationInfos.getEquipmentId() + "' : ";
-        if (vscConverterStation.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (converterStationModificationInfos.getMinimumReactivePower() != null || converterStationModificationInfos.getMaximumReactivePower() != null)) {
-            MinMaxReactiveLimits minMaxReactiveLimits = vscConverterStation.getReactiveLimits(MinMaxReactiveLimits.class);
-            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, converterStationModificationInfos.getMinimumReactivePower(), converterStationModificationInfos.getMaximumReactivePower(), MODIFY_VSC_ERROR, errorMessage);
-        }
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = converterStationModificationInfos.getReactiveCapabilityCurvePoints();
-        if (modificationPoints != null) {
-            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
-        }
+        ModificationUtils.getInstance().checkReactiveLimit(vscConverterStation, converterStationModificationInfos.getMinimumReactivePower(), converterStationModificationInfos.getMaximumReactivePower(),
+                converterStationModificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_VSC_ERROR, errorMessage);
     }
 
     @Override

@@ -63,15 +63,8 @@ public class GeneratorModification extends AbstractModification {
         Generator generator = ModificationUtils.getInstance().getGenerator(network, modificationInfos.getEquipmentId());
         // check min max reactive limits
         String errorMessage = "Generator '" + modificationInfos.getEquipmentId() + "' : ";
-        if (generator.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinimumReactivePower() != null || modificationInfos.getMaximumReactivePower() != null)) {
-            MinMaxReactiveLimits minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimits.class);
-            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), MODIFY_GENERATOR_ERROR, errorMessage);
-        }
-        // check reactive capability curve limits
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (modificationPoints != null) {
-            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_GENERATOR_ERROR, errorMessage);
-        }
+        ModificationUtils.getInstance().checkReactiveLimit(generator, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(),
+                modificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_GENERATOR_ERROR, errorMessage);
         // check regulated terminal
         if (modificationInfos.getRegulatingTerminalId() != null && modificationInfos.getRegulatingTerminalType() != null &&
                 modificationInfos.getRegulatingTerminalVlId() != null) {
