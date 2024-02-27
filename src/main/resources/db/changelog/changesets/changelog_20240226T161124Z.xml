@@ -87,10 +87,4 @@
     <changeSet author="jamalk (generated)" id="1708963903677-51">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_modification" constraintName="FKryub7wml7674krq1lwhn21jqw" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-<!-- <changeSet author="jamalk (generated)" id="1708963903677-53">
-        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_modification" constraintName="converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
-    </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-54">
-        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_modification" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
-    </changeSet> -->
 </databaseChangeLog>
