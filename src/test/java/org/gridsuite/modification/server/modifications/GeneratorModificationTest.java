@@ -386,7 +386,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                             oldMinQ = oldPoint.getMinQ();
                         }
                         newPoint.setMinQ(300.0);
-                        newPoint.setMaxQ(250.0);
+                        newPoint.setOldMaxQ(250.0);
                         maxQ.set(newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ);
                         minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
