@@ -20,6 +20,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
@@ -84,6 +85,7 @@ public class ModificationControllerTest {
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID TEST_NETWORK_WITH_FLUSH_ERROR_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
@@ -571,42 +573,6 @@ public class ModificationControllerTest {
         assertEquals(newModificationUuidList, modificationUuidList);
     }
 
-    private void testMoveModification(UUID originGroupUuid, Boolean canBuild) throws Exception {
-        // create 2 modifications
-        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
-                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-
-        // swap modifications: move [1] before [0]
-        List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
-                + "&networkUuid=" + TEST_NETWORK_ID
-                + "&reportUuid=" + TEST_REPORT_ID
-                + "&reporterId=" + UUID.randomUUID()
-                + "&variantId=" + NetworkCreation.VARIANT_ID
-                + "&before=" + modificationUuidList.get(0);
-        if (originGroupUuid != null) {
-            url = url + "&originGroupUuid=" + TEST_GROUP_ID;
-        }
-        if (canBuild != null) {
-            url = url + "&buid=" + canBuild;
-        }
-        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
-                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-        assertNotNull(newModificationUuidList);
-        Collections.reverse(newModificationUuidList);
-
-        assertEquals(modificationUuidList, newModificationUuidList);
-    }
-
-    @Test
-    public void testMoveModificationWithOrigin() throws Exception {
-        testMoveModification(TEST_GROUP_ID, Boolean.TRUE);
-    }
-
     @Test
     public void createGeneratorWithStartup() throws Exception {
 
@@ -664,8 +630,68 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMoveModificationWithoutOrigin() throws Exception {
-        testMoveModification(null, null);
+    public void testMoveModificationInSameGroup() throws Exception {
+        // create 2 modifications in a single group
+        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // swap modifications: move [1] before [0]
+        List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
+                + "&networkUuid=" + TEST_NETWORK_ID
+                + "&reportUuid=" + TEST_REPORT_ID
+                + "&reporterId=" + UUID.randomUUID()
+                + "&variantId=" + NetworkCreation.VARIANT_ID
+                + "&before=" + modificationUuidList.get(0);
+        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newModificationUuidList);
+        Collections.reverse(newModificationUuidList); // swap => reverse order is expected
+        assertEquals(modificationUuidList, newModificationUuidList);
+    }
+
+    @Test
+    public void testMoveModificationBetweenTwoGroups() throws Exception {
+        // create 1 modification in destination group
+        List<UUID> destinationModificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 1).
+                stream().map(ModificationInfos::getUuid).toList();
+        // create 2 modifications in origin group
+        List<UUID> originModificationUuidList = createSomeSwitchModifications(TEST_GROUP2_ID, 2).
+                stream().map(ModificationInfos::getUuid).toList();
+
+        // cut origin[1] and append to destination
+        List<UUID> movingModificationUuidList = Collections.singletonList(originModificationUuidList.get(1));
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
+                + "&networkUuid=" + TEST_NETWORK_ID
+                + "&reportUuid=" + TEST_REPORT_ID
+                + "&reporterId=" + UUID.randomUUID()
+                + "&variantId=" + NetworkCreation.VARIANT_ID
+                + "&originGroupUuid=" + TEST_GROUP2_ID
+                + "&build=true";
+
+        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // check destination
+        var newDestinationModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newDestinationModificationUuidList);
+        // Expect: 2 existing + the moved one
+        List<UUID> expectedDestinationModificationUuidList = ListUtils.union(destinationModificationUuidList, movingModificationUuidList);
+        assertEquals(expectedDestinationModificationUuidList, newDestinationModificationUuidList);
+
+        // check origin
+        var newOriginModificationUuidList = modificationRepository.getModifications(TEST_GROUP2_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newOriginModificationUuidList);
+        // Expect: origin[0] only
+        List<UUID> expectedOriginModificationUuidList = Collections.singletonList(originModificationUuidList.get(0));
+        assertEquals(expectedOriginModificationUuidList, newOriginModificationUuidList);
     }
 
     @Test
