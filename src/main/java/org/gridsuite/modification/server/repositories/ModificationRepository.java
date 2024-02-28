@@ -54,4 +54,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Modifying
     @Query("update ModificationEntity m set m.modificationsOrder = :order where m.id = :id")
     int setOrderById(@Param("order") int order, @Param("id") UUID id);
+
+    @Modifying
+    @Query("update ModificationEntity m set m.group.id = :newGroup where m.id = :id")
+    int setGroupById(@Param("newGroup") UUID newGroup, @Param("id") UUID id);
 }

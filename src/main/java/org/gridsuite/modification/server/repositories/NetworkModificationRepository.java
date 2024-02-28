@@ -48,12 +48,6 @@ public class NetworkModificationRepository {
         this.generatorModificationRepository = generatorModificationRepository;
     }
 
-    public enum StashOption {
-        STASHED,
-        UNSTASHED,
-        ANY
-    }
-
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteAll() {
         modificationRepository.deleteAll();
@@ -92,68 +86,56 @@ public class NetworkModificationRepository {
     // TODO Remove transaction when errors will no longer be sent to the front
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
 
-        if (originGroupUuid.equals(destinationGroupUuid)) {
-            List<ModificationEntity> modificationEntities = getModificationsMetadataEntities(originGroupUuid, StashOption.UNSTASHED);
-            Map<UUID, ModificationEntity> originModifications = modificationEntities.stream()
-                    .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-            List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
+        // load origin entities (metadata light mode)
+        List<ModificationEntity> modificationEntities = getModificationsMetadataEntities(originGroupUuid, false);
+        Map<UUID, ModificationEntity> originModifications = modificationEntities.stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+        List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
+
+        if (originGroupUuid.equals(destinationGroupUuid)) { // single group case
             if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
             }
-
-            List<ModificationEntity> newList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
-            AtomicInteger index = new AtomicInteger(0);
-            newList.forEach(m -> this.modificationRepository.setOrderById(index.getAndIncrement(), m.getId()));
+            // re-organize the list
+            updateModificationsOrder(updateModificationList(modificationsToMoveUUID, originModifications, referenceModificationUuid));
             return List.of();
-        }
+        } else { // 2-group case
+            // if destination is empty, group does not exist then we must create it
+            getOrCreateModificationGroup(destinationGroupUuid);
 
-        ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
-
-        Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-
-        List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
-
-        List<ModificationEntity> newDestinationModificationList = List.of();
-        if (!modificationsToMoveUUID.isEmpty()) {
-            // if moving within the same group
-            if (originGroupUuid.equals(destinationGroupUuid)) {
-                if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
-                    throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-                }
-
-                newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
-
-                originModificationGroupEntity.setModifications(newDestinationModificationList);
-            } else {
-                //if destination is empty, group does not exist, we create it here if needed
-                ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
-
-                Map<UUID, ModificationEntity> destinationModifications = getModificationsEntities(destinationGroupUuid).stream()
-                        .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-
-                // referenceModificationUuid must belong to destination one
-                if (referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
-                    throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-                }
-
-                newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, destinationModifications, referenceModificationUuid);
-
-                originModificationGroupEntity.setModifications(new ArrayList<>(originModifications.values()));
-                destinationModificationGroupEntity.setModifications(newDestinationModificationList);
+            // load destination entities (metadata light mode)
+            List<ModificationEntity> destinationModificationEntities = getModificationsMetadataEntities(destinationGroupUuid, false);
+            Map<UUID, ModificationEntity> destinationModifications = destinationModificationEntities.stream()
+                    .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+            if (referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
+                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
             }
+            // update origin list
+            List<ModificationEntity> removedModifications = modificationsToMoveUUID.stream().map(originModifications::remove).collect(Collectors.toList());
+            updateModificationsOrder(originModifications.values());
+            // update destination list
+            updateModificationsOrder(insertModifications(removedModifications, destinationModifications, referenceModificationUuid));
+            // change the owner group for moved modifications
+            modificationsToMoveUUID.forEach(modifId -> this.modificationRepository.setGroupById(destinationGroupUuid, modifId));
+            return removedModifications;
         }
-        return newDestinationModificationList;
     }
 
-    private List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> originModifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
-        List<ModificationEntity> movedModifications = modificationsToMoveUuid.stream().map(originModifications::remove).collect(Collectors.toList());
+    private void updateModificationsOrder(Collection<ModificationEntity> modifications) {
+        AtomicInteger index = new AtomicInteger(0);
+        modifications.forEach(m -> this.modificationRepository.setOrderById(index.getAndIncrement(), m.getId()));
+    }
 
+    private List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> modifications, UUID referenceModificationUuid) {
+        List<ModificationEntity> removedModifications = modificationsToMoveUuid.stream().map(modifications::remove).collect(Collectors.toList());
+        return insertModifications(removedModifications, modifications, referenceModificationUuid);
+    }
+
+    private List<ModificationEntity> insertModifications(List<ModificationEntity> modifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
         List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
-        /* when referenceModification == null we move at the end of list */
+        /* when referenceModification == null we insert at the end of list, otherwise we insert before referenceModification */
         int index = referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
-        newDestinationModificationList.addAll(index, movedModifications);
-
+        newDestinationModificationList.addAll(index, modifications);
         return newDestinationModificationList;
     }
 
@@ -201,22 +183,19 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationEntity> getModificationsMetadataEntities(UUID groupUuid, StashOption stashOption) {
+    public List<ModificationEntity> getModificationsMetadataEntities(UUID groupUuid, boolean onlyStashed) {
         Stream<ModificationEntity> modificationEntityStream = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
-        if (stashOption == StashOption.ANY) {
+        if (!onlyStashed) {
             return modificationEntityStream.collect(Collectors.toList());
         } else {
-            boolean stashValue = stashOption == StashOption.STASHED;
-            return modificationEntityStream.filter(m -> m.getStashed() == stashValue)
-                    .collect(Collectors.toList());
+            return modificationEntityStream.filter(ModificationEntity::getStashed).collect(Collectors.toList());
         }
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        StashOption stashOption = onlyStashed ? StashOption.STASHED : StashOption.ANY;
-        return getModificationsMetadataEntities(groupUuid, stashOption).stream()
+        return getModificationsMetadataEntities(groupUuid, onlyStashed).stream()
                 .map(this::getModificationInfos)
                 .collect(Collectors.toList());
     }
@@ -360,10 +339,6 @@ public class NetworkModificationRepository {
 
     private Stream<ModificationEntity> getModificationEntityStream(UUID groupUuid) {
         return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
-    }
-
-    private List<ModificationEntity> getModificationsEntities(UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)

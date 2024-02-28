@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.stereotype.Service;
@@ -221,19 +222,18 @@ public class NetworkModificationService {
                                                                  UUID beforeModificationUuid, UUID networkUuid, String variantId,
                                                                  ReportInfos reportInfos, List<UUID> modificationsToMove,
                                                                  boolean canBuildNode) {
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid)
-            .stream()
-            .filter(m -> !m.getStashed())
-            .map(networkModificationRepository::getModificationInfos)
-            .collect(Collectors.toList());
+        List<ModificationEntity> movedMetadataEntities = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid);
 
-        if (canBuildNode && !movedModifications.isEmpty()) { // TODO remove canBuildNode ?
+        if (canBuildNode && !movedMetadataEntities.isEmpty()) { // TODO remove canBuildNode ?
             // try to apply the moved modifications (incremental mode)
-            PreloadingStrategy preloadingStrategy = movedModifications.stream()
-                    .map(ModificationInfos::getType)
+            PreloadingStrategy preloadingStrategy = movedMetadataEntities.stream()
+                    .map(e -> ModificationType.valueOf(e.getType()))
                     .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
             if (networkInfos.isVariantPresent()) {
+                List<UUID> movedUuids = movedMetadataEntities.stream().map(ModificationEntity::getId).toList();
+                // now we can fully load the modification entities we have to build
+                List<ModificationInfos> movedModifications = networkModificationRepository.getModificationsInfos(movedUuids);
                 return Optional.of(modificationApplicator.applyModifications(
                         movedModifications,
                         networkInfos,
