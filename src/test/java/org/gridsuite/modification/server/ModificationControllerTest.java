@@ -29,7 +29,6 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -1135,11 +1134,6 @@ public class ModificationControllerTest {
 
                 // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch
                 assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-            } else if (impact instanceof CollectionElementImpact) {
-                // Hard to check because
-                // Not all equipments of this collection impact type have been removed from the network
-                // Not all equipments of this collection impact type have been added as TombstonedEquipmentInfos in ElasticSearch
-                // There is no equipmentType in the TombstonedEquipmentInfos entity
             }
         }
 

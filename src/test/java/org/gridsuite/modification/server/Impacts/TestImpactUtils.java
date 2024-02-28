@@ -94,7 +94,7 @@ public final class TestImpactUtils {
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
-            .networkImpacts(createSubstationImpacts(new HashSet<>(substationIds)))
+            .networkImpacts(createSubstationImpacts(substationIds))
             .build();
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
@@ -157,7 +157,7 @@ public final class TestImpactUtils {
     private static List<AbstractBaseImpact> createBranchImpacts(SimpleImpactType type, IdentifiableType branchType, String branchId,
                                                                  String breakerId1, String disconnectorId1, String substationId1,
                                                                  String breakerId2, String disconnectorId2, String substationId2) {
-        LinkedList<AbstractBaseImpact> impacts = new LinkedList<>();
+        List<AbstractBaseImpact> impacts = new ArrayList<>();
         if (type == SimpleImpactType.DELETION) {
             List<SimpleElementImpact> switchImpacts = List.of(
                 createElementImpact(SimpleImpactType.DELETION, branchType, branchId, new HashSet<>(List.of(substationId1, substationId2))),
@@ -168,9 +168,7 @@ public final class TestImpactUtils {
             );
             impacts.addAll(0, switchImpacts);
         } else {
-            Set<String> substationIds = new HashSet<>();
-            substationIds.addAll(List.of(substationId1, substationId2));
-            impacts.addAll(createSubstationImpacts(substationIds));
+            impacts.addAll(createSubstationImpacts(Set.copyOf(List.of(substationId1, substationId2))));
         }
         return impacts;
     }
