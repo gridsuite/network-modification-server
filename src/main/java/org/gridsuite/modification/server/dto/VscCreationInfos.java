@@ -42,7 +42,7 @@ public class VscCreationInfos extends EquipmentCreationInfos {
     private Double dcResistance;
 
     @Schema(description = "Maximum active power ")
-    private Double maximumActivePower;
+    private Double maxP;
 
     @Schema(description = "Operator active power limit (Side1->Side2)")
     private Float operatorActivePowerLimitFromSide1ToSide2;
@@ -53,8 +53,8 @@ public class VscCreationInfos extends EquipmentCreationInfos {
     @Schema(description = "Converters mode")
     private HvdcLine.ConvertersMode convertersMode;
 
-    @Schema(description = "Active power")
-    private Double activePower;
+    @Schema(description = "Active power setpoint")
+    private Double activePowerSetpoint;
 
     @Schema(description = "Angle droop active power control ")
     private Boolean angleDroopActivePowerControl;
