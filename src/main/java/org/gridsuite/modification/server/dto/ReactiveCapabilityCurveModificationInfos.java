@@ -28,13 +28,13 @@ public class ReactiveCapabilityCurveModificationInfos {
     @Schema(description = "Minimum reactive power ")
     private Double minQ;
 
-    @Schema(description = "Minimum reactive power ")
+    @Schema(description = "Old minimum reactive power ")
     private Double oldMinQ;
 
     @Schema(description = "Maximum reactive power")
     private Double maxQ;
 
-    @Schema(description = "Maximum reactive power")
+    @Schema(description = "Old maximum reactive power")
     private Double oldMaxQ;
 
     @Schema(description = "Active Power")
