@@ -3,7 +3,7 @@
     <changeSet author="rehiligha" id="858e4adf2d13a190f5c808247f825c38-9">
         <sqlFile
                 encoding="UTF-8"
-                path="migrationModificationType_20240229T150459Z.sql"
+                path="migrationModificationType_20240229T160459Z.sql"
                 relativeToChangelogFile="true"
                 splitStatements="true"
                 stripComments="true"/>
