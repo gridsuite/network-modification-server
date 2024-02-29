@@ -54,7 +54,7 @@ public class OperatingStatusModificationTrip2WTransformerTest extends AbstractNe
                 .stashed(false)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
-                .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
+                .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class OperatingStatusModificationTrip2WTransformerTest extends AbstractNe
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));
-        assertEquals("TRIP", updatedValues.get("action"));
+        assertEquals("SWITCH_ON", updatedValues.get("action"));
         assertEquals("trf1Edited", updatedValues.get("equipmentId"));
     }
 }

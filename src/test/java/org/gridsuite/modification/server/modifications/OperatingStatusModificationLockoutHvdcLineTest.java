@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Tag;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -28,12 +29,14 @@ public class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetw
     private static final String TARGET_HVDC_LINE_ID = "hvdcLine";
 
     private static final OperatingStatus.Status TARGET_HVDC_LINE_STATUS = PLANNED_OUTAGE;
+    private static final OperatingStatus.Status OTHER_HVDC_LINE_STATUS = FORCED_OUTAGE;
+
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force operating status different from the expected one, after testCreate
-        TestUtils.setOperatingStatus(network, TARGET_HVDC_LINE_ID, TARGET_HVDC_LINE_STATUS);
+        TestUtils.setOperatingStatus(network, TARGET_HVDC_LINE_ID, OTHER_HVDC_LINE_STATUS);
         return network;
     }
 
@@ -63,7 +66,7 @@ public class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetw
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         // go back to init status
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, TARGET_HVDC_LINE_STATUS);
+        TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, OTHER_HVDC_LINE_STATUS);
     }
 
     @Override

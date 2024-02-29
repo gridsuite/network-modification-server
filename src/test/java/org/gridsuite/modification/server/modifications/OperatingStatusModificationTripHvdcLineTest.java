@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import lombok.SneakyThrows;
@@ -14,12 +15,14 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.junit.Assert;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Map;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
+import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
@@ -28,12 +31,13 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
     private static final String TARGET_HVDC_LINE_ID = "hvdcLine";
 
     private static final OperatingStatus.Status TARGET_HVDC_LINE_STATUS = FORCED_OUTAGE;
+    private static final OperatingStatus.Status OTHER_HVDC_LINE_STATUS = PLANNED_OUTAGE;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
         // force operating status different from the expected one, after testCreate
-        TestUtils.setOperatingStatus(network, TARGET_HVDC_LINE_ID, TARGET_HVDC_LINE_STATUS);
+        TestUtils.setOperatingStatus(network, TARGET_HVDC_LINE_ID, OTHER_HVDC_LINE_STATUS);
         return network;
     }
 
@@ -58,12 +62,14 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
     @Override
     protected void assertAfterNetworkModificationCreation() {
         TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, TARGET_HVDC_LINE_STATUS);
+        assertTerminalsStatusAfterNetworkModification(false);
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         // go back to init status
-        TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, TARGET_HVDC_LINE_STATUS);
+        TestUtils.assertOperatingStatus(getNetwork(), TARGET_HVDC_LINE_ID, OTHER_HVDC_LINE_STATUS);
+        assertTerminalsStatusAfterNetworkModification(true);
     }
 
     @Override
@@ -84,5 +90,11 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
         assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
         assertEquals("TRIP", updatedValues.get("action"));
         assertEquals("hvdcLineEdited", updatedValues.get("equipmentId"));
+    }
+
+    private void assertTerminalsStatusAfterNetworkModification(boolean shouldBeConnected) {
+        HvdcLine hvdcLine = getNetwork().getHvdcLine(TARGET_HVDC_LINE_ID);
+        Assert.assertEquals(hvdcLine.getConverterStation1().getTerminal().isConnected(), shouldBeConnected);
+        Assert.assertEquals(hvdcLine.getConverterStation2().getTerminal().isConnected(), shouldBeConnected);
     }
 }
