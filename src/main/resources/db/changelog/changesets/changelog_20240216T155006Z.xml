@@ -21,19 +21,19 @@
     <changeSet author="souissimai (generated)" id="1708098615603-32">
         <renameColumn tableName="battery_creation"
                       columnDataType="float(53)"
-                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      oldColumnName="maximum_reactive_power"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-33">
         <renameColumn tableName="battery_modification"
                       columnDataType="float(53)"
-                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      oldColumnName="maximum_reactive_power"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-34">
         <renameColumn tableName="battery_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="MAXIMUM_REACTIVE_POWER_op"
+                      oldColumnName="maximum_reactive_power_op"
                       newColumnName="maxq_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-35">
@@ -57,139 +57,139 @@
     <changeSet author="souissimai (generated)" id="1708098615603-38">
         <renameColumn tableName="battery_creation"
                       columnDataType="float(53)"
-                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      oldColumnName="minimum_reactive_power"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-39">
         <renameColumn tableName="battery_modification"
                       columnDataType="float(53)"
-                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      oldColumnName="minimum_reactive_power"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-40">
         <renameColumn tableName="battery_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="MINIMUM_REACTIVE_POWER_op"
+                      oldColumnName="minimum_reactive_power_op"
                       newColumnName="minq_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-41">
         <renameColumn tableName="battery_creation"
                       columnDataType="float(53)"
-                      oldColumnName="ACTIVE_POWER_SETPOINT"
+                      oldColumnName="active_power_setpoint"
                       newColumnName="targetp" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-42">
         <renameColumn tableName="battery_modification"
                       columnDataType="float(53)"
-                      oldColumnName="ACTIVE_POWER_SETPOINT"
+                      oldColumnName="active_power_setpoint"
                       newColumnName="targetp" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-43">
         <renameColumn tableName="battery_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="ACTIVE_POWER_SETPOINT_op"
+                      oldColumnName="active_power_setpoint_op"
                       newColumnName="targetp_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-44">
         <renameColumn tableName="battery_creation"
                       columnDataType="float(53)"
-                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      oldColumnName="reactive_power_setpoint"
                       newColumnName="targetq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-45">
         <renameColumn tableName="battery_modification"
                       columnDataType="float(53)"
-                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      oldColumnName="reactive_power_setpoint"
                       newColumnName="targetq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-46">
         <renameColumn tableName="battery_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="REACTIVE_POWER_SETPOINT_op"
+                      oldColumnName="reactive_power_setpoint_op"
                       newColumnName="targetq_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-47">
         <renameColumn tableName="battery_creation_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMAXP"
+                      oldColumnName="qmaxp"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-48">
         <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMAXP"
+                      oldColumnName="qmaxp"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-49">
         <renameColumn tableName="converter_station_creation_rcc_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMAXP"
+                      oldColumnName="qmaxp"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-50">
         <renameColumn tableName="generator_creation_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMAXP"
+                      oldColumnName="qmaxp"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-51">
         <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMAXP"
+                      oldColumnName="qmaxp"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-52">
         <renameColumn tableName="battery_creation_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMINP"
+                      oldColumnName="qminp"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-53">
         <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMINP"
+                      oldColumnName="qminp"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-54">
         <renameColumn tableName="converter_station_creation_rcc_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMINP"
+                      oldColumnName="qminp"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-55">
         <renameColumn tableName="generator_creation_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMINP"
+                      oldColumnName="qminp"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-56">
         <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="QMINP"
+                      oldColumnName="qminp"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-57">
         <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="OLD_QMAXP"
+                      oldColumnName="old_qmaxp"
                       newColumnName="old_maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-58">
         <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="OLD_QMAXP"
+                      oldColumnName="old_qmaxp"
                       newColumnName="old_maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-59">
         <renameColumn tableName="battery_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="OLD_QMINP"
+                      oldColumnName="old_qminp"
                       newColumnName="old_minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-60">
         <renameColumn tableName="generator_modification_entity_reactive_capability_curve_points"
                       columnDataType="float(53)"
-                      oldColumnName="OLD_QMINP"
+                      oldColumnName="old_qminp"
                       newColumnName="old_minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-61">
@@ -285,25 +285,25 @@
     <changeSet author="souissimai (generated)" id="1708098615603-76">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="ACTIVE_POWER_SETPOINT_op"
+                      oldColumnName="active_power_setpoint_op"
                       newColumnName="targetp_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-77">
         <renameColumn tableName="generator_creation"
                       columnDataType="float(53)"
-                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      oldColumnName="reactive_power_setpoint"
                       newColumnName="targetq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-78">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
-                      oldColumnName="REACTIVE_POWER_SETPOINT"
+                      oldColumnName="reactive_power_setpoint"
                       newColumnName="targetq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-79">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="REACTIVE_POWER_SETPOINT_op"
+                      oldColumnName="reactive_power_setpoint_op"
                       newColumnName="targetq_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-80">
@@ -315,73 +315,73 @@
     <changeSet author="souissimai (generated)" id="1708098615603-81">
         <renameColumn tableName="generator_creation"
                       columnDataType="float(53)"
-                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      oldColumnName="minimum_reactive_power"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-82">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
-                      oldColumnName="MINIMUM_REACTIVE_POWER"
+                      oldColumnName="minimum_reactive_power"
                       newColumnName="minq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-83">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="MINIMUM_REACTIVE_POWER_op"
+                      oldColumnName="minimum_reactive_power_op"
                       newColumnName="minq_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-84">
         <renameColumn tableName="generator_creation"
                       columnDataType="float(53)"
-                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      oldColumnName="maximum_reactive_power"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-85">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
-                      oldColumnName="MAXIMUM_REACTIVE_POWER"
+                      oldColumnName="maximum_reactive_power"
                       newColumnName="maxq" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-86">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="MAXIMUM_REACTIVE_POWER_op"
+                      oldColumnName="maximum_reactive_power_op"
                       newColumnName="maxq_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-87">
         <renameColumn tableName="generator_creation"
                       columnDataType="float(53)"
-                      oldColumnName="TRANSIENT_REACTANCE"
+                      oldColumnName="transient_reactance"
                       newColumnName="direct_transx" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-88">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
-                      oldColumnName="TRANSIENT_REACTANCE"
+                      oldColumnName="transient_reactance"
                       newColumnName="direct_transx" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-89">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="TRANSIENT_REACTANCE_OP"
+                      oldColumnName="transient_reactance_op"
                       newColumnName="direct_transx_op" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-90">
         <renameColumn tableName="generator_creation"
                       columnDataType="float(53)"
-                      oldColumnName="STEP_UP_TRANSFORMER_REACTANCE"
+                      oldColumnName="step_up_transformer_reactance"
                       newColumnName="step_up_transformerx" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-91">
         <renameColumn tableName="generator_modification"
                       columnDataType="float(53)"
-                      oldColumnName="STEP_UP_TRANSFORMER_REACTANCE"
+                      oldColumnName="step_up_transformer_reactance"
                       newColumnName="step_up_transformerx" />
     </changeSet>
     <changeSet author="souissimai (generated)" id="1708098615603-92">
         <renameColumn tableName="generator_modification"
                       columnDataType="varchar(255)"
-                      oldColumnName="STEP_UP_TRANSFORMER_REACTANCE_OP"
+                      oldColumnName="step_up_transformer_reactance_op"
                       newColumnName="step_up_transformerx_op" />
     </changeSet>
 </databaseChangeLog>
