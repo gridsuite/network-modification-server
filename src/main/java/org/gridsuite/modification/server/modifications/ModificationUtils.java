@@ -550,6 +550,11 @@ public final class ModificationUtils {
                     w3t.getLeg2().getTerminal(),
                     w3t.getLeg3().getTerminal()
             ).toList();
+        } else if (identifiable instanceof HvdcLine hvdcLine) {
+            return Stream.of(
+                    hvdcLine.getConverterStation1().getTerminal(),
+                    hvdcLine.getConverterStation2().getTerminal()
+            ).toList();
         }
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }

@@ -16,6 +16,8 @@ import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import com.powsybl.iidm.network.SwitchKind;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,7 +107,12 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .busbarCount(getBusbarCount())
                 .sectionCount(getSectionCount())
                 .switchKinds(getSwitchKinds())
-                .couplingDevices(couplingDeviceInfos);
+                .couplingDevices(couplingDeviceInfos)
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 
     @Override

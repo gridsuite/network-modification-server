@@ -13,7 +13,7 @@ import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.Branch;
+import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
@@ -98,20 +98,20 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static void assertOperatingStatus(Network network, String branchName, OperatingStatus.Status status) {
+    public static void assertOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
         assertNotNull(network);
-        Branch<?> branch = network.getBranch(branchName);
-        assertNotNull(branch);
-        OperatingStatus operatingStatus = branch.getExtensionByName("operatingStatus");
+        Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
+        assertNotNull(identifiable);
+        OperatingStatus operatingStatus = identifiable.getExtensionByName("operatingStatus");
         assertNotNull(operatingStatus);
         assertEquals(status, operatingStatus.getStatus());
     }
 
     @SuppressWarnings("unchecked")
-    public static void setOperatingStatus(Network network, String branchName, OperatingStatus.Status status) {
-        Branch<?> branch = network.getBranch(branchName);
-        assertNotNull(branch);
-        branch.newExtension(OperatingStatusAdder.class).withStatus(status).add();
+    public static void setOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
+        Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
+        assertNotNull(identifiable);
+        identifiable.newExtension(OperatingStatusAdder.class).withStatus(status).add();
     }
 
     public static String resourceToString(String resource) throws IOException {
