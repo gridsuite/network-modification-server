@@ -22,6 +22,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
+import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
 
@@ -105,7 +106,12 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .lowVoltageLimit(toAttributeModification(getLowVoltageLimit()))
                 .highVoltageLimit(toAttributeModification(getHighVoltageLimit()))
                 .ipMin(toAttributeModification(this.getIpMin()))
-                .ipMax(toAttributeModification(this.getIpMax()));
+                .ipMax(toAttributeModification(this.getIpMax()))
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
 
     }
 }
