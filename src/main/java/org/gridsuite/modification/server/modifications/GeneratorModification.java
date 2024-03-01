@@ -9,16 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.MinMaxReactiveLimits;
-import com.powsybl.iidm.network.MinMaxReactiveLimitsAdder;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ReactiveCapabilityCurve;
-import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
-import com.powsybl.iidm.network.ReactiveLimits;
-import com.powsybl.iidm.network.ReactiveLimitsKind;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
@@ -26,13 +17,9 @@ import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
-import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.GeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
+import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -162,23 +149,6 @@ public class GeneratorModification extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(subReporter, reports, "shortCircuitAttributesModified", "Short-circuit");
     }
 
-    private void modifyGeneratorMinMaxReactiveLimits(GeneratorModificationInfos modificationInfos, Generator generator,
-                                                     Reporter subReporter, Reporter subReporterLimits) {
-        MinMaxReactiveLimits minMaxReactiveLimits = null;
-        ReactiveLimits reactiveLimits = generator.getReactiveLimits();
-        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = generator.newMinMaxReactiveLimits();
-        if (reactiveLimits != null) {
-            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
-            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
-                minMaxReactiveLimits = generator.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
-            }
-        }
-        ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
-                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
-                modificationInfos.getMinimumReactivePower(),
-                modificationInfos.getMaximumReactivePower());
-    }
-
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
                                                               Generator generator, Reporter subReporter, Reporter subReporterLimits) {
         ReactiveCapabilityCurveAdder adder = generator.newReactiveCapabilityCurve();
@@ -242,7 +212,7 @@ public class GeneratorModification extends AbstractModification {
                     && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
                 modifyGeneratorReactiveCapabilityCurvePoints(modificationInfos, generator, subReporter, subReporterLimits);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-                modifyGeneratorMinMaxReactiveLimits(modificationInfos, generator, subReporter, subReporterLimits);
+                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), generator, subReporter, subReporterLimits);
             }
         }
     }

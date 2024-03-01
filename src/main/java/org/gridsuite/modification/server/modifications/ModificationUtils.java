@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.FilterService;
@@ -773,6 +774,23 @@ public final class ModificationUtils {
         if (newValue != null) {
             reports.add(buildModificationReport(oldValue, newValue, fieldName));
         }
+    }
+
+    public void modifyMinMaxReactiveLimits(AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower, ReactiveLimitsHolder reactiveLimitsHolder,
+                                           Reporter subReporter, Reporter subReporterLimits) {
+        MinMaxReactiveLimits minMaxReactiveLimits = null;
+        ReactiveLimits reactiveLimits = reactiveLimitsHolder.getReactiveLimits();
+        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = reactiveLimitsHolder.newMinMaxReactiveLimits();
+        if (reactiveLimits != null) {
+            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
+            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
+                minMaxReactiveLimits = reactiveLimitsHolder.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
+            }
+        }
+        modifyMinMaxReactiveLimits(minMaxReactiveLimits,
+                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
+                minimumReactivePower,
+                maximumReactivePower);
     }
 
     public void modifyMinMaxReactiveLimits(MinMaxReactiveLimits minMaxReactiveLimits, MinMaxReactiveLimitsAdder newMinMaxReactiveLimits,

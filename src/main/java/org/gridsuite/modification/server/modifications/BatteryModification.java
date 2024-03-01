@@ -9,10 +9,13 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Battery;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveCapabilityCurve;
+import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
+import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
@@ -160,26 +163,9 @@ public class BatteryModification extends AbstractModification {
                     && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
                 modifyBatteryReactiveCapabilityCurvePoints(modificationInfos, battery, subReporter, subReporterLimits);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-                modifyBatteryMinMaxReactiveLimits(modificationInfos, battery, subReporter, subReporterLimits);
+                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), battery, subReporter, subReporterLimits);
             }
         }
-    }
-
-    private void modifyBatteryMinMaxReactiveLimits(BatteryModificationInfos modificationInfos, Battery battery,
-                                                   Reporter subReporter, Reporter subReporterLimits) {
-        MinMaxReactiveLimits minMaxReactiveLimits = null;
-        ReactiveLimits reactiveLimits = battery.getReactiveLimits();
-        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = battery.newMinMaxReactiveLimits();
-        if (reactiveLimits != null) {
-            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
-            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
-                minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
-            }
-        }
-        ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
-                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
-                modificationInfos.getMinimumReactivePower(),
-                modificationInfos.getMaximumReactivePower());
     }
 
     private Reporter modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,

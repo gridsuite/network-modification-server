@@ -8,7 +8,6 @@ import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
-import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import io.micrometer.common.lang.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ConverterStationModificationInfos;
@@ -268,26 +267,9 @@ public class VscModification extends AbstractModification {
                     && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
                 modifyVscReactiveCapabilityCurvePoints(modificationInfos, vscConverterStation, subReporter, subReporterLimits);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-                modifyVscConverterStationMinMaxReactiveLimits(modificationInfos, vscConverterStation, subReporter, subReporterLimits);
+                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), vscConverterStation, subReporter, subReporterLimits);
             }
         }
-    }
-
-    private void modifyVscConverterStationMinMaxReactiveLimits(ConverterStationModificationInfos modificationInfos, VscConverterStation vscConverterStation,
-                                                               Reporter subReporter, Reporter subReporterLimits) {
-        MinMaxReactiveLimits minMaxReactiveLimits = null;
-        ReactiveLimits reactiveLimits = vscConverterStation.getReactiveLimits();
-        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = vscConverterStation.newMinMaxReactiveLimits();
-        if (reactiveLimits != null) {
-            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
-            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
-                minMaxReactiveLimits = vscConverterStation.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
-            }
-        }
-        ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
-                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
-                modificationInfos.getMinimumReactivePower(),
-                modificationInfos.getMaximumReactivePower());
     }
 
 }
