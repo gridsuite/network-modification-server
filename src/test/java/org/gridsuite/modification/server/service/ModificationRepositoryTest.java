@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -450,22 +451,35 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void insertModificationTest() {
+    public void testMoveModificationInSameGroup() {
+        // use a group Tabular modification
+        List<ModificationInfos> groupModifications = List.of(
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build()
+        );
+        ModificationEntity tabularModificationEntity = TabularModificationInfos.builder()
+                .modificationType(ModificationType.GENERATOR_MODIFICATION)
+                .modifications(groupModifications)
+                .stashed(false)
+                .build()
+                .toEntity();
+        // and 5 script modifications
         var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
         var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
         var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
         var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
         var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
-        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("scriptSaucisse").build().toEntity();
-        List<ModificationEntity> modificationEntities = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, groovyScriptEntity6);
 
+        List<ModificationEntity> modificationEntities = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, modificationEntities);
-        assertRequestsCount(1, 3, 1, 0);
+        assertRequestsCount(1, 8, 1, 0);
 
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity6.getId()), groovyScriptEntity2.getId());
+        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(tabularModificationEntity.getId()), groovyScriptEntity2.getId());
         // JPA/Hibernates may use a temp table to execute subqueries, where 1 insert/delete pair can be made for 1 update
         // (see https://stackoverflow.com/questions/40809645/jpa-hibernate-is-creating-temporary-tables-for-a-simple-update-query)
         // This is the case here for modifications_order or group column update.
@@ -480,7 +494,7 @@ public class ModificationRepositoryTest {
         assertEquals(getIds(expected), getIds(modification));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity3.getId(), groovyScriptEntity6.getId()), null);
+        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity3.getId(), tabularModificationEntity.getId()), null);
         assertRequestsCount(2, nbModificationToUpdateInGroup, nbModificationToUpdateInGroup, nbModificationToUpdateInGroup);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
