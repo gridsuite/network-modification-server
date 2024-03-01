@@ -17,6 +17,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,7 +38,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // TODO later
+        assertThat(impacts).containsExactly(createCollectionElementImpact(getIdentifiableType()));
     }
 
     @Test

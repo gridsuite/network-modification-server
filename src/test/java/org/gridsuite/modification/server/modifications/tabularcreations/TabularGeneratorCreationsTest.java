@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications.tabularcreations;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.EnergySource;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
@@ -16,6 +17,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.TabularCreationInfos;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
@@ -29,7 +31,9 @@ import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -154,6 +158,11 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
         assertNull(getNetwork().getGenerator("id2"));
         assertNull(getNetwork().getGenerator("id3"));
         assertNull(getNetwork().getGenerator("id4"));
+    }
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.GENERATOR));
     }
 
     @Test

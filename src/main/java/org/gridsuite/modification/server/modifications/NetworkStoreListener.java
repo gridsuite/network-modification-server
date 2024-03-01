@@ -45,7 +45,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
-    private Integer collectionThreshold;
+    private final Integer collectionThreshold;
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService, Integer collectionThreshold) {
@@ -311,14 +311,14 @@ public class NetworkStoreListener implements NetworkListener {
         );
 
         // Impacts type simple for deletion only
-        reducedImpacts.addAll(simpleImpacts.stream().filter(i -> i.getSimpleImpactType() == SimpleImpactType.DELETION).distinct().toList());
+        reducedImpacts.addAll(simpleImpacts.stream().filter(i -> i.isDeletion()).distinct().toList());
 
         return reducedImpacts;
     }
 
     private List<SimpleElementImpact> getSimpleImpacts(IdentifiableType elementType) {
         return simpleImpacts.stream()
-                .filter(i -> i.getSimpleImpactType() != SimpleImpactType.DELETION && i.getElementType() == elementType)
+                .filter(i -> !i.isDeletion() && i.getElementType() == elementType)
                 .distinct()
                 .toList();
     }

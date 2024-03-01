@@ -13,7 +13,6 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createMo
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -68,7 +67,7 @@ public class ElementImpactTest {
 
         assertEquals("[s1, s2, s3, s4]", result.getImpactedSubstationsIds().toString());
 
-        HashSet<AbstractBaseImpact> impactsSet = new HashSet<>(List.of(creationImpact, creationImpact, creationImpact));
+        Set<AbstractBaseImpact> impactsSet = Set.copyOf(List.of(creationImpact, creationImpact, creationImpact));
 
         assertEquals("[{\"type\":\"SIMPLE\",\"elementType\":\"LINE\",\"simpleImpactType\":\"CREATION\",\"elementId\":\"lineId\",\"substationIds\":[\"s1\",\"s2\"]}]", mapper.writeValueAsString(impactsSet));
     }
@@ -96,7 +95,7 @@ public class ElementImpactTest {
 
         assertEquals(Set.of(), result.getImpactedSubstationsIds());
 
-        HashSet<AbstractBaseImpact> impactsSet = new HashSet<>(List.of(linesCollectionImpact, linesCollectionImpact, linesCollectionImpact));
+        Set<AbstractBaseImpact> impactsSet = Set.copyOf(List.of(linesCollectionImpact, linesCollectionImpact, linesCollectionImpact));
 
         assertEquals("[{\"type\":\"COLLECTION\",\"elementType\":\"LINE\"}]", mapper.writeValueAsString(impactsSet));
     }

@@ -160,7 +160,7 @@ public final class TestImpactUtils {
         List<AbstractBaseImpact> impacts = new ArrayList<>();
         if (type == SimpleImpactType.DELETION) {
             List<SimpleElementImpact> switchImpacts = List.of(
-                createElementImpact(SimpleImpactType.DELETION, branchType, branchId, new HashSet<>(List.of(substationId1, substationId2))),
+                createElementImpact(SimpleImpactType.DELETION, branchType, branchId, Set.copyOf(List.of(substationId1, substationId2))),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId2, Set.of(substationId2)),

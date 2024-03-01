@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact.ImpactType;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.List;
@@ -54,7 +53,7 @@ public class NetworkModificationResult {
 
     public Set<String> getImpactedSubstationsIds() {
         return networkImpacts.stream()
-            .filter(impact -> impact.getType() == ImpactType.SIMPLE)
+            .filter(impact -> impact.isSimple())
             .flatMap(impact -> ((SimpleElementImpact) impact).getSubstationIds().stream())
             .collect(Collectors.toCollection(TreeSet::new)); // using TreeSet to keep natural order
     }

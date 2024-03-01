@@ -52,14 +52,16 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
+    @Value("${impacts.collection-threshold:50}")
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService, @Value("${impacts.collection-threshold:50}") Integer collectionThreshold) {
+                                         ReportService reportService, FilterService filterService, /*TODO REMOVE*/ Integer collectionThreshold) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
+        // TODO REMOVE from constructor when VoltageInitReportTest becomes a @SpringBootTest
         this.collectionThreshold = collectionThreshold;
     }
 
