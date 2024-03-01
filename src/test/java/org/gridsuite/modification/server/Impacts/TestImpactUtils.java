@@ -59,14 +59,14 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult).recursivelyEquals(resultExpected);
     }
 
-    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, int nbImpacts, Set<IdentifiableType> collectionImpactElementTypes, Set<String> substationIds) throws JsonProcessingException {
+    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, int nbImpacts, Set<IdentifiableType> elementTypes, Set<String> substationIds) throws JsonProcessingException {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
 
         assertEquals(ApplicationStatus.ALL_OK, networkModificationResult.get().getApplicationStatus());
         assertEquals(new TreeSet<>(substationIds), networkModificationResult.get().getImpactedSubstationsIds());
         assertEquals(nbImpacts, networkModificationResult.get().getNetworkImpacts().size());
-        assertThat(networkModificationResult.get().getNetworkImpacts()).containsAll(collectionImpactElementTypes.stream().map(TestImpactUtils::createCollectionElementImpact).toList());
+        assertThat(networkModificationResult.get().getNetworkImpacts()).containsAll(elementTypes.stream().map(TestImpactUtils::createCollectionElementImpact).toList());
     }
 
     public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<AbstractBaseImpact> elementImpactsExpected) throws JsonProcessingException {
