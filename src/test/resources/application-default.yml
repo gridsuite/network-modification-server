@@ -11,7 +11,7 @@ spring:
       #to turn off schema validation that fails (because of clob types) and blocks tests even if the schema is compatible
       ddl-auto: none
 logging:
-  level: 
+  level:
     org.springframework.orm.jpa: INFO
     org.springframework.transaction: INFO
     org.hibernate.SQL: INFO
