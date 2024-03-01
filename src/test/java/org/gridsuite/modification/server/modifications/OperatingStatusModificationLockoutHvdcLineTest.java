@@ -31,7 +31,6 @@ public class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetw
     private static final OperatingStatus.Status TARGET_HVDC_LINE_STATUS = PLANNED_OUTAGE;
     private static final OperatingStatus.Status OTHER_HVDC_LINE_STATUS = FORCED_OUTAGE;
 
-
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
