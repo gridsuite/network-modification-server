@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,6 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithErrors() throws Exception {
@@ -65,7 +69,8 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
             .busOrBusbarSectionId("bus2")
             .connectionName("cn2")
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
-            .build();
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .build();
     }
 
     @Override
@@ -88,6 +93,8 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getShuntCompensator("shuntOneId"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getShuntCompensator("shuntOneId").getProperty(PROPERTY_NAME));
+
     }
 
     @Override
