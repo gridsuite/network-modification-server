@@ -15,6 +15,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -93,8 +94,12 @@ public class LineModificationEntity extends BranchModificationEntity {
             .g1(toAttributeModification(getG1()))
             .b1(toAttributeModification(getB1()))
             .g2(toAttributeModification(getG2()))
-            .b2(toAttributeModification(getB2()));
-
+            .b2(toAttributeModification(getB2()))
+             // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
         }

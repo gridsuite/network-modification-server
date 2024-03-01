@@ -12,6 +12,8 @@ import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -86,7 +88,12 @@ public class LineCreationEntity extends BranchCreationEntity {
             .g1(getG1())
             .b1(getB1())
             .g2(getG2())
-            .b2(getB2());
+            .b2(getB2())
+             // properties
+             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

@@ -25,6 +25,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
 
@@ -112,6 +113,11 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .maxQAtNominalV(toAttributeModification(getMaxQAtNominalV()))
                 .maxSusceptance(toAttributeModification(getMaxSusceptance()))
                 .maximumSectionCount(toAttributeModification(getMaximumSectionCount()))
-                .sectionCount(toAttributeModification(getSectionCount()));
+                .sectionCount(toAttributeModification(getSectionCount()))
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }
