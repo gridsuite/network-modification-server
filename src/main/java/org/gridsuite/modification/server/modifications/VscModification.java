@@ -98,13 +98,6 @@ public class VscModification extends AbstractModification {
         modifyConverterStation(network, modificationInfos.getConverterStation1(), subReporter);
         modifyConverterStation(network, modificationInfos.getConverterStation2(), subReporter);
 
-        subReporter.report(Report.builder()
-                .withKey("vscModification")
-                .withDefaultMessage("Vsc with id=${id} modified :")
-                .withValue("id", modificationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
-
     }
 
     private static void operatorActivePowerLimit(HvdcLine hvdcLine, VscModificationInfos modificationInfos, Reporter subReporter) {
@@ -224,7 +217,9 @@ public class VscModification extends AbstractModification {
             return;
         }
         VscConverterStation converterStation = ModificationUtils.getInstance().getVscConverterStation(network, converterStationModificationInfos.getEquipmentId());
-
+        if (!isConverterStationModified(converterStationModificationInfos)) {
+            return;
+        }
         Reporter converterStationReporter = subReporter.createSubReporter("Converter Station", "Converter station ${id} modified", "id", converterStation.getId());
         converterStationReporter.report(Report.builder()
                 .withKey("converter station modification")
@@ -253,6 +248,14 @@ public class VscModification extends AbstractModification {
         }
 
         modifyVscReactiveLimitsAttributes(converterStationModificationInfos, converterStation, converterStationReporter, converterStationReporter);
+    }
+
+    private boolean isConverterStationModified(ConverterStationModificationInfos converterStationModificationInfos) {
+        return converterStationModificationInfos.getEquipmentName() != null && converterStationModificationInfos.getEquipmentName().getValue() != null || converterStationModificationInfos.getLossFactor() != null
+                || converterStationModificationInfos.getReactivePower() != null
+                || converterStationModificationInfos.getVoltageRegulationOn() != null
+                || converterStationModificationInfos.getVoltage() != null || converterStationModificationInfos.getReactiveCapabilityCurvePoints() != null
+                || converterStationModificationInfos.getMinimumReactivePower() != null || converterStationModificationInfos.getMaximumReactivePower() != null;
     }
 
     private void modifyVscReactiveCapabilityCurvePoints(ConverterStationModificationInfos modificationInfos,
