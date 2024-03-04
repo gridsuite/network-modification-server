@@ -157,20 +157,16 @@ public final class TestImpactUtils {
     private static List<AbstractBaseImpact> createBranchImpacts(SimpleImpactType type, IdentifiableType branchType, String branchId,
                                                                  String breakerId1, String disconnectorId1, String substationId1,
                                                                  String breakerId2, String disconnectorId2, String substationId2) {
-        List<AbstractBaseImpact> impacts = new ArrayList<>();
         if (type == SimpleImpactType.DELETION) {
-            List<SimpleElementImpact> switchImpacts = List.of(
+            return List.of(
                 createElementImpact(SimpleImpactType.DELETION, branchType, branchId, Set.copyOf(List.of(substationId1, substationId2))),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId2, Set.of(substationId2)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId2, Set.of(substationId2))
             );
-            impacts.addAll(0, switchImpacts);
-        } else {
-            impacts.addAll(createSubstationImpacts(Set.copyOf(List.of(substationId1, substationId2))));
         }
-        return impacts;
+        return createSubstationImpacts(Set.copyOf(List.of(substationId1, substationId2)));
     }
 
     public static void test3WTDeletionImpacts(ObjectMapper mapper, String resultAsString, String w3tId,
