@@ -11,11 +11,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -56,6 +61,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection2(ConnectablePosition.Direction.TOP)
             .connectionPosition1(0)
             .connectionPosition2(0)
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -87,6 +93,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLine("idLine1").getProperty(PROPERTY_NAME));
+
     }
 
     @Override

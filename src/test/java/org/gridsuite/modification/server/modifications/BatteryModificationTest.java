@@ -31,6 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class BatteryModificationTest extends AbstractInjectionModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -54,6 +57,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -96,6 +100,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                         assertEquals(modificationPoint.getP(), point.getP());
                     });
         }
+        assertEquals(PROPERTY_VALUE, getNetwork().getBattery("v3Battery").getProperty(PROPERTY_NAME));
     }
 
     @Override

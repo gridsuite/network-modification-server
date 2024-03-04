@@ -147,6 +147,11 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .participate(toAttributeModification(getParticipate()))
                 .droop(toAttributeModification(getDroop()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(points);
+                .reactiveCapabilityCurvePoints(points)
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }
