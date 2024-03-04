@@ -48,7 +48,7 @@ public class ElementImpactTest {
         assertTrue(creationImpact.isSimple());
         assertTrue(creationImpact.isCreation());
         assertTrue(modificationImpact.isModification());
-        assertTrue(creationImpact.isDeletion());
+        assertTrue(deletionImpact.isDeletion());
 
         List<AbstractBaseImpact> impacts = List.of(creationImpact, modificationImpact, deletionImpact);
 
