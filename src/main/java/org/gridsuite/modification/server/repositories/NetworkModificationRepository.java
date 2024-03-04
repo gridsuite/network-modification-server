@@ -101,9 +101,10 @@ public class NetworkModificationRepository {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
             }
             // re-organize the origin list
-            List<ModificationEntity> removedModifications = modificationsToMoveUUID.stream().map(originModifications::remove).toList();
-            updateModificationsOrder(createNewModificationList(removedModifications, originModifications, referenceModificationUuid));
-            return List.of();
+            List<ModificationEntity> modificationsToMove = modificationsToMoveUUID.stream().map(originModifications::remove).toList();
+            List<ModificationEntity> newModificationList = newListWithInsertedModifications(modificationsToMove, originModifications, referenceModificationUuid);
+            updateModificationsOrder(newModificationList);
+            return modificationsToMove;
         } else { // 2-group case
             // if destination is empty, group does not exist then we must create it
             getOrCreateModificationGroup(destinationGroupUuid);
@@ -116,22 +117,23 @@ public class NetworkModificationRepository {
                 throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
             }
             // update origin list
-            List<ModificationEntity> removedModifications = modificationsToMoveUUID.stream().map(originModifications::remove).toList();
-            updateModificationsOrder(originModifications.values());
+            List<ModificationEntity> modificationsToMove = modificationsToMoveUUID.stream().map(originModifications::remove).toList();
+            updateModificationsOrder(originModifications.values().stream().toList());
             // update destination list
-            updateModificationsOrder(createNewModificationList(removedModifications, destinationModifications, referenceModificationUuid));
+            List<ModificationEntity> newDestinationModificationList = newListWithInsertedModifications(modificationsToMove, destinationModifications, referenceModificationUuid);
+            updateModificationsOrder(newDestinationModificationList);
             // change the owner group for moved modifications
             modificationsToMoveUUID.forEach(modifId -> this.modificationRepository.setGroupById(destinationGroupUuid, modifId));
-            return removedModifications;
+            return modificationsToMove;
         }
     }
 
-    private void updateModificationsOrder(Collection<ModificationEntity> modifications) {
+    private void updateModificationsOrder(List<ModificationEntity> modifications) {
         AtomicInteger index = new AtomicInteger(0);
         modifications.forEach(m -> this.modificationRepository.setOrderById(index.getAndIncrement(), m.getId()));
     }
 
-    private List<ModificationEntity> createNewModificationList(List<ModificationEntity> modificationsToAdd, Map<UUID, ModificationEntity> modifications, UUID referenceModificationUuid) {
+    private List<ModificationEntity> newListWithInsertedModifications(final List<ModificationEntity> modificationsToAdd, final Map<UUID, ModificationEntity> modifications, final UUID referenceModificationUuid) {
         List<ModificationEntity> newModificationList = new ArrayList<>(modifications.values());
         /* when referenceModification == null we append at the end of list, otherwise we insert before referenceModification */
         int index = referenceModificationUuid == null ? newModificationList.size() : newModificationList.indexOf(modifications.get(referenceModificationUuid));
@@ -183,7 +185,7 @@ public class NetworkModificationRepository {
         }
     }
 
-    public List<ModificationEntity> getModificationsMetadataEntities(UUID groupUuid, boolean onlyStashed) {
+    private List<ModificationEntity> getModificationsMetadataEntities(UUID groupUuid, boolean onlyStashed) {
         Stream<ModificationEntity> modificationEntityStream = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
