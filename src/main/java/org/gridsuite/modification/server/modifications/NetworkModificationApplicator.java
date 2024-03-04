@@ -15,6 +15,7 @@ import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -53,16 +54,15 @@ public class NetworkModificationApplicator {
     @Getter private final FilterService filterService;
 
     @Value("${impacts.collection-threshold:50}")
+    @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService, /*TODO REMOVE*/ Integer collectionThreshold) {
+                                         ReportService reportService, FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
-        // TODO REMOVE from constructor when VoltageInitReportTest becomes a @SpringBootTest
-        this.collectionThreshold = collectionThreshold;
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {

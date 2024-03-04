@@ -311,7 +311,7 @@ public class NetworkStoreListener implements NetworkListener {
         );
 
         // Impacts type simple for deletion only
-        reducedImpacts.addAll(simpleImpacts.stream().filter(i -> i.isDeletion()).distinct().toList());
+        reducedImpacts.addAll(simpleImpacts.stream().filter(SimpleElementImpact::isDeletion).distinct().toList());
 
         return reducedImpacts;
     }

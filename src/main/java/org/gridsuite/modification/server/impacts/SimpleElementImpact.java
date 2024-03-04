@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 @SuperBuilder
 @Data
+@ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
