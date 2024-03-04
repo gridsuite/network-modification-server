@@ -11,6 +11,7 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCr
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createDeletionImpactType;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createModificationImpactType;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,6 +44,11 @@ public class ElementImpactTest {
         SimpleElementImpact creationImpact = createCreationImpactType(IdentifiableType.LINE, "lineId", new TreeSet<>(List.of("s1", "s2")));
         SimpleElementImpact modificationImpact = createModificationImpactType(IdentifiableType.LOAD, "loadId", new TreeSet<>(List.of("s3")));
         SimpleElementImpact deletionImpact = createDeletionImpactType(IdentifiableType.GENERATOR, "generatorId", new TreeSet<>(List.of("s4")));
+
+        assertTrue(creationImpact.isSimple());
+        assertTrue(creationImpact.isCreation());
+        assertTrue(modificationImpact.isModification());
+        assertTrue(creationImpact.isDeletion());
 
         List<AbstractBaseImpact> impacts = List.of(creationImpact, modificationImpact, deletionImpact);
 
@@ -79,6 +85,8 @@ public class ElementImpactTest {
         CollectionElementImpact linesCollectionImpact = createCollectionElementImpact(IdentifiableType.LINE);
         CollectionElementImpact loadsCollectionImpact = createCollectionElementImpact(IdentifiableType.LOAD);
         CollectionElementImpact generatorsCollectionImpact = createCollectionElementImpact(IdentifiableType.GENERATOR);
+
+        assertTrue(linesCollectionImpact.isCollection());
 
         assertEquals("{\"type\":\"COLLECTION\",\"elementType\":\"LINE\"}", mapper.writeValueAsString(linesCollectionImpact));
         assertEquals("{\"type\":\"COLLECTION\",\"elementType\":\"LOAD\"}", mapper.writeValueAsString(loadsCollectionImpact));
