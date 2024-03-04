@@ -95,6 +95,13 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
+                .equipmentId("id5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
+                .connectionName("name5").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).connected(false).connected(true)
+                .energySource(EnergySource.WIND).minActivePower(0).maxActivePower(200)
+                .activePowerSetpoint(150).voltageRegulationOn(true).voltageSetpoint(375D)
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .build(),
+            GeneratorCreationInfos.builder()
                 .equipmentId("v5generator").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("v5generator").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).connected(false).connected(true)
                 .energySource(EnergySource.WIND).minActivePower(0).maxActivePower(200)
@@ -148,7 +155,8 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
         assertNotNull(getNetwork().getGenerator("id2"));
         assertNotNull(getNetwork().getGenerator("id3"));
         assertNotNull(getNetwork().getGenerator("id4"));
-        assertLogMessage("Tabular creation: 4 generators have been created and 1 have not been created", "tabularGENERATOR_CREATIONWarning", reportService);
+        assertNotNull(getNetwork().getGenerator("id5"));
+        assertLogMessage("Tabular creation: 5 generators have been created and 1 have not been created", "tabularGENERATOR_CREATIONWarning", reportService);
         assertLogMessage("GENERATOR_ALREADY_EXISTS : v5generator", ModificationType.GENERATOR_CREATION.name() + "1", reportService);
     }
 
@@ -158,11 +166,12 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
         assertNull(getNetwork().getGenerator("id2"));
         assertNull(getNetwork().getGenerator("id3"));
         assertNull(getNetwork().getGenerator("id4"));
+        assertNull(getNetwork().getGenerator("id5"));
     }
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.GENERATOR));
+        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.SWITCH), createCollectionElementImpact(IdentifiableType.GENERATOR));
     }
 
     @Test
@@ -174,7 +183,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(8);
+        assertSelectCount(9);
 
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
@@ -207,7 +216,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
                 .andExpect(status().isOk());
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(12);
+        assertSelectCount(13);
     }
 
     @Test

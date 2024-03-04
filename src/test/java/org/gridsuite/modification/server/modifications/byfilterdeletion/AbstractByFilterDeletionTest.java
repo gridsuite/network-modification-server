@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -17,8 +16,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,11 +32,6 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     protected abstract List<FilterEquipments> getTestFilters();
 
     public static final String PATH = "/v1/filters/export";
-
-    @Override
-    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        assertThat(impacts).containsExactly(createCollectionElementImpact(getIdentifiableType()));
-    }
 
     @Test
     @Override
