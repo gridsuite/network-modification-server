@@ -459,6 +459,21 @@ public class ModificationControllerTest {
         return modificationList;
     }
 
+    private ModificationInfos createDeletionModification(UUID groupId, IdentifiableType equipmentType, String equipmentName) throws Exception {
+        EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
+                .equipmentType(equipmentType)
+                .equipmentId(equipmentName)
+                .build();
+        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + "&groupUuid=" + groupId + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID())
+                            .content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        var modificationList = modificationRepository.getModifications(groupId, true, true);
+        assertFalse(modificationList.isEmpty());
+        return modificationList.get(modificationList.size() - 1);
+    }
+
     @Test
     public void testCopyModification() throws Exception {
         // create 3 modifications
@@ -656,15 +671,21 @@ public class ModificationControllerTest {
 
     @Test
     public void testMoveModificationBetweenTwoGroups() throws Exception {
-        // create 1 modification in destination group
-        List<UUID> destinationModificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 1).
-                stream().map(ModificationInfos::getUuid).toList();
-        // create 2 modifications in origin group
-        List<UUID> originModificationUuidList = createSomeSwitchModifications(TEST_GROUP2_ID, 2).
-                stream().map(ModificationInfos::getUuid).toList();
+        String substationS3 = network.getLoad("v5load").getTerminal().getVoltageLevel().getSubstation().get().getId();
+        String substationS1 = network.getLoad("v1load").getTerminal().getVoltageLevel().getSubstation().get().getId();
+        assertEquals("s3", substationS3);
+        assertEquals("s1", substationS1);
 
-        // cut origin[1] and append to destination
-        List<UUID> movingModificationUuidList = Collections.singletonList(originModificationUuidList.get(1));
+        // create 4 modifications in destination group (3 switch updates + 1 load deletion in s3)
+        List<UUID> destinationModificationUuidList = ListUtils.union(
+                createSomeSwitchModifications(TEST_GROUP_ID, 3).stream().map(ModificationInfos::getUuid).toList(),
+                List.of(createDeletionModification(TEST_GROUP_ID, IdentifiableType.LOAD, "v5load").getUuid())
+                );
+        // create 1 modification in origin group (1 load deletion in s1)
+        UUID originSingleModification = createDeletionModification(TEST_GROUP2_ID, IdentifiableType.LOAD, "v1load").getUuid();
+
+        // cut origin[0] and append to destination
+        List<UUID> movingModificationUuidList = Collections.singletonList(originSingleModification);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
                 + "&networkUuid=" + TEST_NETWORK_ID
                 + "&reportUuid=" + TEST_REPORT_ID
@@ -673,15 +694,25 @@ public class ModificationControllerTest {
                 + "&originGroupUuid=" + TEST_GROUP2_ID
                 + "&build=true";
 
-        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+        MvcResult mvcResult = mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+        assertThat(networkModificationResult.get().getNetworkImpacts())
+                .allSatisfy(i -> {
+                    assertEquals(Set.of(substationS1), i.getSubstationIds());
+                    assertEquals(SimpleElementImpact.SimpleImpactType.DELETION, i.getImpactType());
+                });
 
         // check destination
         var newDestinationModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         assertNotNull(newDestinationModificationUuidList);
-        // Expect: 2 existing + the moved one
+        // Expect: existing list + the moved one
         List<UUID> expectedDestinationModificationUuidList = ListUtils.union(destinationModificationUuidList, movingModificationUuidList);
         assertEquals(expectedDestinationModificationUuidList, newDestinationModificationUuidList);
 
@@ -689,9 +720,8 @@ public class ModificationControllerTest {
         var newOriginModificationUuidList = modificationRepository.getModifications(TEST_GROUP2_ID, true, true).
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         assertNotNull(newOriginModificationUuidList);
-        // Expect: origin[0] only
-        List<UUID> expectedOriginModificationUuidList = Collections.singletonList(originModificationUuidList.get(0));
-        assertEquals(expectedOriginModificationUuidList, newOriginModificationUuidList);
+        // Expect: empty
+        assertEquals(List.of(), newOriginModificationUuidList);
     }
 
     @Test
