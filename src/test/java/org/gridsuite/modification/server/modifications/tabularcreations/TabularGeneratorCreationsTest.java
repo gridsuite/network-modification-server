@@ -97,8 +97,8 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
             GeneratorCreationInfos.builder()
                 .equipmentId("id5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("name5").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).connected(false).connected(true)
-                .energySource(EnergySource.WIND).minActivePower(0).maxActivePower(200)
-                .activePowerSetpoint(150).voltageRegulationOn(true).voltageSetpoint(375D)
+                .energySource(EnergySource.WIND).minP(0).maxP(200)
+                .targetP(150).voltageRegulationOn(true).targetV(375D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
