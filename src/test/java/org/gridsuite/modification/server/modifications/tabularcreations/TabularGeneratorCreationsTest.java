@@ -105,10 +105,6 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
             .build();
     }
 
-
-
-
-
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> creations = List.of(
