@@ -3,26 +3,29 @@
   "lastGroupApplicationStatus": "WITH_ERRORS",
   "networkImpacts": [
     {
-      "impactType": "CREATION",
-      "elementId": "lineId",
+      "type": "SIMPLE",
       "elementType": "LINE",
+      "simpleImpactType": "CREATION",
+      "elementId": "lineId",
       "substationIds": [
         "s1",
         "s2"
       ]
     },
     {
-      "impactType": "MODIFICATION",
-      "elementId": "loadId",
+      "type": "SIMPLE",
       "elementType": "LOAD",
+      "simpleImpactType": "MODIFICATION",
+      "elementId": "loadId",
       "substationIds": [
         "s3"
       ]
     },
     {
-      "impactType": "DELETION",
-      "elementId": "generatorId",
+      "type": "SIMPLE",
       "elementType": "GENERATOR",
+      "simpleImpactType": "DELETION",
+      "elementId": "generatorId",
       "substationIds": [
         "s4"
       ]
