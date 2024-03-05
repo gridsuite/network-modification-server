@@ -9,14 +9,14 @@ package org.gridsuite.modification.server.modifications;
 import com.google.common.collect.Iterables;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,25 +43,22 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final List<EquipmentInfos> modifiedEquipments = new ArrayList<>();
 
-    private final Set<SimpleElementImpact> networkImpacts = new LinkedHashSet<>();
+    private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
-    // TODO : Move to the NetworkModificationApplicator class
-    @Setter
-    private ApplicationStatus applicationStatus;
-    @Setter
-    private ApplicationStatus lastGroupApplicationStatus;
+    private final Integer collectionThreshold;
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
-                                   NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService) {
+                                   NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService, Integer collectionThreshold) {
         this.network = network;
         this.networkUuid = networkUuid;
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
+        this.collectionThreshold = collectionThreshold;
     }
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
-                                              EquipmentInfosService equipmentInfosService) {
-        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService);
+                                              EquipmentInfosService equipmentInfosService, Integer collectionThreshold) {
+        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService, collectionThreshold);
         network.addListener(listener);
         return listener;
     }
@@ -96,13 +93,13 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
-        networkImpacts.add(
+        simpleImpacts.add(
                 SimpleElementImpact.builder()
-                        .impactType(SimpleElementImpact.SimpleImpactType.MODIFICATION)
-                        .elementType(identifiable.getType())
-                        .elementId(identifiable.getId())
-                        .substationIds(getSubstationIds(identifiable))
-                        .build()
+                    .simpleImpactType(SimpleImpactType.MODIFICATION)
+                    .elementType(identifiable.getType())
+                    .elementId(identifiable.getId())
+                    .substationIds(getSubstationIds(identifiable))
+                    .build()
         );
     }
 
@@ -194,9 +191,9 @@ public class NetworkStoreListener implements NetworkListener {
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
             .build());
-        networkImpacts.add(
+        simpleImpacts.add(
             SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.CREATION)
+                .simpleImpactType(SimpleImpactType.CREATION)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -207,9 +204,9 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         deletedEquipmentsIds.add(identifiable.getId());
-        networkImpacts.add(
+        simpleImpacts.add(
             SimpleElementImpact.builder()
-                .impactType(SimpleElementImpact.SimpleImpactType.DELETION)
+                .simpleImpactType(SimpleImpactType.DELETION)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -222,7 +219,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public NetworkModificationResult flushNetworkModifications() {
+    public List<AbstractBaseImpact> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
             flushEquipmentInfos();
@@ -231,13 +228,7 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        // TODO : Move to the NetworkModificationApplicator class
-        return
-            NetworkModificationResult.builder()
-                .applicationStatus(applicationStatus)
-                .lastGroupApplicationStatus(lastGroupApplicationStatus)
-                .networkImpacts(new ArrayList<>(networkImpacts))
-                .build();
+        return flushNetworkImpacts();
     }
 
     private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
@@ -275,4 +266,61 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.addAllEquipmentInfos(createdEquipments);
         equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
     }
+
+    private List<AbstractBaseImpact> flushNetworkImpacts() {
+        if (isAllNetworkImpacted()) {
+            return List.of(CollectionElementImpact.builder()
+                    .elementType(IdentifiableType.SUBSTATION)
+                    .build());
+        }
+
+        return reduceNetworkImpacts();
+    }
+
+    private boolean isAllNetworkImpacted() {
+        Set<String> allImpactedSubstationsIds = simpleImpacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet());
+        return allImpactedSubstationsIds.size() >= collectionThreshold;
+    }
+
+    private List<AbstractBaseImpact> reduceNetworkImpacts() {
+        List<AbstractBaseImpact> reducedImpacts = new ArrayList<>();
+        Set<String> impactedSubstationsIds = new HashSet<>();
+
+        // Impacts type collection
+        for (IdentifiableType elementType : IdentifiableType.values()) {
+            List<SimpleElementImpact> impacts = getSimpleImpacts(elementType);
+            if (impacts.size() >= collectionThreshold) {
+                reducedImpacts.add(CollectionElementImpact.builder()
+                    .elementType(elementType)
+                    .build());
+            } else {
+                impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
+            }
+        }
+
+        // Impacts type simple for substation only
+        reducedImpacts.addAll(
+            impactedSubstationsIds.stream().map(id ->
+                SimpleElementImpact.builder()
+                    .simpleImpactType(SimpleImpactType.MODIFICATION)
+                    .elementType(IdentifiableType.SUBSTATION)
+                    .elementId(id)
+                    .substationIds(Set.of(id))
+                    .build()
+            ).toList()
+        );
+
+        // Impacts type simple for deletion only
+        reducedImpacts.addAll(simpleImpacts.stream().filter(SimpleElementImpact::isDeletion).distinct().toList());
+
+        return reducedImpacts;
+    }
+
+    private List<SimpleElementImpact> getSimpleImpacts(IdentifiableType elementType) {
+        return simpleImpacts.stream()
+                .filter(i -> !i.isDeletion() && i.getElementType() == elementType)
+                .distinct()
+                .toList();
+    }
+
 }
