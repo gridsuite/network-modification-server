@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="tourian1 (generated)" id="1709743904912-29">
+        <renameColumn tableName="vsc_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="active_power"
+                      newColumnName="active_power_setpoint"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-30">
+        <renameColumn tableName="vsc_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="maximum_active_power"
+                      newColumnName="max_p"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-31">
+        <renameColumn tableName="vsc_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="dc_nominal_voltage"
+                      newColumnName="nominal_v"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-32">
+        <renameColumn tableName="vsc_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="dc_resistance"
+                      newColumnName="r"/>
+    </changeSet>
+</databaseChangeLog>

@@ -81,8 +81,8 @@ public class VscCreation extends AbstractModification {
         HvdcLine hvdcLine = network.newHvdcLine()
                 .setId(modificationInfos.getEquipmentId())
                 .setName(modificationInfos.getEquipmentName())
-                .setNominalV(modificationInfos.getDcNominalVoltage())
-                .setR(modificationInfos.getDcResistance())
+                .setNominalV(modificationInfos.getNominalV())
+                .setR(modificationInfos.getR())
                 .setMaxP(modificationInfos.getMaxP())
                 .setActivePowerSetpoint(modificationInfos.getActivePowerSetpoint())
                 .setConvertersMode(modificationInfos.getConvertersMode())
@@ -130,8 +130,8 @@ public class VscCreation extends AbstractModification {
     private void reportHvdcLineInfos(Reporter subReporter) {
         List<Report> characteristicsReports = new ArrayList<>();
         Reporter characteristicReport = subReporter.createSubReporter("vscCharacteristics", CHARACTERISTICS);
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcNominalVoltage(), "DC nominal voltage"));
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcResistance(), "DC resistance"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getNominalV(), "DC nominal voltage"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getR(), "DC resistance"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
         ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS);
 

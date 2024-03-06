@@ -33,13 +33,13 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "vscCreation")
 public class VscCreationEntity extends EquipmentCreationEntity {
-    @Column
-    private Double dcNominalVoltage;
+    @Column(name = "nominal_v")
+    private Double nominalV;
 
     @Column
-    private Double dcResistance;
+    private Double r;
 
-    @Column
+    @Column(name = "max_p")
     private Double maxP;
 
     @Column
@@ -97,8 +97,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
         this.angleDroopActivePowerControl = vscCreationInfos.getAngleDroopActivePowerControl();
         this.droop = vscCreationInfos.getDroop();
         this.convertersMode = vscCreationInfos.getConvertersMode();
-        this.dcNominalVoltage = vscCreationInfos.getDcNominalVoltage();
-        this.dcResistance = vscCreationInfos.getDcResistance();
+        this.nominalV = vscCreationInfos.getNominalV();
+        this.r = vscCreationInfos.getR();
         this.operatorActivePowerLimitSide1 = vscCreationInfos.getOperatorActivePowerLimitFromSide1ToSide2();
         this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitFromSide2ToSide1();
         this.maxP = vscCreationInfos.getMaxP();
@@ -125,8 +125,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .angleDroopActivePowerControl(getAngleDroopActivePowerControl())
                 .droop(getDroop())
                 .convertersMode(getConvertersMode())
-                .dcNominalVoltage(getDcNominalVoltage())
-                .dcResistance(getDcResistance())
+                .nominalV(getNominalV())
+                .r(getR())
                 .operatorActivePowerLimitFromSide1ToSide2(getOperatorActivePowerLimitSide1())
                 .operatorActivePowerLimitFromSide2ToSide1(getOperatorActivePowerLimitSide2())
                 .maxP(getMaxP())

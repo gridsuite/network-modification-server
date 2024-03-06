@@ -36,10 +36,10 @@ import org.gridsuite.modification.server.modifications.VscCreation;
 @ModificationErrorTypeName("CREATE_VSC_ERROR")
 public class VscCreationInfos extends EquipmentCreationInfos {
     @Schema(description = "DC nominal voltage")
-    private Double dcNominalVoltage;
+    private Double nominalV;
 
     @Schema(description = "DC resistance")
-    private Double dcResistance;
+    private Double r;
 
     @Schema(description = "Maximum active power ")
     private Double maxP;
