@@ -18,6 +18,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
@@ -48,6 +49,7 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -127,6 +129,9 @@ public abstract class AbstractNetworkModificationTest {
         }
     }
 
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+    }
+
     @Test
     public void testCreate() throws Exception {
         MvcResult mvcResult;
@@ -138,6 +143,7 @@ public abstract class AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
+        assertResultImpacts(networkModificationResult.get().getNetworkImpacts());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 

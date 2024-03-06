@@ -65,6 +65,7 @@ class VoltageInitReportTest {
             (restClient_, preloadingStrategy, executorService) -> new CachedNetworkStoreClient(new OfflineNetworkStoreClient()));
         final EquipmentInfosService equipmentInfosService = Mockito.mock(EquipmentInfosService.class);
         final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, reportService, null);
+        networkModificationApplicator.setCollectionThreshold(5);
 
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));
 

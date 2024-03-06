@@ -29,6 +29,7 @@ import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -1036,7 +1037,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        List<SimpleElementImpact> expectedImpacts = createMultipleDeletionImpacts(
+        List<AbstractBaseImpact> expectedImpacts = createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.HVDC_LINE, "hvdcLine"),
                 Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc"), Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc"),
@@ -1181,12 +1182,16 @@ public class ModificationControllerTest {
         assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<SimpleElementImpact> expectedImpacts) throws JsonProcessingException {
-        // All equipments have been removed from network
-        expectedImpacts.forEach(impact -> assertNull(network.getIdentifiable(impact.getElementId())));
+    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
+        for (AbstractBaseImpact impact : expectedImpacts) {
+            if (impact instanceof SimpleElementImpact simpleImpact) {
+                // Equipment has been removed from network
+                assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
-        // All equipments have been added as TombstonedEquipmentInfos in ElasticSearch
-        expectedImpacts.forEach(impact -> assertTrue(existTombstonedEquipmentInfos(impact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
+                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch
+                assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+            }
+        }
 
         TestImpactUtils.testElementImpacts(mapper, networkModificationResultAsString, expectedImpacts);
     }
