@@ -480,11 +480,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(tabularModificationEntity.getId()), groovyScriptEntity2.getId());
-        // JPA/Hibernates may use a temp table to execute subqueries, where 1 insert/delete pair can be made for 1 update
-        // (see https://stackoverflow.com/questions/40809645/jpa-hibernate-is-creating-temporary-tables-for-a-simple-update-query)
-        // This is the case here for modifications_order or group column update.
-        final int nbModificationToUpdateInGroup = modificationEntities.size(); // to change order for all modifications in the group
-        assertRequestsCount(2, nbModificationToUpdateInGroup, nbModificationToUpdateInGroup, nbModificationToUpdateInGroup);
+        assertRequestsCount(2, 0, 1, 0);
 
         var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         // [0:1, 1:6, 2:2, 3:3, 4:4 ,5:5 ]
@@ -495,7 +491,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity3.getId(), tabularModificationEntity.getId()), null);
-        assertRequestsCount(2, nbModificationToUpdateInGroup, nbModificationToUpdateInGroup, nbModificationToUpdateInGroup);
+        assertRequestsCount(2, 0, 1, 0);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
         modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -527,9 +523,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()), null);
-        // We have insert/delete because of temp table (see comment above)
-        int nbUpdateInBothGroups = 8; // 6 to change order, 2 to change group
-        assertRequestsCount(4, nbUpdateInBothGroups, nbUpdateInBothGroups, nbUpdateInBothGroups);
+        assertRequestsCount(4, 0, 2, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -543,8 +537,7 @@ public class ModificationRepositoryTest {
         // cutting and pasting to non existing group should work (the destination group is implicitly created)
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID_2, List.of(expected2.get(0).getUuid(), expected2.get(1).getUuid()), null);
-        nbUpdateInBothGroups = 6; // 4 to change order, 2 to change group (and 1 real insert for group creation)
-        assertRequestsCount(4, nbUpdateInBothGroups + 1, nbUpdateInBothGroups, nbUpdateInBothGroups);
+        assertRequestsCount(3, 1, 3, 0);
 
         modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
         var modification3 = networkModificationRepository.getModifications(TEST_GROUP_ID_3, true, true);
@@ -578,9 +571,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId()), groovyScriptEntity6.getId());
-        // We have insert/delete because of temp table (see comment above)
-        int nbUpdateInBothGroups = 8; // 6 to change order, 2 to change group
-        assertRequestsCount(4, nbUpdateInBothGroups, nbUpdateInBothGroups, nbUpdateInBothGroups);
+        assertRequestsCount(4, 0, 2, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         var modification2 = networkModificationRepository.getModifications(TEST_GROUP_ID_2, true, true);
@@ -620,9 +611,7 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         List<UUID> modificationsToMoveUuid = List.of(groovyScriptEntity1.getId(), UUID.randomUUID());
         networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null);
-        // We have insert/delete because of temp table (see comment above)
-        final int nbModificationToUpdateInBothGroups = 5; // 4 to change order, 1 to change group
-        assertRequestsCount(4, nbModificationToUpdateInBothGroups, nbModificationToUpdateInBothGroups, nbModificationToUpdateInBothGroups);
+        assertRequestsCount(4, 0, 2, 0);
 
         // moving modification with reference node not in destination: exception expected
         SQLStatementCountValidator.reset();

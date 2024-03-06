@@ -703,9 +703,9 @@ public class ModificationControllerTest {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertThat(networkModificationResult.get().getNetworkImpacts())
-                .allSatisfy(i -> {
-                    assertEquals(Set.of(substationS1), i.getSubstationIds());
-                    assertEquals(SimpleElementImpact.SimpleImpactType.DELETION, i.getImpactType());
+                .allSatisfy(impact -> {
+                    assertEquals(Set.of(substationS1), impact.getSubstationIds());
+                    assertEquals(SimpleElementImpact.SimpleImpactType.DELETION, impact.getImpactType());
                 });
 
         // check destination

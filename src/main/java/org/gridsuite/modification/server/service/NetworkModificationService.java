@@ -218,22 +218,21 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Optional<NetworkModificationResult> moveModifications(UUID groupUuid, UUID originGroupUuid,
+    public Optional<NetworkModificationResult> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid,
                                                                  UUID beforeModificationUuid, UUID networkUuid, String variantId,
-                                                                 ReportInfos reportInfos, List<UUID> modificationsToMove,
-                                                                 boolean canBuildNode) {
-        List<ModificationEntity> movedMetadataEntities = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid);
+                                                                 ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
+        // update origin/destinations groups to cut and paste all modificationsToMove
+        List<ModificationEntity> movedEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid);
 
-        if (canBuildNode && !movedMetadataEntities.isEmpty()) { // TODO remove canBuildNode ?
-            // try to apply the moved modifications (incremental mode)
-            PreloadingStrategy preloadingStrategy = movedMetadataEntities.stream()
+        if (canBuildNode && !movedEntities.isEmpty()) { // TODO remove canBuildNode ?
+            // try to apply the moved modifications only (incremental mode)
+            PreloadingStrategy preloadingStrategy = movedEntities.stream()
                     .map(e -> ModificationType.valueOf(e.getType()))
                     .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
             if (networkInfos.isVariantPresent()) {
-                List<UUID> movedUuids = movedMetadataEntities.stream().map(ModificationEntity::getId).toList();
-                // now we can fully load the modification entities we have to build
-                List<ModificationInfos> movedModifications = networkModificationRepository.getModificationsInfos(movedUuids);
+                List<ModificationInfos> movedModifications = movedEntities.stream()
+                        .map(networkModificationRepository::getModificationInfos).toList();
                 return Optional.of(modificationApplicator.applyModifications(
                         movedModifications,
                         networkInfos,

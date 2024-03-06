@@ -21,9 +21,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -84,61 +84,62 @@ public class NetworkModificationRepository {
 
     @Transactional
     // TODO Remove transaction when errors will no longer be sent to the front
-    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
+    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
+        // read origin group and modifications
+        ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
+        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications();
 
-        // load origin entities (metadata light mode)
-        List<ModificationEntity> modificationEntities = getModificationsMetadataEntities(originGroupUuid, false);
-        Map<UUID, ModificationEntity> originModifications = modificationEntities.stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-
-        List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).toList();
-        if (modificationsToMoveUUID.contains(referenceModificationUuid)) {
-            throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-        }
+        // remove from origin list
+        List<ModificationEntity> modificationsToMove = removeModifications(originModificationEntities, modificationsToMoveUUID);
 
         if (originGroupUuid.equals(destinationGroupUuid)) { // single group case
-            if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
-                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-            }
-            // re-organize the origin list
-            List<ModificationEntity> modificationsToMove = modificationsToMoveUUID.stream().map(originModifications::remove).toList();
-            List<ModificationEntity> newModificationList = newListWithInsertedModifications(modificationsToMove, originModifications, referenceModificationUuid);
-            updateModificationsOrder(newModificationList);
-            return modificationsToMove;
+            // insert into origin list
+            insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
         } else { // 2-group case
-            // if destination is empty, group does not exist then we must create it
-            getOrCreateModificationGroup(destinationGroupUuid);
-
-            // load destination entities (metadata light mode)
-            List<ModificationEntity> destinationModificationEntities = getModificationsMetadataEntities(destinationGroupUuid, false);
-            Map<UUID, ModificationEntity> destinationModifications = destinationModificationEntities.stream()
-                    .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-            if (referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
-                throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-            }
-            // update origin list
-            List<ModificationEntity> modificationsToMove = modificationsToMoveUUID.stream().map(originModifications::remove).toList();
-            updateModificationsOrder(originModifications.values().stream().toList());
-            // update destination list
-            List<ModificationEntity> newDestinationModificationList = newListWithInsertedModifications(modificationsToMove, destinationModifications, referenceModificationUuid);
-            updateModificationsOrder(newDestinationModificationList);
-            // change the owner group for moved modifications
-            modificationsToMoveUUID.forEach(modifId -> this.modificationRepository.setGroupById(destinationGroupUuid, modifId));
-            return modificationsToMove;
+            // read destination group and modifications (group must be created if missing)
+            ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
+            List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();
+            // insert into destination list
+            insertModifications(destinationModificationEntities, modificationsToMove, referenceModificationUuid);
+            // update destination group
+            destinationModificationGroupEntity.setModifications(destinationModificationEntities);
         }
+
+        // update origin group
+        originModificationGroupEntity.setModifications(originModificationEntities);
+
+        return modificationsToMove;
     }
 
-    private void updateModificationsOrder(List<ModificationEntity> modifications) {
-        AtomicInteger index = new AtomicInteger(0);
-        modifications.forEach(m -> this.modificationRepository.setOrderById(index.getAndIncrement(), m.getId()));
+    private void insertModifications(List<ModificationEntity> modificationsList, List<ModificationEntity> modificationsToAdd, UUID referenceModificationUuid) {
+        // If referenceModificationUuid == null we will append at the end of list, otherwise we will insert before referenceModification
+        int insertionIndex = referenceModificationUuid == null ?
+                modificationsList.size() : IntStream.range(0, modificationsList.size())
+                        .filter(i -> referenceModificationUuid.equals(modificationsList.get(i).getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new NetworkModificationException(MOVE_MODIFICATION_ERROR));
+        modificationsList.addAll(insertionIndex, modificationsToAdd);
     }
 
-    private List<ModificationEntity> newListWithInsertedModifications(final List<ModificationEntity> modificationsToAdd, final Map<UUID, ModificationEntity> modifications, final UUID referenceModificationUuid) {
-        List<ModificationEntity> newModificationList = new ArrayList<>(modifications.values());
-        /* when referenceModification == null we append at the end of list, otherwise we insert before referenceModification */
-        int index = referenceModificationUuid == null ? newModificationList.size() : newModificationList.indexOf(modifications.get(referenceModificationUuid));
-        newModificationList.addAll(index, modificationsToAdd);
-        return newModificationList;
+    private List<ModificationEntity> removeModifications(List<ModificationEntity> modificationsList, List<UUID> orderedIdsToRemove) {
+        // Remove all UUID from modificationsList, in a single loop starting from the end.
+        // We memorize the removed elements in a map, to return them in the same order as in orderedIdsToRemove.
+        Set<UUID> uniqueUuids = new HashSet<>(orderedIdsToRemove);
+        Map<UUID, ModificationEntity> removedModificationsMap = new HashMap<>();
+        IntStream.iterate(modificationsList.size() - 1, i -> i >= 0, i -> i - 1).forEach(i -> {
+            UUID modificationId = modificationsList.get(i).getId();
+            if (uniqueUuids.contains(modificationId)) {
+                removedModificationsMap.put(modificationId, modificationsList.remove(i));
+            }
+        });
+        List<ModificationEntity> removedModifications = new ArrayList<>();
+        orderedIdsToRemove.forEach(i -> {
+            ModificationEntity e = removedModificationsMap.get(i);
+            if (e != null) {
+                removedModifications.add(e);
+            }
+        });
+        return removedModifications;
     }
 
     public List<UUID> getModificationGroupsUuids() {
@@ -212,8 +213,8 @@ public class NetworkModificationRepository {
                     .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
                     .stream()
                     .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        Function.identity()
+                            ModificationEntity::getId,
+                            Function.identity()
                     ));
                 // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
                 generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
@@ -354,8 +355,8 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
             .stream()
             .collect(Collectors.toMap(
-                ModificationEntity::getId,
-                Function.identity()
+                    ModificationEntity::getId,
+                    Function.identity()
             ));
         return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
     }
