@@ -16,9 +16,7 @@ import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -50,12 +48,4 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     Set<GeneratorCreationEntity> findAllCreationsWithReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
-
-    @Modifying
-    @Query("update ModificationEntity m set m.modificationsOrder = :order where m.id = :id")
-    int setOrderById(@Param("order") int order, @Param("id") UUID id);
-
-    @Modifying
-    @Query("update ModificationEntity m set m.group.id = :newGroup where m.id = :id")
-    int setGroupById(@Param("newGroup") UUID newGroup, @Param("id") UUID id);
 }

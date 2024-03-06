@@ -186,21 +186,19 @@ public class NetworkModificationRepository {
         }
     }
 
-    private List<ModificationEntity> getModificationsMetadataEntities(UUID groupUuid, boolean onlyStashed) {
+    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
         Stream<ModificationEntity> modificationEntityStream = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
-        if (!onlyStashed) {
-            return modificationEntityStream.collect(Collectors.toList());
+        if (onlyStashed) {
+            return modificationEntityStream.filter(m -> m.getStashed())
+                    .map(this::getModificationInfos)
+                    .collect(Collectors.toList());
         } else {
-            return modificationEntityStream.filter(ModificationEntity::getStashed).collect(Collectors.toList());
+            return modificationEntityStream
+                    .map(this::getModificationInfos)
+                    .collect(Collectors.toList());
         }
-    }
-
-    public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        return getModificationsMetadataEntities(groupUuid, onlyStashed).stream()
-                .map(this::getModificationInfos)
-                .collect(Collectors.toList());
     }
 
     public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
@@ -213,8 +211,8 @@ public class NetworkModificationRepository {
                     .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
                     .stream()
                     .collect(Collectors.toMap(
-                            ModificationEntity::getId,
-                            Function.identity()
+                        ModificationEntity::getId,
+                        Function.identity()
                     ));
                 // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
                 generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
@@ -355,8 +353,8 @@ public class NetworkModificationRepository {
         Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
             .stream()
             .collect(Collectors.toMap(
-                    ModificationEntity::getId,
-                    Function.identity()
+                ModificationEntity::getId,
+                Function.identity()
             ));
         return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
     }
