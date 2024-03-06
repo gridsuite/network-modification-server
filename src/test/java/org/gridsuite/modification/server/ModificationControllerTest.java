@@ -703,11 +703,12 @@ public class ModificationControllerTest {
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
-        assertThat(networkModificationResult.get().getNetworkImpacts())
-                .allSatisfy(impact -> {
-                    assertEquals(Set.of(substationS1), impact.getSubstationIds());
-                    assertEquals(SimpleElementImpact.SimpleImpactType.DELETION, impact.getImpactType());
-                });
+        networkModificationResult.get().getNetworkImpacts().forEach(i -> {
+            assertTrue(i.isSimple());
+            SimpleElementImpact simpleImpact = (SimpleElementImpact) i;
+            assertEquals(Set.of(substationS1), simpleImpact.getSubstationIds());
+            assertEquals(SimpleElementImpact.SimpleImpactType.DELETION, simpleImpact.getSimpleImpactType());
+        });
 
         // check destination
         var newDestinationModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
