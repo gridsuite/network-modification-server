@@ -297,7 +297,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         ComputationManager computationManager = new LocalComputationManager();
         VscModification vscModification = new VscModification(modificationInfos);
         vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
-        var hvdcOperatorActivePowerRange =  hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
+        var hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
         Assert.assertEquals(100.f, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0.1);
         Assert.assertEquals(99.f, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0.1);
     }
