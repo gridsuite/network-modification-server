@@ -13,6 +13,7 @@ import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
+import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -273,5 +275,30 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModification vscModification = new VscModification(modificationInfos);
         Assert.assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
+    }
+
+    @Test
+    public void testModifyOperatorActiveRange() throws IOException {
+        VscModificationInfos modificationInfos = VscModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("hvdcLine")
+                .operatorActivePowerLimitFromSide2ToSide1(new AttributeModification<>(99.f, OperationType.SET))
+                .operatorActivePowerLimitFromSide1ToSide2(new AttributeModification<>(100.f, OperationType.SET))
+                .build();
+
+        var networkuuid = UUID.randomUUID();
+        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
+        var hvdcLine = networkWitoutExt.getHvdcLine("hvdcLine");
+        hvdcLine.newExtension(HvdcOperatorActivePowerRangeAdder.class)
+                .withOprFromCS1toCS2(10)
+                .withOprFromCS2toCS1(12)
+                .add();
+        Reporter subReporter = new Reporter.NoOpImpl();
+        ComputationManager computationManager = new LocalComputationManager();
+        VscModification vscModification = new VscModification(modificationInfos);
+        vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
+        var hvdcOperatorActivePowerRange =  hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
+        Assert.assertEquals(100.f, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0.1);
+        Assert.assertEquals(99.f, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0.1);
     }
 }
