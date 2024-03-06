@@ -321,7 +321,7 @@ public final class NetworkUtil {
     }
 
     public static void createDanglingLine(VoltageLevel vl, String id, String name,
-                                           int node, double r, double x, double b, double g, double p0, double q0, String ucteXnodeCode) {
+                                           int node, double r, double x, double b, double g, double p0, double q0, String pairingKey) {
         vl.newDanglingLine()
             .setId(id)
             .setName(name)
@@ -331,7 +331,7 @@ public final class NetworkUtil {
             .setG(g)
             .setP0(p0)
             .setQ0(q0)
-            .setPairingKey(ucteXnodeCode)
+            .setPairingKey(pairingKey)
             .setNode(node)
             .add();
     }

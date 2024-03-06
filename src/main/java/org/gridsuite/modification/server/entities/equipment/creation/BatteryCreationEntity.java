@@ -14,6 +14,9 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -128,7 +131,12 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .activePowerSetpoint(getActivePowerSetpoint())
                 .reactivePowerSetpoint(getReactivePowerSetpoint())
                 .participate(getParticipate())
-                .droop(getDroop());
+                .droop(getDroop())
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 
 }

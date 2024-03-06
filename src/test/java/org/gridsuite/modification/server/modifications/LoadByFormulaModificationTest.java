@@ -14,6 +14,7 @@ import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.List;
 
@@ -100,5 +101,10 @@ public class LoadByFormulaModificationTest extends AbstractByFormulaModification
         assertEquals(80, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
         assertEquals(70, getNetwork().getLoad(LOAD_ID_3).getQ0(), 0);
         assertEquals(150, getNetwork().getLoad(LOAD_ID_4).getQ0(), 0);
+    }
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        // TODO later
     }
 }

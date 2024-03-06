@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,6 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.createBusBreaker(networkUuid);
@@ -59,6 +64,7 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
                         new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -91,6 +97,7 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
         assertNotNull(getNetwork().getBattery("idBattery2"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getBatteryStream()
                 .filter(transformer -> transformer.getId().equals("idBattery2")).count());
+        assertEquals(PROPERTY_VALUE, getNetwork().getBattery("idBattery2").getProperty(PROPERTY_NAME));
     }
 
     @Override

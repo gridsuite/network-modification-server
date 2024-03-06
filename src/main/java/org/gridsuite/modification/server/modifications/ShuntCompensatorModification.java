@@ -82,6 +82,8 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
 
         ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, shuntCompensator);
+        PropertiesUtils.applyProperties(shuntCompensator, subReporter, modificationInfos.getProperties());
+
     }
 
     private void modifyMaximumSectionCount(List<Report> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {
