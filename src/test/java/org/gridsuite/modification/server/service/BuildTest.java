@@ -718,7 +718,12 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 61, Set.of("newSubstation", "s1", "s2"));
+        // 2 : LOAD and SWITCH equipments are reduced to collection impact
+        // + 2 substation modifications
+        // (newSubstation is created but transformed to modification type (see NetworkStoreListener::reduceNetworkImpacts))
+        // + 3 Equipment deletions ( 1 shunt compensator + 2 switch)
+        // = 7
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 7, Set.of(IdentifiableType.LOAD, IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -863,7 +868,10 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 55, Set.of("newSubstation", "s1", "s2"));
+        // 1 : SWITCH equipments are reduced to collection impact
+        // + 2 substation modifications
+        // = 3
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 3, Set.of(IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
         buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
