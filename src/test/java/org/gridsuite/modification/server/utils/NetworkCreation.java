@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 
@@ -479,6 +480,28 @@ public final class NetworkCreation {
         createSwitch(v1, "l2br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
         createSwitch(v3, "l2d3", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v3, "l2br3", null, SwitchKind.BREAKER, true, false, false, 5, 4);
+
+        return network;
+    }
+
+    public static Network createWithVSC(UUID uuid, boolean withAngleDropExtention) {
+        NetworkFactoryImpl networkFactory = new NetworkFactoryImpl();
+        Network network = create(uuid, false, networkFactory);
+        VoltageLevel v1 = network.getVoltageLevel("v1");
+
+        createVscConverterStation(v1, "v1vsc", "v1vsc", 18, 1, 40, true, 150);
+        createSwitch(v1, "v1dvsc", "v1dvsc", SwitchKind.DISCONNECTOR, true, false, false, 0, 12);
+        createSwitch(v1, "v1bvsc", "v1bvsc", SwitchKind.BREAKER, true, false, false, 12, 18);
+
+        createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1vsc", "v2vsc");
+        HvdcLine hvdcLine = network.getHvdcLine("hvdcLine");
+        if (withAngleDropExtention) {
+            hvdcLine.newExtension(HvdcAngleDroopActivePowerControlAdder.class)
+                    .withEnabled(true)
+                    .withP0(0F)
+                    .withDroop(10F)
+                    .add();
+        }
 
         return network;
     }

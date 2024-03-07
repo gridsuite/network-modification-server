@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.FilterService;
@@ -105,6 +106,15 @@ public final class ModificationUtils {
             throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + " does not exist in network");
         }
         return vscConverterStation;
+    }
+
+    //get hvdcline
+    HvdcLine getHvdcLine(Network network, String hvdcLineId) {
+        HvdcLine hvdcLine = network.getHvdcLine(hvdcLineId);
+        if (hvdcLine == null) {
+            throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + " does not exist in network");
+        }
+        return hvdcLine;
     }
 
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
@@ -771,6 +781,23 @@ public final class ModificationUtils {
         }
     }
 
+    public void modifyMinMaxReactiveLimits(AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower, ReactiveLimitsHolder reactiveLimitsHolder,
+                                           Reporter subReporter, Reporter subReporterLimits) {
+        MinMaxReactiveLimits minMaxReactiveLimits = null;
+        ReactiveLimits reactiveLimits = reactiveLimitsHolder.getReactiveLimits();
+        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = reactiveLimitsHolder.newMinMaxReactiveLimits();
+        if (reactiveLimits != null) {
+            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
+            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
+                minMaxReactiveLimits = reactiveLimitsHolder.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
+            }
+        }
+        modifyMinMaxReactiveLimits(minMaxReactiveLimits,
+                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
+                minimumReactivePower,
+                maximumReactivePower);
+    }
+
     public void modifyMinMaxReactiveLimits(MinMaxReactiveLimits minMaxReactiveLimits, MinMaxReactiveLimitsAdder newMinMaxReactiveLimits,
                                             Reporter subReporter, Reporter subReporterLimits, AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower) {
         List<Report> reports = new ArrayList<>();
@@ -930,6 +957,18 @@ public final class ModificationUtils {
         Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
         if (minReactivePower > maxReactivePower) {
             throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
+        }
+    }
+
+    public void checkReactiveLimit(ReactiveLimitsHolder reactiveLimitsHolder, AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower,
+                                   List<ReactiveCapabilityCurveModificationInfos> modificationPoints, NetworkModificationException.Type exeptionType, String errorMessage) {
+        if (reactiveLimitsHolder.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX
+                && (minimumReactivePower != null || maximumReactivePower != null)) {
+            MinMaxReactiveLimits minMaxReactiveLimits = reactiveLimitsHolder.getReactiveLimits(MinMaxReactiveLimits.class);
+            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, minimumReactivePower, maximumReactivePower, exeptionType, errorMessage);
+        }
+        if (modificationPoints != null) {
+            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, exeptionType, errorMessage);
         }
     }
 
