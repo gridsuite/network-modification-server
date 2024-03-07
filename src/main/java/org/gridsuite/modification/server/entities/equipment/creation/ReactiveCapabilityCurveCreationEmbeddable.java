@@ -24,10 +24,10 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class ReactiveCapabilityCurveCreationEmbeddable {
     @Column
-    private Double qminP;
+    private Double minQ;
 
     @Column
-    private Double qmaxP;
+    private Double maxQ;
 
     @Column
     private Double p;
