@@ -52,10 +52,10 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -67,9 +67,9 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -558,9 +558,9 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Test
     public void testAllModificationsHaveFailed() throws Exception {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build()
         );
         ModificationInfos modificationInfos = TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -621,14 +621,14 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
             .mapToObj(i ->
                 (ModificationInfos) GeneratorModificationInfos.builder()
                     .equipmentId(UUID.randomUUID().toString())
-                    .maxActivePower(new AttributeModification<>(300., OperationType.SET))
+                    .maxP(new AttributeModification<>(300., OperationType.SET))
                     .properties(List.of(
                         ModificationCreation.getFreeProperty(),
                         ModificationCreation.getFreeProperty("test", "value")))
                     .reactiveCapabilityCurvePoints(List.of(
                         ReactiveCapabilityCurveModificationInfos.builder().p(10.).oldP(15.).build(),
-                        ReactiveCapabilityCurveModificationInfos.builder().qmaxP(12.).oldQmaxP(17.).build(),
-                        ReactiveCapabilityCurveModificationInfos.builder().qminP(5.).qmaxP(5.).p(5.).build()))
+                            ReactiveCapabilityCurveModificationInfos.builder().maxQ(12.).oldMaxQ(17.).build(),
+                        ReactiveCapabilityCurveModificationInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
                     .build())
             .toList();
     }

@@ -27,8 +27,8 @@ public class VoltageInitGeneratorModificationEmbeddable {
     private String generatorId;
 
     @Column
-    private Double voltageSetpoint;
+    private Double targetV;
 
     @Column
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 }
