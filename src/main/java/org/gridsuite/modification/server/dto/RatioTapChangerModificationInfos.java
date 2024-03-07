@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -22,6 +23,7 @@ import lombok.experimental.SuperBuilder;
 public class RatioTapChangerModificationInfos extends TapChangerModificationInfos {
 
     @Schema(description = "hasLoadTapChangingCapabilities")
+    @Accessors(fluent = true)
     private AttributeModification<Boolean> hasLoadTapChangingCapabilities;
 
     @Schema(description = "targetV")

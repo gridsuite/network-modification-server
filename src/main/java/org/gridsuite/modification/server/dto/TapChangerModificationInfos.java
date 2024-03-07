@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 import java.util.List;
@@ -42,6 +43,7 @@ public class TapChangerModificationInfos {
     private AttributeModification<Integer> tapPosition;
 
     @Schema(description = "regulating")
+    @Accessors(fluent = true)
     private AttributeModification<Boolean> isRegulating;
 
     @Schema(description = "targetDeadband")

@@ -180,7 +180,7 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 .setRegulationTerminal(terminal);
 
         ratioTapChangerAdder.setRegulating(ratioTapChangerInfos.isRegulating())
-                .setLoadTapChangingCapabilities(ratioTapChangerInfos.isHasLoadTapChangingCapabilities())
+                .setLoadTapChangingCapabilities(ratioTapChangerInfos.hasLoadTapChangingCapabilities())
                 .setLowTapPosition(ratioTapChangerInfos.getLowTapPosition())
                 .setTapPosition(ratioTapChangerInfos.getTapPosition());
 
