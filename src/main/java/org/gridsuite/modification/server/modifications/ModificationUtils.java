@@ -751,8 +751,8 @@ public final class ModificationUtils {
             oldMinQ = oldPoint.getMinQ();
             oldP = oldPoint.getP();
         }
-        var maxQ = newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ;
-        var minQ = newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ;
+        var maxQ = newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ;
+        var minQ = newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ;
         var p = newPoint.getP() != null ? newPoint.getP() : oldP;
 
         adder.beginPoint()
@@ -902,16 +902,16 @@ public final class ModificationUtils {
             double maxQ = Double.NaN;
             double minQ = Double.NaN;
 
-            if (point.getQmaxP() != null) {
-                maxQ = point.getQmaxP();
-            } else if (point.getOldQmaxP() != null) {
-                maxQ = point.getOldQmaxP();
+            if (point.getMaxQ() != null) {
+                maxQ = point.getMaxQ();
+            } else if (point.getOldMaxQ() != null) {
+                maxQ = point.getOldMaxQ();
             }
 
-            if (point.getQminP() != null) {
-                minQ = point.getQminP();
-            } else if (point.getOldQminP() != null) {
-                minQ = point.getOldQminP();
+            if (point.getMinQ() != null) {
+                minQ = point.getMinQ();
+            } else if (point.getOldMinQ() != null) {
+                minQ = point.getOldMinQ();
             }
 
             if (maxQ < minQ) {
@@ -956,12 +956,12 @@ public final class ModificationUtils {
                                             String equipmentId,
                                             String equipmentName) {
         // check min max reactive limits
-        if (modificationInfos.getMinimumReactivePower() != null && modificationInfos.getMaximumReactivePower() != null) {
-            if (Double.isNaN(modificationInfos.getMinimumReactivePower())) {
+        if (modificationInfos.getMinQ() != null && modificationInfos.getMaxQ() != null) {
+            if (Double.isNaN(modificationInfos.getMinQ())) {
                 throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum reactive power is not set");
-            } else if (Double.isNaN(modificationInfos.getMaximumReactivePower())) {
+            } else if (Double.isNaN(modificationInfos.getMaxQ())) {
                 throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is not set");
-            } else if (modificationInfos.getMaximumReactivePower() < modificationInfos.getMinimumReactivePower()) {
+            } else if (modificationInfos.getMaxQ() < modificationInfos.getMinQ()) {
                 throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum reactive power is expected to be greater than or equal to minimum reactive power");
             }
         }
@@ -977,9 +977,9 @@ public final class ModificationUtils {
                         ReactiveCapabilityCurveCreationInfos newPoint = points.get(i);
                         if (Double.isNaN(newPoint.getP())) {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "P is not set in a reactive capability curve limits point");
-                        } else if (Double.isNaN(newPoint.getQminP())) {
+                        } else if (Double.isNaN(newPoint.getMinQ())) {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "min Q is not set in a reactive capability curve limits point");
-                        } else if (Double.isNaN(newPoint.getQmaxP())) {
+                        } else if (Double.isNaN(newPoint.getMaxQ())) {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "max Q is not set in a reactive capability curve limits point");
                         }
                     });
@@ -1006,18 +1006,18 @@ public final class ModificationUtils {
                                                   ReactiveLimitsHolder reactiveLimitsHolder,
                                                   Reporter subReporter) {
         List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
-        if (batteryCreationInfos.getMinimumReactivePower() != null && batteryCreationInfos.getMaximumReactivePower() != null) {
+        if (batteryCreationInfos.getMinQ() != null && batteryCreationInfos.getMaxQ() != null) {
             reactiveLimitsHolder.newMinMaxReactiveLimits()
-                    .setMinQ(batteryCreationInfos.getMinimumReactivePower())
-                    .setMaxQ(batteryCreationInfos.getMaximumReactivePower())
+                    .setMinQ(batteryCreationInfos.getMinQ())
+                    .setMaxQ(batteryCreationInfos.getMaxQ())
                     .add();
 
             minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                    batteryCreationInfos.getMinimumReactivePower(),
+                    batteryCreationInfos.getMinQ(),
                     MIN_REACTIVE_POWER_FIELDNAME));
 
             minMaxReactiveLimitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                    batteryCreationInfos.getMaximumReactivePower(),
+                    batteryCreationInfos.getMaxQ(),
                     MAX_REACTIVE_POWER_FIELDNAME));
 
             Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
@@ -1066,13 +1066,13 @@ public final class ModificationUtils {
                                                            List<Report> reports,
                                                            String fieldSuffix) {
         adder.beginPoint()
-                .setMaxQ(point.getQmaxP())
-                .setMinQ(point.getQminP())
+                .setMaxQ(point.getMaxQ())
+                .setMinQ(point.getMinQ())
                 .setP(point.getP())
                 .endPoint();
         addToReports(reports, point.getP(), "P" + fieldSuffix);
-        addToReports(reports, point.getQminP(), "QminP" + fieldSuffix);
-        addToReports(reports, point.getQmaxP(), "QmaxP" + fieldSuffix);
+        addToReports(reports, point.getMinQ(), "QminP" + fieldSuffix);
+        addToReports(reports, point.getMaxQ(), "QmaxP" + fieldSuffix);
     }
 
     public boolean isValidFilter(Reporter subReporter,
