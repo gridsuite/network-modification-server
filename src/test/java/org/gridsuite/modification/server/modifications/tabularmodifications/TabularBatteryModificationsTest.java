@@ -41,10 +41,10 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                BatteryModificationInfos.builder().equipmentId("v1Battery").maxActivePower(new AttributeModification<>(50., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("v2Battery").minActivePower(new AttributeModification<>(5., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("v3Battery").activePowerSetpoint(new AttributeModification<>(5., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("unknownBattery").reactivePowerSetpoint(new AttributeModification<>(500., OperationType.SET)).build()
+                BatteryModificationInfos.builder().equipmentId("v1Battery").maxP(new AttributeModification<>(50., OperationType.SET)).build(),
+                BatteryModificationInfos.builder().equipmentId("v2Battery").minP(new AttributeModification<>(5., OperationType.SET)).build(),
+                BatteryModificationInfos.builder().equipmentId("v3Battery").targetP(new AttributeModification<>(5., OperationType.SET)).build(),
+                BatteryModificationInfos.builder().equipmentId("unknownBattery").targetQ(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.BATTERY_MODIFICATION)
@@ -56,9 +56,9 @@ public class TabularBatteryModificationsTest extends AbstractNetworkModification
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                BatteryModificationInfos.builder().equipmentId("v1Battery").minActivePower(new AttributeModification<>(3., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("v2Battery").maxActivePower(new AttributeModification<>(30., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("v3Battery").activePowerSetpoint(new AttributeModification<>(6., OperationType.SET)).build()
+                BatteryModificationInfos.builder().equipmentId("v1Battery").minP(new AttributeModification<>(3., OperationType.SET)).build(),
+                BatteryModificationInfos.builder().equipmentId("v2Battery").maxP(new AttributeModification<>(30., OperationType.SET)).build(),
+                BatteryModificationInfos.builder().equipmentId("v3Battery").targetP(new AttributeModification<>(6., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.BATTERY_MODIFICATION)
