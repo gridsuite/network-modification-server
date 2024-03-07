@@ -278,16 +278,16 @@ public class ModificationRepositoryTest {
         var createGeneratorEntity1 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator1").equipmentName("nameGenerator1")
                 .energySource(EnergySource.HYDRO).voltageLevelId("vlId1")
-                .busOrBusbarSectionId("busId1").minActivePower(100.0)
-                .maxActivePower(800.0).ratedNominalPower(10.)
-                .activePowerSetpoint(500).reactivePowerSetpoint(50.)
-                .voltageRegulationOn(true).voltageSetpoint(225.)
+                .busOrBusbarSectionId("busId1").minP(100.0)
+                .maxP(800.0).ratedS(10.)
+                .targetP(500).targetQ(50.)
+                .voltageRegulationOn(true).targetV(225.)
                 .plannedActivePowerSetPoint(20.)
                 .marginalCost(20.)
                 .plannedOutageRate(20.).forcedOutageRate(20.)
-                .minimumReactivePower(30.).maximumReactivePower(50.)
-                .participate(true).droop(8f).transientReactance(37.)
-                .stepUpTransformerReactance(46.).regulatingTerminalId("testTerminalId1")
+                .minQ(30.).maxQ(50.)
+                .participate(true).droop(8f).directTransX(37.)
+                .stepUpTransformerX(46.).regulatingTerminalId("testTerminalId1")
                 .regulatingTerminalType("LINE").regulatingTerminalVlId("idVlTest1")
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
@@ -295,15 +295,15 @@ public class ModificationRepositoryTest {
         var createGeneratorEntity2 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2").equipmentName("nameGenerator2")
                 .energySource(EnergySource.SOLAR).voltageLevelId("vlId2")
-                .busOrBusbarSectionId("busId2").minActivePower(0.0)
-                .maxActivePower(300.0).ratedNominalPower(5.)
-                .activePowerSetpoint(150).reactivePowerSetpoint(30.)
-                .voltageRegulationOn(false).voltageSetpoint(380.)
+                .busOrBusbarSectionId("busId2").minP(0.0)
+                .maxP(300.0).ratedS(5.)
+                .targetP(150).targetQ(30.)
+                .voltageRegulationOn(false).targetV(380.)
                 .plannedActivePowerSetPoint(30.)
                 .marginalCost(30.)
                 .plannedOutageRate(30.).forcedOutageRate(30.)
-                .participate(false).droop(null).transientReactance(37.)
-                .stepUpTransformerReactance(46.).regulatingTerminalId(null)
+                .participate(false).droop(null).directTransX(37.)
+                .stepUpTransformerX(46.).regulatingTerminalId(null)
                 .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
@@ -312,11 +312,11 @@ public class ModificationRepositoryTest {
         var createGeneratorEntity3 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator3").equipmentName("nameGenerator3")
                 .energySource(EnergySource.OTHER).voltageLevelId("vlId3")
-                .busOrBusbarSectionId("busId3").minActivePower(10.0)
-                .maxActivePower(900.0).ratedNominalPower(20.)
-                .voltageRegulationOn(true).voltageSetpoint(150.).marginalCost(null)
-                .participate(false).droop(null).transientReactance(null)
-                .stepUpTransformerReactance(null).regulatingTerminalId("testTerminalId2")
+                .busOrBusbarSectionId("busId3").minP(10.0)
+                .maxP(900.0).ratedS(20.)
+                .voltageRegulationOn(true).targetV(150.).marginalCost(null)
+                .participate(false).droop(null).directTransX(null)
+                .stepUpTransformerX(null).regulatingTerminalId("testTerminalId2")
                 .regulatingTerminalType("BATTERY").regulatingTerminalVlId("idVlTest2")
                 .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurveCreationInfos(33., 44., 55.)))
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
@@ -1104,11 +1104,11 @@ public class ModificationRepositoryTest {
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
-                    .reactivePowerSetpoint(10.)
+                    .targetQ(10.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G2")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()
@@ -1174,6 +1174,21 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
         assertRequestsCount(2, 0, 0, 0);
+    }
+
+    @Test
+    public void testVscModification() {
+        var vscModificationEntity = VscModificationInfos.builder()
+            .equipmentId("VSC1")
+                .converterStation1(ConverterStationModificationInfos.builder().equipmentId("C1").build())
+                .converterStation2(ConverterStationModificationInfos.builder().equipmentId("C2").build())
+            .build().toEntity();
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(vscModificationEntity));
+        assertRequestsCount(1, 5, 1, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
     }
 
     @Test
