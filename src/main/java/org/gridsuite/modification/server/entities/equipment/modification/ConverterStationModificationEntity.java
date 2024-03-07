@@ -97,8 +97,8 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             List<ReactiveCapabilityCurveModificationInfos> points) {
         return points == null ? null
                 : points.stream()
-                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getQminP(), point.getOldQminP(),
-                        point.getQmaxP(), point.getOldQmaxP(), point.getP(),
+                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
+                        point.getMaxQ(), point.getOldMaxQ(), point.getP(),
                         point.getOldP()))
                 .toList();
     }

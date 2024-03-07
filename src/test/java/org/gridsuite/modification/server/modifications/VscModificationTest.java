@@ -163,8 +163,8 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                         .forEach(i -> {
                             var point = vscPoints.get(i);
                             var modificationPoint = modificationPoints.get(i);
-                            assertEquals(modificationPoint.getQmaxP(), point.getMaxQ());
-                            assertEquals(modificationPoint.getQminP(), point.getMinQ());
+                            assertEquals(modificationPoint.getMaxQ(), point.getMaxQ());
+                            assertEquals(modificationPoint.getMinQ(), point.getMinQ());
                             assertEquals(modificationPoint.getP(), point.getP());
                         });
             }

@@ -46,16 +46,16 @@ public class BatteryModification extends AbstractModification {
         }
         Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
-        ModificationUtils.getInstance().checkReactiveLimit(battery, modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(),
+        ModificationUtils.getInstance().checkReactiveLimit(battery, modificationInfos.getMinQ(), modificationInfos.getMaxQ(),
                 modificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_BATTERY_ERROR, errorMessage);
         checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(modificationInfos, battery, MODIFY_BATTERY_ERROR, errorMessage);
     }
 
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(BatteryModificationInfos modificationInfos, Battery battery, NetworkModificationException.Type exceptionType, String errorMessage) {
         ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
-                modificationInfos.getActivePowerSetpoint(),
-                modificationInfos.getMinActivePower(),
-                modificationInfos.getMaxActivePower(),
+                modificationInfos.getTargetP(),
+                modificationInfos.getMinP(),
+                modificationInfos.getMaxP(),
                 battery.getMinP(),
                 battery.getMaxP(),
                 battery.getTargetP(),
@@ -91,8 +91,8 @@ public class BatteryModification extends AbstractModification {
 
     private void modifyBatterySetpointsAttributes(BatteryModificationInfos modificationInfos,
                                                   Battery battery, Reporter subReporter) {
-        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getActivePowerSetpoint(), "Active power");
-        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getReactivePowerSetpoint(), "Reactive power");
+        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getTargetP(), "Active power");
+        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getTargetQ(), "Reactive power");
         Reporter subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
             subReporterSetpoints = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
@@ -129,8 +129,8 @@ public class BatteryModification extends AbstractModification {
     private Reporter modifyBatteryActiveLimitsAttributes(BatteryModificationInfos modificationInfos,
                                                          Battery battery, Reporter subReporter) {
         Reporter subReporterLimits = null;
-        Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxActivePower(), "Max active power");
-        Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinActivePower(), "Min active power");
+        Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxP(), "Max active power");
+        Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinP(), "Min active power");
         if (reportMaxActivePower != null || reportMinActivePower != null) {
             subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
             subReporterLimits.report(Report.builder()
@@ -164,7 +164,7 @@ public class BatteryModification extends AbstractModification {
                     && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
                 modifyBatteryReactiveCapabilityCurvePoints(modificationInfos, battery, subReporter, subReporterLimits);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinimumReactivePower(), modificationInfos.getMaximumReactivePower(), battery, subReporter, subReporterLimits);
+                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinQ(), modificationInfos.getMaxQ(), battery, subReporter, subReporterLimits);
             }
         }
     }

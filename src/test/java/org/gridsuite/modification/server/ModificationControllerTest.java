@@ -1260,11 +1260,11 @@ public class ModificationControllerTest {
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
-                    .reactivePowerSetpoint(10.)
+                    .targetQ(10.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G2")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()

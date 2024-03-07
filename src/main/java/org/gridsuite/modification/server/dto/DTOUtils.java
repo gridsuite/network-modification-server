@@ -21,8 +21,8 @@ public final class DTOUtils {
     public static List<ReactiveCapabilityCurveModificationInfos> convertToReactiveCapabilityCurveModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
         return CollectionUtils.isEmpty(rCCpoints) ? null : rCCpoints
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
-                        value.getQmaxP(), value.getOldQmaxP(),
+                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
+                        value.getMaxQ(), value.getOldMaxQ(),
                         value.getP(), value.getOldP()))
                 .toList();
     }

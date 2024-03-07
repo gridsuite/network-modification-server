@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="jamalk (generated)" id="1708963903677-29">
+    <changeSet author="jamalk (generated)" id="1709822847235-29">
         <createTable tableName="converter_station_modification">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name_op" type="VARCHAR(255)"/>
@@ -30,20 +30,20 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-30">
+    <changeSet author="jamalk (generated)" id="1709822847235-30">
         <createTable tableName="converter_station_modification_rcc_points">
             <column name="converter_station_modification_entity_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
+            <column name="maxq" type="FLOAT(53)"/>
+            <column name="minq" type="FLOAT(53)"/>
+            <column name="old_maxq" type="FLOAT(53)"/>
+            <column name="old_minq" type="FLOAT(53)"/>
             <column name="oldp" type="FLOAT(53)"/>
-            <column name="old_qmaxp" type="FLOAT(53)"/>
-            <column name="old_qminp" type="FLOAT(53)"/>
             <column name="p" type="FLOAT(53)"/>
-            <column name="qmaxp" type="FLOAT(53)"/>
-            <column name="qminp" type="FLOAT(53)"/>
         </createTable>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-31">
+    <changeSet author="jamalk (generated)" id="1709822847235-31">
         <createTable tableName="vsc_modification">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name_op" type="VARCHAR(255)"/>
@@ -75,16 +75,29 @@
             <column name="converter_station_2_id" type="UUID"/>
         </createTable>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-45">
+
+
+
+    <changeSet author="jamalk (generated)" id="1709822847235-45">
         <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_MODIFICATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_modification"/>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-46">
+    <changeSet author="jamalk (generated)" id="1709822847235-46">
         <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_MODIFICATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_modification"/>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-50">
+
+
+    <changeSet author="jamalk (generated)" id="1709822847235-49">
+        <addForeignKeyConstraint baseColumnNames="converter_station_modification_entity_id" baseTableName="converter_station_modification_rcc_points" constraintName="FKa1d66rwnqihum8e7burnweyr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1709822847235-50">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="vsc_modification" constraintName="FKo2vpsuh6othc7kfc7hmilkia5" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="jamalk (generated)" id="1708963903677-51">
+
+
+    <changeSet author="jamalk (generated)" id="1709822847235-51">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_modification" constraintName="FKryub7wml7674krq1lwhn21jqw" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
+
+
+
 </databaseChangeLog>
