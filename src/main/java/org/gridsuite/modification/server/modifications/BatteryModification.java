@@ -10,16 +10,12 @@ import com.powsybl.commons.reporter.Report;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.network.Battery;
-import com.powsybl.iidm.network.MinMaxReactiveLimits;
-import com.powsybl.iidm.network.MinMaxReactiveLimitsAdder;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ReactiveCapabilityCurve;
 import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
-import com.powsybl.iidm.network.ReactiveLimits;
 import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
@@ -50,14 +46,8 @@ public class BatteryModification extends AbstractModification {
         }
         Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
-        if (battery.getReactiveLimits().getKind() == ReactiveLimitsKind.MIN_MAX && (modificationInfos.getMinQ() != null || modificationInfos.getMaxQ() != null)) {
-            MinMaxReactiveLimits minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimits.class);
-            ModificationUtils.getInstance().checkMaxReactivePowerGreaterThanMinReactivePower(minMaxReactiveLimits, modificationInfos.getMinQ(), modificationInfos.getMaxQ(), MODIFY_BATTERY_ERROR, errorMessage);
-        }
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
-        if (modificationPoints != null) {
-            ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(modificationPoints, MODIFY_BATTERY_ERROR, errorMessage);
-        }
+        ModificationUtils.getInstance().checkReactiveLimit(battery, modificationInfos.getMinQ(), modificationInfos.getMaxQ(),
+                modificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_BATTERY_ERROR, errorMessage);
         checkActivePowerZeroOrBetweenMinAndMaxActivePowerBattery(modificationInfos, battery, MODIFY_BATTERY_ERROR, errorMessage);
     }
 
@@ -174,26 +164,9 @@ public class BatteryModification extends AbstractModification {
                     && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
                 modifyBatteryReactiveCapabilityCurvePoints(modificationInfos, battery, subReporter, subReporterLimits);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-                modifyBatteryMinMaxReactiveLimits(modificationInfos, battery, subReporter, subReporterLimits);
+                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinQ(), modificationInfos.getMaxQ(), battery, subReporter, subReporterLimits);
             }
         }
-    }
-
-    private void modifyBatteryMinMaxReactiveLimits(BatteryModificationInfos modificationInfos, Battery battery,
-                                                   Reporter subReporter, Reporter subReporterLimits) {
-        MinMaxReactiveLimits minMaxReactiveLimits = null;
-        ReactiveLimits reactiveLimits = battery.getReactiveLimits();
-        MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = battery.newMinMaxReactiveLimits();
-        if (reactiveLimits != null) {
-            ReactiveLimitsKind limitsKind = reactiveLimits.getKind();
-            if (limitsKind == ReactiveLimitsKind.MIN_MAX) {
-                minMaxReactiveLimits = battery.getReactiveLimits(MinMaxReactiveLimitsImpl.class);
-            }
-        }
-        ModificationUtils.getInstance().modifyMinMaxReactiveLimits(minMaxReactiveLimits,
-                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
-                modificationInfos.getMinQ(),
-                modificationInfos.getMaxQ());
     }
 
     private Reporter modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,
