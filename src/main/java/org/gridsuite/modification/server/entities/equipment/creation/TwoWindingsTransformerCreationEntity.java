@@ -145,7 +145,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId();
         this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId();
         this.ratioTapChangerTerminalRefType = ratioTapChanger.getRegulatingTerminalType();
-        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.hasLoadTapChangingCapabilities();
+        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.isHasLoadTapChangingCapabilities();
         this.ratioTapChangerTargetV = ratioTapChanger.getTargetV();
         this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
     }

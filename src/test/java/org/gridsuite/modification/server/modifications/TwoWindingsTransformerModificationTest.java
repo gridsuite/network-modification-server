@@ -323,7 +323,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         twtToModify.getRatioTapChanger().setRegulating(false);
         twtToModify.getRatioTapChanger().setTargetDeadband(Double.NaN);
         //unset regulating and modify target voltage
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().isRegulating(null);
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setIsRegulating(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
 
         modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
@@ -336,7 +336,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
         //unset target voltage and modify regulating terminal
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().isRegulating(new AttributeModification<>(true, OperationType.SET));
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setIsRegulating(new AttributeModification<>(true, OperationType.SET));
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 

@@ -302,12 +302,12 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratioTapChangerRegulationSide = new EnumModificationEmbedded<>(ratioTapChanger.getRegulationSide());
         this.ratioTapChangerLowTapPosition = new IntegerModificationEmbedded(ratioTapChanger.getLowTapPosition());
         this.ratioTapChangerTapPosition = new IntegerModificationEmbedded(ratioTapChanger.getTapPosition());
-        this.ratioTapChangerRegulating = new BooleanModificationEmbedded(ratioTapChanger.isRegulating());
+        this.ratioTapChangerRegulating = new BooleanModificationEmbedded(ratioTapChanger.getIsRegulating());
         this.ratioTapChangerTargetDeadband = new DoubleModificationEmbedded(ratioTapChanger.getTargetDeadband());
         this.ratioTapChangerTerminalRefConnectableId = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalId());
         this.ratioTapChangerTerminalRefVoltageLevelId = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalVlId());
         this.ratioTapChangerTerminalRefType = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalType());
-        this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.hasLoadTapChangingCapabilities());
+        this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.getHasLoadTapChangingCapabilities());
         this.ratioTapChangerTargetV = new DoubleModificationEmbedded(ratioTapChanger.getTargetV());
         if (ratioTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
