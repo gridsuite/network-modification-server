@@ -89,6 +89,10 @@ public class NetworkModificationRepository {
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
         List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications();
 
+        // To remove null entities when @orderColumn is not a contiguous sequence starting from 0 (to be fixed?)
+        // (there are several places in this file where we filter non-null modification entities)
+        originModificationEntities.removeIf(Objects::isNull);
+
         // remove from origin list
         List<ModificationEntity> modificationsToMove = removeModifications(originModificationEntities, modificationsToMoveUUID);
 
@@ -99,6 +103,7 @@ public class NetworkModificationRepository {
             // read destination group and modifications (group must be created if missing)
             ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
             List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();
+            destinationModificationEntities.removeIf(Objects::isNull);
             // insert into destination list
             insertModifications(destinationModificationEntities, modificationsToMove, referenceModificationUuid);
             // update destination group
