@@ -101,7 +101,7 @@ class VoltageInitReportTest {
                 .date(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
                 .stashed(false)
                 .generators(List.of(
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("GTH2").voltageSetpoint(0.1).build())) //added for test case
+                    VoltageInitGeneratorModificationInfos.builder().generatorId("GTH2").targetV(0.1).build())) //added for test case
                 .transformers(List.of(
                     VoltageInitTransformerModificationInfos.builder().transformerId("TWT2").ratioTapChangerPosition(2).build()))
                 .staticVarCompensators(List.of(
@@ -117,8 +117,8 @@ class VoltageInitReportTest {
                 .date(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
                 .stashed(false)
                 .generators(List.of(
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("G1").reactivePowerSetpoint(10.).build(),
-                    VoltageInitGeneratorModificationInfos.builder().generatorId("G2").voltageSetpoint(226.).build()))
+                    VoltageInitGeneratorModificationInfos.builder().generatorId("G1").targetQ(10.).build(),
+                    VoltageInitGeneratorModificationInfos.builder().generatorId("G2").targetV(226.).build()))
                 .transformers(List.of(
                     VoltageInitTransformerModificationInfos.builder().transformerId("2WT1").ratioTapChangerPosition(3).build(),
                     VoltageInitTransformerModificationInfos.builder().transformerId("3WT1").ratioTapChangerPosition(1).legSide(ThreeSides.TWO).build()))

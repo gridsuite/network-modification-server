@@ -121,13 +121,13 @@ public class GeneratorCreation extends AbstractModification {
             .setId(generatorCreationInfos.getEquipmentId())
             .setName(generatorCreationInfos.getEquipmentName())
             .setEnergySource(generatorCreationInfos.getEnergySource())
-            .setMinP(generatorCreationInfos.getMinActivePower())
-            .setMaxP(generatorCreationInfos.getMaxActivePower())
-            .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
-            .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
+            .setMinP(generatorCreationInfos.getMinP())
+            .setMaxP(generatorCreationInfos.getMaxP())
+            .setRatedS(nanIfNull(generatorCreationInfos.getRatedS()))
+            .setTargetP(generatorCreationInfos.getTargetP())
+            .setTargetQ(nanIfNull(generatorCreationInfos.getTargetQ()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()));
+            .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()));
 
         if (terminal != null) {
             generatorAdder.setRegulatingTerminal(terminal);
@@ -164,13 +164,13 @@ public class GeneratorCreation extends AbstractModification {
             .setEnergySource(generatorCreationInfos.getEnergySource())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
-            .setMinP(generatorCreationInfos.getMinActivePower())
-            .setMaxP(generatorCreationInfos.getMaxActivePower())
-            .setRatedS(nanIfNull(generatorCreationInfos.getRatedNominalPower()))
-            .setTargetP(generatorCreationInfos.getActivePowerSetpoint())
-            .setTargetQ(nanIfNull(generatorCreationInfos.getReactivePowerSetpoint()))
+            .setMinP(generatorCreationInfos.getMinP())
+            .setMaxP(generatorCreationInfos.getMaxP())
+            .setRatedS(nanIfNull(generatorCreationInfos.getRatedS()))
+            .setTargetP(generatorCreationInfos.getTargetP())
+            .setTargetQ(nanIfNull(generatorCreationInfos.getTargetQ()))
             .setVoltageRegulatorOn(generatorCreationInfos.isVoltageRegulationOn())
-            .setTargetV(nanIfNull(generatorCreationInfos.getVoltageSetpoint()))
+            .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()))
             .add();
 
         addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
@@ -186,10 +186,10 @@ public class GeneratorCreation extends AbstractModification {
     private Reporter reportGeneratorSetPoints(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
         List<Report> setPointReports = new ArrayList<>();
         setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(generatorCreationInfos.getActivePowerSetpoint(), "Active power"));
-        if (generatorCreationInfos.getReactivePowerSetpoint() != null) {
+                .buildCreationReport(generatorCreationInfos.getTargetP(), "Active power"));
+        if (generatorCreationInfos.getTargetQ() != null) {
             setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(generatorCreationInfos.getReactivePowerSetpoint(), "Reactive power"));
+                .buildCreationReport(generatorCreationInfos.getTargetQ(), "Reactive power"));
         }
         return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
     }
@@ -198,7 +198,7 @@ public class GeneratorCreation extends AbstractModification {
         List<Report> voltageReports = new ArrayList<>();
         voltageReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("VoltageRegulationOn", modificationInfos.isVoltageRegulationOn()));
-        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getVoltageSetpoint(), "Voltage"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getTargetV(), "Voltage"));
         if (generatorCreationInfos.getRegulatingTerminalVlId() != null && generatorCreationInfos.getRegulatingTerminalId() != null &&
                 generatorCreationInfos.getRegulatingTerminalType() != null) {
             Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
@@ -285,14 +285,14 @@ public class GeneratorCreation extends AbstractModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            generatorCreationInfos.getMinActivePower(), "Min active power"));
+            generatorCreationInfos.getMinP(), "Min active power"));
 
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            generatorCreationInfos.getMaxActivePower(), "Max active power"));
+            generatorCreationInfos.getMaxP(), "Max active power"));
 
-        if (generatorCreationInfos.getRatedNominalPower() != null) {
+        if (generatorCreationInfos.getRatedS() != null) {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-                generatorCreationInfos.getRatedNominalPower(), "Rated nominal power"));
+                generatorCreationInfos.getRatedS(), "Rated nominal power"));
         }
         ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
         return subReporterLimits;
@@ -325,18 +325,18 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void createGeneratorShortCircuit(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
-        if (generatorCreationInfos.getTransientReactance() != null) {
+        if (generatorCreationInfos.getDirectTransX() != null) {
             List<Report> shortCircuitReports = new ArrayList<>();
             try {
                 GeneratorShortCircuitAdder shortCircuitAdder = generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withDirectTransX(generatorCreationInfos.getTransientReactance());
-                if (generatorCreationInfos.getStepUpTransformerReactance() != null) {
-                    shortCircuitAdder.withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerReactance());
+                    .withDirectTransX(generatorCreationInfos.getDirectTransX());
+                if (generatorCreationInfos.getStepUpTransformerX() != null) {
+                    shortCircuitAdder.withStepUpTransformerX(generatorCreationInfos.getStepUpTransformerX());
                 }
                 shortCircuitAdder.add();
-                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getTransientReactance(), "Transient reactance"));
-                if (generatorCreationInfos.getStepUpTransformerReactance() != null) {
-                    shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getStepUpTransformerReactance(), "Transformer reactance"));
+                shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getDirectTransX(), "Transient reactance"));
+                if (generatorCreationInfos.getStepUpTransformerX() != null) {
+                    shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getStepUpTransformerX(), "Transformer reactance"));
                 }
             } catch (PowsyblException e) {
                 shortCircuitReports.add(Report.builder()

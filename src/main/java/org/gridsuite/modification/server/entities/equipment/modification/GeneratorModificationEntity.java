@@ -39,38 +39,38 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "minActivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "minActivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "minP")),
+        @AttributeOverride(name = "opType", column = @Column(name = "minpOp"))
     })
-    private DoubleModificationEmbedded minActivePower;
+    private DoubleModificationEmbedded minP;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "maxActivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "maxActivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "maxP")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maxpOp"))
     })
-    private DoubleModificationEmbedded maxActivePower;
+    private DoubleModificationEmbedded maxP;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedNominalPower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedNominalPowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratedS")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratedsOp"))
     })
-    private DoubleModificationEmbedded ratedNominalPower;
+    private DoubleModificationEmbedded ratedS;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "activePowerSetpoint")),
-        @AttributeOverride(name = "opType", column = @Column(name = "activePowerSetpointOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "targetP")),
+        @AttributeOverride(name = "opType", column = @Column(name = "targetpOp"))
     })
-    private DoubleModificationEmbedded activePowerSetpoint;
+    private DoubleModificationEmbedded targetP;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "reactivePowerSetpoint")),
-        @AttributeOverride(name = "opType", column = @Column(name = "reactivePowerSetpointOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "targetQ")),
+        @AttributeOverride(name = "opType", column = @Column(name = "targetqOp"))
     })
-    private DoubleModificationEmbedded reactivePowerSetpoint;
+    private DoubleModificationEmbedded targetQ;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -81,10 +81,10 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "voltageSetpoint")),
-        @AttributeOverride(name = "opType", column = @Column(name = "voltageSetpointOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "targetV")),
+        @AttributeOverride(name = "opType", column = @Column(name = "targetvOp"))
     })
-    private DoubleModificationEmbedded voltageSetpoint;
+    private DoubleModificationEmbedded targetV;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -116,17 +116,17 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "minimumReactivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "minimumReactivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "minQ")),
+        @AttributeOverride(name = "opType", column = @Column(name = "minqOp"))
     })
-    private DoubleModificationEmbedded minimumReactivePower;
+    private DoubleModificationEmbedded minQ;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "maximumReactivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "maximumReactivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "maxQ")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maxqOp"))
     })
-    private DoubleModificationEmbedded maximumReactivePower;
+    private DoubleModificationEmbedded maxQ;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -144,17 +144,17 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "transientReactance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "transientReactanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "directTransX")),
+        @AttributeOverride(name = "opType", column = @Column(name = "directTransxOp"))
     })
-    private DoubleModificationEmbedded transientReactance;
+    private DoubleModificationEmbedded directTransX;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "stepUpTransformerReactance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "stepUpTransformerReactanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "stepUpTransformerX")),
+        @AttributeOverride(name = "opType", column = @Column(name = "stepUpTransformerxOp"))
     })
-    private DoubleModificationEmbedded stepUpTransformerReactance;
+    private DoubleModificationEmbedded stepUpTransformerX;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -215,23 +215,23 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
 
     private void assignAttributes(GeneratorModificationInfos generatorModificationInfos) {
         this.energySource = generatorModificationInfos.getEnergySource() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getEnergySource()) : null;
-        this.minActivePower = generatorModificationInfos.getMinActivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinActivePower()) : null;
-        this.maxActivePower = generatorModificationInfos.getMaxActivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxActivePower()) : null;
-        this.ratedNominalPower = generatorModificationInfos.getRatedNominalPower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getRatedNominalPower()) : null;
-        this.activePowerSetpoint = generatorModificationInfos.getActivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getActivePowerSetpoint()) : null;
-        this.reactivePowerSetpoint = generatorModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getReactivePowerSetpoint()) : null;
+        this.minP = generatorModificationInfos.getMinP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinP()) : null;
+        this.maxP = generatorModificationInfos.getMaxP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxP()) : null;
+        this.ratedS = generatorModificationInfos.getRatedS() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getRatedS()) : null;
+        this.targetP = generatorModificationInfos.getTargetP() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTargetP()) : null;
+        this.targetQ = generatorModificationInfos.getTargetQ() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTargetQ()) : null;
         this.voltageRegulationOn = generatorModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getVoltageRegulationOn()) : null;
-        this.voltageSetpoint = generatorModificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getVoltageSetpoint()) : null;
+        this.targetV = generatorModificationInfos.getTargetV() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTargetV()) : null;
         this.plannedActivePowerSetPoint = generatorModificationInfos.getPlannedActivePowerSetPoint() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedActivePowerSetPoint()) : null;
         this.marginalCost = generatorModificationInfos.getMarginalCost() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMarginalCost()) : null;
         this.plannedOutageRate = generatorModificationInfos.getPlannedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getPlannedOutageRate()) : null;
         this.forcedOutageRate = generatorModificationInfos.getForcedOutageRate() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getForcedOutageRate()) : null;
-        this.minimumReactivePower = generatorModificationInfos.getMinimumReactivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinimumReactivePower()) : null;
-        this.maximumReactivePower = generatorModificationInfos.getMaximumReactivePower() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaximumReactivePower()) : null;
+        this.minQ = generatorModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMinQ()) : null;
+        this.maxQ = generatorModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getMaxQ()) : null;
         this.participate = generatorModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(generatorModificationInfos.getParticipate()) : null;
         this.droop = generatorModificationInfos.getDroop() != null ? new FloatModificationEmbedded(generatorModificationInfos.getDroop()) : null;
-        this.transientReactance = generatorModificationInfos.getTransientReactance() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getTransientReactance()) : null;
-        this.stepUpTransformerReactance = generatorModificationInfos.getStepUpTransformerReactance() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getStepUpTransformerReactance()) : null;
+        this.directTransX = generatorModificationInfos.getDirectTransX() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getDirectTransX()) : null;
+        this.stepUpTransformerX = generatorModificationInfos.getStepUpTransformerX() != null ? new DoubleModificationEmbedded(generatorModificationInfos.getStepUpTransformerX()) : null;
         this.voltageRegulationType = generatorModificationInfos.getVoltageRegulationType() != null ? new EnumModificationEmbedded<>(generatorModificationInfos.getVoltageRegulationType()) : null;
         this.regulatingTerminalId = generatorModificationInfos.getRegulatingTerminalId() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalId()) : null;
         this.regulatingTerminalType = generatorModificationInfos.getRegulatingTerminalType() != null ? new StringModificationEmbedded(generatorModificationInfos.getRegulatingTerminalType()) : null;
@@ -245,8 +245,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
             List<ReactiveCapabilityCurveModificationInfos> points) {
         return points == null ? null
                 : points.stream()
-                        .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getQminP(), point.getOldQminP(),
-                                point.getQmaxP(), point.getOldQmaxP(), point.getP(),
+                        .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
+                                point.getMaxQ(), point.getOldMaxQ(), point.getP(),
                                 point.getOldP()))
                         .collect(Collectors.toList());
     }
@@ -260,8 +260,8 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
         List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getQminP(), value.getOldQminP(),
-                        value.getQmaxP(), value.getOldQmaxP(),
+                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
+                        value.getMaxQ(), value.getOldMaxQ(),
                         value.getP(), value.getOldP()))
                 .collect(Collectors.toList()) : null;
         return GeneratorModificationInfos
@@ -275,23 +275,23 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
                 .connected(toAttributeModification(getConnected()))
                 .energySource(toAttributeModification(getEnergySource()))
-                .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
-                .maxActivePower(toAttributeModification(getMaxActivePower()))
-                .minActivePower(toAttributeModification(getMinActivePower()))
-                .ratedNominalPower(toAttributeModification(getRatedNominalPower()))
-                .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
+                .targetP(toAttributeModification(getTargetP()))
+                .maxP(toAttributeModification(getMaxP()))
+                .minP(toAttributeModification(getMinP()))
+                .ratedS(toAttributeModification(getRatedS()))
+                .targetQ(toAttributeModification(getTargetQ()))
                 .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-                .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
+                .targetV(toAttributeModification(getTargetV()))
                 .plannedActivePowerSetPoint(toAttributeModification(getPlannedActivePowerSetPoint()))
                 .marginalCost(toAttributeModification(getMarginalCost()))
                 .plannedOutageRate(toAttributeModification(getPlannedOutageRate()))
                 .forcedOutageRate(toAttributeModification(getForcedOutageRate()))
-                .minimumReactivePower(toAttributeModification(getMinimumReactivePower()))
-                .maximumReactivePower(toAttributeModification(getMaximumReactivePower()))
+                .minQ(toAttributeModification(getMinQ()))
+                .maxQ(toAttributeModification(getMaxQ()))
                 .participate(toAttributeModification(getParticipate()))
                 .droop(toAttributeModification(getDroop()))
-                .transientReactance(toAttributeModification(getTransientReactance()))
-                .stepUpTransformerReactance(toAttributeModification(getStepUpTransformerReactance()))
+                .directTransX(toAttributeModification(getDirectTransX()))
+                .stepUpTransformerX(toAttributeModification(getStepUpTransformerX()))
                 .voltageRegulationType(toAttributeModification(getVoltageRegulationType()))
                 .regulatingTerminalId(toAttributeModification(getRegulatingTerminalId()))
                 .regulatingTerminalType(toAttributeModification(getRegulatingTerminalType()))

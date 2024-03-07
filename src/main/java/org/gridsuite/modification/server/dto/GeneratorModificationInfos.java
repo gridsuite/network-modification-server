@@ -40,25 +40,25 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<EnergySource> energySource;
 
     @Schema(description = "Minimum active power")
-    private AttributeModification<Double> minActivePower;
+    private AttributeModification<Double> minP;
 
     @Schema(description = "Maximum active power")
-    private AttributeModification<Double> maxActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Rated nominal power")
-    private AttributeModification<Double> ratedNominalPower;
+    private AttributeModification<Double> ratedS;
 
     @Schema(description = "Active power set point")
-    private AttributeModification<Double> activePowerSetpoint;
+    private AttributeModification<Double> targetP;
 
     @Schema(description = "Reactive power set point")
-    private AttributeModification<Double> reactivePowerSetpoint;
+    private AttributeModification<Double> targetQ;
 
     @Schema(description = "Voltage regulation on")
     private AttributeModification<Boolean> voltageRegulationOn;
 
     @Schema(description = "Voltage set point")
-    private AttributeModification<Double> voltageSetpoint;
+    private AttributeModification<Double> targetV;
 
     @Schema(description = "Planning active power set point")
     private AttributeModification<Double> plannedActivePowerSetPoint;
@@ -73,10 +73,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Double> forcedOutageRate;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
@@ -88,10 +88,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Float> droop;
 
     @Schema(description = "Transient reactance")
-    private AttributeModification<Double> transientReactance;
+    private AttributeModification<Double> directTransX;
 
     @Schema(description = "Step up transformer reactance")
-    private AttributeModification<Double> stepUpTransformerReactance;
+    private AttributeModification<Double> stepUpTransformerX;
 
     @Schema(description = "Voltage Regulation type")
     private AttributeModification<VoltageRegulationType> voltageRegulationType;
