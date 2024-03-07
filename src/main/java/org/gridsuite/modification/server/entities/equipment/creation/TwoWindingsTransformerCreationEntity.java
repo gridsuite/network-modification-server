@@ -145,7 +145,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
         this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId();
         this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId();
         this.ratioTapChangerTerminalRefType = ratioTapChanger.getRegulatingTerminalType();
-        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.isLoadTapChangingCapabilities();
+        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.isHasLoadTapChangingCapabilities();
         this.ratioTapChangerTargetV = ratioTapChanger.getTargetV();
         this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
     }
@@ -223,8 +223,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .lowTapPosition(getRatioTapChangerLowTapPosition())
                     .tapPosition(getRatioTapChangerTapPosition())
                     .targetDeadband(getRatioTapChangerTargetDeadband())
-                    .regulating(getRatioTapChangerRegulating())
-                    .loadTapChangingCapabilities(getRatioTapChangerLoadTapChangingCapabilities())
+                    .isRegulating(getRatioTapChangerRegulating())
+                    .hasLoadTapChangingCapabilities(getRatioTapChangerLoadTapChangingCapabilities())
                     .targetV(getRatioTapChangerTargetV())
                     .regulatingTerminalId(getRatioTapChangerTerminalRefConnectableId())
                     .regulatingTerminalVlId(getRatioTapChangerTerminalRefVoltageLevelId())
@@ -239,7 +239,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .lowTapPosition(getPhaseTapChangerLowTapPosition())
                     .tapPosition(getPhaseTapChangerTapPosition())
                     .targetDeadband(getPhaseTapChangerTargetDeadband())
-                    .regulating(getPhaseTapChangerRegulating())
+                    .isRegulating(getPhaseTapChangerRegulating())
                     .regulationMode(getPhaseTapChangerRegulationMode())
                     .regulationValue(getPhaseTapChangerRegulationValue())
                     .regulatingTerminalId(getPhaseTapChangerTerminalRefConnectableId())

@@ -42,7 +42,7 @@ public class TapChangerModificationInfos {
     private AttributeModification<Integer> tapPosition;
 
     @Schema(description = "regulating")
-    private AttributeModification<Boolean> regulating;
+    private AttributeModification<Boolean> isRegulating;
 
     @Schema(description = "targetDeadband")
     private AttributeModification<Double> targetDeadband;

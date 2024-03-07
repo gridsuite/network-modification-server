@@ -32,8 +32,8 @@ public class TapChangerCreationInfos {
     @Schema(description = "tapPosition")
     private int tapPosition;
 
-    @Schema(description = "regulating")
-    private boolean regulating;
+    @Schema(description = "isRegulating")
+    private boolean isRegulating;
 
     @Schema(description = "targetDeadband")
     private Double targetDeadband;
