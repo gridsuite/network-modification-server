@@ -29,24 +29,24 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 public class VscModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "dcNominalVoltage")),
-        @AttributeOverride(name = "opType", column = @Column(name = "dcNominalVoltageOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "nominalv")),
+        @AttributeOverride(name = "opType", column = @Column(name = "nominalvOp"))
     })
-    private DoubleModificationEmbedded dcNominalVoltage;
+    private DoubleModificationEmbedded nominalV;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "dcResistance")),
-        @AttributeOverride(name = "opType", column = @Column(name = "dcResistanceOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "r")),
+        @AttributeOverride(name = "opType", column = @Column(name = "rOp"))
     })
-    private DoubleModificationEmbedded dcResistance;
+    private DoubleModificationEmbedded r;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "maximumActivePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "maximumActivePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "maxp")),
+        @AttributeOverride(name = "opType", column = @Column(name = "maxpOp"))
     })
-    private DoubleModificationEmbedded maximumActivePower;
+    private DoubleModificationEmbedded maxP;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -71,10 +71,10 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "activePower")),
-        @AttributeOverride(name = "opType", column = @Column(name = "activePowerOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "activePowerSetpoint")),
+        @AttributeOverride(name = "opType", column = @Column(name = "activePowerSetpointOp"))
     })
-    private DoubleModificationEmbedded activePower;
+    private DoubleModificationEmbedded activePowerSetpoint;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -127,13 +127,13 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
     }
 
     private void assignAttributes(@NonNull VscModificationInfos vscModificationInfos) {
-        this.dcNominalVoltage = new DoubleModificationEmbedded(vscModificationInfos.getNominalV());
-        this.dcResistance = new DoubleModificationEmbedded(vscModificationInfos.getR());
-        this.maximumActivePower = new DoubleModificationEmbedded(vscModificationInfos.getMaxP());
+        this.nominalV = new DoubleModificationEmbedded(vscModificationInfos.getNominalV());
+        this.r = new DoubleModificationEmbedded(vscModificationInfos.getR());
+        this.maxP = new DoubleModificationEmbedded(vscModificationInfos.getMaxP());
         this.operatorActivePowerLimitSide1 = new FloatModificationEmbedded(vscModificationInfos.getOperatorActivePowerLimitFromSide1ToSide2());
         this.operatorActivePowerLimitSide2 = new FloatModificationEmbedded(vscModificationInfos.getOperatorActivePowerLimitFromSide2ToSide1());
         this.convertersMode = new EnumModificationEmbedded<>(vscModificationInfos.getConvertersMode());
-        this.activePower = new DoubleModificationEmbedded(vscModificationInfos.getActivePowerSetpoint());
+        this.activePowerSetpoint = new DoubleModificationEmbedded(vscModificationInfos.getActivePowerSetpoint());
         this.angleDroopActivePowerControl = new BooleanModificationEmbedded(vscModificationInfos.getAngleDroopActivePowerControl());
         this.p0 = new FloatModificationEmbedded(vscModificationInfos.getP0());
         this.droop = new FloatModificationEmbedded(vscModificationInfos.getDroop());
@@ -148,13 +148,13 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .nominalV(toAttributeModification(getDcNominalVoltage()))
-                .r(toAttributeModification(getDcResistance()))
-                .maxP(toAttributeModification(getMaximumActivePower()))
+                .nominalV(toAttributeModification(getNominalV()))
+                .r(toAttributeModification(getR()))
+                .maxP(toAttributeModification(getMaxP()))
                 .operatorActivePowerLimitFromSide1ToSide2(toAttributeModification(getOperatorActivePowerLimitSide1()))
                 .operatorActivePowerLimitFromSide2ToSide1(toAttributeModification(getOperatorActivePowerLimitSide2()))
                 .convertersMode(toAttributeModification(getConvertersMode()))
-                .activePowerSetpoint(toAttributeModification(getActivePower()))
+                .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
                 .angleDroopActivePowerControl(toAttributeModification(getAngleDroopActivePowerControl()))
                 .p0(toAttributeModification(getP0()))
                 .droop(toAttributeModification(getDroop()))

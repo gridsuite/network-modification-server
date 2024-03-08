@@ -10,18 +10,68 @@
         <renameColumn tableName="vsc_creation"
                       columnDataType="float(53)"
                       oldColumnName="maximum_active_power"
-                      newColumnName="max_p"/>
+                      newColumnName="maxp"/>
     </changeSet>
     <changeSet author="tourian1 (generated)" id="1709743904912-31">
         <renameColumn tableName="vsc_creation"
                       columnDataType="float(53)"
                       oldColumnName="dc_nominal_voltage"
-                      newColumnName="nominal_v"/>
+                      newColumnName="nominalv"/>
     </changeSet>
     <changeSet author="tourian1 (generated)" id="1709743904912-32">
         <renameColumn tableName="vsc_creation"
                       columnDataType="float(53)"
                       oldColumnName="dc_resistance"
                       newColumnName="r"/>
+    </changeSet>
+
+    <changeSet author="tourian1 (generated)" id="1709743904912-33">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="dc_resistance"
+                      newColumnName="r"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-34">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="dc_resistance_op"
+                      newColumnName="r_op"/>
+    </changeSet>
+
+    <changeSet author="tourian1 (generated)" id="1709743904912-35">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="active_power"
+                      newColumnName="active_power_setpoint"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-36">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="active_power_op"
+                      newColumnName="active_power_setpoint_op"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-37">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="maximum_active_power"
+                      newColumnName="maxp"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-38">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="maximum_active_power_op"
+                      newColumnName="maxp_op"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-39">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="dc_nominal_voltage"
+                      newColumnName="nominalv"/>
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1709743904912-40">
+        <renameColumn tableName="vsc_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="dc_nominal_voltage_op"
+                      newColumnName="nominalv_op"/>
     </changeSet>
 </databaseChangeLog>

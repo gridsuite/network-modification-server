@@ -33,13 +33,11 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "vscCreation")
 public class VscCreationEntity extends EquipmentCreationEntity {
-    @Column(name = "nominal_v")
     private Double nominalV;
 
     @Column
     private Double r;
 
-    @Column(name = "max_p")
     private Double maxP;
 
     @Column
