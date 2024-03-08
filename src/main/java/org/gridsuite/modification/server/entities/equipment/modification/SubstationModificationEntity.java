@@ -21,12 +21,12 @@ import jakarta.persistence.*;
 @Table(name = "substationModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "substationModification_id_fk_constraint"))
 public class SubstationModificationEntity extends BasicEquipmentModificationEntity {
-    @Column(name = "substationCountryValue")
-    private Country substationCountryValue;
+    @Column(name = "country")
+    private Country country;
 
-    @Column(name = "substationCountryOp")
+    @Column(name = "countryOp")
     @Enumerated(EnumType.STRING)
-    private OperationType substationCountryOp;
+    private OperationType countryOp;
 
     public SubstationModificationEntity(@NonNull SubstationModificationInfos substationModificationInfos) {
         super(substationModificationInfos);
@@ -40,8 +40,8 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     }
 
     private void assignAttributes(SubstationModificationInfos substationModificationInfos) {
-        this.substationCountryValue = substationModificationInfos.getSubstationCountry() != null ? substationModificationInfos.getSubstationCountry().getValue() : null;
-        this.substationCountryOp = substationModificationInfos.getSubstationCountry() != null ? substationModificationInfos.getSubstationCountry().getOp() : null;
+        this.country = substationModificationInfos.getCountry() != null ? substationModificationInfos.getCountry().getValue() : null;
+        this.countryOp = substationModificationInfos.getCountry() != null ? substationModificationInfos.getCountry().getOp() : null;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .substationCountry(AttributeModification.toAttributeModification(getSubstationCountryValue(), getSubstationCountryOp()))
+                .country(AttributeModification.toAttributeModification(getCountry(), getCountryOp()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
                         .map(FreePropertyEntity::toInfos)

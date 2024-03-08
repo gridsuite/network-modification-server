@@ -44,7 +44,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
-                .substationCountry(Country.AF)
+                .country(Country.AF)
                 .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoC").build()))
                 .build();
     }
@@ -55,7 +55,7 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("SubstationIdEdited")
                 .equipmentName("SubstationNameEdited")
-                .substationCountry(Country.CI)
+                .country(Country.CI)
                 .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
                 .build();
     }

@@ -30,7 +30,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
     private Country country;
 
     private void assignAttributes(SubstationCreationInfos substationCreationInfos) {
-        country = substationCreationInfos.getSubstationCountry();
+        country = substationCreationInfos.getCountry();
     }
 
     public SubstationCreationEntity(SubstationCreationInfos substationCreationInfos) {
@@ -62,7 +62,7 @@ public class SubstationCreationEntity extends EquipmentCreationEntity {
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
-                .substationCountry(getCountry())
+                .country(getCountry())
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
                         .map(FreePropertyEntity::toInfos)
