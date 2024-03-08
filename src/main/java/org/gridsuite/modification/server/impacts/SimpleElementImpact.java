@@ -6,38 +6,67 @@
  */
 package org.gridsuite.modification.server.impacts;
 
-import com.powsybl.iidm.network.IdentifiableType;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * This class describes an element type network impact
- * This type of network impact only describes an individual impacted item and the list of associated subtractions
+ * This type of network impact only describes an individual impacted item and the list of associated substations
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Setter
-@Getter
-@Builder
+@SuperBuilder
+@Data
+@ToString(callSuper = true)
+@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@ToString
-public class SimpleElementImpact {
+@EqualsAndHashCode(callSuper = true)
+public class SimpleElementImpact extends AbstractBaseImpact {
+
     public enum SimpleImpactType {
         CREATION,
         MODIFICATION,
         DELETION
     }
 
-    private SimpleImpactType impactType;
+    private SimpleImpactType simpleImpactType;
 
     /** The impacted element ID */
     private String elementId;
 
-    private IdentifiableType elementType;
-
     /** The impacted substations IDs */
     private Set<String> substationIds;
+
+    @Override
+    public ImpactType getType() {
+        return ImpactType.SIMPLE;
+    }
+
+    public boolean isSimple() {
+        return true;
+    }
+
+    public boolean isCollection() {
+        return false;
+    }
+
+    @JsonIgnore
+    public boolean isCreation() {
+        return getSimpleImpactType() == SimpleImpactType.CREATION;
+    }
+
+    @JsonIgnore
+    public boolean isModification() {
+        return getSimpleImpactType() == SimpleImpactType.MODIFICATION;
+    }
+
+    @JsonIgnore
+    public boolean isDeletion() {
+        return getSimpleImpactType() == SimpleImpactType.DELETION;
+    }
 }

@@ -14,6 +14,9 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,30 +30,30 @@ import java.util.stream.Collectors;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryCreation_id_fk_constraint"))
 public class BatteryCreationEntity extends InjectionCreationEntity {
 
-    @Column(name = "minActivePower")
-    private double minActivePower;
+    @Column(name = "minP")
+    private double minP;
 
-    @Column(name = "maxActivePower")
-    private double maxActivePower;
+    @Column(name = "maxP")
+    private double maxP;
 
     @Column(name = "reactiveCapabilityCurve")
     private Boolean reactiveCapabilityCurve;
 
-    @Column(name = "minimumReactivePower")
-    private Double minimumReactivePower;
+    @Column(name = "minQ")
+    private Double minQ;
 
-    @Column(name = "maximumReactivePower")
-    private Double maximumReactivePower;
+    @Column(name = "maxQ")
+    private Double maxQ;
 
     @ElementCollection
     @CollectionTable
     private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
-    @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint;
+    @Column(name = "targetP")
+    private double targetP;
 
-    @Column(name = "reactivePowerSetpoint")
-    private Double reactivePowerSetpoint;
+    @Column(name = "targetQ")
+    private Double targetQ;
 
     @Column(name = "participate")
     private Boolean participate;
@@ -70,14 +73,14 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private void assignAttributes(BatteryCreationInfos batteryCreationInfos) {
-        this.minActivePower = batteryCreationInfos.getMinActivePower();
-        this.maxActivePower = batteryCreationInfos.getMaxActivePower();
+        this.minP = batteryCreationInfos.getMinP();
+        this.maxP = batteryCreationInfos.getMaxP();
         this.reactiveCapabilityCurve = batteryCreationInfos.getReactiveCapabilityCurve();
-        this.minimumReactivePower = batteryCreationInfos.getMinimumReactivePower();
-        this.maximumReactivePower = batteryCreationInfos.getMaximumReactivePower();
+        this.minQ = batteryCreationInfos.getMinQ();
+        this.maxQ = batteryCreationInfos.getMaxQ();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryCreationInfos.getReactiveCapabilityCurvePoints());
-        this.activePowerSetpoint = batteryCreationInfos.getActivePowerSetpoint();
-        this.reactivePowerSetpoint = batteryCreationInfos.getReactivePowerSetpoint();
+        this.targetP = batteryCreationInfos.getTargetP();
+        this.targetQ = batteryCreationInfos.getTargetQ();
         this.participate = batteryCreationInfos.getParticipate();
         this.droop = batteryCreationInfos.getDroop();
     }
@@ -85,8 +88,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
             List<ReactiveCapabilityCurveCreationInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
-                        point.getQmaxP(),
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                        point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
@@ -99,8 +102,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
         List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
-                        value.getQmaxP(),
+                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
+                        value.getMaxQ(),
                         value.getP()))
                 .collect(Collectors.toList()) : null;
 
@@ -119,16 +122,21 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .connectionPosition(getConnectionPosition())
                 .connected(isConnected())
                 // battery
-                .minActivePower(getMinActivePower())
-                .maxActivePower(getMaxActivePower())
+                .minP(getMinP())
+                .maxP(getMaxP())
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
-                .minimumReactivePower(this.getMinimumReactivePower())
-                .maximumReactivePower(this.getMaximumReactivePower())
+                .minQ(this.getMinQ())
+                .maxQ(this.getMaxQ())
                 .reactiveCapabilityCurvePoints(points)
-                .activePowerSetpoint(getActivePowerSetpoint())
-                .reactivePowerSetpoint(getReactivePowerSetpoint())
+                .targetP(getTargetP())
+                .targetQ(getTargetQ())
                 .participate(getParticipate())
-                .droop(getDroop());
+                .droop(getDroop())
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 
 }

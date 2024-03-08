@@ -31,6 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class BatteryModificationTest extends AbstractInjectionModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -42,18 +45,19 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .stashed(false)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
-                .activePowerSetpoint(new AttributeModification<>(80.0, OperationType.SET))
-                .reactivePowerSetpoint(new AttributeModification<>(40.0, OperationType.SET))
-                .minActivePower(new AttributeModification<>(0., OperationType.SET))
-                .maxActivePower(new AttributeModification<>(100., OperationType.SET))
-                .minimumReactivePower(new AttributeModification<>(-100., OperationType.SET))
-                .maximumReactivePower(new AttributeModification<>(100., OperationType.SET))
+                .targetP(new AttributeModification<>(80.0, OperationType.SET))
+                .targetQ(new AttributeModification<>(40.0, OperationType.SET))
+                .minP(new AttributeModification<>(0., OperationType.SET))
+                .maxP(new AttributeModification<>(100., OperationType.SET))
+                .minQ(new AttributeModification<>(-100., OperationType.SET))
+                .maxP(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
                         new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.1),
                         new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 200., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -63,10 +67,10 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .stashed(false)
                 .equipmentId("idBatteryEdited")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
-                .activePowerSetpoint(new AttributeModification<>(81.0, OperationType.SET))
-                .reactivePowerSetpoint(new AttributeModification<>(41.0, OperationType.SET))
-                .minActivePower(new AttributeModification<>(1., OperationType.SET))
-                .maxActivePower(new AttributeModification<>(102., OperationType.SET))
+                .targetP(new AttributeModification<>(81.0, OperationType.SET))
+                .targetQ(new AttributeModification<>(41.0, OperationType.SET))
+                .minP(new AttributeModification<>(1., OperationType.SET))
+                .maxP(new AttributeModification<>(102., OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                 .build();
     }
@@ -91,11 +95,12 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                     .forEach(i -> {
                         var point = batteryPoints.get(i);
                         var modificationPoint = modificationPoints.get(i);
-                        assertEquals(modificationPoint.getQmaxP(), point.getMaxQ());
-                        assertEquals(modificationPoint.getQminP(), point.getMinQ());
+                        assertEquals(modificationPoint.getMaxQ(), point.getMaxQ());
+                        assertEquals(modificationPoint.getMinQ(), point.getMinQ());
                         assertEquals(modificationPoint.getP(), point.getP());
                     });
         }
+        assertEquals(PROPERTY_VALUE, getNetwork().getBattery("v3Battery").getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -115,8 +120,8 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
 
         //setting ReactiveCapabilityCurve to false with null min and max reactive limits
         batteryModificationInfos.setReactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET));
-        batteryModificationInfos.setMaximumReactivePower(null);
-        batteryModificationInfos.setMinimumReactivePower(null);
+        batteryModificationInfos.setMaxQ(null);
+        batteryModificationInfos.setMinQ(null);
         //setting ReactiveCapabilityCurvePoints for the battery we are modifying
         Battery battery = getNetwork().getBattery("v3Battery");
         battery.newReactiveCapabilityCurve()
@@ -142,7 +147,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
         testNetworkModificationsCount(getGroupId(), 1);
 
         // Modifying only min reactive limit
-        batteryModificationInfos.setMinimumReactivePower(new AttributeModification<>(-200., OperationType.SET));
+        batteryModificationInfos.setMinQ(new AttributeModification<>(-200., OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -154,8 +159,8 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
         testNetworkModificationsCount(getGroupId(), 2);
 
         // Modifying only max reactive limit
-        batteryModificationInfos.setMinimumReactivePower(null);
-        batteryModificationInfos.setMaximumReactivePower(new AttributeModification<>(200., OperationType.SET));
+        batteryModificationInfos.setMinQ(null);
+        batteryModificationInfos.setMaxQ(new AttributeModification<>(200., OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -167,7 +172,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
         testNetworkModificationsCount(getGroupId(), 3);
 
         // Modifying both min and max reactive limits
-        batteryModificationInfos.setMinimumReactivePower(new AttributeModification<>(-1.1, OperationType.SET));
+        batteryModificationInfos.setMinQ(new AttributeModification<>(-1.1, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -181,8 +186,8 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
         // nothing before reactive limits modification
         batteryModificationInfos = (BatteryModificationInfos) buildModification();
         batteryModificationInfos.setEquipmentName(null);
-        batteryModificationInfos.setMinActivePower(null);
-        batteryModificationInfos.setMaxActivePower(null);
+        batteryModificationInfos.setMinP(null);
+        batteryModificationInfos.setMaxP(null);
         modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -258,11 +263,11 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
         battery.setTargetP(80.)
                 .setMinP(0.)
                 .setMaxP(100.);
-        batteryModificationInfos.setActivePowerSetpoint(new AttributeModification<>(155.0, OperationType.SET));
+        batteryModificationInfos.setTargetP(new AttributeModification<>(155.0, OperationType.SET));
 
-        Double minActivePower = batteryModificationInfos.getMinActivePower() != null ? batteryModificationInfos.getMinActivePower().getValue() : battery.getMinP();
-        Double maxActivePower = batteryModificationInfos.getMaxActivePower() != null ? batteryModificationInfos.getMaxActivePower().getValue() : battery.getMaxP();
-        Double activePower = batteryModificationInfos.getActivePowerSetpoint() != null ? batteryModificationInfos.getActivePowerSetpoint().getValue() : battery.getTargetP();
+        Double minActivePower = batteryModificationInfos.getMinP() != null ? batteryModificationInfos.getMinP().getValue() : battery.getMinP();
+        Double maxActivePower = batteryModificationInfos.getMaxP() != null ? batteryModificationInfos.getMaxP().getValue() : battery.getMaxP();
+        Double activePower = batteryModificationInfos.getTargetP() != null ? batteryModificationInfos.getTargetP().getValue() : battery.getTargetP();
 
         String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -304,10 +309,10 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                             oldMaxQ = oldPoint.getMaxQ();
                             oldMinQ = oldPoint.getMinQ();
                         }
-                        newPoint.setQminP(300.0);
-                        newPoint.setOldQmaxP(250.0);
-                        maxQ.set(newPoint.getQmaxP() != null ? newPoint.getQmaxP() : oldMaxQ);
-                        minQ.set(newPoint.getQminP() != null ? newPoint.getQminP() : oldMinQ);
+                        newPoint.setMinQ(300.0);
+                        newPoint.setOldMaxQ(250.0);
+                        maxQ.set(newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ);
+                        minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
         }
         String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);

@@ -529,16 +529,16 @@ public class BuildTest {
         entities2.add(GeneratorCreationInfos.builder()
                 .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
                 .energySource(EnergySource.HYDRO).voltageLevelId("v2")
-                .busOrBusbarSectionId("1A").minActivePower(0)
-                .maxActivePower(500).ratedNominalPower(1.)
-                .activePowerSetpoint(100).reactivePowerSetpoint(50.)
-                .voltageRegulationOn(true).voltageSetpoint(225.)
+                .busOrBusbarSectionId("1A").minP(0)
+                .maxP(500).ratedS(1.)
+                .targetP(100).targetQ(50.)
+                .voltageRegulationOn(true).targetV(225.)
                 .plannedActivePowerSetPoint(80.)
                 .marginalCost(82.)
                 .plannedOutageRate(83.).forcedOutageRate(84.)
-                .minimumReactivePower(20.).maximumReactivePower(50.)
-                .participate(true).droop(9F).transientReactance(35.)
-                .stepUpTransformerReactance(25.).regulatingTerminalId("v2load")
+                .minQ(20.).maxQ(50.)
+                .participate(true).droop(9F).directTransX(35.)
+                .stepUpTransformerX(25.).regulatingTerminalId("v2load")
                 .regulatingTerminalType("LOAD").regulatingTerminalVlId("v2")
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
@@ -718,7 +718,12 @@ public class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 61, Set.of("newSubstation", "s1", "s2"));
+        // 2 : LOAD and SWITCH equipments are reduced to collection impact
+        // + 2 substation modifications
+        // (newSubstation is created but transformed to modification type (see NetworkStoreListener::reduceNetworkImpacts))
+        // + 3 Equipment deletions ( 1 shunt compensator + 2 switch)
+        // = 7
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 7, Set.of(IdentifiableType.LOAD, IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -863,7 +868,10 @@ public class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 55, Set.of("newSubstation", "s1", "s2"));
+        // 1 : SWITCH equipments are reduced to collection impact
+        // + 2 substation modifications
+        // = 3
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 3, Set.of(IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
         buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));

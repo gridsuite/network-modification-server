@@ -16,9 +16,9 @@ import java.util.List;
 public interface ReactiveLimitsHolderInfos {
     Boolean getReactiveCapabilityCurve();
 
-    Double getMinimumReactivePower();
+    Double getMinQ();
 
-    Double getMaximumReactivePower();
+    Double getMaxQ();
 
     List<ReactiveCapabilityCurveCreationInfos> getReactiveCapabilityCurvePoints();
 }

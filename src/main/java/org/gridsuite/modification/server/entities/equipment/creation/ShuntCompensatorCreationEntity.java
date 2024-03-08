@@ -14,6 +14,8 @@ import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>
@@ -84,6 +86,11 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .sectionCount(getSectionCount())
             .maxSusceptance(getMaxSusceptance())
             .maxQAtNominalV(getMaxQAtNominalV())
-            .shuntCompensatorType(getShuntCompensatorType());
+            .shuntCompensatorType(getShuntCompensatorType())
+             // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }

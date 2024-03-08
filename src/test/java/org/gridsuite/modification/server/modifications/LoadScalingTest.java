@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.hamcrest.core.IsNull;
@@ -31,7 +32,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -125,6 +128,11 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(load9, load10), List.of());
 
         return List.of(filter1, filter2, filter3, filter4, filter5);
+    }
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.LOAD));
     }
 
     @Test
