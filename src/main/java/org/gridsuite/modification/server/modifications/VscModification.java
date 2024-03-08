@@ -75,17 +75,17 @@ public class VscModification extends AbstractModification {
         if (modificationInfos.getEquipmentName() != null && modificationInfos.getEquipmentName().getValue() != null) {
             ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setName, () -> hvdcLine.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         }
-        if (modificationInfos.getDcNominalVoltage() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setNominalV, hvdcLine::getNominalV, modificationInfos.getDcNominalVoltage(), subReporter, "dcNominalVoltage");
+        if (modificationInfos.getNominalV() != null) {
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setNominalV, hvdcLine::getNominalV, modificationInfos.getNominalV(), subReporter, "dcNominalVoltage");
         }
-        if (modificationInfos.getDcResistance() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setR, hvdcLine::getR, modificationInfos.getDcResistance(), subReporter, "R");
+        if (modificationInfos.getR() != null) {
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setR, hvdcLine::getR, modificationInfos.getR(), subReporter, "R");
         }
-        if (modificationInfos.getActivePower() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setActivePowerSetpoint, hvdcLine::getActivePowerSetpoint, modificationInfos.getActivePower(), subReporter, "ActivePowerSetpoint");
+        if (modificationInfos.getActivePowerSetpoint() != null) {
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setActivePowerSetpoint, hvdcLine::getActivePowerSetpoint, modificationInfos.getActivePowerSetpoint(), subReporter, "ActivePowerSetpoint");
         }
-        if (modificationInfos.getMaximumActivePower() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaximumActivePower(), subReporter, "MaxP");
+        if (modificationInfos.getMaxP() != null) {
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaxP(), subReporter, "MaxP");
         }
         if (modificationInfos.getConvertersMode() != null) {
             ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setConvertersMode, hvdcLine::getConvertersMode, modificationInfos.getConvertersMode(), subReporter, "ConvertersMode");

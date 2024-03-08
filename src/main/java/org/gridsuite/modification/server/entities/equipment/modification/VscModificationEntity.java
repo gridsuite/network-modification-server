@@ -127,13 +127,13 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
     }
 
     private void assignAttributes(@NonNull VscModificationInfos vscModificationInfos) {
-        this.dcNominalVoltage = new DoubleModificationEmbedded(vscModificationInfos.getDcNominalVoltage());
-        this.dcResistance = new DoubleModificationEmbedded(vscModificationInfos.getDcResistance());
-        this.maximumActivePower = new DoubleModificationEmbedded(vscModificationInfos.getMaximumActivePower());
+        this.dcNominalVoltage = new DoubleModificationEmbedded(vscModificationInfos.getNominalV());
+        this.dcResistance = new DoubleModificationEmbedded(vscModificationInfos.getR());
+        this.maximumActivePower = new DoubleModificationEmbedded(vscModificationInfos.getMaxP());
         this.operatorActivePowerLimitSide1 = new FloatModificationEmbedded(vscModificationInfos.getOperatorActivePowerLimitFromSide1ToSide2());
         this.operatorActivePowerLimitSide2 = new FloatModificationEmbedded(vscModificationInfos.getOperatorActivePowerLimitFromSide2ToSide1());
         this.convertersMode = new EnumModificationEmbedded<>(vscModificationInfos.getConvertersMode());
-        this.activePower = new DoubleModificationEmbedded(vscModificationInfos.getActivePower());
+        this.activePower = new DoubleModificationEmbedded(vscModificationInfos.getActivePowerSetpoint());
         this.angleDroopActivePowerControl = new BooleanModificationEmbedded(vscModificationInfos.getAngleDroopActivePowerControl());
         this.p0 = new FloatModificationEmbedded(vscModificationInfos.getP0());
         this.droop = new FloatModificationEmbedded(vscModificationInfos.getDroop());
@@ -148,13 +148,13 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .dcNominalVoltage(toAttributeModification(getDcNominalVoltage()))
-                .dcResistance(toAttributeModification(getDcResistance()))
-                .maximumActivePower(toAttributeModification(getMaximumActivePower()))
+                .nominalV(toAttributeModification(getDcNominalVoltage()))
+                .r(toAttributeModification(getDcResistance()))
+                .maxP(toAttributeModification(getMaximumActivePower()))
                 .operatorActivePowerLimitFromSide1ToSide2(toAttributeModification(getOperatorActivePowerLimitSide1()))
                 .operatorActivePowerLimitFromSide2ToSide1(toAttributeModification(getOperatorActivePowerLimitSide2()))
                 .convertersMode(toAttributeModification(getConvertersMode()))
-                .activePower(toAttributeModification(getActivePower()))
+                .activePowerSetpoint(toAttributeModification(getActivePower()))
                 .angleDroopActivePowerControl(toAttributeModification(getAngleDroopActivePowerControl()))
                 .p0(toAttributeModification(getP0()))
                 .droop(toAttributeModification(getDroop()))
