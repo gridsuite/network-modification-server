@@ -20,7 +20,7 @@ public class SubstationCreation extends AbstractModification {
         Substation substation = network.newSubstation()
                 .setId(modificationInfos.getEquipmentId())
                 .setName(modificationInfos.getEquipmentName())
-                .setCountry(modificationInfos.getSubstationCountry())
+                .setCountry(modificationInfos.getCountry())
                 .add();
 
         subReporter.report(Report.builder()
@@ -35,9 +35,9 @@ public class SubstationCreation extends AbstractModification {
             ModificationUtils.getInstance()
                     .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
         }
-        if (modificationInfos.getSubstationCountry() != null) {
+        if (modificationInfos.getCountry() != null) {
             ModificationUtils.getInstance()
-                    .reportElementaryCreation(subReporter, modificationInfos.getSubstationCountry(), "Country");
+                    .reportElementaryCreation(subReporter, modificationInfos.getCountry(), "Country");
         }
         // properties
         PropertiesUtils.applyProperties(substation, subReporter, modificationInfos.getProperties());

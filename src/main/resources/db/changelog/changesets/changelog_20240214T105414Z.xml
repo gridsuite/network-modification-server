@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="tourian1 (generated)" id="1707908083647-29">
+        <renameColumn tableName="substation_modification"
+                      columnDataType="smallint"
+                      oldColumnName="substation_country_value"
+                      newColumnName="country" />
+    </changeSet>
+    <changeSet author="tourian1 (generated)" id="1707908083647-30">
+        <renameColumn tableName="substation_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="substation_country_op"
+                      newColumnName="country_op" />
+    </changeSet>
+</databaseChangeLog>
