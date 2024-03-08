@@ -144,12 +144,12 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
                 phaseTapChangerInfos.getRegulatingTerminalVlId());
         phaseTapChangerAdder.setRegulationTerminal(terminal);
 
-        if (phaseTapChangerInfos.getRegulating()) {
+        if (phaseTapChangerInfos.isRegulating()) {
             phaseTapChangerAdder.setRegulationValue(phaseTapChangerInfos.getRegulationValue())
                     .setTargetDeadband(phaseTapChangerInfos.getTargetDeadband() != null ? phaseTapChangerInfos.getTargetDeadband() : 0.);
         }
 
-        phaseTapChangerAdder.setRegulating(phaseTapChangerInfos.getRegulating())
+        phaseTapChangerAdder.setRegulating(phaseTapChangerInfos.isRegulating())
                 .setRegulationMode(phaseTapChangerInfos.getRegulationMode())
                 .setLowTapPosition(phaseTapChangerInfos.getLowTapPosition())
                 .setTapPosition(phaseTapChangerInfos.getTapPosition());
@@ -173,14 +173,14 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
 
         Double targetDeadband = ratioTapChangerInfos.getTargetDeadband();
         if (targetDeadband == null) {
-            targetDeadband = ratioTapChangerInfos.getRegulating() ? 0. : Double.NaN;
+            targetDeadband = ratioTapChangerInfos.isRegulating() ? 0. : Double.NaN;
         }
         ratioTapChangerAdder.setTargetV(ratioTapChangerInfos.getTargetV() != null ? ratioTapChangerInfos.getTargetV() : Double.NaN)
                 .setTargetDeadband(targetDeadband)
                 .setRegulationTerminal(terminal);
 
-        ratioTapChangerAdder.setRegulating(ratioTapChangerInfos.getRegulating())
-                .setLoadTapChangingCapabilities(ratioTapChangerInfos.getLoadTapChangingCapabilities())
+        ratioTapChangerAdder.setRegulating(ratioTapChangerInfos.isRegulating())
+                .setLoadTapChangingCapabilities(ratioTapChangerInfos.isLoadTapChangingCapabilities())
                 .setLowTapPosition(ratioTapChangerInfos.getLowTapPosition())
                 .setTapPosition(ratioTapChangerInfos.getTapPosition());
 

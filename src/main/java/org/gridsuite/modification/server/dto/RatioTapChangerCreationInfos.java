@@ -27,7 +27,7 @@ public class RatioTapChangerCreationInfos extends TapChangerCreationInfos {
 
     @Schema(description = "hasLoadTapChangingCapabilities")
     @JsonProperty("hasLoadTapChangingCapabilities")
-    private Boolean loadTapChangingCapabilities;
+    private boolean loadTapChangingCapabilities;
 
     @Schema(description = "targetV")
     private Double targetV;

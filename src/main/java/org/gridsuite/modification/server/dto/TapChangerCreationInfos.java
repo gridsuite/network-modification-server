@@ -35,7 +35,7 @@ public class TapChangerCreationInfos {
 
     @Schema(description = "isRegulating")
     @JsonProperty("isRegulating")
-    private Boolean regulating;
+    private boolean regulating;
 
     @Schema(description = "targetDeadband")
     private Double targetDeadband;
