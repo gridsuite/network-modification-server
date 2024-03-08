@@ -302,12 +302,12 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratioTapChangerRegulationSide = new EnumModificationEmbedded<>(ratioTapChanger.getRegulationSide());
         this.ratioTapChangerLowTapPosition = new IntegerModificationEmbedded(ratioTapChanger.getLowTapPosition());
         this.ratioTapChangerTapPosition = new IntegerModificationEmbedded(ratioTapChanger.getTapPosition());
-        this.ratioTapChangerRegulating = new BooleanModificationEmbedded(ratioTapChanger.getIsRegulating());
+        this.ratioTapChangerRegulating = new BooleanModificationEmbedded(ratioTapChanger.getRegulating());
         this.ratioTapChangerTargetDeadband = new DoubleModificationEmbedded(ratioTapChanger.getTargetDeadband());
         this.ratioTapChangerTerminalRefConnectableId = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalId());
         this.ratioTapChangerTerminalRefVoltageLevelId = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalVlId());
         this.ratioTapChangerTerminalRefType = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalType());
-        this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.getHasLoadTapChangingCapabilities());
+        this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities());
         this.ratioTapChangerTargetV = new DoubleModificationEmbedded(ratioTapChanger.getTargetV());
         if (ratioTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
@@ -387,8 +387,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .lowTapPosition(AttributeModification.toAttributeModification(getRatioTapChangerLowTapPosition()))
                 .tapPosition(AttributeModification.toAttributeModification(getRatioTapChangerTapPosition()))
                 .targetDeadband(AttributeModification.toAttributeModification(getRatioTapChangerTargetDeadband()))
-                .isRegulating(AttributeModification.toAttributeModification(getRatioTapChangerRegulating()))
-                .hasLoadTapChangingCapabilities(AttributeModification.toAttributeModification(getRatioTapChangerLoadTapChangingCapabilities()))
+                .regulating(AttributeModification.toAttributeModification(getRatioTapChangerRegulating()))
+                .loadTapChangingCapabilities(AttributeModification.toAttributeModification(getRatioTapChangerLoadTapChangingCapabilities()))
                 .targetV(AttributeModification.toAttributeModification(getRatioTapChangerTargetV()))
                 .regulatingTerminalId(AttributeModification.toAttributeModification(getRatioTapChangerTerminalRefConnectableId()))
                 .regulatingTerminalVlId(AttributeModification.toAttributeModification(getRatioTapChangerTerminalRefVoltageLevelId()))

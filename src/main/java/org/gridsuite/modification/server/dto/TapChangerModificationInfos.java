@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,8 +42,9 @@ public class TapChangerModificationInfos {
     @Schema(description = "tapPosition")
     private AttributeModification<Integer> tapPosition;
 
-    @Schema(description = "regulating")
-    private AttributeModification<Boolean> isRegulating;
+    @Schema(description = "isRegulating")
+    @JsonProperty("isRegulating")
+    private AttributeModification<Boolean> regulating;
 
     @Schema(description = "targetDeadband")
     private AttributeModification<Double> targetDeadband;
