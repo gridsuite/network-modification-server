@@ -691,19 +691,19 @@ public class ModificationRepositoryTest {
         var createSubstationEntity1 = SubstationCreationInfos.builder()
                 .equipmentId("idSubstation1")
                 .equipmentName("nameSubstation1")
-                .substationCountry(Country.FR)
+                .country(Country.FR)
                 .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
                 .build().toEntity();
         var createSubstationEntity2 = SubstationCreationInfos.builder()
                 .equipmentId("idSubstation2")
                 .equipmentName("nameSubstation2")
-                .substationCountry(Country.TD)
+                .country(Country.TD)
                 .properties(null)
                 .build().toEntity();
         var createSubstationEntity3 = SubstationCreationInfos.builder()
                 .equipmentId("idSubstation3")
                 .equipmentName("nameSubstation3")
-                .substationCountry(Country.KG)
+                .country(Country.KG)
                 .properties(null)
                 .build().toEntity();
 
