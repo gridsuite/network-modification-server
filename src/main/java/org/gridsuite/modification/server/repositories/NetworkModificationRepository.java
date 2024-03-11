@@ -95,6 +95,9 @@ public class NetworkModificationRepository {
 
         // remove from origin list
         List<ModificationEntity> modificationsToMove = removeModifications(originModificationEntities, modificationsToMoveUUID);
+        if (modificationsToMove.isEmpty()) {
+            return List.of();
+        }
 
         if (originGroupUuid.equals(destinationGroupUuid)) { // single group case
             // insert into origin list
