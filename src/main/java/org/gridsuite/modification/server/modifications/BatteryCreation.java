@@ -98,10 +98,10 @@ public class BatteryCreation extends AbstractModification {
         return voltageLevel.newBattery()
                 .setId(batteryCreationInfos.getEquipmentId())
                 .setName(batteryCreationInfos.getEquipmentName())
-                .setMinP(batteryCreationInfos.getMinActivePower())
-                .setMaxP(batteryCreationInfos.getMaxActivePower())
-                .setTargetP(batteryCreationInfos.getActivePowerSetpoint())
-                .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()));
+                .setMinP(batteryCreationInfos.getMinP())
+                .setMaxP(batteryCreationInfos.getMaxP())
+                .setTargetP(batteryCreationInfos.getTargetP())
+                .setTargetQ(nanIfNull(batteryCreationInfos.getTargetQ()));
     }
 
     private void createBatteryInBusBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Reporter subReporter) {
@@ -113,10 +113,10 @@ public class BatteryCreation extends AbstractModification {
                 .setConnectableBus(bus.getId())
                 .setId(batteryCreationInfos.getEquipmentId())
                 .setName(batteryCreationInfos.getEquipmentName())
-                .setMinP(batteryCreationInfos.getMinActivePower())
-                .setMaxP(batteryCreationInfos.getMaxActivePower())
-                .setTargetP(batteryCreationInfos.getActivePowerSetpoint())
-                .setTargetQ(nanIfNull(batteryCreationInfos.getReactivePowerSetpoint()))
+                .setMinP(batteryCreationInfos.getMinP())
+                .setMaxP(batteryCreationInfos.getMaxP())
+                .setTargetP(batteryCreationInfos.getTargetP())
+                .setTargetQ(nanIfNull(batteryCreationInfos.getTargetQ()))
                 .add();
 
         addExtensionsToBattery(batteryCreationInfos, battery, subReporter);
@@ -143,10 +143,10 @@ public class BatteryCreation extends AbstractModification {
     private Reporter reportBatterySetPoints(BatteryCreationInfos batteryCreationInfos, Reporter subReporter) {
         List<Report> setPointReports = new ArrayList<>();
         setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(batteryCreationInfos.getActivePowerSetpoint(), "Active power"));
-        if (batteryCreationInfos.getReactivePowerSetpoint() != null) {
+                .buildCreationReport(batteryCreationInfos.getTargetP(), "Active power"));
+        if (batteryCreationInfos.getTargetQ() != null) {
             setPointReports.add(ModificationUtils.getInstance()
-                .buildCreationReport(batteryCreationInfos.getReactivePowerSetpoint(), "Reactive power"));
+                .buildCreationReport(batteryCreationInfos.getTargetQ(), "Reactive power"));
         }
         return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
     }
@@ -193,10 +193,10 @@ public class BatteryCreation extends AbstractModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            batteryCreationInfos.getMinActivePower(), "Min active power"));
+            batteryCreationInfos.getMinP(), "Min active power"));
 
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
-            batteryCreationInfos.getMaxActivePower(), "Max active power"));
+            batteryCreationInfos.getMaxP(), "Max active power"));
 
         ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
         return subReporterLimits;

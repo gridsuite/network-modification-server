@@ -49,7 +49,7 @@ public class SubstationModification extends AbstractModification {
                 .build());
         // name and country
         ModificationUtils.getInstance().applyElementaryModifications(station::setName, () -> station.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
-        ModificationUtils.getInstance().applyElementaryModifications(station::setCountry, station::getNullableCountry, modificationInfos.getSubstationCountry(), subReporter, "Country");
+        ModificationUtils.getInstance().applyElementaryModifications(station::setCountry, station::getNullableCountry, modificationInfos.getCountry(), subReporter, "Country");
         // properties
         PropertiesUtils.applyProperties(station, subReporter, modificationInfos.getProperties());
     }

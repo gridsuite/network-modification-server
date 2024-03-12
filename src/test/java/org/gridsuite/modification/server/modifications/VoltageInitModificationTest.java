@@ -88,11 +88,11 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
-                    .reactivePowerSetpoint(10.)
+                    .targetQ(10.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("newGen")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()
@@ -200,11 +200,11 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
-                    .voltageSetpoint(370.)
+                    .targetV(370.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("v5generator")
-                    .reactivePowerSetpoint(15.)
+                    .targetQ(15.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()

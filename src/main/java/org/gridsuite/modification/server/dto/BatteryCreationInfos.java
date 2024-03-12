@@ -38,25 +38,25 @@ import java.util.List;
 public class BatteryCreationInfos extends InjectionCreationInfos implements ReactiveLimitsHolderInfos {
 
     @Schema(description = "Minimum active power")
-    private double minActivePower;
+    private double minP;
 
     @Schema(description = "Maximum active power")
-    private double maxActivePower;
+    private double maxP;
 
     @Schema(description = "Minimum reactive power")
-    private Double minimumReactivePower;
+    private Double minQ;
 
     @Schema(description = "Maximum reactive power")
-    private Double maximumReactivePower;
+    private Double maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
 
     @Schema(description = "Active power set point")
-    private double activePowerSetpoint;
+    private double targetP;
 
     @Schema(description = "Reactive power set point")
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 
     @Schema(description = "Participate")
     private Boolean participate;

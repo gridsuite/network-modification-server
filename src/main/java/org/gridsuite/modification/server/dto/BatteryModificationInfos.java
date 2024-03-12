@@ -35,16 +35,16 @@ import java.util.List;
 @ModificationErrorTypeName("MODIFY_BATTERY_ERROR")
 public class BatteryModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Minimum active power")
-    private AttributeModification<Double> minActivePower;
+    private AttributeModification<Double> minP;
 
     @Schema(description = "Maximum active power")
-    private AttributeModification<Double> maxActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Active power set point")
-    private AttributeModification<Double> activePowerSetpoint;
+    private AttributeModification<Double> targetP;
 
     @Schema(description = "Reactive power set point")
-    private AttributeModification<Double> reactivePowerSetpoint;
+    private AttributeModification<Double> targetQ;
 
     @Schema(description = "Participate")
     private AttributeModification<Boolean> participate;
@@ -53,10 +53,10 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Float> droop;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
