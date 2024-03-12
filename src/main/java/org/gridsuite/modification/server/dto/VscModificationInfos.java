@@ -26,13 +26,13 @@ import org.gridsuite.modification.server.modifications.VscModification;
 @ModificationErrorTypeName("MODIFY_VSC_ERROR")
 public class VscModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "DC nominal voltage")
-    private AttributeModification<Double> dcNominalVoltage;
+    private AttributeModification<Double> nominalV;
 
     @Schema(description = "DC resistance")
-    private AttributeModification<Double> dcResistance;
+    private AttributeModification<Double> r;
 
     @Schema(description = "Maximum active power ")
-    private AttributeModification<Double> maximumActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Operator active power limit (Side1->Side2)")
     private AttributeModification<Float> operatorActivePowerLimitFromSide1ToSide2;
@@ -43,8 +43,8 @@ public class VscModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "Converters mode")
     private AttributeModification<HvdcLine.ConvertersMode> convertersMode;
 
-    @Schema(description = "Active power")
-    private AttributeModification<Double> activePower;
+    @Schema(description = "Active power setpoint")
+    private AttributeModification<Double> activePowerSetpoint;
 
     @Schema(description = "Angle droop active power control ")
     private AttributeModification<Boolean> angleDroopActivePowerControl;

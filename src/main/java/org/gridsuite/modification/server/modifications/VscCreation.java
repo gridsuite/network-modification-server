@@ -81,10 +81,10 @@ public class VscCreation extends AbstractModification {
         HvdcLine hvdcLine = network.newHvdcLine()
                 .setId(modificationInfos.getEquipmentId())
                 .setName(modificationInfos.getEquipmentName())
-                .setNominalV(modificationInfos.getDcNominalVoltage())
-                .setR(modificationInfos.getDcResistance())
-                .setMaxP(modificationInfos.getMaximumActivePower())
-                .setActivePowerSetpoint(modificationInfos.getActivePower())
+                .setNominalV(modificationInfos.getNominalV())
+                .setR(modificationInfos.getR())
+                .setMaxP(modificationInfos.getMaxP())
+                .setActivePowerSetpoint(modificationInfos.getActivePowerSetpoint())
                 .setConvertersMode(modificationInfos.getConvertersMode())
                 .setConverterStationId1(converterStation1 != null ? converterStation1.getId() : null)
                 .setConverterStationId2(converterStation2 != null ? converterStation2.getId() : null)
@@ -130,9 +130,9 @@ public class VscCreation extends AbstractModification {
     private void reportHvdcLineInfos(Reporter subReporter) {
         List<Report> characteristicsReports = new ArrayList<>();
         Reporter characteristicReport = subReporter.createSubReporter("vscCharacteristics", CHARACTERISTICS);
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcNominalVoltage(), "DC nominal voltage"));
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcResistance(), "DC resistance"));
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaximumActivePower(), "Pmax"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getNominalV(), "DC nominal voltage"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getR(), "DC resistance"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
         ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS);
 
         List<Report> limitsReports = new ArrayList<>();
@@ -144,8 +144,8 @@ public class VscCreation extends AbstractModification {
         List<Report> setPointsReports = new ArrayList<>();
         Reporter setPointsReporter = subReporter.createSubReporter("vscSetPoints", SETPOINTS);
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
-        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePower(), "Active power"));
-        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaximumActivePower(), "Pmax"));
+        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePowerSetpoint(), "Active power"));
+        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
         ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, "vscSetPoints", SETPOINTS);
 
         List<Report> angleDroopActivePowerControlReports = new ArrayList<>();
