@@ -40,7 +40,9 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void addModification(ModificationEntity modification) {
         if (modifications.isEmpty()) {
-            setModifications(List.of(modification));
+            List<ModificationEntity> newList = new ArrayList<>();
+            newList.add(modification);
+            setModifications(newList);
         } else {
             modifications.add(modification);
             modification.setGroup(this);
