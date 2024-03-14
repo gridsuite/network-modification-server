@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
 import org.gridsuite.modification.server.dto.*;
@@ -23,12 +24,15 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -49,6 +53,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_3 = UUID.randomUUID();
     private static final UUID FILTER_ID_4 = UUID.randomUUID();
     private static final UUID FILTER_ID_5 = UUID.randomUUID();
+    private static final UUID FILTER_ID_ALL_GEN = UUID.randomUUID();
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_1 = UUID.randomUUID();
     private static final UUID FILTER_WRONG_ID_2 = UUID.randomUUID();
@@ -419,5 +424,80 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
             return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
         }
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
+    }
+
+    @Test
+    public void testRegularDistributionAllConnected() {
+        testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of());
+    }
+
+    @Test
+    public void testRegularDistributionOnlyGTH2Connected() {
+        testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of("GH1", "GH2", "GH3", "GTH1", "GTH3"));
+    }
+
+    @Test
+    public void testAllModesGH1Disconnected() {
+        for (VariationMode mode : VariationMode.values()) {
+            testVariationWithSomeDisconnections(mode, List.of("GH1"));
+        }
+    }
+
+    @SneakyThrows
+    private void testVariationWithSomeDisconnections(VariationMode variationMode, List<String> generatorsToDisconnect) {
+        // use a dedicated network where we can easily disconnect generators
+        setNetwork(Network.read(Paths.get(Objects.requireNonNull(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm")).toURI())));
+
+        // disconnect some generators (must not be taken into account by the variation modification)
+        generatorsToDisconnect.forEach(g -> getNetwork().getGenerator(g).getTerminal().disconnect());
+        List<String> modifiedGenerators = Stream.of("GH1", "GH2", "GH3", "GTH1", "GTH2", "GTH3")
+                .filter(g -> !generatorsToDisconnect.contains(g))
+                .toList();
+
+        IdentifiableAttributes genGh1 = getIdentifiableAttributes("GH1", 0.0);
+        IdentifiableAttributes genGh2 = getIdentifiableAttributes("GH2", 100.0);
+        IdentifiableAttributes genGh3 = getIdentifiableAttributes("GH3", 100.0);
+        IdentifiableAttributes genGth1 = getIdentifiableAttributes("GTH1", 100.0);
+        IdentifiableAttributes genGth2 = getIdentifiableAttributes("GTH2", 100.0);
+        IdentifiableAttributes genGth3 = getIdentifiableAttributes("GTH3", 100.0);
+        FilterEquipments allGenerators = getFilterEquipments(FILTER_ID_ALL_GEN, "AllGen",
+                List.of(genGh1, genGh2, genGh3, genGth1, genGth2, genGth3), List.of());
+
+        UUID subFilter = wireMockServer.stubFor(WireMock.get("/v1/filters/export?networkUuid=" + getNetworkUuid() + "&variantId=InitialState&ids=" + FILTER_ID_ALL_GEN)
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(allGenerators)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        var filter = FilterInfos.builder()
+                .name("filter")
+                .id(FILTER_ID_ALL_GEN)
+                .build();
+        final double variationValue = 100D;
+        var variation = ScalingVariationInfos.builder()
+                .variationMode(variationMode)
+                .variationValue(variationValue)
+                .filters(List.of(filter))
+                .build();
+        var generatorScalingInfo = GeneratorScalingInfos.builder()
+                .stashed(false)
+                .variationType(VariationType.TARGET_P)
+                .variations(List.of(variation))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
+        mockMvc.perform(post(getNetworkModificationUri())
+                        .content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // If we sum the targetP for all expected modified generators, we should have the requested variation value
+        double connectedGeneratorsTargetP = modifiedGenerators
+                .stream()
+                .map(g -> getNetwork().getGenerator(g).getTargetP())
+                .reduce(0D, Double::sum);
+        assertEquals(variationValue, connectedGeneratorsTargetP, 0.001D);
+
+        wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(getNetworkUuid())), "variantId", WireMock.equalTo("InitialState"), "ids", WireMock.matching(".*")), false);
+
     }
 }
