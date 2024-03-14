@@ -71,7 +71,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .lossFactor(new AttributeModification<>(0.1F, OperationType.SET))
                 .reactivePower(new AttributeModification<>(0.2, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-                .voltage(new AttributeModification<>(0.3, OperationType.SET))
+                .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
                         new ReactiveCapabilityCurveModificationInfos(0.4, 3., 11., 13., 0.7, 0.9),
@@ -87,9 +87,9 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .lossFactor(new AttributeModification<>(0.1F, OperationType.SET))
                 .reactivePower(new AttributeModification<>(0.2, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-                .voltage(new AttributeModification<>(0.3, OperationType.SET))
-                .minimumReactivePower(new AttributeModification<>(0.4, OperationType.SET))
-                .maximumReactivePower(new AttributeModification<>(0.5, OperationType.SET))
+                .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
+                .minQ(new AttributeModification<>(0.4, OperationType.SET))
+                .maxQ(new AttributeModification<>(0.5, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                 .build();
     }
