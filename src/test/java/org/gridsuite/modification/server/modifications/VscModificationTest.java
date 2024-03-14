@@ -340,5 +340,11 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                     .stashed(false).build();
             Assert.assertFalse(VscModification.isConverterStationModified(noVoltageRegulationOn));
         }
+        {
+            ConverterStationModificationInfos withQMax = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).maxQ(new AttributeModification<>(0.2, OperationType.SET)).build();
+            Assert.assertTrue(VscModification.isConverterStationModified(withQMax));
+        }
     }
 }
