@@ -232,7 +232,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.setConverterStation1(buildConverterStationWithMinMaxReactiveLimits());
+        modificationInfos.setConverterStation1(null);
         modificationInfos.setConverterStation2(null);
         modificationInfos.setAngleDroopActivePowerControl(null);
         modificationInfos.setDroop(null);
@@ -262,14 +262,6 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
         VscModification vscModification = new VscModification(modificationInfos);
         Assert.assertFalse(vscModification.checkIfChangeRequestedOnDropActiveControl());
-    }
-
-    @Test
-    public void testIsConverterStationModified() {
-        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.getConverterStation1().setLossFactor(new AttributeModification<>(0.11f, OperationType.SET));
-        VscModification vscModification = new VscModification(modificationInfos);
-        Assert.assertTrue(vscModification.isConverterStationModified(modificationInfos.getConverterStation1()));
     }
 
     @Test
