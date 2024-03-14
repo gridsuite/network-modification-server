@@ -301,4 +301,44 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         Assert.assertEquals(100.f, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0.1);
         Assert.assertEquals(99.f, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0.1);
     }
+
+    @Test
+    public void testIsConverterStationModified(){
+        {
+            ConverterStationModificationInfos noName = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).build();
+            Assert.assertFalse(VscModification.isConverterStationModified(noName));
+        }
+        {
+            ConverterStationModificationInfos withName = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).equipmentName(new AttributeModification<>("name", OperationType.SET)).build();
+            Assert.assertTrue(VscModification.isConverterStationModified(withName));
+        }
+        {
+            ConverterStationModificationInfos withReativePowerSetpoint = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).reactivePowerSetpoint(new AttributeModification<>(0.2, OperationType.SET)).build();
+            Assert.assertTrue(VscModification.isConverterStationModified(withReativePowerSetpoint));
+        }
+        {
+            ConverterStationModificationInfos noReactivePowerSetpoint = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).build();
+            Assert.assertFalse(VscModification.isConverterStationModified(noReactivePowerSetpoint));
+        }
+        {
+            ConverterStationModificationInfos withVoltageRegulationOn = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).voltageRegulationOn(new AttributeModification<>(true, OperationType.SET)).build();
+            Assert.assertTrue(VscModification.isConverterStationModified(withVoltageRegulationOn));
+        }
+        {
+            ConverterStationModificationInfos noVoltageRegulationOn = ConverterStationModificationInfos.builder()
+                    .equipmentId("v1vsc")
+                    .stashed(false).build();
+            Assert.assertFalse(VscModification.isConverterStationModified(noVoltageRegulationOn));
+        }
+    }
 }
