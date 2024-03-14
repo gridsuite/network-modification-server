@@ -311,7 +311,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testIsConverterStationModified(){
+    public void testIsConverterStationModified() {
         {
             ConverterStationModificationInfos noName = ConverterStationModificationInfos.builder()
                     .equipmentId("v1vsc")
