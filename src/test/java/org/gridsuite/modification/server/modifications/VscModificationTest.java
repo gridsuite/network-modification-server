@@ -263,13 +263,6 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         VscModification vscModification = new VscModification(modificationInfos);
         Assert.assertFalse(vscModification.checkIfChangeRequestedOnDropActiveControl());
     }
-    @Test
-    public void testIsConverterStationModified() {
-        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.getConverterStation1().setMinQ(new AttributeModification<>(0.1, OperationType.SET));
-        VscModification vscModification = new VscModification(modificationInfos);
-        Assert.assertTrue(vscModification.isConverterStationModified(modificationInfos.getConverterStation1()));
-    }
 
     @Test
     public void testDtoContainRequiredData() {

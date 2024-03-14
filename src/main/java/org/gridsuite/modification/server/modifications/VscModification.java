@@ -250,7 +250,7 @@ public class VscModification extends AbstractModification {
         modifyVscReactiveLimitsAttributes(converterStationModificationInfos, converterStation, converterStationReporter, converterStationReporter);
     }
 
-    public boolean isConverterStationModified(ConverterStationModificationInfos converterStationModificationInfos) {
+    private boolean isConverterStationModified(ConverterStationModificationInfos converterStationModificationInfos) {
         return converterStationModificationInfos.getEquipmentName() != null && converterStationModificationInfos.getEquipmentName().getValue() != null || converterStationModificationInfos.getLossFactor() != null
                 || converterStationModificationInfos.getReactivePowerSetpoint() != null
                 || converterStationModificationInfos.getVoltageRegulationOn() != null
