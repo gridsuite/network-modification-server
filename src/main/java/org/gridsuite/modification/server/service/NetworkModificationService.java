@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.stereotype.Service;
@@ -217,27 +218,26 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Optional<NetworkModificationResult> moveModifications(UUID groupUuid, UUID originGroupUuid,
-                                                                 UUID before, UUID networkUuid, String variantId,
-                                                                 ReportInfos reportInfos, List<UUID> modificationsToMove,
-                                                                 boolean canBuildNode) {
-        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(groupUuid, originGroupUuid, modificationsToMove, before)
-            .stream()
-            .filter(m -> !m.getStashed())
-            .map(networkModificationRepository::getModificationInfos)
-            .collect(Collectors.toList());
+    public Optional<NetworkModificationResult> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid,
+                                                                 UUID beforeModificationUuid, UUID networkUuid, String variantId,
+                                                                 ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
+        // update origin/destinations groups to cut and paste all modificationsToMove
+        List<ModificationEntity> movedEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid);
 
-        PreloadingStrategy preloadingStrategy = movedModifications.stream()
-                .map(ModificationInfos::getType)
-                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
-        NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
-
-        if (canBuildNode && !movedModifications.isEmpty() && networkInfos.isVariantPresent()) { // TODO remove canBuildNode and return NetworkDamages() ?
-            // try to apply the moved modifications (incremental mode)
-            return Optional.of(modificationApplicator.applyModifications(
-                    movedModifications,
-                    networkInfos,
-                    reportInfos));
+        if (canBuildNode && !movedEntities.isEmpty()) { // TODO remove canBuildNode ?
+            // try to apply the moved modifications only (incremental mode)
+            PreloadingStrategy preloadingStrategy = movedEntities.stream()
+                    .map(e -> ModificationType.valueOf(e.getType()))
+                    .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+            NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
+            if (networkInfos.isVariantPresent()) {
+                List<ModificationInfos> movedModifications = movedEntities.stream()
+                        .map(networkModificationRepository::getModificationInfos).toList();
+                return Optional.of(modificationApplicator.applyModifications(
+                        movedModifications,
+                        networkInfos,
+                        reportInfos));
+            }
         }
         return Optional.empty();
     }
