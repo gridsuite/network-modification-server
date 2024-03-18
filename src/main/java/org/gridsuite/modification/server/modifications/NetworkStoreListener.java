@@ -326,22 +326,22 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onExtensionCreation(Extension<?> extension) {
-        // Do nothing
+        // FIXME: implement this method
     }
 
     @Override
     public void onExtensionAfterRemoval(Identifiable<?> identifiable, String extensionName) {
-        // Do nothing
+        // FIXME: implement this method
     }
 
     @Override
     public void onExtensionBeforeRemoval(Extension<?> extension) {
-        // Do nothing
+        // FIXME: implement this method
     }
 
     @Override
     public void onExtensionUpdate(Extension<?> extendable, String attribute, Object oldValue, Object newValue) {
-        // Do nothing
+        // FIXME: implement this method
     }
 
 }
