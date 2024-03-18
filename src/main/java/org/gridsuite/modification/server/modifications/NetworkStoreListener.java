@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.google.common.collect.Iterables;
+import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -321,6 +322,26 @@ public class NetworkStoreListener implements NetworkListener {
                 .filter(i -> !i.isDeletion() && i.getElementType() == elementType)
                 .distinct()
                 .toList();
+    }
+
+    @Override
+    public void onExtensionCreation(Extension<?> extension) {
+        // Do nothing
+    }
+
+    @Override
+    public void onExtensionAfterRemoval(Identifiable<?> identifiable, String extensionName) {
+        // Do nothing
+    }
+
+    @Override
+    public void onExtensionBeforeRemoval(Extension<?> extension) {
+        // Do nothing
+    }
+
+    @Override
+    public void onExtensionUpdate(Extension<?> extendable, String attribute, Object oldValue, Object newValue) {
+        // Do nothing
     }
 
 }

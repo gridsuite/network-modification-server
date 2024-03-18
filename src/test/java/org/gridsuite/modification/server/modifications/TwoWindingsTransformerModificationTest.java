@@ -62,6 +62,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 .ratedU2(new AttributeModification<>(6., OperationType.SET))
                 .ratedS(new AttributeModification<>(7., OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
+                        .permanentLimit(12.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(null)
                                 .name("name31")
@@ -249,7 +250,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         assertEquals(7.0, modifiedTwoWindingsTransformer.getRatedS(), 0.1);
         // limits
         assertNotNull(modifiedTwoWindingsTransformer.getNullableCurrentLimits1());
-        assertEquals(Double.NaN, modifiedTwoWindingsTransformer.getNullableCurrentLimits1().getPermanentLimit());
+        assertEquals(12.0, modifiedTwoWindingsTransformer.getNullableCurrentLimits1().getPermanentLimit());
         LoadingLimits.TemporaryLimit temporaryLimit = modifiedTwoWindingsTransformer.getNullableCurrentLimits1().getTemporaryLimit(Integer.MAX_VALUE);
         assertEquals(Integer.MAX_VALUE, temporaryLimit.getAcceptableDuration());
         assertEquals("name31", temporaryLimit.getName());
