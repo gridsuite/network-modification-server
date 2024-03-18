@@ -40,6 +40,7 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     public void addModification(ModificationEntity modification) {
         if (modifications.isEmpty()) {
+            // when we go back to an empty list, dont use add() on the list because JPA could start @OrderColumn to 1 instead of 0
             List<ModificationEntity> newList = new ArrayList<>();
             newList.add(modification);
             setModifications(newList);
