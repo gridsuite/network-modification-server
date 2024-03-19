@@ -52,6 +52,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
+                        .permanentLimit(12.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(null)
                                 .name("name31")
@@ -113,7 +114,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals(1.0, modifiedLine.getB1());
         assertEquals(2.0, modifiedLine.getG2());
         assertEquals(2.0, modifiedLine.getB2());
-        assertEquals(Double.NaN, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
+        assertEquals(12.0, modifiedLine.getNullableCurrentLimits1().getPermanentLimit());
         TemporaryLimit temporaryLimit = modifiedLine.getNullableCurrentLimits1().getTemporaryLimit(Integer.MAX_VALUE);
         assertEquals(Integer.MAX_VALUE, temporaryLimit.getAcceptableDuration());
         assertEquals("name31", temporaryLimit.getName());
@@ -305,6 +306,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
+                        .permanentLimit(12.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
                                 .acceptableDuration(null)
                                 .name("name31")
