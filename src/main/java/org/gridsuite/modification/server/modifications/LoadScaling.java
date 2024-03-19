@@ -46,7 +46,7 @@ public class LoadScaling extends AbstractScaling {
 
             identifiableAttributes.forEach(equipment -> {
                 Load load = network.getLoad(equipment.getId());
-                if (load != null && load.getTerminal().isConnected()) {
+                if (ModificationUtils.isInjectionConnected(load)) {
                     sum.set(load.getP0() + sum.get());
                     scalables.add(getScalable(equipment.getId()));
                     percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
@@ -64,7 +64,7 @@ public class LoadScaling extends AbstractScaling {
         List<Load> loads = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
-                .filter(l -> l != null && l.getTerminal().isConnected())
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -86,7 +86,7 @@ public class LoadScaling extends AbstractScaling {
     protected void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         List<Load> loads = identifiableAttributes.stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
-                .filter(l -> l != null && l.getTerminal().isConnected())
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();

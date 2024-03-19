@@ -47,7 +47,7 @@ public class GeneratorScaling extends AbstractScaling {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Scalable stackingUpScalable = Scalable.stack(identifiableAttributes.stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
-                .filter(g -> g != null && g.getTerminal().isConnected())
+                .filter(ModificationUtils::isInjectionConnected)
                 .map(g -> {
                     sum.set(g.getTargetP() + sum.get());
                     return getScalable(g.getId());
@@ -68,7 +68,7 @@ public class GeneratorScaling extends AbstractScaling {
 
             identifiableAttributes.forEach(equipment -> {
                 Generator generator = network.getGenerator(equipment.getId());
-                if (generator != null && generator.getTerminal().isConnected()) {
+                if (ModificationUtils.isInjectionConnected(generator)) {
                     sum.set(generator.getTargetP() + sum.get());
                     scalables.add(getScalable(equipment.getId()));
                     percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
@@ -87,7 +87,7 @@ public class GeneratorScaling extends AbstractScaling {
         List<Generator> generators = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
-                .filter(g -> g != null && g.getTerminal().isConnected())
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -113,7 +113,7 @@ public class GeneratorScaling extends AbstractScaling {
         List<Generator> generators = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
-                .filter(g -> g != null && g.getTerminal().isConnected())
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
         Map<String, Double> maxPMap = new HashMap<>();
         List<Double> percentages = new ArrayList<>();
@@ -141,7 +141,7 @@ public class GeneratorScaling extends AbstractScaling {
         List<Generator> generators = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
-                .filter(g -> g != null && g.getTerminal().isConnected())
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
         List<Double> percentages = new ArrayList<>();
         Map<String, Double> targetPMap = new HashMap<>();
