@@ -37,12 +37,12 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private FloatModificationEmbedded lossFactor;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minq")), @AttributeOverride(name = "opType", column = @Column(name = "minqOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minQ")), @AttributeOverride(name = "opType", column = @Column(name = "minqOp"))
     })
     private DoubleModificationEmbedded minQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxq")), @AttributeOverride(name = "opType", column = @Column(name = "maxqOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxQ")), @AttributeOverride(name = "opType", column = @Column(name = "maxqOp"))
     })
     private DoubleModificationEmbedded maxQ;
 
