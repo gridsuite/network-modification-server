@@ -113,10 +113,6 @@ public class VoltageInitModification extends AbstractModification {
         List<Report> reports2WT = new ArrayList<>();
         List<Report> reports3WT = new ArrayList<>();
         for (final VoltageInitTransformerModificationInfos t : voltageInitModificationInfos.getTransformers()) {
-            if (t.getRatioTapChangerPosition() == null) {
-                continue;
-            }
-            modificationsCount++;
             if (t.getLegSide() != null) {
                 final ThreeWindingsTransformer threeWindingsTransformer = network.getThreeWindingsTransformer(t.getTransformerId());
                 if (threeWindingsTransformer == null) {
@@ -130,14 +126,22 @@ public class VoltageInitModification extends AbstractModification {
                         .withValue("id", t.getTransformerId())
                         .withValue("leg", t.getLegSide().name())
                         .withSeverity(TypedValue.WARN_SEVERITY).build());
-                } else {
+                } else if (t.getRatioTapChangerPosition() != null || t.getRatioTapChangerTargetV() != null) {
+                    modificationsCount++;
                     reports3WT.add(Report.builder().withKey("3WindingsTransformerModification")
                         .withDefaultMessage("3 windings transformer with id=${id} modified :")
                         .withValue("id", t.getTransformerId())
                         .withSeverity(TypedValue.TRACE_SEVERITY).build());
-                    final int oldTapPosition = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTapPosition();
-                    threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
-                    reports3WT.add(ModificationUtils.buildModificationReport(oldTapPosition, t.getRatioTapChangerPosition(), "Leg " + t.getLegSide().name() + " ratio tap changer position", 1, TypedValue.TRACE_SEVERITY));
+                    if (t.getRatioTapChangerPosition() != null) {
+                        final int oldTapPosition = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTapPosition();
+                        threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
+                        reports3WT.add(ModificationUtils.buildModificationReport(oldTapPosition, t.getRatioTapChangerPosition(), "Leg " + t.getLegSide().name() + " ratio tap changer position", 1, TypedValue.TRACE_SEVERITY));
+                    }
+                    if (t.getRatioTapChangerTargetV() != null) {
+                        final double oldTapTargetV = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTargetV();
+                        threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTargetV(t.getRatioTapChangerTargetV());
+                        reports3WT.add(ModificationUtils.buildModificationReport(oldTapTargetV, t.getRatioTapChangerTargetV(), "Leg " + t.getLegSide().name() + " ratio tap changer target voltage", 1, TypedValue.TRACE_SEVERITY));
+                    }
                 }
             } else {
                 final TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(t.getTransformerId());
@@ -151,14 +155,22 @@ public class VoltageInitModification extends AbstractModification {
                         .withDefaultMessage("2 windings transformer with id=${id} : Ratio tap changer not found")
                         .withValue("id", t.getTransformerId())
                         .withSeverity(TypedValue.WARN_SEVERITY).build());
-                } else {
+                } else if (t.getRatioTapChangerPosition() != null || t.getRatioTapChangerTargetV() != null) {
+                    modificationsCount++;
                     reports2WT.add(Report.builder().withKey("2WindingsTransformerModification")
                         .withDefaultMessage("2 windings transformer with id=${id} modified :")
                         .withValue("id", t.getTransformerId())
                         .withSeverity(TypedValue.TRACE_SEVERITY).build());
-                    final int oldTapPosition = twoWindingsTransformer.getRatioTapChanger().getTapPosition();
-                    twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
-                    reports2WT.add(ModificationUtils.buildModificationReport(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1, TypedValue.TRACE_SEVERITY));
+                    if (t.getRatioTapChangerPosition() != null) {
+                        final int oldTapPosition = twoWindingsTransformer.getRatioTapChanger().getTapPosition();
+                        twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
+                        reports2WT.add(ModificationUtils.buildModificationReport(oldTapPosition, t.getRatioTapChangerPosition(), "Ratio tap changer position", 1, TypedValue.TRACE_SEVERITY));
+                    }
+                    if (t.getRatioTapChangerTargetV() != null) {
+                        final double oldTapTargetV = twoWindingsTransformer.getRatioTapChanger().getTargetV();
+                        twoWindingsTransformer.getRatioTapChanger().setTargetV(t.getRatioTapChangerTargetV());
+                        reports2WT.add(ModificationUtils.buildModificationReport(oldTapTargetV, t.getRatioTapChangerTargetV(), "Ratio tap changer target voltage", 1, TypedValue.TRACE_SEVERITY));
+                    }
                 }
             }
         }
@@ -268,7 +280,7 @@ public class VoltageInitModification extends AbstractModification {
                     .withDefaultMessage("Shunt compensator with id=${id} not found")
                     .withValue("id", m.getShuntCompensatorId())
                     .withSeverity(TypedValue.WARN_SEVERITY).build());
-            } else if (m.getSectionCount() != null || m.getConnect() != null) {
+            } else if (m.getSectionCount() != null || m.getConnect() != null || m.getTargetV() != null) {
                 List<Report> reportsShunt = new ArrayList<>();
                 final int currentSectionCount = shuntCompensator.getSectionCount();
                 final Terminal shuntCompensatorTerminal = shuntCompensator.getTerminal();
@@ -307,13 +319,18 @@ public class VoltageInitModification extends AbstractModification {
                         }
                     }
                 }
+                if (m.getTargetV() != null) {
+                    final double oldTargetV = shuntCompensator.getTargetV();
+                    shuntCompensator.setTargetV(m.getTargetV());
+                    reportsShunt.add(ModificationUtils.buildModificationReport(oldTargetV, m.getTargetV(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
+                }
                 if (!reportsShunt.isEmpty()) {
                     modificationsCount++;
                     reports.add(Report.builder().withKey("shuntCompensatorModification")
                         .withDefaultMessage("Shunt compensator with id=${id} modified :")
                         .withValue("id", m.getShuntCompensatorId())
                         .withSeverity(TypedValue.TRACE_SEVERITY).build());
-                    reportsShunt.forEach(reports::add);
+                    reports.addAll(reportsShunt);
                 }
             }
         }
