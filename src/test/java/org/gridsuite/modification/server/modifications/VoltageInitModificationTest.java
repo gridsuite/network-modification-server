@@ -98,6 +98,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf1")
                     .ratioTapChangerPosition(2)
+                    .ratioTapChangerTargetV(223.)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf2")
@@ -110,6 +111,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(2)
+                    .ratioTapChangerTargetV(220.)
                     .legSide(ThreeSides.TWO)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
@@ -124,7 +126,20 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(1)
+                    .ratioTapChangerTargetV(220.)
                     .legSide(ThreeSides.ONE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(null)
+                    .ratioTapChangerTargetV(220.)
+                    .legSide(ThreeSides.TWO)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(2)
+                    .ratioTapChangerTargetV(null)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
@@ -157,11 +172,13 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
+                    .targetV(230.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v5shunt")
                     .sectionCount(0)
                     .connect(true)
+                    .targetV(221.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v6shunt")
@@ -297,13 +314,17 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
         assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
         assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(223, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(2, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
+        assertEquals(220., getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(50., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
         assertEquals(372., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
         assertEquals(23., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
         assertEquals(560., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+        assertEquals(230., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+        assertEquals(221., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
     }
 
@@ -312,13 +333,16 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
         assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
         assertEquals(1, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(220., getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(1, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
         assertEquals(100., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
         assertEquals(380., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
         assertEquals(40., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
         assertEquals(150., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+        assertEquals(225., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+        assertEquals(225., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
     }
 }
