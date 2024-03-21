@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -46,9 +45,12 @@ public class LoadScaling extends AbstractScaling {
             List<Scalable> scalables = new ArrayList<>();
 
             identifiableAttributes.forEach(equipment -> {
-                sum.set(network.getLoad(equipment.getId()).getP0() + sum.get());
-                scalables.add(getScalable(equipment.getId()));
-                percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
+                Load load = network.getLoad(equipment.getId());
+                if (ModificationUtils.isInjectionConnected(load)) {
+                    sum.set(load.getP0() + sum.get());
+                    scalables.add(getScalable(equipment.getId()));
+                    percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
+                }
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
             var asked = getAsked(scalingVariationInfos, sum);
@@ -62,7 +64,7 @@ public class LoadScaling extends AbstractScaling {
         List<Load> loads = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
-                .filter(Objects::nonNull)
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -82,8 +84,10 @@ public class LoadScaling extends AbstractScaling {
 
     @Override
     protected void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
-        List<Load> loads = identifiableAttributes
-                .stream().map(attribute -> network.getLoad(attribute.getId())).toList();
+        List<Load> loads = identifiableAttributes.stream()
+                .map(attribute -> network.getLoad(attribute.getId()))
+                .filter(ModificationUtils::isInjectionConnected)
+                .toList();
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Map<String, Double> targetPMap = new HashMap<>();
         List<Double> percentages = new ArrayList<>();

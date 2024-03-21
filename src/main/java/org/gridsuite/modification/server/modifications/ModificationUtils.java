@@ -559,6 +559,10 @@ public final class ModificationUtils {
         throw NetworkModificationException.createEquipmentTypeNotSupported(identifiable.getClass().getSimpleName());
     }
 
+    public static boolean isInjectionConnected(Injection<?> injection) {
+        return injection != null && injection.getTerminal().isConnected();
+    }
+
     public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
         // A newly created injection is connected by default, unless we choose not to do
         if (!modificationInfos.isConnected()) {

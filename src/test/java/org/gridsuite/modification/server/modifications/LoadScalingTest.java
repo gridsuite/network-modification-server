@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ReactiveVariationMode;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
@@ -25,12 +26,15 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -56,6 +60,8 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_4 = UUID.randomUUID();
 
     private static final UUID FILTER_ID_5 = UUID.randomUUID();
+
+    private static final UUID FILTER_ID_ALL_LOADS = UUID.randomUUID();
 
     private static final UUID FILTER_NO_DK = UUID.randomUUID();
 
@@ -446,4 +452,80 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
     }
 
+    @Test
+    public void testProportionalAllConnected() {
+        testVariationWithSomeDisconnections(VariationMode.PROPORTIONAL, List.of());
+    }
+
+    @Test
+    public void testProportionalAndVentilationLD1Disconnected() {
+        testVariationWithSomeDisconnections(VariationMode.PROPORTIONAL, List.of("LD1"));
+        testVariationWithSomeDisconnections(VariationMode.VENTILATION, List.of("LD1"));
+    }
+
+    @Test
+    public void testProportionalOnlyLD6Connected() {
+        testVariationWithSomeDisconnections(VariationMode.PROPORTIONAL, List.of("LD1", "LD2", "LD3", "LD4", "LD5"));
+    }
+
+    @SneakyThrows
+    private void testVariationWithSomeDisconnections(VariationMode variationMode, List<String> loadsToDisconnect) {
+        // use a dedicated network where we can easily disconnect loads
+        setNetwork(Network.read(Paths.get(Objects.requireNonNull(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm")).toURI())));
+
+        // disconnect some loads (must not be taken into account by the variation modification)
+        loadsToDisconnect.forEach(l -> getNetwork().getLoad(l).getTerminal().disconnect());
+        List<String> modifiedLoads = Stream.of("LD1", "LD2", "LD3", "LD4", "LD5", "LD6")
+                .filter(l -> !loadsToDisconnect.contains(l))
+                .toList();
+
+        IdentifiableAttributes loadLd1 = getIdentifiableAttributes("LD1", 0.0);
+        IdentifiableAttributes loadLd2 = getIdentifiableAttributes("LD2", 100.0);
+        IdentifiableAttributes loadLd3 = getIdentifiableAttributes("LD3", 100.0);
+        IdentifiableAttributes loadLd4 = getIdentifiableAttributes("LD4", 100.0);
+        IdentifiableAttributes loadLd5 = getIdentifiableAttributes("LD5", 100.0);
+        IdentifiableAttributes loadLd6 = getIdentifiableAttributes("LD6", 100.0);
+        FilterEquipments allLoads = getFilterEquipments(FILTER_ID_ALL_LOADS, "allLoads",
+                List.of(loadLd1, loadLd2, loadLd3, loadLd4, loadLd5, loadLd6), List.of());
+
+        UUID subFilter = wireMockServer.stubFor(WireMock.get("/v1/filters/export?networkUuid=" + getNetworkUuid() + "&variantId=InitialState&ids=" + FILTER_ID_ALL_LOADS)
+                .willReturn(WireMock.ok()
+                        .withBody(mapper.writeValueAsString(List.of(allLoads)))
+                        .withHeader("Content-Type", "application/json"))).getId();
+
+        var filter = FilterInfos.builder()
+                .name("filter")
+                .id(FILTER_ID_ALL_LOADS)
+                .build();
+        final double variationValue = 100D;
+        ScalingVariationInfos variation = ScalingVariationInfos.builder()
+                .variationMode(variationMode)
+                .reactiveVariationMode(ReactiveVariationMode.CONSTANT_Q)
+                .variationValue(variationValue)
+                .filters(List.of(filter))
+                .build();
+        var loadScalingInfo = LoadScalingInfos.builder()
+                .stashed(false)
+                .uuid(LOAD_SCALING_ID)
+                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                .variationType(VariationType.TARGET_P)
+                .variations(List.of(variation))
+                .build();
+
+        String modificationToCreateJson = mapper.writeValueAsString(loadScalingInfo);
+        mockMvc.perform(post(getNetworkModificationUri())
+                        .content(modificationToCreateJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // If we sum the P0 for all expected modified loads, we should have the requested variation value
+        double connectedLoadsConstantP = modifiedLoads
+                .stream()
+                .map(g -> getNetwork().getLoad(g).getP0())
+                .reduce(0D, Double::sum);
+        assertEquals(variationValue, connectedLoadsConstantP, 0.001D);
+
+        wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("networkUuid", WireMock.equalTo(String.valueOf(getNetworkUuid())), "variantId", WireMock.equalTo("InitialState"), "ids", WireMock.matching(".*")), false);
+
+    }
 }
