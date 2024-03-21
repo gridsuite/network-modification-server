@@ -11,14 +11,17 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
@@ -34,7 +37,8 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
 
     @Test
     public void testCreateWithWarning() throws Exception {
-        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
+        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filterWithOneWrongId))
@@ -44,7 +48,7 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(3.).build())
                 .build();
 
-        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes));
+        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
         assertEquals(5, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
     }
 
@@ -56,19 +60,27 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes shunt1 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
-        IdentifiableAttributes shunt2 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_2, 2.0);
-        IdentifiableAttributes shunt3 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_3, 2.0);
-        IdentifiableAttributes shunt4 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_4, 5.0);
-        IdentifiableAttributes shunt5 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_5, 6.0);
-        IdentifiableAttributes shunt6 = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_6, 7.0);
-
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(shunt1, shunt2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(shunt3, shunt6), List.of());
-        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(shunt4, shunt5), List.of());
-        FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(shunt1, shunt5), List.of());
-        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(shunt3, shunt2), List.of());
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_2, 2.0)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_3, 2.0),
+                new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_6, 7.0)))
+            .build();
+        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_4, 5.0),
+                new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_5, 6.0)))
+            .build();
+        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_5, 6.0)))
+            .build();
+        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.SHUNT_COMPENSATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_3, 2.0),
+                new IdentifierListFilterEquipmentAttributes(SHUNT_COMPENSATOR_ID_2, 2.0)))
+            .build();
 
         return List.of(filter1, filter2, filter3, filter4, filter5);
     }
@@ -172,5 +184,10 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     @Override
     protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.SHUNT_COMPENSATOR;
+    }
+
+    @Override
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.SHUNT_COMPENSATOR;
     }
 }

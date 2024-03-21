@@ -10,9 +10,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.network.store.iidm.impl.NetworkImpl;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.utils.FilterServiceUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
+import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.FILTERS_NOT_FOUND;
 
@@ -55,28 +58,28 @@ public class FilterService {
         FilterService.filterServerBaseUri = filterServerBaseUri;
     }
 
-    public List<FilterEquipments> exportFilters(List<UUID> filtersUuids, UUID networkUuid, String variantId) {
-        var ids = !filtersUuids.isEmpty() ?
-                "&ids=" + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")) : "";
-        var variant = variantId != null ? "&variantId=" + variantId : "";
-        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/export?networkUuid=" + networkUuid + variant + ids)
-                .buildAndExpand()
-                .toUriString();
+    public List<AbstractFilter> getFilters(List<UUID> filtersUuids) {
+        var ids = !filtersUuids.isEmpty() ? "?ids=" + filtersUuids.stream().map(UUID::toString).collect(Collectors.joining(",")) : "";
+        String path = UriComponentsBuilder.fromPath(DELIMITER + FILTER_SERVER_API_VERSION + "/filters/metadata" + ids)
+            .buildAndExpand()
+            .toUriString();
         try {
-            return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<FilterEquipments>>() { })
-                    .getBody();
+            return restTemplate.exchange(filterServerBaseUri + path, HttpMethod.GET, null, new ParameterizedTypeReference<List<AbstractFilter>>() { }).getBody();
         } catch (HttpStatusCodeException e) {
             throw handleChangeError(e, FILTERS_NOT_FOUND);
         }
     }
 
+    public Stream<org.gridsuite.filter.identifierlistfilter.FilterEquipments> exportFilters(List<UUID> filtersUuids, Network network) {
+        return FilterServiceUtils.getFilterEquipmentsFromUuid(network, filtersUuids, this::getFilters).stream();
+    }
+
     public Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(Network network, Map<UUID, String> filters) {
-        String workingVariantId = network.getVariantManager().getWorkingVariantId();
-        UUID uuid = ((NetworkImpl) network).getUuid();
-        return exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId)
-                .stream()
-                .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
-                .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
+        return exportFilters(new ArrayList<>(filters.keySet()), network)
+            .map(f -> new FilterEquipments(f.getFilterId(), filters.get(f.getFilterId()),
+                f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
+                f.getNotFoundEquipments()))
+            .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
     }
 
     private NetworkModificationException handleChangeError(HttpStatusCodeException httpException, NetworkModificationException.Type type) {

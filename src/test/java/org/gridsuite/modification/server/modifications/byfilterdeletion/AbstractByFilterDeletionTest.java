@@ -5,11 +5,16 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.SneakyThrows;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,24 +32,26 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
     protected abstract IdentifiableType getIdentifiableType();
 
-    protected abstract String getEquipmentNotFoundMessage();
+    protected abstract EquipmentType getEquipmentType();
 
-    protected abstract List<FilterEquipments> getTestFilters();
+    protected abstract String getExistingId();
 
-    public static final String PATH = "/v1/filters/export";
+    protected abstract List<AbstractFilter> getTestFilters();
+
+    public static final String PATH = "/v1/filters/metadata";
 
     @Test
     @Override
     public void testCreate() throws Exception {
-        List<FilterEquipments> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+,){1}.*"))
+        List<AbstractFilter> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+,){1}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
 
         super.testCreate();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
     @Test
@@ -60,9 +67,12 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
                 .filters(List.of(filter1))
                 .build();
 
-        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(EQUIPMENT_WRONG_ID_1)), List.of()));
+        List<IdentifierListFilter> filters = List.of(IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(getEquipmentType())
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(getExistingId(), null),
+                                                new IdentifierListFilterEquipmentAttributes(EQUIPMENT_WRONG_ID_1, null)))
+            .build());
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+){1}.*"))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+){1}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -70,23 +80,23 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        assertLogMessage(getEquipmentNotFoundMessage(),
-                byFilterDeletionInfos.getErrorType().name(), reportService);
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        assertLogMessage("Cannot find the following equipments " + EQUIPMENT_WRONG_ID_1 + " in filter filter1",
+            "filterEquipmentsNotFound_filter1", reportService);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
     @Test
     @Override
     public void testCopy() throws Exception {
-        List<FilterEquipments> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + ".{2,}"))
+        List<AbstractFilter> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
 
         super.testCopy();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
     @Test
@@ -102,42 +112,27 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
                 .filters(List.of(filter1))
                 .build();
 
-        List<FilterEquipments> filters = List.of(getFilterEquipments(FILTER_ID_1, "filter1", List.of(getIdentifiableAttributes(EQUIPMENT_WRONG_ID_1)), List.of(EQUIPMENT_WRONG_ID_1)));
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid()) + "(.+){1}.*"))
+        List<IdentifierListFilter> filters = List.of(IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(getEquipmentType())
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(EQUIPMENT_WRONG_ID_1, null)))
+            .build());
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+){1}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("All of the following filters have equipments with wrong id : filter1",
-                "allFiltersWrong", reportService);
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        assertLogMessage(byFilterDeletionInfos.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
+            "invalidFilters", reportService);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
-    private String getPath(UUID networkUuid) {
-        return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+    private String getPath() {
+        return "/v1/filters/metadata\\?ids=";
     }
 
-    protected Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
-        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
-    }
-
-    FilterEquipments getFilterEquipments(UUID filterID, String filterName, List<IdentifiableAttributes> identifiableAttributes, List<String> notFoundEquipments) {
-        return FilterEquipments.builder()
-                .filterId(filterID)
-                .filterName(filterName)
-                .identifiableAttributes(identifiableAttributes)
-                .notFoundEquipments(notFoundEquipments)
-                .build();
-    }
-
-    IdentifiableAttributes getIdentifiableAttributes(String id) {
-        return IdentifiableAttributes.builder()
-                .id(id)
-                .type(getIdentifiableType())
-                .build();
+    protected Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
+        return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
     @Override

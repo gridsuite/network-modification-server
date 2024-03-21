@@ -49,6 +49,7 @@
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
+        <gridsuite-filter.version>1.0.0-SNAPSHOT</gridsuite-filter.version>
     </properties>
 
     <build>
@@ -83,6 +84,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-filter</artifactId>
+                <version>${gridsuite-filter.version}</version>
+            </dependency>
+
             <!-- overrides of imports -->
 
             <!-- imports -->
@@ -112,7 +119,10 @@
     <dependencies>
 
         <!-- Compilation dependencies -->
-
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-filter</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-api</artifactId>

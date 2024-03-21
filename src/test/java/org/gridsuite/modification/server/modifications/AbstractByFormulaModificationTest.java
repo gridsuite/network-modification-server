@@ -12,10 +12,12 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
-import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +66,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     protected final FilterInfos filterWithAllWrongId = new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithAllWrongId");
     protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
-    public static final String PATH = "/v1/filters/export";
+    public static final String PATH = "/v1/filters/metadata";
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
@@ -104,10 +107,10 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
-    protected void checkCreateWithWarning(List<FormulaInfos> formulaInfos, List<IdentifiableAttributes> existingEquipmentList) throws Exception {
-        FilterEquipments filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, "filterWithWrongId", existingEquipmentList, List.of("wrongId"));
+    protected void checkCreateWithWarning(List<FormulaInfos> formulaInfos, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
+        AbstractFilter filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, existingEquipmentList);
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ONE_WRONG_ID))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -119,16 +122,16 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
         checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_WITH_ONE_WRONG_ID)), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ONE_WRONG_ID)), false);
     }
 
-    protected void checkCreateWithError(List<FormulaInfos> formulaInfos, List<FilterEquipments> filterEquipments) throws Exception {
+    protected void checkCreateWithError(List<FormulaInfos> formulaInfos, List<AbstractFilter> filterEquipments) throws Exception {
         String filterIds = filterEquipments.stream()
-                .map(FilterEquipments::getFilterId)
+                .map(AbstractFilter::getId)
                 .map(UUID::toString)
                 .collect(Collectors.joining(","));
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + filterIds))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + filterIds))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filterEquipments))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -142,19 +145,19 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
         wireMockUtils.verifyGetRequest(stubId,
                 PATH,
-                handleQueryParams(getNetworkUuid(), filterEquipments.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())),
+                handleQueryParams(filterEquipments.stream().map(AbstractFilter::getId).collect(Collectors.toList())),
                 false);
     }
 
     @Test
     public void testModificationWithAllWrongEquipmentIds() throws Exception {
-        FilterEquipments filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId", List.of(), List.of("wrongId1", "wrongId2"));
+        AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
 
         List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
                 .peek(formula -> formula.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
                 .toList();
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_WITH_ALL_WRONG_IDS))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -166,40 +169,39 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
 
         checkCreationApplicationStatus(byFormulaModificationInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_WITH_ALL_WRONG_IDS)), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ALL_WRONG_IDS)), false);
     }
 
     @Test
     @Override
     public void testCreate() throws Exception {
-        List<FilterEquipments> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
+        List<AbstractFilter> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
 
         super.testCreate();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
     @Test
     @Override
     public void testCopy() throws Exception {
-
-        List<FilterEquipments> filters = getTestFilters();
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
+        List<AbstractFilter> filters = getTestFilters();
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader("Content-Type", "application/json"))).getId();
 
         super.testCopy();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), filters.stream().map(FilterEquipments::getFilterId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
     protected void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
-                                        NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
+                                                  NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
         String modificationToCreateJson = mapper.writeValueAsString(byFormulaModificationInfos);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -233,21 +235,14 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .build();
     }
 
-    protected IdentifiableAttributes getIdentifiableAttributes(String id, Double distributionKey) {
-        return IdentifiableAttributes.builder()
-                .id(id)
-                .type(getIdentifiableType())
-                .distributionKey(distributionKey)
-                .build();
+    protected IdentifierListFilterEquipmentAttributes getIdentifiableAttributes(String id, Double distributionKey) {
+        return new IdentifierListFilterEquipmentAttributes(id, distributionKey);
     }
 
-    protected FilterEquipments getFilterEquipments(UUID filterID, String filterName, List<IdentifiableAttributes> identifiableAttributes, List<String> notFoundEquipments) {
-        return FilterEquipments.builder()
-                .filterId(filterID)
-                .filterName(filterName)
-                .identifiableAttributes(identifiableAttributes)
-                .notFoundEquipments(notFoundEquipments)
-                .build();
+    protected AbstractFilter getFilterEquipments(UUID filterID, List<IdentifierListFilterEquipmentAttributes> identifiableAttributes) {
+        return IdentifierListFilter.builder().id(filterID).modificationDate(new Date()).equipmentType(getEquipmentType())
+            .filterEquipmentsAttributes(identifiableAttributes)
+            .build();
     }
 
     protected FormulaInfos getFormulaInfo(String editedField,
@@ -264,24 +259,26 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .build();
     }
 
-    Map<String, StringValuePattern> handleQueryParams(UUID networkUuid, List<UUID> filterIds) {
-        return Map.of("networkUuid", WireMock.equalTo(String.valueOf(networkUuid)), "variantId", WireMock.equalTo("variant_1"), "ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
+    Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
+        return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    String getPath(UUID networkUuid, boolean isRegexPhat) {
+    String getPath(boolean isRegexPhat) {
         if (isRegexPhat) {
-            return "/v1/filters/export\\?networkUuid=" + networkUuid + "\\&variantId=variant_1\\&ids=";
+            return "/v1/filters/metadata\\?ids=";
         }
-        return "/v1/filters/export?networkUuid=" + networkUuid + "&variantId=variant_1&ids=";
+        return "/v1/filters/metadata?ids=";
     }
 
     protected abstract void createEquipments();
 
-    protected abstract List<FilterEquipments> getTestFilters();
+    protected abstract List<AbstractFilter> getTestFilters();
 
     protected abstract List<FormulaInfos> getFormulaInfos();
 
     protected abstract List<FormulaInfos> getUpdatedFormulaInfos();
 
     protected abstract IdentifiableType getIdentifiableType();
+
+    protected abstract EquipmentType getEquipmentType();
 }
