@@ -1331,6 +1331,7 @@ public class ModificationControllerTest {
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
+                    .ratioTapChangerTargetV(225.)
                     .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
@@ -1356,6 +1357,7 @@ public class ModificationControllerTest {
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
+                    .targetV(225.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v5shunt")
@@ -1366,6 +1368,7 @@ public class ModificationControllerTest {
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
+                    .targetV(380.)
                     .build()))
             .build();
 

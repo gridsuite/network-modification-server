@@ -31,4 +31,7 @@ public class VoltageInitShuntCompensatorModificationInfos {
 
     @Schema(description = "Connexion")
     private Boolean connect;
+
+    @Schema(description = "Target voltage")
+    private Double targetV;
 }

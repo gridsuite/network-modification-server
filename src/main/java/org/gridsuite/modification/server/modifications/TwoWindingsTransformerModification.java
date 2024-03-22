@@ -172,7 +172,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void modifyTapPositions(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?> tapChanger, List<Report> tapChangerReports) {
+    private <T> void modifyTapPositions(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?, ?, ?> tapChanger, List<Report> tapChangerReports) {
         if (tapChangerModificationInfos.getLowTapPosition() != null && tapChangerModificationInfos.getLowTapPosition().getValue() != null) {
             Integer oldLowTapPosition = tapChanger != null ? tapChanger.getLowTapPosition() : null;
             tapChangerReports.add(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldLowTapPosition,
@@ -215,7 +215,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void addTapChangerPositionsAndSteps(TapChangerModificationInfos tapChangerModificationInfos, TapChanger<?, ?> tapChanger, T adder, List<Report> tapChangerReports) {
+    private <T> void addTapChangerPositionsAndSteps(TapChangerModificationInfos tapChangerModificationInfos, TapChanger<?, ?, ?, ?> tapChanger, T adder, List<Report> tapChangerReports) {
         modifyTapPositions(tapChangerModificationInfos, adder, tapChanger, tapChangerReports);
 
         // Add steps
@@ -237,7 +237,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private <T> void modifyRegulatingTerminal(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?> tapChanger, List<Report> regulationReports, Network network, Terminal terminal1, Terminal terminal2) {
+    private <T> void modifyRegulatingTerminal(TapChangerModificationInfos tapChangerModificationInfos, T adder, TapChanger<?, ?, ?, ?> tapChanger, List<Report> regulationReports, Network network, Terminal terminal1, Terminal terminal2) {
         Terminal regulatingTerminal = tapChanger != null ? tapChanger.getRegulationTerminal() : null;
 
         String oldVoltageLevel = null;
