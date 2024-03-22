@@ -10,13 +10,16 @@ package org.gridsuite.modification.server.modifications.byfilterdeletion;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -66,20 +69,25 @@ public class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest 
     }
 
     @Override
-    protected String getEquipmentNotFoundMessage() {
-        return "Connectable not found: " + EQUIPMENT_WRONG_ID_1;
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.LOAD;
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes load1 = getIdentifiableAttributes(LOAD_ID_1);
-        IdentifiableAttributes load2 = getIdentifiableAttributes(LOAD_ID_2);
-        IdentifiableAttributes load3 = getIdentifiableAttributes(LOAD_ID_3);
-        IdentifiableAttributes load4 = getIdentifiableAttributes(LOAD_ID_4);
+    protected String getExistingId() {
+        return LOAD_ID_1;
+    }
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4), List.of());
-
+    @Override
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_1, null),
+                new IdentifierListFilterEquipmentAttributes(LOAD_ID_2, null)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_3, null),
+                new IdentifierListFilterEquipmentAttributes(LOAD_ID_4, null)))
+            .build();
         return List.of(filter1, filter2);
     }
 }

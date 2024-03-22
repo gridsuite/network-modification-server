@@ -8,13 +8,16 @@ package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,20 +66,25 @@ public class VoltageLevelByFilterDeletionTest extends AbstractByFilterDeletionTe
     }
 
     @Override
-    protected String getEquipmentNotFoundMessage() {
-        return "Voltage level not found: " + EQUIPMENT_WRONG_ID_1;
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.VOLTAGE_LEVEL;
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes vl1 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_1);
-        IdentifiableAttributes vl2 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_2);
-        IdentifiableAttributes vl3 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_3);
-        IdentifiableAttributes vl4 = getIdentifiableAttributes(VOLTAGE_LEVEL_ID_4);
+    protected String getExistingId() {
+        return VOLTAGE_LEVEL_ID_1;
+    }
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(vl1, vl2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(vl3, vl4), List.of());
-
+    @Override
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.VOLTAGE_LEVEL)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(VOLTAGE_LEVEL_ID_1, null),
+                new IdentifierListFilterEquipmentAttributes(VOLTAGE_LEVEL_ID_2, null)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.VOLTAGE_LEVEL)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(VOLTAGE_LEVEL_ID_3, null),
+                new IdentifierListFilterEquipmentAttributes(VOLTAGE_LEVEL_ID_4, null)))
+            .build();
         return List.of(filter1, filter2);
     }
 }

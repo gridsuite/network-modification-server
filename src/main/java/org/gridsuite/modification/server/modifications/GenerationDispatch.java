@@ -15,7 +15,6 @@ import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import lombok.Builder;
 import lombok.Getter;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -341,7 +340,7 @@ public class GenerationDispatch extends AbstractModification {
 
     @Builder
     @Getter
-    private static class GeneratorsFrequencyReserve {
+    private static final class GeneratorsFrequencyReserve {
         private final List<String> generators;
         private final double frequencyReserve;
     }
@@ -370,14 +369,14 @@ public class GenerationDispatch extends AbstractModification {
         var filters = generatorsFilters.stream().collect(Collectors.toMap(GeneratorsFilterInfos::getId, GeneratorsFilterInfos::getName, (id1, id2) -> id1, LinkedHashMap::new));
 
         // export filters
-        String workingVariantId = network.getVariantManager().getWorkingVariantId();
-        UUID uuid = ((NetworkImpl) network).getUuid();
         Map<UUID, FilterEquipments> exportedGenerators = filterService
-            .exportFilters(new ArrayList<>(filters.keySet()), uuid, workingVariantId).stream()
+            .exportFilters(new ArrayList<>(filters.keySet()), network)
+            .map(f -> new FilterEquipments(f.getFilterId(), filters.get(f.getFilterId()),
+                f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
+                f.getNotFoundEquipments()))
             // keep only generators filters
-            .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()) &&
-                filterEquipments.getIdentifiableAttributes().stream().allMatch(identifiableAttributes -> identifiableAttributes.getType() == IdentifiableType.GENERATOR))
-            .peek(t -> t.setFilterName(filters.get(t.getFilterId())))
+            .filter(f -> !CollectionUtils.isEmpty(f.getIdentifiableAttributes()) &&
+               f.getIdentifiableAttributes().stream().allMatch(i -> i.getType() == IdentifiableType.GENERATOR))
             .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
         // report filters with generators not found
