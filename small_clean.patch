@@ -1,0 +1,57 @@
+Subject: [PATCH] Fix rename boolean attributes
+---
+Index: src/main/java/org/gridsuite/modification/server/dto/VscModificationInfos.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/org/gridsuite/modification/server/dto/VscModificationInfos.java b/src/main/java/org/gridsuite/modification/server/dto/VscModificationInfos.java
+--- a/src/main/java/org/gridsuite/modification/server/dto/VscModificationInfos.java	(revision 20a5df20f40bb9288c8c57118790d833644b63aa)
++++ b/src/main/java/org/gridsuite/modification/server/dto/VscModificationInfos.java	(date 1711374624692)
+@@ -5,9 +5,7 @@
+ import com.powsybl.commons.reporter.ReporterModel;
+ import com.powsybl.iidm.network.HvdcLine;
+ import io.swagger.v3.oas.annotations.media.Schema;
+-import lombok.Data;
+-import lombok.NoArgsConstructor;
+-import lombok.ToString;
++import lombok.*;
+ import lombok.experimental.SuperBuilder;
+ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
+ import org.gridsuite.modification.server.entities.equipment.modification.VscModificationEntity;
+@@ -19,7 +17,8 @@
+  */
+ @SuperBuilder
+ @NoArgsConstructor
+-@Data
++@Getter
++@Setter
+ @ToString(callSuper = true)
+ @Schema(description = "VSC modification")
+ @JsonTypeName("VSC_MODIFICATION")
+Index: src/main/java/org/gridsuite/modification/server/modifications/VscModification.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/org/gridsuite/modification/server/modifications/VscModification.java b/src/main/java/org/gridsuite/modification/server/modifications/VscModification.java
+--- a/src/main/java/org/gridsuite/modification/server/modifications/VscModification.java	(revision 20a5df20f40bb9288c8c57118790d833644b63aa)
++++ b/src/main/java/org/gridsuite/modification/server/modifications/VscModification.java	(date 1711374857424)
+@@ -39,7 +39,7 @@
+         this.modificationInfos = vscModificationInfos;
+     }
+ 
+-    public void checkConverterStation(@NonNull ConverterStationModificationInfos converterStationModificationInfos, @NonNull VscConverterStation vscConverterStation) {
++    protected void checkConverterStation(@NonNull ConverterStationModificationInfos converterStationModificationInfos, @NonNull VscConverterStation vscConverterStation) {
+         String errorMessage = "Converter station '" + converterStationModificationInfos.getEquipmentId() + "' : ";
+         ModificationUtils.getInstance().checkReactiveLimit(vscConverterStation, converterStationModificationInfos.getMinQ(), converterStationModificationInfos.getMaxQ(),
+                 converterStationModificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_VSC_ERROR, errorMessage);
+@@ -172,7 +172,7 @@
+         });
+     }
+ 
+-    public boolean checkIfChangeRequestedOnDropActiveControl() {
++    protected boolean checkIfChangeRequestedOnDropActiveControl() {
+         return modificationInfos.getAngleDroopActivePowerControl() == null
+                 && modificationInfos.getDroop() == null
+                 && modificationInfos.getP0() == null;

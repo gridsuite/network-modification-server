@@ -39,7 +39,7 @@ public class VscModification extends AbstractModification {
         this.modificationInfos = vscModificationInfos;
     }
 
-    public void checkConverterStation(@NonNull ConverterStationModificationInfos converterStationModificationInfos, @NonNull VscConverterStation vscConverterStation) {
+    protected void checkConverterStation(@NonNull ConverterStationModificationInfos converterStationModificationInfos, @NonNull VscConverterStation vscConverterStation) {
         String errorMessage = "Converter station '" + converterStationModificationInfos.getEquipmentId() + "' : ";
         ModificationUtils.getInstance().checkReactiveLimit(vscConverterStation, converterStationModificationInfos.getMinQ(), converterStationModificationInfos.getMaxQ(),
                 converterStationModificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_VSC_ERROR, errorMessage);
@@ -172,7 +172,7 @@ public class VscModification extends AbstractModification {
         });
     }
 
-    public boolean checkIfChangeRequestedOnDropActiveControl() {
+    protected boolean checkIfChangeRequestedOnDropActiveControl() {
         return modificationInfos.getAngleDroopActivePowerControl() == null
                 && modificationInfos.getDroop() == null
                 && modificationInfos.getP0() == null;
