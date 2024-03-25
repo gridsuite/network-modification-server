@@ -37,19 +37,19 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private FloatModificationEmbedded lossFactor;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minimumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "minimumReactivePowerOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minQ")), @AttributeOverride(name = "opType", column = @Column(name = "minqOp"))
     })
-    private DoubleModificationEmbedded minimumReactivePower;
+    private DoubleModificationEmbedded minQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maximumReactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "maximumReactivePowerOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "maxQ")), @AttributeOverride(name = "opType", column = @Column(name = "maxqOp"))
     })
-    private DoubleModificationEmbedded maximumReactivePower;
+    private DoubleModificationEmbedded maxQ;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactivePower")), @AttributeOverride(name = "opType", column = @Column(name = "reactivePowerOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactivePowerSetpoint")), @AttributeOverride(name = "opType", column = @Column(name = "reactivePowerSetpointOp"))
     })
-    private DoubleModificationEmbedded reactivePower;
+    private DoubleModificationEmbedded reactivePowerSetpoint;
 
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "voltageRegulationOn")), @AttributeOverride(name = "opType", column = @Column(name = "voltageRegulationOnOp"))
@@ -57,9 +57,9 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private BooleanModificationEmbedded voltageRegulationOn;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "voltage")), @AttributeOverride(name = "opType", column = @Column(name = "voltageOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "voltageSetpoint")), @AttributeOverride(name = "opType", column = @Column(name = "voltageSetpointOp"))
     })
-    private DoubleModificationEmbedded voltage;
+    private DoubleModificationEmbedded voltageSetpoint;
 
     @ElementCollection
     @CollectionTable(name = "converter_station_modification_rcc_points")
@@ -83,11 +83,11 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
 
     private void assignAttributes(ConverterStationModificationInfos converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
-        this.minimumReactivePower = converterStationModificationInfos.getMinimumReactivePower() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinimumReactivePower()) : null;
-        this.maximumReactivePower = converterStationModificationInfos.getMaximumReactivePower() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaximumReactivePower()) : null;
-        this.reactivePower = converterStationModificationInfos.getReactivePower() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getReactivePower()) : null;
+        this.minQ = converterStationModificationInfos.getMinQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMinQ()) : null;
+        this.maxQ = converterStationModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getMaxQ()) : null;
+        this.reactivePowerSetpoint = converterStationModificationInfos.getReactivePowerSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getReactivePowerSetpoint()) : null;
         this.voltageRegulationOn = converterStationModificationInfos.getVoltageRegulationOn() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getVoltageRegulationOn()) : null;
-        this.voltage = converterStationModificationInfos.getVoltage() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getVoltage()) : null;
+        this.voltageSetpoint = converterStationModificationInfos.getVoltageSetpoint() != null ? new DoubleModificationEmbedded(converterStationModificationInfos.getVoltageSetpoint()) : null;
         this.reactiveCapabilityCurve = converterStationModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationModificationInfos.getReactiveCapabilityCurvePoints());
 
@@ -117,11 +117,11 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .lossFactor(toAttributeModification(getLossFactor()))
-            .minimumReactivePower(toAttributeModification(getMinimumReactivePower()))
-            .maximumReactivePower(toAttributeModification(getMaximumReactivePower()))
-            .reactivePower(toAttributeModification(getReactivePower()))
+            .minQ(toAttributeModification(getMinQ()))
+            .maxQ(toAttributeModification(getMaxQ()))
+            .reactivePowerSetpoint(toAttributeModification(getReactivePowerSetpoint()))
             .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
-            .voltage(toAttributeModification(getVoltage()))
+            .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
             .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
             .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveModificationInfos(getReactiveCapabilityCurvePoints()));
     }

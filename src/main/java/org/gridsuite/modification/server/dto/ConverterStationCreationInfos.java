@@ -35,14 +35,14 @@ public class ConverterStationCreationInfos extends InjectionCreationInfos implem
     @Schema(description = "Loss Factor")
     private Float lossFactor;
 
-    @Schema(description = "Reactive power")
-    private Double reactivePower;
+    @Schema(description = "Reactive power set point")
+    private Double reactivePowerSetpoint;
 
     @Schema(description = "Voltage regulation")
     private Boolean voltageRegulationOn;
 
-    @Schema(description = "Voltage")
-    private Double voltage;
+    @Schema(description = "Voltage set point")
+    private Double voltageSetpoint;
 
     @Schema(description = "Reactive capability curve")
     private Boolean reactiveCapabilityCurve;

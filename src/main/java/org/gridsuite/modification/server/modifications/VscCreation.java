@@ -196,16 +196,16 @@ public class VscCreation extends AbstractModification {
                 .setName(converterStationCreationInfos.getEquipmentName())
                 .setVoltageRegulatorOn(converterStationCreationInfos.getVoltageRegulationOn());
 
-        if (converterStationCreationInfos.getReactivePower() != null) {
-            converterStationAdder.setReactivePowerSetpoint(converterStationCreationInfos.getReactivePower());
+        if (converterStationCreationInfos.getReactivePowerSetpoint() != null) {
+            converterStationAdder.setReactivePowerSetpoint(converterStationCreationInfos.getReactivePowerSetpoint());
         }
 
         if (converterStationCreationInfos.getLossFactor() != null) {
             converterStationAdder.setLossFactor(converterStationCreationInfos.getLossFactor());
         }
 
-        if (converterStationCreationInfos.getVoltage() != null) {
-            converterStationAdder.setVoltageSetpoint(converterStationCreationInfos.getVoltage());
+        if (converterStationCreationInfos.getVoltageSetpoint() != null) {
+            converterStationAdder.setVoltageSetpoint(converterStationCreationInfos.getVoltageSetpoint());
         }
         int position = ModificationUtils.getInstance().getPosition(converterStationCreationInfos.getConnectionPosition(),
                 converterStationCreationInfos.getBusOrBusbarSectionId(),
@@ -242,10 +242,10 @@ public class VscCreation extends AbstractModification {
                 .setId(converterStationCreationInfos.getEquipmentId())
                 .setName(converterStationCreationInfos.getEquipmentName())
                 .setVoltageRegulatorOn(converterStationCreationInfos.getVoltageRegulationOn())
-                .setReactivePowerSetpoint(converterStationCreationInfos.getReactivePower())
+                .setReactivePowerSetpoint(converterStationCreationInfos.getReactivePowerSetpoint())
                 .setBus(bus.getId())
                 .setLossFactor(converterStationCreationInfos.getLossFactor())
-                .setVoltageSetpoint(converterStationCreationInfos.getVoltage())
+                .setVoltageSetpoint(converterStationCreationInfos.getVoltageSetpoint())
                 .add();
 
         addExtensionsAndReports(vscConverterStation, converterStationCreationInfos, subReporter);
@@ -276,17 +276,17 @@ public class VscCreation extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
-        if (converterStationCreationInfos.getReactivePower() != null) {
+        if (converterStationCreationInfos.getReactivePowerSetpoint() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(setPointReporter,
-                    converterStationCreationInfos.getReactivePower(),
+                    converterStationCreationInfos.getReactivePowerSetpoint(),
                     "Reactive power");
         }
 
         List<Report> setPointsVoltageReports = new ArrayList<>();
         setPointsVoltageReports.add(ModificationUtils.getInstance().createEnabledDisabledReport("voltageRegulationOn",
                 converterStationCreationInfos.getVoltageRegulationOn()));
-        if (converterStationCreationInfos.getVoltage() != null) {
-            setPointsVoltageReports.add(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getReactivePower(), "Voltage"));
+        if (converterStationCreationInfos.getVoltageSetpoint() != null) {
+            setPointsVoltageReports.add(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getReactivePowerSetpoint(), "Voltage"));
         }
 
         ModificationUtils.getInstance().reportModifications(setPointReporter,

@@ -44,19 +44,19 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Float lossFactor;
 
     @Column
-    private Double minimumReactivePower;
+    private Double minQ;
 
     @Column
-    private Double maximumReactivePower;
+    private Double maxQ;
 
     @Column
-    private Double reactivePower;
+    private Double reactivePowerSetpoint;
 
     @Column
     private Boolean voltageRegulationOn;
 
     @Column
-    private Double voltage;
+    private Double voltageSetpoint;
 
     @ElementCollection
     @CollectionTable(name = "converter_station_creation_rcc_points")
@@ -72,11 +72,11 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
 
     private void assignAttributes(ConverterStationCreationInfos converterStationCreationInfos) {
         this.lossFactor = converterStationCreationInfos.getLossFactor();
-        this.minimumReactivePower = converterStationCreationInfos.getMinQ();
-        this.maximumReactivePower = converterStationCreationInfos.getMaxQ();
-        this.reactivePower = converterStationCreationInfos.getReactivePower();
+        this.minQ = converterStationCreationInfos.getMinQ();
+        this.maxQ = converterStationCreationInfos.getMaxQ();
+        this.reactivePowerSetpoint = converterStationCreationInfos.getReactivePowerSetpoint();
         this.voltageRegulationOn = converterStationCreationInfos.getVoltageRegulationOn();
-        this.voltage = converterStationCreationInfos.getVoltage();
+        this.voltageSetpoint = converterStationCreationInfos.getVoltageSetpoint();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationCreationInfos.getReactiveCapabilityCurvePoints());
         this.reactiveCapabilityCurve = converterStationCreationInfos.getReactiveCapabilityCurve();
     }
@@ -95,11 +95,11 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .connected(isConnected())
                 // ConverterStation
                 .lossFactor(getLossFactor())
-                .minQ(getMinimumReactivePower())
-                .maxQ(getMaximumReactivePower())
-                .reactivePower(getReactivePower())
+                .minQ(getMinQ())
+                .maxQ(getMaxQ())
+                .reactivePowerSetpoint(getReactivePowerSetpoint())
                 .voltageRegulationOn(getVoltageRegulationOn())
-                .voltage(getVoltage())
+                .voltageSetpoint(getVoltageSetpoint())
                 .reactiveCapabilityCurvePoints(toReactiveCapabilityCurveInfos(getReactiveCapabilityCurvePoints()))
                 .reactiveCapabilityCurve(getReactiveCapabilityCurve())
                 .build();

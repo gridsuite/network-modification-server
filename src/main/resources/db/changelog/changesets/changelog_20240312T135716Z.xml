@@ -1,0 +1,75 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="souissimai (generated)" id="1710251843753-29">
+        <renameColumn tableName="converter_station_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="maximum_reactive_power"
+                      newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-30">
+            <renameColumn tableName="converter_station_modification"
+                          columnDataType="float(53)"
+                          oldColumnName="maximum_reactive_power"
+                          newColumnName="maxq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-31">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="maximum_reactive_power_op"
+                      newColumnName="maxq_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-32">
+        <renameColumn tableName="converter_station_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="minimum_reactive_power"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-33">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="minimum_reactive_power"
+                      newColumnName="minq" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-34">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="minimum_reactive_power_op"
+                      newColumnName="minq_op" />
+     </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-35">
+        <renameColumn tableName="converter_station_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="voltage"
+                      newColumnName="voltage_setpoint" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-36">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="voltage"
+                      newColumnName="voltage_setpoint" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-37">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="voltage_op"
+                      newColumnName="voltage_setpoint_op" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-38">
+        <renameColumn tableName="converter_station_creation"
+                      columnDataType="float(53)"
+                      oldColumnName="reactive_power"
+                      newColumnName="reactive_power_setpoint" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-39">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="float(53)"
+                      oldColumnName="reactive_power"
+                      newColumnName="reactive_power_setpoint" />
+    </changeSet>
+    <changeSet author="souissimai (generated)" id="1710251843753-40">
+        <renameColumn tableName="converter_station_modification"
+                      columnDataType="varchar(255)"
+                      oldColumnName="reactive_power_op"
+                      newColumnName="reactive_power_setpoint_op" />
+    </changeSet>
+</databaseChangeLog>

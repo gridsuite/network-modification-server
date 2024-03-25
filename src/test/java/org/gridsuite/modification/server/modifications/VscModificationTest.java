@@ -30,6 +30,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
@@ -69,13 +70,20 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentName(new AttributeModification<>("v1vsc-name", OperationType.SET))
                 .lossFactor(new AttributeModification<>(0.1F, OperationType.SET))
-                .reactivePower(new AttributeModification<>(0.2, OperationType.SET))
+                .reactivePowerSetpoint(new AttributeModification<>(0.2, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-                .voltage(new AttributeModification<>(0.3, OperationType.SET))
+                .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
                         new ReactiveCapabilityCurveModificationInfos(0.4, 3., 11., 13., 0.7, 0.9),
                         new ReactiveCapabilityCurveModificationInfos(0.6, 2., 12., 14., 0.8, 0.11)))
+                .build();
+    }
+
+    private ConverterStationModificationInfos buildEmptyConverterStation() {
+        return ConverterStationModificationInfos.builder()
+                .equipmentId("v1vsc")
+                .stashed(false)
                 .build();
     }
 
@@ -85,11 +93,11 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentName(new AttributeModification<>("v2vsc-name", OperationType.SET))
                 .lossFactor(new AttributeModification<>(0.1F, OperationType.SET))
-                .reactivePower(new AttributeModification<>(0.2, OperationType.SET))
+                .reactivePowerSetpoint(new AttributeModification<>(0.2, OperationType.SET))
                 .voltageRegulationOn(new AttributeModification<>(true, OperationType.SET))
-                .voltage(new AttributeModification<>(0.3, OperationType.SET))
-                .minimumReactivePower(new AttributeModification<>(0.4, OperationType.SET))
-                .maximumReactivePower(new AttributeModification<>(0.5, OperationType.SET))
+                .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
+                .minQ(new AttributeModification<>(0.4, OperationType.SET))
+                .maxQ(new AttributeModification<>(0.5, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET))
                 .build();
     }
@@ -300,5 +308,19 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         var hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
         Assert.assertEquals(100.f, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0.1);
         Assert.assertEquals(99.f, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0.1);
+    }
+
+    @Test
+    public void testNoChangeOnConverterStation() throws IOException {
+        var networkuuid = UUID.randomUUID();
+        ConverterStationModificationInfos emptyConverterStation = buildEmptyConverterStation();
+        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
+        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
+        modificationInfos.setConverterStation1(emptyConverterStation); // no change on converter station
+        VscModification vscModification = new VscModification(modificationInfos);
+        Reporter subReporter = new Reporter.NoOpImpl();
+        ComputationManager computationManager = new LocalComputationManager();
+        vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
+        assertDoesNotThrow(() -> vscModification.apply(networkWitoutExt, true, computationManager, subReporter));
     }
 }

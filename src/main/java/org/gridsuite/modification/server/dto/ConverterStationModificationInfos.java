@@ -33,23 +33,23 @@ public class ConverterStationModificationInfos extends InjectionModificationInfo
     @Schema(description = "Loss Factor")
     private AttributeModification<Float> lossFactor;
 
-    @Schema(description = "Reactive power")
-    private AttributeModification<Double> reactivePower;
+    @Schema(description = "Reactive power set point ")
+    private AttributeModification<Double> reactivePowerSetpoint;
 
     @Schema(description = "Voltage regulation")
     private AttributeModification<Boolean> voltageRegulationOn;
 
-    @Schema(description = "Voltage")
-    private AttributeModification<Double> voltage;
+    @Schema(description = "Voltage set point")
+    private AttributeModification<Double> voltageSetpoint;
 
     @Schema(description = "Reactive capability curve")
     private AttributeModification<Boolean> reactiveCapabilityCurve;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;

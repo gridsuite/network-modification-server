@@ -5,9 +5,7 @@ import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.HvdcLine;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.VscModificationEntity;
@@ -19,7 +17,8 @@ import org.gridsuite.modification.server.modifications.VscModification;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @ToString(callSuper = true)
 @Schema(description = "VSC modification")
 @JsonTypeName("VSC_MODIFICATION")
