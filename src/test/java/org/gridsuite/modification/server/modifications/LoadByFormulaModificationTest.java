@@ -8,14 +8,17 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.IdentifiableType;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
@@ -40,14 +43,15 @@ public class LoadByFormulaModificationTest extends AbstractByFormulaModification
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes load1 = getIdentifiableAttributes(LOAD_ID_1, 1.0);
-        IdentifiableAttributes load2 = getIdentifiableAttributes(LOAD_ID_2, 2.0);
-        IdentifiableAttributes load3 = getIdentifiableAttributes(LOAD_ID_3, 2.0);
-        IdentifiableAttributes load4 = getIdentifiableAttributes(LOAD_ID_4, 5.0);
-
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(load1, load2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(load3, load4), List.of());
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(LOAD_ID_2, 2.0)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_3, 2.0),
+                new IdentifierListFilterEquipmentAttributes(LOAD_ID_4, 5.0)))
+            .build();
 
         return List.of(filter1, filter2);
     }
@@ -85,6 +89,11 @@ public class LoadByFormulaModificationTest extends AbstractByFormulaModification
     @Override
     protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.LOAD;
+    }
+
+    @Override
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.LOAD;
     }
 
     @Override

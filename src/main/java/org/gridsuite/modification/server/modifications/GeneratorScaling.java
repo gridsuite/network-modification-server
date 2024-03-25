@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -47,9 +46,11 @@ public class GeneratorScaling extends AbstractScaling {
                                          ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         Scalable stackingUpScalable = Scalable.stack(identifiableAttributes.stream()
-                .map(equipment -> {
-                    sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
-                    return getScalable(equipment.getId());
+                .map(attribute -> network.getGenerator(attribute.getId()))
+                .filter(ModificationUtils::isInjectionConnected)
+                .map(g -> {
+                    sum.set(g.getTargetP() + sum.get());
+                    return getScalable(g.getId());
                 }).toArray(Scalable[]::new));
         scale(network, subReporter, generatorScalingVariation, sum, stackingUpScalable, new ScalingParameters());
     }
@@ -66,9 +67,12 @@ public class GeneratorScaling extends AbstractScaling {
             List<Scalable> scalables = new ArrayList<>();
 
             identifiableAttributes.forEach(equipment -> {
-                sum.set(network.getGenerator(equipment.getId()).getTargetP() + sum.get());
-                scalables.add(getScalable(equipment.getId()));
-                percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
+                Generator generator = network.getGenerator(equipment.getId());
+                if (ModificationUtils.isInjectionConnected(generator)) {
+                    sum.set(generator.getTargetP() + sum.get());
+                    scalables.add(getScalable(equipment.getId()));
+                    percentages.add((equipment.getDistributionKey() / distributionKeys) * 100);
+                }
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
             scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
@@ -83,7 +87,7 @@ public class GeneratorScaling extends AbstractScaling {
         List<Generator> generators = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getGenerator(attribute.getId()))
-                .filter(Objects::nonNull)
+                .filter(ModificationUtils::isInjectionConnected)
                 .toList();
 
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -107,7 +111,10 @@ public class GeneratorScaling extends AbstractScaling {
         AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
         AtomicReference<Double> targetPSum = new AtomicReference<>(0D);
         List<Generator> generators = identifiableAttributes
-                .stream().map(attribute -> network.getGenerator(attribute.getId())).toList();
+                .stream()
+                .map(attribute -> network.getGenerator(attribute.getId()))
+                .filter(ModificationUtils::isInjectionConnected)
+                .toList();
         Map<String, Double> maxPMap = new HashMap<>();
         List<Double> percentages = new ArrayList<>();
         List<Scalable> scalables = new ArrayList<>();
@@ -132,7 +139,10 @@ public class GeneratorScaling extends AbstractScaling {
                                            ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
         List<Generator> generators = identifiableAttributes
-                .stream().map(attribute -> network.getGenerator(attribute.getId())).toList();
+                .stream()
+                .map(attribute -> network.getGenerator(attribute.getId()))
+                .filter(ModificationUtils::isInjectionConnected)
+                .toList();
         List<Double> percentages = new ArrayList<>();
         Map<String, Double> targetPMap = new HashMap<>();
         List<Scalable> scalables = new ArrayList<>();

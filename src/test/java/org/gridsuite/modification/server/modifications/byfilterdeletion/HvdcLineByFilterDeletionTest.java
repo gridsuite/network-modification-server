@@ -8,13 +8,16 @@ package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,16 +55,20 @@ public class HvdcLineByFilterDeletionTest extends AbstractByFilterDeletionTest {
     }
 
     @Override
-    protected String getEquipmentNotFoundMessage() {
-        return "Hvdc Line " + EQUIPMENT_WRONG_ID_1 + " not found";
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.HVDC_LINE;
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes hvdc1 = getIdentifiableAttributes(HVDC_LINE_ID_1);
+    protected String getExistingId() {
+        return HVDC_LINE_ID_1;
+    }
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(hvdc1), List.of());
-
+    @Override
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.HVDC_LINE)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(HVDC_LINE_ID_1, null)))
+            .build();
         return List.of(filter1);
     }
 }

@@ -8,13 +8,16 @@ package org.gridsuite.modification.server.modifications.byfilterdeletion;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,19 +63,24 @@ public class SubstationByFilterDeletionTest extends AbstractByFilterDeletionTest
     }
 
     @Override
-    protected String getEquipmentNotFoundMessage() {
-        return "Substation not found: " + EQUIPMENT_WRONG_ID_1;
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.SUBSTATION;
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes substation1 = getIdentifiableAttributes(SUBSTATION_ID_1);
-        IdentifiableAttributes substation2 = getIdentifiableAttributes(SUBSTATION_ID_2);
-        IdentifiableAttributes substation3 = getIdentifiableAttributes(SUBSTATION_ID_3);
+    protected String getExistingId() {
+        return SUBSTATION_ID_1;
+    }
 
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(substation1, substation2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(substation3), List.of());
-
+    @Override
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.SUBSTATION)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SUBSTATION_ID_1, null),
+                new IdentifierListFilterEquipmentAttributes(SUBSTATION_ID_2, null)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.SUBSTATION)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(SUBSTATION_ID_3, null)))
+            .build();
         return List.of(filter1, filter2);
     }
 }

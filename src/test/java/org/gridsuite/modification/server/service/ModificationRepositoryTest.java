@@ -1145,6 +1145,7 @@ public class ModificationRepositoryTest {
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("2WT1")
                     .ratioTapChangerPosition(3)
+                    .ratioTapChangerTargetV(225.)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3WT1")
@@ -1174,6 +1175,7 @@ public class ModificationRepositoryTest {
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
+                    .targetV(225.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v5shunt")
@@ -1184,6 +1186,7 @@ public class ModificationRepositoryTest {
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
+                    .targetV(380.)
                     .build()))
             .build().toEntity();
 
@@ -1236,5 +1239,24 @@ public class ModificationRepositoryTest {
         assertRequestsCount(1, 0, 0, 0);
 
         assertThrows(NullPointerException.class, () -> networkModificationRepository.getModificationsCount(null, true));
+    }
+
+    @Test
+    public void testModificationOrder() {
+        // add 1 modification in a group
+        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1));
+        // move it in another group
+        List<ModificationEntity> movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity1.getId()), null);
+        assertEquals(1, movedEntities.size());
+        assertEquals(0, movedEntities.get(0).getModificationsOrder());
+
+        // put another modification in empty origin group: its order must restart to 0 as well
+        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity2));
+        // trick: move it too, to see the order in the entity
+        movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity2.getId()), null);
+        assertEquals(1, movedEntities.size());
+        assertEquals(0, movedEntities.get(0).getModificationsOrder());
     }
 }
