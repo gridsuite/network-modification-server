@@ -35,12 +35,16 @@ public class FreePropertyInfos {
     @Schema(description = "property added in current modification")
     private boolean added = false;
 
+    @Schema(description = "previous value")
+    private String previousValue;
+
     public FreePropertyEntity toEntity() {
         return FreePropertyEntity.builder()
             .name(getName())
             .value(getValue())
             .deletionMark(isDeletionMark())
             .added(isAdded())
+            .previousValue(getPreviousValue())
             .build();
     }
 }
