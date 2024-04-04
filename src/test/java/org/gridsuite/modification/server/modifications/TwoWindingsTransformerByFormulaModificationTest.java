@@ -92,7 +92,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.).build())
                 .operator(Operator.DIVISION)
                 .filters(List.of(filter4))
-                .editedField(TwoWindingsTransformerField.SERIES_RESISTANCE.name())
+                .editedField(TwoWindingsTransformerField.R.name())
                 .build();
 
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
@@ -258,41 +258,41 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TARGET_DEADBAND.name()).build(),
                 ReferenceFieldOrValue.builder().value(10.).build());
 
-        FormulaInfos formulaInfos9 = getFormulaInfo(TwoWindingsTransformerField.SERIES_REACTANCE.name(),
+        FormulaInfos formulaInfos9 = getFormulaInfo(TwoWindingsTransformerField.X.name(),
                 List.of(filter1, filter4),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(20.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.SERIES_REACTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.X.name()).build());
 
-        FormulaInfos formulaInfos10 = getFormulaInfo(TwoWindingsTransformerField.SERIES_RESISTANCE.name(),
+        FormulaInfos formulaInfos10 = getFormulaInfo(TwoWindingsTransformerField.R.name(),
                 List.of(filter2, filter3),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.SERIES_RESISTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.R.name()).build());
 
-        FormulaInfos formulaInfos11 = getFormulaInfo(TwoWindingsTransformerField.MAGNETIZING_CONDUCTANCE.name(),
+        FormulaInfos formulaInfos11 = getFormulaInfo(TwoWindingsTransformerField.G.name(),
                 List.of(filter4, filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(25.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.MAGNETIZING_CONDUCTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.G.name()).build());
 
-        FormulaInfos formulaInfos12 = getFormulaInfo(TwoWindingsTransformerField.MAGNETIZING_SUSCEPTANCE.name(),
+        FormulaInfos formulaInfos12 = getFormulaInfo(TwoWindingsTransformerField.B.name(),
                 List.of(filter1, filter3),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(2.5).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.MAGNETIZING_SUSCEPTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.B.name()).build());
 
-        FormulaInfos formulaInfos13 = getFormulaInfo(TwoWindingsTransformerField.RATED_VOLTAGE_1.name(),
+        FormulaInfos formulaInfos13 = getFormulaInfo(TwoWindingsTransformerField.RATED_U1.name(),
                 List.of(filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(15.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_VOLTAGE_1.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_U1.name()).build());
 
-        FormulaInfos formulaInfos14 = getFormulaInfo(TwoWindingsTransformerField.RATED_VOLTAGE_2.name(),
+        FormulaInfos formulaInfos14 = getFormulaInfo(TwoWindingsTransformerField.RATED_U2.name(),
                 List.of(filter3, filter2),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(50.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_VOLTAGE_2.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_U2.name()).build());
 
         FormulaInfos formulaInfos15 = getFormulaInfo(TwoWindingsTransformerField.RATED_S.name(),
                 List.of(filter1, filter2),
