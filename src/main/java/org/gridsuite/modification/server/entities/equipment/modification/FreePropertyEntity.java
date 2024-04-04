@@ -42,12 +42,16 @@ public class FreePropertyEntity {
     @Column(name = "added")
     private Boolean added = false;
 
+    @Column(name = "previous_value")
+    private String previousValue;
+
     public FreePropertyInfos toInfos() {
         return FreePropertyInfos.builder()
             .name(name)
             .value(value)
             .deletionMark(deletionMark)
             .added(added)
+            .previousValue(previousValue)
             .build();
     }
 }
