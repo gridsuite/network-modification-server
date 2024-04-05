@@ -113,7 +113,7 @@ public class ByFormulaModification extends AbstractModification {
                 if (equipmentNotModifiedCount == equipmentCount) {
                     createReport(subReporter, "byFormulaModificationNone",
                             "No equipment have been modified",
-                            TypedValue.ERROR_SEVERITY);
+                            Map.of(), TypedValue.ERROR_SEVERITY);
                 } else {
                     subReporter.report(Report.builder()
                             .withKey("byFormulaModificationSome")

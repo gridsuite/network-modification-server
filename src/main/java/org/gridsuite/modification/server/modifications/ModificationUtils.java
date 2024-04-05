@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.reporter.Report;
+import com.powsybl.commons.reporter.ReportBuilder;
 import com.powsybl.commons.reporter.Reporter;
 import com.powsybl.commons.reporter.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
@@ -433,13 +434,15 @@ public final class ModificationUtils {
         }
     }
 
-    // TODO /!\ Do not use this function as is : it needs to be refactored to prevent log overwriting /!\
-    public static void createReport(Reporter reporter, String reporterKey, String message, TypedValue errorSeverity) {
-        reporter.report(Report.builder()
-                .withKey(reporterKey)
-                .withDefaultMessage(message) // TODO /!\ log overwriting here /!\
-                .withSeverity(errorSeverity)
-                .build());
+    public static void createReport(Reporter reporter, String reporterKey, String defaultMessage, Map<String, Object> values, TypedValue errorSeverity) {
+        ReportBuilder builder = Report.builder()
+            .withKey(reporterKey)
+            .withDefaultMessage(defaultMessage)
+            .withSeverity(errorSeverity);
+        for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
+            builder.withValue(valueEntry.getKey(), valueEntry.getValue().toString());
+        }
+        reporter.report(builder.build());
     }
 
     public static <T> Predicate<T> distinctByKey(
@@ -469,18 +472,21 @@ public final class ModificationUtils {
                 .build();
     }
 
-    // TODO /!\ Do not use this function as is : it needs to be refactored to prevent log overwriting /!\
     public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
-                                        String subReporterDefaultMessage) {
+                                        String subReporterDefaultMessage, Map<String, Object> values) {
         List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
         Reporter modificationSubreporter = null;
         if (!validReports.isEmpty() && subReporter != null) {
             modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
-            modificationSubreporter.report(Report.builder()
+
+            ReportBuilder builder = Report.builder()
                     .withKey(subReporterKey)
                     .withDefaultMessage(subReporterDefaultMessage)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .withSeverity(TypedValue.INFO_SEVERITY);
+            for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
+                builder.withValue(valueEntry.getKey(), valueEntry.getValue().toString());
+            }
+            modificationSubreporter.report(builder.build());
             validReports.stream().forEach(modificationSubreporter::report);
         }
         return modificationSubreporter;
@@ -752,7 +758,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        reportModifications(subReporterReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram");
+        reportModifications(subReporterReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram", Map.of());
     }
 
     public void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
@@ -864,7 +870,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
+        reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range", Map.of());
     }
 
     private void modifyExistingActivePowerControl(ActivePowerControl<?> activePowerControl,
@@ -924,7 +930,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
+        reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation", Map.of());
         return subReporterSetpoints2;
     }
 
@@ -1074,7 +1080,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
 
-            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
+            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range", Map.of());
         }
     }
 
@@ -1104,7 +1110,7 @@ public final class ModificationUtils {
                 .withDefaultMessage(REACTIVE_LIMITS)
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
-        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
+        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram", Map.of());
     }
 
     private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
@@ -1128,8 +1134,8 @@ public final class ModificationUtils {
                 .allMatch(filterEquipments -> CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()));
 
         if (noValidEquipmentId) {
-            String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
-            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY); // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
+            String errorMsg = "${errorType}: There is no valid equipment ID among the provided filter(s)";
+            createReport(subReporter, "invalidFilters", errorMsg, Map.of("errorType", errorType), TypedValue.ERROR_SEVERITY);
             return false;
         }
 
@@ -1141,8 +1147,8 @@ public final class ModificationUtils {
                 .filter(f -> !exportFilters.containsKey(f.getId()))
                 .forEach(f -> createReport(subReporter,
                         "filterNotFound",
-                        String.format("Cannot find the following filter: %s", f.getName()), // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
-                        TypedValue.WARN_SEVERITY));
+                        "Cannot find the following filter: ${name}",
+                        Map.of("name", f.getName()), TypedValue.WARN_SEVERITY));
 
         return filterInfos
                 .stream()
@@ -1172,8 +1178,8 @@ public final class ModificationUtils {
             var equipmentIds = String.join(", ", f.getNotFoundEquipments());
             createReport(subReporter,
                     "filterEquipmentsNotFound_" + f.getFilterName(),
-                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())), // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
-                    TypedValue.WARN_SEVERITY);
+                    "Cannot find the following equipments ${equipmentIds} in filter ${filters}",
+                    Map.of("equipmentIds", equipmentIds, "filters", filters.get(f.getFilterId())), TypedValue.WARN_SEVERITY);
         });
         return filterWithWrongEquipmentsIds;
     }
