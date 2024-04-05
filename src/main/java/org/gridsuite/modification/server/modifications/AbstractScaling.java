@@ -61,7 +61,7 @@ public abstract class AbstractScaling extends AbstractModification {
                     String filterNames = variation.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
                     createReport(subReporter,
                             "allFiltersWrong",
-                            String.format("All of the following variation's filters have equipments with wrong id : %s", filterNames),
+                            String.format("All of the following variation's filters have equipments with wrong id : %s", filterNames), // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
                             TypedValue.WARN_SEVERITY);
                 } else {
                     applyVariation(network, subReporter, identifiableAttributes, variation);

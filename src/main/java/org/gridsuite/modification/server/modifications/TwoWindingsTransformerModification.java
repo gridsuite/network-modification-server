@@ -499,7 +499,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
             }
-            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, ModificationUtils.getInstance().formatRegulationModeReport(regulationMode));
+            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)); // TODO /!\ log overwriting here : need to refactor reportModifications and use .withValue /!\
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports, "phaseTapChangerPositionsAndStepsModification", "    Tap Changer");
         }
     }

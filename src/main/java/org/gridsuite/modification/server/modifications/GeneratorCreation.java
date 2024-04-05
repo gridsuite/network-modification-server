@@ -217,8 +217,9 @@ public class GeneratorCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 voltageReports.add(Report.builder()
                         .withKey("ReactivePercentageError")
-                        .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} :" + e.getMessage())
+                        .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} : ${message}")
                         .withValue("id", generatorCreationInfos.getEquipmentId())
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
@@ -315,8 +316,9 @@ public class GeneratorCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 activePowerRegulationReports.add(Report.builder()
                         .withKey("ActivePowerExtensionAddError")
-                        .withDefaultMessage("cannot add active power extension on generator with id=${id} : " + e.getMessage())
+                        .withDefaultMessage("cannot add active power extension on generator with id=${id} : ${message}")
                         .withValue("id", generatorCreationInfos.getEquipmentId())
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
@@ -341,8 +343,9 @@ public class GeneratorCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 shortCircuitReports.add(Report.builder()
                         .withKey("ShortCircuitExtensionAddError")
-                        .withDefaultMessage("cannot add short-circuit extension on generator with id=${id} : " + e.getMessage())
+                        .withDefaultMessage("cannot add short-circuit extension on generator with id=${id} : ${message}")
                         .withValue("id", generatorCreationInfos.getEquipmentId())
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
@@ -382,8 +385,9 @@ public class GeneratorCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 startupReports.add(Report.builder()
                         .withKey("StartupExtensionAddError")
-                        .withDefaultMessage("cannot add startup extension on generator with id=${id} : " + e.getMessage())
+                        .withDefaultMessage("cannot add startup extension on generator with id=${id} : ${message}")
                         .withValue("id", generatorCreationInfos.getEquipmentId())
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }

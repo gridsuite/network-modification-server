@@ -433,10 +433,11 @@ public final class ModificationUtils {
         }
     }
 
+    // TODO /!\ Do not use this function as is : it needs to be refactored to prevent log overwriting /!\
     public static void createReport(Reporter reporter, String reporterKey, String message, TypedValue errorSeverity) {
         reporter.report(Report.builder()
                 .withKey(reporterKey)
-                .withDefaultMessage(message)
+                .withDefaultMessage(message) // TODO /!\ log overwriting here /!\
                 .withSeverity(errorSeverity)
                 .build());
     }
@@ -462,11 +463,13 @@ public final class ModificationUtils {
 
     public Report createEnabledDisabledReport(String key, boolean enabled) {
         return Report.builder().withKey(key)
-                .withDefaultMessage(enabled ? "    Enabled" : "    Disables")
+                .withDefaultMessage("    ${status}")
+                .withValue("status", enabled ? "Enabled" : "Disabled")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build();
     }
 
+    // TODO /!\ Do not use this function as is : it needs to be refactored to prevent log overwriting /!\
     public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
                                         String subReporterDefaultMessage) {
         List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
@@ -1126,7 +1129,7 @@ public final class ModificationUtils {
 
         if (noValidEquipmentId) {
             String errorMsg = errorType + ": There is no valid equipment ID among the provided filter(s)";
-            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY);
+            createReport(subReporter, "invalidFilters", errorMsg, TypedValue.ERROR_SEVERITY); // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
             return false;
         }
 
@@ -1138,7 +1141,7 @@ public final class ModificationUtils {
                 .filter(f -> !exportFilters.containsKey(f.getId()))
                 .forEach(f -> createReport(subReporter,
                         "filterNotFound",
-                        String.format("Cannot find the following filter: %s", f.getName()),
+                        String.format("Cannot find the following filter: %s", f.getName()), // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
                         TypedValue.WARN_SEVERITY));
 
         return filterInfos
@@ -1169,7 +1172,7 @@ public final class ModificationUtils {
             var equipmentIds = String.join(", ", f.getNotFoundEquipments());
             createReport(subReporter,
                     "filterEquipmentsNotFound_" + f.getFilterName(),
-                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())),
+                    String.format("Cannot find the following equipments %s in filter %s", equipmentIds, filters.get(f.getFilterId())), // TODO /!\ log overwriting here : need to refactor createReport and use .withValue /!\
                     TypedValue.WARN_SEVERITY);
         });
         return filterWithWrongEquipmentsIds;
