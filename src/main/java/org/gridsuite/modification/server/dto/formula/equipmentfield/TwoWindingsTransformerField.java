@@ -5,12 +5,12 @@ import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
 public enum TwoWindingsTransformerField {
-    SERIES_RESISTANCE,
-    SERIES_REACTANCE,
-    MAGNETIZING_CONDUCTANCE,
-    MAGNETIZING_SUSCEPTANCE,
-    RATED_VOLTAGE_1,
-    RATED_VOLTAGE_2,
+    R,
+    X,
+    G,
+    B,
+    RATED_U1,
+    RATED_U2,
     RATED_S,
     TARGET_V,
     RATIO_LOW_TAP_POSITION,
@@ -26,12 +26,12 @@ public enum TwoWindingsTransformerField {
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
         return switch (field) {
-            case SERIES_RESISTANCE -> transformer.getR();
-            case SERIES_REACTANCE -> transformer.getX();
-            case MAGNETIZING_CONDUCTANCE -> transformer.getG();
-            case MAGNETIZING_SUSCEPTANCE -> transformer.getB();
-            case RATED_VOLTAGE_1 -> transformer.getRatedU1();
-            case RATED_VOLTAGE_2 -> transformer.getRatedU2();
+            case R -> transformer.getR();
+            case X -> transformer.getX();
+            case G -> transformer.getG();
+            case B -> transformer.getB();
+            case RATED_U1 -> transformer.getRatedU1();
+            case RATED_U2 -> transformer.getRatedU2();
             case RATED_S -> transformer.getRatedS();
             case TARGET_V -> ratioTapChanger != null ? ratioTapChanger.getTargetV() : null;
             case RATIO_LOW_TAP_POSITION -> ratioTapChanger != null ? (double) ratioTapChanger.getLowTapPosition() : null;
@@ -50,12 +50,12 @@ public enum TwoWindingsTransformerField {
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
 
         switch (field) {
-            case SERIES_RESISTANCE -> transformer.setR(newValue);
-            case SERIES_REACTANCE -> transformer.setX(newValue);
-            case MAGNETIZING_CONDUCTANCE -> transformer.setG(newValue);
-            case MAGNETIZING_SUSCEPTANCE -> transformer.setB(newValue);
-            case RATED_VOLTAGE_1 -> transformer.setRatedU1(newValue);
-            case RATED_VOLTAGE_2 -> transformer.setRatedU2(newValue);
+            case R -> transformer.setR(newValue);
+            case X -> transformer.setX(newValue);
+            case G -> transformer.setG(newValue);
+            case B -> transformer.setB(newValue);
+            case RATED_U1 -> transformer.setRatedU1(newValue);
+            case RATED_U2 -> transformer.setRatedU2(newValue);
             case RATED_S -> transformer.setRatedS(newValue);
             case TARGET_V -> ratioTapChanger.setTargetV(newValue);
             case RATIO_LOW_TAP_POSITION -> ratioTapChanger.setLowTapPosition(newValue.intValue());
