@@ -1188,10 +1188,19 @@ public class ModificationRepositoryTest {
                     .connect(false)
                     .targetV(380.)
                     .build()))
+            .buses(List.of(
+                VoltageInitBusModificationInfos.builder()
+                    .busId("B1")
+                    .v(225.)
+                    .build(),
+                VoltageInitBusModificationInfos.builder()
+                    .busId("B2")
+                    .v(380.)
+                    .build()))
             .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
-        assertRequestsCount(1, 8, 1, 0);
+        assertRequestsCount(1, 9, 1, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
@@ -1203,7 +1212,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity.getId()));
-        assertRequestsCount(2, 0, 0, 7);
+        assertRequestsCount(2, 0, 0, 8);
 
         SQLStatementCountValidator.reset();
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());

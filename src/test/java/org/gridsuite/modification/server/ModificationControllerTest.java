@@ -1370,6 +1370,15 @@ public class ModificationControllerTest {
                     .connect(false)
                     .targetV(380.)
                     .build()))
+            .buses(List.of(
+                VoltageInitBusModificationInfos.builder()
+                    .busId("1.1")
+                    .v(225.)
+                    .build(),
+                VoltageInitBusModificationInfos.builder()
+                    .busId("1.2")
+                    .v(226.)
+                    .build()))
             .build();
 
         MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
