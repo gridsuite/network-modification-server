@@ -13,6 +13,7 @@ import lombok.Setter;
 import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.VoltageInitBusModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitStaticVarCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
@@ -68,6 +69,12 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_shunt_compensators_fk1"))
     private List<VoltageInitShuntCompensatorModificationEmbeddable> shuntCompensators;
 
+    @ElementCollection
+    @CollectionTable(name = "voltageInitBusModification",
+        indexes = {@Index(name = "VoltageInitModificationEntity_buses_idx1", columnList = "voltage_init_modification_entity_id")},
+        foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_buses_fk1"))
+    private List<VoltageInitBusModificationEmbeddable> buses;
+
     public VoltageInitModificationEntity(VoltageInitModificationInfos voltageInitModificationInfos) {
         super(voltageInitModificationInfos);
         assignAttributes(voltageInitModificationInfos);
@@ -85,6 +92,8 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         staticVarCompensators = toEmbeddableVoltageInitStaticVarCompensators(voltageInitModificationInfos.getStaticVarCompensators());
         vscConverterStations = toEmbeddableVoltageInitVscConverterStations(voltageInitModificationInfos.getVscConverterStations());
         shuntCompensators = toEmbeddableVoltageInitShuntCompensators(voltageInitModificationInfos.getShuntCompensators());
+        buses = toEmbeddableVoltageInitBuses(voltageInitModificationInfos.getBuses());
+
     }
 
     public static List<VoltageInitGeneratorModificationEmbeddable> toEmbeddableVoltageInitGenerators(List<VoltageInitGeneratorModificationInfos> generators) {
@@ -152,6 +161,19 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .collect(Collectors.toList()) : null;
     }
 
+    public static List<VoltageInitBusModificationEmbeddable> toEmbeddableVoltageInitBuses(List<VoltageInitBusModificationInfos> buses) {
+        return buses == null ? null : buses.stream()
+            .map(bus -> new VoltageInitBusModificationEmbeddable(bus.getBusId(), bus.getV()))
+            .collect(Collectors.toList());
+    }
+
+    private List<VoltageInitBusModificationInfos> toBusesModification(List<VoltageInitBusModificationEmbeddable> buses) {
+        return buses != null ? buses
+            .stream()
+            .map(bus -> new VoltageInitBusModificationInfos(bus.getBusId(), bus.getV()))
+            .collect(Collectors.toList()) : null;
+    }
+
     @Override
     public VoltageInitModificationInfos toModificationInfos() {
         return VoltageInitModificationInfos.builder()
@@ -163,6 +185,7 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .staticVarCompensators(toStaticVarCompensatorsModification(staticVarCompensators))
             .vscConverterStations(toVscConverterStationsModification(vscConverterStations))
             .shuntCompensators(toShuntCompensatorsModification(shuntCompensators))
+            .buses(toBusesModification(buses))
             .build();
     }
 }

@@ -1,0 +1,20 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="labidiayo (generated)" id="1712531241127-29">
+        <createTable tableName="voltage_init_bus_modification">
+            <column name="voltage_init_modification_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bus_id" type="VARCHAR(255)"/>
+            <column name="v" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1712531241127-30">
+        <createIndex indexName="VoltageInitModificationEntity_buses_idx1" tableName="voltage_init_bus_modification">
+            <column name="voltage_init_modification_entity_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="labidiayo (generated)" id="1712531241127-31">
+        <addForeignKeyConstraint baseColumnNames="voltage_init_modification_entity_id" baseTableName="voltage_init_bus_modification" constraintName="VoltageInitModificationEntity_buses_fk1" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_init_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

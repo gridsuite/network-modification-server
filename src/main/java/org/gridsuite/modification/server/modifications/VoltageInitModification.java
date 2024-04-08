@@ -66,6 +66,42 @@ public class VoltageInitModification extends AbstractModification {
 
         // apply vsc converter stations modifications
         applyVscConverterStationModification(network, subReporter);
+
+        // apply buses modifications
+        applyBusModification(network, subReporter);
+    }
+
+    private void applyBusModification(Network network, Reporter subReporter) {
+        int modificationsCount = 0;
+        List<Report> reports = new ArrayList<>();
+        for (VoltageInitBusModificationInfos m : voltageInitModificationInfos.getBuses()) {
+            final Bus bus = network.getBusView().getBus(m.getBusId());
+            if (bus == null) {
+                reports.add(Report.builder().withKey("busNotFound")
+                    .withDefaultMessage("Bus with id=${id} not found")
+                    .withValue("id", m.getBusId())
+                    .withSeverity(TypedValue.WARN_SEVERITY).build());
+            } else if (m.getV() != null) {
+                modificationsCount++;
+                reports.add(Report.builder().withKey("busModification")
+                    .withDefaultMessage("Bus with id=${id} modified :")
+                    .withValue("id", m.getBusId())
+                    .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                final double oldTargetV = bus.getV();
+                bus.setV(m.getV());
+                reports.add(ModificationUtils.buildModificationReport(oldTargetV, m.getV(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
+            }
+        }
+        if (!reports.isEmpty()) {
+            Reporter busesReporter = subReporter.createSubReporter("BusesModifications", "Buses");
+            reports.forEach(busesReporter::report);
+        }
+        if (modificationsCount > 0) {
+            subReporter.report(new Report("busModificationsResume", "${count} bus(es) have been modified.", Map.of(
+                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
+            )));
+        }
     }
 
     private void applyGeneratorModification(Network network, Reporter subReporter) {
