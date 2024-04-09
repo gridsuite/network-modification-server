@@ -1374,10 +1374,12 @@ public class ModificationControllerTest {
                 VoltageInitBusModificationInfos.builder()
                     .busId("1.1")
                     .v(225.)
+                    .angle(0.)
                     .build(),
                 VoltageInitBusModificationInfos.builder()
                     .busId("1.2")
                     .v(226.)
+                    .angle(0.6)
                     .build()))
             .build();
 

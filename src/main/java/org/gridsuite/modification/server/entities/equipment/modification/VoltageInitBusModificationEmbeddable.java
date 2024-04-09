@@ -28,4 +28,7 @@ public class VoltageInitBusModificationEmbeddable {
 
     @Column
     private Double v;
+
+    @Column
+    private Double angle;
 }

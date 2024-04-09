@@ -1192,10 +1192,12 @@ public class ModificationRepositoryTest {
                 VoltageInitBusModificationInfos.builder()
                     .busId("B1")
                     .v(225.)
+                    .angle(0.)
                     .build(),
                 VoltageInitBusModificationInfos.builder()
                     .busId("B2")
                     .v(380.)
+                    .angle(0.3)
                     .build()))
             .build().toEntity();
 

@@ -40,8 +40,11 @@ public class VoltageInitModification extends AbstractModification {
     private static final String SHUNT_COMPENSATORS_NAME = "Shunt compensators";
 
     private static final String VOLTAGE_SET_POINT = "Voltage set point";
+    private static final String VOLTAGE_MAGNITUDE = "Voltage magnitude";
+    private static final String VOLTAGE_ANGLE = "Voltage angle";
     private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
     private static final String SECTION_COUNT = "Section count";
+    private static final String COUNT = "count";
 
     @Override
     public void check(Network network) throws NetworkModificationException {
@@ -78,18 +81,27 @@ public class VoltageInitModification extends AbstractModification {
             final Bus bus = network.getBusView().getBus(m.getBusId());
             if (bus == null) {
                 reports.add(Report.builder().withKey("busNotFound")
-                    .withDefaultMessage("Bus with id=${id} not found")
-                    .withValue("id", m.getBusId())
-                    .withSeverity(TypedValue.WARN_SEVERITY).build());
-            } else if (m.getV() != null) {
+                        .withDefaultMessage("Bus with id=${id} not found")
+                        .withValue("id", m.getBusId())
+                        .withSeverity(TypedValue.WARN_SEVERITY).build());
+            } else if (m.getV() != null || m.getAngle() != null) {
                 modificationsCount++;
                 reports.add(Report.builder().withKey("busModification")
-                    .withDefaultMessage("Bus with id=${id} modified :")
-                    .withValue("id", m.getBusId())
-                    .withSeverity(TypedValue.TRACE_SEVERITY).build());
-                final double oldTargetV = bus.getV();
-                bus.setV(m.getV());
-                reports.add(ModificationUtils.buildModificationReport(oldTargetV, m.getV(), VOLTAGE_SET_POINT, 1, TypedValue.TRACE_SEVERITY));
+                        .withDefaultMessage("Bus with id=${id} modified :")
+                        .withValue("id", m.getBusId())
+                        .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                if (m.getV() != null) {
+                    final double oldV = bus.getV();
+                    bus.setV(m.getV());
+                    reports.add(ModificationUtils.buildModificationReport(oldV, m.getV(), VOLTAGE_MAGNITUDE, 1,
+                            TypedValue.TRACE_SEVERITY));
+                }
+                if (m.getAngle() != null) {
+                    final double oldAngle = bus.getAngle();
+                    bus.setAngle(m.getAngle());
+                    reports.add(ModificationUtils.buildModificationReport(oldAngle, m.getAngle(), VOLTAGE_ANGLE, 1,
+                            TypedValue.TRACE_SEVERITY));
+                }
             }
         }
         if (!reports.isEmpty()) {
@@ -98,7 +110,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (modificationsCount > 0) {
             subReporter.report(new Report("busModificationsResume", "${count} bus(es) have been modified.", Map.of(
-                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
                 Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
         }
@@ -138,7 +150,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (modificationsCount > 0) {
             subReporter.report(new Report("generatorModificationsResume", "${count} generator(s) have been modified.", Map.of(
-                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
                 Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
         }
@@ -220,7 +232,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (modificationsCount > 0) {
             subReporter.report(new Report("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.", Map.of(
-                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
                 Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
         }
@@ -260,7 +272,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (modificationsCount > 0) {
             subReporter.report(new Report("svcModificationsResume", "${count} static var compensator(s) have been modified.", Map.of(
-                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
                 Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
         }
@@ -300,7 +312,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (modificationsCount > 0) {
             subReporter.report(new Report("vscModificationsResume", "${count} vsc converter station(s) have been modified.", Map.of(
-                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
                 Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
         }
@@ -376,7 +388,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (modificationsCount > 0) {
             subReporter.report(new Report("shuntCompensatorModificationsResume", "${count} shunt compensator(s) have been modified.", Map.of(
-                "count", new TypedValue(modificationsCount, TypedValue.UNTYPED),
+                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
                 Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
             )));
         }

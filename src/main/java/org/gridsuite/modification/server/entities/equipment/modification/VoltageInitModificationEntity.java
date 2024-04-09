@@ -163,14 +163,14 @@ public class VoltageInitModificationEntity extends ModificationEntity {
 
     public static List<VoltageInitBusModificationEmbeddable> toEmbeddableVoltageInitBuses(List<VoltageInitBusModificationInfos> buses) {
         return buses == null ? null : buses.stream()
-            .map(bus -> new VoltageInitBusModificationEmbeddable(bus.getBusId(), bus.getV()))
+            .map(bus -> new VoltageInitBusModificationEmbeddable(bus.getBusId(), bus.getV(), bus.getAngle()))
             .collect(Collectors.toList());
     }
 
     private List<VoltageInitBusModificationInfos> toBusesModification(List<VoltageInitBusModificationEmbeddable> buses) {
         return buses != null ? buses
             .stream()
-            .map(bus -> new VoltageInitBusModificationInfos(bus.getBusId(), bus.getV()))
+            .map(bus -> new VoltageInitBusModificationInfos(bus.getBusId(), bus.getV(), bus.getAngle()))
             .collect(Collectors.toList()) : null;
     }
 

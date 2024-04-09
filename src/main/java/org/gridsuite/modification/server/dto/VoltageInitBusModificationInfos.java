@@ -21,12 +21,15 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Voltage init generator modfication infos")
+@Schema(description = "Voltage init bus modfication infos")
 public class VoltageInitBusModificationInfos {
     @Schema(description = "Bus id")
     private String busId;
 
-    @Schema(description = "Voltage set point")
+    @Schema(description = "Voltage magnitude")
     private Double v;
+
+    @Schema(description = "Voltage angle")
+    private Double angle;
 
 }
