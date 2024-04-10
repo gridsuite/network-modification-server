@@ -79,8 +79,8 @@ public class ByFilterDeletion extends AbstractModification {
                 String filterNames = modificationInfos.getFilters().stream().map(FilterInfos::getName).collect(Collectors.joining(", "));
                 createReport(subReporter,
                         "allFiltersWrong",
-                        String.format("All of the following filters have equipments with wrong id : %s", filterNames),
-                        TypedValue.WARN_SEVERITY);
+                        "All of the following filters have equipments with wrong id : ${filterNames}",
+                        Map.of("filterNames", filterNames), TypedValue.WARN_SEVERITY);
             } else {
                 subReporter.report(Report.builder()
                         .withKey("equipmentDeleted")

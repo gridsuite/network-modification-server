@@ -131,7 +131,8 @@ public class NetworkModificationApplicator {
         String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
         subReporter.report(Report.builder()
                 .withKey(typeIfError.name())
-                .withDefaultMessage(errorMessage)
+                .withDefaultMessage("${errorMessage}")
+                .withValue("errorMessage", errorMessage)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
                 .build());
     }

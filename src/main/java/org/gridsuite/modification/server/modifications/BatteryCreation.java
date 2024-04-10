@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.dto.BatteryCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
@@ -148,7 +149,7 @@ public class BatteryCreation extends AbstractModification {
             setPointReports.add(ModificationUtils.getInstance()
                 .buildCreationReport(batteryCreationInfos.getTargetQ(), "Reactive power"));
         }
-        return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
+        return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints", Map.of());
     }
 
     private void reportBatteryConnectivity(BatteryCreationInfos batteryCreationInfos, Reporter subReporter) {
@@ -180,7 +181,7 @@ public class BatteryCreation extends AbstractModification {
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
         }
     }
 
@@ -198,7 +199,7 @@ public class BatteryCreation extends AbstractModification {
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             batteryCreationInfos.getMaxP(), "Max active power"));
 
-        ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
+        ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS, Map.of());
         return subReporterLimits;
     }
 
@@ -219,12 +220,13 @@ public class BatteryCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 activePowerRegulationReports.add(Report.builder()
                         .withKey("ActivePowerExtensionAddError")
-                        .withDefaultMessage("cannot add active power extension on battery with id=${id} : " + e.getMessage())
+                        .withDefaultMessage("cannot add active power extension on battery with id=${id} : ${message}")
                         .withValue("id", batteryCreationInfos.getEquipmentId())
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation");
+            ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation", Map.of());
         }
     }
 }

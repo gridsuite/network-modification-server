@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.dto.TemporaryLimitModificationType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_MODIFICATION_ERROR;
@@ -73,9 +74,9 @@ public abstract class AbstractBranchModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             ModificationUtils.getInstance().reportModifications(limitsReporter, side1LimitsReports, "side1LimitsModification",
-                    "    Side 1");
+                    "    Side 1", Map.of());
             ModificationUtils.getInstance().reportModifications(limitsReporter, side2LimitsReports, "side2LimitsModification",
-                    "    Side 2");
+                    "    Side 2", Map.of());
         }
 
         updateConnections(branch, branchModificationInfos);
