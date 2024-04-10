@@ -82,8 +82,8 @@ public class OperatingStatusModification extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("lockout" + equipmentType + APPLIED)
                 .withDefaultMessage("${equipmentType} ${id} (id) : lockout applied")
-                .withValue("id", equipment.getId())
                 .withValue("equipmentType", equipmentType)
+                .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
@@ -106,8 +106,8 @@ public class OperatingStatusModification extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("trip" + equipmentType + APPLIED)
                 .withDefaultMessage("${equipmentType} ${id} (id) : trip applied")
-                .withValue("id", equipment.getId())
                 .withValue("equipmentType", equipmentType)
+                .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
 
@@ -134,8 +134,8 @@ public class OperatingStatusModification extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("switchOn" + equipmentType + APPLIED)
                 .withDefaultMessage("${equipmentType} ${id} (id) : switch on applied")
-                .withValue("id", equipment.getId())
                 .withValue("equipmentType", equipmentType)
+                .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
@@ -155,9 +155,9 @@ public class OperatingStatusModification extends AbstractModification {
         subReporter.report(Report.builder()
                 .withKey("energise" + equipmentType + "EndApplied")
                 .withDefaultMessage("${equipmentType} ${id} (id) : energise the side ${side} applied")
+                .withValue("equipmentType", equipmentType)
                 .withValue("id", equipment.getId())
                 .withValue("side", side.name())
-                .withValue("equipmentType", equipmentType)
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }
