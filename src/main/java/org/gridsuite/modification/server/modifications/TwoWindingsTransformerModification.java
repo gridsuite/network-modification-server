@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 
@@ -365,7 +366,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         if (!ratioTapChangerReports.isEmpty() || !voltageRegulationReports.isEmpty() || !positionsAndStepsReports.isEmpty()) {
-            Reporter ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter, ratioTapChangerReports, TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
+            Reporter ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter, ratioTapChangerReports, TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE, Map.of());
             if (ratioTapChangerReporter == null) {
                 ratioTapChangerReporter = subReporter.createSubReporter(TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
                 ratioTapChangerReporter.report(Report.builder()
@@ -374,8 +375,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
             }
-            ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, voltageRegulationReports, "ratioTapChangerVoltageRegulationModification", "    Voltage regulation");
-            ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, positionsAndStepsReports, "ratioTapChangerPositionsAndStepsModification", "    Tap Changer");
+            ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, voltageRegulationReports, "ratioTapChangerVoltageRegulationModification", "    Voltage regulation", Map.of());
+            ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, positionsAndStepsReports, "ratioTapChangerPositionsAndStepsModification", "    Tap Changer", Map.of());
         }
     }
 
@@ -490,7 +491,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         if (!phaseTapChangerReports.isEmpty() || !regulationReports.isEmpty() || !positionsAndStepsReports.isEmpty()) {
-            Reporter phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReporter, phaseTapChangerReports, TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
+            Reporter phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReporter, phaseTapChangerReports, TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE, Map.of());
             if (phaseTapChangerSubreporter == null) {
                 phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
                 phaseTapChangerSubreporter.report(Report.builder()
@@ -499,8 +500,14 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                             .withSeverity(TypedValue.INFO_SEVERITY)
                             .build());
             }
-            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports, regulationMode != null ? regulationMode.name() : null, ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)); // TODO /!\ log overwriting here : need to refactor reportModifications and use .withValue /!\
-            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports, "phaseTapChangerPositionsAndStepsModification", "    Tap Changer");
+            ModificationUtils.getInstance().reportModifications(
+                    phaseTapChangerSubreporter,
+                    regulationReports,
+                    regulationMode != null ? regulationMode.name() : null,
+                    "${regulationMode}",
+                    Map.of("regulationMode", ModificationUtils.getInstance().formatRegulationModeReport(regulationMode))
+            );
+            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports, "phaseTapChangerPositionsAndStepsModification", "    Tap Changer", Map.of());
         }
     }
 

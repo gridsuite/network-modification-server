@@ -28,6 +28,7 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
@@ -191,7 +192,7 @@ public class GeneratorCreation extends AbstractModification {
             setPointReports.add(ModificationUtils.getInstance()
                 .buildCreationReport(generatorCreationInfos.getTargetQ(), "Reactive power"));
         }
-        return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints");
+        return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints", Map.of());
     }
 
     private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
@@ -224,7 +225,7 @@ public class GeneratorCreation extends AbstractModification {
                         .build());
             }
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
+        ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation", Map.of());
 
     }
 
@@ -273,7 +274,7 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
         }
     }
 
@@ -295,7 +296,7 @@ public class GeneratorCreation extends AbstractModification {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
                 generatorCreationInfos.getRatedS(), "Rated nominal power"));
         }
-        ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
+        ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS, Map.of());
         return subReporterLimits;
     }
 
@@ -322,7 +323,7 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation");
+            ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation", Map.of());
         }
     }
 
@@ -349,7 +350,7 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, shortCircuitReports, "shortCircuitCreated", "Short-circuit");
+            ModificationUtils.getInstance().reportModifications(subReporter, shortCircuitReports, "shortCircuitCreated", "Short-circuit", Map.of());
         }
     }
 
@@ -391,7 +392,7 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, startupReports, "startUpAttributesCreated", "Start up");
+            ModificationUtils.getInstance().reportModifications(subReporter, startupReports, "startUpAttributesCreated", "Start up", Map.of());
         }
     }
 }
