@@ -57,7 +57,8 @@ public class TabularModification extends AbstractModification {
                 applicationFailuresCount++;
                 subReporter.report(Report.builder()
                         .withKey(modifInfos.getType().name() + applicationFailuresCount)
-                        .withDefaultMessage(e.getMessage())
+                        .withDefaultMessage("${message}")
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
                 LOGGER.warn(e.getMessage());
@@ -78,22 +79,25 @@ public class TabularModification extends AbstractModification {
         if (modificationInfos.getModifications().size() == applicationFailuresCount) {
             subReporter.report(Report.builder()
                     .withKey(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name() + "Error")
-                    .withDefaultMessage("Tabular modification: No " + defaultMessage)
+                    .withDefaultMessage("Tabular modification: No ${defaultMessage}")
+                    .withValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
         } else if (applicationFailuresCount > 0) {
             subReporter.report(Report.builder()
                     .withKey(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name() + "Warning")
-                    .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage + " and ${failuresCount} have not been modified")
+                    .withDefaultMessage("Tabular modification: ${modificationsCount} ${defaultMessage} and ${failuresCount} have not been modified")
                     .withValue("modificationsCount", modificationInfos.getModifications().size() - applicationFailuresCount)
                     .withValue("failuresCount", applicationFailuresCount)
+                    .withValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         } else {
             subReporter.report(Report.builder()
                     .withKey(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name())
-                    .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage)
+                    .withDefaultMessage("Tabular modification: ${modificationsCount} ${defaultMessage}")
                     .withValue("modificationsCount", modificationInfos.getModifications().size())
+                    .withValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
@@ -108,29 +112,30 @@ public class TabularModification extends AbstractModification {
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.NON_LINEAR) {
             subReporter.report(Report.builder()
                     .withKey(shuntCompensator.getId())
-                    .withDefaultMessage("Tabular modification: It is currently not possible to modify non-linear shunt compensator with id " + shuntCompensator.getId())
+                    .withDefaultMessage("Tabular modification: It is currently not possible to modify non-linear shunt compensator with id ${id}")
+                    .withValue("id", shuntCompensator.getId())
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
         } else if (shuntCompensatorModificationInfos.getMaxSusceptance() != null) {
             if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null && shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
                 subReporter.report(Report.builder()
                         .withKey(shuntCompensator.getId())
-                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance for shunt compensator with id "
-                                + shuntCompensator.getId())
+                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance for shunt compensator with id ${id}")
+                        .withValue("id", shuntCompensator.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
             } else if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null) {
                 subReporter.report(Report.builder()
                         .withKey(shuntCompensator.getId())
-                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance for shunt compensator with id "
-                                + shuntCompensator.getId())
+                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance for shunt compensator with id ${id}")
+                        .withValue("id", shuntCompensator.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
             } else if (shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
                 subReporter.report(Report.builder()
                         .withKey(shuntCompensator.getId())
-                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance for shunt compensator with id "
-                                + shuntCompensator.getId())
+                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance for shunt compensator with id ${id}")
+                        .withValue("id", shuntCompensator.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
             }

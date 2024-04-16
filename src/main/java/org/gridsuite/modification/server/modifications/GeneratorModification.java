@@ -24,6 +24,7 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 
@@ -146,7 +147,7 @@ public class GeneratorModification extends AbstractModification {
                     modificationInfos.getStepUpTransformerX().getValue(),
                     "Transformer reactance"));
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, reports, "shortCircuitAttributesModified", "Short-circuit");
+        ModificationUtils.getInstance().reportModifications(subReporter, reports, "shortCircuitAttributesModified", "Short-circuit", Map.of());
     }
 
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
@@ -239,7 +240,7 @@ public class GeneratorModification extends AbstractModification {
                 plannedOutageRateUpdated ||
                 forcedOutageRateUpdated) {
             generatorStartupAdder.add();
-            ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up");
+            ModificationUtils.getInstance().reportModifications(subReporter, reports, "startUpAttributesModified", "Start up", Map.of());
         }
     }
 
@@ -408,7 +409,7 @@ public class GeneratorModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        ModificationUtils.getInstance().reportModifications(subReporterSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation");
+        ModificationUtils.getInstance().reportModifications(subReporterSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation", Map.of());
         return subReporterSetpoints2;
     }
 

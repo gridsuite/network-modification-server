@@ -81,7 +81,8 @@ public class OperatingStatusModification extends AbstractModification {
         }
         subReporter.report(Report.builder()
                 .withKey("lockout" + equipmentType + APPLIED)
-                .withDefaultMessage(equipmentType + " ${id} (id) : lockout applied")
+                .withDefaultMessage("${equipmentType} ${id} (id) : lockout applied")
+                .withValue("equipmentType", equipmentType)
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
@@ -104,7 +105,8 @@ public class OperatingStatusModification extends AbstractModification {
 
         subReporter.report(Report.builder()
                 .withKey("trip" + equipmentType + APPLIED)
-                .withDefaultMessage(equipmentType + " ${id} (id) : trip applied")
+                .withDefaultMessage("${equipmentType} ${id} (id) : trip applied")
+                .withValue("equipmentType", equipmentType)
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
@@ -131,7 +133,8 @@ public class OperatingStatusModification extends AbstractModification {
 
         subReporter.report(Report.builder()
                 .withKey("switchOn" + equipmentType + APPLIED)
-                .withDefaultMessage(equipmentType + " ${id} (id) : switch on applied")
+                .withDefaultMessage("${equipmentType} ${id} (id) : switch on applied")
+                .withValue("equipmentType", equipmentType)
                 .withValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
@@ -151,7 +154,8 @@ public class OperatingStatusModification extends AbstractModification {
 
         subReporter.report(Report.builder()
                 .withKey("energise" + equipmentType + "EndApplied")
-                .withDefaultMessage(equipmentType + " ${id} (id) : energise the side ${side} applied")
+                .withDefaultMessage("${equipmentType} ${id} (id) : energise the side ${side} applied")
+                .withValue("equipmentType", equipmentType)
                 .withValue("id", equipment.getId())
                 .withValue("side", side.name())
                 .withSeverity(TypedValue.INFO_SEVERITY)

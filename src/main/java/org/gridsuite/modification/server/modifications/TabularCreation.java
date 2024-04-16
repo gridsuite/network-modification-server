@@ -52,7 +52,8 @@ public class TabularCreation extends AbstractModification {
                 applicationFailuresCount++;
                 subReporter.report(Report.builder()
                         .withKey(creatInfos.getType().name() + applicationFailuresCount)
-                        .withDefaultMessage(e.getMessage())
+                        .withDefaultMessage("${message}")
+                        .withValue("message", e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .build());
                 LOGGER.warn(e.getMessage());
@@ -66,22 +67,25 @@ public class TabularCreation extends AbstractModification {
         if (creationInfos.getCreations().size() == applicationFailuresCount) {
             subReporter.report(Report.builder()
                     .withKey(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Error")
-                    .withDefaultMessage("Tabular creation: No " + defaultMessage)
+                    .withDefaultMessage("Tabular creation: No ${defaultMessage}")
+                    .withValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .build());
         } else if (applicationFailuresCount > 0) {
             subReporter.report(Report.builder()
                     .withKey(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Warning")
-                    .withDefaultMessage("Tabular creation: ${creationsCount} " + defaultMessage + " and ${failuresCount} have not been created")
+                    .withDefaultMessage("Tabular creation: ${creationsCount} ${defaultMessage} and ${failuresCount} have not been created")
                     .withValue("creationsCount", creationInfos.getCreations().size() - applicationFailuresCount)
                     .withValue("failuresCount", applicationFailuresCount)
+                    .withValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         } else {
             subReporter.report(Report.builder()
                     .withKey(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name())
-                    .withDefaultMessage("Tabular creation: ${creationsCount} " + defaultMessage)
+                    .withDefaultMessage("Tabular creation: ${creationsCount} ${defaultMessage}")
                     .withValue("creationsCount", creationInfos.getCreations().size())
+                    .withValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
