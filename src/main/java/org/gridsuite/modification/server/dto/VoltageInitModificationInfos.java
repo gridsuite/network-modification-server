@@ -49,6 +49,9 @@ public class VoltageInitModificationInfos extends ModificationInfos {
     @Schema(description = "shunt compensator modifications")
     private List<VoltageInitShuntCompensatorModificationInfos> shuntCompensators;
 
+    @Schema(description = "buses modifications")
+    private List<VoltageInitBusModificationInfos> buses;
+
     @Override
     public ModificationEntity toEntity() {
         return new VoltageInitModificationEntity(this);
