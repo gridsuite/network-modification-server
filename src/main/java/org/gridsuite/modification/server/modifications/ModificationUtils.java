@@ -464,6 +464,18 @@ public final class ModificationUtils {
         return null;
     }
 
+    public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
+                                                                                AttributeModification<T> modification, String fieldName, int indentationLevel) {
+        if (modification != null) {
+            T oldValue = getter.get();
+            T newValue = modification.applyModification(oldValue);
+            setter.accept(newValue);
+
+            return buildModificationReportWithIndentation(oldValue, newValue, fieldName, indentationLevel);
+        }
+        return null;
+    }
+
     public Report createEnabledDisabledReport(String key, boolean enabled) {
         return Report.builder().withKey(key)
                 .withDefaultMessage("    ${status}")
