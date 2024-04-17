@@ -10,6 +10,7 @@ import com.google.common.collect.Iterables;
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
+import lombok.Getter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
@@ -32,6 +33,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final UUID networkUuid;
 
+    @Getter
     private final Network network;
 
     private final NetworkStoreService networkStoreService;
@@ -87,10 +89,6 @@ public class NetworkStoreListener implements NetworkListener {
             ids.add(((VoltageLevel) identifiable).getSubstation().orElseThrow().getId());
         }
         return ids;
-    }
-
-    public Network getNetwork() {
-        return network;
     }
 
     private void addSimpleModificationImpact(Identifiable<?> identifiable) {
@@ -229,7 +227,7 @@ public class NetworkStoreListener implements NetworkListener {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
 
-        return flushNetworkImpacts();
+        return reduceNetworkImpacts();
     }
 
     private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
@@ -268,21 +266,6 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
     }
 
-    private List<AbstractBaseImpact> flushNetworkImpacts() {
-        if (isAllNetworkImpacted()) {
-            return List.of(CollectionElementImpact.builder()
-                    .elementType(IdentifiableType.SUBSTATION)
-                    .build());
-        }
-
-        return reduceNetworkImpacts();
-    }
-
-    private boolean isAllNetworkImpacted() {
-        Set<String> allImpactedSubstationsIds = simpleImpacts.stream().flatMap(i -> i.getSubstationIds().stream()).collect(Collectors.toSet());
-        return allImpactedSubstationsIds.size() >= collectionThreshold;
-    }
-
     private List<AbstractBaseImpact> reduceNetworkImpacts() {
         List<AbstractBaseImpact> reducedImpacts = new ArrayList<>();
         Set<String> impactedSubstationsIds = new HashSet<>();
@@ -297,6 +280,13 @@ public class NetworkStoreListener implements NetworkListener {
             } else {
                 impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
             }
+        }
+
+        // All network is impacted ?
+        if (impactedSubstationsIds.size() >= collectionThreshold) {
+            return List.of(CollectionElementImpact.builder()
+                    .elementType(IdentifiableType.SUBSTATION)
+                    .build());
         }
 
         // Impacts type simple for substation only
