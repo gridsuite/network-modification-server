@@ -190,6 +190,17 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .sectionCount(1)
                     .connect(false)
                     .build()))
+            .buses(List.of(
+                VoltageInitBusModificationInfos.builder()
+                    .busId("busNotFound")
+                    .v(400.)
+                    .angle(0.)
+                    .build(),
+                VoltageInitBusModificationInfos.builder()
+                    .busId("v1_0")
+                    .v(230.)
+                    .angle(0.5)
+                    .build()))
             .build();
     }
 
@@ -250,6 +261,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .sectionCount(0)
                     .connect(false)
                     .build()))
+            .buses(List.of())
             .build();
     }
 
@@ -326,6 +338,8 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
         assertEquals(221., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
+        assertEquals(230., getNetwork().getBusView().getBus("v1_0").getV(), 0.001);
+        assertEquals(0.5, getNetwork().getBusView().getBus("v1_0").getAngle(), 0.001);
     }
 
     @Override
