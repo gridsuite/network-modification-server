@@ -98,6 +98,18 @@ public final class ModificationCreation {
             .build();
     }
 
+    public static GeneratorModificationInfos getModificationGenerator(String generatorId, String generatorName) {
+        GeneratorModificationInfos.GeneratorModificationInfosBuilder builder = GeneratorModificationInfos.builder()
+                .stashed(false)
+                .equipmentId(generatorId);
+
+        if (generatorName != null) {
+            builder.equipmentName(AttributeModification.toAttributeModification(generatorName, OperationType.SET));
+        }
+
+        return builder.build();
+    }
+
     public static LoadCreationInfos getCreationLoad(String vlId, String loadId, String loadName, String busOrBusBarSectionId, LoadType loadType) {
         return LoadCreationInfos.builder()
             .stashed(false)

@@ -251,14 +251,13 @@ public class NetworkStoreListener implements NetworkListener {
         deletedEquipmentsIds.forEach(id -> {
             if (presentEquipmentDeletionsIds.contains(id)) {
                 equipmentDeletionsIds.add(id);
-            } else {
-                tombstonedEquipmentInfos.add(
-                    TombstonedEquipmentInfos.builder()
-                        .networkUuid(networkUuid)
-                        .variantId(variantId)
-                        .id(id)
-                        .build());
             }
+            tombstonedEquipmentInfos.add(
+                TombstonedEquipmentInfos.builder()
+                    .networkUuid(networkUuid)
+                    .variantId(variantId)
+                    .id(id)
+                    .build());
         });
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
