@@ -273,7 +273,7 @@ public class ByFormulaModification extends AbstractModification {
                               List<String> notEditableEquipments) {
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
-        if (value1 == null || value2 == null) {
+        if (value1 == null || Double.isNaN(value1) || value2 == null || Double.isNaN(value2)) {
             equipmentNotModifiedCount += 1;
             notEditableEquipments.add(identifiable.getId());
             reports.add(Report.builder()
