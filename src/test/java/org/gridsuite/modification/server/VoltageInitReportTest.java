@@ -111,6 +111,7 @@ class VoltageInitReportTest {
                 .shuntCompensators(List.of(
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("SHUNT2").sectionCount(1).connect(true).build(),
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("SHUNT3").sectionCount(0).connect(false).build())) //altered for test case
+                .buses(List.of())
                 .build()),
             Arguments.of(ApplicationStatus.WITH_WARNINGS, "reports_voltage_init_modification_warnings.json", VoltageInitModificationInfos.builder()
                 .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
@@ -132,6 +133,7 @@ class VoltageInitReportTest {
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v2shunt").sectionCount(1).connect(true).build(),
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v5shunt").sectionCount(0).connect(false).build(),
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v6shunt").sectionCount(1).connect(false).build()))
+                .buses(List.of())
                 .build())
         );
     }

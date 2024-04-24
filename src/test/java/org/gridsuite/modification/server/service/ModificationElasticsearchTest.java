@@ -1,16 +1,16 @@
 package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.modification.server.dto.LoadCreationInfos;
-import org.gridsuite.modification.server.dto.LoadModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -72,6 +72,9 @@ public class ModificationElasticsearchTest {
     @Autowired
     private EquipmentInfosRepository equipmentInfosRepository;
 
+    @Autowired
+    private TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository;
+
     Network network;
 
     @Before
@@ -101,6 +104,30 @@ public class ModificationElasticsearchTest {
         String loadModificationJson = mapper.writeValueAsString(loadModification);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_newname", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
+    }
+
+    @Test
+    public void testModifyGenThenDeleteVl() throws Exception {
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
+        network.getVariantManager().setWorkingVariant(NEW_VARIANT);
+
+        // modify generator in the new variant
+        GeneratorModificationInfos generatorModificationInfos = ModificationCreation.getModificationGenerator("idGenerator", "modifiedGeneratorName");
+        String generatorModificationJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertEquals("modifiedGeneratorName", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v2")));
+
+        //then delete the voltage level containing the generator we just modified
+        EquipmentDeletionInfos voltageLevelDeletionInfos = EquipmentDeletionInfos.builder().stashed(false).equipmentType(IdentifiableType.VOLTAGE_LEVEL).equipmentId("v2").build();
+        String substationDeletionJson = mapper.writeValueAsString(voltageLevelDeletionInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(substationDeletionJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v2"), NETWORK_UUID, NEW_VARIANT).isEmpty());
+
+        //check that the generator is also deleted and that it's present in the tombstonedEquipment in elastic
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).isEmpty());
+        assertTrue(tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).stream().anyMatch(tombstonedEquipmentInfos -> tombstonedEquipmentInfos.getId().equals("idGenerator")));
+
     }
 
     @Test

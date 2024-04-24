@@ -133,6 +133,31 @@ public final class TestUtils {
         assertLogNthMessage(expectedMessage, reportKey, reportService, 1);
     }
 
+    public static void assertLogMessageWithoutRank(String expectedMessage, String reportKey, ReportService reportService) {
+        ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        assertNotNull(reporterCaptor.getValue());
+        assertTrue(assertMessageFoundFromReporter(expectedMessage, reportKey, reporterCaptor.getValue()));
+    }
+
+    private static boolean assertMessageFoundFromReporter(String expectedMessage, String reportKey, ReporterModel reporterModel) {
+        for (Report report : reporterModel.getReports()) {
+            if (report.getReportKey().equals(reportKey)) {
+                String message = formatReportMessage(report, reporterModel);
+                if (message.trim().equals(expectedMessage)) {
+                    return true;
+                }
+            }
+        }
+
+        boolean foundInSubReporters = false;
+        Iterator<ReporterModel> reportersIterator = reporterModel.getSubReporters().iterator();
+        while (!foundInSubReporters && reportersIterator.hasNext()) {
+            foundInSubReporters = assertMessageFoundFromReporter(expectedMessage, reportKey, reportersIterator.next());
+        }
+        return foundInSubReporters;
+    }
+
     private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel, int rank) {
         Optional<String> message = Optional.empty();
 
