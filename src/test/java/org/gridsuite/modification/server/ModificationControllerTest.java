@@ -1447,7 +1447,7 @@ public class ModificationControllerTest {
 
         // Duplicate it without group ownership
         MvcResult mvcResult = mockMvc.perform(
-            post(URI_NETWORK_MODIF_BASE + "/duplicate")
+            post(URI_NETWORK_MODIF_BASE)
                     .content(objectWriter.writeValueAsString(modificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
