@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.modification.topology.RevertCreateLineOnLine;
 import com.powsybl.iidm.modification.topology.RevertCreateLineOnLineBuilder;
 import com.powsybl.iidm.network.Network;
@@ -46,7 +46,7 @@ public class DeleteAttachingLine extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         RevertCreateLineOnLineBuilder builder = new RevertCreateLineOnLineBuilder();
         RevertCreateLineOnLine algo = builder.withLineToBeMerged1Id(modificationInfos.getLineToAttachTo1Id())
                 .withLineToBeMerged2Id(modificationInfos.getLineToAttachTo2Id())
@@ -54,6 +54,6 @@ public class DeleteAttachingLine extends AbstractModification {
                 .withMergedLineId(modificationInfos.getReplacingLine1Id())
                 .withMergedLineName(modificationInfos.getReplacingLine1Name())
                 .build();
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
     }
 }

@@ -7,10 +7,8 @@
 
 package org.gridsuite.modification.server.service;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.junit.jupiter.api.Tag;
@@ -30,37 +28,44 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class NetworkModificationApplicatorTest {
     @ParameterizedTest
     @MethodSource("provideArgumentsForComputeHigherSeverity")
-    void computeHigherSeverity(List<Report> reports, ApplicationStatus expectedSeverity) {
+    void computeHigherSeverity(List<ReportNode> reports, ApplicationStatus expectedSeverity) {
 
         assertEquals(6, reports.size(), "We need exactly 6 reports to run the test");
 
-        ReporterModel reporterModel = new ReporterModel("rep1", "");
-        Reporter subReporter1 = reporterModel.createSubReporter("subrep1", "");
-        Reporter subReporter2 = reporterModel.createSubReporter("subrep2", "");
-        ReporterModel subReporterModel = reporterModel.createSubReporter("rep2", "", Collections.emptyMap());
-        Reporter subSubReporter1 = subReporterModel.createSubReporter("subsubrep1", "");
-        Reporter subSubReporter2 = subReporterModel.createSubReporter("subsubrep2", "");
+        ReportNode rootReportNode = ReportNode.newRootReportNode()
+                .withMessageTemplate("rep1", "")
+                .build();
 
-        reporterModel.report(reports.get(0));
-        subReporter1.report(reports.get(1));
-        subReporter2.report(reports.get(2));
-        subReporterModel.report(reports.get(3));
-        subSubReporter1.report(reports.get(4));
-        subSubReporter2.report(reports.get(5));
+        ReportNode subReportNode1 = rootReportNode.newReportNode().withMessageTemplate("subrep1", "").add();
+        ReportNode subReportNode2 = rootReportNode.newReportNode().withMessageTemplate("subrep2", "").add();
+        ReportNode subReportNode3 = rootReportNode.newReportNode().withMessageTemplate("rep2", "").add();
 
-        ApplicationStatus actualSeverity = NetworkModificationApplicator.getApplicationStatus(reporterModel);
+        ReportNode subSubReportNode1 = subReportNode3.newReportNode().withMessageTemplate("subsubrep1", "").add();
+        ReportNode subSubReportNode2 = subReportNode3.newReportNode().withMessageTemplate("subsubrep2", "").add();
+
+        rootReportNode.newReportNode().withMessageTemplate(reports.get(0).getMessageKey(), reports.get(0).getMessageTemplate()).add();
+        subReportNode1.newReportNode().withMessageTemplate(reports.get(1).getMessageKey(), reports.get(1).getMessageTemplate()).add();
+        subReportNode2.newReportNode().withMessageTemplate(reports.get(2).getMessageKey(), reports.get(2).getMessageTemplate()).add();
+        subReportNode3.newReportNode().withMessageTemplate(reports.get(3).getMessageKey(), reports.get(3).getMessageTemplate()).add();
+
+        subSubReportNode1.newReportNode().withMessageTemplate(reports.get(4).getMessageKey(), reports.get(4).getMessageTemplate()).add();
+        subSubReportNode2.newReportNode().withMessageTemplate(reports.get(5).getMessageKey(), reports.get(5).getMessageTemplate()).add();
+
+        ApplicationStatus actualSeverity = NetworkModificationApplicator.getApplicationStatus(rootReportNode);
         assertEquals(expectedSeverity, actualSeverity);
     }
 
     @Test
     void shouldThrowExceptionOnBadSeverity() {
-        ReporterModel reporterModel = new ReporterModel("rep1", "");
-        reporterModel.report(Report.builder()
-                .withKey("badSeverity")
-                .withDefaultMessage("Bad severity message")
-                .withValue("reportSeverity", "bad severity")
-                .build());
-        assertThrows(IllegalArgumentException.class, () -> NetworkModificationApplicator.getApplicationStatus(reporterModel));
+        ReportNode rootReportNode = ReportNode.newRootReportNode()
+                .withMessageTemplate("rep1", "")
+                .build();
+        rootReportNode.newReportNode()
+                .withMessageTemplate("badSeverity", "Bad severity message")
+                .withUntypedValue("reportSeverity", "bad severity")
+                .add();
+
+        assertThrows(IllegalArgumentException.class, () -> NetworkModificationApplicator.getApplicationStatus(rootReportNode));
     }
 
     private static Stream<Arguments> provideArgumentsForComputeHigherSeverity() {
@@ -140,27 +145,23 @@ class NetworkModificationApplicatorTest {
         );
     }
 
-    private static Report infoReport = Report.builder()
-            .withKey("info")
-            .withDefaultMessage("Info severity message")
+    private static ReportNode infoReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("info", "Info severity message")
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build();
 
-    private static Report warningReport = Report.builder()
-            .withKey("warning")
-            .withDefaultMessage("Warning severity message")
+    private static ReportNode warningReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("warning", "Warning severity message")
             .withSeverity(TypedValue.WARN_SEVERITY)
             .build();
 
-    private static Report errorReport = Report.builder()
-            .withKey("error")
-            .withDefaultMessage("Error severity message")
+    private static ReportNode errorReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("error", "Error severity message")
             .withSeverity(TypedValue.ERROR_SEVERITY)
             .build();
-    private static Report notSeverityReport = Report.builder()
-            .withKey("notSeverity")
-            .withDefaultMessage("Not a severity message")
-            .withValue("rand", "random value")
-            .build();
 
+    private static ReportNode notSeverityReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("notSeverity", "Not a severity message")
+            .withUntypedValue("rand", "random value")
+            .build();
 }

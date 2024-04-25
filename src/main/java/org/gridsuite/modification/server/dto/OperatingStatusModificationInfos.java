@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -62,14 +61,14 @@ public class OperatingStatusModificationInfos extends EquipmentModificationInfos
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
+    public ReportNode createSubReportNode(ReportNode reportNode) {
         String defaultName = switch (action) {
             case LOCKOUT -> "Lockout ${equipmentId}";
             case TRIP -> "Trip ${equipmentId}";
             case ENERGISE_END_ONE, ENERGISE_END_TWO -> "Energise ${equipmentId}";
             case SWITCH_ON -> "Switch on ${equipmentId}";
         };
-        return reporter.createSubReporter(getType().name() + "_" + action, defaultName, "equipmentId", this.getEquipmentId());
+        return reportNode.newReportNode().withMessageTemplate(getType().name() + "_" + action, defaultName).withUntypedValue("equipmentId", this.getEquipmentId()).add();
     }
 
     @Override

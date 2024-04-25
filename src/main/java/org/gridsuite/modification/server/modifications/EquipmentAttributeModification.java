@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
@@ -41,39 +40,38 @@ public class EquipmentAttributeModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         Identifiable<?> identifiable = network.getIdentifiable(modificationInfos.getEquipmentId());
         if (identifiable instanceof Switch) {
-            changeSwitchAttribute((Switch) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
+            changeSwitchAttribute((Switch) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReportNode);
         } else if (identifiable instanceof Injection) {
             if (identifiable instanceof Generator) {
-                changeGeneratorAttribute((Generator) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
+                changeGeneratorAttribute((Generator) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReportNode);
             }
         } else if (identifiable instanceof Branch) {
             if (identifiable instanceof Line) {
-                changeLineAttribute((Line) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
+                changeLineAttribute((Line) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReportNode);
             } else if (identifiable instanceof TwoWindingsTransformer) {
-                changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
+                changeTwoWindingsTransformerAttribute((TwoWindingsTransformer) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReportNode);
             }
         } else if (identifiable instanceof ThreeWindingsTransformer) {
-            changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReporter);
+            changeThreeWindingsTransformerAttribute((ThreeWindingsTransformer) identifiable, modificationInfos.getEquipmentAttributeName(), modificationInfos.getEquipmentAttributeValue(), subReportNode);
         } else if (identifiable instanceof HvdcLine) {
             // no hvdc line modifications yet
         }
     }
 
-    private void changeSwitchAttribute(Switch aSwitch, String attributeName, Object attributeValue, Reporter reporter) {
+    private void changeSwitchAttribute(Switch aSwitch, String attributeName, Object attributeValue, ReportNode reportNode) {
         if (attributeName.equals("open")) {
             if (Boolean.TRUE.equals(aSwitch.isOpen() != (Boolean) attributeValue)) {
                 aSwitch.setOpen((Boolean) attributeValue);
-                reporter.report(Report.builder()
-                    .withKey("switchChanged")
-                    .withDefaultMessage("${operation} switch '${id}' in voltage level ${voltageLevelId}")
-                    .withValue("id", aSwitch.getId())
-                    .withValue("operation", Boolean.TRUE.equals(attributeValue) ? "Opening" : "Closing")
-                    .withValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
+                reportNode.newReportNode()
+                    .withMessageTemplate("switchChanged", "${operation} switch '${id}' in voltage level ${voltageLevelId}")
+                    .withUntypedValue("id", aSwitch.getId())
+                    .withUntypedValue("operation", Boolean.TRUE.equals(attributeValue) ? "Opening" : "Closing")
+                    .withUntypedValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
             }
         } else {
             throw NetworkModificationException.createEquipementAttributeNotEditable(aSwitch.getType(), attributeName);
@@ -81,37 +79,35 @@ public class EquipmentAttributeModification extends AbstractModification {
     }
 
     // TODO remove only for switch
-    private void changeGeneratorAttribute(Generator generator, String attributeName, Object attributeValue, Reporter reporter) {
+    private void changeGeneratorAttribute(Generator generator, String attributeName, Object attributeValue, ReportNode reportNode) {
         if (attributeName.equals("targetP")) {
             generator.setTargetP((Double) attributeValue);
-            reporter.report(Report.builder()
-                .withKey("generatorChanged")
-                .withDefaultMessage("Generator with id=${id} targetP changed")
-                .withValue("id", generator.getId())
+            reportNode.newReportNode()
+                .withMessageTemplate("generatorChanged", "Generator with id=${id} targetP changed")
+                .withUntypedValue("id", generator.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
         } else {
             throw NetworkModificationException.createEquipementAttributeNotEditable(generator.getType(), attributeName);
         }
     }
 
     // TODO remove only for switch
-    private void changeLineAttribute(Line line, String attributeName, Object attributeValue, Reporter reporter) {
+    private void changeLineAttribute(Line line, String attributeName, Object attributeValue, ReportNode reportNode) {
         if (attributeName.equals("operatingStatus")) {
             line.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.valueOf((String) attributeValue)).add();
-            reporter.report(Report.builder()
-                .withKey("lineStatusChanged")
-                .withDefaultMessage("Branch with id=${id} status changed")
-                .withValue("id", line.getId())
+            reportNode.newReportNode()
+                .withMessageTemplate("lineStatusChanged", "Branch with id=${id} status changed")
+                .withUntypedValue("id", line.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
         } else {
             throw NetworkModificationException.createEquipementAttributeNotEditable(line.getType(), attributeName);
         }
     }
 
     // TODO remove only for switch
-    private void changeTwoWindingsTransformerAttribute(TwoWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
+    private void changeTwoWindingsTransformerAttribute(TwoWindingsTransformer transformer, String attributeName, Object attributeValue, ReportNode reportNode) {
         String reportKey;
         String reportDefaultMessage;
 
@@ -129,16 +125,15 @@ public class EquipmentAttributeModification extends AbstractModification {
                 throw NetworkModificationException.createEquipementAttributeNotEditable(transformer.getType(), attributeName);
         }
 
-        reporter.report(Report.builder()
-            .withKey(reportKey)
-            .withDefaultMessage(reportDefaultMessage)
-            .withValue("id", transformer.getId())
+        reportNode.newReportNode()
+            .withMessageTemplate(reportKey, reportDefaultMessage)
+            .withUntypedValue("id", transformer.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+            .add();
     }
 
     // TODO remove only for switch
-    private void changeThreeWindingsTransformerAttribute(ThreeWindingsTransformer transformer, String attributeName, Object attributeValue, Reporter reporter) {
+    private void changeThreeWindingsTransformerAttribute(ThreeWindingsTransformer transformer, String attributeName, Object attributeValue, ReportNode reportNode) {
         String reportKey;
         String reportDefaultMessage;
 
@@ -177,11 +172,10 @@ public class EquipmentAttributeModification extends AbstractModification {
                 throw NetworkModificationException.createEquipementAttributeNotEditable(transformer.getType(), attributeName);
         }
 
-        reporter.report(Report.builder()
-            .withKey(reportKey)
-            .withDefaultMessage(reportDefaultMessage)
-            .withValue("id", transformer.getId())
+        reportNode.newReportNode()
+            .withMessageTemplate(reportKey, reportDefaultMessage)
+            .withUntypedValue("id", transformer.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+            .add();
     }
 }

@@ -7,9 +7,8 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.Generator;
@@ -41,7 +40,7 @@ public class GeneratorScaling extends AbstractScaling {
 
     @Override
     protected void applyStackingUpVariation(Network network,
-                                         Reporter subReporter,
+                                            ReportNode subReportNode,
                                          List<IdentifiableAttributes> identifiableAttributes,
                                          ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -52,12 +51,12 @@ public class GeneratorScaling extends AbstractScaling {
                     sum.set(g.getTargetP() + sum.get());
                     return getScalable(g.getId());
                 }).toArray(Scalable[]::new));
-        scale(network, subReporter, generatorScalingVariation, sum, stackingUpScalable, new ScalingParameters());
+        scale(network, subReportNode, generatorScalingVariation, sum, stackingUpScalable, new ScalingParameters());
     }
 
     @Override
     protected void applyVentilationVariation(Network network,
-                                          Reporter subReporter,
+                                             ReportNode subReportNode,
                                           List<IdentifiableAttributes> identifiableAttributes,
                                           ScalingVariationInfos generatorScalingVariation,
                                           Double distributionKeys) {
@@ -75,13 +74,13 @@ public class GeneratorScaling extends AbstractScaling {
                 }
             });
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
-            scale(network, subReporter, generatorScalingVariation, sum, ventilationScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
+            scale(network, subReportNode, generatorScalingVariation, sum, ventilationScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
         }
     }
 
     @Override
     protected void applyRegularDistributionVariation(Network network,
-                                                  Reporter subReporter,
+                                                     ReportNode subReportNode,
                                                   List<IdentifiableAttributes> identifiableAttributes,
                                                   ScalingVariationInfos generatorScalingVariation) {
         List<Generator> generators = identifiableAttributes
@@ -100,12 +99,12 @@ public class GeneratorScaling extends AbstractScaling {
 
         List<Double> percentages = new ArrayList<>(Collections.nCopies(scalables.size(), 100.0 / scalables.size()));
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, sum, regularDistributionScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
+        scale(network, subReportNode, generatorScalingVariation, sum, regularDistributionScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
     }
 
     @Override
     protected void applyProportionalToPmaxVariation(Network network,
-                                                 Reporter subReporter,
+                                                    ReportNode subReportNode,
                                                  List<IdentifiableAttributes> identifiableAttributes,
                                                  ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> maxPSum = new AtomicReference<>(0D);
@@ -129,12 +128,12 @@ public class GeneratorScaling extends AbstractScaling {
 
         setScalablePercentage(maxPSum, maxPMap, percentages, scalables);
         Scalable proportionalToPmaxScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, targetPSum, proportionalToPmaxScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
+        scale(network, subReportNode, generatorScalingVariation, targetPSum, proportionalToPmaxScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
     }
 
     @Override
     protected void applyProportionalVariation(Network network,
-                                           Reporter subReporter,
+                                              ReportNode subReportNode,
                                            List<IdentifiableAttributes> identifiableAttributes,
                                            ScalingVariationInfos generatorScalingVariation) {
         AtomicReference<Double> sum = new AtomicReference<>(0D);
@@ -156,7 +155,7 @@ public class GeneratorScaling extends AbstractScaling {
         // we calculate percentage of each target P value relative to the sum of target P
         setScalablePercentage(sum, targetPMap, percentages, scalables);
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
-        scale(network, subReporter, generatorScalingVariation, sum, proportionalScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
+        scale(network, subReportNode, generatorScalingVariation, sum, proportionalScalable, new ScalingParameters().setPriority(RESPECT_OF_VOLUME_ASKED));
     }
 
     private void setScalablePercentage(AtomicReference<Double> sum,
@@ -169,17 +168,16 @@ public class GeneratorScaling extends AbstractScaling {
         });
     }
 
-    private void scale(Network network, Reporter subReporter, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable, ScalingParameters scalingParameters) {
+    private void scale(Network network, ReportNode subReportNode, ScalingVariationInfos scalingVariationInfos, AtomicReference<Double> sum, Scalable scalable, ScalingParameters scalingParameters) {
         double asked = getAsked(scalingVariationInfos, sum);
         double done = scalable.scale(network, asked, scalingParameters);
-        subReporter.report(Report.builder()
-                .withKey("scalingApplied")
-                .withDefaultMessage("successfully scaled for mode ${scalingMode} with variation value asked is ${askedValue}. variation done is  ${actualValue}")
-                .withValue("scalingMode", scalingVariationInfos.getVariationMode().name())
-                .withValue("askedValue", asked)
-                .withValue("actualValue", done)
+        subReportNode.newReportNode()
+                .withMessageTemplate("scalingApplied", "successfully scaled for mode ${scalingMode} with variation value asked is ${askedValue}. variation done is  ${actualValue}")
+                .withUntypedValue("scalingMode", scalingVariationInfos.getVariationMode().name())
+                .withUntypedValue("askedValue", asked)
+                .withUntypedValue("actualValue", done)
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 
     @Override

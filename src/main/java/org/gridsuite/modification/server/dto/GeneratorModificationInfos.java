@@ -9,14 +9,13 @@ package org.gridsuite.modification.server.dto;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.powsybl.commons.report.ReportNode;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorModification;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -125,7 +124,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Generator modification ${generatorId}", "generatorId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Generator modification ${generatorId}")
+                .withUntypedValue("generatorId", this.getEquipmentId())
+                .add();
     }
 }

@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.TapChangerType;
@@ -41,36 +40,35 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(modificationInfos.getEquipmentId());
         // modify the 2wt in the network
-        modifyTwoWindingsTransformer(twoWindingsTransformer, modificationInfos, subReporter, network);
+        modifyTwoWindingsTransformer(twoWindingsTransformer, modificationInfos, subReportNode, network);
     }
 
-    private void modifyTwoWindingsTransformer(TwoWindingsTransformer twoWindingsTransformer, BranchModificationInfos twoWindingsTransformerModificationInfos, Reporter subReporter, Network network) {
-        modifyBranch(twoWindingsTransformer, twoWindingsTransformerModificationInfos, subReporter, "twoWindingsTransformerModification", "TwoWindingsTransformer with id=${id} modified :");
-        addTapChangersToTwoWindingsTransformer(network, (TwoWindingsTransformerModificationInfos) modificationInfos, twoWindingsTransformer, subReporter);
-        PropertiesUtils.applyProperties(twoWindingsTransformer, subReporter, modificationInfos.getProperties());
+    private void modifyTwoWindingsTransformer(TwoWindingsTransformer twoWindingsTransformer, BranchModificationInfos twoWindingsTransformerModificationInfos, ReportNode subReportNode, Network network) {
+        modifyBranch(twoWindingsTransformer, twoWindingsTransformerModificationInfos, subReportNode, "twoWindingsTransformerModification", "TwoWindingsTransformer with id=${id} modified :");
+        addTapChangersToTwoWindingsTransformer(network, (TwoWindingsTransformerModificationInfos) modificationInfos, twoWindingsTransformer, subReportNode);
+        PropertiesUtils.applyProperties(twoWindingsTransformer, subReportNode, modificationInfos.getProperties());
     }
 
     @Override
-    protected void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
+    protected void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, ReportNode subReportNode) {
         TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) branch;
-        Reporter characteristicsReporter = subReporter.createSubReporter("characteristics", "Characteristics");
-        characteristicsReporter.report(Report.builder()
-                .withKey("characteristicsModification")
-                .withDefaultMessage("Characteristics")
+        ReportNode characteristicsReporter = subReportNode.newReportNode().withMessageTemplate("characteristics", "Characteristics").add();
+        characteristicsReporter.newReportNode()
+                .withMessageTemplate("characteristicsModification", "Characteristics")
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
         // Branch specific fields
         if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
                     branchModificationInfos.getR().getValue(), "Series resistance", 1));
             twoWindingsTransformer.setR(branchModificationInfos.getR().getValue());
         }
         if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
                     branchModificationInfos.getX().getValue(), "Series reactance", 1));
             twoWindingsTransformer.setX(branchModificationInfos.getX().getValue());
         }
@@ -81,7 +79,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             // convert reported value from siemens to microsiemens
             double oldMagnetizingConductanceToReport = twoWindingsTransformer.getG() * Math.pow(10, 6);
             double newMagnetizingConductanceToReport = twoWindingsTransformerModificationInfos.getG().getValue() * Math.pow(10, 6);
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingConductanceToReport,
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingConductanceToReport,
                     newMagnetizingConductanceToReport, "Magnetizing conductance", 1));
             twoWindingsTransformer.setG(twoWindingsTransformerModificationInfos.getG().getValue());
         }
@@ -89,66 +87,66 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             // convert reported value from siemens to microsiemens
             double oldMagnetizingSusceptanceToReport = twoWindingsTransformer.getB() * Math.pow(10, 6);
             double newMagnetizingSusceptanceToReport = twoWindingsTransformerModificationInfos.getB().getValue() * Math.pow(10, 6);
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingSusceptanceToReport,
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingSusceptanceToReport,
                     newMagnetizingSusceptanceToReport, "Magnetizing susceptance", 1));
             twoWindingsTransformer.setB(twoWindingsTransformerModificationInfos.getB().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedS() != null && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedS(),
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedS(),
                     twoWindingsTransformerModificationInfos.getRatedS().getValue(), "Rated nominal power", 1));
             twoWindingsTransformer.setRatedS(twoWindingsTransformerModificationInfos.getRatedS().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedU1() != null && twoWindingsTransformerModificationInfos.getRatedU1().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU1(),
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU1(),
                     twoWindingsTransformerModificationInfos.getRatedU1().getValue(), "Rated Voltage (Side 1)", 1));
             twoWindingsTransformer.setRatedU1(twoWindingsTransformerModificationInfos.getRatedU1().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedU2() != null && twoWindingsTransformerModificationInfos.getRatedU2().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU2(),
+            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU2(),
                     twoWindingsTransformerModificationInfos.getRatedU2().getValue(), "Rated Voltage (Side 2)", 1));
             twoWindingsTransformer.setRatedU2(twoWindingsTransformerModificationInfos.getRatedU2().getValue());
         }
     }
 
-    private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, Reporter subReporter) {
+    private void addTapChangersToTwoWindingsTransformer(Network network, TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos, TwoWindingsTransformer twt, ReportNode subReportNode) {
         if (twt.hasRatioTapChanger() && twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled() != null && Boolean.FALSE.equals(twoWindingsTransformerModificationInfos.getRatioTapChanger().getEnabled().getValue())) {
             twt.getRatioTapChanger().remove();
-            subReporter.report(Report.builder().withKey("RatioTapChangerRemoved")
-                .withDefaultMessage("The ratio tap changer has been removed")
+            subReportNode.newReportNode()
+                .withMessageTemplate("RatioTapChangerRemoved","The ratio tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
         } else if (ratioTapChangerModified(twoWindingsTransformerModificationInfos.getRatioTapChanger())) {
-            processRatioTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter, twt.hasRatioTapChanger());
+            processRatioTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReportNode, twt.hasRatioTapChanger());
         }
 
         if (twt.hasPhaseTapChanger() && twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled() != null && Boolean.FALSE.equals(twoWindingsTransformerModificationInfos.getPhaseTapChanger().getEnabled().getValue())) {
             twt.getPhaseTapChanger().remove();
-            subReporter.report(Report.builder().withKey("PhaseTapChangerRemoved")
-                .withDefaultMessage("The phase tap changer has been removed")
+            subReportNode.newReportNode()
+                .withMessageTemplate("PhaseTapChangerRemoved", "The phase tap changer has been removed")
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
         } else if (phaseTapChangerModified(twoWindingsTransformerModificationInfos.getPhaseTapChanger())) {
-            processPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReporter, twt.hasPhaseTapChanger());
+            processPhaseTapChanger(network, twoWindingsTransformerModificationInfos, twt, subReportNode, twt.hasPhaseTapChanger());
         }
     }
 
     private void processPhaseTapChanger(Network network,
             TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos,
             TwoWindingsTransformer twt,
-            Reporter subReporter,
+            ReportNode subReportNode,
             boolean isModification) {
         PhaseTapChanger phaseTapChanger = isModification ? twt.getPhaseTapChanger() : null;
         PhaseTapChangerAdder phaseTapChangerAdder = isModification ? null : twt.newPhaseTapChanger();
         PhaseTapChangerModificationInfos phaseTapChangerInfos = twoWindingsTransformerModificationInfos
                 .getPhaseTapChanger();
 
-        List<Report> phaseTapChangerReports = new ArrayList<>();
+        List<ReportNode> phaseTapChangerReports = new ArrayList<>();
         phaseTapChangerReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
                 isModification ? phaseTapChanger::setRegulationMode : phaseTapChangerAdder::setRegulationMode,
                 isModification ? phaseTapChanger::getRegulationMode : () -> null,
                 phaseTapChangerInfos.getRegulationMode(), "Regulation mode", 1));
 
-        List<Report> regulationReports = new ArrayList<>();
+        List<ReportNode> regulationReports = new ArrayList<>();
         PhaseTapChanger.RegulationMode regulationMode = isModification ? phaseTapChanger.getRegulationMode() : null;
         if (phaseTapChangerInfos.getRegulationMode() != null
                 && phaseTapChangerInfos.getRegulationMode().getValue() != null) {
@@ -163,7 +161,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 network,
                 twt, isModification);
 
-        List<Report> positionsAndStepsReports = new ArrayList<>();
+        List<ReportNode> positionsAndStepsReports = new ArrayList<>();
         processTapChangerPositionsAndSteps(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, positionsAndStepsReports,
                 isModification);
 
@@ -172,17 +170,17 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         if (!phaseTapChangerReports.isEmpty() || !regulationReports.isEmpty() || !positionsAndStepsReports.isEmpty()) {
-            Reporter phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReporter,
+            ReportNode phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReportNode,
                     phaseTapChangerReports, TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE,
                     Map.of());
             if (phaseTapChangerSubreporter == null) {
-                phaseTapChangerSubreporter = subReporter.createSubReporter(TapChangerType.PHASE.name(),
-                        PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
-                phaseTapChangerSubreporter.report(Report.builder()
-                        .withKey(TapChangerType.PHASE.name())
-                        .withDefaultMessage(PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
+                phaseTapChangerSubreporter = subReportNode.newReportNode()
+                        .withMessageTemplate(TapChangerType.PHASE.name(),PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
+                        .add();
+                phaseTapChangerSubreporter.newReportNode()
+                        .withMessageTemplate(TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
                         .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                        .add();
             }
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports,
                     regulationMode != null ? regulationMode.name() : null,
@@ -196,7 +194,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void processPhaseTapRegulation(PhaseTapChangerModificationInfos phaseTapChangerInfos,
             PhaseTapChanger phaseTapChanger,
             PhaseTapChangerAdder phaseTapChangerAdder,
-            List<Report> regulationReports,
+            List<ReportNode> regulationReports,
             PhaseTapChanger.RegulationMode regulationMode,
             boolean isModification) {
 
@@ -226,13 +224,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void processRatioTapChanger(Network network,
             TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos,
             TwoWindingsTransformer twt,
-            Reporter subReporter,
+            ReportNode subReporter,
             boolean isModification) {
         RatioTapChangerModificationInfos ratioTapChangerInfos = twoWindingsTransformerModificationInfos
                 .getRatioTapChanger();
         RatioTapChanger ratioTapChanger = isModification ? twt.getRatioTapChanger() : null;
         RatioTapChangerAdder ratioTapChangerAdder = isModification ? null : twt.newRatioTapChanger();
-        List<Report> ratioTapChangerReports = new ArrayList<>();
+        List<ReportNode> ratioTapChangerReports = new ArrayList<>();
         ratioTapChangerReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
                 isModification ? ratioTapChanger::setLoadTapChangingCapabilities
                         : ratioTapChangerAdder::setLoadTapChangingCapabilities,
@@ -240,10 +238,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 ratioTapChangerInfos.getLoadTapChangingCapabilities(), "Load tap changing capabilities", 1));
         processRegulating(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, ratioTapChangerReports, isModification);
 
-        List<Report> voltageRegulationReports = new ArrayList<>();
+        List<ReportNode> voltageRegulationReports = new ArrayList<>();
         processRatioVoltageRegulation(ratioTapChangerInfos, twt, ratioTapChanger, ratioTapChangerAdder, voltageRegulationReports, network,
                 isModification);
-        List<Report> positionsAndStepsReports = new ArrayList<>();
+        List<ReportNode> positionsAndStepsReports = new ArrayList<>();
         processTapChangerPositionsAndSteps(ratioTapChangerInfos, ratioTapChanger, ratioTapChangerAdder, positionsAndStepsReports,
                 isModification);
 
@@ -253,16 +251,16 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         if (!ratioTapChangerReports.isEmpty() || !voltageRegulationReports.isEmpty()
                 || !positionsAndStepsReports.isEmpty()) {
-            Reporter ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter,
+            ReportNode ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter,
                     ratioTapChangerReports, TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE, Map.of());
             if (ratioTapChangerReporter == null) {
-                ratioTapChangerReporter = subReporter.createSubReporter(TapChangerType.RATIO.name(),
-                        RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
-                ratioTapChangerReporter.report(Report.builder()
-                        .withKey(TapChangerType.RATIO.name())
-                        .withDefaultMessage(RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
+                ratioTapChangerReporter = subReporter.newReportNode()
+                        .withMessageTemplate(TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
+                        .add();
+                ratioTapChangerReporter.newReportNode()
+                        .withMessageTemplate(TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
                         .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
+                        .add();
             }
             ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, voltageRegulationReports,
                     "ratioTapChangerVoltageRegulationModification", "    Voltage regulation", Map.of());
@@ -273,7 +271,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
     private void processRegulating(RatioTapChangerModificationInfos ratioTapChangerInfos,
             RatioTapChanger ratioTapChanger, RatioTapChangerAdder ratioTapChangerAdder,
-            List<Report> ratioTapChangerReports, boolean isModification) {
+            List<ReportNode> ratioTapChangerReports, boolean isModification) {
         if (ratioTapChangerInfos.getRegulating() != null && ratioTapChangerInfos.getRegulating().getValue() != null) {
             boolean regulating = ratioTapChangerInfos.getRegulating().getValue();
             ratioTapChangerReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
@@ -288,7 +286,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             TwoWindingsTransformer twt,
             RatioTapChanger ratioTapChanger,
             RatioTapChangerAdder ratioTapChangerAdder,
-            List<Report> voltageRegulationReports,
+            List<ReportNode> voltageRegulationReports,
             Network network,
             boolean isModification) {
         voltageRegulationReports
@@ -312,7 +310,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void processRegulatingTerminal(TapChangerModificationInfos tapChangerModificationInfos,
             TapChanger<?, ?, ?, ?> tapChanger,
             TapChangerAdder<?, ?, ?, ?, ?, ?> tapChangerAdder,
-            List<Report> regulationReports,
+            List<ReportNode> regulationReports,
             Network network,
             TwoWindingsTransformer twt,
             boolean isModification) {
@@ -363,13 +361,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         tapChangerModificationInfos.setRegulatingTerminalType(new AttributeModification<>(terminal.getConnectable().getType().name(), OperationType.SET));
     }
 
-    private void processTapchangerSteps(List<Report> tapChangerStepsReports,
+    private void processTapchangerSteps(List<ReportNode> tapChangerStepsReports,
             TapChangerModificationInfos tapChangerModificationInfos,
             TapChangerAdder<?, ?, ?, ?, ?, ?> tapChangerAdder,
             TapChangerStepsReplacer<?, ?> tapChangerStepReplacer,
             boolean isModification) {
-        tapChangerStepsReports.add(Report.builder().withKey("tapChangerStepsModification")
-                .withDefaultMessage("            Taps were replaced by new ones below")
+        tapChangerStepsReports.add(ReportNode.newRootReportNode()
+                .withMessageTemplate("tapChangerStepsModification", "            Taps were replaced by new ones below")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
         for (TapChangerStepCreationInfos step : tapChangerModificationInfos.getSteps()) {
@@ -399,7 +397,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private void addStepAttributeReports(List<Report> tapChangerStepsReports, TapChangerStepCreationInfos step) {
+    private void addStepAttributeReports(List<ReportNode> tapChangerStepsReports, TapChangerStepCreationInfos step) {
         addStepAttributeReport(tapChangerStepsReports, "newStepIndex" + step.getIndex(),
                 "            Tap (${index})", "index", String.valueOf(step.getIndex()));
         addStepAttributeReport(tapChangerStepsReports, "newStepResistance" + step.getR(),
@@ -417,7 +415,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void processTapChangerPositionsAndSteps(TapChangerModificationInfos tapChangerModificationInfos,
             TapChanger<?, ?, ?, ?> tapChanger,
             TapChangerAdder<?, ?, ?, ?, ?, ?> tapChangerAdder,
-            List<Report> tapChangerReports,
+            List<ReportNode> tapChangerReports,
             boolean isModification) {
         tapChangerReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
                 isModification ? tapChanger::setLowTapPosition
@@ -433,9 +431,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         // Add steps
         if (tapChangerModificationInfos.getSteps() != null) {
-            tapChangerReports.add(Report.builder()
-                    .withKey("tapsModification")
-                    .withDefaultMessage("        Taps")
+            tapChangerReports.add(ReportNode.newRootReportNode()
+                    .withMessageTemplate("tapsModification", "        Taps")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
             processTapchangerSteps(tapChangerReports, tapChangerModificationInfos,
@@ -443,11 +440,11 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private void addStepAttributeReport(List<Report> tapChangerStepsReports, String key, String defaultMessage,
+    private void addStepAttributeReport(List<ReportNode> tapChangerStepsReports, String key, String defaultMessage,
             String valueKey, String value) {
-        tapChangerStepsReports.add(Report.builder().withKey(key)
-                .withDefaultMessage(defaultMessage)
-                .withValue(valueKey, value)
+        tapChangerStepsReports.add(ReportNode.newRootReportNode()
+                .withMessageTemplate(key, defaultMessage)
+                .withUntypedValue(valueKey, value)
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());
     }

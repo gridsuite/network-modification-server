@@ -7,9 +7,8 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.Bus;
@@ -72,23 +71,23 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         // create the generator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
-            createGeneratorInNodeBreaker(voltageLevel, modificationInfos, network, subReporter);
+            createGeneratorInNodeBreaker(voltageLevel, modificationInfos, network, subReportNode);
         } else {
-            createGeneratorInBusBreaker(voltageLevel, modificationInfos, subReporter);
+            createGeneratorInBusBreaker(voltageLevel, modificationInfos, subReportNode);
         }
         if (!modificationInfos.isConnected()) {
             network.getGenerator(modificationInfos.getEquipmentId()).getTerminal().disconnect();
         }
         // apply the properties
         Generator generator = network.getGenerator(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(generator, subReporter, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties());
     }
 
-    private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, Reporter subReporter) {
+    private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, ReportNode subReportNode) {
         GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
         var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getConnectionPosition(),
                 generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
@@ -103,12 +102,12 @@ public class GeneratorCreation extends AbstractModification {
                 .withInjectionAdder(generatorAdder)
                 .build();
 
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
 
         // CreateFeederBayBuilder already create the generator using
         // (withInjectionAdder(generatorAdder)) so then we can add the additional informations and extensions
         var generator = ModificationUtils.getInstance().getGenerator(network, generatorCreationInfos.getEquipmentId());
-        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReportNode);
     }
 
     private GeneratorAdder createGeneratorAdderInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos) {
@@ -138,24 +137,24 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private void addExtensionsToGenerator(GeneratorCreationInfos generatorCreationInfos, Generator generator,
-                                          VoltageLevel voltageLevel, Reporter subReporter) {
+                                          VoltageLevel voltageLevel, ReportNode subReportNode) {
         if (generatorCreationInfos.getEquipmentName() != null) {
-            ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEquipmentName(), "Name");
+            ModificationUtils.getInstance().reportElementaryCreation(subReportNode, generatorCreationInfos.getEquipmentName(), "Name");
         }
         if (generatorCreationInfos.getEnergySource() != null) {
-            ModificationUtils.getInstance().reportElementaryCreation(subReporter, generatorCreationInfos.getEnergySource(), "Energy source");
+            ModificationUtils.getInstance().reportElementaryCreation(subReportNode, generatorCreationInfos.getEnergySource(), "Energy source");
         }
-        reportGeneratorConnectivity(generatorCreationInfos, subReporter);
-        Reporter subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReporter);
+        reportGeneratorConnectivity(generatorCreationInfos, subReportNode);
+        ReportNode subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReportNode);
         ModificationUtils.getInstance().createReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
-        Reporter subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReporter);
+        ReportNode subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReportNode);
         createGeneratorVoltageRegulation(generatorCreationInfos, generator, voltageLevel, subReporterSetpoints);
         createGeneratorActivePowerControl(generatorCreationInfos, generator, subReporterSetpoints);
-        createGeneratorShortCircuit(generatorCreationInfos, generator, subReporter);
-        createGeneratorStartUp(generatorCreationInfos, generator, subReporter);
+        createGeneratorShortCircuit(generatorCreationInfos, generator, subReportNode);
+        createGeneratorStartUp(generatorCreationInfos, generator, subReportNode);
     }
 
-    private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
+    private void createGeneratorInBusBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, ReportNode subReportNode) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, generatorCreationInfos.getBusOrBusbarSectionId());
 
         // creating the generator
@@ -174,29 +173,28 @@ public class GeneratorCreation extends AbstractModification {
             .setTargetV(nanIfNull(generatorCreationInfos.getTargetV()))
             .add();
 
-        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReporter);
+        addExtensionsToGenerator(generatorCreationInfos, generator, voltageLevel, subReportNode);
 
-        subReporter.report(Report.builder()
-                .withKey("generatorCreated")
-                .withDefaultMessage("New generator with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("generatorCreated", "New generator with id=${id} created")
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 
-    private Reporter reportGeneratorSetPoints(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
-        List<Report> setPointReports = new ArrayList<>();
+    private ReportNode reportGeneratorSetPoints(GeneratorCreationInfos generatorCreationInfos, ReportNode subReportNode) {
+        List<ReportNode> setPointReports = new ArrayList<>();
         setPointReports.add(ModificationUtils.getInstance()
                 .buildCreationReport(generatorCreationInfos.getTargetP(), "Active power"));
         if (generatorCreationInfos.getTargetQ() != null) {
             setPointReports.add(ModificationUtils.getInstance()
                 .buildCreationReport(generatorCreationInfos.getTargetQ(), "Reactive power"));
         }
-        return ModificationUtils.getInstance().reportModifications(subReporter, setPointReports, "SetPointCreated", "Setpoints", Map.of());
+        return ModificationUtils.getInstance().reportModifications(subReportNode, setPointReports, "SetPointCreated", "Setpoints", Map.of());
     }
 
-    private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, Reporter subReporter) {
-        List<Report> voltageReports = new ArrayList<>();
+    private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, ReportNode subReportNode) {
+        List<ReportNode> voltageReports = new ArrayList<>();
         voltageReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("VoltageRegulationOn", modificationInfos.isVoltageRegulationOn()));
         voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getTargetV(), "Voltage"));
@@ -216,21 +214,20 @@ public class GeneratorCreation extends AbstractModification {
                         .withQPercent(generatorCreationInfos.getQPercent()).add();
                 voltageReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getQPercent(), "Reactive percentage"));
             } catch (PowsyblException e) {
-                voltageReports.add(Report.builder()
-                        .withKey("ReactivePercentageError")
-                        .withDefaultMessage("cannot add Coordinated reactive extension on generator with id=${id} : ${message}")
-                        .withValue("id", generatorCreationInfos.getEquipmentId())
-                        .withValue("message", e.getMessage())
+                voltageReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("ReactivePercentageError", "cannot add Coordinated reactive extension on generator with id=${id} : ${message}")
+                        .withUntypedValue("id", generatorCreationInfos.getEquipmentId())
+                        .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, voltageReports, "VoltageRegulationCreated", "Voltage regulation", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, voltageReports, "VoltageRegulationCreated", "Voltage regulation", Map.of());
 
     }
 
     private void updateGeneratorRegulatingTerminal(GeneratorCreationInfos generatorCreationInfos, Generator generator,
-                                                   Terminal terminal, List<Report> voltageReports) {
+                                                   Terminal terminal, List<ReportNode> voltageReports) {
         if (generatorCreationInfos.getRegulatingTerminalId() != null
                 && generatorCreationInfos.getRegulatingTerminalType() != null
                 && generatorCreationInfos.getRegulatingTerminalVlId() != null) {
@@ -245,7 +242,7 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private void reportGeneratorConnectivity(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
+    private void reportGeneratorConnectivity(GeneratorCreationInfos generatorCreationInfos, ReportNode subReporter) {
         if (generatorCreationInfos.getVoltageLevelId() == null || generatorCreationInfos.getBusOrBusbarSectionId() == null) {
             return;
         }
@@ -253,7 +250,7 @@ public class GeneratorCreation extends AbstractModification {
         if (generatorCreationInfos.getConnectionName() != null ||
             generatorCreationInfos.getConnectionDirection() != null ||
             generatorCreationInfos.getConnectionPosition() != null) {
-            List<Report> connectivityReports = new ArrayList<>();
+            List<ReportNode> connectivityReports = new ArrayList<>();
             if (generatorCreationInfos.getConnectionName() != null) {
                 connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(generatorCreationInfos.getConnectionName(), "Connection name"));
@@ -267,10 +264,9 @@ public class GeneratorCreation extends AbstractModification {
                         .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
             }
             if (!generatorCreationInfos.isConnected()) {
-                connectivityReports.add(Report.builder()
-                        .withKey("equipmentDisconnected")
-                        .withDefaultMessage("    Equipment with id=${id} disconnected")
-                        .withValue("id", generatorCreationInfos.getEquipmentId())
+                connectivityReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withUntypedValue("id", generatorCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
@@ -278,14 +274,14 @@ public class GeneratorCreation extends AbstractModification {
         }
     }
 
-    private Reporter reportGeneratorActiveLimits(GeneratorCreationInfos generatorCreationInfos, Reporter subReporter) {
-        List<Report> limitsReports = new ArrayList<>();
-        Reporter subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
-        subReporterLimits.report(Report.builder()
-            .withKey(LIMITS)
-            .withDefaultMessage(LIMITS)
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+    private ReportNode reportGeneratorActiveLimits(GeneratorCreationInfos generatorCreationInfos, ReportNode subReportNode) {
+        List<ReportNode> limitsReports = new ArrayList<>();
+        ReportNode subReportNodeLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
+        subReportNodeLimits.newReportNode()
+                .withMessageTemplate(LIMITS, LIMITS)
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .add();
+
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             generatorCreationInfos.getMinP(), "Min active power"));
 
@@ -296,13 +292,13 @@ public class GeneratorCreation extends AbstractModification {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
                 generatorCreationInfos.getRatedS(), "Rated nominal power"));
         }
-        ModificationUtils.getInstance().reportModifications(subReporterLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS, Map.of());
-        return subReporterLimits;
+        ModificationUtils.getInstance().reportModifications(subReportNodeLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS, Map.of());
+        return subReportNodeLimits;
     }
 
-    private void createGeneratorActivePowerControl(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorActivePowerControl(GeneratorCreationInfos generatorCreationInfos, Generator generator, ReportNode subReportNode) {
         if (generatorCreationInfos.getParticipate() != null && generatorCreationInfos.getDroop() != null) {
-            List<Report> activePowerRegulationReports = new ArrayList<>();
+            List<ReportNode> activePowerRegulationReports = new ArrayList<>();
             try {
                 generator.newExtension(ActivePowerControlAdder.class)
                         .withParticipate(generatorCreationInfos.getParticipate())
@@ -315,21 +311,21 @@ public class GeneratorCreation extends AbstractModification {
                         generatorCreationInfos.getDroop(),
                         "Droop"));
             } catch (PowsyblException e) {
-                activePowerRegulationReports.add(Report.builder()
-                        .withKey("ActivePowerExtensionAddError")
-                        .withDefaultMessage("cannot add active power extension on generator with id=${id} : ${message}")
-                        .withValue("id", generatorCreationInfos.getEquipmentId())
-                        .withValue("message", e.getMessage())
+                activePowerRegulationReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("ActivePowerExtensionAddError", "cannot add active power extension on generator with id=${id} : ${message}")
+                        .withUntypedValue("id", generatorCreationInfos.getEquipmentId())
+                        .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
+
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation", Map.of());
         }
     }
 
-    private void createGeneratorShortCircuit(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorShortCircuit(GeneratorCreationInfos generatorCreationInfos, Generator generator, ReportNode subReportNode) {
         if (generatorCreationInfos.getDirectTransX() != null) {
-            List<Report> shortCircuitReports = new ArrayList<>();
+            List<ReportNode> shortCircuitReports = new ArrayList<>();
             try {
                 GeneratorShortCircuitAdder shortCircuitAdder = generator.newExtension(GeneratorShortCircuitAdder.class)
                     .withDirectTransX(generatorCreationInfos.getDirectTransX());
@@ -342,24 +338,23 @@ public class GeneratorCreation extends AbstractModification {
                     shortCircuitReports.add(ModificationUtils.getInstance().buildCreationReport(generatorCreationInfos.getStepUpTransformerX(), "Transformer reactance"));
                 }
             } catch (PowsyblException e) {
-                shortCircuitReports.add(Report.builder()
-                        .withKey("ShortCircuitExtensionAddError")
-                        .withDefaultMessage("cannot add short-circuit extension on generator with id=${id} : ${message}")
-                        .withValue("id", generatorCreationInfos.getEquipmentId())
-                        .withValue("message", e.getMessage())
+                shortCircuitReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("ShortCircuitExtensionAddError", "cannot add short-circuit extension on generator with id=${id} : ${message}")
+                        .withUntypedValue("id", generatorCreationInfos.getEquipmentId())
+                        .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, shortCircuitReports, "shortCircuitCreated", "Short-circuit", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, shortCircuitReports, "shortCircuitCreated", "Short-circuit", Map.of());
         }
     }
 
-    private void createGeneratorStartUp(GeneratorCreationInfos generatorCreationInfos, Generator generator, Reporter subReporter) {
+    private void createGeneratorStartUp(GeneratorCreationInfos generatorCreationInfos, Generator generator, ReportNode subReportNode) {
         if (generatorCreationInfos.getPlannedActivePowerSetPoint() != null
                 || generatorCreationInfos.getMarginalCost() != null
                 || generatorCreationInfos.getPlannedOutageRate() != null
                 || generatorCreationInfos.getForcedOutageRate() != null) {
-            List<Report> startupReports = new ArrayList<>();
+            List<ReportNode> startupReports = new ArrayList<>();
             try {
                 generator.newExtension(GeneratorStartupAdderImpl.class)
                         .withPlannedActivePowerSetpoint(nanIfNull(generatorCreationInfos.getPlannedActivePowerSetPoint()))
@@ -384,15 +379,14 @@ public class GeneratorCreation extends AbstractModification {
                         generatorCreationInfos.getForcedOutageRate(), "Forced outage rate"));
                 }
             } catch (PowsyblException e) {
-                startupReports.add(Report.builder()
-                        .withKey("StartupExtensionAddError")
-                        .withDefaultMessage("cannot add startup extension on generator with id=${id} : ${message}")
-                        .withValue("id", generatorCreationInfos.getEquipmentId())
-                        .withValue("message", e.getMessage())
+                startupReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("StartupExtensionAddError", "cannot add startup extension on generator with id=${id} : ${message}")
+                        .withUntypedValue("id", generatorCreationInfos.getEquipmentId())
+                        .withMessageTemplate("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, startupReports, "startUpAttributesCreated", "Start up", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, startupReports, "startUpAttributesCreated", "Start up", Map.of());
         }
     }
 }

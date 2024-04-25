@@ -6,10 +6,9 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.ReportBuilder;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.ReportNodeAdder;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
 import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
@@ -283,32 +282,30 @@ public final class ModificationUtils {
         }
     }
 
-    private boolean checkBbs(Network network, String busbarSectionId1, String busbarSectionId2, Reporter subReporter) {
+    private boolean checkBbs(Network network, String busbarSectionId1, String busbarSectionId2, ReportNode subReportNode) {
         Identifiable<?> busOrBbs1 = network.getIdentifiable(busbarSectionId1);
         Identifiable<?> busOrBbs2 = network.getIdentifiable(busbarSectionId2);
         if (busOrBbs1 == null) {
-            subReporter.report(Report.builder()
-                    .withKey("notFoundBurOrBusbarSection")
-                    .withDefaultMessage("Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
-                    .withValue(BUS_BAR_SECTION_ID, busbarSectionId1)
+            subReportNode.newReportNode()
+                    .withMessageTemplate("notFoundBurOrBusbarSection", "Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
+                    .withUntypedValue(BUS_BAR_SECTION_ID, busbarSectionId1)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
+                    .add();
             return false;
         }
         if (busOrBbs2 == null) {
-            subReporter.report(Report.builder()
-                    .withKey("notFoundBurOrBusbarSection")
-                    .withDefaultMessage("Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
-                    .withValue(BUS_BAR_SECTION_ID, busbarSectionId2)
+            subReportNode.newReportNode()
+                    .withMessageTemplate("notFoundBurOrBusbarSection", "Bus or busbar section ID ${busbarSectionId} not found. Coupler was not created.")
+                    .withUntypedValue(BUS_BAR_SECTION_ID, busbarSectionId2)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
+                    .add();
             return false;
         }
         return true;
     }
 
     void createVoltageLevel(VoltageLevelCreationInfos voltageLevelCreationInfos,
-                                   Reporter subReporter, Network network) {
+                                   ReportNode subReportNode, Network network) {
         String substationId = voltageLevelCreationInfos.getSubstationId();
         Substation substation = network.getSubstation(substationId);
         if (substation == null) {
@@ -352,22 +349,21 @@ public final class ModificationUtils {
                 .build().apply(network);
 
         voltageLevelCreationInfos.getCouplingDevices().forEach(couplingDevice -> {
-            if (!checkBbs(network, couplingDevice.getBusbarSectionId1(), couplingDevice.getBusbarSectionId2(), subReporter)) {
+            if (!checkBbs(network, couplingDevice.getBusbarSectionId1(), couplingDevice.getBusbarSectionId2(), subReportNode)) {
                 return;
             }
             CreateCouplingDeviceBuilder couplingDeviceBuilder = new CreateCouplingDeviceBuilder();
             couplingDeviceBuilder.withBusOrBusbarSectionId1(couplingDevice.getBusbarSectionId1())
                 .withBusOrBusbarSectionId2(couplingDevice.getBusbarSectionId2())
                 .withSwitchPrefixId(voltageLevelCreationInfos.getEquipmentId() + "_COUPL")
-                    .build().apply(network, subReporter);
+                    .build().apply(network, subReportNode);
         });
 
-        subReporter.report(Report.builder()
-            .withKey("voltageLevelCreated")
-            .withDefaultMessage("New voltage level with id=${id} created")
-            .withValue("id", voltageLevelCreationInfos.getEquipmentId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+        subReportNode.newReportNode()
+                .withMessageTemplate("voltageLevelCreated", "New voltage level with id=${id} created")
+                .withUntypedValue("id", voltageLevelCreationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .add();
     }
 
     public LineAdder createLineAdder(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2) {
@@ -434,15 +430,15 @@ public final class ModificationUtils {
         }
     }
 
-    public static void createReport(Reporter reporter, String reporterKey, String defaultMessage, Map<String, Object> values, TypedValue errorSeverity) {
-        ReportBuilder builder = Report.builder()
-            .withKey(reporterKey)
-            .withDefaultMessage(defaultMessage)
-            .withSeverity(errorSeverity);
+    public static void createReport(ReportNode reportNode, String reporterKey, String defaultMessage, Map<String, Object> values, TypedValue errorSeverity) {
+        ReportNodeAdder adder = reportNode.newReportNode()
+                .withMessageTemplate(reporterKey, defaultMessage)
+                .withSeverity(errorSeverity);
+
         for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
-            builder.withValue(valueEntry.getKey(), valueEntry.getValue().toString());
+            adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
         }
-        reporter.report(builder.build());
+        adder.add();
     }
 
     public static <T> Predicate<T> distinctByKey(
@@ -452,7 +448,7 @@ public final class ModificationUtils {
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
-    public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
+    public <T> ReportNode applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
                                                                   AttributeModification<T> modification, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
@@ -464,7 +460,7 @@ public final class ModificationUtils {
         return null;
     }
 
-    public <T> Report applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
+    public <T> ReportNode applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
                                                                                 AttributeModification<T> modification, String fieldName, int indentationLevel) {
         if (modification != null) {
             T oldValue = getter.get();
@@ -476,67 +472,62 @@ public final class ModificationUtils {
         return null;
     }
 
-    public Report createEnabledDisabledReport(String key, boolean enabled) {
-        return Report.builder().withKey(key)
-                .withDefaultMessage("    ${status}")
-                .withValue("status", enabled ? "Enabled" : "Disabled")
+    public ReportNode createEnabledDisabledReport(String key, boolean enabled) {
+        return ReportNode.newRootReportNode()
+                .withMessageTemplate(key, "    ${status}")
+                .withUntypedValue("status", enabled ? "Enabled" : "Disabled")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build();
     }
 
-    public Reporter reportModifications(Reporter subReporter, List<Report> reports, String subReporterKey,
-                                        String subReporterDefaultMessage, Map<String, Object> values) {
-        List<Report> validReports = reports.stream().filter(Objects::nonNull).toList();
-        Reporter modificationSubreporter = null;
-        if (!validReports.isEmpty() && subReporter != null) {
-            modificationSubreporter = subReporter.createSubReporter(subReporterKey, subReporterDefaultMessage);
-
-            ReportBuilder builder = Report.builder()
-                    .withKey(subReporterKey)
-                    .withDefaultMessage(subReporterDefaultMessage)
-                    .withSeverity(TypedValue.INFO_SEVERITY);
+    public ReportNode reportModifications(ReportNode subReportNode, List<ReportNode> reports, String subReportNodeKey,
+                                        String subReportNodeDefaultMessage, Map<String, Object> values) {
+        List<ReportNode> validReports = reports.stream().filter(Objects::nonNull).toList();
+        ReportNode modificationSubReportNode = null;
+        if (!validReports.isEmpty() && subReportNode != null) {
+            modificationSubReportNode = subReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).add();
+            ReportNodeAdder adder = modificationSubReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).withSeverity(TypedValue.INFO_SEVERITY);
             for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
-                builder.withValue(valueEntry.getKey(), valueEntry.getValue().toString());
+                adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
             }
-            modificationSubreporter.report(builder.build());
-            validReports.stream().forEach(modificationSubreporter::report);
+            adder.add();
+            validReports.stream().forEach(modificationSubReportNode::include);
         }
-        return modificationSubreporter;
+        return modificationSubReportNode;
     }
 
     public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
             AttributeModification<T> modification,
-            Reporter subReporter, String fieldName) {
+            ReportNode subReportNode, String fieldName) {
         if (modification != null) {
             T oldValue = getter.get();
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            subReporter.report(buildModificationReport(oldValue, newValue, fieldName));
+            subReportNode.include(buildModificationReport(oldValue, newValue, fieldName));
         }
     }
 
-    public <T> Report buildModificationReport(T oldValue, T newValue, String fieldName) {
+    public <T> ReportNode buildModificationReport(T oldValue, T newValue, String fieldName) {
         return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
     }
 
     //TODO rename to buildModificationReport()
-    public <T> Report buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
+    public <T> ReportNode buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
         return buildModificationReport(oldValue, newValue, fieldName, indentationLevel, TypedValue.INFO_SEVERITY);
     }
 
-    static <T> Report buildModificationReport(T oldValue, T newValue, String fieldName, int indentationLevel, TypedValue severity) {
+    static <T> ReportNode buildModificationReport(T oldValue, T newValue, String fieldName, int indentationLevel, TypedValue severity) {
         final String oldValueString = (oldValue == null || oldValue instanceof Double oldDouble && Double.isNaN(oldDouble))
                 ? NO_VALUE : oldValue.toString();
         final String newValueString = (newValue == null || newValue instanceof Double newDouble && Double.isNaN(newDouble))
                 ? NO_VALUE : newValue.toString();
         final String indentation = "\t".repeat(indentationLevel);
-        return Report.builder()
-                .withKey("modification-indent" + indentationLevel)
-                .withDefaultMessage(indentation + "${fieldName} : ${oldValue} → ${newValue}")
-                .withValue("fieldName", fieldName)
-                .withValue("oldValue", oldValueString)
-                .withValue("newValue", newValueString)
+        return ReportNode.newRootReportNode()
+                .withMessageTemplate("modification-indent" + indentationLevel, indentation + "${fieldName} : ${oldValue} → ${newValue}")
+                .withUntypedValue("fieldName", fieldName)
+                .withUntypedValue("oldValue", oldValueString)
+                .withUntypedValue("newValue", newValueString)
                 .withSeverity(severity)
                 .build();
     }
@@ -584,16 +575,15 @@ public final class ModificationUtils {
         return injection != null && injection.getTerminal().isConnected();
     }
 
-    public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, Reporter subReporter) {
+    public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, ReportNode subReportNode) {
         // A newly created injection is connected by default, unless we choose not to do
         if (!modificationInfos.isConnected()) {
             injection.getTerminal().disconnect();
-            subReporter.report(Report.builder()
-                    .withKey("equipmentDisconnected")
-                    .withDefaultMessage("Equipment with id=${id} disconnected")
-                    .withValue("id", modificationInfos.getEquipmentId())
+            subReportNode.newReportNode()
+                    .withMessageTemplate("equipmentDisconnected", "Equipment with id=${id} disconnected")
+                    .withUntypedValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
     }
 
@@ -615,25 +605,23 @@ public final class ModificationUtils {
         }
     }
 
-    public void disconnectBranch(BranchCreationInfos modificationInfos, Branch<?> branch, Reporter subReporter) {
+    public void disconnectBranch(BranchCreationInfos modificationInfos, Branch<?> branch, ReportNode subReportNode) {
         // A newly created branch is connected by default on both sides, unless we choose not to do
         if (!modificationInfos.isConnected1()) {
             branch.getTerminal1().disconnect();
-            subReporter.report(Report.builder()
-                    .withKey("terminal1Disconnected")
-                    .withDefaultMessage("Equipment with id=${id} disconnected on side 1")
-                    .withValue("id", modificationInfos.getEquipmentId())
+            subReportNode.newReportNode()
+                    .withMessageTemplate("terminal1Disconnected", "Equipment with id=${id} disconnected on side 1")
+                    .withUntypedValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
         if (!modificationInfos.isConnected2()) {
             branch.getTerminal2().disconnect();
-            subReporter.report(Report.builder()
-                    .withKey("terminal2Disconnected")
-                    .withDefaultMessage("Equipment with id=${id} disconnected on side 2")
-                    .withValue("id", modificationInfos.getEquipmentId())
+            subReportNode.newReportNode()
+                    .withMessageTemplate("terminal2Disconnected", "Equipment with id=${id} disconnected on side 2")
+                    .withUntypedValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
     }
 
@@ -699,19 +687,18 @@ public final class ModificationUtils {
         }
     }
 
-    public <T> Report buildCreationReport(T value, String fieldName) {
+    public <T> ReportNode buildCreationReport(T value, String fieldName) {
         String newValueString = value == null ? NO_VALUE : value.toString();
-        return Report.builder()
-                .withKey("Creation" + fieldName)
-                .withDefaultMessage("    ${fieldName} : ${value}")
-                .withValue("fieldName", fieldName)
-                .withValue("value", newValueString)
+        return ReportNode.newRootReportNode()
+                .withMessageTemplate("Creation" + fieldName, "    ${fieldName} : ${value}")
+                .withUntypedValue("fieldName", fieldName)
+                .withUntypedValue("value", newValueString)
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build();
     }
 
-    public <T> void reportElementaryCreation(Reporter subReporter, T value, String fieldName) {
-        subReporter.report(buildCreationReport(value, fieldName));
+    public <T> void reportElementaryCreation(ReportNode subReportNode, T value, String fieldName) {
+        subReportNode.include(buildCreationReport(value, fieldName));
     }
 
     public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
@@ -731,8 +718,8 @@ public final class ModificationUtils {
     public void modifyReactiveCapabilityCurvePoints(Collection<ReactiveCapabilityCurve.Point> points,
                                                     List<ReactiveCapabilityCurveModificationInfos> modificationPoints,
                                                     ReactiveCapabilityCurveAdder adder,
-                                                    Reporter subReporter, Reporter subReporterLimits) {
-        List<Report> reports = new ArrayList<>();
+                                                    ReportNode subReportNode, ReportNode subReportNodeLimits) {
+        List<ReportNode> reports = new ArrayList<>();
         List<ReactiveCapabilityCurve.Point> equipementIdPoints = new ArrayList<>(points);
         IntStream.range(0, modificationPoints.size())
                 .forEach(i -> {
@@ -752,31 +739,29 @@ public final class ModificationUtils {
                     createReactiveCapabilityCurvePoint(adder, newPoint, oldPoint, reports, fieldSuffix);
                 });
         adder.add();
-        Reporter subReporterReactiveLimits = null;
-        Reporter subReporterLimits2 = subReporterLimits;
-        if (subReporterLimits == null && !reports.isEmpty()) {
-            subReporterLimits2 = subReporter.createSubReporter(LIMITS, LIMITS);
-            subReporterLimits2.report(Report.builder()
-                    .withKey(LIMITS)
-                    .withDefaultMessage(LIMITS)
+        ReportNode subReportNodeReactiveLimits = null;
+        ReportNode subReporterLimits2 = subReportNodeLimits;
+        if (subReportNodeLimits == null && !reports.isEmpty()) {
+            subReporterLimits2.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
+            subReporterLimits2.newReportNode()
+                    .withMessageTemplate(LIMITS, LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
         if (subReporterLimits2 != null && !reports.isEmpty()) {
-            subReporterReactiveLimits = subReporterLimits2.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                    .withKey(REACTIVE_LIMITS)
-                    .withDefaultMessage(REACTIVE_LIMITS)
+            subReportNodeReactiveLimits = subReporterLimits2.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
+            subReportNodeReactiveLimits.newReportNode()
+                    .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
-        reportModifications(subReporterReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram", Map.of());
+        reportModifications(subReportNodeReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram", Map.of());
     }
 
     public void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
                                                     ReactiveCapabilityCurveModificationInfos newPoint,
                                                     ReactiveCapabilityCurve.Point oldPoint,
-                                                    List<Report> reports,
+                                                    List<ReportNode> reports,
                                                     String fieldSuffix) {
         Double oldMaxQ = Double.NaN;
         Double oldMinQ = Double.NaN;
@@ -800,14 +785,14 @@ public final class ModificationUtils {
         addToReports(reports, maxQ, oldMaxQ, "QmaxP" + fieldSuffix);
     }
 
-    public void addToReports(List<Report> reports, Double newValue, Double oldValue, String fieldName) {
+    public void addToReports(List<ReportNode> reports, Double newValue, Double oldValue, String fieldName) {
         if (newValue != null) {
             reports.add(buildModificationReport(oldValue, newValue, fieldName));
         }
     }
 
     public void modifyMinMaxReactiveLimits(AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower, ReactiveLimitsHolder reactiveLimitsHolder,
-                                           Reporter subReporter, Reporter subReporterLimits) {
+                                           ReportNode subReportNode, ReportNode subReportNodeLimits) {
         MinMaxReactiveLimits minMaxReactiveLimits = null;
         ReactiveLimits reactiveLimits = reactiveLimitsHolder.getReactiveLimits();
         MinMaxReactiveLimitsAdder newMinMaxReactiveLimitsAdder = reactiveLimitsHolder.newMinMaxReactiveLimits();
@@ -818,14 +803,14 @@ public final class ModificationUtils {
             }
         }
         modifyMinMaxReactiveLimits(minMaxReactiveLimits,
-                newMinMaxReactiveLimitsAdder, subReporter, subReporterLimits,
+                newMinMaxReactiveLimitsAdder, subReportNode, subReportNodeLimits,
                 minimumReactivePower,
                 maximumReactivePower);
     }
 
     public void modifyMinMaxReactiveLimits(MinMaxReactiveLimits minMaxReactiveLimits, MinMaxReactiveLimitsAdder newMinMaxReactiveLimits,
-                                            Reporter subReporter, Reporter subReporterLimits, AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower) {
-        List<Report> reports = new ArrayList<>();
+                                           ReportNode subReportNode, ReportNode subReportNodeLimits, AttributeModification<Double> minimumReactivePower, AttributeModification<Double> maximumReactivePower) {
+        List<ReportNode> reports = new ArrayList<>();
 
         if (minimumReactivePower != null
                 && maximumReactivePower != null) {
@@ -864,31 +849,29 @@ public final class ModificationUtils {
                     Double.MAX_VALUE,
                     MAX_REACTIVE_POWER_FIELDNAME));
         }
-        Reporter subReporterReactiveLimits = null;
-        Reporter subReporterLimits2 = subReporterLimits;
-        if (subReporterLimits == null && !reports.isEmpty()) {
-            subReporterLimits2 = subReporter.createSubReporter(LIMITS, LIMITS);
-            subReporterLimits2.report(Report.builder()
-                    .withKey(LIMITS)
-                    .withDefaultMessage(LIMITS)
+        ReportNode subReportNodeReactiveLimits = null;
+        ReportNode subReportNodeLimits2 = subReportNodeLimits;
+        if (subReportNodeLimits == null && !reports.isEmpty()) {
+            subReportNodeLimits2 = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
+            subReportNodeLimits2.newReportNode()
+                    .withMessageTemplate(LIMITS, LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
-        if (subReporterLimits2 != null && !reports.isEmpty()) {
-            subReporterReactiveLimits = subReporterLimits2.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-            subReporterReactiveLimits.report(Report.builder()
-                    .withKey(REACTIVE_LIMITS)
-                    .withDefaultMessage(REACTIVE_LIMITS)
+        if (subReportNodeLimits2 != null && !reports.isEmpty()) {
+            subReportNodeReactiveLimits = subReportNodeLimits2.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
+            subReportNodeReactiveLimits.newReportNode()
+                    .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
-        reportModifications(subReporterReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range", Map.of());
+        reportModifications(subReportNodeReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range", Map.of());
     }
 
     private void modifyExistingActivePowerControl(ActivePowerControl<?> activePowerControl,
                                                   AttributeModification<Boolean> participateInfo,
                                                   AttributeModification<Float> droopInfo,
-                                                  List<Report> reports) {
+                                                  List<ReportNode> reports) {
         double oldDroop = activePowerControl.getDroop();
         boolean oldParticipate = activePowerControl.isParticipate();
 
@@ -906,7 +889,7 @@ public final class ModificationUtils {
     private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
                                              AttributeModification<Boolean> participateInfo,
                                              AttributeModification<Float> droopInfo,
-                                             List<Report> reports) {
+                                             List<ReportNode> reports) {
         boolean participate = participateInfo != null ? participateInfo.getValue() : false;
         adder.withParticipate(participate);
         if (participateInfo != null) {
@@ -920,30 +903,29 @@ public final class ModificationUtils {
         adder.add();
     }
 
-    public Reporter modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
+    public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
                                                        ActivePowerControlAdder<?> activePowerControlAdder,
                                                        AttributeModification<Boolean> participateInfo,
                                                        AttributeModification<Float> droopInfo,
-                                                       Reporter subReporter,
-                                                       Reporter subReporterSetpoints) {
-        List<Report> reports = new ArrayList<>();
+                                                        ReportNode subReportNode,
+                                                         ReportNode subReporterSetpoints) {
+        List<ReportNode> reports = new ArrayList<>();
         if (activePowerControl != null) {
             modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
             createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
 
-        Reporter subReporterSetpoints2 = subReporterSetpoints;
+        ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !reports.isEmpty()) {
-            subReporterSetpoints2 = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
-            subReporterSetpoints2.report(Report.builder()
-                    .withKey(SETPOINTS)
-                    .withDefaultMessage(SETPOINTS)
+            subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
+            subReportNodeSetpoints2.newReportNode()
+                    .withMessageTemplate(SETPOINTS, SETPOINTS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
-        reportModifications(subReporterSetpoints2, reports, "activePowerRegulationModified", "Active power regulation", Map.of());
-        return subReporterSetpoints2;
+        reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation", Map.of());
+        return subReportNodeSetpoints2;
     }
 
     public void checkMaxQGreaterThanMinQ(
@@ -1050,7 +1032,7 @@ public final class ModificationUtils {
         }
     }
 
-    public static void addToReports(List<Report> reports, Double newValue, String fieldName) {
+    public static void addToReports(List<ReportNode> reports, Double newValue, String fieldName) {
         if (newValue != null) {
             reports.add(ModificationUtils.getInstance().buildCreationReport(newValue, fieldName));
         }
@@ -1058,7 +1040,7 @@ public final class ModificationUtils {
 
     public void createReactiveLimits(ReactiveLimitsHolderInfos creationInfos,
                                             ReactiveLimitsHolder reactiveLimitsHolder,
-                                            Reporter subReporter) {
+                                     ReportNode subReporter) {
         if (Boolean.TRUE.equals(creationInfos.getReactiveCapabilityCurve())) {
             createReactiveCapabilityCurve(creationInfos, reactiveLimitsHolder, subReporter);
         } else if (Boolean.FALSE.equals(creationInfos.getReactiveCapabilityCurve())) {
@@ -1068,8 +1050,8 @@ public final class ModificationUtils {
 
     public void createMinMaxReactiveLimits(ReactiveLimitsHolderInfos batteryCreationInfos,
                                                   ReactiveLimitsHolder reactiveLimitsHolder,
-                                                  Reporter subReporter) {
-        List<Report> minMaxReactiveLimitsReports = new ArrayList<>();
+                                           ReportNode subReportNode) {
+        List<ReportNode> minMaxReactiveLimitsReports = new ArrayList<>();
         if (batteryCreationInfos.getMinQ() != null && batteryCreationInfos.getMaxQ() != null) {
             reactiveLimitsHolder.newMinMaxReactiveLimits()
                     .setMinQ(batteryCreationInfos.getMinQ())
@@ -1084,13 +1066,11 @@ public final class ModificationUtils {
                     batteryCreationInfos.getMaxQ(),
                     MAX_REACTIVE_POWER_FIELDNAME));
 
-            Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-
-            subReporterReactiveLimits.report(Report.builder()
-                    .withKey(REACTIVE_LIMITS)
-                    .withDefaultMessage(REACTIVE_LIMITS)
+            ReportNode subReporterReactiveLimits = subReportNode.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
+            subReporterReactiveLimits.newReportNode()
+                    .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
 
             ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range", Map.of());
         }
@@ -1098,8 +1078,8 @@ public final class ModificationUtils {
 
     public void createReactiveCapabilityCurve(ReactiveLimitsHolderInfos creationInfos,
                                                      ReactiveLimitsHolder reactiveLimitsHolder,
-                                                     Reporter subReporter) {
-        List<Report> pointsReports = new ArrayList<>();
+                                              ReportNode subReportNode) {
+        List<ReportNode> pointsReports = new ArrayList<>();
         ReactiveCapabilityCurveAdder adder = reactiveLimitsHolder.newReactiveCapabilityCurve();
         List<ReactiveCapabilityCurveCreationInfos> points = creationInfos.getReactiveCapabilityCurvePoints();
         IntStream.range(0, points.size())
@@ -1116,18 +1096,17 @@ public final class ModificationUtils {
                     createReactiveCapabilityCurvePoint(adder, newPoint, pointsReports, fieldSuffix);
                 });
         adder.add();
-        Reporter subReporterReactiveLimits = subReporter.createSubReporter(REACTIVE_LIMITS, REACTIVE_LIMITS);
-        subReporterReactiveLimits.report(Report.builder()
-                .withKey(REACTIVE_LIMITS)
-                .withDefaultMessage(REACTIVE_LIMITS)
+        ReportNode subReporterReactiveLimits = subReportNode.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
+        subReporterReactiveLimits.newReportNode()
+                .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
         ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram", Map.of());
     }
 
     private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
                                                            ReactiveCapabilityCurveCreationInfos point,
-                                                           List<Report> reports,
+                                                           List<ReportNode> reports,
                                                            String fieldSuffix) {
         adder.beginPoint()
                 .setMaxQ(point.getMaxQ())
@@ -1139,7 +1118,7 @@ public final class ModificationUtils {
         addToReports(reports, point.getMaxQ(), "QmaxP" + fieldSuffix);
     }
 
-    public boolean isValidFilter(Reporter subReporter,
+    public boolean isValidFilter(ReportNode subReportNode,
                                  NetworkModificationException.Type errorType,
                                  Map<UUID, FilterEquipments> exportFilters) {
         boolean noValidEquipmentId = exportFilters.values().stream()
@@ -1147,17 +1126,17 @@ public final class ModificationUtils {
 
         if (noValidEquipmentId) {
             String errorMsg = "${errorType}: There is no valid equipment ID among the provided filter(s)";
-            createReport(subReporter, "invalidFilters", errorMsg, Map.of("errorType", errorType), TypedValue.ERROR_SEVERITY);
+            createReport(subReportNode, "invalidFilters", errorMsg, Map.of("errorType", errorType), TypedValue.ERROR_SEVERITY);
             return false;
         }
 
         return true;
     }
 
-    public static List<IdentifiableAttributes> getIdentifiableAttributes(Map<UUID, FilterEquipments> exportFilters, Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds, List<FilterInfos> filterInfos, Reporter subReporter) {
+    public static List<IdentifiableAttributes> getIdentifiableAttributes(Map<UUID, FilterEquipments> exportFilters, Map<UUID, FilterEquipments> filtersWithWrongEquipmentIds, List<FilterInfos> filterInfos, ReportNode subReportNode) {
         filterInfos.stream()
                 .filter(f -> !exportFilters.containsKey(f.getId()))
-                .forEach(f -> createReport(subReporter,
+                .forEach(f -> createReport(subReportNode,
                         "filterNotFound",
                         "Cannot find the following filter: ${name}",
                         Map.of("name", f.getName()), TypedValue.WARN_SEVERITY));
@@ -1172,14 +1151,14 @@ public final class ModificationUtils {
     }
 
     @Nullable
-    public static Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(FilterService filterService, Network network, Reporter subReporter, Map<UUID, String> filters, NetworkModificationException.Type errorType) {
+    public static Map<UUID, FilterEquipments> getUuidFilterEquipmentsMap(FilterService filterService, Network network, ReportNode subReportNode, Map<UUID, String> filters, NetworkModificationException.Type errorType) {
         Map<UUID, FilterEquipments> exportFilters = filterService.getUuidFilterEquipmentsMap(network, filters);
 
-        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReporter, errorType, exportFilters);
+        boolean isValidFilter = ModificationUtils.getInstance().isValidFilter(subReportNode, errorType, exportFilters);
         return isValidFilter ? exportFilters : null;
     }
 
-    public static Map<UUID, FilterEquipments> getUuidFilterWrongEquipmentsIdsMap(Reporter subReporter, Map<UUID, FilterEquipments> exportFilters, Map<UUID, String> filters) {
+    public static Map<UUID, FilterEquipments> getUuidFilterWrongEquipmentsIdsMap(ReportNode subReportNode, Map<UUID, FilterEquipments> exportFilters, Map<UUID, String> filters) {
         // collect all filters with wrong equipments ids
         Map<UUID, FilterEquipments> filterWithWrongEquipmentsIds = exportFilters.entrySet().stream()
                 .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
@@ -1188,7 +1167,7 @@ public final class ModificationUtils {
         // create report for each wrong filter
         filterWithWrongEquipmentsIds.values().forEach(f -> {
             var equipmentIds = String.join(", ", f.getNotFoundEquipments());
-            createReport(subReporter,
+            createReport(subReportNode,
                     "filterEquipmentsNotFound_" + f.getFilterName(),
                     "Cannot find the following equipments ${equipmentIds} in filter ${filters}",
                     Map.of("equipmentIds", equipmentIds, "filters", filters.get(f.getFilterId())), TypedValue.WARN_SEVERITY);
