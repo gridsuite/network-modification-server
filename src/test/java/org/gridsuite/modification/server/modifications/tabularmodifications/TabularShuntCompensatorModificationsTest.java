@@ -8,9 +8,8 @@
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
@@ -52,7 +51,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
     private Network network;
 
     @Mock
-    private Reporter reporter;
+    private ReportNode reportNode;
 
     @Mock
     private ShuntCompensator shuntCompensator;
@@ -141,15 +140,15 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
-        tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
+        tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
         shuntModification.setShuntCompensatorType(AttributeModification.toAttributeModification(ShuntCompensatorType.CAPACITOR, OperationType.SET));
-        tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
+        tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
         shuntModification.setMaxQAtNominalV(null);
-        tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
+        tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
-        verify(reporter, times(3)).report(argThat(report -> report.getValue(Report.REPORT_SEVERITY_KEY) == TypedValue.WARN_SEVERITY));
+        verify(reportNode, times(3)).include(argThat(report -> report.getValue(TypedValue.SEVERITY).get() == TypedValue.WARN_SEVERITY));
     }
 
     @Test
@@ -172,8 +171,8 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.NON_LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
-        tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
-        verify(reporter).report(argThat(report -> report.getValue(Report.REPORT_SEVERITY_KEY) == TypedValue.ERROR_SEVERITY));
+        tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
+        verify(reportNode).include(argThat(report -> report.getValue(TypedValue.SEVERITY).get() == TypedValue.ERROR_SEVERITY));
     }
 
     @Test
@@ -196,7 +195,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
-        tabularModification.checkShuntCompensatorModification(network, shuntModification, reporter);
-        verify(reporter, never()).report(any());
+        tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
+        verify(reportNode, never()).include(any());
     }
 }

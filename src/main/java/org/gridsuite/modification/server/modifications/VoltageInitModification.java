@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
 import lombok.AllArgsConstructor;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -17,7 +16,6 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -54,42 +52,44 @@ public class VoltageInitModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         // apply generators modifications
-        applyGeneratorModification(network, subReporter);
+        applyGeneratorModification(network, subReportNode);
 
         // apply transformers modifications
-        applyTransformerModification(network, subReporter);
+        applyTransformerModification(network, subReportNode);
 
         // apply static var compensators modifications
-        applyStaticVarCompensatorModification(network, subReporter);
+        applyStaticVarCompensatorModification(network, subReportNode);
 
         // apply shunt compensators modifications
-        applyShuntCompensatorModification(network, subReporter);
+        applyShuntCompensatorModification(network, subReportNode);
 
         // apply vsc converter stations modifications
-        applyVscConverterStationModification(network, subReporter);
+        applyVscConverterStationModification(network, subReportNode);
 
         // apply buses modifications
-        applyBusModification(network, subReporter);
+        applyBusModification(network, subReportNode);
     }
 
-    private void applyBusModification(Network network, Reporter subReporter) {
+    private void applyBusModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
-        List<Report> reports = new ArrayList<>();
+        List<ReportNode> reports = new ArrayList<>();
         for (VoltageInitBusModificationInfos m : voltageInitModificationInfos.getBuses()) {
             final Bus bus = network.getBusView().getBus(m.getBusId());
             if (bus == null) {
-                reports.add(Report.builder().withKey("busNotFound")
-                        .withDefaultMessage("Bus with id=${id} not found")
-                        .withValue("id", m.getBusId())
-                        .withSeverity(TypedValue.WARN_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("busNotFound", "Bus with id=${id} not found")
+                        .withUntypedValue("id", m.getBusId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
             } else if (m.getV() != null || m.getAngle() != null) {
                 modificationsCount++;
-                reports.add(Report.builder().withKey("busModification")
-                        .withDefaultMessage("Bus with id=${id} modified :")
-                        .withValue("id", m.getBusId())
-                        .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("busModification", "Bus with id=${id} modified :")
+                        .withUntypedValue("id", m.getBusId())
+                        .withSeverity(TypedValue.TRACE_SEVERITY)
+                        .build());
                 if (m.getV() != null) {
                     final double oldV = bus.getV();
                     bus.setV(m.getV());
@@ -105,33 +105,36 @@ public class VoltageInitModification extends AbstractModification {
             }
         }
         if (!reports.isEmpty()) {
-            Reporter busesReporter = subReporter.createSubReporter("BusesModifications", "Buses");
-            reports.forEach(busesReporter::report);
+            ReportNode busesReporter = subReportNode.newReportNode().withMessageTemplate("BusesModifications", "Buses").add();
+            reports.forEach(busesReporter::include);
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("busModificationsResume", "${count} bus(es) have been modified.", Map.of(
-                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
-                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
-            )));
+            subReportNode.newReportNode()
+                    .withMessageTemplate("busModificationsResume", "${count} bus(es) have been modified.")
+                    .withUntypedValue(COUNT, modificationsCount)
+                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .add();
         }
     }
 
-    private void applyGeneratorModification(Network network, Reporter subReporter) {
+    private void applyGeneratorModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
-        List<Report> reports = new ArrayList<>();
+        List<ReportNode> reports = new ArrayList<>();
         for (final VoltageInitGeneratorModificationInfos m : voltageInitModificationInfos.getGenerators()) {
             final Generator generator = network.getGenerator(m.getGeneratorId());
             if (generator == null) {
-                reports.add(Report.builder().withKey("generatorNotFound")
-                    .withDefaultMessage("Generator with id=${id} not found")
-                    .withValue("id", m.getGeneratorId())
-                    .withSeverity(TypedValue.WARN_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("generatorNotFound", "Generator with id=${id} not found")
+                        .withUntypedValue("id", m.getGeneratorId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
             } else if (m.getTargetV() != null || m.getTargetQ() != null) {
                 modificationsCount++;
-                reports.add(Report.builder().withKey("generatorModification")
-                    .withDefaultMessage("Generator with id=${id} modified :")
-                    .withValue("id", m.getGeneratorId())
-                    .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("generatorModification", "Generator with id=${id} modified :")
+                        .withUntypedValue("id", m.getGeneratorId())
+                        .withSeverity(TypedValue.TRACE_SEVERITY)
+                        .build());
                 if (m.getTargetV() != null) {
                     final double oldTargetV = generator.getTargetV();
                     generator.setTargetV(m.getTargetV());
@@ -145,41 +148,45 @@ public class VoltageInitModification extends AbstractModification {
             }
         }
         if (!reports.isEmpty()) {
-            Reporter generatorsReporter = subReporter.createSubReporter(GENERATORS_KEY, GENERATORS_NAME);
-            reports.forEach(generatorsReporter::report);
+            ReportNode generatorsReportNode = subReportNode.newReportNode().withMessageTemplate(GENERATORS_KEY, GENERATORS_NAME).add();
+            reports.forEach(generatorsReportNode::include);
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("generatorModificationsResume", "${count} generator(s) have been modified.", Map.of(
-                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
-                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
-            )));
+            subReportNode.newReportNode()
+                    .withMessageTemplate("generatorModificationsResume", "${count} generator have been modified.")
+                    .withUntypedValue(COUNT, modificationsCount)
+                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .add();
         }
     }
 
-    private void applyTransformerModification(Network network, Reporter subReporter) {
+    private void applyTransformerModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
-        List<Report> reports2WT = new ArrayList<>();
-        List<Report> reports3WT = new ArrayList<>();
+        List<ReportNode> reports2WT = new ArrayList<>();
+        List<ReportNode> reports3WT = new ArrayList<>();
         for (final VoltageInitTransformerModificationInfos t : voltageInitModificationInfos.getTransformers()) {
             if (t.getLegSide() != null) {
                 final ThreeWindingsTransformer threeWindingsTransformer = network.getThreeWindingsTransformer(t.getTransformerId());
                 if (threeWindingsTransformer == null) {
-                    reports3WT.add(Report.builder().withKey("3WindingsTransformerNotFound")
-                        .withDefaultMessage("3 windings transformer with id=${id} not found")
-                        .withValue("id", t.getTransformerId())
-                        .withSeverity(TypedValue.WARN_SEVERITY).build());
+                    reports3WT.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("3WindingsTransformerNotFound", "3 windings transformer with id=${id} not found")
+                            .withUntypedValue("id", t.getTransformerId())
+                            .withSeverity(TypedValue.WARN_SEVERITY)
+                            .build());
                 } else if (threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger() == null) {
-                    reports3WT.add(Report.builder().withKey("3WindingsTransformerRatioTapChangerNotFound")
-                        .withDefaultMessage("3 windings transformer with id=${id} : Ratio tap changer for leg ${leg} not found")
-                        .withValue("id", t.getTransformerId())
-                        .withValue("leg", t.getLegSide().name())
-                        .withSeverity(TypedValue.WARN_SEVERITY).build());
+                    reports3WT.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("3WindingsTransformerRatioTapChangerNotFound", "3 windings transformer with id=${id} : Ratio tap changer for leg ${leg} not found")
+                            .withUntypedValue("id", t.getTransformerId())
+                            .withUntypedValue("leg", t.getLegSide().name())
+                            .withSeverity(TypedValue.WARN_SEVERITY)
+                            .build());
                 } else if (t.getRatioTapChangerPosition() != null || t.getRatioTapChangerTargetV() != null) {
                     modificationsCount++;
-                    reports3WT.add(Report.builder().withKey("3WindingsTransformerModification")
-                        .withDefaultMessage("3 windings transformer with id=${id} modified :")
-                        .withValue("id", t.getTransformerId())
-                        .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                    reports3WT.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("3WindingsTransformerModification", "3 windings transformer with id=${id} modified :")
+                            .withUntypedValue("id", t.getTransformerId())
+                            .withSeverity(TypedValue.TRACE_SEVERITY)
+                            .build());
                     if (t.getRatioTapChangerPosition() != null) {
                         final int oldTapPosition = threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().getTapPosition();
                         threeWindingsTransformer.getLeg(t.getLegSide()).getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
@@ -194,21 +201,24 @@ public class VoltageInitModification extends AbstractModification {
             } else {
                 final TwoWindingsTransformer twoWindingsTransformer = network.getTwoWindingsTransformer(t.getTransformerId());
                 if (twoWindingsTransformer == null) {
-                    reports2WT.add(Report.builder().withKey("2WindingsTransformerNotFound")
-                        .withDefaultMessage("2 windings transformer with id=${id} not found")
-                        .withValue("id", t.getTransformerId())
-                        .withSeverity(TypedValue.WARN_SEVERITY).build());
+                    reports2WT.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("2WindingsTransformerNotFound", "2 windings transformer with id=${id} not found")
+                            .withUntypedValue("id", t.getTransformerId())
+                            .withSeverity(TypedValue.WARN_SEVERITY)
+                            .build());
                 } else if (twoWindingsTransformer.getRatioTapChanger() == null) {
-                    reports2WT.add(Report.builder().withKey("2WindingsTransformerRatioTapChangerNotFound")
-                        .withDefaultMessage("2 windings transformer with id=${id} : Ratio tap changer not found")
-                        .withValue("id", t.getTransformerId())
-                        .withSeverity(TypedValue.WARN_SEVERITY).build());
+                    reports2WT.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("2WindingsTransformerRatioTapChangerNotFound", "2 windings transformer with id=${id} : Ratio tap changer not found")
+                            .withUntypedValue("id", t.getTransformerId())
+                            .withSeverity(TypedValue.WARN_SEVERITY)
+                            .build());
                 } else if (t.getRatioTapChangerPosition() != null || t.getRatioTapChangerTargetV() != null) {
                     modificationsCount++;
-                    reports2WT.add(Report.builder().withKey("2WindingsTransformerModification")
-                        .withDefaultMessage("2 windings transformer with id=${id} modified :")
-                        .withValue("id", t.getTransformerId())
-                        .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                    reports2WT.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("2WindingsTransformerModification", "2 windings transformer with id=${id} modified :")
+                            .withUntypedValue("id", t.getTransformerId())
+                            .withSeverity(TypedValue.TRACE_SEVERITY)
+                            .build());
                     if (t.getRatioTapChangerPosition() != null) {
                         final int oldTapPosition = twoWindingsTransformer.getRatioTapChanger().getTapPosition();
                         twoWindingsTransformer.getRatioTapChanger().setTapPosition(t.getRatioTapChangerPosition());
@@ -223,37 +233,40 @@ public class VoltageInitModification extends AbstractModification {
             }
         }
         if (!reports2WT.isEmpty()) {
-            Reporter twoWindingsTransformerReporter = subReporter.createSubReporter(TWO_WINDINGS_TRANSFORMERS_KEY, TWO_WINDINGS_TRANSFORMERS_NAME);
-            reports2WT.forEach(twoWindingsTransformerReporter::report);
+            ReportNode twoWindingsTransformerReportNode = subReportNode.newReportNode().withMessageTemplate(TWO_WINDINGS_TRANSFORMERS_KEY, TWO_WINDINGS_TRANSFORMERS_NAME).add();
+            reports2WT.forEach(twoWindingsTransformerReportNode::include);
         }
         if (!reports3WT.isEmpty()) {
-            Reporter threeWindingsTransformerReporter = subReporter.createSubReporter(THREE_WINDINGS_TRANSFORMERS_KEY, THREE_WINDINGS_TRANSFORMERS_NAME);
-            reports3WT.forEach(threeWindingsTransformerReporter::report);
+            ReportNode threeWindingsTransformerReporter = subReportNode.newReportNode().withMessageTemplate(THREE_WINDINGS_TRANSFORMERS_KEY, THREE_WINDINGS_TRANSFORMERS_NAME).add();
+            reports3WT.forEach(threeWindingsTransformerReporter::include);
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.", Map.of(
-                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
-                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
-            )));
+            subReportNode.newReportNode()
+                    .withMessageTemplate("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.")
+                    .withUntypedValue(COUNT, modificationsCount)
+                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .add();
         }
     }
 
-    private void applyStaticVarCompensatorModification(Network network, Reporter subReporter) {
+    private void applyStaticVarCompensatorModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
-        List<Report> reports = new ArrayList<>();
+        List<ReportNode> reports = new ArrayList<>();
         for (VoltageInitStaticVarCompensatorModificationInfos s : voltageInitModificationInfos.getStaticVarCompensators()) {
             final StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(s.getStaticVarCompensatorId());
             if (staticVarCompensator == null) {
-                reports.add(Report.builder().withKey("staticVarCompensatorNotFound")
-                    .withDefaultMessage("Static var compensator with id=${id} not found")
-                    .withValue("id", s.getStaticVarCompensatorId())
-                    .withSeverity(TypedValue.WARN_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("staticVarCompensatorNotFound", "Static var compensator with id=${id} not found")
+                        .withUntypedValue("id", s.getStaticVarCompensatorId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
             } else if (s.getVoltageSetpoint() != null || s.getReactivePowerSetpoint() != null) {
                 modificationsCount++;
-                reports.add(Report.builder().withKey("staticVarCompensatorModification")
-                    .withDefaultMessage("Static var compensator with id=${id} modified :")
-                    .withValue("id", s.getStaticVarCompensatorId())
-                    .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("staticVarCompensatorModification", "Static var compensator with id=${id} modified :")
+                        .withUntypedValue("id", s.getStaticVarCompensatorId())
+                        .withSeverity(TypedValue.TRACE_SEVERITY)
+                        .build());
                 if (s.getVoltageSetpoint() != null) {
                     final double oldTargetV = staticVarCompensator.getVoltageSetpoint();
                     staticVarCompensator.setVoltageSetpoint(s.getVoltageSetpoint());
@@ -267,33 +280,36 @@ public class VoltageInitModification extends AbstractModification {
             }
         }
         if (!reports.isEmpty()) {
-            Reporter staticVarsReporter = subReporter.createSubReporter(STATIC_VAR_COMPENSATORS_KEY, STATIC_VAR_COMPENSATORS_NAME);
-            reports.forEach(staticVarsReporter::report);
+            ReportNode staticVarsReportNode = subReportNode.newReportNode().withMessageTemplate(STATIC_VAR_COMPENSATORS_KEY, STATIC_VAR_COMPENSATORS_NAME).add();
+            reports.forEach(staticVarsReportNode::include);
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("svcModificationsResume", "${count} static var compensator(s) have been modified.", Map.of(
-                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
-                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
-            )));
+            subReportNode.newReportNode()
+                    .withMessageTemplate("svcModificationsResume", "${count} static var compensator(s) have been modified.")
+                    .withUntypedValue(COUNT, modificationsCount)
+                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .add();
         }
     }
 
-    private void applyVscConverterStationModification(Network network, Reporter subReporter) {
+    private void applyVscConverterStationModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
-        List<Report> reports = new ArrayList<>();
+        List<ReportNode> reports = new ArrayList<>();
         for (VoltageInitVscConverterStationModificationInfos v : voltageInitModificationInfos.getVscConverterStations()) {
             final VscConverterStation vscConverterStation = network.getVscConverterStation(v.getVscConverterStationId());
             if (vscConverterStation == null) {
-                reports.add(Report.builder().withKey("vscConverterStationNotFound")
-                    .withDefaultMessage("Vsc converter station with id=${id} not found")
-                    .withValue("id", v.getVscConverterStationId())
-                    .withSeverity(TypedValue.WARN_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("vscConverterStationNotFound", "Vsc converter station with id=${id} not found")
+                        .withUntypedValue("id", v.getVscConverterStationId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
             } else if (v.getVoltageSetpoint() != null || v.getReactivePowerSetpoint() != null) {
                 modificationsCount++;
-                reports.add(Report.builder().withKey("vscConverterStationModification")
-                    .withDefaultMessage("Vsc converter station with id=${id} modified :")
-                    .withValue("id", v.getVscConverterStationId())
-                    .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("vscConverterStationModification", "Vsc converter station with id=${id} modified :")
+                        .withUntypedValue("id", v.getVscConverterStationId())
+                        .withSeverity(TypedValue.TRACE_SEVERITY)
+                        .build());
                 if (v.getVoltageSetpoint() != null) {
                     final double oldTargetV = vscConverterStation.getVoltageSetpoint();
                     vscConverterStation.setVoltageSetpoint(v.getVoltageSetpoint());
@@ -307,42 +323,46 @@ public class VoltageInitModification extends AbstractModification {
             }
         }
         if (!reports.isEmpty()) {
-            Reporter vscConverterStationsReporter = subReporter.createSubReporter(VSC_CONVERTER_STATIONS_KEY, VSC_CONVERTER_STATIONS_NAME);
-            reports.forEach(vscConverterStationsReporter::report);
+            ReportNode vscConverterStationsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_CONVERTER_STATIONS_KEY, VSC_CONVERTER_STATIONS_NAME).add();
+            reports.forEach(vscConverterStationsReporter::include);
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("vscModificationsResume", "${count} vsc converter station(s) have been modified.", Map.of(
-                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
-                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
-            )));
+            subReportNode.newReportNode()
+                    .withMessageTemplate("vscModificationsResume", "${count} vsc converter station(s) have been modified.")
+                    .withUntypedValue(COUNT, modificationsCount)
+                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .add();
         }
     }
 
-    private void applyShuntCompensatorModification(Network network, Reporter subReporter) {
+    private void applyShuntCompensatorModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
-        List<Report> reports = new ArrayList<>();
+        List<ReportNode> reports = new ArrayList<>();
         for (VoltageInitShuntCompensatorModificationInfos m : voltageInitModificationInfos.getShuntCompensators()) {
             final ShuntCompensator shuntCompensator = network.getShuntCompensator(m.getShuntCompensatorId());
             if (shuntCompensator == null) {
-                reports.add(Report.builder().withKey("shuntCompensatorNotFound")
-                    .withDefaultMessage("Shunt compensator with id=${id} not found")
-                    .withValue("id", m.getShuntCompensatorId())
-                    .withSeverity(TypedValue.WARN_SEVERITY).build());
+                reports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("shuntCompensatorNotFound", "Shunt compensator with id=${id} not found")
+                        .withUntypedValue("id", m.getShuntCompensatorId())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .build());
             } else if (m.getSectionCount() != null || m.getConnect() != null || m.getTargetV() != null) {
-                List<Report> reportsShunt = new ArrayList<>();
+                List<ReportNode> reportsShunt = new ArrayList<>();
                 final int currentSectionCount = shuntCompensator.getSectionCount();
                 final Terminal shuntCompensatorTerminal = shuntCompensator.getTerminal();
                 if (shuntCompensatorTerminal.isConnected()) {  // shunt compensator is connected
                     if (m.getSectionCount() == null) {
-                        reportsShunt.add(Report.builder().withKey("shuntCompensatorSectionCountUndefined")
-                            .withDefaultMessage("\tSection count value is undefined")
-                            .withSeverity(TypedValue.WARN_SEVERITY).build());
+                        reportsShunt.add(ReportNode.newRootReportNode()
+                                .withMessageTemplate("shuntCompensatorSectionCountUndefined", "\tSection count value is undefined")
+                                .withSeverity(TypedValue.WARN_SEVERITY)
+                                .build());
                     } else {
                         if (m.getSectionCount() == 0) {
                             shuntCompensatorTerminal.disconnect();
-                            reportsShunt.add(Report.builder().withKey("shuntCompensatorDisconnected")
-                                .withDefaultMessage("\tShunt compensator disconnected")
-                                .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                            reportsShunt.add(ReportNode.newRootReportNode()
+                                    .withMessageTemplate("shuntCompensatorDisconnected", "\tShunt compensator disconnected")
+                                    .withSeverity(TypedValue.TRACE_SEVERITY)
+                                    .build());
                         }
                         if (m.getSectionCount() != currentSectionCount) {
                             shuntCompensator.setSectionCount(m.getSectionCount());
@@ -351,15 +371,17 @@ public class VoltageInitModification extends AbstractModification {
                     }
                 } else {  // shunt compensator is disconnected
                     if (m.getConnect() == null) {
-                        reportsShunt.add(Report.builder().withKey("shuntCompensatorConnectUndefined")
-                            .withDefaultMessage("\tConnect value is undefined")
-                            .withSeverity(TypedValue.WARN_SEVERITY).build());
+                        reportsShunt.add(ReportNode.newRootReportNode()
+                                .withMessageTemplate("shuntCompensatorConnectUndefined", "\tConnect value is undefined")
+                                .withSeverity(TypedValue.WARN_SEVERITY)
+                                .build());
                     } else {
                         if (Boolean.TRUE.equals(m.getConnect())) {
                             shuntCompensatorTerminal.connect();
-                            reportsShunt.add(Report.builder().withKey("shuntCompensatorReconnected")
-                                .withDefaultMessage("\tShunt compensator reconnected")
-                                .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                            reportsShunt.add(ReportNode.newRootReportNode()
+                                    .withMessageTemplate("shuntCompensatorReconnected", "\tShunt compensator reconnected")
+                                    .withSeverity(TypedValue.TRACE_SEVERITY)
+                                    .build());
                         }
                         if (m.getSectionCount() != currentSectionCount) {
                             shuntCompensator.setSectionCount(m.getSectionCount());
@@ -374,23 +396,25 @@ public class VoltageInitModification extends AbstractModification {
                 }
                 if (!reportsShunt.isEmpty()) {
                     modificationsCount++;
-                    reports.add(Report.builder().withKey("shuntCompensatorModification")
-                        .withDefaultMessage("Shunt compensator with id=${id} modified :")
-                        .withValue("id", m.getShuntCompensatorId())
-                        .withSeverity(TypedValue.TRACE_SEVERITY).build());
+                    reports.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate("shuntCompensatorModification", "Shunt compensator with id=${id} modified :")
+                            .withUntypedValue("id", m.getShuntCompensatorId())
+                            .withSeverity(TypedValue.TRACE_SEVERITY)
+                            .build());
                     reports.addAll(reportsShunt);
                 }
             }
         }
         if (!reports.isEmpty()) {
-            Reporter shuntCompensatorsReporter = subReporter.createSubReporter(SHUNT_COMPENSATORS_KEY, SHUNT_COMPENSATORS_NAME);
-            reports.forEach(shuntCompensatorsReporter::report);
+            ReportNode shuntCompensatorsReporter = subReportNode.newReportNode().withMessageTemplate(SHUNT_COMPENSATORS_KEY, SHUNT_COMPENSATORS_NAME).add();
+            reports.forEach(shuntCompensatorsReporter::include);
         }
         if (modificationsCount > 0) {
-            subReporter.report(new Report("shuntCompensatorModificationsResume", "${count} shunt compensator(s) have been modified.", Map.of(
-                COUNT, new TypedValue(modificationsCount, TypedValue.UNTYPED),
-                Report.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY
-            )));
+            subReportNode.newReportNode()
+                    .withMessageTemplate("shuntCompensatorModificationsResume", "${count} shunt compensator(s) have been modified.")
+                    .withUntypedValue(COUNT, modificationsCount)
+                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .add();
         }
     }
 }

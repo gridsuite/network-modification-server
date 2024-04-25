@@ -32,7 +32,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -101,7 +100,7 @@ public class NetworkModificationApplicator {
     }
 
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
-        ReportNode subReportNode  = modificationInfos.createSubReportNode(reportNode);
+        ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
             apply(modificationInfos.toModification(), network, subReportNode);
         } catch (Exception e) {

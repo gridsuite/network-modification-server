@@ -42,9 +42,9 @@ public class LineModification extends AbstractBranchModification {
         modifyLine(line, modificationInfos, subReportNode);
     }
 
-    private void modifyLine(Line line, BranchModificationInfos lineModificationInfos, Reporter subReporter) {
-        modifyBranch(line, lineModificationInfos, subReporter, "lineModification", "Line with id=${id} modified :");
-        PropertiesUtils.applyProperties(line, subReporter, modificationInfos.getProperties());
+    private void modifyLine(Line line, BranchModificationInfos lineModificationInfos, ReportNode subReportNode) {
+        modifyBranch(line, lineModificationInfos, subReportNode, "lineModification", "Line with id=${id} modified :");
+        PropertiesUtils.applyProperties(line, subReportNode, modificationInfos.getProperties());
     }
 
     @Override
@@ -106,7 +106,7 @@ public class LineModification extends AbstractBranchModification {
                 || lineModificationInfos.getB2() != null && lineModificationInfos.getB2().getValue() != null) {
             ReportNode side2Reporter = characteristicsReportNode.newReportNode().withMessageTemplate("side2Characteristics", "Side 2").add();
             side2Reporter.newReportNode()
-                    .withMessageTemplate("side2CharacteristicsModification","    Side 2")
+                    .withMessageTemplate("side2CharacteristicsModification", "    Side 2")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (lineModificationInfos.getG2() != null && lineModificationInfos.getG2().getValue() != null) {

@@ -72,7 +72,7 @@ public class BatteryCreation extends AbstractModification {
         PropertiesUtils.applyProperties(battery, subReportNode, modificationInfos.getProperties());
     }
 
-    private void createBatteryInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Network network, Reporter subReporter) {
+    private void createBatteryInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Network network, ReportNode subReportNode) {
         BatteryAdder batteryAdder = createBatteryAdderInNodeBreaker(voltageLevel, batteryCreationInfos);
         var position = ModificationUtils.getInstance().getPosition(batteryCreationInfos.getConnectionPosition(),
                 batteryCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
@@ -87,10 +87,10 @@ public class BatteryCreation extends AbstractModification {
                 .withInjectionAdder(batteryAdder)
                 .build();
 
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
 
         var battery = ModificationUtils.getInstance().getBattery(network, batteryCreationInfos.getEquipmentId());
-        addExtensionsToBattery(batteryCreationInfos, battery, subReporter);
+        addExtensionsToBattery(batteryCreationInfos, battery, subReportNode);
     }
 
     private BatteryAdder createBatteryAdderInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos) {
