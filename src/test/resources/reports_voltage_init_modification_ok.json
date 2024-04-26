@@ -1,252 +1,220 @@
 {
-  "version" : "1.0",
-  "reportTree" : {
-    "taskKey" : "99999999-9999-9999-9999-999999999999@NetworkModification",
-    "subReporters" : [ {
-      "taskKey" : "VOLTAGE_INIT_MODIFICATION",
-      "reports" : [ {
-        "reportKey" : "generatorModificationsResume",
-        "values" : {
-          "reportSeverity" : {
-            "value" : "INFO",
-            "type" : "SEVERITY"
+  "version": "2.0",
+  "reportRoot": {
+    "messageKey": "99999999-9999-9999-9999-999999999999@NetworkModification",
+    "children": [
+      {
+        "messageKey": "VOLTAGE_INIT_MODIFICATION",
+        "children": [
+          {
+            "messageKey": "GeneratorsModifications",
+            "children": [
+              {
+                "messageKey": "generatorModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "GTH2"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "0.1"
+                  },
+                  "fieldName": {
+                    "value": "Voltage set point"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "400.0"
+                  }
+                }
+              }
+            ]
           },
-          "count" : {
-            "value" : 1
-          }
-        }
-      }, {
-        "reportKey" : "windingsTransformerModificationsResume",
-        "values" : {
-          "reportSeverity" : {
-            "value" : "INFO",
-            "type" : "SEVERITY"
+          {
+            "messageKey": "2WindingsTransformersModifications",
+            "children": [
+              {
+                "messageKey": "2WindingsTransformerModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "TWT2"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "2"
+                  },
+                  "fieldName": {
+                    "value": "Ratio tap changer position"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "1"
+                  }
+                }
+              }
+            ]
           },
-          "count" : {
-            "value" : 1
-          }
-        }
-      }, {
-        "reportKey" : "svcModificationsResume",
-        "values" : {
-          "reportSeverity" : {
-            "value" : "INFO",
-            "type" : "SEVERITY"
+          {
+            "messageKey": "StaticVarCompensatorsModifications",
+            "children": [
+              {
+                "messageKey": "staticVarCompensatorModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "SVC"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "1346.7"
+                  },
+                  "fieldName": {
+                    "value": "Reactive power set point"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "No value"
+                  }
+                }
+              }
+            ]
           },
-          "count" : {
-            "value" : 1
-          }
-        }
-      }, {
-        "reportKey" : "shuntCompensatorModificationsResume",
-        "values" : {
-          "reportSeverity" : {
-            "value" : "INFO",
-            "type" : "SEVERITY"
+          {
+            "messageKey": "ShuntCompensatorsModifications",
+            "children": [
+              {
+                "messageKey": "shuntCompensatorModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "SHUNT3"
+                  }
+                }
+              },
+              {
+                "messageKey": "shuntCompensatorDisconnected",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "0"
+                  },
+                  "fieldName": {
+                    "value": "Section count"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "1"
+                  }
+                }
+              }
+            ]
           },
-          "count" : {
-            "value" : 1
+          {
+            "messageKey": "VscConverterStationsModifications",
+            "children": [
+              {
+                "messageKey": "vscConverterStationModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "VSC2"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "326.6"
+                  },
+                  "fieldName": {
+                    "value": "Reactive power set point"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "120.0"
+                  }
+                }
+              }
+            ]
           }
-        }
-      }, {
-        "reportKey" : "vscModificationsResume",
-        "values" : {
-          "reportSeverity" : {
-            "value" : "INFO",
-            "type" : "SEVERITY"
-          },
-          "count" : {
-            "value" : 1
-          }
-        }
-      } ],
-      "subReporters" : [ {
-        "taskKey" : "GeneratorsModifications",
-        "reports" : [ {
-          "reportKey" : "generatorModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "GTH2"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "0.1"
-            },
-            "fieldName" : {
-              "value" : "Voltage set point"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "400.0"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "2WindingsTransformersModifications",
-        "reports" : [ {
-          "reportKey" : "2WindingsTransformerModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "TWT2"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "2"
-            },
-            "fieldName" : {
-              "value" : "Ratio tap changer position"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "1"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "StaticVarCompensatorsModifications",
-        "reports" : [ {
-          "reportKey" : "staticVarCompensatorModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "SVC"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "1346.7"
-            },
-            "fieldName" : {
-              "value" : "Reactive power set point"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "No value"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "ShuntCompensatorsModifications",
-        "reports" : [ {
-          "reportKey" : "shuntCompensatorModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "SHUNT3"
-            }
-          }
-        }, {
-          "reportKey" : "shuntCompensatorDisconnected",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "0"
-            },
-            "fieldName" : {
-              "value" : "Section count"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "1"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "VscConverterStationsModifications",
-        "reports" : [ {
-          "reportKey" : "vscConverterStationModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "VSC2"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "326.6"
-            },
-            "fieldName" : {
-              "value" : "Reactive power set point"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "120.0"
-            }
-          }
-        } ]
-      } ]
-    } ]
+        ]
+      }
+    ]
   },
-  "dics" : {
-    "default" : {
-      "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
-      "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
-      "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
-      "GeneratorsModifications" : "Generators",
-      "generatorModification" : "Generator with id=${id} modified :",
-      "generatorModificationsResume" : "${count} generator(s) have been modified.",
-      "2WindingsTransformersModifications" : "2 windings transformers",
-      "2WindingsTransformerModification" : "2 windings transformer with id=${id} modified :",
-      "windingsTransformerModificationsResume" : "${count} transformer(s) have been modified.",
-      "VscConverterStationsModifications" : "Vsc converter stations",
-      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
-      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
-      "StaticVarCompensatorsModifications" : "Static var compensators",
-      "staticVarCompensatorModification" : "Static var compensator with id=${id} modified :",
-      "svcModificationsResume" : "${count} static var compensator(s) have been modified.",
-      "ShuntCompensatorsModifications" : "Shunt compensators",
-      "shuntCompensatorModification" : "Shunt compensator with id=${id} modified :",
-      "shuntCompensatorDisconnected" : "\tShunt compensator disconnected",
-      "shuntCompensatorModificationsResume" : "${count} shunt compensator(s) have been modified."
+  "dictionaries": {
+    "default": {
+      "99999999-9999-9999-9999-999999999999@NetworkModification": "99999999-9999-9999-9999-999999999999@NetworkModification",
+      "VOLTAGE_INIT_MODIFICATION": "Voltage init modification",
+      "modification-indent1": "\t${fieldName} : ${oldValue} → ${newValue}",
+      "GeneratorsModifications": "Generators",
+      "generatorModification": "Generator with id=${id} modified :",
+      "generatorModificationsResume": "${count} generator(s) have been modified.",
+      "2WindingsTransformersModifications": "2 windings transformers",
+      "2WindingsTransformerModification": "2 windings transformer with id=${id} modified :",
+      "windingsTransformerModificationsResume": "${count} transformer(s) have been modified.",
+      "VscConverterStationsModifications": "Vsc converter stations",
+      "vscConverterStationModification": "Vsc converter station with id=${id} modified :",
+      "vscModificationsResume": "${count} vsc converter station(s) have been modified.",
+      "StaticVarCompensatorsModifications": "Static var compensators",
+      "staticVarCompensatorModification": "Static var compensator with id=${id} modified :",
+      "svcModificationsResume": "${count} static var compensator(s) have been modified.",
+      "ShuntCompensatorsModifications": "Shunt compensators",
+      "shuntCompensatorModification": "Shunt compensator with id=${id} modified :",
+      "shuntCompensatorDisconnected": "\tShunt compensator disconnected",
+      "shuntCompensatorModificationsResume": "${count} shunt compensator(s) have been modified."
     }
   }
 }

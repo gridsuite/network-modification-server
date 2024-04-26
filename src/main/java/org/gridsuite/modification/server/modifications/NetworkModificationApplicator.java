@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
@@ -141,7 +142,8 @@ public class NetworkModificationApplicator {
                     .reduce(ApplicationStatus::max)
                     .orElse(ApplicationStatus.ALL_OK);
         }
-        TypedValue severity = reportNode.getValues().get(TypedValue.SEVERITY);
+
+        TypedValue severity = reportNode.getValues().get(ReportConstants.REPORT_SEVERITY_KEY);
         if (severity == null || severity == TypedValue.TRACE_SEVERITY || severity == TypedValue.DEBUG_SEVERITY || severity == TypedValue.INFO_SEVERITY) {
             return ApplicationStatus.ALL_OK;
         } else if (severity == TypedValue.WARN_SEVERITY) {

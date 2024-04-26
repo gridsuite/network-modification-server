@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
@@ -486,12 +487,23 @@ public final class ModificationUtils {
         ReportNode modificationSubReportNode = null;
         if (!validReports.isEmpty() && subReportNode != null) {
             modificationSubReportNode = subReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).add();
-            ReportNodeAdder adder = modificationSubReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).withSeverity(TypedValue.INFO_SEVERITY);
+            ReportNodeAdder adder = modificationSubReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage);
             for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
                 adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
             }
             adder.add();
             validReports.stream().forEach(modificationSubReportNode::include);
+            for (ReportNode report : validReports) {
+                ReportNodeAdder reportNodeAdder = modificationSubReportNode.newReportNode().withMessageTemplate(report.getMessageKey(), report.getMessageTemplate());
+                TypedValue severity = report.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+                if (severity != null) {
+                    reportNodeAdder.withSeverity(severity);
+                }
+                for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
+                    adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
+                }
+                adder.add();
+            };
         }
         return modificationSubReportNode;
     }

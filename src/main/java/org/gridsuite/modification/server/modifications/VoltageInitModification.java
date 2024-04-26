@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
@@ -112,7 +113,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("busModificationsResume", "${count} bus(es) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
                     .add();
         }
     }
@@ -155,7 +156,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("generatorModificationsResume", "${count} generator have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
                     .add();
         }
     }
@@ -244,7 +245,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
                     .add();
         }
     }
@@ -287,7 +288,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("svcModificationsResume", "${count} static var compensator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
                     .add();
         }
     }
@@ -330,7 +331,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("vscModificationsResume", "${count} vsc converter station(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
                     .add();
         }
     }
@@ -413,7 +414,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("shuntCompensatorModificationsResume", "${count} shunt compensator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(TypedValue.SEVERITY, TypedValue.INFO_SEVERITY.toString())
+                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
                     .add();
         }
     }

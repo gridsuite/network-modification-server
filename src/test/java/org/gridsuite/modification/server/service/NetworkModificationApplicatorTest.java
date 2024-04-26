@@ -7,7 +7,9 @@
 
 package org.gridsuite.modification.server.service;
 
+import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -42,16 +44,24 @@ class NetworkModificationApplicatorTest {
         ReportNode subSubReportNode1 = subReportNode3.newReportNode().withMessageTemplate("subsubrep1", "").add();
         ReportNode subSubReportNode2 = subReportNode3.newReportNode().withMessageTemplate("subsubrep2", "").add();
 
-        rootReportNode.newReportNode().withMessageTemplate(reports.get(0).getMessageKey(), reports.get(0).getMessageTemplate()).add();
-        subReportNode1.newReportNode().withMessageTemplate(reports.get(1).getMessageKey(), reports.get(1).getMessageTemplate()).add();
-        subReportNode2.newReportNode().withMessageTemplate(reports.get(2).getMessageKey(), reports.get(2).getMessageTemplate()).add();
-        subReportNode3.newReportNode().withMessageTemplate(reports.get(3).getMessageKey(), reports.get(3).getMessageTemplate()).add();
-
-        subSubReportNode1.newReportNode().withMessageTemplate(reports.get(4).getMessageKey(), reports.get(4).getMessageTemplate()).add();
-        subSubReportNode2.newReportNode().withMessageTemplate(reports.get(5).getMessageKey(), reports.get(5).getMessageTemplate()).add();
+        addSubReport(rootReportNode, reports.get(0));
+        addSubReport(subReportNode1, reports.get(1));
+        addSubReport(subReportNode2, reports.get(2));
+        addSubReport(subReportNode3, reports.get(3));
+        addSubReport(subSubReportNode1, reports.get(4));
+        addSubReport(subSubReportNode2, reports.get(5));
 
         ApplicationStatus actualSeverity = NetworkModificationApplicator.getApplicationStatus(rootReportNode);
         assertEquals(expectedSeverity, actualSeverity);
+    }
+
+    private static void addSubReport(ReportNode parent, ReportNode child) {
+        ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(child.getMessageKey(), child.getMessageTemplate());
+        TypedValue severity = child.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+        if (severity != null) {
+            adder.withSeverity(severity);
+        }
+        adder.add();
     }
 
     @Test
