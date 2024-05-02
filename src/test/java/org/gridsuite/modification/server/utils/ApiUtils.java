@@ -86,7 +86,7 @@ public final class ApiUtils {
 
     public static Map<UUID, UUID> postNetworkModificationsDuplicate(MockMvc mockMvc, List<UUID> modificationUuids) throws Exception {
         MvcResult mvcResult = mockMvc.perform(
-                post("/v1/network-modifications/duplicate")
+                post("/v1/network-modifications")
                     .contentType("application/json")
                     .content(new ObjectMapper().writeValueAsString(modificationUuids))
             )
