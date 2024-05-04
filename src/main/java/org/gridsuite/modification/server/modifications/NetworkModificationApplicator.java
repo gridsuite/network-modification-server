@@ -136,6 +136,10 @@ public class NetworkModificationApplicator {
                 .add();
     }
 
+    public static boolean areSeveritiesEquals(TypedValue s1, TypedValue s2) {
+        return s1.getValue().toString().equals(s2.getValue().toString());
+    }
+
     public static ApplicationStatus getApplicationStatus(ReportNode reportNode) {
         if (reportNode.getChildren() != null && !reportNode.getChildren().isEmpty()) {
             return reportNode.getChildren().stream().map(NetworkModificationApplicator::getApplicationStatus)
@@ -144,11 +148,11 @@ public class NetworkModificationApplicator {
         }
 
         TypedValue severity = reportNode.getValues().get(ReportConstants.REPORT_SEVERITY_KEY);
-        if (severity == null || severity == TypedValue.TRACE_SEVERITY || severity == TypedValue.DEBUG_SEVERITY || severity == TypedValue.INFO_SEVERITY) {
+        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
-        } else if (severity == TypedValue.WARN_SEVERITY) {
+        } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {
             return ApplicationStatus.WITH_WARNINGS;
-        } else if (severity == TypedValue.ERROR_SEVERITY) {
+        } else if (areSeveritiesEquals(severity, TypedValue.ERROR_SEVERITY)) {
             return ApplicationStatus.WITH_ERRORS;
         } else {
             throw new IllegalArgumentException(String.format("Report severity '%s' unknown !", severity.getValue()));

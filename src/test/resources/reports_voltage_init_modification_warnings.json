@@ -7,14 +7,14 @@
         "messageKey": "VOLTAGE_INIT_MODIFICATION",
         "children": [
           {
-            "messageKey": "vscModificationsResume",
-            "values": {
-              "childreneverity": {
-                "value": "INFO",
-                "type": "SEVERITY"
+            "messageKey" : "vscModificationsResume",
+            "values" : {
+              "reportSeverity" : {
+                "value" : "INFO",
+                "type" : "SEVERITY"
               },
-              "count": {
-                "value": 2
+              "count" : {
+                "value" : 2
               }
             }
           },
@@ -24,7 +24,7 @@
               {
                 "messageKey": "generatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -36,7 +36,7 @@
               {
                 "messageKey": "generatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -53,7 +53,7 @@
               {
                 "messageKey": "2WindingsTransformerNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -70,7 +70,7 @@
               {
                 "messageKey": "3WindingsTransformerNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -87,7 +87,7 @@
               {
                 "messageKey": "staticVarCompensatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -99,7 +99,7 @@
               {
                 "messageKey": "staticVarCompensatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -116,7 +116,7 @@
               {
                 "messageKey": "shuntCompensatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -128,7 +128,7 @@
               {
                 "messageKey": "shuntCompensatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -140,7 +140,7 @@
               {
                 "messageKey": "shuntCompensatorNotFound",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
@@ -157,7 +157,7 @@
               {
                 "messageKey": "vscConverterStationModification",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "TRACE",
                     "type": "SEVERITY"
                   },
@@ -175,7 +175,7 @@
                   "fieldName": {
                     "value": "Reactive power set point"
                   },
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "TRACE",
                     "type": "SEVERITY"
                   },
@@ -187,7 +187,7 @@
               {
                 "messageKey": "vscConverterStationModification",
                 "values": {
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "TRACE",
                     "type": "SEVERITY"
                   },
@@ -205,7 +205,7 @@
                   "fieldName": {
                     "value": "Voltage set point"
                   },
-                  "childreneverity": {
+                  "reportSeverity": {
                     "value": "TRACE",
                     "type": "SEVERITY"
                   },

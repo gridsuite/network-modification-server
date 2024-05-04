@@ -7,6 +7,66 @@
         "messageKey": "VOLTAGE_INIT_MODIFICATION",
         "children": [
           {
+            "messageKey": "generatorModificationsResume",
+            "values": {
+              "reportSeverity": {
+                "value": "INFO",
+                "type": "SEVERITY"
+              },
+              "count": {
+                "value": 1
+              }
+            }
+          },
+          {
+            "messageKey": "windingsTransformerModificationsResume",
+            "values": {
+              "reportSeverity": {
+                "value": "INFO",
+                "type": "SEVERITY"
+              },
+              "count": {
+                "value": 1
+              }
+            }
+          },
+          {
+            "messageKey": "svcModificationsResume",
+            "values": {
+              "reportSeverity": {
+                "value": "INFO",
+                "type": "SEVERITY"
+              },
+              "count": {
+                "value": 1
+              }
+            }
+          },
+          {
+            "messageKey": "shuntCompensatorModificationsResume",
+            "values": {
+              "reportSeverity": {
+                "value": "INFO",
+                "type": "SEVERITY"
+              },
+              "count": {
+                "value": 1
+              }
+            }
+          },
+          {
+            "messageKey": "vscModificationsResume",
+            "values": {
+              "reportSeverity": {
+                "value": "INFO",
+                "type": "SEVERITY"
+              },
+              "count": {
+                "value": 1
+              }
+            }
+          },
+          {
             "messageKey": "GeneratorsModifications",
             "children": [
               {
@@ -192,29 +252,29 @@
           }
         ]
       }
-    ]
-  },
-  "dictionaries": {
-    "default": {
-      "99999999-9999-9999-9999-999999999999@NetworkModification": "99999999-9999-9999-9999-999999999999@NetworkModification",
-      "VOLTAGE_INIT_MODIFICATION": "Voltage init modification",
-      "modification-indent1": "\t${fieldName} : ${oldValue} → ${newValue}",
-      "GeneratorsModifications": "Generators",
-      "generatorModification": "Generator with id=${id} modified :",
-      "generatorModificationsResume": "${count} generator(s) have been modified.",
-      "2WindingsTransformersModifications": "2 windings transformers",
-      "2WindingsTransformerModification": "2 windings transformer with id=${id} modified :",
-      "windingsTransformerModificationsResume": "${count} transformer(s) have been modified.",
-      "VscConverterStationsModifications": "Vsc converter stations",
-      "vscConverterStationModification": "Vsc converter station with id=${id} modified :",
-      "vscModificationsResume": "${count} vsc converter station(s) have been modified.",
-      "StaticVarCompensatorsModifications": "Static var compensators",
-      "staticVarCompensatorModification": "Static var compensator with id=${id} modified :",
-      "svcModificationsResume": "${count} static var compensator(s) have been modified.",
-      "ShuntCompensatorsModifications": "Shunt compensators",
-      "shuntCompensatorModification": "Shunt compensator with id=${id} modified :",
-      "shuntCompensatorDisconnected": "\tShunt compensator disconnected",
-      "shuntCompensatorModificationsResume": "${count} shunt compensator(s) have been modified."
+    ],
+    "dictionaries": {
+      "default": {
+        "99999999-9999-9999-9999-999999999999@NetworkModification": "99999999-9999-9999-9999-999999999999@NetworkModification",
+        "VOLTAGE_INIT_MODIFICATION": "Voltage init modification",
+        "modification-indent1": "\t${fieldName} : ${oldValue} → ${newValue}",
+        "GeneratorsModifications": "Generators",
+        "generatorModification": "Generator with id=${id} modified :",
+        "generatorModificationsResume": "${count} generator(s) have been modified.",
+        "2WindingsTransformersModifications": "2 windings transformers",
+        "2WindingsTransformerModification": "2 windings transformer with id=${id} modified :",
+        "windingsTransformerModificationsResume": "${count} transformer(s) have been modified.",
+        "VscConverterStationsModifications": "Vsc converter stations",
+        "vscConverterStationModification": "Vsc converter station with id=${id} modified :",
+        "vscModificationsResume": "${count} vsc converter station(s) have been modified.",
+        "StaticVarCompensatorsModifications": "Static var compensators",
+        "staticVarCompensatorModification": "Static var compensator with id=${id} modified :",
+        "svcModificationsResume": "${count} static var compensator(s) have been modified.",
+        "ShuntCompensatorsModifications": "Shunt compensators",
+        "shuntCompensatorModification": "Shunt compensator with id=${id} modified :",
+        "shuntCompensatorDisconnected": "\tShunt compensator disconnected",
+        "shuntCompensatorModificationsResume": "${count} shunt compensator(s) have been modified."
+      }
     }
   }
 }

@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.LineModificationInfos;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -56,12 +57,12 @@ public class LineModification extends AbstractBranchModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .add();
         if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
                     branchModificationInfos.getR().getValue(), "Series resistance", 1));
             line.setR(branchModificationInfos.getR().getValue());
         }
         if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
                     branchModificationInfos.getX().getValue(), "Series reactance", 1));
             line.setX(branchModificationInfos.getX().getValue());
         }
@@ -85,16 +86,16 @@ public class LineModification extends AbstractBranchModification {
                 //convert reported value from siemens to microsiemens
                 double shuntConductance1ToReport = lineModificationInfos.getG1().getValue() * Math.pow(10, 6);
                 double oldShuntConductance1ToReport = line.getG1() * Math.pow(10, 6);
-                side1ReportNode.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance1ToReport,
-                    shuntConductance1ToReport, "Shunt conductance", 2));
+                newReportNode(side1ReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance1ToReport,
+                        shuntConductance1ToReport, "Shunt conductance", 2));
                 line.setG1(lineModificationInfos.getG1().getValue());
             }
             if (lineModificationInfos.getB1() != null && lineModificationInfos.getB1().getValue() != null) {
                 //convert reported value from siemens to microsiemens
                 double shuntSusceptance1ToReport = lineModificationInfos.getB1().getValue() * Math.pow(10, 6);
                 double oldShuntSusceptance1ToReport = line.getB1() * Math.pow(10, 6);
-                side1ReportNode.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance1ToReport,
-                    shuntSusceptance1ToReport, "Shunt susceptance", 2));
+                newReportNode(side1ReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance1ToReport,
+                        shuntSusceptance1ToReport, "Shunt susceptance", 2));
                 line.setB1(lineModificationInfos.getB1().getValue());
             }
         }
@@ -113,16 +114,16 @@ public class LineModification extends AbstractBranchModification {
                 // convert reported value from siemens to microsiemens
                 double shuntConductance2ToReport = lineModificationInfos.getG2().getValue() * Math.pow(10, 6);
                 double oldShuntConductance2ToReport = line.getG2() * Math.pow(10, 6);
-                side2Reporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance2ToReport,
-                    shuntConductance2ToReport, "Shunt conductance", 2));
+                newReportNode(side2Reporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance2ToReport,
+                        shuntConductance2ToReport, "Shunt conductance", 2));
                 line.setG2(lineModificationInfos.getG2().getValue());
             }
             if (lineModificationInfos.getB2() != null && lineModificationInfos.getB2().getValue() != null) {
                 // convert reported value from siemens to microsiemens
                 double shuntSusceptance2ToReport = lineModificationInfos.getB2().getValue() * Math.pow(10, 6);
                 double oldShuntSusceptance2ToReport = line.getB2() * Math.pow(10, 6);
-                side2Reporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance2ToReport,
-                    shuntSusceptance2ToReport, "Shunt susceptance", 2));
+                newReportNode(side2Reporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance2ToReport,
+                        shuntSusceptance2ToReport, "Shunt susceptance", 2));
                 line.setB2(lineModificationInfos.getB2().getValue());
             }
         }

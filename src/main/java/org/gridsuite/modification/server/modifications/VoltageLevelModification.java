@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -128,7 +129,7 @@ public class VoltageLevelModification extends AbstractModification {
             }
 
             identifiableShortCircuitAdder.add();
-            reports.forEach(subReportNode::include);
+            reports.forEach(report -> newReportNode(subReportNode, report));
         }
     }
 }

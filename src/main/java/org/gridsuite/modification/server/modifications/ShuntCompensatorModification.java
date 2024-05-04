@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -163,7 +164,7 @@ public class ShuntCompensatorModification extends AbstractModification {
 
         reportSwitchedOnAndPerSectionValues(reports, oldQAtNominalV, oldSwitchedOnQAtNominalV, oldSusceptancePerSection, oldSwitchedOnSusceptance, oldMaxQAtNominalV, sectionCount, maximumSectionCount);
 
-        reports.forEach(subReportNode::include);
+        reports.forEach(report -> newReportNode(subReportNode, report));
     }
 
     private void reportSwitchedOnAndPerSectionValues(List<ReportNode> reports, double oldQAtNominalV, double oldSwitchedOnQAtNominalV, double oldSusceptancePerSection, double oldSwitchedOnSusceptance, double oldMaxQAtNominalV, int sectionCount, int maximumSectionCount) {

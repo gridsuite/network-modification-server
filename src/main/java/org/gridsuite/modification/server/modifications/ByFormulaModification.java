@@ -27,8 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createReport;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 public class ByFormulaModification extends AbstractModification {
     public static final String EQUIPMENT_MODIFIED_REPORT_ERROR = "EquipmentModifiedReportError_";
@@ -129,7 +128,7 @@ public class ByFormulaModification extends AbstractModification {
                 .withMessageTemplate("appliedFormulasModifications", "  Formulas")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
-        formulaReports.forEach(formulaSubReportNode::include);
+        formulaReports.forEach(report -> newReportNode(formulaSubReportNode, report));
     }
 
     private void applyFormulaOnFilterEquipments(Network network,

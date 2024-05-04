@@ -18,6 +18,8 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -107,13 +109,13 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode busesReporter = subReportNode.newReportNode().withMessageTemplate("BusesModifications", "Buses").add();
-            reports.forEach(busesReporter::include);
+            reports.forEach(report -> newReportNode(busesReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
                     .withMessageTemplate("busModificationsResume", "${count} bus(es) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
+                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -150,13 +152,13 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode generatorsReportNode = subReportNode.newReportNode().withMessageTemplate(GENERATORS_KEY, GENERATORS_NAME).add();
-            reports.forEach(generatorsReportNode::include);
+            reports.forEach(report -> newReportNode(generatorsReportNode, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
-                    .withMessageTemplate("generatorModificationsResume", "${count} generator have been modified.")
+                    .withMessageTemplate("generatorModificationsResume", "${count} generator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
+                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -235,17 +237,17 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports2WT.isEmpty()) {
             ReportNode twoWindingsTransformerReportNode = subReportNode.newReportNode().withMessageTemplate(TWO_WINDINGS_TRANSFORMERS_KEY, TWO_WINDINGS_TRANSFORMERS_NAME).add();
-            reports2WT.forEach(twoWindingsTransformerReportNode::include);
+            reports2WT.forEach(report -> newReportNode(twoWindingsTransformerReportNode, report));
         }
         if (!reports3WT.isEmpty()) {
             ReportNode threeWindingsTransformerReporter = subReportNode.newReportNode().withMessageTemplate(THREE_WINDINGS_TRANSFORMERS_KEY, THREE_WINDINGS_TRANSFORMERS_NAME).add();
-            reports3WT.forEach(threeWindingsTransformerReporter::include);
+            reports3WT.forEach(report -> newReportNode(threeWindingsTransformerReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
                     .withMessageTemplate("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
+                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -282,13 +284,13 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode staticVarsReportNode = subReportNode.newReportNode().withMessageTemplate(STATIC_VAR_COMPENSATORS_KEY, STATIC_VAR_COMPENSATORS_NAME).add();
-            reports.forEach(staticVarsReportNode::include);
+            reports.forEach(report -> newReportNode(staticVarsReportNode, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
                     .withMessageTemplate("svcModificationsResume", "${count} static var compensator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
+                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -325,13 +327,13 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode vscConverterStationsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_CONVERTER_STATIONS_KEY, VSC_CONVERTER_STATIONS_NAME).add();
-            reports.forEach(vscConverterStationsReporter::include);
+            reports.forEach(report -> newReportNode(vscConverterStationsReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
                     .withMessageTemplate("vscModificationsResume", "${count} vsc converter station(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
+                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -408,13 +410,13 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode shuntCompensatorsReporter = subReportNode.newReportNode().withMessageTemplate(SHUNT_COMPENSATORS_KEY, SHUNT_COMPENSATORS_NAME).add();
-            reports.forEach(shuntCompensatorsReporter::include);
+            reports.forEach(report -> newReportNode(shuntCompensatorsReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
                     .withMessageTemplate("shuntCompensatorModificationsResume", "${count} shunt compensator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withUntypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString())
+                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }

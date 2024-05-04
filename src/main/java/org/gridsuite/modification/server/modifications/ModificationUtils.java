@@ -492,7 +492,6 @@ public final class ModificationUtils {
                 adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
             }
             adder.add();
-            validReports.stream().forEach(modificationSubReportNode::include);
             for (ReportNode report : validReports) {
                 ReportNodeAdder reportNodeAdder = modificationSubReportNode.newReportNode().withMessageTemplate(report.getMessageKey(), report.getMessageTemplate());
                 TypedValue severity = report.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
@@ -500,10 +499,10 @@ public final class ModificationUtils {
                     reportNodeAdder.withSeverity(severity);
                 }
                 for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
-                    adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
+                    reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
                 }
-                adder.add();
-            };
+                reportNodeAdder.add();
+            }
         }
         return modificationSubReportNode;
     }
@@ -516,7 +515,7 @@ public final class ModificationUtils {
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            subReportNode.include(buildModificationReport(oldValue, newValue, fieldName));
+            newReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
         }
     }
 
@@ -710,7 +709,7 @@ public final class ModificationUtils {
     }
 
     public <T> void reportElementaryCreation(ReportNode subReportNode, T value, String fieldName) {
-        subReportNode.include(buildCreationReport(value, fieldName));
+        newReportNode(subReportNode, buildCreationReport(value, fieldName));
     }
 
     public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
@@ -1185,6 +1184,18 @@ public final class ModificationUtils {
                     Map.of("equipmentIds", equipmentIds, "filters", filters.get(f.getFilterId())), TypedValue.WARN_SEVERITY);
         });
         return filterWithWrongEquipmentsIds;
+    }
+
+    public static void newReportNode(ReportNode parent, ReportNode child) {
+        ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(child.getMessageKey(), child.getMessageTemplate());
+        for (Map.Entry<String, TypedValue> valueEntry : child.getValues().entrySet()) {
+            adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
+        }
+        TypedValue severity = child.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+        if (severity != null) {
+            adder.withSeverity(severity);
+        }
+        adder.add();
     }
 }
 

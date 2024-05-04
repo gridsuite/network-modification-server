@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
 
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
@@ -110,7 +111,7 @@ public class VscModification extends AbstractModification {
                 createOperatorActiveRangeExt(hvdcLine, modificationInfos, reports);
             }
         }
-        reports.forEach(subReportNode::include);
+        reports.forEach(report -> newReportNode(subReportNode, report));
     }
 
     private static void modifyOperatorActiveRange(VscModificationInfos modificationInfos, HvdcOperatorActivePowerRange operatorActivePowerRange, List<ReportNode> reports) {
@@ -207,7 +208,7 @@ public class VscModification extends AbstractModification {
             activePowerControlExtension.add();
 
         }
-        reports.forEach(subReportNode::include);
+        reports.forEach(report -> newReportNode(subReportNode, report));
     }
 
     private void modifyConverterStation(Network network, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {

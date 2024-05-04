@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -184,13 +185,13 @@ public class GeneratorModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (reportMaxActivePower != null) {
-                subReporterActiveLimits.include(reportMaxActivePower);
+                newReportNode(subReporterActiveLimits, reportMaxActivePower);
             }
             if (reportMinActivePower != null) {
-                subReporterActiveLimits.include(reportMinActivePower);
+                newReportNode(subReporterActiveLimits, reportMinActivePower);
             }
             if (reportRatedNominalPower != null) {
-                subReporterActiveLimits.include(reportRatedNominalPower);
+                newReportNode(subReporterActiveLimits, reportRatedNominalPower);
             }
         }
         return subReporterLimits;
@@ -398,6 +399,9 @@ public class GeneratorModification extends AbstractModification {
 
         ReportNode subReportNodeSetpoints2 = subReportNodeSetpoints;
         if (subReportNodeSetpoints == null && !voltageRegulationReports.isEmpty()) {
+            subReportNodeSetpoints2 = subReportNode.newReportNode()
+                            .withMessageTemplate(SETPOINTS, SETPOINTS)
+                            .add();
             subReportNodeSetpoints2.newReportNode()
                     .withMessageTemplate(SETPOINTS, SETPOINTS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
@@ -427,10 +431,10 @@ public class GeneratorModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (reportActivePower != null) {
-                subReporterSetpoints.include(reportActivePower);
+                newReportNode(subReporterSetpoints, reportActivePower);
             }
             if (reportReactivePower != null) {
-                subReporterSetpoints.include(reportReactivePower);
+                newReportNode(subReporterSetpoints, reportReactivePower);
             }
         }
         subReporterSetpoints = modifyGeneratorVoltageRegulatorAttributes(modificationInfos, generator, subReportNode, subReporterSetpoints);

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -63,12 +64,12 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         // Branch specific fields
         if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
                     branchModificationInfos.getR().getValue(), "Series resistance", 1));
             twoWindingsTransformer.setR(branchModificationInfos.getR().getValue());
         }
         if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
                     branchModificationInfos.getX().getValue(), "Series reactance", 1));
             twoWindingsTransformer.setX(branchModificationInfos.getX().getValue());
         }
@@ -79,7 +80,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             // convert reported value from siemens to microsiemens
             double oldMagnetizingConductanceToReport = twoWindingsTransformer.getG() * Math.pow(10, 6);
             double newMagnetizingConductanceToReport = twoWindingsTransformerModificationInfos.getG().getValue() * Math.pow(10, 6);
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingConductanceToReport,
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingConductanceToReport,
                     newMagnetizingConductanceToReport, "Magnetizing conductance", 1));
             twoWindingsTransformer.setG(twoWindingsTransformerModificationInfos.getG().getValue());
         }
@@ -87,22 +88,22 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             // convert reported value from siemens to microsiemens
             double oldMagnetizingSusceptanceToReport = twoWindingsTransformer.getB() * Math.pow(10, 6);
             double newMagnetizingSusceptanceToReport = twoWindingsTransformerModificationInfos.getB().getValue() * Math.pow(10, 6);
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingSusceptanceToReport,
-                    newMagnetizingSusceptanceToReport, "Magnetizing susceptance", 1));
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingSusceptanceToReport,
+                            newMagnetizingSusceptanceToReport, "Magnetizing susceptance", 1));
             twoWindingsTransformer.setB(twoWindingsTransformerModificationInfos.getB().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedS() != null && twoWindingsTransformerModificationInfos.getRatedS().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedS(),
-                    twoWindingsTransformerModificationInfos.getRatedS().getValue(), "Rated nominal power", 1));
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedS(),
+                            twoWindingsTransformerModificationInfos.getRatedS().getValue(), "Rated nominal power", 1));
             twoWindingsTransformer.setRatedS(twoWindingsTransformerModificationInfos.getRatedS().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedU1() != null && twoWindingsTransformerModificationInfos.getRatedU1().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU1(),
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU1(),
                     twoWindingsTransformerModificationInfos.getRatedU1().getValue(), "Rated Voltage (Side 1)", 1));
             twoWindingsTransformer.setRatedU1(twoWindingsTransformerModificationInfos.getRatedU1().getValue());
         }
         if (twoWindingsTransformerModificationInfos.getRatedU2() != null && twoWindingsTransformerModificationInfos.getRatedU2().getValue() != null) {
-            characteristicsReporter.include(ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU2(),
+            newReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU2(),
                     twoWindingsTransformerModificationInfos.getRatedU2().getValue(), "Rated Voltage (Side 2)", 1));
             twoWindingsTransformer.setRatedU2(twoWindingsTransformerModificationInfos.getRatedU2().getValue());
         }

@@ -35,24 +35,16 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * @author SARTORI David <david.sartori_externe@rte-france.com>
  */
 @Tag("IntegrationTest")
-class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
+    class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificationTest {
 
     @Mock
     private Network network;
-
-    @Mock
-    private ReportNode reportNode;
 
     @Mock
     private ShuntCompensator shuntCompensator;
@@ -140,6 +132,9 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
+        ReportNode reportNode = ReportNode.newRootReportNode()
+                .withMessageTemplate("test", "test")
+                .build();
 
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
@@ -149,7 +144,7 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         shuntModification.setMaxQAtNominalV(null);
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
-        verify(reportNode, times(3)).include(argThat(report -> report.getValue(ReportConstants.REPORT_SEVERITY_KEY).get() == TypedValue.WARN_SEVERITY));
+        assertEquals(TypedValue.WARN_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.REPORT_SEVERITY_KEY));
     }
 
     @Test
@@ -172,8 +167,13 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.NON_LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
 
+        ReportNode reportNode = ReportNode.newRootReportNode()
+                .withMessageTemplate("test", "test")
+                .build();
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
-        verify(reportNode).include(argThat(report -> report.getValue(ReportConstants.REPORT_SEVERITY_KEY).get() == TypedValue.ERROR_SEVERITY));
+
+        assertEquals(TypedValue.ERROR_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.REPORT_SEVERITY_KEY));
+
     }
 
     @Test
@@ -195,8 +195,11 @@ class TabularShuntCompensatorModificationsTest extends AbstractNetworkModificati
         when(network.getShuntCompensator("id")).thenReturn(shuntCompensator);
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
+        ReportNode reportNode = ReportNode.newRootReportNode()
+                .withMessageTemplate("test", "test")
+                .build();
 
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
-        verify(reportNode, never()).include(any());
+        assertEquals(0, reportNode.getChildren().size());
     }
 }
