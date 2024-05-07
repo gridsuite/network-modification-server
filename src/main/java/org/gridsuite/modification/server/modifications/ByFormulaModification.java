@@ -128,7 +128,7 @@ public class ByFormulaModification extends AbstractModification {
                 .withMessageTemplate("appliedFormulasModifications", "  Formulas")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
-        formulaReports.forEach(report -> newReportNode(formulaSubReportNode, report));
+        formulaReports.forEach(report -> insertReportNode(formulaSubReportNode, report));
     }
 
     private void applyFormulaOnFilterEquipments(Network network,

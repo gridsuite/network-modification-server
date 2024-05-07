@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -185,13 +185,13 @@ public class GeneratorModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (reportMaxActivePower != null) {
-                newReportNode(subReporterActiveLimits, reportMaxActivePower);
+                insertReportNode(subReporterActiveLimits, reportMaxActivePower);
             }
             if (reportMinActivePower != null) {
-                newReportNode(subReporterActiveLimits, reportMinActivePower);
+                insertReportNode(subReporterActiveLimits, reportMinActivePower);
             }
             if (reportRatedNominalPower != null) {
-                newReportNode(subReporterActiveLimits, reportRatedNominalPower);
+                insertReportNode(subReporterActiveLimits, reportRatedNominalPower);
             }
         }
         return subReporterLimits;
@@ -431,10 +431,10 @@ public class GeneratorModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (reportActivePower != null) {
-                newReportNode(subReporterSetpoints, reportActivePower);
+                insertReportNode(subReporterSetpoints, reportActivePower);
             }
             if (reportReactivePower != null) {
-                newReportNode(subReporterSetpoints, reportReactivePower);
+                insertReportNode(subReporterSetpoints, reportReactivePower);
             }
         }
         subReporterSetpoints = modifyGeneratorVoltageRegulatorAttributes(modificationInfos, generator, subReportNode, subReporterSetpoints);

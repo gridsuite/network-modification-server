@@ -18,7 +18,7 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -109,7 +109,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode busesReporter = subReportNode.newReportNode().withMessageTemplate("BusesModifications", "Buses").add();
-            reports.forEach(report -> newReportNode(busesReporter, report));
+            reports.forEach(report -> insertReportNode(busesReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
@@ -152,7 +152,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode generatorsReportNode = subReportNode.newReportNode().withMessageTemplate(GENERATORS_KEY, GENERATORS_NAME).add();
-            reports.forEach(report -> newReportNode(generatorsReportNode, report));
+            reports.forEach(report -> insertReportNode(generatorsReportNode, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
@@ -237,11 +237,11 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports2WT.isEmpty()) {
             ReportNode twoWindingsTransformerReportNode = subReportNode.newReportNode().withMessageTemplate(TWO_WINDINGS_TRANSFORMERS_KEY, TWO_WINDINGS_TRANSFORMERS_NAME).add();
-            reports2WT.forEach(report -> newReportNode(twoWindingsTransformerReportNode, report));
+            reports2WT.forEach(report -> insertReportNode(twoWindingsTransformerReportNode, report));
         }
         if (!reports3WT.isEmpty()) {
             ReportNode threeWindingsTransformerReporter = subReportNode.newReportNode().withMessageTemplate(THREE_WINDINGS_TRANSFORMERS_KEY, THREE_WINDINGS_TRANSFORMERS_NAME).add();
-            reports3WT.forEach(report -> newReportNode(threeWindingsTransformerReporter, report));
+            reports3WT.forEach(report -> insertReportNode(threeWindingsTransformerReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
@@ -284,7 +284,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode staticVarsReportNode = subReportNode.newReportNode().withMessageTemplate(STATIC_VAR_COMPENSATORS_KEY, STATIC_VAR_COMPENSATORS_NAME).add();
-            reports.forEach(report -> newReportNode(staticVarsReportNode, report));
+            reports.forEach(report -> insertReportNode(staticVarsReportNode, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
@@ -327,7 +327,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode vscConverterStationsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_CONVERTER_STATIONS_KEY, VSC_CONVERTER_STATIONS_NAME).add();
-            reports.forEach(report -> newReportNode(vscConverterStationsReporter, report));
+            reports.forEach(report -> insertReportNode(vscConverterStationsReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()
@@ -410,7 +410,7 @@ public class VoltageInitModification extends AbstractModification {
         }
         if (!reports.isEmpty()) {
             ReportNode shuntCompensatorsReporter = subReportNode.newReportNode().withMessageTemplate(SHUNT_COMPENSATORS_KEY, SHUNT_COMPENSATORS_NAME).add();
-            reports.forEach(report -> newReportNode(shuntCompensatorsReporter, report));
+            reports.forEach(report -> insertReportNode(shuntCompensatorsReporter, report));
         }
         if (modificationsCount > 0) {
             subReportNode.newReportNode()

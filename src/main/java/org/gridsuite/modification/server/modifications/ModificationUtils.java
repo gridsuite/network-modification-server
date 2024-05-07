@@ -515,7 +515,7 @@ public final class ModificationUtils {
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            newReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
+            insertReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
         }
     }
 
@@ -709,7 +709,7 @@ public final class ModificationUtils {
     }
 
     public <T> void reportElementaryCreation(ReportNode subReportNode, T value, String fieldName) {
-        newReportNode(subReportNode, buildCreationReport(value, fieldName));
+        insertReportNode(subReportNode, buildCreationReport(value, fieldName));
     }
 
     public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
@@ -1186,7 +1186,7 @@ public final class ModificationUtils {
         return filterWithWrongEquipmentsIds;
     }
 
-    public static void newReportNode(ReportNode parent, ReportNode child) {
+    public static void insertReportNode(ReportNode parent, ReportNode child) {
         ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(child.getMessageKey(), child.getMessageTemplate());
         for (Map.Entry<String, TypedValue> valueEntry : child.getValues().entrySet()) {
             adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
@@ -1195,7 +1195,10 @@ public final class ModificationUtils {
         if (severity != null) {
             adder.withSeverity(severity);
         }
-        adder.add();
+        ReportNode insertedChild = adder.add();
+        if (child.getChildren() != null) {
+            child.getChildren().forEach(grandChild -> insertReportNode(insertedChild, grandChild));
+        }
     }
 }
 

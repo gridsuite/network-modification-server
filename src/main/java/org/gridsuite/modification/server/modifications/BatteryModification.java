@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -101,10 +101,10 @@ public class BatteryModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (reportActivePower != null) {
-                newReportNode(subReporterSetpoints, reportActivePower);
+                insertReportNode(subReporterSetpoints, reportActivePower);
             }
             if (reportReactivePower != null) {
-                newReportNode(subReporterSetpoints, reportReactivePower);
+                insertReportNode(subReporterSetpoints, reportReactivePower);
             }
         }
         modifyBatteryActivePowerControlAttributes(modificationInfos, battery, subReportNode, subReporterSetpoints);
@@ -143,10 +143,10 @@ public class BatteryModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             if (reportMaxActivePower != null) {
-                newReportNode(subReporterActiveLimits, reportMaxActivePower);
+                insertReportNode(subReporterActiveLimits, reportMaxActivePower);
             }
             if (reportMinActivePower != null) {
-                newReportNode(subReporterActiveLimits, reportMinActivePower);
+                insertReportNode(subReporterActiveLimits, reportMinActivePower);
             }
         }
         return subReportNodeLimits;
