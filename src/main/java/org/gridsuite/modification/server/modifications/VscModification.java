@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
 
 /**
@@ -50,7 +49,7 @@ public class VscModification extends AbstractModification {
         if (modificationInfos == null
                 || modificationInfos.getConverterStation1() == null
                 || modificationInfos.getConverterStation2() == null) {
-            throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
+            throw new NetworkModificationException(MODIFY_VSC_ERROR, "Missing required attributes to modify the equipment");
         }
         VscConverterStation converterStation1 = ModificationUtils.getInstance().getVscConverterStation(network, modificationInfos.getConverterStation1().getEquipmentId());
         VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, modificationInfos.getConverterStation2().getEquipmentId());
