@@ -487,19 +487,19 @@ public final class ModificationUtils {
         ReportNode modificationSubReportNode = null;
         if (!validReports.isEmpty() && subReportNode != null) {
             modificationSubReportNode = subReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).add();
-            ReportNodeAdder adder = modificationSubReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage);
+            ReportNodeAdder adder = modificationSubReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).withSeverity(TypedValue.INFO_SEVERITY);
             for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
                 adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
             }
             adder.add();
             for (ReportNode report : validReports) {
-                ReportNodeAdder reportNodeAdder = modificationSubReportNode.newReportNode().withMessageTemplate(report.getMessageKey(), report.getMessageTemplate());
+                ReportNodeAdder reportNodeAdder = modificationSubReportNode.newReportNode().withMessageTemplate(report.getMessageKey(), report.getMessageTemplate()).withSeverity(TypedValue.INFO_SEVERITY);
+                for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
+                    reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
+                }
                 TypedValue severity = report.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
                 if (severity != null) {
                     reportNodeAdder.withSeverity(severity);
-                }
-                for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
-                    reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
                 }
                 reportNodeAdder.add();
             }
