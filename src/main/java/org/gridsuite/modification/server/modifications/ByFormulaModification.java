@@ -146,9 +146,7 @@ public class ByFormulaModification extends AbstractModification {
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         } else {
-            if (!CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes())) {
-                equipmentCount += filterEquipments.getIdentifiableAttributes().size();
-            }
+            equipmentCount += filterEquipments.getIdentifiableAttributes().size();
             if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
                 equipmentNotFoundCount += filterEquipments.getNotFoundEquipments().size();
             }
