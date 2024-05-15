@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
+import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
 /**
@@ -159,7 +160,12 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .p0(toAttributeModification(getP0()))
                 .droop(toAttributeModification(getDroop()))
                 .converterStation1(getConverterStation1() == null ? null : getConverterStation1().toModificationInfos())
-                .converterStation2(getConverterStation2() == null ? null : getConverterStation2().toModificationInfos());
+                .converterStation2(getConverterStation2() == null ? null : getConverterStation2().toModificationInfos())
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 
     @Override
