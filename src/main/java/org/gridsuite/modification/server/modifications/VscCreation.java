@@ -124,6 +124,8 @@ public class VscCreation extends AbstractModification {
             ModificationUtils.getInstance()
                     .reportElementaryCreation(subReportNode, modificationInfos.getEquipmentName(), "Name");
         }
+
+        PropertiesUtils.applyProperties(hvdcLine, subReporter, modificationInfos.getProperties());
     }
 
     private void reportHvdcLineInfos(ReportNode subReportNode) {
