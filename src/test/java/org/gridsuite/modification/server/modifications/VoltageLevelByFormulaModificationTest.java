@@ -243,7 +243,7 @@ public class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModi
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getLowVoltageLimit()));
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getHighVoltageLimit()));
         assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is null", EQUIPMENT_MODIFIED_REPORT_ERROR + "0", reportService);
-        assertLogMessageWithoutRank("Some of the equipment have been modified : 7 equipment(s) modified and 4 equipment(s) not modified", "byFormulaModificationSome", reportService);
+        assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 4 equipment(s) not modified", "byFormulaModificationSome", reportService);
     }
 
     @Override
