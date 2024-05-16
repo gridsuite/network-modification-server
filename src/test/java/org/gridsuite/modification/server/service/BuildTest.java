@@ -830,7 +830,8 @@ public class BuildTest {
         List<TombstonedEquipmentInfos> tbseqVariant1 = tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         List<TombstonedEquipmentInfos> tbseqVariant2 = tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VARIANT_ID_2);
         // v2shunt was deleted from initial variant => v2shunt and the cell switches (breaker and disconnector) have been added as TombstonedEquipmentInfos in ElasticSearch
-        assertEquals(3, tbseqVariant1.size());
+        // switch equipments are not indexed in elasticsearch
+        assertEquals(1, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
 
         // deactivate some modifications and rebuild VARIANT_ID

@@ -161,8 +161,8 @@ public class ModificationElasticsearchTest {
         // assert linked load has been updated (linked connectable)
         assertTrue(checkEquipmentHasVoltageLevelWithName(networkUuid, variantId, "v1Load", voltageLevelName));
 
-        // assert linked switch has been updated (linked equipment which is not a connectable)
-        assertTrue(checkEquipmentHasVoltageLevelWithName(networkUuid, variantId, "v1dlcc", voltageLevelName));
+        // assert switch has not been indexed
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Switch"), networkUuid, variantId).isEmpty());
 
         // assert parent substation has been updated
         assertTrue(checkEquipmentHasVoltageLevelWithName(networkUuid, variantId, "s1", voltageLevelName));
