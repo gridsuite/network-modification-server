@@ -75,19 +75,19 @@ public class VscModification extends AbstractModification {
             ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setName, () -> hvdcLine.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
         }
         if (modificationInfos.getNominalV() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setNominalV, hvdcLine::getNominalV, modificationInfos.getNominalV(), subReporter, "dcNominalVoltage");
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setNominalV, hvdcLine::getNominalV, modificationInfos.getNominalV(), subReporter, "DC nominal voltage");
         }
         if (modificationInfos.getR() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setR, hvdcLine::getR, modificationInfos.getR(), subReporter, "R");
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setR, hvdcLine::getR, modificationInfos.getR(), subReporter, "DC resistance");
         }
         if (modificationInfos.getActivePowerSetpoint() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setActivePowerSetpoint, hvdcLine::getActivePowerSetpoint, modificationInfos.getActivePowerSetpoint(), subReporter, "ActivePowerSetpoint");
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setActivePowerSetpoint, hvdcLine::getActivePowerSetpoint, modificationInfos.getActivePowerSetpoint(), subReporter, "Active power");
         }
         if (modificationInfos.getMaxP() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaxP(), subReporter, "MaxP");
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaxP(), subReporter, "Pmax");
         }
         if (modificationInfos.getConvertersMode() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setConvertersMode, hvdcLine::getConvertersMode, modificationInfos.getConvertersMode(), subReporter, "ConvertersMode");
+            ModificationUtils.getInstance().applyElementaryModifications(hvdcLine::setConvertersMode, hvdcLine::getConvertersMode, modificationInfos.getConvertersMode(), subReporter, "Converters mode");
         }
 
         operatorActivePowerLimit(hvdcLine, modificationInfos, subReporter);
@@ -120,13 +120,13 @@ public class VscModification extends AbstractModification {
         Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2()).ifPresent(info -> {
             if (info.getValue() != null) {
                 operatorActivePowerRange.setOprFromCS1toCS2(info.getValue());
-                reports.add(ModificationUtils.getInstance().buildModificationReport(oldCs1ToCs2, info.getValue(), "OprFromCS1toCS2"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldCs1ToCs2, info.getValue(), "Operator active power limit (Side1 -> Side 2)"));
             }
         });
         Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1()).ifPresent(info -> {
             if (info.getValue() != null) {
                 operatorActivePowerRange.setOprFromCS2toCS1(info.getValue());
-                reports.add(ModificationUtils.getInstance().buildModificationReport(oldCs2ToCs1, info.getValue(), "OprFromCS2toCS1"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldCs2ToCs1, info.getValue(), "Operator active power limit (Side2 -> Side 1)"));
             }
         });
     }
@@ -136,13 +136,13 @@ public class VscModification extends AbstractModification {
         Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2()).ifPresent(info -> {
             if (info.getValue() != null) {
                 hvdcOperatorActivePowerRangeAddr.withOprFromCS1toCS2(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2().getValue());
-                reports.add(ModificationUtils.getInstance().buildModificationReport(null, info.getValue(), "OprFromCS1toCS2"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(null, info.getValue(), "Operator active power limit (Side1 -> Side 2)"));
             }
         });
         Optional.ofNullable(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1()).ifPresent(info -> {
             if (info.getValue() != null) {
                 hvdcOperatorActivePowerRangeAddr.withOprFromCS2toCS1(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1().getValue());
-                reports.add(ModificationUtils.getInstance().buildModificationReport(null, info.getValue(), "OprFromCS2toCS1"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(null, info.getValue(), "Operator active power limit (Side2 -> Side 1)"));
             }
         });
         hvdcOperatorActivePowerRangeAddr.add();
@@ -157,7 +157,7 @@ public class VscModification extends AbstractModification {
                 return;
             }
             hvdcAngleDroopActivePowerControl.setEnabled(info.getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(isEnabled, info.getValue(), "AngleDroopActivePowerControl"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(isEnabled, info.getValue(), "Angle droop active power control"));
         });
 
         Optional.ofNullable(modificationInfos.getDroop()).ifPresent(info -> {
@@ -192,7 +192,7 @@ public class VscModification extends AbstractModification {
             boolean isEnabled = modificationInfos.getAngleDroopActivePowerControl() != null && modificationInfos.getAngleDroopActivePowerControl().getValue();
             if (modificationInfos.getAngleDroopActivePowerControl() != null) {
                 activePowerControlExtension.withEnabled(isEnabled);
-                reports.add(ModificationUtils.getInstance().buildModificationReport(null, isEnabled, "AngleDroopActivePowerControl"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(null, isEnabled, "Angle droop active power control"));
             }
 
             var droop = modificationInfos.getDroop() != null ? modificationInfos.getDroop().getValue() : Float.NaN;
@@ -231,15 +231,15 @@ public class VscModification extends AbstractModification {
         }
 
         if (converterStationModificationInfos.getLossFactor() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setLossFactor, converterStation::getLossFactor, converterStationModificationInfos.getLossFactor(), converterStationReporter, "LossFactor");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setLossFactor, converterStation::getLossFactor, converterStationModificationInfos.getLossFactor(), converterStationReporter, "Loss Factor");
         }
 
         if (converterStationModificationInfos.getReactivePowerSetpoint() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setReactivePowerSetpoint, converterStation::getReactivePowerSetpoint, converterStationModificationInfos.getReactivePowerSetpoint(), converterStationReporter, "ReactivePower");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setReactivePowerSetpoint, converterStation::getReactivePowerSetpoint, converterStationModificationInfos.getReactivePowerSetpoint(), converterStationReporter, "Reactive power");
         }
 
         if (converterStationModificationInfos.getVoltageRegulationOn() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setVoltageRegulatorOn, converterStation::isVoltageRegulatorOn, converterStationModificationInfos.getVoltageRegulationOn(), converterStationReporter, "VoltageRegulationOn");
+            ModificationUtils.getInstance().applyElementaryModifications(converterStation::setVoltageRegulatorOn, converterStation::isVoltageRegulatorOn, converterStationModificationInfos.getVoltageRegulationOn(), converterStationReporter, "Voltage regulation");
         }
 
         if (converterStationModificationInfos.getVoltageSetpoint() != null) {
