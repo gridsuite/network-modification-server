@@ -97,6 +97,7 @@ public class VscModification extends AbstractModification {
         modifyConverterStation(network, modificationInfos.getConverterStation1(), subReporter);
         modifyConverterStation(network, modificationInfos.getConverterStation2(), subReporter);
 
+        PropertiesUtils.applyProperties(hvdcLine, subReporter, modificationInfos.getProperties());
     }
 
     private static void operatorActivePowerLimit(HvdcLine hvdcLine, VscModificationInfos modificationInfos, Reporter subReporter) {
