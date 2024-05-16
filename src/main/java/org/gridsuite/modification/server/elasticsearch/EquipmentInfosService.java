@@ -46,7 +46,7 @@ public class EquipmentInfosService {
         // get only equipments allowed to be indexed
         List<EquipmentInfos> filteredEquipmentsInfos = equipmentsInfos.stream()
                 .filter(equipmentInfos -> !EXCLUDED_TYPES_FOR_INDEXING.contains(equipmentInfos.getType()))
-                .collect(Collectors.toList());
+                .toList();
         Lists.partition(filteredEquipmentsInfos, partitionSize)
                 .parallelStream()
                 .forEach(equipmentInfosRepository::saveAll);
