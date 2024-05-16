@@ -304,34 +304,26 @@ public class NetworkModificationRepository {
         }
     }
 
-    @Transactional
-    public int deleteModifications(UUID groupUuid, boolean onlyStashed) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
-            .filter(m -> !onlyStashed || m.getStashed())
-            .toList();
-        groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
-        int count = modifications.size();
-        deleteModifications(modifications);
-        return count;
-    }
-
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
         List<ModificationEntity> modifications;
         if (groupUuid != null) {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            modifications = getModificationEntityStream(groupUuid)
-                    .filter(m -> uuids.contains(m.getId()))
-                    .collect(Collectors.toList());
+            Stream<ModificationEntity> modificationStream = getModificationEntityStream(groupUuid);
+            if (uuids != null) {
+                modificationStream = modificationStream.filter(m -> uuids.contains(m.getId()));
+            }
+            modifications = modificationStream.collect(Collectors.toList());
             groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
-        } else {
+        } else if (uuids != null) {
             modifications = modificationRepository.findAllById(uuids);
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
                 throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
                     optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId()));
             }
+        } else {
+            throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, "need to specify the group or give a list of UUIDs");
         }
         int count = modifications.size();
         deleteModifications(modifications);
