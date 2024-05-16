@@ -68,7 +68,6 @@ public abstract class AbstractBranchModification extends AbstractModification {
             ReportNode limitsReportNode = subReportNode.newReportNode().withMessageTemplate("limits", "Limits").add();
             limitsReportNode.newReportNode()
                     .withMessageTemplate("limitsModification", "Limits")
-                    .withMessageTemplate("limitsModification", "Limits")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
             ModificationUtils.getInstance().reportModifications(limitsReportNode, side1LimitsReports, "side1LimitsModification",
