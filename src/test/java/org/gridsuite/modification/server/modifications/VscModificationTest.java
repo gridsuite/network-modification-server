@@ -37,6 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Tag("IntegrationTest")
 public class VscModificationTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.createWithVSC(networkUuid, true);
@@ -61,6 +65,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .angleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET))
                 .converterStation1(buildConverterStationWithMinMaxReactiveLimits())
                 .converterStation2(buildConverterStationWithReactiveCapabilityCurve())
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -134,6 +139,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         assertEquals(4., hvdcLine.getR(), 0);
         assertEquals(5., hvdcLine.getActivePowerSetpoint(), 0);
         assertEquals(56., hvdcLine.getMaxP(), 0);
+        assertEquals(PROPERTY_VALUE, hvdcLine.getProperty(PROPERTY_NAME));
 
         HvdcOperatorActivePowerRange hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
         Assert.assertEquals(6, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0);

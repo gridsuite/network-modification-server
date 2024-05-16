@@ -41,10 +41,14 @@ public class ByFormulaModification extends AbstractModification {
     private final ByFormulaModificationInfos modificationInfos;
     protected FilterService filterService;
     private int equipmentNotModifiedCount;
+    private long equipmentCount;
+    private long equipmentNotFoundCount;
 
     public ByFormulaModification(ByFormulaModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
         equipmentNotModifiedCount = 0;
+        equipmentCount = 0;
+        equipmentNotFoundCount = 0;
     }
 
     @Override
@@ -78,16 +82,6 @@ public class ByFormulaModification extends AbstractModification {
         Map<UUID, FilterEquipments> exportFilters = ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReportNode, filters, modificationInfos.getErrorType());
 
         if (exportFilters != null) {
-            long equipmentCount = exportFilters.values()
-                    .stream()
-                    .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes()))
-                    .mapToLong(filterEquipments -> filterEquipments.getIdentifiableAttributes().size())
-                    .sum();
-            long equipmentNotFoundCount = exportFilters.values()
-                    .stream()
-                    .filter(filterEquipments -> !CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments()))
-                    .mapToLong(filterEquipments -> filterEquipments.getNotFoundEquipments().size())
-                    .sum();
             ReportNode formulaSubReporter = subReportNode.newReportNode().withMessageTemplate("appliedFormulasModifications", "Formulas").add();
             List<ReportNode> formulaReports = new ArrayList<>();
             modificationInfos.getFormulaInfosList().forEach(formulaInfos ->
@@ -128,7 +122,7 @@ public class ByFormulaModification extends AbstractModification {
                 .withMessageTemplate("appliedFormulasModifications", "  Formulas")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
-        formulaReports.forEach(report -> newReportNode(formulaSubReportNode, report));
+        formulaReports.forEach(report -> insertReportNode(formulaSubReportNode, report));
     }
 
     private void applyFormulaOnFilterEquipments(Network network,
@@ -145,6 +139,10 @@ public class ByFormulaModification extends AbstractModification {
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .build());
         } else {
+            equipmentCount += filterEquipments.getIdentifiableAttributes().size();
+            if (!CollectionUtils.isEmpty(filterEquipments.getNotFoundEquipments())) {
+                equipmentNotFoundCount += filterEquipments.getNotFoundEquipments().size();
+            }
             List<String> notEditableEquipments = new ArrayList<>();
             List<ReportNode> equipmentsReport = new ArrayList<>();
             filterEquipments.getIdentifiableAttributes()

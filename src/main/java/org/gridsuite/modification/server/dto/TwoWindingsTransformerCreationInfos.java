@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.creation.TwoWindingsTransformerCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -68,7 +67,7 @@ public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(ModificationType.TABULAR_CREATION.name(), "Two windings transformer creation ${twoWindingsTransformerId}")
+                .withMessageTemplate(getType().name(), "Two windings transformer creation ${twoWindingsTransformerId}")
                 .withUntypedValue("twoWindingsTransformerId", getEquipmentId())
                 .add();
     }

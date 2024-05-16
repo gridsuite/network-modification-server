@@ -11,7 +11,6 @@ import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.TwoWindingsTransformerModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
@@ -66,7 +65,7 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(ModificationType.TABULAR_CREATION.name(), "Two windings transformer modification ${twoWindingsTransformerId}")
+                .withMessageTemplate(getType().name(), "Two windings transformer modification ${twoWindingsTransformerId}")
                 .withUntypedValue("twoWindingsTransformerId", getEquipmentId())
                 .add();
     }

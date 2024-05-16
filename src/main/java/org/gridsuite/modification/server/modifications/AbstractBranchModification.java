@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_MODIFICATION_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.newReportNode;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
@@ -44,7 +44,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         if (branchModificationInfos.getEquipmentName() != null) {
-            newReportNode(subReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getOptionalName().isEmpty() ? null : branch.getOptionalName().get(), branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
+            insertReportNode(subReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getOptionalName().isEmpty() ? null : branch.getOptionalName().get(), branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
@@ -67,7 +67,6 @@ public abstract class AbstractBranchModification extends AbstractModification {
         if (!side1LimitsReports.isEmpty() || !side2LimitsReports.isEmpty()) {
             ReportNode limitsReportNode = subReportNode.newReportNode().withMessageTemplate("limits", "Limits").add();
             limitsReportNode.newReportNode()
-                    .withMessageTemplate("limitsModification", "Limits")
                     .withMessageTemplate("limitsModification", "Limits")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();

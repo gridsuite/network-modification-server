@@ -8,21 +8,15 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.HvdcLine;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VscCreationInfos;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -130,6 +124,11 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .maxP(getMaxP())
                 .p0(getP0())
                 .converterStation1(converterStationCreationInfos1)
-                .converterStation2(converterStationCreationInfos2);
+                .converterStation2(converterStationCreationInfos2)
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }
