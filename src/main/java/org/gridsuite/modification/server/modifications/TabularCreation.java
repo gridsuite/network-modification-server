@@ -7,9 +7,8 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.TabularCreationInfos;
@@ -41,7 +40,7 @@ public class TabularCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         int applicationFailuresCount = 0;
         for (var creatInfos : creationInfos.getCreations()) {
             try {
@@ -50,12 +49,11 @@ public class TabularCreation extends AbstractModification {
                 modification.apply(network);
             } catch (PowsyblException e) {
                 applicationFailuresCount++;
-                subReporter.report(Report.builder()
-                        .withKey(creatInfos.getType().name() + applicationFailuresCount)
-                        .withDefaultMessage("${message}")
-                        .withValue("message", e.getMessage())
+                subReportNode.newReportNode()
+                        .withMessageTemplate(creatInfos.getType().name() + applicationFailuresCount, "${message}")
+                        .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
+                        .add();
                 LOGGER.warn(e.getMessage());
             }
         }
@@ -65,29 +63,26 @@ public class TabularCreation extends AbstractModification {
         } + " have been created";
 
         if (creationInfos.getCreations().size() == applicationFailuresCount) {
-            subReporter.report(Report.builder()
-                    .withKey(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Error")
-                    .withDefaultMessage("Tabular creation: No ${defaultMessage}")
-                    .withValue("defaultMessage", defaultMessage)
+            subReportNode.newReportNode()
+                    .withMessageTemplate(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Error", "Tabular creation: No ${defaultMessage}")
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
+                    .add();
         } else if (applicationFailuresCount > 0) {
-            subReporter.report(Report.builder()
-                    .withKey(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Warning")
-                    .withDefaultMessage("Tabular creation: ${creationsCount} ${defaultMessage} and ${failuresCount} have not been created")
-                    .withValue("creationsCount", creationInfos.getCreations().size() - applicationFailuresCount)
-                    .withValue("failuresCount", applicationFailuresCount)
-                    .withValue("defaultMessage", defaultMessage)
+            subReportNode.newReportNode()
+                    .withMessageTemplate(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Warning", "Tabular creation: ${creationsCount} ${defaultMessage} and ${failuresCount} have not been created")
+                    .withUntypedValue("creationsCount", creationInfos.getCreations().size() - applicationFailuresCount)
+                    .withUntypedValue("failuresCount", applicationFailuresCount)
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.WARN_SEVERITY)
-                    .build());
+                    .add();
         } else {
-            subReporter.report(Report.builder()
-                    .withKey(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name())
-                    .withDefaultMessage("Tabular creation: ${creationsCount} ${defaultMessage}")
-                    .withValue("creationsCount", creationInfos.getCreations().size())
-                    .withValue("defaultMessage", defaultMessage)
+            subReportNode.newReportNode()
+                    .withMessageTemplate(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name(), "Tabular creation: ${creationsCount} ${defaultMessage}")
+                    .withUntypedValue("creationsCount", creationInfos.getCreations().size())
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
     }
 }

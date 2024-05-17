@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ConnectVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.*;
@@ -45,10 +45,10 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         VoltageLevelCreationInfos mayNewVL = modificationInfos.getMayNewVoltageLevelInfos();
         if (mayNewVL != null) {
-            ModificationUtils.getInstance().createVoltageLevel(mayNewVL, subReporter, network);
+            ModificationUtils.getInstance().createVoltageLevel(mayNewVL, subReportNode, network);
         }
 
         ConnectVoltageLevelOnLine algo = new ConnectVoltageLevelOnLineBuilder()
@@ -61,6 +61,6 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
                 .withLine(network.getLine(modificationInfos.getLineToSplitId()))
                 .build();
 
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
     }
 }

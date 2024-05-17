@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.scalable.Scalable;
 import com.powsybl.iidm.modification.scalable.ScalingParameters;
 import com.powsybl.iidm.network.Load;
@@ -38,7 +37,7 @@ public class LoadScaling extends AbstractScaling {
     }
 
     @Override
-    protected void applyVentilationVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos, Double distributionKeys) {
+    protected void applyVentilationVariation(Network network, ReportNode subReportNode, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos, Double distributionKeys) {
         if (distributionKeys != null) {
             AtomicReference<Double> sum = new AtomicReference<>(0D);
             List<Double> percentages = new ArrayList<>();
@@ -55,12 +54,12 @@ public class LoadScaling extends AbstractScaling {
             Scalable ventilationScalable = Scalable.proportional(percentages, scalables);
             var asked = getAsked(scalingVariationInfos, sum);
             var done = scale(network, scalingVariationInfos, asked, ventilationScalable);
-            reportScaling(subReporter, scalingVariationInfos.getVariationMode(), asked, done);
+            reportScaling(subReportNode, scalingVariationInfos.getVariationMode(), asked, done);
         }
     }
 
     @Override
-    protected void applyRegularDistributionVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
+    protected void applyRegularDistributionVariation(Network network, ReportNode subReportNode, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         List<Load> loads = identifiableAttributes
                 .stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
@@ -79,11 +78,11 @@ public class LoadScaling extends AbstractScaling {
         Scalable regularDistributionScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, regularDistributionScalable);
-        reportScaling(subReporter, scalingVariationInfos.getVariationMode(), asked, done);
+        reportScaling(subReportNode, scalingVariationInfos.getVariationMode(), asked, done);
     }
 
     @Override
-    protected void applyProportionalVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
+    protected void applyProportionalVariation(Network network, ReportNode subReportNode, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         List<Load> loads = identifiableAttributes.stream()
                 .map(attribute -> network.getLoad(attribute.getId()))
                 .filter(ModificationUtils::isInjectionConnected)
@@ -104,17 +103,17 @@ public class LoadScaling extends AbstractScaling {
         Scalable proportionalScalable = Scalable.proportional(percentages, scalables);
         var asked = getAsked(scalingVariationInfos, sum);
         var done = scale(network, scalingVariationInfos, asked, proportionalScalable);
-        reportScaling(subReporter, scalingVariationInfos.getVariationMode(), asked, done);
+        reportScaling(subReportNode, scalingVariationInfos.getVariationMode(), asked, done);
     }
 
     @Override
-    protected void applyProportionalToPmaxVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
+    protected void applyProportionalToPmaxVariation(Network network, ReportNode subReportNode, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         // no implementation for load scaling
         throw new NetworkModificationException(scalingInfos.getErrorType(), String.format("This variation mode is not supported : %s", scalingVariationInfos.getVariationMode().name()));
     }
 
     @Override
-    protected void applyStackingUpVariation(Network network, Reporter subReporter, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
+    protected void applyStackingUpVariation(Network network, ReportNode subReportNode, List<IdentifiableAttributes> identifiableAttributes, ScalingVariationInfos scalingVariationInfos) {
         // no implementation for load scaling
         throw new NetworkModificationException(scalingInfos.getErrorType(), String.format("This variation mode is not supported : %s", scalingVariationInfos.getVariationMode().name()));
     }
@@ -140,14 +139,13 @@ public class LoadScaling extends AbstractScaling {
         return Scalable.onLoad(id, -Double.MAX_VALUE, Double.MAX_VALUE);
     }
 
-    private void reportScaling(Reporter subReporter, VariationMode variationMode, double askedValue, double actualValue) {
-        subReporter.report(Report.builder()
-                .withKey("scalingApplied")
-                .withDefaultMessage("Successfully scaling variation in ${variationMode} mode with variation value asked is ${askedValue} and variation done is ${actualValue}")
-                .withValue("variationMode", variationMode.name())
-                .withValue("askedValue", askedValue)
-                .withValue("actualValue", actualValue)
+    private void reportScaling(ReportNode subReportNode, VariationMode variationMode, double askedValue, double actualValue) {
+        subReportNode.newReportNode()
+                .withMessageTemplate("scalingApplied", "Successfully scaling variation in ${variationMode} mode with variation value asked is ${askedValue} and variation done is ${actualValue}")
+                .withUntypedValue("variationMode", variationMode.name())
+                .withUntypedValue("askedValue", askedValue)
+                .withUntypedValue("actualValue", actualValue)
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 }

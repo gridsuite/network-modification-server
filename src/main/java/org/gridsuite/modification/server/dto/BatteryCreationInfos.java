@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -78,7 +77,7 @@ public class BatteryCreationInfos extends InjectionCreationInfos implements Reac
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.BATTERY_CREATION.name(), "Battery creation ${batteryId}", "batteryId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.BATTERY_CREATION.name(), "Battery creation ${batteryId}").withUntypedValue("batteryId", this.getEquipmentId()).add();
     }
 }

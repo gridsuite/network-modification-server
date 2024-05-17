@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
 import com.powsybl.iidm.modification.tripping.HvdcLineTripping;
 import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
@@ -52,7 +51,7 @@ public class OperatingStatusModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         String equipmentId = modificationInfos.getEquipmentId();
         Identifiable<?> equipment = network.getIdentifiable(equipmentId);
         if (equipment == null) {
@@ -61,34 +60,33 @@ public class OperatingStatusModification extends AbstractModification {
 
         String equipmentType = String.valueOf(equipment.getType());
         switch (modificationInfos.getAction()) {
-            case LOCKOUT -> applyLockoutEquipment(subReporter, equipment, equipmentType);
-            case TRIP -> applyTripEquipment(subReporter, equipment, equipmentType, network);
-            case SWITCH_ON -> applySwitchOnEquipment(subReporter, equipment, equipmentType);
+            case LOCKOUT -> applyLockoutEquipment(subReportNode, equipment, equipmentType);
+            case TRIP -> applyTripEquipment(subReportNode, equipment, equipmentType, network);
+            case SWITCH_ON -> applySwitchOnEquipment(subReportNode, equipment, equipmentType);
             case ENERGISE_END_ONE ->
-                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentType, TwoSides.ONE);
+                    applyEnergiseEquipmentEnd(subReportNode, equipment, equipmentType, TwoSides.ONE);
             case ENERGISE_END_TWO ->
-                    applyEnergiseEquipmentEnd(subReporter, equipment, equipmentType, TwoSides.TWO);
+                    applyEnergiseEquipmentEnd(subReportNode, equipment, equipmentType, TwoSides.TWO);
             default ->
                     throw NetworkModificationException.createOperatingActionTypeUnsupported(modificationInfos.getAction());
         }
     }
 
-    private void applyLockoutEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentType) {
+    private void applyLockoutEquipment(ReportNode subReportNode, Identifiable<?> equipment, String equipmentType) {
         if (disconnectAllTerminals(equipment)) {
             equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.PLANNED_OUTAGE).add();
         } else {
             throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to disconnect all equipment ends");
         }
-        subReporter.report(Report.builder()
-                .withKey("lockout" + equipmentType + APPLIED)
-                .withDefaultMessage("${equipmentType} ${id} (id) : lockout applied")
-                .withValue("equipmentType", equipmentType)
-                .withValue("id", equipment.getId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("lockout" + equipmentType + APPLIED, "${equipmentType} ${id} (id) : lockout applied")
+                .withUntypedValue("equipmentType", equipmentType)
+                .withUntypedValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 
-    private void applyTripEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentType, Network network) {
+    private void applyTripEquipment(ReportNode subReportNode, Identifiable<?> equipment, String equipmentType, Network network) {
         var switchesToDisconnect = new HashSet<Switch>();
         var terminalsToDisconnect = new HashSet<Terminal>();
         var traversedTerminals = new HashSet<Terminal>();
@@ -103,13 +101,12 @@ public class OperatingStatusModification extends AbstractModification {
         switchesToDisconnect.forEach(sw -> sw.setOpen(true));
         terminalsToDisconnect.forEach(Terminal::disconnect);
 
-        subReporter.report(Report.builder()
-                .withKey("trip" + equipmentType + APPLIED)
-                .withDefaultMessage("${equipmentType} ${id} (id) : trip applied")
-                .withValue("equipmentType", equipmentType)
-                .withValue("id", equipment.getId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("trip" + equipmentType + APPLIED, "${equipmentType} ${id} (id) : trip applied")
+                .withUntypedValue("equipmentType", equipmentType)
+                .withUntypedValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
         traversedTerminals.stream()
                 .map(t -> network.getIdentifiable(t.getConnectable().getId()))
@@ -120,7 +117,7 @@ public class OperatingStatusModification extends AbstractModification {
                         .add());
     }
 
-    private void applySwitchOnEquipment(Reporter subReporter, Identifiable<?> equipment, String equipmentType) {
+    private void applySwitchOnEquipment(ReportNode subReportNode, Identifiable<?> equipment, String equipmentType) {
         if (!(equipment instanceof Branch<?>)) {
             throw NetworkModificationException.createEquipmentTypeNotSupported(equipment.getClass().getSimpleName());
         }
@@ -131,16 +128,15 @@ public class OperatingStatusModification extends AbstractModification {
             throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to connect all equipment ends");
         }
 
-        subReporter.report(Report.builder()
-                .withKey("switchOn" + equipmentType + APPLIED)
-                .withDefaultMessage("${equipmentType} ${id} (id) : switch on applied")
-                .withValue("equipmentType", equipmentType)
-                .withValue("id", equipment.getId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("switchOn" + equipmentType + APPLIED, "${equipmentType} ${id} (id) : switch on applied")
+                .withUntypedValue("equipmentType", equipmentType)
+                .withUntypedValue("id", equipment.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 
-    private void applyEnergiseEquipmentEnd(Reporter subReporter, Identifiable<?> equipment, String equipmentType, TwoSides side) {
+    private void applyEnergiseEquipmentEnd(ReportNode subReportNode, Identifiable<?> equipment, String equipmentType, TwoSides side) {
         if (!(equipment instanceof Branch<?> branch)) {
             throw NetworkModificationException.createEquipmentTypeNotSupported(equipment.getClass().getSimpleName());
         }
@@ -152,14 +148,13 @@ public class OperatingStatusModification extends AbstractModification {
             throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end");
         }
 
-        subReporter.report(Report.builder()
-                .withKey("energise" + equipmentType + "EndApplied")
-                .withDefaultMessage("${equipmentType} ${id} (id) : energise the side ${side} applied")
-                .withValue("equipmentType", equipmentType)
-                .withValue("id", equipment.getId())
-                .withValue("side", side.name())
+        subReportNode.newReportNode()
+                .withMessageTemplate("energise" + equipmentType + "EndApplied", "${equipmentType} ${id} (id) : energise the side ${side} applied")
+                .withUntypedValue("equipmentType", equipmentType)
+                .withUntypedValue("id", equipment.getId())
+                .withUntypedValue("side", side.name())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {

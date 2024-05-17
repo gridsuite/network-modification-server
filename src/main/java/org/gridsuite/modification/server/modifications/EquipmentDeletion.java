@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -41,29 +40,27 @@ public class EquipmentDeletion extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         Identifiable<?> identifiable = ModificationUtils.getInstance().getEquipmentByIdentifiableType(network, modificationInfos.getEquipmentType(), modificationInfos.getEquipmentId());
         if (identifiable instanceof Connectable) {
-            new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
+            new RemoveFeederBay(modificationInfos.getEquipmentId()).apply(network, true, subReportNode);
         } else if (identifiable instanceof HvdcLine) {
-            removeHvdcLine(network, subReporter);
+            removeHvdcLine(network, subReportNode);
         } else if (identifiable instanceof VoltageLevel) {
-            new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReporter);
+            new RemoveVoltageLevel(modificationInfos.getEquipmentId()).apply(network, true, subReportNode);
         } else if (identifiable instanceof Substation) {
             RemoveSubstation rs = new RemoveSubstationBuilder().withSubstationId(modificationInfos.getEquipmentId()).build();
-            rs.apply(network, true, subReporter);
+            rs.apply(network, true, subReportNode);
         }
-
-        subReporter.report(Report.builder()
-            .withKey("equipmentDeleted")
-            .withDefaultMessage("equipment of type=${type} and id=${id} deleted")
-            .withValue("type", modificationInfos.getEquipmentType().name())
-            .withValue("id", modificationInfos.getEquipmentId())
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+        subReportNode.newReportNode()
+                .withMessageTemplate("equipmentDeleted", "equipment of type=${type} and id=${id} deleted")
+                .withUntypedValue("type", modificationInfos.getEquipmentType().name())
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withSeverity(TypedValue.INFO_SEVERITY)
+                .add();
     }
 
-    private void removeHvdcLine(Network network, Reporter subReporter) {
+    private void removeHvdcLine(Network network, ReportNode subReportNode) {
         HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getEquipmentInfos();
         List<String> shuntCompensatorIds = List.of();
         if (specificInfos != null) {
@@ -73,12 +70,11 @@ public class EquipmentDeletion extends AbstractModification {
                     .filter(mcsInfo -> {
                         // isConnectedToHvdc means: selected to be removed (can be changed by the Front)
                         if (mcsInfo.isConnectedToHvdc() && network.getShuntCompensator(mcsInfo.getId()) == null) {
-                            subReporter.report(Report.builder()
-                                    .withKey("shuntCompensatorNotDeleted")
-                                    .withDefaultMessage("Shunt compensator with id=${id} not found in the network")
-                                    .withValue("id", mcsInfo.getId())
+                            subReportNode.newReportNode()
+                                    .withMessageTemplate("shuntCompensatorNotDeleted", "Shunt compensator with id=${id} not found in the network")
+                                    .withUntypedValue("id", mcsInfo.getId())
                                     .withSeverity(TypedValue.WARN_SEVERITY)
-                                    .build());
+                                    .add();
                             return false;
                         } else {
                             return mcsInfo.isConnectedToHvdc();
@@ -91,6 +87,6 @@ public class EquipmentDeletion extends AbstractModification {
                 .withHvdcLineId(modificationInfos.getEquipmentId())
                 .withShuntCompensatorIds(shuntCompensatorIds)
                 .build();
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
     }
 }
