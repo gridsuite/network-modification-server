@@ -753,6 +753,7 @@ public final class ModificationUtils {
         ReportNode subReportNodeReactiveLimits = null;
         ReportNode subReporterLimits2 = subReportNodeLimits;
         if (subReportNodeLimits == null && !reports.isEmpty()) {
+            subReporterLimits2 = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
             subReporterLimits2.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
             subReporterLimits2.newReportNode()
                     .withMessageTemplate(LIMITS, LIMITS)
