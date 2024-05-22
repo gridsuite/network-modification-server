@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ReactiveCapabilityCurve;
@@ -24,6 +23,8 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
+
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
@@ -65,115 +66,111 @@ public class BatteryModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         Battery battery = ModificationUtils.getInstance().getBattery(network, modificationInfos.getEquipmentId());
         // modify the battery in the network
-        modifyBattery(battery, modificationInfos, subReporter);
+        modifyBattery(battery, modificationInfos, subReportNode);
     }
 
-    private void modifyBattery(Battery battery, BatteryModificationInfos modificationInfos, Reporter subReporter) {
-        subReporter.report(Report.builder()
-                .withKey("batteryModification")
-                .withDefaultMessage("Battery with id=${id} modified :")
-                .withValue("id", modificationInfos.getEquipmentId())
+    private void modifyBattery(Battery battery, BatteryModificationInfos modificationInfos, ReportNode subReportNode) {
+        subReportNode.newReportNode()
+                .withMessageTemplate("batteryModification", "Battery with id=${id} modified :")
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
         if (modificationInfos.getEquipmentName() != null && modificationInfos.getEquipmentName().getValue() != null) {
-            ModificationUtils.getInstance().applyElementaryModifications(battery::setName, () -> battery.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
+            ModificationUtils.getInstance().applyElementaryModifications(battery::setName, () -> battery.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReportNode, "Name");
         }
 
-        modifyBatteryLimitsAttributes(modificationInfos, battery, subReporter);
-        modifyBatterySetpointsAttributes(modificationInfos, battery, subReporter);
+        modifyBatteryLimitsAttributes(modificationInfos, battery, subReportNode);
+        modifyBatterySetpointsAttributes(modificationInfos, battery, subReportNode);
         ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, battery);
-        PropertiesUtils.applyProperties(battery, subReporter, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(battery, subReportNode, modificationInfos.getProperties());
     }
 
     private void modifyBatterySetpointsAttributes(BatteryModificationInfos modificationInfos,
-                                                  Battery battery, Reporter subReporter) {
-        Report reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getTargetP(), "Active power");
-        Report reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getTargetQ(), "Reactive power");
-        Reporter subReporterSetpoints = null;
+                                                  Battery battery, ReportNode subReportNode) {
+        ReportNode reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetP, battery::getTargetP, modificationInfos.getTargetP(), "Active power");
+        ReportNode reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setTargetQ, battery::getTargetQ, modificationInfos.getTargetQ(), "Reactive power");
+        ReportNode subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
-            subReporterSetpoints = subReporter.createSubReporter(SETPOINTS, SETPOINTS);
-            subReporterSetpoints.report(Report.builder()
-                    .withKey(SETPOINTS)
-                    .withDefaultMessage(SETPOINTS)
+            subReporterSetpoints = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
+            subReporterSetpoints.newReportNode()
+                    .withMessageTemplate(SETPOINTS, SETPOINTS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
             if (reportActivePower != null) {
-                subReporterSetpoints.report(reportActivePower);
+                insertReportNode(subReporterSetpoints, reportActivePower);
             }
             if (reportReactivePower != null) {
-                subReporterSetpoints.report(reportReactivePower);
+                insertReportNode(subReporterSetpoints, reportReactivePower);
             }
         }
-        modifyBatteryActivePowerControlAttributes(modificationInfos, battery, subReporter, subReporterSetpoints);
+        modifyBatteryActivePowerControlAttributes(modificationInfos, battery, subReportNode, subReporterSetpoints);
     }
 
     private void modifyBatteryLimitsAttributes(BatteryModificationInfos modificationInfos,
-                                               Battery battery, Reporter subReporter) {
-        Reporter subReporterLimits = modifyBatteryActiveLimitsAttributes(modificationInfos, battery, subReporter);
-        modifyBatteryReactiveLimitsAttributes(modificationInfos, battery, subReporter, subReporterLimits);
+                                               Battery battery, ReportNode subReportNode) {
+        ReportNode subReportNodeLimits = modifyBatteryActiveLimitsAttributes(modificationInfos, battery, subReportNode);
+        modifyBatteryReactiveLimitsAttributes(modificationInfos, battery, subReportNode, subReportNodeLimits);
     }
 
     private void modifyBatteryReactiveCapabilityCurvePoints(BatteryModificationInfos modificationInfos,
-                                                            Battery battery, Reporter subReporter, Reporter subReporterLimits) {
+                                                            Battery battery, ReportNode subReportNode, ReportNode subReportNodeLimits) {
 
         ReactiveCapabilityCurveAdder adder = battery.newReactiveCapabilityCurve();
         List<ReactiveCapabilityCurveModificationInfos> modificationPoints = modificationInfos.getReactiveCapabilityCurvePoints();
         Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits().getKind() == ReactiveLimitsKind.CURVE ? battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints() : List.of();
-        ModificationUtils.getInstance().modifyReactiveCapabilityCurvePoints(points, modificationPoints, adder, subReporter, subReporterLimits);
+        ModificationUtils.getInstance().modifyReactiveCapabilityCurvePoints(points, modificationPoints, adder, subReportNode, subReportNodeLimits);
     }
 
-    private Reporter modifyBatteryActiveLimitsAttributes(BatteryModificationInfos modificationInfos,
-                                                         Battery battery, Reporter subReporter) {
-        Reporter subReporterLimits = null;
-        Report reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxP(), "Max active power");
-        Report reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinP(), "Min active power");
+    private ReportNode modifyBatteryActiveLimitsAttributes(BatteryModificationInfos modificationInfos,
+                                                         Battery battery, ReportNode subReportNode) {
+        ReportNode subReportNodeLimits = null;
+        ReportNode reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMaxP, battery::getMaxP, modificationInfos.getMaxP(), "Max active power");
+        ReportNode reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, modificationInfos.getMinP(), "Min active power");
         if (reportMaxActivePower != null || reportMinActivePower != null) {
-            subReporterLimits = subReporter.createSubReporter(LIMITS, LIMITS);
-            subReporterLimits.report(Report.builder()
-                    .withKey(LIMITS)
-                    .withDefaultMessage(LIMITS)
+            subReportNodeLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
+            subReportNodeLimits.newReportNode()
+                    .withMessageTemplate(LIMITS, LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
 
-            Reporter subReporterActiveLimits = subReporterLimits.createSubReporter(ACTIVE_LIMITS, ACTIVE_LIMITS);
-            subReporterActiveLimits.report(Report.builder()
-                    .withKey(ACTIVE_LIMITS)
-                    .withDefaultMessage(ACTIVE_LIMITS)
+            ReportNode subReporterActiveLimits = subReportNodeLimits.newReportNode().withMessageTemplate(ACTIVE_LIMITS, ACTIVE_LIMITS).add();
+            subReporterActiveLimits.newReportNode()
+                    .withMessageTemplate(ACTIVE_LIMITS, ACTIVE_LIMITS)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
             if (reportMaxActivePower != null) {
-                subReporterActiveLimits.report(reportMaxActivePower);
+                insertReportNode(subReporterActiveLimits, reportMaxActivePower);
             }
             if (reportMinActivePower != null) {
-                subReporterActiveLimits.report(reportMinActivePower);
+                insertReportNode(subReporterActiveLimits, reportMinActivePower);
             }
         }
-        return subReporterLimits;
+        return subReportNodeLimits;
     }
 
     private void modifyBatteryReactiveLimitsAttributes(BatteryModificationInfos modificationInfos,
-                                                       Battery battery, Reporter subReporter, Reporter subReporterLimits) {
+                                                       Battery battery, ReportNode subReportNode, ReportNode subReportNodeLimits) {
 
         if (modificationInfos.getReactiveCapabilityCurve() != null) {
             if (Boolean.TRUE.equals(modificationInfos.getReactiveCapabilityCurve().getValue()
                     && modificationInfos.getReactiveCapabilityCurvePoints() != null
                     && !modificationInfos.getReactiveCapabilityCurvePoints().isEmpty())) {
-                modifyBatteryReactiveCapabilityCurvePoints(modificationInfos, battery, subReporter, subReporterLimits);
+                modifyBatteryReactiveCapabilityCurvePoints(modificationInfos, battery, subReportNode, subReportNodeLimits);
             } else if (Boolean.FALSE.equals(modificationInfos.getReactiveCapabilityCurve().getValue())) {
-                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinQ(), modificationInfos.getMaxQ(), battery, subReporter, subReporterLimits);
+                ModificationUtils.getInstance().modifyMinMaxReactiveLimits(modificationInfos.getMinQ(), modificationInfos.getMaxQ(), battery, subReportNode, subReportNodeLimits);
             }
         }
     }
 
-    private Reporter modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,
-                                                               Battery battery, Reporter subReporter, Reporter subReporterSetpoints) {
+    private ReportNode modifyBatteryActivePowerControlAttributes(BatteryModificationInfos modificationInfos,
+                                                               Battery battery, ReportNode subReportNode, ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
-        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReporter, subReporterSetpoints);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
     }
 }
 

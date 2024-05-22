@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -37,27 +36,26 @@ public class LoadModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         Load load = network.getLoad(modificationInfos.getEquipmentId());
         // modify the load in the network
-        modifyLoad(load, subReporter);
+        modifyLoad(load, subReportNode);
     }
 
-    private void modifyLoad(Load load, Reporter subReporter) {
-        subReporter.report(Report.builder()
-            .withKey("loadModification")
-            .withDefaultMessage("Load with id=${id} modified :")
-            .withValue("id", modificationInfos.getEquipmentId())
+    private void modifyLoad(Load load, ReportNode subReportNode) {
+        subReportNode.newReportNode()
+            .withMessageTemplate("loadModification", "Load with id=${id} modified :")
+            .withUntypedValue("id", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
+            .add();
 
-        ModificationUtils.getInstance().applyElementaryModifications(load::setName, () -> load.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReporter, "Type");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getP0(), subReporter, "Constant active power");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getQ0(), subReporter, "Constant reactive power");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setName, () -> load.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReportNode, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReportNode, "Type");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getP0(), subReportNode, "Constant active power");
+        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getQ0(), subReportNode, "Constant reactive power");
 
         // properties
-        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(load, subReportNode, modificationInfos.getProperties());
 
         ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, load);
     }

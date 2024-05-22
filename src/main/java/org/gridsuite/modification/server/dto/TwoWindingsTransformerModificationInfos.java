@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -64,7 +63,10 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Two windings transformer modification ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Two windings transformer modification ${twoWindingsTransformerId}")
+                .withUntypedValue("twoWindingsTransformerId", getEquipmentId())
+                .add();
     }
 }
