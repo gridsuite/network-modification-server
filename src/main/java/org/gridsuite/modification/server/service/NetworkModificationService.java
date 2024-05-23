@@ -282,6 +282,21 @@ public class NetworkModificationService {
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
+    @Transactional
+    public Optional<NetworkModificationResult> insertGroupModifications(UUID targetGroupUuid,
+                                                                      UUID networkUuid, String variantId,
+                                                                      ReportInfos reportInfos, List<UUID> modificationsUuids) {
+        List<ModificationInfos> allModificationInfos = new ArrayList<>();
+
+        for (UUID modificationUuid : modificationsUuids) {
+            List<ModificationInfos> modificationInfos = networkModificationRepository.getActiveModificationsInfos(modificationUuid);
+            allModificationInfos.addAll(modificationInfos);
+        }
+
+        networkModificationRepository.saveModificationInfos(targetGroupUuid, allModificationInfos);
+        return applyModifications(networkUuid, variantId, reportInfos, allModificationInfos);
+    }
+
     public UUID createModificationInGroup(@NonNull ModificationInfos modificationsInfos) {
         UUID groupUuid = UUID.randomUUID();
         networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationsInfos));
@@ -290,6 +305,16 @@ public class NetworkModificationService {
 
     public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
         return networkModificationRepository.duplicateModifications(sourceModificationUuids);
+    }
+
+    @Transactional
+    public UUID duplicateModificationsInGroup(List<UUID> sourceModificationUuids) {
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationInfos> modificationInfos = networkModificationRepository
+                .getModificationsInfos(duplicateModifications(sourceModificationUuids)
+                .values().stream().toList());
+        networkModificationRepository.saveModificationInfos(groupUuid, modificationInfos);
+        return groupUuid;
     }
 
     @Transactional
@@ -308,5 +333,9 @@ public class NetworkModificationService {
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
         return networkModificationRepository.getModificationsMetadata(ids);
+    }
+
+    public List<GroupModificationMetadata> getGroupModificationsMetadata(List<UUID> ids) {
+        return networkModificationRepository.getGroupModificationsMetadata(ids);
     }
 }

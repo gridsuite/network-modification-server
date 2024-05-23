@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.GroupModificationMetadata;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
@@ -432,6 +433,16 @@ public class NetworkModificationRepository {
                     .type(ModificationType.valueOf(entity.getType()))
                     .build())
             .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<GroupModificationMetadata> getGroupModificationsMetadata(List<UUID> uuids) {
+        return modificationGroupRepository.findAllById(uuids)
+                .stream()
+                .map(modificationGroupEntity -> GroupModificationMetadata.builder()
+                        .id(modificationGroupEntity.getId())
+                        .build())
+                .toList();
     }
 
     private void deleteModifications(List<ModificationEntity> modificationEntities) {

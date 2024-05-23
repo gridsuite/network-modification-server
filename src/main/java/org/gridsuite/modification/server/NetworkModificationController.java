@@ -36,7 +36,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class NetworkModificationController {
 
     enum GroupModificationAction {
-        MOVE, COPY
+        MOVE, COPY, INSERT
     }
 
     private final NetworkModificationService networkModificationService;
@@ -92,6 +92,8 @@ public class NetworkModificationController {
         switch (action) {
             case COPY:
                 return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
+            case INSERT:
+                return ResponseEntity.ok().body(networkModificationService.insertGroupModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
@@ -225,6 +227,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.duplicateModifications(sourceModificationUuids));
     }
 
+    @PostMapping(value = "/groups/network-modifications", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Duplicate some modifications with group ownership")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids mapped with their source uuid")})
+    public ResponseEntity<UUID> duplicateModificationsInGroup(@Parameter(description = "source modifications uuids list to duplicate") @RequestBody List<UUID> sourceModificationUuids) {
+        return ResponseEntity.ok().body(networkModificationService.duplicateModificationsInGroup(sourceModificationUuids));
+    }
+
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
@@ -266,5 +275,12 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "List of metadata used to describe modification elements")
     public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
+    }
+
+    @GetMapping(value = "groups/network-modifications/metadata", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get modifications group metadata")
+    @ApiResponse(responseCode = "200", description = "List of metadata used to describe group of modifications elements")
+    public ResponseEntity<List<GroupModificationMetadata>> getGroupModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getGroupModificationsMetadata(ids));
     }
 }
