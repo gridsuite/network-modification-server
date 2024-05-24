@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -329,7 +329,9 @@ public class BuildTest {
             List.of(TEST_GROUP_ID),
             List.of(TEST_SUB_REPORTER_ID_1),
             new HashSet<>());
-        String expectedBody = mapper.writeValueAsString(new ReporterModel(TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT, TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT));
+        String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
+                .withMessageTemplate(TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT, TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT)
+                .build());
 
         // Group does not exist
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";

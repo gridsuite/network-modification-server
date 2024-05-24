@@ -7,9 +7,8 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
@@ -24,6 +23,7 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -64,29 +64,28 @@ public class ShuntCompensatorModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         ShuntCompensator shuntCompensator = network.getShuntCompensator(modificationInfos.getEquipmentId());
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
 
-        subReporter.report(Report.builder()
-                .withKey("shuntCompensatorModification")
-                .withDefaultMessage("Shunt Compensator with id=${id} modified :")
-                .withValue("id", modificationInfos.getEquipmentId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("shuntCompensatorModification", "Shunt Compensator with id=${id} modified :")
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
-        ModificationUtils.getInstance().applyElementaryModifications(shuntCompensator::setName, () -> shuntCompensator.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(shuntCompensator::setName, () -> shuntCompensator.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReportNode, "Name");
 
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.LINEAR) {
-            applyModificationOnLinearModel(subReporter, shuntCompensator, voltageLevel);
+            applyModificationOnLinearModel(subReportNode, shuntCompensator, voltageLevel);
         }
 
         ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, shuntCompensator);
-        PropertiesUtils.applyProperties(shuntCompensator, subReporter, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties());
 
     }
 
-    private void modifyMaximumSectionCount(List<Report> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {
+    private void modifyMaximumSectionCount(List<ReportNode> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {
         if (modificationInfos.getMaximumSectionCount() != null) {
             var maximumSectionCount = modificationInfos.getMaximumSectionCount().getValue();
             if (modificationInfos.getMaxSusceptance() == null && modificationInfos.getMaxQAtNominalV() == null) {
@@ -97,7 +96,7 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
     }
 
-    private void modifySectionCount(List<Report> reports, ShuntCompensator shuntCompensator) {
+    private void modifySectionCount(List<ReportNode> reports, ShuntCompensator shuntCompensator) {
         if (modificationInfos.getSectionCount() != null) {
             var newSectionCount = modificationInfos.getSectionCount().getValue();
             reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensator.getSectionCount(), newSectionCount, "Section count"));
@@ -105,8 +104,8 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
     }
 
-    private void applyModificationOnLinearModel(Reporter subReporter, ShuntCompensator shuntCompensator, VoltageLevel voltageLevel) {
-        List<Report> reports = new ArrayList<>();
+    private void applyModificationOnLinearModel(ReportNode subReportNode, ShuntCompensator shuntCompensator, VoltageLevel voltageLevel) {
+        List<ReportNode> reports = new ArrayList<>();
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
         double oldSusceptancePerSection = model.getBPerSection();
@@ -165,10 +164,10 @@ public class ShuntCompensatorModification extends AbstractModification {
 
         reportSwitchedOnAndPerSectionValues(reports, oldQAtNominalV, oldSwitchedOnQAtNominalV, oldSusceptancePerSection, oldSwitchedOnSusceptance, oldMaxQAtNominalV, sectionCount, maximumSectionCount);
 
-        reports.forEach(subReporter::report);
+        reports.forEach(report -> insertReportNode(subReportNode, report));
     }
 
-    private void reportSwitchedOnAndPerSectionValues(List<Report> reports, double oldQAtNominalV, double oldSwitchedOnQAtNominalV, double oldSusceptancePerSection, double oldSwitchedOnSusceptance, double oldMaxQAtNominalV, int sectionCount, int maximumSectionCount) {
+    private void reportSwitchedOnAndPerSectionValues(List<ReportNode> reports, double oldQAtNominalV, double oldSwitchedOnQAtNominalV, double oldSusceptancePerSection, double oldSwitchedOnSusceptance, double oldMaxQAtNominalV, int sectionCount, int maximumSectionCount) {
         if (modificationInfos.getMaxQAtNominalV() != null) {
             double newQatNominalV = modificationInfos.getMaxQAtNominalV().getValue() / maximumSectionCount;
             double newSwitchedOnQAtNominalV = newQatNominalV * sectionCount;

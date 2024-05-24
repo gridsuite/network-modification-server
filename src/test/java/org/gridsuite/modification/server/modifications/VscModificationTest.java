@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.network.*;
@@ -227,7 +227,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
         modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
         VscModification vscModification = new VscModification(modificationInfos);
-        Reporter subReporter = new Reporter.NoOpImpl();
+        ReportNode subReporter = ReportNode.NO_OP;
         ComputationManager computationManager = new LocalComputationManager();
         vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
 
@@ -252,7 +252,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         modificationInfos.setDroop(null);
         modificationInfos.setP0(null);
         VscModification vscModification = new VscModification(modificationInfos);
-        Reporter subReporter = new Reporter.NoOpImpl();
+        ReportNode subReporter = ReportNode.NO_OP;
         ComputationManager computationManager = new LocalComputationManager();
         vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
         HvdcLine hvdcLine = networkWitoutExt.getHvdcLine("hvdcLine");
@@ -307,7 +307,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .withOprFromCS1toCS2(10)
                 .withOprFromCS2toCS1(12)
                 .add();
-        Reporter subReporter = new Reporter.NoOpImpl();
+        ReportNode subReporter = ReportNode.NO_OP;
         ComputationManager computationManager = new LocalComputationManager();
         VscModification vscModification = new VscModification(modificationInfos);
         vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
@@ -324,7 +324,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
         modificationInfos.setConverterStation1(emptyConverterStation); // no change on converter station
         VscModification vscModification = new VscModification(modificationInfos);
-        Reporter subReporter = new Reporter.NoOpImpl();
+        ReportNode subReporter = ReportNode.NO_OP;
         ComputationManager computationManager = new LocalComputationManager();
         vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
         assertDoesNotThrow(() -> vscModification.apply(networkWitoutExt, true, computationManager, subReporter));
