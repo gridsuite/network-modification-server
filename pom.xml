@@ -44,12 +44,11 @@
     </developers>
 
     <properties>
-        <powsybl-ws-dependencies.version>2.9.0</powsybl-ws-dependencies.version>
+        <gridsuite-dependencies.version>29</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
-        <gridsuite-filter.version>1.0.7</gridsuite-filter.version>
     </properties>
 
     <build>
@@ -84,19 +83,13 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.gridsuite</groupId>
-                <artifactId>gridsuite-filter</artifactId>
-                <version>${gridsuite-filter.version}</version>
-            </dependency>
-
             <!-- overrides of imports -->
 
             <!-- imports -->
             <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-ws-dependencies</artifactId>
-                <version>${powsybl-ws-dependencies.version}</version>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-dependencies</artifactId>
+                <version>${gridsuite-dependencies.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

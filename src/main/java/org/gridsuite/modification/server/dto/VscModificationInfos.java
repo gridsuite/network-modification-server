@@ -1,8 +1,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.HvdcLine;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -71,7 +70,10 @@ public class VscModificationInfos extends BasicEquipmentModificationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Vsc modification ${vscId}", "vscId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Vsc modification ${vscId}")
+                .withUntypedValue("vscId", getEquipmentId())
+                .add();
     }
 }

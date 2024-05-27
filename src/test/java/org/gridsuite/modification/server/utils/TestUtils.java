@@ -11,8 +11,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
@@ -121,7 +120,7 @@ public final class TestUtils {
     }
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {
-        ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
         verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
@@ -134,15 +133,15 @@ public final class TestUtils {
     }
 
     public static void assertLogMessageWithoutRank(String expectedMessage, String reportKey, ReportService reportService) {
-        ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
         verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
         assertNotNull(reporterCaptor.getValue());
         assertTrue(assertMessageFoundFromReporter(expectedMessage, reportKey, reporterCaptor.getValue()));
     }
 
-    private static boolean assertMessageFoundFromReporter(String expectedMessage, String reportKey, ReporterModel reporterModel) {
-        for (Report report : reporterModel.getReports()) {
-            if (report.getReportKey().equals(reportKey)) {
+    private static boolean assertMessageFoundFromReporter(String expectedMessage, String reportKey, ReportNode reporterModel) {
+        for (ReportNode report : reporterModel.getChildren()) {
+            if (report.getMessageKey().equals(reportKey)) {
                 String message = formatReportMessage(report, reporterModel);
                 if (message.trim().equals(expectedMessage)) {
                     return true;
@@ -151,21 +150,21 @@ public final class TestUtils {
         }
 
         boolean foundInSubReporters = false;
-        Iterator<ReporterModel> reportersIterator = reporterModel.getSubReporters().iterator();
+        Iterator<ReportNode> reportersIterator = reporterModel.getChildren().iterator();
         while (!foundInSubReporters && reportersIterator.hasNext()) {
             foundInSubReporters = assertMessageFoundFromReporter(expectedMessage, reportKey, reportersIterator.next());
         }
         return foundInSubReporters;
     }
 
-    private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel, int rank) {
+    private static Optional<String> getMessageFromReporter(String reportKey, ReportNode reporterModel, int rank) {
         Optional<String> message = Optional.empty();
 
-        Iterator<Report> reportsIterator = reporterModel.getReports().iterator();
+        Iterator<ReportNode> reportsIterator = reporterModel.getChildren().iterator();
         int nbTimes = 0;
         while (message.isEmpty() && reportsIterator.hasNext()) {
-            Report report = reportsIterator.next();
-            if (report.getReportKey().equals(reportKey)) {
+            ReportNode report = reportsIterator.next();
+            if (report.getMessageKey().equals(reportKey)) {
                 nbTimes++;
                 if (nbTimes == rank) {
                     message = Optional.of(formatReportMessage(report, reporterModel));
@@ -173,7 +172,7 @@ public final class TestUtils {
             }
         }
 
-        Iterator<ReporterModel> reportersIterator = reporterModel.getSubReporters().iterator();
+        Iterator<ReportNode> reportersIterator = reporterModel.getChildren().iterator();
         while (message.isEmpty() && reportersIterator.hasNext()) {
             message = getMessageFromReporter(reportKey, reportersIterator.next(), rank);
         }
@@ -181,8 +180,8 @@ public final class TestUtils {
         return message;
     }
 
-    private static String formatReportMessage(Report report, ReporterModel reporterModel) {
-        return new StringSubstitutor(reporterModel.getTaskValues()).replace(new StringSubstitutor(report.getValues()).replace(report.getDefaultMessage()));
+    private static String formatReportMessage(ReportNode report, ReportNode reporterModel) {
+        return new StringSubstitutor(reporterModel.getValues()).replace(new StringSubstitutor(report.getValues()).replace(report.getMessageTemplate()));
     }
 
     public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {

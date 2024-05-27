@@ -8,9 +8,9 @@ package org.gridsuite.modification.server;
 
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.ReporterModelDeserializer;
-import com.powsybl.commons.reporter.ReporterModelJsonModule;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.ReportNodeDeserializer;
+import com.powsybl.commons.report.ReportNodeJsonModule;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ThreeSides;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -51,8 +51,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith({MockitoExtension.class})
 class VoltageInitReportTest {
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
-            .registerModule(new ReporterModelJsonModule())
-            .setInjectableValues(new InjectableValues.Std().addValue(ReporterModelDeserializer.DICTIONARY_VALUE_ID, null));
+            .registerModule(new ReportNodeJsonModule())
+            .setInjectableValues(new InjectableValues.Std().addValue(ReportNodeDeserializer.DICTIONARY_VALUE_ID, null));
 
     @SuppressWarnings("DataFlowIssue") //for .toURI() nullable warning
     @MethodSource("voltageInitModifications")
@@ -70,7 +70,7 @@ class VoltageInitReportTest {
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));
 
         //for internal call to reportService.sendReport(reportInfos.getReportUuid(), reporter);
-        final ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        final ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
 
         final UUID networkUuuid = UUID.fromString("11111111-1111-1111-1111-111111111111");
         final UUID reportUuid = UUID.fromString("88888888-8888-8888-8888-888888888888");
@@ -85,7 +85,7 @@ class VoltageInitReportTest {
             .isEqualTo(resultStatus);
 
         Mockito.verify(reportService, Mockito.times(1)).sendReport(Mockito.eq(reportUuid), reporterCaptor.capture());
-        final ReporterModel result = reporterCaptor.getValue();
+        final ReportNode result = reporterCaptor.getValue();
         log.info("Result = {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result));
         JSONAssert.assertEquals("voltage-init plan logs aggregated",
                 Files.readString(Paths.get(this.getClass().getClassLoader().getResource(logsJsonFile).toURI())),

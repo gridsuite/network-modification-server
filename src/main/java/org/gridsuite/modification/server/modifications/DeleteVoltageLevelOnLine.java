@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.modification.topology.RevertConnectVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.RevertConnectVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Network;
@@ -43,13 +43,13 @@ public class DeleteVoltageLevelOnLine extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         RevertConnectVoltageLevelOnLineBuilder builder = new RevertConnectVoltageLevelOnLineBuilder();
         RevertConnectVoltageLevelOnLine algo = builder.withLine1Id(modificationInfos.getLineToAttachTo1Id())
                 .withLine2Id(modificationInfos.getLineToAttachTo2Id())
                 .withLineId(modificationInfos.getReplacingLine1Id())
                 .withLineName(modificationInfos.getReplacingLine1Name())
                 .build();
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
     }
 }

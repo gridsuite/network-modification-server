@@ -8,9 +8,8 @@ package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -60,9 +59,12 @@ public class EquipmentAttributeModificationInfos extends EquipmentModificationIn
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "${EquipmentType} '${EquipmentId}' change",
-            Map.of("EquipmentType", new TypedValue(equipmentType.name(), TypedValue.UNTYPED), "EquipmentId", new TypedValue(getEquipmentId(), TypedValue.UNTYPED)));
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "${EquipmentType} '${EquipmentId}' change")
+                .withTypedValue("EquipmentType", equipmentType.name(), TypedValue.UNTYPED)
+                .withTypedValue("EquipmentId", getEquipmentId(), TypedValue.UNTYPED)
+                .add();
     }
 
     @Override

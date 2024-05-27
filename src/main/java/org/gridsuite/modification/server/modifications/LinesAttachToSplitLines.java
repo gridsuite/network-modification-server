@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLine;
 import com.powsybl.iidm.modification.topology.ReplaceTeePointByVoltageLevelOnLineBuilder;
 import com.powsybl.iidm.network.Network;
@@ -52,7 +52,7 @@ public class LinesAttachToSplitLines extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         ReplaceTeePointByVoltageLevelOnLine algo = new ReplaceTeePointByVoltageLevelOnLineBuilder()
                 .withTeePointLine1(modificationInfos.getLineToAttachTo1Id())
                 .withTeePointLine2(modificationInfos.getLineToAttachTo2Id())
@@ -63,6 +63,6 @@ public class LinesAttachToSplitLines extends AbstractModification {
                 .withNewLine2Id(modificationInfos.getReplacingLine2Id())
                 .withNewLine2Name(modificationInfos.getReplacingLine2Name())
                 .build();
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
     }
 }
