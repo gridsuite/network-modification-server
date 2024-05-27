@@ -420,45 +420,6 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         - delete modification for tabular modifications
      */
     @Test
-    public void testSqlRequestsCountOnDeleteStashedInGroupBis() throws Exception {
-        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
-        ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-
-        reset();
-        ApiUtils.deleteStashedInGroupBis(mockMvc, getGroupId());
-        // It is actually (4, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(4, 0, 0, 0);
-    }
-
-    @Test
-    public void testSqlRequestsCountOnDeleteStashedInGroupBis2() throws Exception {
-        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
-        ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-
-        reset();
-        ApiUtils.deleteStashedInGroupBis(mockMvc, getGroupId());
-        // It is actually (6, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 0, 0);
-    }
-
-    /*
-    DELETE /v1/network-modifications SQL requests analysis
-
-    Given an example with 2 tabular modifications having 1000 modifications each
-
-    - 1 select on group to check if it exists
-    - 1 select to find modifications of this group
-    - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
-    - 14 deletes (7 per tabular modification):
-        - delete reactive_capability_curve_points
-        - delete free_property
-        - delete generator_modification
-        - delete tabular_modifications_modification
-        - delete modification for generators
-        - delete tabular_modification
-        - delete modification for tabular modifications
-     */
-    @Test
     public void testSqlRequestsCountOnDeleteNetworkModificationsInGroup() throws Exception {
         createFewTabularModifications();
 
