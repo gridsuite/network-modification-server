@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Reporter;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -29,10 +29,10 @@ public class VoltageLevelCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
-        ModificationUtils.getInstance().createVoltageLevel(modificationInfos, subReporter, network);
+    public void apply(Network network, ReportNode subReportNode) {
+        ModificationUtils.getInstance().createVoltageLevel(modificationInfos, subReportNode, network);
         // properties
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(voltageLevel, subReporter, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties());
     }
 }

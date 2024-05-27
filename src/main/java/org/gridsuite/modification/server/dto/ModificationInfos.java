@@ -10,8 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -124,7 +123,7 @@ public class ModificationInfos {
     }
 
     @JsonIgnore
-    public Reporter createSubReporter(ReporterModel reporter) {
+    public ReportNode createSubReportNode(ReportNode reportNode) {
         throw new UnsupportedOperationException("TODO");
     }
 

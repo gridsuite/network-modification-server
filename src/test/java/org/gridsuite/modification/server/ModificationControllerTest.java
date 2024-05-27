@@ -389,14 +389,11 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDeleteTryToDeleteEmptyStashedModification() throws Exception {
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
-
-        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("onlyStashed", "true")
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString()))
-                .andExpect(status().isBadRequest());
+    public void testDeleteModificationMissingParamError() throws Exception {
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
+                .andExpect(status().isInternalServerError())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NetworkModificationException))
+                .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
     @Test

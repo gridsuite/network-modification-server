@@ -1,215 +1,243 @@
 {
-  "version" : "1.0",
-  "reportTree" : {
-    "taskKey" : "99999999-9999-9999-9999-999999999999@NetworkModification",
-    "subReporters" : [ {
-      "taskKey" : "VOLTAGE_INIT_MODIFICATION",
-      "reports" : [ {
-        "reportKey" : "vscModificationsResume",
-        "values" : {
-          "reportSeverity" : {
-            "value" : "INFO",
-            "type" : "SEVERITY"
+  "version": "2.0",
+  "reportRoot": {
+    "messageKey": "99999999-9999-9999-9999-999999999999@NetworkModification",
+    "children": [
+      {
+        "messageKey": "VOLTAGE_INIT_MODIFICATION",
+        "children": [
+          {
+            "messageKey" : "vscModificationsResume",
+            "values" : {
+              "reportSeverity" : {
+                "value" : "INFO",
+                "type" : "SEVERITY"
+              },
+              "count" : {
+                "value" : 2
+              }
+            }
           },
-          "count" : {
-            "value" : 2
+          {
+            "messageKey": "GeneratorsModifications",
+            "children": [
+              {
+                "messageKey": "generatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "G1"
+                  }
+                }
+              },
+              {
+                "messageKey": "generatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "G2"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "messageKey": "2WindingsTransformersModifications",
+            "children": [
+              {
+                "messageKey": "2WindingsTransformerNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "2WT1"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "messageKey": "3WindingsTransformersModifications",
+            "children": [
+              {
+                "messageKey": "3WindingsTransformerNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "3WT1"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "messageKey": "StaticVarCompensatorsModifications",
+            "children": [
+              {
+                "messageKey": "staticVarCompensatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "SVC1"
+                  }
+                }
+              },
+              {
+                "messageKey": "staticVarCompensatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "SVC2"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "messageKey": "ShuntCompensatorsModifications",
+            "children": [
+              {
+                "messageKey": "shuntCompensatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "v2shunt"
+                  }
+                }
+              },
+              {
+                "messageKey": "shuntCompensatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "v5shunt"
+                  }
+                }
+              },
+              {
+                "messageKey": "shuntCompensatorNotFound",
+                "values": {
+                  "reportSeverity": {
+                    "value": "WARN",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "v6shunt"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "messageKey": "VscConverterStationsModifications",
+            "children": [
+              {
+                "messageKey": "vscConverterStationModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "VSC1"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "40.0"
+                  },
+                  "fieldName": {
+                    "value": "Reactive power set point"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "500.0"
+                  }
+                }
+              },
+              {
+                "messageKey": "vscConverterStationModification",
+                "values": {
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "id": {
+                    "value": "VSC2"
+                  }
+                }
+              },
+              {
+                "messageKey": "modification-indent1",
+                "values": {
+                  "newValue": {
+                    "value": "224.0"
+                  },
+                  "fieldName": {
+                    "value": "Voltage set point"
+                  },
+                  "reportSeverity": {
+                    "value": "TRACE",
+                    "type": "SEVERITY"
+                  },
+                  "oldValue": {
+                    "value": "0.0"
+                  }
+                }
+              }
+            ]
           }
-        }
-      } ],
-      "subReporters" : [ {
-        "taskKey" : "GeneratorsModifications",
-        "reports" : [ {
-          "reportKey" : "generatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "G1"
-            }
-          }
-        }, {
-          "reportKey" : "generatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "G2"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "2WindingsTransformersModifications",
-        "reports" : [ {
-          "reportKey" : "2WindingsTransformerNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "2WT1"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "3WindingsTransformersModifications",
-        "reports" : [ {
-          "reportKey" : "3WindingsTransformerNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "3WT1"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "StaticVarCompensatorsModifications",
-        "reports" : [ {
-          "reportKey" : "staticVarCompensatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "SVC1"
-            }
-          }
-        }, {
-          "reportKey" : "staticVarCompensatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "SVC2"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "ShuntCompensatorsModifications",
-        "reports" : [ {
-          "reportKey" : "shuntCompensatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "v2shunt"
-            }
-          }
-        }, {
-          "reportKey" : "shuntCompensatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "v5shunt"
-            }
-          }
-        }, {
-          "reportKey" : "shuntCompensatorNotFound",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "WARN",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "v6shunt"
-            }
-          }
-        } ]
-      }, {
-        "taskKey" : "VscConverterStationsModifications",
-        "reports" : [ {
-          "reportKey" : "vscConverterStationModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "VSC1"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "40.0"
-            },
-            "fieldName" : {
-              "value" : "Reactive power set point"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "500.0"
-            }
-          }
-        }, {
-          "reportKey" : "vscConverterStationModification",
-          "values" : {
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "id" : {
-              "value" : "VSC2"
-            }
-          }
-        }, {
-          "reportKey" : "modification-indent1",
-          "values" : {
-            "newValue" : {
-              "value" : "224.0"
-            },
-            "fieldName" : {
-              "value" : "Voltage set point"
-            },
-            "reportSeverity" : {
-              "value" : "TRACE",
-              "type" : "SEVERITY"
-            },
-            "oldValue" : {
-              "value" : "0.0"
-            }
-          }
-        } ]
-      } ]
-    } ]
-  },
-  "dics" : {
-    "default" : {
-      "GeneratorsModifications" : "Generators",
-      "StaticVarCompensatorsModifications" : "Static var compensators",
-      "VscConverterStationsModifications" : "Vsc converter stations",
-      "VOLTAGE_INIT_MODIFICATION" : "Voltage init modification",
-      "staticVarCompensatorNotFound" : "Static var compensator with id=${id} not found",
-      "vscConverterStationModification" : "Vsc converter station with id=${id} modified :",
-      "ShuntCompensatorsModifications" : "Shunt compensators",
-      "2WindingsTransformerNotFound" : "2 windings transformer with id=${id} not found",
-      "99999999-9999-9999-9999-999999999999@NetworkModification" : "99999999-9999-9999-9999-999999999999@NetworkModification",
-      "vscModificationsResume" : "${count} vsc converter station(s) have been modified.",
-      "shuntCompensatorNotFound" : "Shunt compensator with id=${id} not found",
-      "3WindingsTransformerNotFound" : "3 windings transformer with id=${id} not found",
-      "modification-indent1" : "\t${fieldName} : ${oldValue} → ${newValue}",
-      "generatorNotFound" : "Generator with id=${id} not found",
-      "2WindingsTransformersModifications" : "2 windings transformers",
-      "3WindingsTransformersModifications" : "3 windings transformers"
+        ]
+      }
+    ],
+    "dictionaries": {
+      "default": {
+        "GeneratorsModifications": "Generators",
+        "StaticVarCompensatorsModifications": "Static var compensators",
+        "VscConverterStationsModifications": "Vsc converter stations",
+        "VOLTAGE_INIT_MODIFICATION": "Voltage init modification",
+        "staticVarCompensatorNotFound": "Static var compensator with id=${id} not found",
+        "vscConverterStationModification": "Vsc converter station with id=${id} modified :",
+        "ShuntCompensatorsModifications": "Shunt compensators",
+        "2WindingsTransformerNotFound": "2 windings transformer with id=${id} not found",
+        "99999999-9999-9999-9999-999999999999@NetworkModification": "99999999-9999-9999-9999-999999999999@NetworkModification",
+        "vscModificationsResume": "${count} vsc converter station(s) have been modified.",
+        "shuntCompensatorNotFound": "Shunt compensator with id=${id} not found",
+        "3WindingsTransformerNotFound": "3 windings transformer with id=${id} not found",
+        "modification-indent1": "\t${fieldName} : ${oldValue} → ${newValue}",
+        "generatorNotFound": "Generator with id=${id} not found",
+        "2WindingsTransformersModifications": "2 windings transformers",
+        "3WindingsTransformersModifications": "3 windings transformers"
+      }
     }
   }
 }

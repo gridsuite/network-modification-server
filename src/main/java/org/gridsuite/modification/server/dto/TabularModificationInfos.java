@@ -8,8 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import lombok.*;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
@@ -56,8 +55,10 @@ public class TabularModificationInfos extends ModificationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(ModificationType.TABULAR_MODIFICATION.name(), "Tabular modification");
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(ModificationType.TABULAR_CREATION.name(), "Tabular modification")
+                .add();
     }
 
     @Override

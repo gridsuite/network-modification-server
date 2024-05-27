@@ -173,7 +173,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         String lineCreationInfosPermanentLimitNOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitNOK);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine2': permanent limit must be defined and be > 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
+        assertLogMessage("AC Line 'idLine2': permanent limit must be > 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
     }
 
     @Test
