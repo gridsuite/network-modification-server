@@ -36,7 +36,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class NetworkModificationController {
 
     enum GroupModificationAction {
-        MOVE, COPY
+        MOVE, COPY, INSERT
     }
 
     private final NetworkModificationService networkModificationService;
@@ -92,6 +92,8 @@ public class NetworkModificationController {
         switch (action) {
             case COPY:
                 return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
+            case INSERT:
+                return ResponseEntity.ok().body(networkModificationService.insertModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
@@ -216,6 +218,13 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group with the modification has been created")})
     public ResponseEntity<UUID> createModificationInGroup(@RequestBody ModificationInfos modificationsInfos) {
         return ResponseEntity.ok().body(networkModificationService.createModificationInGroup(modificationsInfos));
+    }
+
+    @PostMapping(value = "/composite/network-modifications", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a composite modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
+    public ResponseEntity<UUID> createCompositeModification(@RequestBody ModificationInfos modificationInfos) {
+        return ResponseEntity.ok().body(networkModificationService.createCompositeModification(modificationInfos));
     }
 
     @PostMapping(value = "/network-modifications", consumes = MediaType.APPLICATION_JSON_VALUE)

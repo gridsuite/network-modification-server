@@ -282,10 +282,27 @@ public class NetworkModificationService {
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
+    @Transactional
+    public Optional<NetworkModificationResult> insertModifications(UUID targetGroupUuid,
+                                                                      UUID networkUuid, String variantId,
+                                                                      ReportInfos reportInfos, List<UUID> modificationsUuids) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
+        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
+    }
+
     public UUID createModificationInGroup(@NonNull ModificationInfos modificationsInfos) {
         UUID groupUuid = UUID.randomUUID();
         networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationsInfos));
         return groupUuid;
+    }
+
+    @Transactional
+    public UUID createCompositeModification(@NonNull ModificationInfos modificationInfos) {
+        Map<UUID, UUID> duplicateModifications = networkModificationRepository.duplicateModifications(
+                ((CompositeModificationInfos) modificationInfos).getModificationsList());
+        ((CompositeModificationInfos) modificationInfos).setModificationsList(duplicateModifications.values().stream().toList());
+        return networkModificationRepository.saveCompositeModificationInfos(modificationInfos);
     }
 
     public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {

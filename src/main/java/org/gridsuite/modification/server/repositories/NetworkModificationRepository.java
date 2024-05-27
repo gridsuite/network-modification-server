@@ -69,6 +69,11 @@ public class NetworkModificationRepository {
         saveModificationsNonTransactional(groupUuid, modifications.stream().map(ModificationInfos::toEntity).toList());
     }
 
+    @Transactional
+    public UUID saveCompositeModificationInfos(ModificationInfos modifications) {
+        return modificationRepository.save(modifications.toEntity()).getId();
+    }
+
     private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
         var modificationGroupEntity = this.modificationGroupRepository
             .findById(groupUuid)
@@ -365,6 +370,12 @@ public class NetworkModificationRepository {
                 Function.identity()
             ));
         return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
+        List<UUID> entities = modificationRepository.findModificationIdsByCompositeModificationId(uuids);
+        return entities.stream().map(this::getModificationInfo).toList();
     }
 
     @Transactional(readOnly = true)

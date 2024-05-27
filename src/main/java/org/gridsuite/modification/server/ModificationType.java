@@ -51,7 +51,8 @@ public enum ModificationType {
     CONVERTER_STATION_MODIFICATION(PreloadingStrategy.NONE),
     TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION),
     TABULAR_CREATION(PreloadingStrategy.COLLECTION),
-    BY_FORMULA_MODIFICATION(PreloadingStrategy.COLLECTION);
+    BY_FORMULA_MODIFICATION(PreloadingStrategy.COLLECTION),
+    COMPOSITE_MODIFICATION(PreloadingStrategy.COLLECTION);
 
     private final PreloadingStrategy strategy;
 
