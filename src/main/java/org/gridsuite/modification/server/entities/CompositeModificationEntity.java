@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.CompositeModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,24 +36,6 @@ public class CompositeModificationEntity extends ModificationEntity {
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
         super(compositeModificationInfos);
         assignAttributes(compositeModificationInfos);
-    }
-
-    @Override
-    public CompositeModificationInfos toModificationInfos() {
-        return CompositeModificationInfos.builder()
-                .date(getDate())
-                .uuid(getId())
-                .stashed(getStashed())
-                .messageType(getMessageType())
-                .messageValues(getMessageValues())
-                .modificationsList(getModificationsList())
-                .build();
-    }
-
-    @Override
-    public void update(@NonNull ModificationInfos modificationInfos) {
-        super.update(modificationInfos);
-        assignAttributes((CompositeModificationInfos) modificationInfos);
     }
 
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
