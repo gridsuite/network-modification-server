@@ -45,6 +45,8 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
+                .messageType(getMessageType())
+                .messageValues(getMessageValues())
                 .modificationsList(getModificationsList())
                 .build();
     }

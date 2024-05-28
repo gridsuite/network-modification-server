@@ -93,6 +93,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/composite/network-modifications";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
@@ -460,6 +461,19 @@ public class ModificationControllerTest {
         return modificationList;
     }
 
+    private UUID createCompositeModifications(List<UUID> modificationInfosList) throws Exception {
+        CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
+                .modificationsList(modificationInfosList)
+                .build();
+        MvcResult mvcResult;
+        String switchStatusModificationInfosJson = objectWriter.writeValueAsString(compositeModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+    }
+
     private ModificationInfos createDeletionModification(UUID groupId, IdentifiableType equipmentType, String equipmentName) throws Exception {
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .equipmentType(equipmentType)
@@ -668,6 +682,32 @@ public class ModificationControllerTest {
         assertNotNull(newModificationUuidList);
         Collections.reverse(newModificationUuidList); // swap => reverse order is expected
         assertEquals(modificationUuidList, newModificationUuidList);
+    }
+
+    @Test
+    public void testInsertModificationInSameGroup() throws Exception {
+        // insert composite modifications in a single group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        UUID compositeModificationUuid = createCompositeModifications(modificationUuidList);
+
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(
+                        put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT"
+                                + "&networkUuid=" + TEST_NETWORK_ID
+                                + "&reportUuid=" + TEST_REPORT_ID
+                                + "&reporterId=" + UUID.randomUUID()
+                                + "&variantId=" + NetworkCreation.VARIANT_ID)
+                                .content(objectWriter.writeValueAsString(List.of(compositeModificationUuid)))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertEquals(2, newModificationList.size());
+        assertEquals(modificationUuidList, newModificationUuidList.subList(0, 1));
+        assertThat(newModificationList.get(1)).recursivelyEquals(modificationList.get(0));
     }
 
     @Test
