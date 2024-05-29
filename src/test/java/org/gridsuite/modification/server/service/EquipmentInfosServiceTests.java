@@ -164,7 +164,8 @@ public class EquipmentInfosServiceTests {
                     .build()
         );
         equipmentInfosService.addAllEquipmentInfos(equipmentInfosList);
-        assertEquals(7, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_2).size());
+        // exclude switch since it is not indexed
+        assertEquals(6, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_2).size());
 
         equipmentInfosService.deleteEquipmentInfosList(equipmentInfosList.stream().map(EquipmentInfos::getId).collect(Collectors.toList()), NETWORK_UUID, VARIANT_NAME_2);
         assertEquals(0, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_2).size());
