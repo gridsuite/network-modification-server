@@ -15,8 +15,8 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -42,7 +42,7 @@ public class ModificationEntity {
     private String type;
 
     @Column(name = "date")
-    private ZonedDateTime date;
+    private OffsetDateTime date;
 
     @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))
     @ManyToOne(fetch = FetchType.LAZY)
@@ -61,7 +61,7 @@ public class ModificationEntity {
     @Column(name = "message_values")
     private String messageValues;
 
-    public ModificationEntity(UUID id, String type, ZonedDateTime date, Boolean stashed, String messageType, String messageValues) {
+    public ModificationEntity(UUID id, String type, OffsetDateTime date, Boolean stashed, String messageType, String messageValues) {
         this.id = id;
         this.type = type;
         this.date = date;
@@ -80,7 +80,7 @@ public class ModificationEntity {
             throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
         }
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
-        this.date = ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
+        this.date = OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS);
         // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
         this.stashed = modificationInfos.getStashed();
 

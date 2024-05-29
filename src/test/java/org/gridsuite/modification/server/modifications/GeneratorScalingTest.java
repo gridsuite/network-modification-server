@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.nio.file.Paths;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -186,7 +186,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = GeneratorScalingInfos.builder()
                 .stashed(false)
                 .uuid(GENERATOR_SCALING_ID)
-                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                .date(OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.DELTA_P)
                 .variations(List.of(variation1))
                 .build();

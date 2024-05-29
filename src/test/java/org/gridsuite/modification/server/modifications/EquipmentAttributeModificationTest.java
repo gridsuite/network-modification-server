@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
             .uuid(modificationUuid)
-            .date(ZonedDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
+            .date(OffsetDateTime.of(2021, 2, 19, 0, 0, 0, 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
             .equipmentId("equipmentId")
             .equipmentAttributeName("equipmentAttributeName")
             .equipmentAttributeValue("equipmentAttributeValue")
