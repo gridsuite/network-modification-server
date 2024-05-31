@@ -2,7 +2,7 @@ package com.powsybl.iidm.modification.topology;
 
 import com.powsybl.iidm.network.*;
 
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 public final class HvdcTestNetwork {
@@ -17,7 +17,7 @@ public final class HvdcTestNetwork {
         Objects.requireNonNull(networkFactory);
 
         Network network = networkFactory.createNetwork("hvdctest", "test");
-        network.setCaseDate(OffsetDateTime.parse("2016-06-27T16:34:55.930+02:00").toZonedDateTime());
+        network.setCaseDate(ZonedDateTime.parse("2016-06-27T16:34:55.930+02:00"));
         Substation s1 = network.newSubstation()
                 .setId("S1")
                 .setCountry(Country.FR)

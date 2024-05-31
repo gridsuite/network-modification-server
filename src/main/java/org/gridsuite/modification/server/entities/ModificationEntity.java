@@ -41,7 +41,7 @@ public class ModificationEntity {
     @Column(name = "type")
     private String type;
 
-    @Column(name = "date")
+    @Column(name = "date", columnDefinition = "timestamptz")
     private OffsetDateTime date;
 
     @JoinColumn(name = "groupId", foreignKey = @ForeignKey(name = "group_id_fk_constraint"))

@@ -98,7 +98,7 @@ class VoltageInitReportTest {
         return List.of(
             Arguments.of(ApplicationStatus.ALL_OK, "reports_voltage_init_modification_ok.json", VoltageInitModificationInfos.builder()
                 .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
-                .date(OffsetDateTime.now().ofInstant(Instant.EPOCH, ZoneOffset.UTC))
+                .date(OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
                 .stashed(false)
                 .generators(List.of(
                     VoltageInitGeneratorModificationInfos.builder().generatorId("GTH2").targetV(0.1).build())) //added for test case
