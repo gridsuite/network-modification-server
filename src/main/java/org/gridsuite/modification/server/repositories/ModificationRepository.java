@@ -6,12 +6,6 @@
  */
 package org.gridsuite.modification.server.repositories;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
-import lombok.NonNull;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
@@ -19,6 +13,11 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -42,8 +41,8 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationId(UUID uuid);
 
-    @Query("SELECT m.modificationsList FROM CompositeModificationEntity m WHERE m.id IN :uuid")
-    List<UUID> findModificationIdsByCompositeModificationId(@NonNull List<UUID> uuid);
+    @Query(value = "SELECT cast(modifications_list_id AS VARCHAR) FROM composite_modification_modifications_list WHERE composite_modification_entity_id = :uuid ORDER BY modifications_list_order", nativeQuery = true)
+    List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
     @EntityGraph(attributePaths = {"creations", "creations.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
     Optional<TabularCreationEntity> findTabularCreationWithReactiveCapabilityCurvePointsById(UUID id);

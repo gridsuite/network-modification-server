@@ -1,0 +1,35 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1717148699754-29">
+        <createTable tableName="composite_modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1717148699754-30">
+        <createTable tableName="composite_modification_modifications_list">
+            <column name="composite_modification_entity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_modifications_listPK"/>
+            </column>
+            <column name="modifications_list_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifications_list_order" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_modifications_listPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1717148699754-31">
+        <addUniqueConstraint columnNames="modifications_list_id" constraintName="UC_COMPOSITE_MODIFICATION_MODIFICATIONS_LISTMODIFICATIONS_LIST_" tableName="composite_modification_modifications_list"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1717148699754-47">
+        <addForeignKeyConstraint baseColumnNames="composite_modification_entity_id" baseTableName="composite_modification_modifications_list" constraintName="FKbj0gyqnqohx7iigw5kyrxfw51" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="composite_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1717148699754-48">
+        <addForeignKeyConstraint baseColumnNames="modifications_list_id" baseTableName="composite_modification_modifications_list" constraintName="FKcebq8e9h7kxqmla18w5t5bmfr" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1717148699754-49">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="composite_modification" constraintName="FKnlntmmfbgen7lvhqpjpr53k22" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

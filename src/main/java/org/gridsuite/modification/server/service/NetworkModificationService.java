@@ -299,10 +299,30 @@ public class NetworkModificationService {
 
     @Transactional
     public UUID createCompositeModification(@NonNull ModificationInfos modificationInfos) {
-        Map<UUID, UUID> duplicateModifications = networkModificationRepository.duplicateModifications(
-                ((CompositeModificationInfos) modificationInfos).getModificationsList());
-        ((CompositeModificationInfos) modificationInfos).setModificationsList(duplicateModifications.values().stream().toList());
-        return networkModificationRepository.saveCompositeModificationInfos(modificationInfos);
+        CompositeModificationInfos compositeInfos = (CompositeModificationInfos) modificationInfos;
+        List<ModificationInfos> modificationInfosList = compositeInfos.getCompositeModificationsList();
+
+        // Duplicate modifications and get the duplicated UUIDs
+        Map<UUID, UUID> duplicatedMapListUuids = networkModificationRepository.duplicateModifications(
+                modificationInfosList.stream()
+                        .map(ModificationInfos::getUuid)
+                        .toList()
+        );
+
+        // Fetch duplicated modifications using the duplicated UUIDs and save them
+        List<ModificationInfos> savedDuplicatedModificationInfosList = duplicatedMapListUuids.values().stream()
+                .map(this::getNetworkModification)
+                .peek(modification -> {
+                    UUID savedUuid = networkModificationRepository.saveCompositeModificationInfos(modification);
+                    modification.setUuid(savedUuid);  // Update the UUID
+                })
+                .toList();
+
+        // Set the saved duplicated modifications in compositeInfos
+        compositeInfos.setCompositeModificationsList(savedDuplicatedModificationInfosList);
+
+        // Save and return the composite modification
+        return networkModificationRepository.saveCompositeModificationInfos(compositeInfos);
     }
 
     public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {

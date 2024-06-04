@@ -1,0 +1,81 @@
+/*
+  Copyright (c) 2024, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+package org.gridsuite.modification.server.modifications;
+
+import com.powsybl.commons.PowsyblException;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
+import com.powsybl.iidm.network.Network;
+import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.CompositeModificationInfos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.COMPOSITE_MODIFICATION_ERROR;
+
+/**
+ * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
+ */
+public class CompositeModification extends AbstractModification {
+
+    private final CompositeModificationInfos modificationInfos;
+
+    private static final String COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX = "composite";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CompositeModification.class);
+
+    public CompositeModification(CompositeModificationInfos compositeModificationInfos) {
+        this.modificationInfos = compositeModificationInfos;
+    }
+
+    @Override
+    public void check(Network network) throws NetworkModificationException {
+        if (modificationInfos == null) {
+            throw new NetworkModificationException(COMPOSITE_MODIFICATION_ERROR, "No composite modification to apply !!");
+        }
+    }
+
+    @Override
+    public void apply(Network network, ReportNode subReportNode) {
+        int applicationFailuresCount = 0;
+        for (var modifInfos : modificationInfos.getCompositeModificationsList()) {
+            try {
+                AbstractModification modification = modifInfos.toModification();
+                modification.check(network);
+                modification.apply(network);
+            } catch (PowsyblException e) {
+                applicationFailuresCount++;
+                subReportNode.newReportNode()
+                        .withMessageTemplate(modifInfos.getType().name() + applicationFailuresCount, "${message}")
+                        .withUntypedValue("message", e.getMessage())
+                        .withSeverity(TypedValue.WARN_SEVERITY)
+                        .add();
+                LOGGER.warn(e.getMessage());
+            }
+        }
+
+        if (modificationInfos.getCompositeModificationsList().size() == applicationFailuresCount) {
+            subReportNode.newReportNode()
+                    .withMessageTemplate(COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getType().name() + "Error", "Composite modification: No ${defaultMessage}")
+                    .withSeverity(TypedValue.ERROR_SEVERITY)
+                    .add();
+        } else if (applicationFailuresCount > 0) {
+            subReportNode.newReportNode()
+                    .withMessageTemplate(COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getType().name() + "Warning", "Composite modification: ${modificationsCount} ${defaultMessage} and ${failuresCount} have not been modified")
+                    .withUntypedValue("modificationsCount", modificationInfos.getCompositeModificationsList().size() - applicationFailuresCount)
+                    .withUntypedValue("failuresCount", applicationFailuresCount)
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .add();
+        } else {
+            subReportNode.newReportNode()
+                    .withMessageTemplate(COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getType().name(), "Composite modification: ${modificationsCount} ${defaultMessage}")
+                    .withUntypedValue("modificationsCount", modificationInfos.getCompositeModificationsList().size())
+                    .withSeverity(TypedValue.INFO_SEVERITY)
+                    .add();
+        }
+    }
+}

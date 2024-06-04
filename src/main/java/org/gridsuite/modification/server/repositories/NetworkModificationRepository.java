@@ -374,8 +374,17 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
-        List<UUID> entities = modificationRepository.findModificationIdsByCompositeModificationId(uuids);
-        return entities.stream().map(this::getModificationInfo).toList();
+        List<ModificationInfos> entities = new ArrayList<>();
+        uuids.forEach(uuid -> {
+            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+            List<ModificationInfos> orderedModifications = foundEntities
+                    .stream()
+                    .map(this::getModificationInfo)
+                    .toList();
+            entities.addAll(orderedModifications);
+        }
+        );
+        return entities;
     }
 
     @Transactional(readOnly = true)

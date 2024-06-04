@@ -461,9 +461,9 @@ public class ModificationControllerTest {
         return modificationList;
     }
 
-    private UUID createCompositeModifications(List<UUID> modificationInfosList) throws Exception {
+    private UUID createCompositeModifications(List<ModificationInfos> modificationInfosList) throws Exception {
         CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
-                .modificationsList(modificationInfosList)
+                .compositeModificationsList(modificationInfosList)
                 .build();
         MvcResult mvcResult;
         String switchStatusModificationInfosJson = objectWriter.writeValueAsString(compositeModificationInfos);
@@ -689,7 +689,7 @@ public class ModificationControllerTest {
         // insert composite modifications in a single group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-        UUID compositeModificationUuid = createCompositeModifications(modificationUuidList);
+        UUID compositeModificationUuid = createCompositeModifications(modificationList);
 
         MvcResult mvcResult;
         mvcResult = mockMvc.perform(

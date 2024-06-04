@@ -16,11 +16,12 @@ import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.modifications.AbstractModification;
+import org.gridsuite.modification.server.modifications.CompositeModification;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -33,13 +34,18 @@ import java.util.UUID;
 @ModificationErrorTypeName("COMPOSITE_MODIFICATION_ERROR")
 public class CompositeModificationInfos extends ModificationInfos {
 
-    @Schema(description = "modifications list")
+    @Schema(description = "composite modification list")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<UUID> modificationsList;
+    private List<ModificationInfos> compositeModificationsList;
 
     @Override
     public ModificationEntity toEntity() {
         return new CompositeModificationEntity(this);
+    }
+
+    @Override
+    public AbstractModification toModification() {
+        return new CompositeModification(this);
     }
 
     @Override
