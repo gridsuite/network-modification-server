@@ -44,8 +44,8 @@ public class LoadModification extends AbstractModification {
 
     private void modifyLoad(Load load, ReportNode subReportNode) {
         subReportNode.newReportNode()
-            .withMessageTemplate("loadModification", "Load with id=${id} modified :")
-            .withUntypedValue("id", modificationInfos.getEquipmentId())
+            .withMessageTemplate("loadModification", "Load with id=${equipmentId} modified :")
+            .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .add();
 

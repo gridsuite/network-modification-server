@@ -82,8 +82,8 @@ public class LineCreation extends AbstractModification {
         ModificationUtils.getInstance().createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, withSwitch1, withSwitch2).add();
 
         subReportNode.newReportNode()
-                .withMessageTemplate("lineCreated", "New line with id=${id} created")
-                .withUntypedValue("id", lineCreationInfos.getEquipmentId())
+                .withMessageTemplate("lineCreated", "New line with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", lineCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
     }

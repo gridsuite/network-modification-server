@@ -66,8 +66,8 @@ public class VscModification extends AbstractModification {
 
     private void modifyVsc(@NonNull Network network, @NonNull HvdcLine hvdcLine, VscModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
-                .withMessageTemplate("VscModification", "Vsc with id=${id} modified :")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("VscModification", "Vsc with id=${equipmentId} modified :")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
@@ -221,12 +221,12 @@ public class VscModification extends AbstractModification {
             return;
         }
         ReportNode converterStationReportNode = subReportNode.newReportNode()
-                .withMessageTemplate("Converter Station", "Converter station ${id} modified")
-                .withUntypedValue("id", converterStation.getId())
+                .withMessageTemplate("Converter Station", "Converter station ${equipmentId} modified")
+                .withUntypedValue("equipmentId", converterStation.getId())
                 .add();
         converterStationReportNode.newReportNode()
-                .withMessageTemplate("converter station modification", "Converter Station with id=${id} modified :")
-                .withUntypedValue("id", converterStation.getId())
+                .withMessageTemplate("converter station modification", "Converter Station with id=${equipmentId} modified :")
+                .withUntypedValue("equipmentId", converterStation.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         if (converterStationModificationInfos.getEquipmentName() != null && converterStationModificationInfos.getEquipmentName().getValue() != null) {

@@ -66,8 +66,8 @@ public class EquipmentAttributeModification extends AbstractModification {
             if (Boolean.TRUE.equals(aSwitch.isOpen() != (Boolean) attributeValue)) {
                 aSwitch.setOpen((Boolean) attributeValue);
                 reportNode.newReportNode()
-                    .withMessageTemplate("switchChanged", "${operation} switch '${id}' in voltage level ${voltageLevelId}")
-                    .withUntypedValue("id", aSwitch.getId())
+                    .withMessageTemplate("switchChanged", "${operation} switch '${switchId}' in voltage level ${voltageLevelId}")
+                    .withUntypedValue("switchId", aSwitch.getId())
                     .withUntypedValue("operation", Boolean.TRUE.equals(attributeValue) ? "Opening" : "Closing")
                     .withUntypedValue("voltageLevelId", aSwitch.getVoltageLevel().getId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
@@ -83,8 +83,8 @@ public class EquipmentAttributeModification extends AbstractModification {
         if (attributeName.equals("targetP")) {
             generator.setTargetP((Double) attributeValue);
             reportNode.newReportNode()
-                .withMessageTemplate("generatorChanged", "Generator with id=${id} targetP changed")
-                .withUntypedValue("id", generator.getId())
+                .withMessageTemplate("generatorChanged", "Generator with id=${equipmentId} targetP changed")
+                .withUntypedValue("equipmentId", generator.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         } else {
@@ -97,8 +97,8 @@ public class EquipmentAttributeModification extends AbstractModification {
         if (attributeName.equals("operatingStatus")) {
             line.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.valueOf((String) attributeValue)).add();
             reportNode.newReportNode()
-                .withMessageTemplate("lineStatusChanged", "Branch with id=${id} status changed")
-                .withUntypedValue("id", line.getId())
+                .withMessageTemplate("lineStatusChanged", "Branch with id=${equipmentId} status changed")
+                .withUntypedValue("equipmentId", line.getId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         } else {
@@ -115,11 +115,11 @@ public class EquipmentAttributeModification extends AbstractModification {
             case "ratioTapChanger.tapPosition":
                 transformer.getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
                 reportKey = "ratioTapPositionChanged";
-                reportDefaultMessage = "2WT with id=${id} ratio tap changer position changed";
+                reportDefaultMessage = "2WT with id=${equipmentId} ratio tap changer position changed";
                 break;
             case "phaseTapChanger.tapPosition":
                 reportKey = "phaseTapPositionChanged";
-                reportDefaultMessage = "2WT with id=${id} phase tap changer position changed";
+                reportDefaultMessage = "2WT with id=${equipmentId} phase tap changer position changed";
                 break;
             default:
                 throw NetworkModificationException.createEquipementAttributeNotEditable(transformer.getType(), attributeName);
@@ -127,7 +127,7 @@ public class EquipmentAttributeModification extends AbstractModification {
 
         reportNode.newReportNode()
             .withMessageTemplate(reportKey, reportDefaultMessage)
-            .withUntypedValue("id", transformer.getId())
+            .withUntypedValue("equipmentId", transformer.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .add();
     }
@@ -141,32 +141,32 @@ public class EquipmentAttributeModification extends AbstractModification {
             case "ratioTapChanger1.tapPosition":
                 transformer.getLeg1().getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
                 reportKey = "ratioTapChanger1.tapPosition";
-                reportDefaultMessage = "3WT with id=${id} ratio tap changer 1 position changed";
+                reportDefaultMessage = "3WT with id=${equipmentId} ratio tap changer 1 position changed";
                 break;
             case "ratioTapChanger2.tapPosition":
                 transformer.getLeg2().getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
                 reportKey = "ratioTapChanger2.tapPosition";
-                reportDefaultMessage = "3WT with id=${id} ratio tap changer 2 position changed";
+                reportDefaultMessage = "3WT with id=${equipmentId} ratio tap changer 2 position changed";
                 break;
             case "ratioTapChanger3.tapPosition":
                 transformer.getLeg3().getOptionalRatioTapChanger().ifPresent(r -> r.setTapPosition((Integer) attributeValue));
                 reportKey = "ratioTapChanger3.tapPosition";
-                reportDefaultMessage = "3WT with id=${id} ratio tap changer 3 position changed";
+                reportDefaultMessage = "3WT with id=${equipmentId} ratio tap changer 3 position changed";
                 break;
             case "phaseTapChanger1.tapPosition":
                 transformer.getLeg1().getOptionalPhaseTapChanger().ifPresent(p -> p.setTapPosition((Integer) attributeValue));
                 reportKey = "phaseTapChanger1.tapPosition";
-                reportDefaultMessage = "3WT with id=${id} phase tap changer 1 position changed";
+                reportDefaultMessage = "3WT with id=${equipmentId} phase tap changer 1 position changed";
                 break;
             case "phaseTapChanger2.tapPosition":
                 transformer.getLeg2().getOptionalPhaseTapChanger().ifPresent(p -> p.setTapPosition((Integer) attributeValue));
                 reportKey = "phaseTapChanger2.tapPosition";
-                reportDefaultMessage = "3WT with id=${id} phase tap changer 2 position changed";
+                reportDefaultMessage = "3WT with id=${equipmentId} phase tap changer 2 position changed";
                 break;
             case "phaseTapChanger3.tapPosition":
                 transformer.getLeg3().getOptionalPhaseTapChanger().ifPresent(p -> p.setTapPosition((Integer) attributeValue));
                 reportKey = "phaseTapChanger3.tapPosition";
-                reportDefaultMessage = "3WT with id=${id} phase tap changer 3 position changed";
+                reportDefaultMessage = "3WT with id=${equipmentId} phase tap changer 3 position changed";
                 break;
             default:
                 throw NetworkModificationException.createEquipementAttributeNotEditable(transformer.getType(), attributeName);
@@ -174,7 +174,7 @@ public class EquipmentAttributeModification extends AbstractModification {
 
         reportNode.newReportNode()
             .withMessageTemplate(reportKey, reportDefaultMessage)
-            .withUntypedValue("id", transformer.getId())
+            .withUntypedValue("equipmentId", transformer.getId())
             .withSeverity(TypedValue.INFO_SEVERITY)
             .add();
     }

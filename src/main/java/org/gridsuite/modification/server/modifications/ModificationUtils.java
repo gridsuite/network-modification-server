@@ -361,8 +361,8 @@ public final class ModificationUtils {
         });
 
         subReportNode.newReportNode()
-                .withMessageTemplate("voltageLevelCreated", "New voltage level with id=${id} created")
-                .withUntypedValue("id", voltageLevelCreationInfos.getEquipmentId())
+                .withMessageTemplate("voltageLevelCreated", "New voltage level with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", voltageLevelCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
     }
@@ -591,8 +591,8 @@ public final class ModificationUtils {
         if (!modificationInfos.isConnected()) {
             injection.getTerminal().disconnect();
             subReportNode.newReportNode()
-                    .withMessageTemplate("equipmentDisconnected", "Equipment with id=${id} disconnected")
-                    .withUntypedValue("id", modificationInfos.getEquipmentId())
+                    .withMessageTemplate("equipmentDisconnected", "Equipment with id=${equipmentId} disconnected")
+                    .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
@@ -621,16 +621,16 @@ public final class ModificationUtils {
         if (!modificationInfos.isConnected1()) {
             branch.getTerminal1().disconnect();
             subReportNode.newReportNode()
-                    .withMessageTemplate("terminal1Disconnected", "Equipment with id=${id} disconnected on side 1")
-                    .withUntypedValue("id", modificationInfos.getEquipmentId())
+                    .withMessageTemplate("terminal1Disconnected", "Equipment with id=${equipmentId} disconnected on side 1")
+                    .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
         if (!modificationInfos.isConnected2()) {
             branch.getTerminal2().disconnect();
             subReportNode.newReportNode()
-                    .withMessageTemplate("terminal2Disconnected", "Equipment with id=${id} disconnected on side 2")
-                    .withUntypedValue("id", modificationInfos.getEquipmentId())
+                    .withMessageTemplate("terminal2Disconnected", "Equipment with id=${equipmentId} disconnected on side 2")
+                    .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }

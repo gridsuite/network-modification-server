@@ -58,8 +58,8 @@ public class LineModificationInfos extends BranchModificationInfos {
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Line modification ${lineId}")
-                .withUntypedValue("lineId", getEquipmentId())
+                .withMessageTemplate(getType().name(), "Line modification ${equipmentId}")
+                .withUntypedValue("equipmentId", getEquipmentId())
                 .add();
     }
 }

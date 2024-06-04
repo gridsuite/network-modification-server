@@ -40,7 +40,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
     protected void modifyBranch(Branch<?> branch, BranchModificationInfos branchModificationInfos, ReportNode subReportNode, String reporterKey, String reporterDefaultMessage) {
         subReportNode.newReportNode()
                 .withMessageTemplate(reporterKey, reporterDefaultMessage)
-                .withUntypedValue("id", branchModificationInfos.getEquipmentId())
+                .withUntypedValue("equipmentId", branchModificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         if (branchModificationInfos.getEquipmentName() != null) {

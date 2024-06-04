@@ -62,8 +62,8 @@ public class ShuntCompensatorModificationInfos extends InjectionModificationInfo
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Shunt compensator modification ${shuntCompensatorId}")
-                .withUntypedValue("shuntCompensatorId", this.getEquipmentId())
+                .withMessageTemplate(getType().name(), "Shunt compensator modification ${equipmentId}")
+                .withUntypedValue("equipmentId", this.getEquipmentId())
                 .add();
     }
 }

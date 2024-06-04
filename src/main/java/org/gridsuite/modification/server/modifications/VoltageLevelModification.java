@@ -78,8 +78,8 @@ public class VoltageLevelModification extends AbstractModification {
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getEquipmentId());
 
         subReportNode.newReportNode()
-                .withMessageTemplate("voltageLevelModification", "Voltage level with id=${id} modified :")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("voltageLevelModification", "Voltage level with id=${equipmentId} modified :")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 

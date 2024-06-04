@@ -91,7 +91,7 @@
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
-                  "id": {
+                  "svcId": {
                     "value": "SVC1"
                   }
                 }
@@ -103,7 +103,7 @@
                     "value": "WARN",
                     "type": "SEVERITY"
                   },
-                  "id": {
+                  "svcId": {
                     "value": "SVC2"
                   }
                 }
@@ -225,16 +225,16 @@
         "StaticVarCompensatorsModifications": "Static var compensators",
         "VscConverterStationsModifications": "Vsc converter stations",
         "VOLTAGE_INIT_MODIFICATION": "Voltage init modification",
-        "staticVarCompensatorNotFound": "Static var compensator with id=${id} not found",
-        "vscConverterStationModification": "Vsc converter station with id=${id} modified :",
+        "staticVarCompensatorNotFound": "Static var compensator with id=${svcId} not found",
+        "vscConverterStationModification": "Vsc converter station with id=${equipmentId} modified :",
         "ShuntCompensatorsModifications": "Shunt compensators",
-        "2WindingsTransformerNotFound": "2 windings transformer with id=${id} not found",
+        "2WindingsTransformerNotFound": "2 windings transformer with id=${equipmentId} not found",
         "99999999-9999-9999-9999-999999999999@NetworkModification": "99999999-9999-9999-9999-999999999999@NetworkModification",
         "vscModificationsResume": "${count} vsc converter station(s) have been modified.",
-        "shuntCompensatorNotFound": "Shunt compensator with id=${id} not found",
-        "3WindingsTransformerNotFound": "3 windings transformer with id=${id} not found",
+        "shuntCompensatorNotFound": "Shunt compensator with id=${equipmentId} not found",
+        "3WindingsTransformerNotFound": "3 windings transformer with id=${equipmentId} not found",
         "modification-indent1": "\t${fieldName} : ${oldValue} → ${newValue}",
-        "generatorNotFound": "Generator with id=${id} not found",
+        "generatorNotFound": "Generator with id=${equipmentId} not found",
         "2WindingsTransformersModifications": "2 windings transformers",
         "3WindingsTransformersModifications": "3 windings transformers"
       }

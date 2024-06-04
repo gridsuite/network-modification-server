@@ -55,8 +55,8 @@ public class LoadCreation extends AbstractModification {
         } else {
             createLoadInBusBreaker(voltageLevel, modificationInfos);
             subReporter.newReportNode()
-                .withMessageTemplate("loadCreated", "New load with id=${id} created")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("loadCreated", "New load with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         }

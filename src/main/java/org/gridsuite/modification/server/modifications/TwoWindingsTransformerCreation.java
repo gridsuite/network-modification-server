@@ -196,8 +196,8 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         var twt = createTwoWindingsTransformerAdder(voltageLevel1, voltageLevel2, twoWindingsTransformerCreationInfos, withSwitch1, withSwitch2).add();
         addTapChangersToTwoWindingsTransformer(network, twoWindingsTransformerCreationInfos, twt);
         subReportNode.newReportNode()
-                .withMessageTemplate("twoWindingsTransformerCreated", "New two windings transformer with id=${id} created")
-                .withUntypedValue("id", twoWindingsTransformerCreationInfos.getEquipmentId())
+                .withMessageTemplate("twoWindingsTransformerCreated", "New two windings transformer with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", twoWindingsTransformerCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 

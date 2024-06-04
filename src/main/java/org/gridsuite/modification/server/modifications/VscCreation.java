@@ -115,8 +115,8 @@ public class VscCreation extends AbstractModification {
         reportHvdcLineInfos(subReportNode);
 
         subReportNode.newReportNode()
-                .withMessageTemplate("vscCreated", "New vsc with id=${id} created")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("vscCreated", "New vsc with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
@@ -175,8 +175,8 @@ public class VscCreation extends AbstractModification {
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
 
         converterStationReporter.newReportNode()
-                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
-                .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
+                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
@@ -316,8 +316,8 @@ public class VscCreation extends AbstractModification {
         }
         if (!converterStationCreationInfos.isConnected()) {
             connectivityReports.add(ReportNode.newRootReportNode()
-                    .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
-                    .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
+                    .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${equipmentId} disconnected")
+                    .withUntypedValue("equipmentId", converterStationCreationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }

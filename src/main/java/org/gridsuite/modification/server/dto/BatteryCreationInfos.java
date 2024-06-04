@@ -78,6 +78,6 @@ public class BatteryCreationInfos extends InjectionCreationInfos implements Reac
 
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode().withMessageTemplate(ModificationType.BATTERY_CREATION.name(), "Battery creation ${batteryId}").withUntypedValue("batteryId", this.getEquipmentId()).add();
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.BATTERY_CREATION.name(), "Battery creation ${equipmentId}").withUntypedValue("equipmentId", this.getEquipmentId()).add();
     }
 }

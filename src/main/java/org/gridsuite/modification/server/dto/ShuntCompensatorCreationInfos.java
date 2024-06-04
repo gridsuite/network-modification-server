@@ -60,8 +60,8 @@ public class ShuntCompensatorCreationInfos extends InjectionCreationInfos {
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Shunt compensator creation ${shuntCompensatorId}")
-                .withUntypedValue("shuntCompensatorId", this.getEquipmentId())
+                .withMessageTemplate(getType().name(), "Shunt compensator creation ${equipmentId}")
+                .withUntypedValue("equipmentId", this.getEquipmentId())
                 .add();
     }
 }

@@ -55,8 +55,8 @@ public class LoadCreationInfos extends InjectionCreationInfos {
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Load creation ${loadId}")
-                .withUntypedValue("loadId", getEquipmentId())
+                .withMessageTemplate(getType().name(), "Load creation ${equipmentId}")
+                .withUntypedValue("equipmentId", getEquipmentId())
                 .add();
     }
 }

@@ -122,8 +122,8 @@ public class BatteryCreation extends AbstractModification {
         addExtensionsToBattery(batteryCreationInfos, battery, subReportNode);
 
         subReportNode.newReportNode()
-                .withMessageTemplate("batteryCreated", "New battery with id=${id} created")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("batteryCreated", "New battery with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
     }
@@ -173,8 +173,8 @@ public class BatteryCreation extends AbstractModification {
             }
             if (!batteryCreationInfos.isConnected()) {
                 connectivityReports.add(ReportNode.newRootReportNode()
-                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
-                        .withUntypedValue("id", batteryCreationInfos.getEquipmentId())
+                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${equipmentId} disconnected")
+                        .withUntypedValue("equipmentId", batteryCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
@@ -215,8 +215,8 @@ public class BatteryCreation extends AbstractModification {
                         "Droop"));
             } catch (PowsyblException e) {
                 activePowerRegulationReports.add(ReportNode.newRootReportNode()
-                        .withMessageTemplate("ActivePowerExtensionAddError", "cannot add active power extension on battery with id=${id} : ${message}")
-                        .withUntypedValue("id", batteryCreationInfos.getEquipmentId())
+                        .withMessageTemplate("ActivePowerExtensionAddError", "cannot add active power extension on battery with id=${equipmentId} : ${message}")
+                        .withUntypedValue("equipmentId", batteryCreationInfos.getEquipmentId())
                         .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());

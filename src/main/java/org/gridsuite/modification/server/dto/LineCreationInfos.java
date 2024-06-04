@@ -58,8 +58,8 @@ public class LineCreationInfos extends BranchCreationInfos {
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Creation of line ${lineId}")
-                .withUntypedValue("lineId", getEquipmentId())
+                .withMessageTemplate(getType().name(), "Creation of line ${equipmentId}")
+                .withUntypedValue("equipmentId", getEquipmentId())
                 .add();
     }
 }

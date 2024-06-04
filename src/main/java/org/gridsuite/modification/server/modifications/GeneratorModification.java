@@ -87,8 +87,8 @@ public class GeneratorModification extends AbstractModification {
 
     private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
-                .withMessageTemplate("generatorModification", "Generator with id=${id} modified :")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("generatorModification", "Generator with id=${equipmentId} modified :")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 

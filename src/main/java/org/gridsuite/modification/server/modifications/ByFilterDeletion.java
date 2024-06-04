@@ -115,8 +115,8 @@ public class ByFilterDeletion extends AbstractModification {
             if (converterStation1.getHvdcType() == HvdcConverterStation.HvdcType.LCC || converterStation2.getHvdcType() == HvdcConverterStation.HvdcType.LCC) {
                 String hdvcLineId = identifiableAttribute.getId();
                 subReportNode.newReportNode()
-                        .withMessageTemplate("SCNotRemoved" + hdvcLineId, "Shunt compensators were not removed for HVDC line id=${id}")
-                        .withUntypedValue("id", identifiableAttribute.getId())
+                        .withMessageTemplate("SCNotRemoved" + hdvcLineId, "Shunt compensators were not removed for HVDC line id=${hvdcLineId}")
+                        .withUntypedValue("hvdcLineId", identifiableAttribute.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .add();
             }

@@ -69,8 +69,8 @@ public class ShuntCompensatorModification extends AbstractModification {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
 
         subReportNode.newReportNode()
-                .withMessageTemplate("shuntCompensatorModification", "Shunt Compensator with id=${id} modified :")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("shuntCompensatorModification", "Shunt Compensator with id=${equipmentId} modified :")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 

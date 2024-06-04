@@ -74,8 +74,8 @@ public class BatteryModification extends AbstractModification {
 
     private void modifyBattery(Battery battery, BatteryModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
-                .withMessageTemplate("batteryModification", "Battery with id=${id} modified :")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("batteryModification", "Battery with id=${equipmentId} modified :")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 

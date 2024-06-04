@@ -65,8 +65,8 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Two windings transformer modification ${twoWindingsTransformerId}")
-                .withUntypedValue("twoWindingsTransformerId", getEquipmentId())
+                .withMessageTemplate(getType().name(), "Two windings transformer modification ${equipmentId}")
+                .withUntypedValue("equipmentId", getEquipmentId())
                 .add();
     }
 }

@@ -23,8 +23,8 @@ public class SubstationCreation extends AbstractModification {
                 .add();
 
         subReportNode.newReportNode()
-                .withMessageTemplate("substationCreated", "New substation with id=${id} created")
-                .withUntypedValue("id", modificationInfos.getEquipmentId())
+                .withMessageTemplate("substationCreated", "New substation with id=${equipmentId} created")
+                .withUntypedValue("equipmentId", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
