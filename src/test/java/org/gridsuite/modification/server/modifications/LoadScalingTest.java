@@ -32,6 +32,7 @@ import org.springframework.http.MediaType;
 
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -489,7 +490,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(List.of(filter1)))
                 .withHeader("Content-Type", "application/json"))).getId();
 
-        var filter = FilterInfos.builder()
+        FilterInfos filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_ID_ALL_LOADS)
                 .build();
@@ -500,10 +501,10 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .variationValue(variationValue)
                 .filters(List.of(filter))
                 .build();
-        var loadScalingInfo = LoadScalingInfos.builder()
+        LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
                 .stashed(false)
                 .uuid(LOAD_SCALING_ID)
-                .date(OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                .date(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
