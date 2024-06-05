@@ -31,8 +31,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.nio.file.Paths;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -204,7 +203,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .stashed(false)
             .uuid(LOAD_SCALING_ID)
-            .date(OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
@@ -376,7 +375,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .stashed(false)
-            .date(OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
             .build();
@@ -399,7 +398,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         return LoadScalingInfos.builder()
             .stashed(false)
             .uuid(LOAD_SCALING_ID)
-            .date(OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
             .build();
@@ -504,7 +503,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
                 .stashed(false)
                 .uuid(LOAD_SCALING_ID)
-                .date(OffsetDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MICROS))
+                .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
