@@ -9,16 +9,13 @@ package org.gridsuite.modification.server;
 import com.powsybl.network.store.client.NetworkStoreService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @SuppressWarnings("checkstyle:HideUtilityClassConstructor")
-@SpringBootApplication
-@ComponentScan(basePackageClasses = {NetworkModificationApplication.class, NetworkStoreService.class})
+@SpringBootApplication(scanBasePackageClasses = { NetworkModificationApplication.class, NetworkStoreService.class })
 public class NetworkModificationApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(NetworkModificationApplication.class, args);
     }
