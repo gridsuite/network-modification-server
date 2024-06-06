@@ -39,8 +39,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -98,7 +96,7 @@ class VoltageInitReportTest {
         return List.of(
             Arguments.of(ApplicationStatus.ALL_OK, "reports_voltage_init_modification_ok.json", VoltageInitModificationInfos.builder()
                 .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
-                .date(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
+                .date(Instant.EPOCH)
                 .stashed(false)
                 .generators(List.of(
                     VoltageInitGeneratorModificationInfos.builder().generatorId("GTH2").targetV(0.1).build())) //added for test case
@@ -115,7 +113,7 @@ class VoltageInitReportTest {
                 .build()),
             Arguments.of(ApplicationStatus.WITH_WARNINGS, "reports_voltage_init_modification_warnings.json", VoltageInitModificationInfos.builder()
                 .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
-                .date(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC))
+                .date(Instant.EPOCH)
                 .stashed(false)
                 .generators(List.of(
                     VoltageInitGeneratorModificationInfos.builder().generatorId("G1").targetQ(10.).build(),

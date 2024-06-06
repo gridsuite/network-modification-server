@@ -390,14 +390,11 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDeleteTryToDeleteEmptyStashedModification() throws Exception {
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
-
-        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("onlyStashed", "true")
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString()))
-                .andExpect(status().isBadRequest());
+    public void testDeleteModificationMissingParamError() throws Exception {
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
+                .andExpect(status().isInternalServerError())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NetworkModificationException))
+                .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -1157,7 +1154,8 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
-        assertEquals(71, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
+        // switches are not indexed in ElasticSearch
+        assertEquals(31, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
     }
 
     private void testConnectableDeletionImpacts(String resultAsString,
@@ -1170,10 +1168,11 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch(breakerId));
         assertNull(network.getSwitch(disconnectorId));
 
-        // Connectable and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        // Connectable have been added as TombstonedEquipmentInfos in ElasticSearch
+        // switches are not indexed in ElasticSearch
         assertTrue(existTombstonedEquipmentInfos(connectableId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
     private void testBranchDeletionImpacts(String resultAsString,
@@ -1189,12 +1188,13 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch(breakerId2));
         assertNull(network.getSwitch(disconnectorId2));
 
-        // line and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        // line have been added as TombstonedEquipmentInfos in ElasticSearch
+        // switches are not indexed in ElasticSearch
         assertTrue(existTombstonedEquipmentInfos(branchId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
     private void test3WTDeletionImpacts(String resultAsString, String w3tId,
@@ -1213,14 +1213,16 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch(breakerId3));
         assertNull(network.getSwitch(disconnectorId3));
 
-        // 3 windings transformer and switches have been added as TombstonedEquipmentInfos in ElasticSearch
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        // 3 windings transformer have been added as TombstonedEquipmentInfos in ElasticSearch
+        // switches are not indexed in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(w3tId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
     private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
@@ -1229,8 +1231,12 @@ public class ModificationControllerTest {
                 // Equipment has been removed from network
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
-                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch
-                assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for switches
+                if (simpleImpact.getElementType() != IdentifiableType.SWITCH) {
+                    assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+                } else {
+                    assertFalse(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+                }
             }
         }
 
