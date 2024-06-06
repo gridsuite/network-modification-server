@@ -42,15 +42,17 @@ public class CompositeModification extends AbstractModification {
     @Override
     public void apply(Network network, ReportNode subReportNode) {
         int applicationFailuresCount = 0;
-        for (var modifInfos : modificationInfos.getCompositeModificationsList()) {
+        int modificationsCount = modificationInfos.getCompositeModificationsList().size();
+
+        for (var modificationCompositeInfos : modificationInfos.getCompositeModificationsList()) {
             try {
-                AbstractModification modification = modifInfos.toModification();
+                AbstractModification modification = modificationCompositeInfos.toModification();
                 modification.check(network);
                 modification.apply(network);
             } catch (PowsyblException e) {
                 applicationFailuresCount++;
                 subReportNode.newReportNode()
-                        .withMessageTemplate(modifInfos.getType().name() + applicationFailuresCount, "${message}")
+                        .withMessageTemplate(modificationCompositeInfos.getType().name() + applicationFailuresCount, "${message}")
                         .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .add();
@@ -58,22 +60,25 @@ public class CompositeModification extends AbstractModification {
             }
         }
 
-        if (modificationInfos.getCompositeModificationsList().size() == applicationFailuresCount) {
+        String typeName = modificationInfos.getType().name();
+        String baseTemplate = COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + typeName;
+        String defaultMessage = modificationInfos.getType().toString();
+        if (applicationFailuresCount == modificationsCount) {
             subReportNode.newReportNode()
-                    .withMessageTemplate(COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getType().name() + "Error", "Composite modification: No ${defaultMessage}")
+                    .withMessageTemplate(baseTemplate + "Error", "Composite modification")
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .add();
         } else if (applicationFailuresCount > 0) {
             subReportNode.newReportNode()
-                    .withMessageTemplate(COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getType().name() + "Warning", "Composite modification: ${modificationsCount} ${defaultMessage} and ${failuresCount} have not been modified")
-                    .withUntypedValue("modificationsCount", modificationInfos.getCompositeModificationsList().size() - applicationFailuresCount)
-                    .withUntypedValue("failuresCount", applicationFailuresCount)
+                    .withMessageTemplate(baseTemplate + "Warning", "Composite modification")
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.WARN_SEVERITY)
                     .add();
         } else {
             subReportNode.newReportNode()
-                    .withMessageTemplate(COMPOSITE_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getType().name(), "Composite modification: ${modificationsCount} ${defaultMessage}")
-                    .withUntypedValue("modificationsCount", modificationInfos.getCompositeModificationsList().size())
+                    .withMessageTemplate(baseTemplate, "Composite modification")
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
