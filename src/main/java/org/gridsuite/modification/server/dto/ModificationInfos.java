@@ -20,7 +20,7 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -87,7 +87,7 @@ public class ModificationInfos {
     private final AtomicReference<ModificationType> type = new AtomicReference<>(null); // Only accessor (automatically initialized)
 
     @Schema(description = "Modification date")
-    private ZonedDateTime date;
+    private Instant date;
 
     @Schema(description = "Modification flag")
     @Builder.Default

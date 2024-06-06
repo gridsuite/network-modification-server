@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.nio.file.Paths;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -203,7 +203,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .stashed(false)
             .uuid(LOAD_SCALING_ID)
-            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
@@ -375,7 +375,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .stashed(false)
-            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
             .build();
@@ -398,7 +398,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
         return LoadScalingInfos.builder()
             .stashed(false)
             .uuid(LOAD_SCALING_ID)
-            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation5))
             .build();
@@ -489,7 +489,7 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(List.of(filter1)))
                 .withHeader("Content-Type", "application/json"))).getId();
 
-        var filter = FilterInfos.builder()
+        FilterInfos filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_ID_ALL_LOADS)
                 .build();
@@ -500,10 +500,10 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .variationValue(variationValue)
                 .filters(List.of(filter))
                 .build();
-        var loadScalingInfo = LoadScalingInfos.builder()
+        LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
                 .stashed(false)
                 .uuid(LOAD_SCALING_ID)
-                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
