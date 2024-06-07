@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     protected ModificationInfos buildModification() {
         return ShuntCompensatorCreationInfos.builder()
             .stashed(false)
-            .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+            .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .equipmentId("shuntOneId")
             .equipmentName("hopOne")
             .maximumSectionCount(10)
@@ -77,7 +77,7 @@ public class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkMod
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorCreationInfos.builder()
                 .stashed(false)
-                .date(ZonedDateTime.now().truncatedTo(ChronoUnit.MICROS))
+                .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .equipmentId("shuntOneIdEdited")
                 .equipmentName("hopEdited")
                 .maximumSectionCount(20)

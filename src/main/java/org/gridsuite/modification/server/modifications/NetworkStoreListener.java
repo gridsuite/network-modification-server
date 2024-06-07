@@ -13,6 +13,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfosToDelete;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
@@ -40,7 +41,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private final List<String> deletedEquipmentsIds = new ArrayList<>();
+    private final List<EquipmentInfosToDelete> deletedEquipments = new ArrayList<>();
 
     private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
 
@@ -202,7 +203,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        deletedEquipmentsIds.add(identifiable.getId());
+        deletedEquipments.add(new EquipmentInfosToDelete(identifiable.getId(), identifiable.getType().name()));
         simpleImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(SimpleImpactType.DELETION)
@@ -244,20 +245,27 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(deletedEquipmentsIds, networkUuid, variantId).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
+        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(
+                deletedEquipments.stream().map(EquipmentInfosToDelete::id).toList(),
+                networkUuid,
+                variantId
+        ).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
 
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
-        deletedEquipmentsIds.forEach(id -> {
-            if (presentEquipmentDeletionsIds.contains(id)) {
-                equipmentDeletionsIds.add(id);
+        deletedEquipments.forEach(deletedEquipment -> {
+            if (presentEquipmentDeletionsIds.contains(deletedEquipment.id())) {
+                equipmentDeletionsIds.add(deletedEquipment.id());
             }
-            tombstonedEquipmentInfos.add(
-                TombstonedEquipmentInfos.builder()
-                    .networkUuid(networkUuid)
-                    .variantId(variantId)
-                    .id(id)
-                    .build());
+            // add only allowed equipments types to be indexed to tombstonedEquipmentInfos
+            if (!EquipmentInfosService.EXCLUDED_TYPES_FOR_INDEXING.contains(deletedEquipment.type())) {
+                tombstonedEquipmentInfos.add(
+                        TombstonedEquipmentInfos.builder()
+                                .networkUuid(networkUuid)
+                                .variantId(variantId)
+                                .id(deletedEquipment.id())
+                                .build());
+            }
         });
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);

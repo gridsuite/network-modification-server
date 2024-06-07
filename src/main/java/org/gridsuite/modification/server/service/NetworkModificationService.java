@@ -205,12 +205,6 @@ public class NetworkModificationService {
         notificationService.emitCancelBuildMessage(receiver);
     }
 
-    public void deleteNetworkModifications(@NonNull UUID groupUuid, boolean onlyStashed) {
-        if (networkModificationRepository.deleteModifications(groupUuid, onlyStashed) == 0) {
-            throw new NetworkModificationException(NOTHING_TO_DELETE);
-        }
-    }
-
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);

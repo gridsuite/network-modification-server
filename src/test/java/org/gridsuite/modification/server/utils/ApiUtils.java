@@ -103,20 +103,10 @@ public final class ApiUtils {
         mockMvc.perform(delete("/v1/groups/{groupUuid}/stashed-modifications", groupUuid)).andExpectAll(status().isOk());
     }
 
-    public static void deleteStashedInGroupBis(MockMvc mockMvc, UUID groupUuid) throws Exception {
-        mockMvc.perform(
-                delete("/v1/network-modifications")
-                    .param("groupUuid", groupUuid.toString())
-                    .param("onlyStashed", "true")
-            )
-            .andExpectAll(status().isOk());
-    }
-
     public static void deleteNetworkModificationsInGroup(MockMvc mockMvc, UUID groupUuid) throws Exception {
         mockMvc.perform(
                 delete("/v1/network-modifications")
                     .param("groupUuid", groupUuid.toString())
-                    .param("onlyStashed", "false")
             )
             .andExpectAll(status().isOk());
     }

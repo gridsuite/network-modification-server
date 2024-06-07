@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -161,14 +160,8 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The network modifications were deleted")
     public ResponseEntity<Void> deleteNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam(name = "uuids", required = false) List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
-            @Parameter(description = "Delete only stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed) {
-
-        if (CollectionUtils.isEmpty(networkModificationUuids)) {
-            networkModificationService.deleteNetworkModifications(groupUuid, onlyStashed);
-        } else {
-            networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
-        }
+            @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid) {
+        networkModificationService.deleteNetworkModifications(groupUuid, networkModificationUuids);
         return ResponseEntity.ok().build();
     }
 

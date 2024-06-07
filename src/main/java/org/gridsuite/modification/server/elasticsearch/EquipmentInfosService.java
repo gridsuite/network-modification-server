@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import com.google.common.collect.Lists;
+import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,13 +35,19 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size:10000}")
     private int partitionSize;
 
+    public static final Set<String> EXCLUDED_TYPES_FOR_INDEXING = Set.of(IdentifiableType.SWITCH.name());
+
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
         this.tombstonedEquipmentInfosRepository = tombstonedEquipmentInfosRepository;
     }
 
     public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos) {
-        Lists.partition(equipmentsInfos, partitionSize)
+        // get only equipments allowed to be indexed
+        List<EquipmentInfos> filteredEquipmentsInfos = equipmentsInfos.stream()
+                .filter(equipmentInfos -> !EXCLUDED_TYPES_FOR_INDEXING.contains(equipmentInfos.getType()))
+                .toList();
+        Lists.partition(filteredEquipmentsInfos, partitionSize)
                 .parallelStream()
                 .forEach(equipmentInfosRepository::saveAll);
     }
