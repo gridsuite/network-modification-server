@@ -294,7 +294,7 @@ public class NetworkModificationService {
     @Transactional
     public UUID createCompositeModification(@NonNull ModificationInfos modificationInfos) {
         CompositeModificationInfos compositeInfos = (CompositeModificationInfos) modificationInfos;
-        List<ModificationInfos> modificationInfosList = compositeInfos.getCompositeModificationsList();
+        List<ModificationInfos> modificationInfosList = compositeInfos.getModificationsList();
 
         // Duplicate modifications and get the duplicated UUIDs
         Map<UUID, UUID> duplicatedMapListUuids = networkModificationRepository.duplicateModifications(
@@ -313,7 +313,7 @@ public class NetworkModificationService {
                 .toList();
 
         // Set the saved duplicated modifications in compositeInfos
-        compositeInfos.setCompositeModificationsList(savedDuplicatedModificationInfosList);
+        compositeInfos.setModificationsList(savedDuplicatedModificationInfosList);
 
         // Save and return the composite modification
         return networkModificationRepository.saveCompositeModificationInfos(compositeInfos);

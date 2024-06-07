@@ -460,7 +460,7 @@ public class ModificationControllerTest {
 
     private UUID createCompositeModifications(List<ModificationInfos> modificationInfosList) throws Exception {
         CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
-                .compositeModificationsList(modificationInfosList)
+                .modificationsList(modificationInfosList)
                 .build();
         MvcResult mvcResult;
         String switchStatusModificationInfosJson = objectWriter.writeValueAsString(compositeModificationInfos);

@@ -52,7 +52,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
                 ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1")
         );
         return CompositeModificationInfos.builder()
-                .compositeModificationsList(modifications)
+                .modificationsList(modifications)
                 .stashed(false)
                 .build();
     }
@@ -65,7 +65,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
                 ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1")
         );
         return CompositeModificationInfos.builder()
-                .compositeModificationsList(modifications)
+                .modificationsList(modifications)
                 .stashed(false)
                 .build();
     }
@@ -118,7 +118,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
                 ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1")
         );
         ModificationInfos modifInfo = CompositeModificationInfos.builder()
-                .compositeModificationsList(modifications)
+                .modificationsList(modifications)
                 .stashed(false)
                 .build();
         saveModification(modifInfo);
@@ -138,7 +138,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
                 ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1")
         );
         ModificationInfos modifInfo = CompositeModificationInfos.builder()
-                .compositeModificationsList(modifications)
+                .modificationsList(modifications)
                 .stashed(false)
                 .build();
         saveModification(modifInfo);
@@ -156,7 +156,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
                 ModificationCreation.getCreationGenerator("v1", "idGenerator", "nameGenerator", "1B", "v2load", "LOAD", "v1")
         );
         ModificationInfos modifInfo = CompositeModificationInfos.builder()
-                .compositeModificationsList(modifications)
+                .modificationsList(modifications)
                 .stashed(false)
                 .build();
         saveModification(modifInfo);

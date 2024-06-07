@@ -37,7 +37,7 @@ public class CompositeModificationInfos extends ModificationInfos {
 
     @Schema(description = "composite modification list")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<ModificationInfos> compositeModificationsList;
+    private List<ModificationInfos> modificationsList;
 
     @Override
     public ModificationEntity toEntity() {

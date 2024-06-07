@@ -42,16 +42,16 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
-                .compositeModificationsList(modificationsInfos)
+                .modificationsList(modificationsInfos)
                 .build();
     }
 
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         if (modificationsList == null) {
-            modificationsList = compositeModificationInfos.getCompositeModificationsList().stream().map(ModificationInfos::toEntity).toList();
+            modificationsList = compositeModificationInfos.getModificationsList().stream().map(ModificationInfos::toEntity).toList();
         } else {
             modificationsList.clear();
-            modificationsList.addAll(compositeModificationInfos.getCompositeModificationsList().stream().map(ModificationInfos::toEntity).toList());
+            modificationsList.addAll(compositeModificationInfos.getModificationsList().stream().map(ModificationInfos::toEntity).toList());
         }
     }
 }
