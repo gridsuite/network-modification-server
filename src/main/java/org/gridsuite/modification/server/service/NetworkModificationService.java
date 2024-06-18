@@ -294,17 +294,15 @@ public class NetworkModificationService {
     @Transactional
     public UUID createCompositeModification(@NonNull ModificationInfos modificationInfos) {
         CompositeModificationInfos compositeInfos = (CompositeModificationInfos) modificationInfos;
-        List<ModificationInfos> modificationInfosList = compositeInfos.getModificationsList();
+        List<UUID> modificationUuidsList = compositeInfos.getModificationsList().stream()
+                .map(ModificationInfos::getUuid)
+                .collect(Collectors.toList());
 
         // Duplicate modifications and get the duplicated UUIDs
-        Map<UUID, UUID> duplicatedMapListUuids = networkModificationRepository.duplicateModifications(
-                modificationInfosList.stream()
-                        .map(ModificationInfos::getUuid)
-                        .toList()
-        );
+        List<UUID> duplicatedMapListUuids = networkModificationRepository.duplicateModificationsByOrder(modificationUuidsList);
 
         // Fetch duplicated modifications using the duplicated UUIDs and save them
-        List<ModificationInfos> savedDuplicatedModificationInfosList = duplicatedMapListUuids.values().stream()
+        List<ModificationInfos> savedDuplicatedModificationInfosList = duplicatedMapListUuids.stream()
                 .map(this::getNetworkModification)
                 .peek(modification -> {
                     UUID savedUuid = networkModificationRepository.saveCompositeModificationInfos(modification);

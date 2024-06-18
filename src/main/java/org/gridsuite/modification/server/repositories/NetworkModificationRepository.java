@@ -182,6 +182,20 @@ public class NetworkModificationRepository {
         return ids;
     }
 
+    @Transactional
+    public List<UUID> duplicateModificationsByOrder(List<UUID> sourceModificationUuids) {
+        List<ModificationEntity> sourceEntities = modificationRepository.findAllByOrderId(sourceModificationUuids);
+        // findAllByOrderId does keep sourceModificationUuids order, and
+        // sourceEntities, copyEntities, newEntities have the same order.
+        List<ModificationEntity> copyEntities = sourceEntities.stream()
+                .map(this::getModificationInfos)
+                .map(ModificationInfos::toEntity)
+                .toList();
+        List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
+
+        return newEntities.stream().map(ModificationEntity::getId).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound) {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
