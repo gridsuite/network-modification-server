@@ -14,6 +14,7 @@ import lombok.Setter;
 import org.gridsuite.modification.server.dto.CompositeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,8 +28,12 @@ import java.util.List;
 public class CompositeModificationEntity extends ModificationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "compositeModificationList",
+            joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
     @OrderColumn
-    private List<ModificationEntity> modificationsList;
+    private List<ModificationEntity> modifications = new ArrayList<>();
 
     public CompositeModificationEntity(@NonNull CompositeModificationInfos compositeModificationInfos) {
         super(compositeModificationInfos);
@@ -37,7 +42,7 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @Override
     public CompositeModificationInfos toModificationInfos() {
-        List<ModificationInfos> modificationsInfos = modificationsList.stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
         return CompositeModificationInfos.builder()
                 .date(getDate())
                 .uuid(getId())
@@ -46,12 +51,10 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .build();
     }
 
+    // when we go back to an empty list, dont use addAll() on the list because JPA could start
+    // @OrderColumn to 1 instead of 0
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
-        if (modificationsList == null) {
-            modificationsList = compositeModificationInfos.getModificationsList().stream().map(ModificationInfos::toEntity).toList();
-        } else {
-            modificationsList.clear();
-            modificationsList.addAll(compositeModificationInfos.getModificationsList().stream().map(ModificationInfos::toEntity).toList());
-        }
+        modifications.clear();
+        modifications = compositeModificationInfos.getModificationsList().stream().map(ModificationInfos::toEntity).toList();
     }
 }

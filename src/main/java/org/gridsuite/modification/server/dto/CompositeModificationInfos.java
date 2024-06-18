@@ -52,7 +52,7 @@ public class CompositeModificationInfos extends ModificationInfos {
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
         return reportNode.newReportNode()
-                .withMessageTemplate(ModificationType.COMPOSITE_MODIFICATION.name(), "Composite modification")
+                .withMessageTemplate(getType().name(), "Composite modification")
                 .add();
     }
 

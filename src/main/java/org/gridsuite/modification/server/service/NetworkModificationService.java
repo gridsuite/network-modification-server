@@ -277,11 +277,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Optional<NetworkModificationResult> insertModifications(UUID targetGroupUuid,
+    public Optional<NetworkModificationResult> insertModifications(UUID compositeModificationUuid,
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
-        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        networkModificationRepository.saveModificationInfos(compositeModificationUuid, modificationInfos);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
