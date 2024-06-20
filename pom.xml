@@ -44,7 +44,7 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>29</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>30</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <testcontainers.version>1.16.2</testcontainers.version>
@@ -115,6 +115,8 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
+            <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section. The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
+            <version>1.0.8</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
