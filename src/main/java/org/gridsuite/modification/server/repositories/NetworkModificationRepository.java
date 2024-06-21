@@ -9,13 +9,11 @@ package org.gridsuite.modification.server.repositories;
 import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.CompositeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.TabularCreationEntity;
-import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,9 +67,14 @@ public class NetworkModificationRepository {
         saveModificationsNonTransactional(groupUuid, modifications.stream().map(ModificationInfos::toEntity).toList());
     }
 
-    @Transactional
-    public UUID saveCompositeModificationInfos(ModificationInfos modifications) {
-        return modificationRepository.save(modifications.toEntity()).getId();
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) CompositeModificationInfos.builder().modifications(List.of()).build().toEntity();
+        List<ModificationEntity> copyEntities = modificationRepository.findAllByOrderId(modificationUuids).stream()
+                .map(this::getModificationInfos)
+                .map(ModificationInfos::toEntity)
+                .toList();
+        compositeEntity.setModifications(copyEntities);
+        return modificationRepository.save(compositeEntity).getId();
     }
 
     private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
@@ -180,20 +183,6 @@ public class NetworkModificationRepository {
             ids.put(sourceIterator.next().getId(), newIterator.next().getId());
         }
         return ids;
-    }
-
-    @Transactional
-    public List<UUID> duplicateModificationsByOrder(List<UUID> sourceModificationUuids) {
-        List<ModificationEntity> sourceEntities = modificationRepository.findAllByOrderId(sourceModificationUuids);
-        // findAllByOrderId does keep sourceModificationUuids order, and
-        // sourceEntities, copyEntities, newEntities have the same order.
-        List<ModificationEntity> copyEntities = sourceEntities.stream()
-                .map(this::getModificationInfos)
-                .map(ModificationInfos::toEntity)
-                .toList();
-        List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
-
-        return newEntities.stream().map(ModificationEntity::getId).toList();
     }
 
     @Transactional(readOnly = true)

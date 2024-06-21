@@ -277,11 +277,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Optional<NetworkModificationResult> insertModifications(UUID compositeModificationUuid,
-                                                                      UUID networkUuid, String variantId,
-                                                                      ReportInfos reportInfos, List<UUID> modificationsUuids) {
+    public Optional<NetworkModificationResult> insertModifications(UUID targetGroupUuid,
+                                                                   UUID networkUuid, String variantId,
+                                                                   ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
-        networkModificationRepository.saveModificationInfos(compositeModificationUuid, modificationInfos);
+        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
@@ -292,29 +292,12 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID createCompositeModification(@NonNull ModificationInfos modificationInfos) {
+    public UUID createNetworkCompositeModification(@NonNull ModificationInfos modificationInfos) {
         CompositeModificationInfos compositeInfos = (CompositeModificationInfos) modificationInfos;
-        List<UUID> modificationUuidsList = compositeInfos.getModificationsList().stream()
+        List<UUID> modificationUuids = compositeInfos.getModifications().stream()
                 .map(ModificationInfos::getUuid)
                 .collect(Collectors.toList());
-
-        // Duplicate modifications and get the duplicated UUIDs
-        List<UUID> duplicatedMapListUuids = networkModificationRepository.duplicateModificationsByOrder(modificationUuidsList);
-
-        // Fetch duplicated modifications using the duplicated UUIDs and save them
-        List<ModificationInfos> savedDuplicatedModificationInfosList = duplicatedMapListUuids.stream()
-                .map(this::getNetworkModification)
-                .peek(modification -> {
-                    UUID savedUuid = networkModificationRepository.saveCompositeModificationInfos(modification);
-                    modification.setUuid(savedUuid);  // Update the UUID
-                })
-                .toList();
-
-        // Set the saved duplicated modifications in compositeInfos
-        compositeInfos.setModificationsList(savedDuplicatedModificationInfosList);
-
-        // Save and return the composite modification
-        return networkModificationRepository.saveCompositeModificationInfos(compositeInfos);
+        return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
     }
 
     public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {

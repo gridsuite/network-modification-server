@@ -47,7 +47,7 @@ public class CompositeModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
-                .modificationsList(modificationsInfos)
+                .modifications(modificationsInfos)
                 .build();
     }
 
@@ -55,6 +55,6 @@ public class CompositeModificationEntity extends ModificationEntity {
     // @OrderColumn to 1 instead of 0
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         modifications.clear();
-        modifications = compositeModificationInfos.getModificationsList().stream().map(ModificationInfos::toEntity).toList();
+        modifications = compositeModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
     }
 }

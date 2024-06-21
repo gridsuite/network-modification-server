@@ -42,9 +42,9 @@ public class CompositeModification extends AbstractModification {
     @Override
     public void apply(Network network, ReportNode subReportNode) {
         int applicationFailuresCount = 0;
-        int modificationsCount = modificationInfos.getModificationsList().size();
+        int modificationsCount = modificationInfos.getModifications().size();
 
-        for (var modificationCompositeInfos : modificationInfos.getModificationsList()) {
+        for (var modificationCompositeInfos : modificationInfos.getModifications()) {
             try {
                 AbstractModification modification = modificationCompositeInfos.toModification();
                 modification.check(network);
