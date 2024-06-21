@@ -93,7 +93,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
-    private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/composite/network-modifications";
+    private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
@@ -453,22 +453,9 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk()).andReturn();
             assertApplicationStatusOK(mvcResult);
         }
-        var modificationList = modificationRepository.getModifications(groupId, true, true);
+        var modificationList = modificationRepository.getModifications(groupId, false, true);
         assertEquals(number, modificationList.size());
         return modificationList;
-    }
-
-    private UUID createCompositeModifications(List<ModificationInfos> modificationInfosList) throws Exception {
-        CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
-                .modifications(modificationInfosList)
-                .build();
-        MvcResult mvcResult;
-        String switchStatusModificationInfosJson = objectWriter.writeValueAsString(compositeModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        return mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-
     }
 
     private ModificationInfos createDeletionModification(UUID groupId, IdentifiableType equipmentType, String equipmentName) throws Exception {
@@ -508,7 +495,7 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
-        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         // now 5 modifications: first 0-1-2 are still the same, last 3-4 are new (duplicates of 0-1)
         assertEquals(5, newModificationList.size());
@@ -544,7 +531,7 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
-        var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
+        var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, false, true);
         List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         // now 3 modifications in new group: first 0 is still the same, last 1-2 are new (duplicates of 0-1 from first group)
         assertEquals(3, newModificationListOtherGroup.size());
@@ -682,13 +669,26 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testInsertModificationInSameGroup() throws Exception {
-        // insert composite modifications in a single group
+    public void testNetworkCompositeModification() throws Exception {
+        // Insert a switch modification in the group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-        UUID compositeModificationUuid = createCompositeModifications(modificationList);
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
+        // Create a composite modification with the switch modification
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        ModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
+                .modifications(modificationList)
+                .build();
         MvcResult mvcResult;
+        String compositeModificationInfosJson = objectWriter.writeValueAsString(compositeModificationInfos);
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(compositeModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // Insert the composite modification in the group
         mvcResult = mockMvc.perform(
                         put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT"
                                 + "&networkUuid=" + TEST_NETWORK_ID
@@ -700,11 +700,11 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
-        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
-        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(2, newModificationList.size());
-        assertEquals(modificationUuidList, newModificationUuidList.subList(0, 1));
-        assertThat(newModificationList.get(1)).recursivelyEquals(modificationList.get(0));
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(modificationUuidList.get(0), newModificationUuidList.get(0));
+        assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(1));
     }
 
     @Test

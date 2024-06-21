@@ -8,28 +8,28 @@ package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.CompositeModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.CompositeModification;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
 @Schema(description = "Composite modification")
 @JsonTypeName("COMPOSITE_MODIFICATION")
 @ModificationErrorTypeName("COMPOSITE_MODIFICATION_ERROR")
@@ -47,19 +47,5 @@ public class CompositeModificationInfos extends ModificationInfos {
     @Override
     public AbstractModification toModification() {
         return new CompositeModification(this);
-    }
-
-    @Override
-    public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode()
-                .withMessageTemplate(getType().name(), "Composite modification")
-                .add();
-    }
-
-    @Override
-    public Map<String, String> getMapMessageValues() {
-        Map<String, String> mapMessageValues = new HashMap<>();
-        mapMessageValues.put("compositeModificationType", ModificationType.COMPOSITE_MODIFICATION.name());
-        return mapMessageValues;
     }
 }
