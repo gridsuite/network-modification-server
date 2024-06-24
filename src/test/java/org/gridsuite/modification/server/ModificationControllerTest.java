@@ -675,15 +675,14 @@ public class ModificationControllerTest {
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // Create a composite modification with the switch modification
-        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
         ModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
                 .modifications(modificationList)
                 .build();
-        MvcResult mvcResult;
-        String compositeModificationInfosJson = objectWriter.writeValueAsString(compositeModificationInfos);
-        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
-                        .content(compositeModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
@@ -703,7 +702,7 @@ public class ModificationControllerTest {
         List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(2, newModificationList.size());
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
-        assertEquals(modificationUuidList.get(0), newModificationUuidList.get(0));
+        assertEquals(modificationUuids.get(0), newModificationUuidList.get(0));
         assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(1));
     }
 

@@ -292,11 +292,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public UUID createNetworkCompositeModification(@NonNull ModificationInfos modificationInfos) {
-        CompositeModificationInfos compositeInfos = (CompositeModificationInfos) modificationInfos;
-        List<UUID> modificationUuids = compositeInfos.getModifications().stream()
-                .map(ModificationInfos::getUuid)
-                .collect(Collectors.toList());
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
     }
 
