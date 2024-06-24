@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
+import com.vladmihalcea.sql.SQLStatementCountValidator;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.CompositeModificationInfos;
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -60,7 +60,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return NetworkCreation.create(networkUuid, true);
+        return NetworkCreation.create(networkUuid, false);
     }
 
     @Override
@@ -78,15 +78,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        List<ModificationInfos> modifications = List.of(
-                ModificationCreation.getCreationGenerator("v1", "idGenerator", "nameGenerator", "1B", "v2load", "LOAD", "v1"),
-                ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED),
-                ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1")
-        );
-        return CompositeModificationInfos.builder()
-                .modifications(modifications)
-                .stashed(false)
-                .build();
+        return buildModification();
     }
 
     @Override
@@ -112,15 +104,16 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
     @Test
     public void testCheckSqlRequestsCount() throws Exception {
         UUID modificationUuid = saveModification(buildModification());
-        reset();
+        SQLStatementCountValidator.reset();
 
         mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         assertSelectCount(7);
+        SQLStatementCountValidator.reset();
 
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
                 .andExpect(status().isOk());
-        assertSelectCount(15);
+        SQLStatementCountValidator.assertSelectCount(8);
     }
 }
