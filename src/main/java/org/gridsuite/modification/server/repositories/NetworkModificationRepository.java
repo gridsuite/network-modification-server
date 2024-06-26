@@ -9,13 +9,11 @@ package org.gridsuite.modification.server.repositories;
 import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.CompositeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.TabularModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.TabularCreationEntity;
-import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +65,16 @@ public class NetworkModificationRepository {
     // TODO Remove transaction when errors will no longer be sent to the front
     public void saveModificationInfos(UUID groupUuid, List<? extends ModificationInfos> modifications) {
         saveModificationsNonTransactional(groupUuid, modifications.stream().map(ModificationInfos::toEntity).toList());
+    }
+
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) CompositeModificationInfos.builder().modifications(List.of()).build().toEntity();
+        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .map(this::getModificationInfos)
+                .map(ModificationInfos::toEntity)
+                .toList();
+        compositeEntity.setModifications(copyEntities);
+        return modificationRepository.save(compositeEntity).getId();
     }
 
     private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
@@ -357,6 +365,21 @@ public class NetworkModificationRepository {
                 Function.identity()
             ));
         return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
+        List<ModificationInfos> entities = new ArrayList<>();
+        uuids.forEach(uuid -> {
+            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+            List<ModificationInfos> orderedModifications = foundEntities
+                    .stream()
+                    .map(this::getModificationInfo)
+                    .toList();
+            entities.addAll(orderedModifications);
+        }
+        );
+        return entities;
     }
 
     @Transactional(readOnly = true)

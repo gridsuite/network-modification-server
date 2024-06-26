@@ -70,7 +70,8 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = ByFormulaModificationInfos.class),
     @JsonSubTypes.Type(value = VscModificationInfos.class),
     @JsonSubTypes.Type(value = ConverterStationModificationInfos.class),
-    @JsonSubTypes.Type(value = TabularCreationInfos.class)
+    @JsonSubTypes.Type(value = TabularCreationInfos.class),
+    @JsonSubTypes.Type(value = CompositeModificationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor
