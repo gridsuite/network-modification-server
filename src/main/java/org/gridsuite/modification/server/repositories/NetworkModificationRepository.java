@@ -69,7 +69,7 @@ public class NetworkModificationRepository {
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) CompositeModificationInfos.builder().modifications(List.of()).build().toEntity();
-        List<ModificationEntity> copyEntities = modificationRepository.findAllByOrderId(modificationUuids).stream()
+        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .map(this::getModificationInfos)
                 .map(ModificationInfos::toEntity)
                 .toList();

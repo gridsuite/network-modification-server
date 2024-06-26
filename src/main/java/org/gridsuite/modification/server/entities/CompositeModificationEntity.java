@@ -29,8 +29,8 @@ public class CompositeModificationEntity extends ModificationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
-            name = "compositeModificationList",
-            joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_id_fk"),
+            name = "compositeModificationSubModifications",
+            joinColumns = @JoinColumn(name = "id"), foreignKey = @ForeignKey(name = "composite_modification_sub_modifications_id_fk"),
             inverseJoinColumns = @JoinColumn(name = "modificationId"), inverseForeignKey = @ForeignKey(name = "modification_id_fk"))
     @OrderColumn
     private List<ModificationEntity> modifications = new ArrayList<>();

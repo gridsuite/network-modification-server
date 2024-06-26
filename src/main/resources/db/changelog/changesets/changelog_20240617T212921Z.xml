@@ -8,28 +8,28 @@
         </createTable>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1718659778069-30">
-        <createTable tableName="composite_modification_list">
+        <createTable tableName="composite_modification_sub_modifications">
             <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_listPK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_sub_modificationsPK"/>
             </column>
             <column name="modification_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="modifications_order" type="INT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_listPK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="composite_modification_sub_modificationsPK"/>
             </column>
         </createTable>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1718659778069-31">
-        <addUniqueConstraint columnNames="modification_id" constraintName="UC_COMPOSITE_MODIFICATION_LISTMODIFICATION_ID_COL" tableName="composite_modification_list"/>
+        <addUniqueConstraint columnNames="modification_id" constraintName="UC_COMPOSITE_MODIFICATION_SUB_MODIFICATIONSMODIFICATION_ID_COL" tableName="composite_modification_sub_modifications"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1718659778069-47">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="composite_modification" constraintName="FKnlntmmfbgen7lvhqpjpr53k22" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1718659778069-49">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="composite_modification_list" constraintName="composite_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="composite_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="composite_modification_sub_modifications" constraintName="composite_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="composite_modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1718659778069-54">
-        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="composite_modification_list" constraintName="modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="composite_modification_sub_modifications" constraintName="modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
