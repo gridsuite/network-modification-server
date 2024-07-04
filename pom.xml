@@ -115,8 +115,8 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
-            <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section. The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
-            <version>1.0.8</version>
+            <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section. The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
+            <version>1.0.10</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
