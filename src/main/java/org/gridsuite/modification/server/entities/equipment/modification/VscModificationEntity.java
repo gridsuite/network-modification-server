@@ -11,12 +11,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VscModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
@@ -27,7 +25,7 @@ import static org.gridsuite.modification.server.dto.AttributeModification.toAttr
 @Getter
 @Entity
 @Table(name = "vscModification")
-public class VscModificationEntity extends BasicEquipmentModificationEntity {
+public class VscModificationEntity extends InjectionModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "nominalv")),
@@ -149,6 +147,12 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+                .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
+                .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+                .connectionName(IAttributeModificationEmbeddable.toAttributeModification(getConnectionName()))
+                .connectionDirection(IAttributeModificationEmbeddable.toAttributeModification(getConnectionDirection()))
+                .connectionPosition(IAttributeModificationEmbeddable.toAttributeModification(getConnectionPosition()))
+                .connected(IAttributeModificationEmbeddable.toAttributeModification(getConnected()))
                 .nominalV(toAttributeModification(getNominalV()))
                 .r(toAttributeModification(getR()))
                 .maxP(toAttributeModification(getMaxP()))
