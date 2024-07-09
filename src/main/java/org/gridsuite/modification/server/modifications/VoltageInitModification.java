@@ -17,9 +17,6 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
@@ -81,11 +78,9 @@ public class VoltageInitModification extends AbstractModification {
     private void applyBusModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
         List<ReportNode> reports = new ArrayList<>();
-        // Cache buses by ID to optimize lookup times and avoid repeated iterations over voltage levels and buses in the store.
-        // The bus view remains valid for all iterations as we only set voltage magnitude and angle.
-        Map<String, Bus> busCache = network.getBusView().getBusStream().collect(Collectors.toMap(Bus::getId, Function.identity()));
         for (VoltageInitBusModificationInfos m : voltageInitModificationInfos.getBuses()) {
-            final Bus bus = busCache.get(m.getBusId());
+            final VoltageLevel voltageLevel = network.getVoltageLevel(m.getVoltageLevelId());
+            final Bus bus = voltageLevel.getBusView().getBus(m.getBusId());
             if (bus == null) {
                 reports.add(ReportNode.newRootReportNode()
                         .withMessageTemplate("busNotFound", "Bus with id=${id} not found")

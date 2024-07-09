@@ -1417,11 +1417,13 @@ public class ModificationControllerTest {
                     .build()))
             .buses(List.of(
                 VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v1")
                     .busId("1.1")
                     .v(225.)
                     .angle(0.)
                     .build(),
                 VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v1")
                     .busId("1.2")
                     .v(226.)
                     .angle(0.6)
