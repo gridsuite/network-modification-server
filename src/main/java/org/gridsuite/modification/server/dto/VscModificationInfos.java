@@ -22,7 +22,7 @@ import org.gridsuite.modification.server.modifications.VscModification;
 @Schema(description = "VSC modification")
 @JsonTypeName("VSC_MODIFICATION")
 @ModificationErrorTypeName("MODIFY_VSC_ERROR")
-public class VscModificationInfos extends InjectionModificationInfos {
+public class VscModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "DC nominal voltage")
     private AttributeModification<Double> nominalV;
 
