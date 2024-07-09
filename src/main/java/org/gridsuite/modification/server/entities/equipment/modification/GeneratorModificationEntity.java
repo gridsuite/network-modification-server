@@ -276,7 +276,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .connectionName(toAttributeModification(getConnectionName()))
                 .connectionDirection(toAttributeModification(getConnectionDirection()))
                 .connectionPosition(toAttributeModification(getConnectionPosition()))
-                .connected(toAttributeModification(getConnected()))
+                .terminalConnected(toAttributeModification(getTerminalConnected()))
                 .energySource(toAttributeModification(getEnergySource()))
                 .targetP(toAttributeModification(getTargetP()))
                 .maxP(toAttributeModification(getMaxP()))

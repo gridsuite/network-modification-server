@@ -111,7 +111,7 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .connectionName(toAttributeModification(getConnectionName()))
                 .connectionDirection(toAttributeModification(getConnectionDirection()))
                 .connectionPosition(toAttributeModification(getConnectionPosition()))
-                .connected(IAttributeModificationEmbeddable.toAttributeModification(getConnected()))
+                .terminalConnected(IAttributeModificationEmbeddable.toAttributeModification(getTerminalConnected()))
                 .shuntCompensatorType(toAttributeModification(getShuntCompensatorType()))
                 .maxQAtNominalV(toAttributeModification(getMaxQAtNominalV()))
                 .maxSusceptance(toAttributeModification(getMaxSusceptance()))

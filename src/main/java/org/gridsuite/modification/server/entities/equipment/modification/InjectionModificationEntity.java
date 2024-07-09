@@ -65,7 +65,7 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
         @AttributeOverride(name = "value", column = @Column(name = "connected")),
         @AttributeOverride(name = "opType", column = @Column(name = "connectedOp"))
     })
-    private BooleanModificationEmbedded connected;
+    private BooleanModificationEmbedded terminalConnected;
 
     protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
         super(modificationInfos);
@@ -86,6 +86,6 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
         this.connectionName = modificationInfos.getConnectionName() != null ? new StringModificationEmbedded(modificationInfos.getConnectionName()) : null;
         this.connectionDirection = modificationInfos.getConnectionDirection() != null ? new EnumModificationEmbedded<>(modificationInfos.getConnectionDirection()) : null;
         this.connectionPosition = modificationInfos.getConnectionPosition() != null ? new IntegerModificationEmbedded(modificationInfos.getConnectionPosition()) : null;
-        this.connected = modificationInfos.getConnected() != null ? new BooleanModificationEmbedded(modificationInfos.getConnected()) : null;
+        this.terminalConnected = modificationInfos.getTerminalConnected() != null ? new BooleanModificationEmbedded(modificationInfos.getTerminalConnected()) : null;
     }
 }

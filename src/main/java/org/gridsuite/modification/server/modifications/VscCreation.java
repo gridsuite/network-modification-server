@@ -180,7 +180,7 @@ public class VscCreation extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
-        if (!converterStationCreationInfos.isConnected()) {
+        if (!converterStationCreationInfos.isTerminalConnected()) {
             vscConverterStation.getTerminal().disconnect();
         }
 
@@ -314,7 +314,7 @@ public class VscCreation extends AbstractModification {
             connectivityReports.add(ModificationUtils.getInstance()
                     .buildCreationReport(converterStationCreationInfos.getConnectionPosition(), "Connection position"));
         }
-        if (!converterStationCreationInfos.isConnected()) {
+        if (!converterStationCreationInfos.isTerminalConnected()) {
             connectivityReports.add(ReportNode.newRootReportNode()
                     .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
                     .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())

@@ -130,7 +130,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .connectionName(toAttributeModification(getConnectionName()))
                 .connectionDirection(toAttributeModification(getConnectionDirection()))
                 .connectionPosition(toAttributeModification(getConnectionPosition()))
-                .connected(toAttributeModification(getConnected()))
+                .terminalConnected(toAttributeModification(getTerminalConnected()))
                 .targetP(toAttributeModification(getTargetP()))
                 .maxP(toAttributeModification(getMaxP()))
                 .minP(toAttributeModification(getMinP()))

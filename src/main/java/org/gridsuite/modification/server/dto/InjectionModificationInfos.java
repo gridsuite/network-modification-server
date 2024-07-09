@@ -40,5 +40,5 @@ public class InjectionModificationInfos extends BasicEquipmentModificationInfos 
     private AttributeModification<Integer> connectionPosition;
 
     @Schema(description = "Connected")
-    private AttributeModification<Boolean> connected;
+    private AttributeModification<Boolean> terminalConnected;
 }

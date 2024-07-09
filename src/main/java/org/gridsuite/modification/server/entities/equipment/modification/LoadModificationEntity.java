@@ -88,7 +88,7 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .connectionName(toAttributeModification(getConnectionName()))
                 .connectionDirection(toAttributeModification(getConnectionDirection()))
                 .connectionPosition(toAttributeModification(getConnectionPosition()))
-                .connected(toAttributeModification(getConnected()))
+                .terminalConnected(toAttributeModification(getTerminalConnected()))
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
                 .p0(AttributeModification.toAttributeModification(getP0Value(), getP0Op()))
                 .q0(AttributeModification.toAttributeModification(getQ0Value(), getQ0Op()))

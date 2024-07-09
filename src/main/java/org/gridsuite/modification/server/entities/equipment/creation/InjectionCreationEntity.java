@@ -57,6 +57,6 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
         this.connectionName = injectionCreationInfos.getConnectionName();
         this.connectionPosition = injectionCreationInfos.getConnectionPosition();
         this.connectionDirection = injectionCreationInfos.getConnectionDirection();
-        this.connected = injectionCreationInfos.isConnected();
+        this.connected = injectionCreationInfos.isTerminalConnected();
     }
 }

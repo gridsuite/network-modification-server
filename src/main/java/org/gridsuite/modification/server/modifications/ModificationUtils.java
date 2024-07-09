@@ -588,7 +588,7 @@ public final class ModificationUtils {
 
     public void disconnectCreatedInjection(InjectionCreationInfos modificationInfos, Injection<?> injection, ReportNode subReportNode) {
         // A newly created injection is connected by default, unless we choose not to do
-        if (!modificationInfos.isConnected()) {
+        if (!modificationInfos.isTerminalConnected()) {
             injection.getTerminal().disconnect();
             subReportNode.newReportNode()
                     .withMessageTemplate("equipmentDisconnected", "Equipment with id=${id} disconnected")
@@ -599,14 +599,14 @@ public final class ModificationUtils {
     }
 
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection) {
-        if (modificationInfos.getConnected() != null) {
-            if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getConnected().getValue())) {
+        if (modificationInfos.getTerminalConnected() != null) {
+            if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getTerminalConnected().getValue())) {
                 injection.getTerminal().disconnect();
                 if (injection.getTerminal().isConnected()) {
                     throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
                         String.format("Could not disconnect equipment '%s'", injection.getId()));
                 }
-            } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getConnected().getValue())) {
+            } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getTerminalConnected().getValue())) {
                 injection.getTerminal().connect();
                 if (!injection.getTerminal().isConnected()) {
                     throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
