@@ -44,7 +44,7 @@ public enum ModificationType {
     DELETE_VOLTAGE_LEVEL_ON_LINE(PreloadingStrategy.NONE),
     DELETE_ATTACHING_LINE(PreloadingStrategy.NONE),
     GENERATION_DISPATCH(PreloadingStrategy.COLLECTION),
-    VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.COLLECTION),
+    VOLTAGE_INIT_MODIFICATION(PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW),
     VSC_CREATION(PreloadingStrategy.NONE),
     VSC_MODIFICATION(PreloadingStrategy.NONE),
     CONVERTER_STATION_CREATION(PreloadingStrategy.NONE),
