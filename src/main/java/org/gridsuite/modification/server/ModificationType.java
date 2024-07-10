@@ -8,8 +8,6 @@ package org.gridsuite.modification.server;
 
 import com.powsybl.network.store.client.PreloadingStrategy;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.PRELOADING_STRATEGY_NOT_ALLOWED;
-
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -65,9 +63,20 @@ public enum ModificationType {
     }
 
     public ModificationType maxStrategy(ModificationType other) {
-        if (strategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW || other.strategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            throw new NetworkModificationException(PRELOADING_STRATEGY_NOT_ALLOWED, "Preloading strategy ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW not allowed");
-        }
-        return strategy != PreloadingStrategy.NONE ? this : other;
+        return switch (strategy) {
+            case NONE -> {
+                if (other.strategy != PreloadingStrategy.NONE) {
+                    yield other;
+                }
+                yield this;
+            }
+            case COLLECTION -> {
+                if (other.strategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
+                    yield other;
+                }
+                yield this;
+            }
+            case ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW -> this;
+        };
     }
 }
