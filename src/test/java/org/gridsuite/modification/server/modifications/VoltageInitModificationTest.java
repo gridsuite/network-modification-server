@@ -192,11 +192,13 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .build()))
             .buses(List.of(
                 VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v2")
                     .busId("busNotFound")
                     .v(400.)
                     .angle(0.)
                     .build(),
                 VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v1")
                     .busId("v1_0")
                     .v(230.)
                     .angle(0.5)

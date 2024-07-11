@@ -1190,11 +1190,13 @@ public class ModificationRepositoryTest {
                     .build()))
             .buses(List.of(
                 VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("1")
                     .busId("B1")
                     .v(225.)
                     .angle(0.)
                     .build(),
                 VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("2")
                     .busId("B2")
                     .v(380.)
                     .angle(0.3)

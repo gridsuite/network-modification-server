@@ -24,6 +24,9 @@ import jakarta.persistence.Embeddable;
 @Embeddable
 public class VoltageInitBusModificationEmbeddable {
     @Column
+    private String voltageLevelId;
+
+    @Column
     private String busId;
 
     @Column

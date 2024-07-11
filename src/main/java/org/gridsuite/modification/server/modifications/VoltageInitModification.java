@@ -79,7 +79,14 @@ public class VoltageInitModification extends AbstractModification {
         int modificationsCount = 0;
         List<ReportNode> reports = new ArrayList<>();
         for (VoltageInitBusModificationInfos m : voltageInitModificationInfos.getBuses()) {
-            final Bus bus = network.getBusView().getBus(m.getBusId());
+            String voltageLevelId = m.getVoltageLevelId();
+            Bus bus;
+            if (voltageLevelId != null) {
+                final VoltageLevel voltageLevel = network.getVoltageLevel(voltageLevelId);
+                bus = voltageLevel.getBusView().getBus(m.getBusId());
+            } else {
+                bus = network.getBusView().getBus(m.getBusId());
+            }
             if (bus == null) {
                 reports.add(ReportNode.newRootReportNode()
                         .withMessageTemplate("busNotFound", "Bus with id=${id} not found")

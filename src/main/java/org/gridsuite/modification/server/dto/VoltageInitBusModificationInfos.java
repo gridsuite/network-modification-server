@@ -23,6 +23,9 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @Schema(description = "Voltage init bus modfication infos")
 public class VoltageInitBusModificationInfos {
+    @Schema(description = "Voltage level id")
+    private String voltageLevelId;
+
     @Schema(description = "Bus id")
     private String busId;
 
