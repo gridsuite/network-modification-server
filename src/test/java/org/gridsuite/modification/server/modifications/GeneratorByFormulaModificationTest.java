@@ -18,8 +18,11 @@ import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
@@ -27,6 +30,7 @@ import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorFie
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
@@ -52,7 +56,8 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
 
     @Test
     public void testCreateWithWarning() throws Exception {
-        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
+        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filterWithOneWrongId))
@@ -62,21 +67,24 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
                 .build();
 
-        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes));
+        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
         assertEquals(75, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
     @Test
-    public void testCreateWithError() throws Exception {
+    public void testWithNullReferenceFieldOrValue() throws Exception {
+        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
+        AbstractFilter filterEquipments = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes));
+
         FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithAllWrongId))
+                .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1")))
                 .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
                 .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
                 .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
+                .fieldOrValue2(ReferenceFieldOrValue.builder().build())
                 .build();
 
-        checkCreateWithError(List.of(formulaInfos));
+        checkCreateWithError(List.of(formulaInfos), List.of(filterEquipments));
     }
 
     protected void createEquipments() {
@@ -143,23 +151,27 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         getNetwork().getGenerator(GENERATOR_ID_10).setRatedS(30.);
     }
 
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes gen1 = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
-        IdentifiableAttributes gen2 = getIdentifiableAttributes(GENERATOR_ID_2, 2.0);
-        IdentifiableAttributes gen3 = getIdentifiableAttributes(GENERATOR_ID_3, 2.0);
-        IdentifiableAttributes gen4 = getIdentifiableAttributes(GENERATOR_ID_4, 5.0);
-        IdentifiableAttributes gen5 = getIdentifiableAttributes(GENERATOR_ID_5, 6.0);
-        IdentifiableAttributes gen6 = getIdentifiableAttributes(GENERATOR_ID_6, 7.0);
-        IdentifiableAttributes gen7 = getIdentifiableAttributes(GENERATOR_ID_7, 3.0);
-        IdentifiableAttributes gen8 = getIdentifiableAttributes(GENERATOR_ID_8, 8.0);
-        IdentifiableAttributes gen9 = getIdentifiableAttributes(GENERATOR_ID_9, 0.0);
-        IdentifiableAttributes gen10 = getIdentifiableAttributes(GENERATOR_ID_10, 9.0);
-
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(gen1, gen2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(gen3, gen4), List.of());
-        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(gen5, gen6), List.of());
-        FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(gen7, gen8), List.of());
-        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(gen9, gen10), List.of());
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_2, 2.0)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_3, 2.0),
+                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_4, 5.0)))
+            .build();
+        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_5, 6.0),
+                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_6, 7.0)))
+            .build();
+        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_7, 3.0),
+                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_8, 8.0)))
+            .build();
+        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_9, 0.0),
+                new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_10, 9.0)))
+            .build();
 
         return List.of(filter1, filter2, filter3, filter4, filter5);
     }
@@ -431,5 +443,10 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     @Override
     protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.GENERATOR;
+    }
+
+    @Override
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.GENERATOR;
     }
 }

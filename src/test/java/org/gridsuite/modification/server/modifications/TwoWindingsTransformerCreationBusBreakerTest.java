@@ -36,6 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -48,12 +50,12 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .stashed(false)
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
-                .seriesResistance(1.)
-                .seriesReactance(2.)
-                .magnetizingConductance(3.)
-                .magnetizingSusceptance(4.)
-                .ratedVoltage1(5.)
-                .ratedVoltage2(6.)
+                .r(1.)
+                .x(2.)
+                .g(3.)
+                .b(4.)
+                .ratedU1(5.)
+                .ratedU2(6.)
                 .ratedS(1.)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
@@ -147,6 +149,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                                         .build()
                         ))
                         .build())
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -156,12 +159,12 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .stashed(false)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
-                .seriesResistance(2.3)
-                .seriesReactance(3.2)
-                .magnetizingConductance(4.4)
-                .magnetizingSusceptance(5.5)
-                .ratedVoltage1(6.8)
-                .ratedVoltage2(7.9)
+                .r(2.3)
+                .x(3.2)
+                .g(4.4)
+                .b(5.5)
+                .ratedU1(6.8)
+                .ratedU2(7.9)
                 .ratedS(9.4)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
@@ -286,6 +289,7 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
         assertEquals(4, getNetwork().getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
         assertEquals(3, getNetwork().getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
+        assertEquals(PROPERTY_VALUE, getNetwork().getTwoWindingsTransformer("new2wt").getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -321,12 +325,12 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
                 .connected2(true)
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
+                .g(100.0)
+                .b(200.0)
+                .ratedU1(1000)
+                .ratedU2(1010)
+                .x(300)
+                .r(400)
                 .ratedS(200.)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
                 .build();
@@ -341,12 +345,12 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
                 .connected2(true)
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
+                .g(100.0)
+                .b(200.0)
+                .ratedU1(1000)
+                .ratedU2(1010)
+                .x(300)
+                .r(400)
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
                 .ratioTapChanger(ratioTapChangerCreationInfos)
@@ -377,12 +381,12 @@ public class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetwor
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
-                .seriesReactance(300)
-                .seriesResistance(400)
+                .g(100.0)
+                .b(200.0)
+                .ratedU1(1000)
+                .ratedU2(1010)
+                .x(300)
+                .r(400)
                 .connectionName1("cnid2wt1")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connected1(true)

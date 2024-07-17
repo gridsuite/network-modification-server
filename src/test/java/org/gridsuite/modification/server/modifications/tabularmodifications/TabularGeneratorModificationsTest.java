@@ -13,23 +13,30 @@ import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.utils.ApiUtils;
+import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -45,10 +52,10 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxActivePower(new AttributeModification<>(500., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -60,9 +67,9 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -87,54 +94,434 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testCheckSqlRequestsCount() throws Exception {
-        List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
-        );
-        ModificationInfos modificationInfos = TabularModificationInfos.builder()
-                .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(modifications)
-                .build();
-        UUID modificationUuid = saveModification(modificationInfos);
+    public void testSqlRequestsCountOnGetModification() throws Exception {
+        Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
+        ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
+        assertSelectCount(4); // 4 before improvements
+        assertTabularModificationsEquals(tabularWith1Modification.getRight(), tabularWith1ModificationInfos);
 
-        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        assertSelectCount(3);
-
-        modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(300., OperationType.SET)).build()
-        );
-        modificationInfos = TabularModificationInfos.builder()
-                .modificationType(ModificationType.GENERATOR_MODIFICATION)
-                .modifications(modifications)
-                .build();
-        modificationUuid = saveModification(modificationInfos);
+        Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
+        ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
+        assertSelectCount(4); // 6 before improvements
+        assertTabularModificationsEquals(tabularWith3Modification.getRight(), tabularWith3ModificationInfos);
+    }
 
-        mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
-        assertSelectCount(3);
+    @Test
+    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+
         reset();
+        List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
+        assertSelectCount(8); // 10 before improvements
+        assertTabularModificationsEquals(modifications.stream().map(Pair::getRight).toList(), tabularModifications);
+    }
 
-        // We get the modifications of the group (so the 2 tabular modifications)
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
-                .andExpect(status().isOk());
-        // We check that the request count is not dependent on the number of sub modifications of the tabular modification (the JPA N+1 problem is correctly solved)
-        assertSelectCount(6);
+    /*
+    POST /v1/groups SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    First we select the modifications to copy:
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 1 select on group to check if it exists before the save
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification_group to create the new group
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
+    Then modifications order is set:
+    - 2 updates in modification for orders
+    Then relation between tabular modifications and sub-modifications are set:
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
+    (optional) Then order of sub-modifications relations are set:
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
+     */
+    @Test
+    public void testSqlRequestsCountOnPostGroups() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
+        TestUtils.assertRequestsCount(9, 8, 2, 0); // (13, 8, 2, 0) before improvements
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPostGroups2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
+        TestUtils.assertRequestsCount(15, 9, 2, 0); // (95, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    /*
+    PUT /v1/groups/{groupUuid}/duplications SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    First we select the modifications to copy:
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 1 select on group to check if it exists before the save
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification_group to create the new group
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
+    Then modifications order is set:
+    - 2 updates in modification for orders
+    Then relation between tabular modifications and sub-modifications are set:
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
+    (optional) Then order of sub-modifications relations are set:
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
+     */
+    @Test
+    public void testSqlRequestsCountOnPutGroupsDuplications() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+        TestUtils.assertRequestsCount(9, 8, 2, 0); // (19, 8, 2, 0) before improvements
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPutGroupsDuplications2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
+        TestUtils.assertRequestsCount(15, 9, 2, 0); // (107, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    /*
+    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    First we select the modifications to copy:
+    - 1 select to find modifications of this group
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
+    - 1 select on group to check if it exists before the save
+    Then we insert the new modifications in the new group:
+    - 1 insert in modification_group to create the new group
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
+    Then modifications order is set:
+    - 2 updates in modification for orders
+    Then relation between tabular modifications and sub-modifications are set:
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
+    (optional) Then order of sub-modifications relations are set:
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
+     */
+    @Test
+    public void testSqlRequestsCountOnPutGroupsWithCopy() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
+        TestUtils.assertRequestsCount(8, 8, 2, 0); // (14, 8, 2, 0) before improvements
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPutGroupsWithCopy2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        UUID targetGroupUuid = UUID.randomUUID();
+
+        reset();
+        ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
+        TestUtils.assertRequestsCount(14, 9, 2, 0); // (26, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        assertTabularModificationsEquals(modifications, targetGroupUuid);
+    }
+
+    /*
+    POST /v1/network-modifications/duplicate SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    First we select the modifications to copy:
+    - 1 select to find modifications of this group
+    - 6 selects: 3 per tabular modification (get IDs, get reactive capability curve points, get properties)
+    Then we insert the new modifications in the new group:
+    - 2 inserts in modification for tabular modifications
+    - 2 inserts in tabular_modification
+    - batched* and reduced** 2000 inserts in modification for sub-modifications
+    - batched* and reduced** 2000 inserts in sub-modification table
+    - batched* and reduced** 2000 inserts in free_property
+    - batched* and reduced** 2000 inserts in reactive_capability_curve_points
+    Then modifications order is set:
+    - 2 updates in modification for orders
+    Then relation between tabular modifications and sub-modifications are set:
+    - batched* and reduced** 2000 inserts in tabular_modification_modifications for the relation
+    (optional) Then order of sub-modifications relations are set:
+    - batched* but not reduced** 2000 updates in free_property
+
+    *Batched means it requires less network connections to exchange all the requests, they are grouped by batches.
+    **Reduced means several 'unitary' requests are merged into one request with several entries. It is a postrgreeSQL
+    optimization to reduce the treated number of requests.
+    NB: as a limitation of pgjdbc we have a maximum of 128 entries for each merged requests, as multiple entries increase
+    response time, it is a better optimization to start multiplying requests instead of entries in one request.
+     */
+    @Test
+    public void testSqlRequestsCountOnPostNetworkModificationsDuplicate() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+
+        reset();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+        TestUtils.assertRequestsCount(7, 7, 1, 0); // (11, 7, 1, 0) before improvements
+        assertTabularModificationsEquals(modifications, idsMapping);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnPostNetworkModificationsDuplicate2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+
+        reset();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+        TestUtils.assertRequestsCount(13, 8, 1, 0); // (93, 8, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
+        assertTabularModificationsEquals(modifications, idsMapping);
+    }
+
+    /*
+    DELETE /v1/groups/{groupUuid} SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
+    - 14 deletes (7 per tabular modification):
+        - delete reactive_capability_curve_points
+        - delete free_property
+        - delete generator_modification
+        - delete tabular_modifications_modification
+        - delete modification for generators
+        - delete tabular_modification
+        - delete modification for tabular modifications
+    - 1 select on group generated by the JPA delete of the group
+    - 1 delete of the group
+     */
+    @Test
+    public void testSqlRequestsCountOnDeleteGroup() throws Exception {
+        createFewTabularModifications();
+
+        reset();
+        ApiUtils.deleteGroup(mockMvc, getGroupId());
+        // It is actually (5, 0, 0, 15) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(5, 0, 0, 1);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnDeleteGroup2() throws Exception {
+        createMoreTabularModifications();
+
+        reset();
+        ApiUtils.deleteGroup(mockMvc, getGroupId());
+        // It is actually (7, 0, 0, 29) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(7, 0, 0, 1);
+    }
+
+    /*
+    DELETE /v1/groups/{groupUuid}/stashed-modifications SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
+    - 14 deletes (7 per tabular modification):
+        - delete reactive_capability_curve_points
+        - delete free_property
+        - delete generator_modification
+        - delete tabular_modifications_modification
+        - delete modification for generators
+        - delete tabular_modification
+        - delete modification for tabular modifications
+     */
+    @Test
+    public void testSqlRequestsCountOnDeleteStashedInGroup() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+
+        reset();
+        ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
+        // It is actually (4, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(4, 0, 0, 0);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnDeleteStashedInGroup2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+
+        reset();
+        ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
+        // It is actually (6, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(6, 0, 0, 0);
+    }
+
+    /*
+    DELETE /v1/network-modifications SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 2 selects to retrieve tabular sub-modifications IDs (1 per tabular modification)
+    - 14 deletes (7 per tabular modification):
+        - delete reactive_capability_curve_points
+        - delete free_property
+        - delete generator_modification
+        - delete tabular_modifications_modification
+        - delete modification for generators
+        - delete tabular_modification
+        - delete modification for tabular modifications
+     */
+    @Test
+    public void testSqlRequestsCountOnDeleteNetworkModificationsInGroup() throws Exception {
+        createFewTabularModifications();
+
+        reset();
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
+        // It is actually (4, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(4, 0, 0, 0);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnDeleteNetworkModificationsInGroup2() throws Exception {
+        createMoreTabularModifications();
+
+        reset();
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
+        // It is actually (6, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(6, 0, 0, 0);
+    }
+
+    /*
+    DELETE /v1/network-modifications SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    - 1 select on group to check if it exists
+    - 1 select to find modifications of this group
+    - 1 update to maintain modifications order
+    - 2 select to retrieve tabular sub-modifications IDs (1 per tabular modification)
+    - 14 deletes (7 per tabular modification):
+        - delete reactive_capability_curve_points
+        - delete free_property
+        - delete generator_modification
+        - delete tabular_modifications_modification
+        - delete modification for generators
+        - delete tabular_modification
+        - delete modification for tabular modifications
+     */
+    @Test
+    public void testSqlRequestsCountOnDeleteNetworkModificationsByIdsInGroup() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+
+        reset();
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft())); // removing only 1 tabular modification in the group
+        // It is actually (3, 0, 1, 7) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(3, 0, 1, 0);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnDeleteNetworkModificationsByIdsInGroup2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+
+        reset();
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList()); // removing only 3 tabular modification in the group
+        // It is actually (5, 0, 1, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(5, 0, 1, 0);
+    }
+
+    /*
+    DELETE /v1/network-modifications SQL requests analysis
+
+    Given an example with 2 tabular modifications having 1000 modifications each
+
+    - 1 select to find modifications of this group
+    - 2 select to retrieve tabular sub-modifications IDs (1 per tabular modification)
+    - 14 deletes (7 per tabular modification):
+        - delete reactive_capability_curve_points
+        - delete free_property
+        - delete generator_modification
+        - delete tabular_modifications_modification
+        - delete modification for generators
+        - delete tabular_modification
+        - delete modification for tabular modifications
+     */
+
+    @Test
+    public void testSqlRequestsCountOnDeleteNetworkModificationsByIds() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+
+        reset();
+        ApiUtils.deleteNetworkModifications(mockMvc, idsMapping.values().stream().toList());
+        // It is actually (3, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(3, 0, 0, 0);
+    }
+
+    @Test
+    public void testSqlRequestsCountOnDeleteNetworkModificationsByIds2() throws Exception {
+        List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+
+        reset();
+        ApiUtils.deleteNetworkModifications(mockMvc, idsMapping.values().stream().toList());
+        // It is actually (5, 0, 0, 28) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(5, 0, 0, 0);
     }
 
     @Test
     public void testAllModificationsHaveFailed() throws Exception {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxActivePower(new AttributeModification<>(-300., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build()
         );
         ModificationInfos modificationInfos = TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
@@ -145,7 +532,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk()).andReturn();
-        assertLogMessage("Tabular modification: No generators have been modified", "tabularModificationError", reportService);
+        assertLogMessage("Tabular modification: No generators have been modified", "tabularGENERATOR_MODIFICATIONError", reportService);
     }
 
     @Override
@@ -162,5 +549,89 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         Assertions.assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
+    }
+
+    private List<Pair<UUID, ModificationInfos>> createFewTabularModifications() {
+        Pair<UUID, ModificationInfos> tabular1 = createTabularGeneratorModification(1);
+        Pair<UUID, ModificationInfos> tabular2 = createTabularGeneratorModification(3);
+
+        return List.of(tabular1, tabular2);
+    }
+
+    private List<Pair<UUID, ModificationInfos>> createMoreTabularModifications() {
+        Pair<UUID, ModificationInfos> tabular1 = createTabularGeneratorModification(1);
+        Pair<UUID, ModificationInfos> tabular2 = createTabularGeneratorModification(3);
+        Pair<UUID, ModificationInfos> tabular3 = createTabularGeneratorModification(10);
+        Pair<UUID, ModificationInfos> tabular4 = createTabularGeneratorModification(30);
+
+        return List.of(tabular1, tabular2, tabular3, tabular4);
+    }
+
+    private Pair<UUID, ModificationInfos> createTabularGeneratorModification(int qty) {
+        ModificationInfos tabularModification = TabularModificationInfos.builder()
+            .modificationType(ModificationType.GENERATOR_MODIFICATION)
+            .modifications(createGeneratorModificationList(qty))
+            .build();
+        UUID uuid = saveModification(tabularModification);
+        tabularModification.setUuid(uuid);
+        return Pair.of(uuid, tabularModification);
+    }
+
+    private List<ModificationInfos> createGeneratorModificationList(int qty) {
+        return IntStream.range(0, qty)
+            .mapToObj(i ->
+                (ModificationInfos) GeneratorModificationInfos.builder()
+                    .equipmentId(UUID.randomUUID().toString())
+                    .maxP(new AttributeModification<>(300., OperationType.SET))
+                    .properties(List.of(
+                        ModificationCreation.getFreeProperty(),
+                        ModificationCreation.getFreeProperty("test", "value")))
+                    .reactiveCapabilityCurvePoints(List.of(
+                        ReactiveCapabilityCurveModificationInfos.builder().p(10.).oldP(15.).build(),
+                            ReactiveCapabilityCurveModificationInfos.builder().maxQ(12.).oldMaxQ(17.).build(),
+                        ReactiveCapabilityCurveModificationInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
+                    .build())
+            .toList();
+    }
+
+    private void assertTabularModificationsEquals(List<Pair<UUID, ModificationInfos>> expectedModifications, UUID groupUuid) throws Exception {
+        List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, groupUuid);
+        assertTabularModificationsEquals(expectedModifications.stream().map(Pair::getRight).toList(), tabularModifications);
+    }
+
+    private void assertTabularModificationsEquals(List<Pair<UUID, ModificationInfos>> expectedModifications, Map<UUID, UUID> idsMapping) {
+        Map<UUID, ModificationInfos> retrievedModifications = idsMapping.values()
+            .stream()
+            .map(id -> {
+                try {
+                    return ApiUtils.getModification(mockMvc, id);
+                } catch (Exception e) {
+                    return null; // Not important, comparison will fail if some modification fetch fails
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(
+                ModificationInfos::getUuid,
+                Function.identity()
+            ));
+        List<ModificationInfos> sourceModifications = expectedModifications.stream().map(Pair::getRight).toList();
+        // Ordering the retrieved list based on the source <-> target mapping
+        List<ModificationInfos> targetModifications = sourceModifications.stream().map(m -> retrievedModifications.get(idsMapping.get(m.getUuid()))).toList();
+
+        assertTabularModificationsEquals(sourceModifications, targetModifications);
+    }
+
+    private void assertTabularModificationsEquals(List<ModificationInfos> expectedModifications, List<ModificationInfos> modificationInfos) {
+        assertThat(expectedModifications)
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(modificationInfos);
+    }
+
+    private void assertTabularModificationsEquals(ModificationInfos expectedModificationInfos, ModificationInfos modificationInfos) {
+        assertThat(expectedModificationInfos)
+            .usingRecursiveComparison()
+            .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
+            .isEqualTo(modificationInfos);
     }
 }

@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,13 +16,13 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.entities.equipment.modification.BranchStatusModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.OperatingStatusModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
-import org.gridsuite.modification.server.modifications.BranchStatusModification;
+import org.gridsuite.modification.server.modifications.OperatingStatusModification;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_ACTION_TYPE_EMPTY;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_ACTION_TYPE_EMPTY;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -33,10 +32,10 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 @Getter
 @Setter
 @ToString(callSuper = true)
-@Schema(description = "Branch status modification")
-@JsonTypeName("BRANCH_STATUS_MODIFICATION")
-@ModificationErrorTypeName("BRANCH_ACTION_ERROR")
-public class BranchStatusModificationInfos extends EquipmentModificationInfos {
+@Schema(description = "Operating status modification")
+@JsonTypeName("OPERATING_STATUS_MODIFICATION")
+@ModificationErrorTypeName("OPERATING_STATUS_MODIFICATION_ERROR")
+public class OperatingStatusModificationInfos extends EquipmentModificationInfos {
     @Schema(description = "Action type")
     private ActionType action;
 
@@ -52,43 +51,31 @@ public class BranchStatusModificationInfos extends EquipmentModificationInfos {
     }
 
     @Override
-    public BranchStatusModificationEntity toEntity() {
-        return new BranchStatusModificationEntity(this);
+    public OperatingStatusModificationEntity toEntity() {
+        return new OperatingStatusModificationEntity(this);
     }
 
     @Override
     public AbstractModification toModification() {
-        return new BranchStatusModification(this);
+        return new OperatingStatusModification(this);
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        String defaultName;
-        switch (action) {
-            case LOCKOUT:
-                defaultName = "Lockout ${branchId}";
-                break;
-            case TRIP:
-                defaultName = "Trip ${branchId}";
-                break;
-            case ENERGISE_END_ONE:
-            case ENERGISE_END_TWO:
-                defaultName = "Energise ${branchId}";
-                break;
-            case SWITCH_ON:
-                defaultName = "Switch on ${branchId}";
-                break;
-            default:
-                defaultName = "";
-        }
-        return reporter.createSubReporter(getType().name() + "_" + action, defaultName, "branchId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        String defaultName = switch (action) {
+            case LOCKOUT -> "Lockout ${equipmentId}";
+            case TRIP -> "Trip ${equipmentId}";
+            case ENERGISE_END_ONE, ENERGISE_END_TWO -> "Energise ${equipmentId}";
+            case SWITCH_ON -> "Switch on ${equipmentId}";
+        };
+        return reportNode.newReportNode().withMessageTemplate(getType().name() + "_" + action, defaultName).withUntypedValue("equipmentId", this.getEquipmentId()).add();
     }
 
     @Override
     public void check() {
         super.check();
         if (action == null) {
-            throw new NetworkModificationException(BRANCH_ACTION_TYPE_EMPTY);
+            throw new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY);
         }
     }
 

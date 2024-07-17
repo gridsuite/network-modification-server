@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
 @Builder
 @Data
@@ -47,10 +49,12 @@ public class NetworkModificationResult {
 
     @Schema(description = "Network modification impacts")
     @Builder.Default
-    private List<SimpleElementImpact> networkImpacts = List.of();
+    private List<AbstractBaseImpact> networkImpacts = List.of();
 
     public Set<String> getImpactedSubstationsIds() {
-        return networkImpacts.stream().flatMap(impact -> impact.getSubstationIds().stream()).collect(Collectors.toCollection(TreeSet::new));
+        return networkImpacts.stream()
+            .filter(impact -> impact.isSimple())
+            .flatMap(impact -> ((SimpleElementImpact) impact).getSubstationIds().stream())
+            .collect(Collectors.toCollection(TreeSet::new)); // using TreeSet to keep natural order
     }
-
 }

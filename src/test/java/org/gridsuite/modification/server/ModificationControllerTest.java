@@ -20,6 +20,7 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
@@ -28,6 +29,7 @@ import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -56,6 +58,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -83,12 +86,14 @@ public class ModificationControllerTest {
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID TEST_NETWORK_WITH_FLUSH_ERROR_ID = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
+    private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
+    private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
     private static final String URI_NETWORK_MODIF_BUS_BREAKER = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_BUS_BREAKER_ID + URI_NETWORK_MODIF_PARAMS;
@@ -385,14 +390,11 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDeleteTryToDeleteEmptyStashedModification() throws Exception {
-        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
-
-        assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("onlyStashed", "true")
-                        .queryParam("groupUuid", TEST_GROUP_ID.toString()))
-                .andExpect(status().isBadRequest());
+    public void testDeleteModificationMissingParamError() throws Exception {
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
+                .andExpect(status().isInternalServerError())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NetworkModificationException))
+                .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -451,13 +453,28 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk()).andReturn();
             assertApplicationStatusOK(mvcResult);
         }
-        var modificationList = modificationRepository.getModifications(groupId, true, true);
+        var modificationList = modificationRepository.getModifications(groupId, false, true);
         assertEquals(number, modificationList.size());
         return modificationList;
     }
 
+    private ModificationInfos createDeletionModification(UUID groupId, IdentifiableType equipmentType, String equipmentName) throws Exception {
+        EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
+                .equipmentType(equipmentType)
+                .equipmentId(equipmentName)
+                .build();
+        MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + "&groupUuid=" + groupId + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID())
+                            .content(objectWriter.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        var modificationList = modificationRepository.getModifications(groupId, true, true);
+        assertFalse(modificationList.isEmpty());
+        return modificationList.get(modificationList.size() - 1);
+    }
+
     @Test
-    public void testDuplicateModification() throws Exception {
+    public void testCopyModification() throws Exception {
         // create 3 modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -478,7 +495,7 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
-        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         // now 5 modifications: first 0-1-2 are still the same, last 3-4 are new (duplicates of 0-1)
         assertEquals(5, newModificationList.size());
@@ -514,7 +531,7 @@ public class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
-        var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
+        var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, false, true);
         List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         // now 3 modifications in new group: first 0 is still the same, last 1-2 are new (duplicates of 0-1 from first group)
         assertEquals(3, newModificationListOtherGroup.size());
@@ -547,7 +564,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDuplicateModificationWithUnexistingId() throws Exception {
+    public void testCopyModificationWithUnexistingId() throws Exception {
         // create 1 modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -568,42 +585,6 @@ public class ModificationControllerTest {
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
         // we still have the same and only modification
         assertEquals(newModificationUuidList, modificationUuidList);
-    }
-
-    private void testMoveModification(UUID originGroupUuid, Boolean canBuild) throws Exception {
-        // create 2 modifications
-        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
-                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-
-        // swap modifications: move [1] before [0]
-        List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
-                + "&networkUuid=" + TEST_NETWORK_ID
-                + "&reportUuid=" + TEST_REPORT_ID
-                + "&reporterId=" + UUID.randomUUID()
-                + "&variantId=" + NetworkCreation.VARIANT_ID
-                + "&before=" + modificationUuidList.get(0);
-        if (originGroupUuid != null) {
-            url = url + "&originGroupUuid=" + TEST_GROUP_ID;
-        }
-        if (canBuild != null) {
-            url = url + "&buid=" + canBuild;
-        }
-        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
-                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-        assertNotNull(newModificationUuidList);
-        Collections.reverse(newModificationUuidList);
-
-        assertEquals(modificationUuidList, newModificationUuidList);
-    }
-
-    @Test
-    public void testMoveModificationWithOrigin() throws Exception {
-        testMoveModification(TEST_GROUP_ID, Boolean.TRUE);
     }
 
     @Test
@@ -663,8 +644,122 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMoveModificationWithoutOrigin() throws Exception {
-        testMoveModification(null, null);
+    public void testMoveModificationInSameGroup() throws Exception {
+        // create 2 modifications in a single group
+        List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // swap modifications: move [1] before [0]
+        List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
+                + "&networkUuid=" + TEST_NETWORK_ID
+                + "&reportUuid=" + TEST_REPORT_ID
+                + "&reporterId=" + UUID.randomUUID()
+                + "&variantId=" + NetworkCreation.VARIANT_ID
+                + "&before=" + modificationUuidList.get(0);
+        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        var newModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newModificationUuidList);
+        Collections.reverse(newModificationUuidList); // swap => reverse order is expected
+        assertEquals(modificationUuidList, newModificationUuidList);
+    }
+
+    @Test
+    public void testNetworkCompositeModification() throws Exception {
+        // Insert a switch modification in the group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // Create a composite modification with the switch modification
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                        .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        ModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
+                .modifications(modificationList)
+                .build();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
+        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // Insert the composite modification in the group
+        mvcResult = mockMvc.perform(
+                        put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT"
+                                + "&networkUuid=" + TEST_NETWORK_ID
+                                + "&reportUuid=" + TEST_REPORT_ID
+                                + "&reporterId=" + UUID.randomUUID()
+                                + "&variantId=" + NetworkCreation.VARIANT_ID)
+                                .content(objectWriter.writeValueAsString(List.of(compositeModificationUuid)))
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(2, newModificationList.size());
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(modificationUuids.get(0), newModificationUuidList.get(0));
+        assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(1));
+    }
+
+    @Test
+    public void testMoveModificationBetweenTwoGroups() throws Exception {
+        String substationS3 = network.getLoad("v5load").getTerminal().getVoltageLevel().getSubstation().get().getId();
+        String substationS1 = network.getLoad("v1load").getTerminal().getVoltageLevel().getSubstation().get().getId();
+        assertEquals("s3", substationS3);
+        assertEquals("s1", substationS1);
+
+        // create 4 modifications in destination group (3 switch updates + 1 load deletion in s3)
+        List<UUID> destinationModificationUuidList = ListUtils.union(
+                createSomeSwitchModifications(TEST_GROUP_ID, 3).stream().map(ModificationInfos::getUuid).toList(),
+                List.of(createDeletionModification(TEST_GROUP_ID, IdentifiableType.LOAD, "v5load").getUuid())
+                );
+        // create 1 modification in origin group (1 load deletion in s1)
+        UUID originSingleModification = createDeletionModification(TEST_GROUP2_ID, IdentifiableType.LOAD, "v1load").getUuid();
+
+        // cut origin[0] and append to destination
+        List<UUID> movingModificationUuidList = Collections.singletonList(originSingleModification);
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
+                + "&networkUuid=" + TEST_NETWORK_ID
+                + "&reportUuid=" + TEST_REPORT_ID
+                + "&reporterId=" + UUID.randomUUID()
+                + "&variantId=" + NetworkCreation.VARIANT_ID
+                + "&originGroupUuid=" + TEST_GROUP2_ID
+                + "&build=true";
+
+        MvcResult mvcResult = mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+        networkModificationResult.get().getNetworkImpacts().forEach(i -> {
+            assertTrue(i.isSimple());
+            SimpleElementImpact simpleImpact = (SimpleElementImpact) i;
+            assertEquals(Set.of(substationS1), simpleImpact.getSubstationIds());
+            assertEquals(SimpleElementImpact.SimpleImpactType.DELETION, simpleImpact.getSimpleImpactType());
+        });
+
+        // check destination
+        var newDestinationModificationUuidList = modificationRepository.getModifications(TEST_GROUP_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newDestinationModificationUuidList);
+        // Expect: existing list + the moved one
+        List<UUID> expectedDestinationModificationUuidList = ListUtils.union(destinationModificationUuidList, movingModificationUuidList);
+        assertEquals(expectedDestinationModificationUuidList, newDestinationModificationUuidList);
+
+        // check origin
+        var newOriginModificationUuidList = modificationRepository.getModifications(TEST_GROUP2_ID, true, true).
+                stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        assertNotNull(newOriginModificationUuidList);
+        // Expect: empty
+        assertEquals(List.of(), newOriginModificationUuidList);
     }
 
     @Test
@@ -714,12 +809,12 @@ public class ModificationControllerTest {
         LineCreationInfos lineCreationInfos = LineCreationInfos.builder()
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
-                .shuntConductance1(10.0)
-                .shuntSusceptance1(10.0)
-                .shuntConductance2(20.0)
-                .shuntSusceptance2(20.0)
+                .r(100.0)
+                .x(100.0)
+                .g1(10.0)
+                .b1(10.0)
+                .g2(20.0)
+                .b2(20.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
@@ -743,8 +838,8 @@ public class ModificationControllerTest {
         //create a lineAttached
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .equipmentId("attachmentLine")
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
+                .r(50.6)
+                .x(25.3)
                 .build();
 
         LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
@@ -838,8 +933,8 @@ public class ModificationControllerTest {
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .loadType(LoadType.AUXILIARY)
-                .activePower(100.0)
-                .reactivePower(60.0)
+                .p0(100.0)
+                .q0(60.0)
                 .connectionDirection(ConnectablePosition.Direction.BOTTOM)
                 .connectionName("bottom")
                 .build();
@@ -979,7 +1074,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        List<SimpleElementImpact> expectedImpacts = createMultipleDeletionImpacts(
+        List<AbstractBaseImpact> expectedImpacts = createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.HVDC_LINE, "hvdcLine"),
                 Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc"), Pair.of(IdentifiableType.HVDC_CONVERTER_STATION, "v2vsc"),
@@ -1058,7 +1153,8 @@ public class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
-        assertEquals(71, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
+        // switches are not indexed in ElasticSearch
+        assertEquals(31, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
     }
 
     private void testConnectableDeletionImpacts(String resultAsString,
@@ -1071,10 +1167,11 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch(breakerId));
         assertNull(network.getSwitch(disconnectorId));
 
-        // Connectable and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        // Connectable have been added as TombstonedEquipmentInfos in ElasticSearch
+        // switches are not indexed in ElasticSearch
         assertTrue(existTombstonedEquipmentInfos(connectableId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
     private void testBranchDeletionImpacts(String resultAsString,
@@ -1090,12 +1187,13 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch(breakerId2));
         assertNull(network.getSwitch(disconnectorId2));
 
-        // line and switches have been added as TombstonedEquipmentInfos in ElasticSearch
+        // line have been added as TombstonedEquipmentInfos in ElasticSearch
+        // switches are not indexed in ElasticSearch
         assertTrue(existTombstonedEquipmentInfos(branchId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
     private void test3WTDeletionImpacts(String resultAsString, String w3tId,
@@ -1114,22 +1212,32 @@ public class ModificationControllerTest {
         assertNull(network.getSwitch(breakerId3));
         assertNull(network.getSwitch(disconnectorId3));
 
-        // 3 windings transformer and switches have been added as TombstonedEquipmentInfos in ElasticSearch
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(breakerId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
-        assertTrue(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        // 3 windings transformer have been added as TombstonedEquipmentInfos in ElasticSearch
+        // switches are not indexed in ElasticSearch
+        assertTrue(existTombstonedEquipmentInfos(w3tId, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId1, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId2, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(breakerId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+        assertFalse(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<SimpleElementImpact> expectedImpacts) throws JsonProcessingException {
-        // All equipments have been removed from network
-        expectedImpacts.forEach(impact -> assertNull(network.getIdentifiable(impact.getElementId())));
+    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
+        for (AbstractBaseImpact impact : expectedImpacts) {
+            if (impact instanceof SimpleElementImpact simpleImpact) {
+                // Equipment has been removed from network
+                assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
-        // All equipments have been added as TombstonedEquipmentInfos in ElasticSearch
-        expectedImpacts.forEach(impact -> assertTrue(existTombstonedEquipmentInfos(impact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID)));
+                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for switches
+                if (simpleImpact.getElementType() != IdentifiableType.SWITCH) {
+                    assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+                } else {
+                    assertFalse(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
+                }
+            }
+        }
 
         TestImpactUtils.testElementImpacts(mapper, networkModificationResultAsString, expectedImpacts);
     }
@@ -1254,11 +1362,11 @@ public class ModificationControllerTest {
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
-                    .reactivePowerSetpoint(10.)
+                    .targetQ(10.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G2")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()
@@ -1268,7 +1376,8 @@ public class ModificationControllerTest {
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3WT1")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .ratioTapChangerTargetV(225.)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
@@ -1293,6 +1402,7 @@ public class ModificationControllerTest {
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
+                    .targetV(225.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v5shunt")
@@ -1303,6 +1413,20 @@ public class ModificationControllerTest {
                     .shuntCompensatorId("v6shunt")
                     .sectionCount(1)
                     .connect(false)
+                    .targetV(380.)
+                    .build()))
+            .buses(List.of(
+                VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v1")
+                    .busId("1.1")
+                    .v(225.)
+                    .angle(0.)
+                    .build(),
+                VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v1")
+                    .busId("1.2")
+                    .v(226.)
+                    .angle(0.6)
                     .build()))
             .build();
 
@@ -1370,6 +1494,83 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID))
             .andExpect(status().isOk()).andReturn();
         assertEquals(3, Integer.valueOf(mvcResult.getResponse().getContentAsString()).intValue());
+    }
 
+    @Test
+    @SneakyThrows
+    public void testDuplicate() {
+        // create 1 modification
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // Duplicate it without group ownership
+        MvcResult mvcResult = mockMvc.perform(
+            post(URI_NETWORK_MODIF_BASE)
+                    .content(objectWriter.writeValueAsString(modificationUuidList))
+                    .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        Map<UUID, UUID> returnedMap = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, returnedMap.size());
+        Map.Entry<UUID, UUID> returnedIds = returnedMap.entrySet().stream().findFirst().get();
+        UUID returnedSourceId = returnedIds.getKey();
+        UUID returnedNewId = returnedIds.getValue();
+        assertNotEquals(returnedSourceId, returnedNewId);
+        assertEquals(modificationUuidList.get(0), returnedSourceId);
+
+        ModificationInfos sourceModificationInfos = modificationRepository.getModificationInfo(modificationUuidList.get(0));
+        ModificationInfos newModificationInfos = modificationRepository.getModificationInfo(returnedNewId);
+        // compare duplicate with the source (same data except uuid)
+        assertThat(sourceModificationInfos).recursivelyEquals(newModificationInfos);
+        // source group has not changed
+        List<ModificationInfos> groupModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        assertEquals(1, groupModifications.size());
+        assertEquals(returnedSourceId, groupModifications.get(0).getUuid());
+
+        // now delete the duplicate modification
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("uuids", returnedNewId.toString()))
+                .andExpect(status().isOk());
+
+        // source group has not changed
+        groupModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
+        assertEquals(1, groupModifications.size());
+        assertEquals(returnedSourceId, groupModifications.get(0).getUuid());
+        // duplicate has been deleted
+        assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
+                -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testMetadata() {
+        // create a single switch attribute modification in a group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID switchModificationId = modificationList.get(0).getUuid();
+
+        MvcResult mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/metadata?ids={id}", switchModificationId)
+                    .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        List<ModificationMetadata> metadata = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, metadata.size());
+        assertEquals(switchModificationId, metadata.get(0).getId());
+        assertEquals(EQUIPMENT_ATTRIBUTE_MODIFICATION, metadata.get(0).getType());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testStandaloneDeletionError() {
+        // create a single switch attribute modification in a group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID switchModificationId = modificationList.get(0).getUuid();
+
+        // Try to delete this modification without its group: not allowed
+        mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
+                        .queryParam("uuids", switchModificationId.toString()))
+                .andExpectAll(
+                    status().is5xxServerError(),
+                    content().string(new NetworkModificationException(MODIFICATION_DELETION_ERROR,
+                        String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
+            );
     }
 }

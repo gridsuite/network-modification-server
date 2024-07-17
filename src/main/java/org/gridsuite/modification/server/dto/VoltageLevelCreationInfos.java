@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -40,7 +39,7 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     private String substationId;
 
     @Schema(description = "nominal voltage in kV")
-    private double nominalVoltage;
+    private double nominalV;
 
     @Schema(description = "low voltage limit in kV")
     private Double lowVoltageLimit;
@@ -77,7 +76,10 @@ public class VoltageLevelCreationInfos extends EquipmentCreationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "VoltageLevel creation ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "VoltageLevel creation ${voltageLevelId}")
+                .withUntypedValue("voltageLevelId", getEquipmentId())
+                .add();
     }
 }

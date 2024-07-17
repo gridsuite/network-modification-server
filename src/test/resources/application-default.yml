@@ -12,10 +12,10 @@ spring:
       ddl-auto: none
 logging:
   level:
-    org.springframework.orm.jpa: DEBUG
-    org.springframework.transaction: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.orm.jpa: INFO
+    org.springframework.transaction: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
 gridsuite:
   services:
     report-server:
@@ -28,6 +28,9 @@ powsybl-ws:
     vendor: h2:mem
     query: ;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     hostPort: ":"
+
+impacts:
+    collection-threshold: 5
 
 
 

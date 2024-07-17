@@ -8,8 +8,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.HvdcLine;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -36,13 +35,13 @@ import org.gridsuite.modification.server.modifications.VscCreation;
 @ModificationErrorTypeName("CREATE_VSC_ERROR")
 public class VscCreationInfos extends EquipmentCreationInfos {
     @Schema(description = "DC nominal voltage")
-    private Double dcNominalVoltage;
+    private Double nominalV;
 
     @Schema(description = "DC resistance")
-    private Double dcResistance;
+    private Double r;
 
     @Schema(description = "Maximum active power ")
-    private Double maximumActivePower;
+    private Double maxP;
 
     @Schema(description = "Operator active power limit (Side1->Side2)")
     private Float operatorActivePowerLimitFromSide1ToSide2;
@@ -53,8 +52,8 @@ public class VscCreationInfos extends EquipmentCreationInfos {
     @Schema(description = "Converters mode")
     private HvdcLine.ConvertersMode convertersMode;
 
-    @Schema(description = "Active power")
-    private Double activePower;
+    @Schema(description = "Active power setpoint")
+    private Double activePowerSetpoint;
 
     @Schema(description = "Angle droop active power control ")
     private Boolean angleDroopActivePowerControl;
@@ -82,7 +81,10 @@ public class VscCreationInfos extends EquipmentCreationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Vsc creation ${vscId}", "vscId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Vsc creation ${vscId}")
+                .withUntypedValue("vscId", getEquipmentId())
+                .add();
     }
 }

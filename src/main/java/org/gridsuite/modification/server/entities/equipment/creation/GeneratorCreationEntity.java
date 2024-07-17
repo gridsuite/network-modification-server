@@ -7,14 +7,16 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.EnergySource;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
-import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,26 +32,26 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "energySource")
     private EnergySource energySource;
 
-    @Column(name = "minActivePower")
-    private double minActivePower;
+    @Column(name = "minP")
+    private double minP;
 
-    @Column(name = "maxActivePower")
-    private double maxActivePower;
+    @Column(name = "maxP")
+    private double maxP;
 
-    @Column(name = "ratedNominalPower")
-    private Double ratedNominalPower;
+    @Column(name = "ratedS")
+    private Double ratedS;
 
-    @Column(name = "activePowerSetpoint")
-    private double activePowerSetpoint;
+    @Column(name = "targetP")
+    private double targetP;
 
-    @Column(name = "reactivePowerSetpoint")
-    private Double reactivePowerSetpoint;
+    @Column(name = "targetQ")
+    private Double targetQ;
 
     @Column(name = "voltageRegulationOn")
     private boolean voltageRegulationOn;
 
-    @Column(name = "voltageSetpoint")
-    private Double voltageSetpoint;
+    @Column(name = "targetV")
+    private Double targetV;
 
     @Column(name = "plannedActivePowerSetPoint")
     private Double plannedActivePowerSetPoint;
@@ -63,11 +65,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "forcedOutageRate")
     private Double forcedOutageRate;
 
-    @Column(name = "minimumReactivePower")
-    private Double minimumReactivePower;
+    @Column(name = "minQ")
+    private Double minQ;
 
-    @Column(name = "maximumReactivePower")
-    private Double maximumReactivePower;
+    @Column(name = "maxQ")
+    private Double maxQ;
 
     @Column(name = "participate")
     private Boolean participate;
@@ -75,11 +77,11 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     @Column(name = "droop")
     private Float droop;
 
-    @Column(name = "transientReactance")
-    private Double transientReactance;
+    @Column(name = "directTransX")
+    private Double directTransX;
 
-    @Column(name = "stepUpTransformerReactance")
-    private Double stepUpTransformerReactance;
+    @Column(name = "stepUpTransformerX")
+    private Double stepUpTransformerX;
 
     @Column(name = "regulatingTerminalId")
     private String regulatingTerminalId;
@@ -113,23 +115,23 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
 
     private void assignAttributes(GeneratorCreationInfos generatorCreationInfos) {
         this.energySource = generatorCreationInfos.getEnergySource();
-        this.minActivePower = generatorCreationInfos.getMinActivePower();
-        this.maxActivePower = generatorCreationInfos.getMaxActivePower();
-        this.ratedNominalPower = generatorCreationInfos.getRatedNominalPower();
-        this.activePowerSetpoint = generatorCreationInfos.getActivePowerSetpoint();
-        this.reactivePowerSetpoint = generatorCreationInfos.getReactivePowerSetpoint();
+        this.minP = generatorCreationInfos.getMinP();
+        this.maxP = generatorCreationInfos.getMaxP();
+        this.ratedS = generatorCreationInfos.getRatedS();
+        this.targetP = generatorCreationInfos.getTargetP();
+        this.targetQ = generatorCreationInfos.getTargetQ();
         this.voltageRegulationOn = generatorCreationInfos.isVoltageRegulationOn();
-        this.voltageSetpoint = generatorCreationInfos.getVoltageSetpoint();
+        this.targetV = generatorCreationInfos.getTargetV();
         this.plannedActivePowerSetPoint = generatorCreationInfos.getPlannedActivePowerSetPoint();
         this.marginalCost = generatorCreationInfos.getMarginalCost();
         this.plannedOutageRate = generatorCreationInfos.getPlannedOutageRate();
         this.forcedOutageRate = generatorCreationInfos.getForcedOutageRate();
-        this.minimumReactivePower = generatorCreationInfos.getMinimumReactivePower();
-        this.maximumReactivePower = generatorCreationInfos.getMaximumReactivePower();
+        this.minQ = generatorCreationInfos.getMinQ();
+        this.maxQ = generatorCreationInfos.getMaxQ();
         this.participate = generatorCreationInfos.getParticipate();
         this.droop = generatorCreationInfos.getDroop();
-        this.transientReactance = generatorCreationInfos.getTransientReactance();
-        this.stepUpTransformerReactance = generatorCreationInfos.getStepUpTransformerReactance();
+        this.directTransX = generatorCreationInfos.getDirectTransX();
+        this.stepUpTransformerX = generatorCreationInfos.getStepUpTransformerX();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorCreationInfos.getReactiveCapabilityCurvePoints());
         this.regulatingTerminalId = generatorCreationInfos.getRegulatingTerminalId();
         this.regulatingTerminalType = generatorCreationInfos.getRegulatingTerminalType();
@@ -141,8 +143,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
             List<ReactiveCapabilityCurveCreationInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
-                        point.getQmaxP(),
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                        point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
@@ -155,8 +157,8 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     private GeneratorCreationInfos.GeneratorCreationInfosBuilder<?, ?> toGeneratorCreationInfosBuilder() {
         List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getQminP(),
-                        value.getQmaxP(),
+                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
+                        value.getMaxQ(),
                         value.getP()))
                 .collect(Collectors.toList()) : null;
 
@@ -176,28 +178,33 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .connected(isConnected())
             // generator
             .energySource(getEnergySource())
-            .minActivePower(getMinActivePower())
-            .maxActivePower(getMaxActivePower())
-            .ratedNominalPower(getRatedNominalPower())
-            .activePowerSetpoint(getActivePowerSetpoint())
-            .reactivePowerSetpoint(getReactivePowerSetpoint())
+            .minP(getMinP())
+            .maxP(getMaxP())
+            .ratedS(getRatedS())
+            .targetP(getTargetP())
+            .targetQ(getTargetQ())
             .voltageRegulationOn(isVoltageRegulationOn())
-            .voltageSetpoint(getVoltageSetpoint())
+            .targetV(getTargetV())
             .plannedActivePowerSetPoint(getPlannedActivePowerSetPoint())
             .marginalCost(getMarginalCost())
             .plannedOutageRate(getPlannedOutageRate())
             .forcedOutageRate(getForcedOutageRate())
-            .minimumReactivePower(this.getMinimumReactivePower())
+            .minQ(this.getMinQ())
             .participate(getParticipate())
             .droop(getDroop())
-            .maximumReactivePower(this.getMaximumReactivePower())
+            .maxQ(this.getMaxQ())
             .reactiveCapabilityCurvePoints(points)
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
             .qPercent(getQPercent())
             .reactiveCapabilityCurve(getReactiveCapabilityCurve())
-            .transientReactance(getTransientReactance())
-            .stepUpTransformerReactance(getStepUpTransformerReactance());
+            .directTransX(getDirectTransX())
+            .stepUpTransformerX(getStepUpTransformerX())
+            // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                   getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }

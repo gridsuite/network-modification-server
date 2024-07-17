@@ -7,19 +7,9 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.ThreeWindingsTransformer;
-import com.powsybl.iidm.network.VoltageLevel;
-import com.powsybl.iidm.network.Generator;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.dto.VoltageInitGeneratorModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitShuntCompensatorModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitStaticVarCompensatorModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitTransformerModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageInitVscConverterStationModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -98,16 +88,17 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
-                    .reactivePowerSetpoint(10.)
+                    .targetQ(10.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("newGen")
-                    .voltageSetpoint(226.)
+                    .targetV(226.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf1")
                     .ratioTapChangerPosition(2)
+                    .ratioTapChangerTargetV(223.)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf2")
@@ -120,21 +111,35 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(2)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .ratioTapChangerTargetV(220.)
+                    .legSide(ThreeSides.TWO)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3wtNotFound")
-                    .legSide(ThreeWindingsTransformer.Side.THREE)
+                    .legSide(ThreeSides.THREE)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("3wtNotFound")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .legSide(ThreeSides.ONE)
                     .build(),
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(1)
-                    .legSide(ThreeWindingsTransformer.Side.ONE)
+                    .ratioTapChangerTargetV(220.)
+                    .legSide(ThreeSides.ONE)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(null)
+                    .ratioTapChangerTargetV(220.)
+                    .legSide(ThreeSides.TWO)
+                    .build(),
+                VoltageInitTransformerModificationInfos.builder()
+                    .transformerId("trf6")
+                    .ratioTapChangerPosition(2)
+                    .ratioTapChangerTargetV(null)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
@@ -167,11 +172,13 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .shuntCompensatorId("v2shunt")
                     .sectionCount(1)
                     .connect(true)
+                    .targetV(230.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v5shunt")
                     .sectionCount(0)
                     .connect(true)
+                    .targetV(221.)
                     .build(),
                 VoltageInitShuntCompensatorModificationInfos.builder()
                     .shuntCompensatorId("v6shunt")
@@ -183,6 +190,19 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .sectionCount(1)
                     .connect(false)
                     .build()))
+            .buses(List.of(
+                VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v2")
+                    .busId("busNotFound")
+                    .v(400.)
+                    .angle(0.)
+                    .build(),
+                VoltageInitBusModificationInfos.builder()
+                    .voltageLevelId("v1")
+                    .busId("v1_0")
+                    .v(230.)
+                    .angle(0.5)
+                    .build()))
             .build();
     }
 
@@ -193,11 +213,11 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
-                    .voltageSetpoint(370.)
+                    .targetV(370.)
                     .build(),
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("v5generator")
-                    .reactivePowerSetpoint(15.)
+                    .targetQ(15.)
                     .build()))
             .transformers(List.of(
                 VoltageInitTransformerModificationInfos.builder()
@@ -207,7 +227,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                 VoltageInitTransformerModificationInfos.builder()
                     .transformerId("trf6")
                     .ratioTapChangerPosition(2)
-                    .legSide(ThreeWindingsTransformer.Side.TWO)
+                    .legSide(ThreeSides.TWO)
                     .build()))
             .staticVarCompensators(List.of(
                 VoltageInitStaticVarCompensatorModificationInfos.builder()
@@ -243,6 +263,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
                     .sectionCount(0)
                     .connect(false)
                     .build()))
+            .buses(List.of())
             .build();
     }
 
@@ -307,14 +328,20 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
         assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
         assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(223, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(2, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
+        assertEquals(220., getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(50., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
         assertEquals(372., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
         assertEquals(23., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
         assertEquals(560., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+        assertEquals(230., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+        assertEquals(221., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
+        assertEquals(230., getNetwork().getBusView().getBus("v1_0").getV(), 0.001);
+        assertEquals(0.5, getNetwork().getBusView().getBus("v1_0").getAngle(), 0.001);
     }
 
     @Override
@@ -322,13 +349,16 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
         assertEquals(1., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(224., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
         assertEquals(1, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
+        assertEquals(220., getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTargetV(), 0.001);
         assertEquals(1, getNetwork().getThreeWindingsTransformer("trf6").getLeg2().getRatioTapChanger().getTapPosition());
         assertEquals(100., getNetwork().getStaticVarCompensator("v5Compensator").getReactivePowerSetpoint(), 0.001);
         assertEquals(380., getNetwork().getStaticVarCompensator("v6Compensator").getVoltageSetpoint(), 0.001);
         assertEquals(40., getNetwork().getVscConverterStation("v2vsc").getReactivePowerSetpoint(), 0.001);
         assertEquals(150., getNetwork().getVscConverterStation("v2vsc").getVoltageSetpoint(), 0.001);
         assertEquals(1, getNetwork().getShuntCompensator("v2shunt").getSectionCount());
+        assertEquals(225., getNetwork().getShuntCompensator("v2shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
+        assertEquals(225., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
     }
 }

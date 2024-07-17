@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryCreationInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,6 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.createBusBreaker(networkUuid);
@@ -46,12 +51,12 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
                 .equipmentName("nameBattery2")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
-                .minActivePower(100.0)
-                .maxActivePower(600.0)
-                .activePowerSetpoint(400.)
-                .reactivePowerSetpoint(50.)
-                .minimumReactivePower(20.0)
-                .maximumReactivePower(25.0)
+                .minP(100.0)
+                .maxP(600.0)
+                .targetP(400.)
+                .targetQ(50.)
+                .minQ(20.0)
+                .maxQ(25.0)
                 .droop(5f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
@@ -59,6 +64,7 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
                         new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -70,12 +76,12 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
                 .equipmentName("nameBatteryModified")
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
-                .minActivePower(101.0)
-                .maxActivePower(601.0)
-                .activePowerSetpoint(401.)
-                .reactivePowerSetpoint(51.)
-                .minimumReactivePower(23.0)
-                .maximumReactivePower(26.0)
+                .minP(101.0)
+                .maxP(601.0)
+                .targetP(401.)
+                .targetQ(51.)
+                .minQ(23.0)
+                .maxQ(26.0)
                 .droop(6f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
@@ -91,6 +97,7 @@ public class BatteryCreationInBusBreakerTest extends AbstractNetworkModification
         assertNotNull(getNetwork().getBattery("idBattery2"));
         assertEquals(1, getNetwork().getVoltageLevel("v1").getBatteryStream()
                 .filter(transformer -> transformer.getId().equals("idBattery2")).count());
+        assertEquals(PROPERTY_VALUE, getNetwork().getBattery("idBattery2").getProperty(PROPERTY_NAME));
     }
 
     @Override

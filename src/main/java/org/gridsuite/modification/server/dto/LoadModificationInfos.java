@@ -7,13 +7,12 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.powsybl.commons.report.ReportNode;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.LoadModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.LoadModification;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.LoadType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -36,10 +35,10 @@ public class LoadModificationInfos extends InjectionModificationInfos {
     private AttributeModification<LoadType> loadType;
 
     @Schema(description = "Active power modification")
-    private AttributeModification<Double> constantActivePower;
+    private AttributeModification<Double> p0;
 
     @Schema(description = "Reactive power modification")
-    private AttributeModification<Double> constantReactivePower;
+    private AttributeModification<Double> q0;
 
     @Override
     public LoadModificationEntity toEntity() {
@@ -52,7 +51,10 @@ public class LoadModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Load modification ${loadId}", "loadId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Load modification ${loadId}")
+                .withUntypedValue("loadId", getEquipmentId())
+                .add();
     }
 }

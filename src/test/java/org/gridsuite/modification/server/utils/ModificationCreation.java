@@ -18,6 +18,8 @@ import java.util.Arrays;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public final class ModificationCreation {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     private ModificationCreation() {
     }
@@ -28,7 +30,7 @@ public final class ModificationCreation {
             .equipmentId(voltageLevelId)
             .equipmentName(voltageLevelName)
             .substationId(substationId)
-            .nominalVoltage(379.1)
+            .nominalV(379.1)
             .lowVoltageLimit(0.0)
             .highVoltageLimit(10.0)
             .ipMin(0.0)
@@ -46,12 +48,12 @@ public final class ModificationCreation {
                 .equipmentName(batteryName)
                 .voltageLevelId(vlId)
                 .busOrBusbarSectionId(busOrBusbarSectionId)
-                .minActivePower(100.0)
-                .maxActivePower(600.0)
-                .activePowerSetpoint(400.)
-                .reactivePowerSetpoint(50.)
-                .minimumReactivePower(20.0)
-                .maximumReactivePower(25.0)
+                .minP(100.0)
+                .maxP(600.0)
+                .targetP(400.)
+                .targetQ(50.)
+                .minQ(20.0)
+                .maxQ(25.0)
                 .droop(5f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
@@ -71,17 +73,17 @@ public final class ModificationCreation {
             .voltageLevelId(vlId)
             .busOrBusbarSectionId(busOrBusbarSectionId)
             .energySource(EnergySource.HYDRO)
-            .minActivePower(100.0)
-            .maxActivePower(600.0)
-            .ratedNominalPower(10.)
-            .activePowerSetpoint(400.)
-            .reactivePowerSetpoint(50.)
+            .minP(100.0)
+            .maxP(600.0)
+            .ratedS(10.)
+            .targetP(400.)
+            .targetQ(50.)
             .voltageRegulationOn(true)
-            .voltageSetpoint(225.)
-            .stepUpTransformerReactance(60.0)
-            .transientReactance(61.0)
-            .minimumReactivePower(20.0)
-            .maximumReactivePower(25.0)
+            .targetV(225.)
+            .stepUpTransformerX(60.0)
+            .directTransX(61.0)
+            .minQ(20.0)
+            .maxQ(25.0)
             .droop(5f)
             .participate(true)
             .regulatingTerminalId(regulatingTerminalId)
@@ -96,6 +98,18 @@ public final class ModificationCreation {
             .build();
     }
 
+    public static GeneratorModificationInfos getModificationGenerator(String generatorId, String generatorName) {
+        GeneratorModificationInfos.GeneratorModificationInfosBuilder builder = GeneratorModificationInfos.builder()
+                .stashed(false)
+                .equipmentId(generatorId);
+
+        if (generatorName != null) {
+            builder.equipmentName(AttributeModification.toAttributeModification(generatorName, OperationType.SET));
+        }
+
+        return builder.build();
+    }
+
     public static LoadCreationInfos getCreationLoad(String vlId, String loadId, String loadName, String busOrBusBarSectionId, LoadType loadType) {
         return LoadCreationInfos.builder()
             .stashed(false)
@@ -104,8 +118,8 @@ public final class ModificationCreation {
             .voltageLevelId(vlId)
             .busOrBusbarSectionId(busOrBusBarSectionId)
             .loadType(loadType)
-            .activePower(100.0)
-            .reactivePower(20.0)
+            .p0(100.0)
+            .q0(20.0)
             .connectionName("top")
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
@@ -133,11 +147,11 @@ public final class ModificationCreation {
         }
 
         if (activePower != null) {
-            builder.constantActivePower(AttributeModification.toAttributeModification(activePower, OperationType.SET));
+            builder.p0(AttributeModification.toAttributeModification(activePower, OperationType.SET));
         }
 
         if (reactivePower != null) {
-            builder.constantReactivePower(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
+            builder.q0(AttributeModification.toAttributeModification(reactivePower, OperationType.SET));
         }
 
         return builder.build();
@@ -151,5 +165,13 @@ public final class ModificationCreation {
         builder.equipmentName(AttributeModification.toAttributeModification(vlName, OperationType.SET));
 
         return builder.build();
+    }
+
+    public static FreePropertyInfos getFreeProperty() {
+        return getFreeProperty(PROPERTY_NAME, PROPERTY_VALUE);
+    }
+
+    public static FreePropertyInfos getFreeProperty(String name, String value) {
+        return FreePropertyInfos.builder().name(name).value(value).build();
     }
 }

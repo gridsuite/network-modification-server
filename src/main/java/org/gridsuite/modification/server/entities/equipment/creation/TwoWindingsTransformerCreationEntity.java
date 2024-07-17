@@ -14,6 +14,9 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,17 +33,17 @@ import java.util.stream.Collectors;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "twoWindingsTransformerCreation_id_fk_constraint"))
 public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
 
-    @Column(name = "magnetizingConductance")
-    private double magnetizingConductance;
+    @Column(name = "g")
+    private double g;
 
-    @Column(name = "magnetizingSusceptance")
-    private double magnetizingSusceptance;
+    @Column(name = "b")
+    private double b;
 
-    @Column(name = "ratedVoltage1")
-    private double ratedVoltage1;
+    @Column(name = "ratedU1")
+    private double ratedU1;
 
-    @Column(name = "ratedVoltage2")
-    private double ratedVoltage2;
+    @Column(name = "ratedU2")
+    private double ratedU2;
 
     @Column(name = "rateds")
     private Double ratedS;
@@ -120,10 +123,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     }
 
     private void assignAttributes(TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos) {
-        this.magnetizingConductance = twoWindingsTransformerCreationInfos.getMagnetizingConductance();
-        this.magnetizingSusceptance = twoWindingsTransformerCreationInfos.getMagnetizingSusceptance();
-        this.ratedVoltage1 = twoWindingsTransformerCreationInfos.getRatedVoltage1();
-        this.ratedVoltage2 = twoWindingsTransformerCreationInfos.getRatedVoltage2();
+        this.g = twoWindingsTransformerCreationInfos.getG();
+        this.b = twoWindingsTransformerCreationInfos.getB();
+        this.ratedU1 = twoWindingsTransformerCreationInfos.getRatedU1();
+        this.ratedU2 = twoWindingsTransformerCreationInfos.getRatedU2();
         this.ratedS = twoWindingsTransformerCreationInfos.getRatedS();
         this.tapChangerSteps = new ArrayList<>();
         assignTapChanger(twoWindingsTransformerCreationInfos);
@@ -181,8 +184,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // branch
-                .seriesResistance(getSeriesResistance())
-                .seriesReactance(getSeriesReactance())
+                .r(getR())
+                .x(getX())
                 .voltageLevelId1(getVoltageLevelId1())
                 .voltageLevelId2(getVoltageLevelId2())
                 .busOrBusbarSectionId1(getBusOrBusbarSectionId1())
@@ -196,11 +199,16 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .connected1(isConnected1())
                 .connected2(isConnected2())
                 // 2WT
-                .magnetizingConductance(getMagnetizingConductance())
-                .magnetizingSusceptance(getMagnetizingSusceptance())
-                .ratedVoltage1(getRatedVoltage1())
-                .ratedVoltage2(getRatedVoltage2())
-                .ratedS(getRatedS());
+                .g(getG())
+                .b(getB())
+                .ratedU1(getRatedU1())
+                .ratedU2(getRatedU2())
+                .ratedS(getRatedS())
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
 
         if (getCurrentLimits1() != null) {
             builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());

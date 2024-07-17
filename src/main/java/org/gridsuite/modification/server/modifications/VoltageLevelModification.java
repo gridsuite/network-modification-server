@@ -7,9 +7,8 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -74,27 +74,27 @@ public class VoltageLevelModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getEquipmentId());
 
-        subReporter.report(Report.builder()
-                .withKey("voltageLevelModification")
-                .withDefaultMessage("Voltage level with id=${id} modified :")
-                .withValue("id", modificationInfos.getEquipmentId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("voltageLevelModification", "Voltage level with id=${id} modified :")
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setName, () -> voltageLevel.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReporter, "Name");
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setNominalV, voltageLevel::getNominalV, modificationInfos.getNominalVoltage(), subReporter, "Nominal voltage");
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setLowVoltageLimit, voltageLevel::getLowVoltageLimit, modificationInfos.getLowVoltageLimit(), subReporter, "Low voltage limit");
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setHighVoltageLimit, voltageLevel::getHighVoltageLimit, modificationInfos.getHighVoltageLimit(), subReporter, "High voltage limit");
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setName, () -> voltageLevel.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReportNode, "Name");
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setNominalV, voltageLevel::getNominalV, modificationInfos.getNominalV(), subReportNode, "Nominal voltage");
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setLowVoltageLimit, voltageLevel::getLowVoltageLimit, modificationInfos.getLowVoltageLimit(), subReportNode, "Low voltage limit");
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setHighVoltageLimit, voltageLevel::getHighVoltageLimit, modificationInfos.getHighVoltageLimit(), subReportNode, "High voltage limit");
 
-        modifyVoltageLevelShortCircuit(subReporter, voltageLevel);
+        modifyVoltageLevelShortCircuit(subReportNode, voltageLevel);
+        PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties());
     }
 
-    private void modifyVoltageLevelShortCircuit(Reporter subReporter, VoltageLevel voltageLevel) {
+    private void modifyVoltageLevelShortCircuit(ReportNode subReportNode, VoltageLevel voltageLevel) {
         if (modificationInfos.getIpMin() != null || modificationInfos.getIpMax() != null) {
-            List<Report> reports = new ArrayList<>();
+            List<ReportNode> reports = new ArrayList<>();
             IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
             IdentifiableShortCircuitAdder<VoltageLevel> identifiableShortCircuitAdder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class);
             var oldIpMin = identifiableShortCircuit == null ? null : identifiableShortCircuit.getIpMin();
@@ -129,7 +129,7 @@ public class VoltageLevelModification extends AbstractModification {
             }
 
             identifiableShortCircuitAdder.add();
-            reports.forEach(subReporter::report);
+            reports.forEach(report -> insertReportNode(subReportNode, report));
         }
     }
 }

@@ -7,9 +7,8 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.Bus;
@@ -27,6 +26,7 @@ import org.gridsuite.modification.server.dto.VscCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
@@ -73,18 +73,18 @@ public class VscCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
-        VscConverterStation converterStation1 = createConverterStation(network, modificationInfos.getConverterStation1(), subReporter, "Converter station 1");
+    public void apply(Network network, ReportNode subReportNode) {
+        VscConverterStation converterStation1 = createConverterStation(network, modificationInfos.getConverterStation1(), subReportNode, "Converter station 1");
 
-        VscConverterStation converterStation2 = createConverterStation(network, modificationInfos.getConverterStation2(), subReporter, "Converter station 2");
+        VscConverterStation converterStation2 = createConverterStation(network, modificationInfos.getConverterStation2(), subReportNode, "Converter station 2");
 
         HvdcLine hvdcLine = network.newHvdcLine()
                 .setId(modificationInfos.getEquipmentId())
                 .setName(modificationInfos.getEquipmentName())
-                .setNominalV(modificationInfos.getDcNominalVoltage())
-                .setR(modificationInfos.getDcResistance())
-                .setMaxP(modificationInfos.getMaximumActivePower())
-                .setActivePowerSetpoint(modificationInfos.getActivePower())
+                .setNominalV(modificationInfos.getNominalV())
+                .setR(modificationInfos.getR())
+                .setMaxP(modificationInfos.getMaxP())
+                .setActivePowerSetpoint(modificationInfos.getActivePowerSetpoint())
                 .setConvertersMode(modificationInfos.getConvertersMode())
                 .setConverterStationId1(converterStation1 != null ? converterStation1.getId() : null)
                 .setConverterStationId2(converterStation2 != null ? converterStation2.getId() : null)
@@ -112,43 +112,44 @@ public class VscCreation extends AbstractModification {
 
             activePowerControlExtension.add();
         }
-        reportHvdcLineInfos(subReporter);
+        reportHvdcLineInfos(subReportNode);
 
-        subReporter.report(Report.builder()
-                .withKey("vscCreated")
-                .withDefaultMessage("New vsc with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("vscCreated", "New vsc with id=${id} created")
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
         if (modificationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance()
-                    .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
+                    .reportElementaryCreation(subReportNode, modificationInfos.getEquipmentName(), "Name");
         }
+
+        PropertiesUtils.applyProperties(hvdcLine, subReportNode, modificationInfos.getProperties());
     }
 
-    private void reportHvdcLineInfos(Reporter subReporter) {
-        List<Report> characteristicsReports = new ArrayList<>();
-        Reporter characteristicReport = subReporter.createSubReporter("vscCharacteristics", CHARACTERISTICS);
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcNominalVoltage(), "DC nominal voltage"));
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDcResistance(), "DC resistance"));
-        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaximumActivePower(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS);
+    private void reportHvdcLineInfos(ReportNode subReportNode) {
+        List<ReportNode> characteristicsReports = new ArrayList<>();
+        ReportNode characteristicReport = subReportNode.newReportNode().withMessageTemplate("vscCharacteristics", CHARACTERISTICS).add();
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getNominalV(), "DC nominal voltage"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getR(), "DC resistance"));
+        characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
+        ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS, Map.of());
 
-        List<Report> limitsReports = new ArrayList<>();
-        Reporter limitsReport = subReporter.createSubReporter("vscLimits", "Limits");
+        List<ReportNode> limitsReports = new ArrayList<>();
+        ReportNode limitsReport = subReportNode.newReportNode().withMessageTemplate("vscLimits", "Limits").add();
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2(), "Operator active power limit (Side1 -> Side 2)"));
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1(), "Operator active power limit (Side2 -> Side 1)"));
-        ModificationUtils.getInstance().reportModifications(limitsReport, limitsReports, "vscLimits", "Limits");
+        ModificationUtils.getInstance().reportModifications(limitsReport, limitsReports, "vscLimits", "Limits", Map.of());
 
-        List<Report> setPointsReports = new ArrayList<>();
-        Reporter setPointsReporter = subReporter.createSubReporter("vscSetPoints", SETPOINTS);
+        List<ReportNode> setPointsReports = new ArrayList<>();
+        ReportNode setPointsReporter = subReportNode.newReportNode().withMessageTemplate("vscSetPoints", SETPOINTS).add();
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
-        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePower(), "Active power"));
-        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaximumActivePower(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, "vscSetPoints", SETPOINTS);
+        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePowerSetpoint(), "Active power"));
+        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
+        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, "vscSetPoints", SETPOINTS, Map.of());
 
-        List<Report> angleDroopActivePowerControlReports = new ArrayList<>();
+        List<ReportNode> angleDroopActivePowerControlReports = new ArrayList<>();
         angleDroopActivePowerControlReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("angleDroopActivePowerControl", modificationInfos.getAngleDroopActivePowerControl()));
 
@@ -160,25 +161,24 @@ public class VscCreation extends AbstractModification {
             angleDroopActivePowerControlReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDroop(), "Droop"));
         }
 
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, angleDroopActivePowerControlReports, "vscAngleDroop", "Angle droop active power control");
+        ModificationUtils.getInstance().reportModifications(setPointsReporter, angleDroopActivePowerControlReports, "vscAngleDroop", "Angle droop active power control", Map.of());
     }
 
     private VscConverterStation createConverterStation(Network network,
                                                        ConverterStationCreationInfos converterStationCreationInfos,
-                                                       Reporter subReporter,
+                                                       ReportNode subReportNode,
                                                        String logFieldName) {
-        Reporter converterStationReporter = subReporter.createSubReporter("converterStationCreated" + logFieldName, logFieldName);
+        ReportNode converterStationReporter = subReportNode.newReportNode().withMessageTemplate("converterStationCreated" + logFieldName, logFieldName).add();
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());
         VscConverterStation vscConverterStation = voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ?
                 createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReporter) :
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
 
-        converterStationReporter.report(Report.builder()
-                .withKey("converterStationCreated" + logFieldName)
-                .withDefaultMessage("New converter station with id=${id} created")
-                .withValue("id", converterStationCreationInfos.getEquipmentId())
+        converterStationReporter.newReportNode()
+                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
+                .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
         if (!converterStationCreationInfos.isConnected()) {
             vscConverterStation.getTerminal().disconnect();
@@ -190,22 +190,22 @@ public class VscCreation extends AbstractModification {
     private VscConverterStation createConverterStationInNodeBreaker(Network network,
                                                                     VoltageLevel voltageLevel,
                                                                     ConverterStationCreationInfos converterStationCreationInfos,
-                                                                    Reporter subReporter) {
+                                                                    ReportNode subReportNode) {
         VscConverterStationAdder converterStationAdder = voltageLevel.newVscConverterStation()
                 .setId(converterStationCreationInfos.getEquipmentId())
                 .setName(converterStationCreationInfos.getEquipmentName())
                 .setVoltageRegulatorOn(converterStationCreationInfos.getVoltageRegulationOn());
 
-        if (converterStationCreationInfos.getReactivePower() != null) {
-            converterStationAdder.setReactivePowerSetpoint(converterStationCreationInfos.getReactivePower());
+        if (converterStationCreationInfos.getReactivePowerSetpoint() != null) {
+            converterStationAdder.setReactivePowerSetpoint(converterStationCreationInfos.getReactivePowerSetpoint());
         }
 
         if (converterStationCreationInfos.getLossFactor() != null) {
             converterStationAdder.setLossFactor(converterStationCreationInfos.getLossFactor());
         }
 
-        if (converterStationCreationInfos.getVoltage() != null) {
-            converterStationAdder.setVoltageSetpoint(converterStationCreationInfos.getVoltage());
+        if (converterStationCreationInfos.getVoltageSetpoint() != null) {
+            converterStationAdder.setVoltageSetpoint(converterStationCreationInfos.getVoltageSetpoint());
         }
         int position = ModificationUtils.getInstance().getPosition(converterStationCreationInfos.getConnectionPosition(),
                 converterStationCreationInfos.getBusOrBusbarSectionId(),
@@ -222,13 +222,13 @@ public class VscCreation extends AbstractModification {
                 .withInjectionAdder(converterStationAdder)
                 .build();
 
-        algo.apply(network, true, subReporter);
+        algo.apply(network, true, subReportNode);
         VscConverterStation vscConverterStation = ModificationUtils.getInstance()
                 .getVscConverterStation(network, converterStationCreationInfos.getEquipmentId());
 
         addExtensionsAndReports(vscConverterStation,
                 converterStationCreationInfos,
-                subReporter);
+                subReportNode);
 
         return vscConverterStation;
 
@@ -236,73 +236,72 @@ public class VscCreation extends AbstractModification {
 
     private VscConverterStation createConverterStationInBusBreaker(VoltageLevel voltageLevel,
                                                                    ConverterStationCreationInfos converterStationCreationInfos,
-                                                                   Reporter subReporter) {
+                                                                   ReportNode subReportNode) {
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, converterStationCreationInfos.getBusOrBusbarSectionId());
         VscConverterStation vscConverterStation = voltageLevel.newVscConverterStation()
                 .setId(converterStationCreationInfos.getEquipmentId())
                 .setName(converterStationCreationInfos.getEquipmentName())
                 .setVoltageRegulatorOn(converterStationCreationInfos.getVoltageRegulationOn())
-                .setReactivePowerSetpoint(converterStationCreationInfos.getReactivePower())
+                .setReactivePowerSetpoint(converterStationCreationInfos.getReactivePowerSetpoint())
                 .setBus(bus.getId())
                 .setLossFactor(converterStationCreationInfos.getLossFactor())
-                .setVoltageSetpoint(converterStationCreationInfos.getVoltage())
+                .setVoltageSetpoint(converterStationCreationInfos.getVoltageSetpoint())
                 .add();
 
-        addExtensionsAndReports(vscConverterStation, converterStationCreationInfos, subReporter);
+        addExtensionsAndReports(vscConverterStation, converterStationCreationInfos, subReportNode);
 
         return vscConverterStation;
     }
 
     private void addExtensionsAndReports(VscConverterStation vscConverterStation,
                                          ConverterStationCreationInfos converterStationCreationInfos,
-                                         Reporter subReporter) {
+                                         ReportNode subReporter) {
         reportConnectivity(converterStationCreationInfos, subReporter);
 
         ModificationUtils.getInstance().reportModifications(subReporter,
                 List.of(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getLossFactor(), "Loss Factor")),
                 "converterStationCharacteristics",
-                CHARACTERISTICS);
+                CHARACTERISTICS, Map.of());
 
         ModificationUtils.getInstance().createReactiveLimits(converterStationCreationInfos, vscConverterStation, subReporter);
 
         reportConverterStationSetPoints(converterStationCreationInfos, subReporter);
     }
 
-    private void reportConverterStationSetPoints(ConverterStationCreationInfos converterStationCreationInfos, Reporter subReporter) {
-        Reporter setPointReporter = subReporter.createSubReporter("converterStationSetPoint", SETPOINTS);
-        setPointReporter.report(Report.builder()
-                .withKey(SETPOINTS)
-                .withDefaultMessage(SETPOINTS)
+    private void reportConverterStationSetPoints(ConverterStationCreationInfos converterStationCreationInfos, ReportNode subReportNode) {
+        ReportNode setPointReporter = subReportNode.newReportNode().withMessageTemplate("converterStationSetPoint", SETPOINTS).add();
+        setPointReporter.newReportNode()
+                .withMessageTemplate(SETPOINTS, SETPOINTS)
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
 
-        if (converterStationCreationInfos.getReactivePower() != null) {
+        if (converterStationCreationInfos.getReactivePowerSetpoint() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(setPointReporter,
-                    converterStationCreationInfos.getReactivePower(),
+                    converterStationCreationInfos.getReactivePowerSetpoint(),
                     "Reactive power");
         }
 
-        List<Report> setPointsVoltageReports = new ArrayList<>();
+        List<ReportNode> setPointsVoltageReports = new ArrayList<>();
         setPointsVoltageReports.add(ModificationUtils.getInstance().createEnabledDisabledReport("voltageRegulationOn",
                 converterStationCreationInfos.getVoltageRegulationOn()));
-        if (converterStationCreationInfos.getVoltage() != null) {
-            setPointsVoltageReports.add(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getReactivePower(), "Voltage"));
+        if (converterStationCreationInfos.getVoltageSetpoint() != null) {
+            setPointsVoltageReports.add(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getReactivePowerSetpoint(), "Voltage"));
         }
 
         ModificationUtils.getInstance().reportModifications(setPointReporter,
                 setPointsVoltageReports,
                 "converterStationSetPointsVoltageRegulation",
-                "Voltage regulation");
+                "Voltage regulation", Map.of());
     }
 
-    private void reportConnectivity(ConverterStationCreationInfos converterStationCreationInfos, Reporter subReporter) {
+    private void reportConnectivity(ConverterStationCreationInfos converterStationCreationInfos, ReportNode subReportNode) {
         if (converterStationCreationInfos.getConnectionName() == null &&
                 converterStationCreationInfos.getConnectionDirection() == null &&
                 converterStationCreationInfos.getConnectionPosition() == null) {
             return;
         }
 
-        List<Report> connectivityReports = new ArrayList<>();
+        List<ReportNode> connectivityReports = new ArrayList<>();
         if (converterStationCreationInfos.getConnectionName() != null) {
             connectivityReports.add(ModificationUtils.getInstance()
                     .buildCreationReport(converterStationCreationInfos.getConnectionName(), "Connection name"));
@@ -316,13 +315,12 @@ public class VscCreation extends AbstractModification {
                     .buildCreationReport(converterStationCreationInfos.getConnectionPosition(), "Connection position"));
         }
         if (!converterStationCreationInfos.isConnected()) {
-            connectivityReports.add(Report.builder()
-                    .withKey("equipmentDisconnected")
-                    .withDefaultMessage("    Equipment with id=${id} disconnected")
-                    .withValue("id", converterStationCreationInfos.getEquipmentId())
+            connectivityReports.add(ReportNode.newRootReportNode()
+                    .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                    .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", "Connectivity");
+        ModificationUtils.getInstance().reportModifications(subReportNode, connectivityReports, "ConnectivityCreated", "Connectivity", Map.of());
     }
 }

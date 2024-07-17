@@ -7,13 +7,12 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.powsybl.commons.report.ReportNode;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.BatteryModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.BatteryModification;
 
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,16 +34,16 @@ import java.util.List;
 @ModificationErrorTypeName("MODIFY_BATTERY_ERROR")
 public class BatteryModificationInfos extends InjectionModificationInfos {
     @Schema(description = "Minimum active power")
-    private AttributeModification<Double> minActivePower;
+    private AttributeModification<Double> minP;
 
     @Schema(description = "Maximum active power")
-    private AttributeModification<Double> maxActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Active power set point")
-    private AttributeModification<Double> activePowerSetpoint;
+    private AttributeModification<Double> targetP;
 
     @Schema(description = "Reactive power set point")
-    private AttributeModification<Double> reactivePowerSetpoint;
+    private AttributeModification<Double> targetQ;
 
     @Schema(description = "Participate")
     private AttributeModification<Boolean> participate;
@@ -53,10 +52,10 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Float> droop;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
@@ -75,7 +74,7 @@ public class BatteryModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Battery modification ${batteryId}", "batteryId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode().withMessageTemplate(getType().name(), "Battery modification ${batteryId}").withUntypedValue("batteryId", this.getEquipmentId()).add();
     }
 }

@@ -10,14 +10,17 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
@@ -38,7 +41,8 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
 
     @Test
     public void testCreateWithWarning() throws Exception {
-        IdentifiableAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
+        IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filterWithOneWrongId))
@@ -48,21 +52,8 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
                 .build();
 
-        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes));
+        checkCreateWithWarning(List.of(formulaInfos), List.of(identifiableAttributes, wrongIdAttributes));
         assertEquals(75, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
-    }
-
-    @Test
-    public void testCreateWithError() throws Exception {
-        FormulaInfos formulaInfos = FormulaInfos.builder()
-                .filters(List.of(filterWithAllWrongId))
-                .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .fieldOrValue1(ReferenceFieldOrValue.builder().value(55.).build())
-                .operator(Operator.ADDITION)
-                .fieldOrValue2(ReferenceFieldOrValue.builder().value(20.).build())
-                .build();
-
-        checkCreateWithError(List.of(formulaInfos));
     }
 
     @Override
@@ -82,19 +73,27 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes battery1 = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
-        IdentifiableAttributes battery2 = getIdentifiableAttributes(BATTERY_ID_2, 2.0);
-        IdentifiableAttributes battery3 = getIdentifiableAttributes(BATTERY_ID_3, 2.0);
-        IdentifiableAttributes battery4 = getIdentifiableAttributes(BATTERY_ID_4, 5.0);
-        IdentifiableAttributes battery5 = getIdentifiableAttributes(BATTERY_ID_5, 6.0);
-        IdentifiableAttributes battery6 = getIdentifiableAttributes(BATTERY_ID_6, 7.0);
-
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(battery1, battery2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(battery3, battery4), List.of());
-        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(battery5, battery6), List.of());
-        FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(battery1, battery5), List.of());
-        FilterEquipments filter5 = getFilterEquipments(FILTER_ID_5, "filter5", List.of(battery2, battery3), List.of());
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_2, 2.0)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_3, 2.0),
+                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_4, 5.0)))
+            .build();
+        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_5, 6.0),
+                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_6, 7.0)))
+            .build();
+        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_5, 6.0)))
+            .build();
+        IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.BATTERY)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(BATTERY_ID_2, 2.0),
+                new IdentifierListFilterEquipmentAttributes(BATTERY_ID_3, 3.0)))
+            .build();
 
         return List.of(filter1, filter2, filter3, filter4, filter5);
     }
@@ -215,5 +214,10 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     @Override
     protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.BATTERY;
+    }
+
+    @Override
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.BATTERY;
     }
 }

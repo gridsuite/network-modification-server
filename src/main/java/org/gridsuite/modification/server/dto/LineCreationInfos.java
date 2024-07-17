@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,16 +34,16 @@ import org.gridsuite.modification.server.modifications.LineCreation;
 public class LineCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Shunt conductance Side 1")
-    private Double shuntConductance1;
+    private Double g1;
 
     @Schema(description = "Shunt susceptance Side 1")
-    private Double shuntSusceptance1;
+    private Double b1;
 
     @Schema(description = "Shunt conductance Side 2")
-    private Double shuntConductance2;
+    private Double g2;
 
     @Schema(description = "Shunt susceptance Side 2")
-    private Double shuntSusceptance2;
+    private Double b2;
 
     @Override
     public LineCreationEntity toEntity() {
@@ -57,7 +56,10 @@ public class LineCreationInfos extends BranchCreationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Creation of line ${lineId}", "lineId", getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Creation of line ${lineId}")
+                .withUntypedValue("lineId", getEquipmentId())
+                .add();
     }
 }

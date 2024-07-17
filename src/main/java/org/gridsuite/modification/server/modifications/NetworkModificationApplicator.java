@@ -8,13 +8,13 @@ package org.gridsuite.modification.server.modifications;
 
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportConstants;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -23,15 +23,16 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -50,6 +51,10 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
+    @Value("${impacts.collection-threshold:50}")
+    @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
+    private Integer collectionThreshold;
+
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService) {
         this.networkStoreService = networkStoreService;
@@ -59,96 +64,98 @@ public class NetworkModificationApplicator {
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        ApplicationStatus applicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
-        listener.setApplicationStatus(applicationStatus);
-        listener.setLastGroupApplicationStatus(applicationStatus);
-        return listener.flushNetworkModifications();
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
+        ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
+        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        return
+            NetworkModificationResult.builder()
+                .applicationStatus(groupApplicationStatus)
+                .lastGroupApplicationStatus(groupApplicationStatus)
+                .networkImpacts(networkImpacts)
+                .build();
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService);
-        List<ApplicationStatus> groupsStatuses =
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
+        List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
                         .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
                         .toList();
-        listener.setApplicationStatus(groupsStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK));
-        listener.setLastGroupApplicationStatus(Streams.findLast(groupsStatuses.stream()).orElse(ApplicationStatus.ALL_OK));
-        return listener.flushNetworkModifications();
+        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        return NetworkModificationResult.builder()
+                .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
+                .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
+                .networkImpacts(networkImpacts)
+                .build();
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReporterModel reporter = new ReporterModel(rootReporterId, rootReporterId);
-        ApplicationStatus applicationStatus = modificationInfosList.stream()
-                .map(m -> apply(m, network, reporter))
+        ReportNode reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
+        ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
+                .map(m -> apply(m, network, reportNode))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
-        reportService.sendReport(reportInfos.getReportUuid(), reporter);
-        return applicationStatus;
+        reportService.sendReport(reportInfos.getReportUuid(), reportNode);
+        return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReporterModel reporter) {
-        Reporter subReporter = modificationInfos.createSubReporter(reporter);
+    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
+        ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            apply(modificationInfos.toModification(), network, subReporter);
+            apply(modificationInfos.toModification(), network, subReportNode);
         } catch (Exception e) {
-            handleException(modificationInfos.getErrorType(), subReporter, e);
+            handleException(modificationInfos.getErrorType(), subReportNode, e);
         }
-        return getApplicationStatus(reporter);
+        return getApplicationStatus(reportNode);
     }
 
-    @SuppressWarnings("squid:S1181")
-    private void apply(AbstractModification modification, Network network, Reporter subReporter) {
-        try {
-            // check input data but don't change the network
-            modification.check(network);
+    private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
+        // check input data but don't change the network
+        modification.check(network);
 
-            // init application context
-            modification.initApplicationContext(this);
+        // init application context
+        modification.initApplicationContext(this);
 
-            // apply all changes on the network
-            modification.apply(network, subReporter);
-        } catch (Error e) {
-            // TODO remove this catch with powsybl 5.2.0
-            // Powsybl can raise Error
-            // Ex: java.lang.AssertionError: The voltage level 'vlId' cannot be removed because of a remaining LINE
-            throw new PowsyblException(e);
-        }
+        // apply all changes on the network
+        modification.apply(network, subReportNode);
     }
 
-    private void handleException(NetworkModificationException.Type typeIfError, Reporter subReporter, Exception e) {
+    private void handleException(NetworkModificationException.Type typeIfError, ReportNode subReportNode, Exception e) {
         boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
         if (!isApplicationException && LOGGER.isErrorEnabled()) {
             LOGGER.error(e.toString(), e);
         }
         String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
-        subReporter.report(Report.builder()
-                .withKey(typeIfError.name())
-                .withDefaultMessage(errorMessage)
+
+        subReportNode.newReportNode()
+                .withMessageTemplate(typeIfError.name(), "${errorMessage}")
+                .withTypedValue("typedValue", 20, "type")
+                .withUntypedValue("errorMessage", errorMessage)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build());
+                .add();
     }
 
-    public static ApplicationStatus getApplicationStatus(Report report) {
-        TypedValue severity = report.getValues().get(Report.REPORT_SEVERITY_KEY);
-        if (severity == null || severity == TypedValue.TRACE_SEVERITY || severity == TypedValue.DEBUG_SEVERITY || severity == TypedValue.INFO_SEVERITY) {
+    public static boolean areSeveritiesEquals(TypedValue s1, TypedValue s2) {
+        return s1.getValue().toString().equals(s2.getValue().toString());
+    }
+
+    public static ApplicationStatus getApplicationStatus(ReportNode reportNode) {
+        if (reportNode.getChildren() != null && !reportNode.getChildren().isEmpty()) {
+            return reportNode.getChildren().stream().map(NetworkModificationApplicator::getApplicationStatus)
+                    .reduce(ApplicationStatus::max)
+                    .orElse(ApplicationStatus.ALL_OK);
+        }
+
+        TypedValue severity = reportNode.getValues().get(ReportConstants.REPORT_SEVERITY_KEY);
+        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
-        } else if (severity == TypedValue.WARN_SEVERITY) {
+        } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {
             return ApplicationStatus.WITH_WARNINGS;
-        } else if (severity == TypedValue.ERROR_SEVERITY) {
+        } else if (areSeveritiesEquals(severity, TypedValue.ERROR_SEVERITY)) {
             return ApplicationStatus.WITH_ERRORS;
         } else {
             throw new IllegalArgumentException(String.format("Report severity '%s' unknown !", severity.getValue()));
         }
-    }
-
-    public static ApplicationStatus getApplicationStatus(ReporterModel reporter) {
-        return Stream.concat(
-                        reporter.getReports().stream().map(NetworkModificationApplicator::getApplicationStatus),
-                        reporter.getSubReporters().stream().map(NetworkModificationApplicator::getApplicationStatus)
-                )
-                .reduce(ApplicationStatus::max)
-                .orElse(ApplicationStatus.ALL_OK);
     }
 }

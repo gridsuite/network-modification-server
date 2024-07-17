@@ -11,12 +11,11 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.ReporterModel;
-import com.powsybl.iidm.network.Branch;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.extensions.BranchStatus;
-import com.powsybl.iidm.network.extensions.BranchStatusAdder;
+import com.powsybl.iidm.network.extensions.OperatingStatus;
+import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.server.service.ReportService;
@@ -27,27 +26,14 @@ import org.springframework.cloud.stream.binder.test.OutputDestination;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertDeleteCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertInsertCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static com.vladmihalcea.sql.SQLStatementCountValidator.assertUpdateCount;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.verify;
+import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -111,20 +97,20 @@ public final class TestUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static void assertBranchStatus(Network network, String branchName, BranchStatus.Status status) {
+    public static void assertOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
         assertNotNull(network);
-        Branch<?> branch = network.getBranch(branchName);
-        assertNotNull(branch);
-        BranchStatus branchStatus = branch.getExtensionByName("branchStatus");
-        assertNotNull(branchStatus);
-        assertEquals(status, branchStatus.getStatus());
+        Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
+        assertNotNull(identifiable);
+        OperatingStatus operatingStatus = identifiable.getExtensionByName("operatingStatus");
+        assertNotNull(operatingStatus);
+        assertEquals(status, operatingStatus.getStatus());
     }
 
     @SuppressWarnings("unchecked")
-    public static void setBranchStatus(Network network, String branchName, BranchStatus.Status status) {
-        Branch<?> branch = network.getBranch(branchName);
-        assertNotNull(branch);
-        branch.newExtension(BranchStatusAdder .class).withStatus(status).add();
+    public static void setOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
+        Identifiable<?> identifiable = network.getIdentifiable(identifiableName);
+        assertNotNull(identifiable);
+        identifiable.newExtension(OperatingStatusAdder.class).withStatus(status).add();
     }
 
     public static String resourceToString(String resource) throws IOException {
@@ -134,7 +120,7 @@ public final class TestUtils {
     }
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {
-        ArgumentCaptor<ReporterModel> reporterCaptor = ArgumentCaptor.forClass(ReporterModel.class);
+        ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
         verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
@@ -146,14 +132,39 @@ public final class TestUtils {
         assertLogNthMessage(expectedMessage, reportKey, reportService, 1);
     }
 
-    private static Optional<String> getMessageFromReporter(String reportKey, ReporterModel reporterModel, int rank) {
+    public static void assertLogMessageWithoutRank(String expectedMessage, String reportKey, ReportService reportService) {
+        ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        assertNotNull(reporterCaptor.getValue());
+        assertTrue(assertMessageFoundFromReporter(expectedMessage, reportKey, reporterCaptor.getValue()));
+    }
+
+    private static boolean assertMessageFoundFromReporter(String expectedMessage, String reportKey, ReportNode reporterModel) {
+        for (ReportNode report : reporterModel.getChildren()) {
+            if (report.getMessageKey().equals(reportKey)) {
+                String message = formatReportMessage(report, reporterModel);
+                if (message.trim().equals(expectedMessage)) {
+                    return true;
+                }
+            }
+        }
+
+        boolean foundInSubReporters = false;
+        Iterator<ReportNode> reportersIterator = reporterModel.getChildren().iterator();
+        while (!foundInSubReporters && reportersIterator.hasNext()) {
+            foundInSubReporters = assertMessageFoundFromReporter(expectedMessage, reportKey, reportersIterator.next());
+        }
+        return foundInSubReporters;
+    }
+
+    private static Optional<String> getMessageFromReporter(String reportKey, ReportNode reporterModel, int rank) {
         Optional<String> message = Optional.empty();
 
-        Iterator<Report> reportsIterator = reporterModel.getReports().iterator();
+        Iterator<ReportNode> reportsIterator = reporterModel.getChildren().iterator();
         int nbTimes = 0;
         while (message.isEmpty() && reportsIterator.hasNext()) {
-            Report report = reportsIterator.next();
-            if (report.getReportKey().equals(reportKey)) {
+            ReportNode report = reportsIterator.next();
+            if (report.getMessageKey().equals(reportKey)) {
                 nbTimes++;
                 if (nbTimes == rank) {
                     message = Optional.of(formatReportMessage(report, reporterModel));
@@ -161,7 +172,7 @@ public final class TestUtils {
             }
         }
 
-        Iterator<ReporterModel> reportersIterator = reporterModel.getSubReporters().iterator();
+        Iterator<ReportNode> reportersIterator = reporterModel.getChildren().iterator();
         while (message.isEmpty() && reportersIterator.hasNext()) {
             message = getMessageFromReporter(reportKey, reportersIterator.next(), rank);
         }
@@ -169,8 +180,8 @@ public final class TestUtils {
         return message;
     }
 
-    private static String formatReportMessage(Report report, ReporterModel reporterModel) {
-        return new StringSubstitutor(reporterModel.getTaskValues()).replace(new StringSubstitutor(report.getValues()).replace(report.getDefaultMessage()));
+    private static String formatReportMessage(ReportNode report, ReportNode reporterModel) {
+        return new StringSubstitutor(reporterModel.getValues()).replace(new StringSubstitutor(report.getValues()).replace(report.getMessageTemplate()));
     }
 
     public static void assertWiremockServerRequestsEmptyThenShutdown(WireMockServer wireMockServer) throws UncheckedInterruptedException, IOException {

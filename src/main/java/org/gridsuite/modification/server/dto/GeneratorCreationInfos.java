@@ -8,8 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -42,25 +41,25 @@ public class GeneratorCreationInfos extends InjectionCreationInfos implements Re
     private EnergySource energySource;
 
     @Schema(description = "Minimum active power")
-    private double minActivePower;
+    private double minP;
 
     @Schema(description = "Maximum active power")
-    private double maxActivePower;
+    private double maxP;
 
     @Schema(description = "Rated nominal power")
-    private Double ratedNominalPower;
+    private Double ratedS;
 
     @Schema(description = "Active power set point")
-    private double activePowerSetpoint;
+    private double targetP;
 
     @Schema(description = "Reactive power set point")
-    private Double reactivePowerSetpoint;
+    private Double targetQ;
 
     @Schema(description = "Voltage regulation on")
     private boolean voltageRegulationOn;
 
     @Schema(description = "Voltage set point")
-    private Double voltageSetpoint;
+    private Double targetV;
 
     @Schema(description = "Planning active power set point")
     private Double plannedActivePowerSetPoint;
@@ -75,10 +74,10 @@ public class GeneratorCreationInfos extends InjectionCreationInfos implements Re
     private Double forcedOutageRate;
 
     @Schema(description = "Minimum reactive power")
-    private Double minimumReactivePower;
+    private Double minQ;
 
     @Schema(description = "Maximum reactive power")
-    private Double maximumReactivePower;
+    private Double maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveCreationInfos> reactiveCapabilityCurvePoints;
@@ -90,10 +89,10 @@ public class GeneratorCreationInfos extends InjectionCreationInfos implements Re
     private Float droop;
 
     @Schema(description = "Transient reactance")
-    private Double transientReactance;
+    private Double directTransX;
 
     @Schema(description = "Step up transformer reactance")
-    private Double stepUpTransformerReactance;
+    private Double stepUpTransformerX;
 
     @Schema(description = "Regulating terminal equipment id")
     private String regulatingTerminalId;
@@ -124,7 +123,10 @@ public class GeneratorCreationInfos extends InjectionCreationInfos implements Re
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Generator creation ${generatorId}", "generatorId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Generator creation ${generatorId}")
+                .withUntypedValue("generatorId", this.getEquipmentId())
+                .add();
     }
 }

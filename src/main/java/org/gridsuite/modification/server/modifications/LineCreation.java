@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateBranchFeederBays;
 import com.powsybl.iidm.modification.topology.CreateBranchFeederBaysBuilder;
 import com.powsybl.iidm.network.*;
@@ -40,7 +39,7 @@ public class LineCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         VoltageLevel voltageLevel1 = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId1());
         VoltageLevel voltageLevel2 = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId2());
 
@@ -60,9 +59,9 @@ public class LineCreation extends AbstractModification {
                     .withPositionOrder1(position1)
                     .withPositionOrder2(position2)
                     .withBranchAdder(lineAdder).build();
-            algo.apply(network, true, subReporter);
+            algo.apply(network, true, subReportNode);
         } else {
-            addLine(network, voltageLevel1, voltageLevel2, modificationInfos, true, true, subReporter);
+            addLine(network, voltageLevel1, voltageLevel2, modificationInfos, true, true, subReportNode);
         }
 
         // Set permanent and temporary current limits
@@ -73,19 +72,20 @@ public class LineCreation extends AbstractModification {
             ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos1, line.newCurrentLimits1());
             ModificationUtils.getInstance().setCurrentLimits(currentLimitsInfos2, line.newCurrentLimits2());
         }
-
-        ModificationUtils.getInstance().disconnectBranch(modificationInfos, network.getLine(modificationInfos.getEquipmentId()), subReporter);
+        ModificationUtils.getInstance().disconnectBranch(modificationInfos, network.getLine(modificationInfos.getEquipmentId()), subReportNode);
+        // properties
+        Line line = network.getLine(modificationInfos.getEquipmentId());
+        PropertiesUtils.applyProperties(line, subReportNode, modificationInfos.getProperties());
     }
 
-    private void addLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2, Reporter subReporter) {
+    private void addLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2, ReportNode subReportNode) {
         ModificationUtils.getInstance().createLineAdder(network, voltageLevel1, voltageLevel2, lineCreationInfos, withSwitch1, withSwitch2).add();
 
-        subReporter.report(Report.builder()
-                .withKey("lineCreated")
-                .withDefaultMessage("New line with id=${id} created")
-                .withValue("id", lineCreationInfos.getEquipmentId())
+        subReportNode.newReportNode()
+                .withMessageTemplate("lineCreated", "New line with id=${id} created")
+                .withUntypedValue("id", lineCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
     }
 
 }

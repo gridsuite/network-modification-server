@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
@@ -49,7 +48,7 @@ public class ShuntCompensatorCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         // create the shunt compensator in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (modificationInfos.getMaxSusceptance() == null) {
@@ -70,17 +69,19 @@ public class ShuntCompensatorCreation extends AbstractModification {
                     .withInjectionPositionOrder(position)
                     .withInjectionAdder(shuntCompensatorAdder)
                     .build();
-            algo.apply(network, true, subReporter);
+            algo.apply(network, true, subReportNode);
         } else {
             createShuntInBusBreaker(voltageLevel, modificationInfos);
-            subReporter.report(Report.builder()
-                    .withKey("shuntCompensatorCreated")
-                    .withDefaultMessage("New shunt compensator with id=${id} created")
-                    .withValue("id", modificationInfos.getEquipmentId())
+            subReportNode.newReportNode()
+                    .withMessageTemplate("shuntCompensatorCreated", "New shunt compensator with id=${id} created")
+                    .withUntypedValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
-        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getShuntCompensator(modificationInfos.getEquipmentId()), subReporter);
+        ModificationUtils.getInstance().disconnectCreatedInjection(modificationInfos, network.getShuntCompensator(modificationInfos.getEquipmentId()), subReportNode);
+        // properties
+        ShuntCompensator shuntCompensator = network.getShuntCompensator(modificationInfos.getEquipmentId());
+        PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties());
     }
 
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {

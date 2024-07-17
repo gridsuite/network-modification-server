@@ -9,9 +9,11 @@ import com.powsybl.iidm.network.RatioTapChangerAdder;
 import com.powsybl.iidm.network.Substation;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.filter.AbstractFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
+import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
+import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
@@ -19,6 +21,7 @@ import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,14 +40,10 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
     @Test
     public void testModifyTwtWithError() throws Exception {
-        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
-        IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
-        FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
-
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_ID_4))
-                .willReturn(WireMock.ok()
-                        .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+        // Test modifying ratio tab changer field when ratio tab changer is null
+        IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
+        AbstractFilter filter = getFilterEquipments(FILTER_ID_4, List.of(identifiableAttributes1, identifiableAttributes2));
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filter4))
                 .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name()).build())
@@ -52,25 +51,37 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .operator(Operator.ADDITION)
                 .build();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
-                .identifiableType(getIdentifiableType())
-                .formulaInfosList(List.of(formulaInfos))
-                .build(),
-                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+
+        checkCreateWithError(List.of(formulaInfos), List.of(filter));
 
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_4)), false);
+        // Test modifying phase tab changer field when phase tab changer is null
+        IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
+        AbstractFilter filter2 = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes3, identifiableAttributes4));
+        FormulaInfos formulaInfos2 = FormulaInfos.builder()
+                .filters(List.of(filter1))
+                .fieldOrValue2(ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name()).build())
+                .fieldOrValue1(ReferenceFieldOrValue.builder().value(1.).build())
+                .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
+                .operator(Operator.ADDITION)
+                .build();
+
+        checkCreateWithError(List.of(formulaInfos2), List.of(filter2));
+
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
+        assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
     }
 
     @Test
     public void testDivisionByZero() throws Exception {
-        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
-        IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
-        FilterEquipments filter = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
+        IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
+        AbstractFilter filter = getFilterEquipments(FILTER_ID_4, List.of(identifiableAttributes1, identifiableAttributes2));
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/export\\?networkUuid=" + getNetworkUuid() + "&variantId=variant_1&ids=" + FILTER_ID_4))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_ID_4))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -81,24 +92,25 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .fieldOrValue2(ReferenceFieldOrValue.builder().value(0.).build())
                 .operator(Operator.DIVISION)
                 .filters(List.of(filter4))
+                .editedField(TwoWindingsTransformerField.R.name())
                 .build();
 
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_4)), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_ID_4)), false);
     }
 
     @Test
     public void testModifyTwtWithWarning() throws Exception {
-        IdentifiableAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_1, 1.);
-        IdentifiableAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_2, 1.);
-        IdentifiableAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_4, 1.);
-        IdentifiableAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_6, 1.);
-        FilterEquipments filterTwt1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(identifiableAttributes1, identifiableAttributes2), List.of());
-        FilterEquipments filterTwt2 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(identifiableAttributes3, identifiableAttributes4), List.of());
+        IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_1, 1.);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_2, 1.);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_4, 1.);
+        IdentifierListFilterEquipmentAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_6, 1.);
+        AbstractFilter filterTwt1 = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes1, identifiableAttributes2));
+        AbstractFilter filterTwt2 = getFilterEquipments(FILTER_ID_4, List.of(identifiableAttributes3, identifiableAttributes4));
 
-        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(getNetworkUuid(), true) + ".{2,}"))
+        UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
                         .withHeader("Content-Type", "application/json"))).getId();
@@ -124,7 +136,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(getNetworkUuid(), List.of(FILTER_ID_1, FILTER_ID_4)), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_ID_1, FILTER_ID_4)), false);
     }
 
     @Override
@@ -175,18 +187,23 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     }
 
     @Override
-    protected List<FilterEquipments> getTestFilters() {
-        IdentifiableAttributes twt1 = getIdentifiableAttributes(TWT_ID_1, 1.0);
-        IdentifiableAttributes twt2 = getIdentifiableAttributes(TWT_ID_2, 2.0);
-        IdentifiableAttributes twt3 = getIdentifiableAttributes(TWT_ID_3, 2.0);
-        IdentifiableAttributes twt4 = getIdentifiableAttributes(TWT_ID_4, 5.0);
-        IdentifiableAttributes twt5 = getIdentifiableAttributes(TWT_ID_5, 6.0);
-        IdentifiableAttributes twt6 = getIdentifiableAttributes(TWT_ID_6, 7.0);
-
-        FilterEquipments filter1 = getFilterEquipments(FILTER_ID_1, "filter1", List.of(twt1, twt2), List.of());
-        FilterEquipments filter2 = getFilterEquipments(FILTER_ID_2, "filter2", List.of(twt1, twt3), List.of());
-        FilterEquipments filter3 = getFilterEquipments(FILTER_ID_3, "filter3", List.of(twt4, twt5), List.of());
-        FilterEquipments filter4 = getFilterEquipments(FILTER_ID_4, "filter4", List.of(twt4, twt6), List.of());
+    protected List<AbstractFilter> getTestFilters() {
+        IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.TWO_WINDINGS_TRANSFORMER)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(TWT_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(TWT_ID_2, 2.0)))
+            .build();
+        IdentifierListFilter filter2 = IdentifierListFilter.builder().id(FILTER_ID_2).modificationDate(new Date()).equipmentType(EquipmentType.TWO_WINDINGS_TRANSFORMER)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(TWT_ID_1, 1.0),
+                new IdentifierListFilterEquipmentAttributes(TWT_ID_3, 2.0)))
+            .build();
+        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.TWO_WINDINGS_TRANSFORMER)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(TWT_ID_4, 5.0),
+                new IdentifierListFilterEquipmentAttributes(TWT_ID_5, 6.0)))
+            .build();
+        IdentifierListFilter filter4 = IdentifierListFilter.builder().id(FILTER_ID_4).modificationDate(new Date()).equipmentType(EquipmentType.TWO_WINDINGS_TRANSFORMER)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(TWT_ID_4, 5.0),
+                new IdentifierListFilterEquipmentAttributes(TWT_ID_6, 7.0)))
+            .build();
 
         return List.of(filter1, filter2, filter3, filter4);
     }
@@ -241,41 +258,41 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.PHASE_TARGET_DEADBAND.name()).build(),
                 ReferenceFieldOrValue.builder().value(10.).build());
 
-        FormulaInfos formulaInfos9 = getFormulaInfo(TwoWindingsTransformerField.SERIES_REACTANCE.name(),
+        FormulaInfos formulaInfos9 = getFormulaInfo(TwoWindingsTransformerField.X.name(),
                 List.of(filter1, filter4),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(20.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.SERIES_REACTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.X.name()).build());
 
-        FormulaInfos formulaInfos10 = getFormulaInfo(TwoWindingsTransformerField.SERIES_RESISTANCE.name(),
+        FormulaInfos formulaInfos10 = getFormulaInfo(TwoWindingsTransformerField.R.name(),
                 List.of(filter2, filter3),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.SERIES_RESISTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.R.name()).build());
 
-        FormulaInfos formulaInfos11 = getFormulaInfo(TwoWindingsTransformerField.MAGNETIZING_CONDUCTANCE.name(),
+        FormulaInfos formulaInfos11 = getFormulaInfo(TwoWindingsTransformerField.G.name(),
                 List.of(filter4, filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(25.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.MAGNETIZING_CONDUCTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.G.name()).build());
 
-        FormulaInfos formulaInfos12 = getFormulaInfo(TwoWindingsTransformerField.MAGNETIZING_SUSCEPTANCE.name(),
+        FormulaInfos formulaInfos12 = getFormulaInfo(TwoWindingsTransformerField.B.name(),
                 List.of(filter1, filter3),
                 Operator.MULTIPLICATION,
                 ReferenceFieldOrValue.builder().value(2.5).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.MAGNETIZING_SUSCEPTANCE.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.B.name()).build());
 
-        FormulaInfos formulaInfos13 = getFormulaInfo(TwoWindingsTransformerField.RATED_VOLTAGE_1.name(),
+        FormulaInfos formulaInfos13 = getFormulaInfo(TwoWindingsTransformerField.RATED_U1.name(),
                 List.of(filter2),
                 Operator.ADDITION,
                 ReferenceFieldOrValue.builder().value(15.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_VOLTAGE_1.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_U1.name()).build());
 
-        FormulaInfos formulaInfos14 = getFormulaInfo(TwoWindingsTransformerField.RATED_VOLTAGE_2.name(),
+        FormulaInfos formulaInfos14 = getFormulaInfo(TwoWindingsTransformerField.RATED_U2.name(),
                 List.of(filter3, filter2),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(50.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_VOLTAGE_2.name()).build());
+                ReferenceFieldOrValue.builder().equipmentField(TwoWindingsTransformerField.RATED_U2.name()).build());
 
         FormulaInfos formulaInfos15 = getFormulaInfo(TwoWindingsTransformerField.RATED_S.name(),
                 List.of(filter1, filter2),
@@ -328,6 +345,11 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     @Override
     protected IdentifiableType getIdentifiableType() {
         return IdentifiableType.TWO_WINDINGS_TRANSFORMER;
+    }
+
+    @Override
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.TWO_WINDINGS_TRANSFORMER;
     }
 
     @Override

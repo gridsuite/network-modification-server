@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,16 +34,16 @@ import org.gridsuite.modification.server.modifications.TwoWindingsTransformerCre
 public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
 
     @Schema(description = "Magnetizing conductance")
-    private double magnetizingConductance;
+    private double g;
 
     @Schema(description = "Magnetizing susceptance")
-    private double magnetizingSusceptance;
+    private double b;
 
     @Schema(description = "side 1 rated voltage")
-    private double ratedVoltage1;
+    private double ratedU1;
 
     @Schema(description = "side 2 rated voltage")
-    private double ratedVoltage2;
+    private double ratedU2;
 
     @Schema(description = "Rated conductance in Siemens")
     private Double ratedS;
@@ -66,8 +65,11 @@ public class TwoWindingsTransformerCreationInfos extends BranchCreationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Two windings transformer creation ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Two windings transformer creation ${twoWindingsTransformerId}")
+                .withUntypedValue("twoWindingsTransformerId", getEquipmentId())
+                .add();
     }
 
 }

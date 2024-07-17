@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.powsybl.iidm.network.ThreeWindingsTransformer;
+import com.powsybl.iidm.network.ThreeSides;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +30,9 @@ public class VoltageInitTransformerModificationInfos {
     @Schema(description = "Ratio tap changer position")
     private Integer ratioTapChangerPosition;
 
+    @Schema(description = "Ratio tap changer target voltage")
+    private Double ratioTapChangerTargetV;
+
     @Schema(description = "3 windings transformer leg side")
-    private ThreeWindingsTransformer.Side legSide;
+    private ThreeSides legSide;
 }

@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.SubstationCreationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -19,6 +20,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,8 +44,8 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("SubstationId")
                 .equipmentName("SubstationName")
-                .substationCountry(Country.AF)
-                .properties(Map.of("DEMO", "DemoC"))
+                .country(Country.AF)
+                .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoC").build()))
                 .build();
     }
 
@@ -53,8 +55,8 @@ public class SubstationCreationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("SubstationIdEdited")
                 .equipmentName("SubstationNameEdited")
-                .substationCountry(Country.CI)
-                .properties(Map.of("DEMO", "DemoU"))
+                .country(Country.CI)
+                .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
                 .build();
     }
 

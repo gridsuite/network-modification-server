@@ -46,11 +46,11 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
             .stashed(false)
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
-            .substationCountry(new AttributeModification<>(Country.BQ, OperationType.SET))
-            .properties(List.of(SubstationFreePropertyInfos.builder().name("p1").value("v1").build(), // new
-                    SubstationFreePropertyInfos.builder().name("p2").value("v2").build(), // new
-                    SubstationFreePropertyInfos.builder().name("region").value("south").build(), // update
-                    SubstationFreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
+            .country(new AttributeModification<>(Country.BQ, OperationType.SET))
+            .properties(List.of(FreePropertyInfos.builder().name("p1").value("v1").build(), // new
+                FreePropertyInfos.builder().name("p2").value("v2").build(), // new
+                FreePropertyInfos.builder().name("region").value("south").build(), // update
+                FreePropertyInfos.builder().name("tso").value("").deletionMark(true).build()))// deletion
             .build();
     }
 
@@ -60,7 +60,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
             .equipmentId("s3Edited")
             .stashed(false)
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
-            .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
+            .country(new AttributeModification<>(Country.JP, OperationType.SET))
             .properties(null)
             .build();
     }
@@ -95,7 +95,7 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         // Try to modify an unknown substation
         SubstationModificationInfos infos = SubstationModificationInfos.builder()
                 .equipmentId("unknown")
-                .substationCountry(new AttributeModification<>(Country.JP, OperationType.SET))
+                .country(new AttributeModification<>(Country.JP, OperationType.SET))
                 .build();
         String infosJson = mapper.writeValueAsString(infos);
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))

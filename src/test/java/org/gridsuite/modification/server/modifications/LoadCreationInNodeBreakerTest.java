@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithErrors() throws Exception {
@@ -78,7 +82,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         testNetworkModificationsCount(getGroupId(), 4);
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
-        loadCreationInfos.setActivePower(Double.NaN);
+        loadCreationInfos.setP0(Double.NaN);
         loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -109,10 +113,11 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .voltageLevelId("v2")
             .busOrBusbarSectionId("1B")
             .loadType(LoadType.AUXILIARY)
-            .activePower(100.0)
-            .reactivePower(60.0)
+            .p0(100.0)
+            .q0(60.0)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .connectionName("top")
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -125,8 +130,8 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
             .voltageLevelId("v2Edited")
             .busOrBusbarSectionId("1BEdited")
             .loadType(LoadType.AUXILIARY)
-            .activePower(200.0)
-            .reactivePower(90.0)
+            .p0(200.0)
+            .q0(90.0)
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .connectionName("topEdited")
             .build();
@@ -135,6 +140,7 @@ public class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLoad("idLoad1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLoad("idLoad1").getProperty(PROPERTY_NAME));
     }
 
     @Override

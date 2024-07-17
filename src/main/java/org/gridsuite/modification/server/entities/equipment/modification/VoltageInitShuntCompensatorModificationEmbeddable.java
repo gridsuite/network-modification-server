@@ -31,4 +31,7 @@ public class VoltageInitShuntCompensatorModificationEmbeddable {
 
     @Column
     private Boolean connect;
+
+    @Column
+    private Double targetV;
 }

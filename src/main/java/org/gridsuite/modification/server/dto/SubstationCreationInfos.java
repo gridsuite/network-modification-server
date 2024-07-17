@@ -6,10 +6,8 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.Country;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -21,8 +19,6 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.creation.SubstationCreationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.SubstationCreation;
-
-import java.util.Map;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -39,11 +35,7 @@ import java.util.Map;
 public class SubstationCreationInfos extends EquipmentCreationInfos {
 
     @Schema(description = "Substation country")
-    private Country substationCountry;
-
-    @Schema(description = "free properties")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Map<String, String> properties;
+    private Country country;
 
     @Override
     public SubstationCreationEntity toEntity() {
@@ -56,7 +48,10 @@ public class SubstationCreationInfos extends EquipmentCreationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Substation creation ${substationId}", "substationId", getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Substation creation ${substationId}")
+                .withUntypedValue("substationId", this.getEquipmentId())
+                .add();
     }
 }

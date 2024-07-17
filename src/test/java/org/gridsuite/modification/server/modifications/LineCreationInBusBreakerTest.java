@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,6 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Test
     public void testCreateWithErrors() throws Exception {
@@ -53,8 +58,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
@@ -77,18 +82,18 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
                 .build();
 
-        lineCreationInfosNoShunt.setShuntConductance1(50.0);
-        lineCreationInfosNoShunt.setShuntConductance2(null);
-        lineCreationInfosNoShunt.setShuntSusceptance1(null);
-        lineCreationInfosNoShunt.setShuntSusceptance2(60.0);
+        lineCreationInfosNoShunt.setG1(50.0);
+        lineCreationInfosNoShunt.setG2(null);
+        lineCreationInfosNoShunt.setB1(null);
+        lineCreationInfosNoShunt.setB2(60.0);
 
         String lineCreationInfosNoShuntJson = mapper.writeValueAsString(lineCreationInfosNoShunt);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
@@ -105,8 +110,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
@@ -130,8 +135,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
@@ -157,8 +162,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
@@ -168,7 +173,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         String lineCreationInfosPermanentLimitNOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitNOK);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine2': permanent limit must be defined and be > 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
+        assertLogMessage("AC Line 'idLine2': permanent limit must be > 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
     }
 
     @Test
@@ -177,8 +182,8 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .stashed(false)
                 .equipmentId("idLine3")
                 .equipmentName("nameLine3")
-                .seriesResistance(100.0)
-                .seriesReactance(100.0)
+                .r(100.0)
+                .x(100.0)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
@@ -205,18 +210,19 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .stashed(false)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
-            .shuntConductance1(10.0)
-            .shuntSusceptance1(10.0)
-            .shuntConductance2(20.0)
-            .shuntSusceptance2(20.0)
+            .r(100.0)
+            .x(100.0)
+            .g1(10.0)
+            .b1(10.0)
+            .g2(20.0)
+            .b2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("bus1")
             .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
             .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -226,12 +232,12 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
             .stashed(false)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
-            .seriesResistance(200.0)
-            .seriesReactance(200.0)
-            .shuntConductance1(20.0)
-            .shuntSusceptance1(20.0)
-            .shuntConductance2(30.0)
-            .shuntSusceptance2(30.0)
+            .r(200.0)
+            .x(200.0)
+            .g1(20.0)
+            .b1(20.0)
+            .g2(30.0)
+            .b2(30.0)
             .voltageLevelId1("v2")
             .busOrBusbarSectionId1("bus3")
             .voltageLevelId2("v3")
@@ -242,6 +248,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLine("idLine1").getProperty(PROPERTY_NAME));
     }
 
     @Override

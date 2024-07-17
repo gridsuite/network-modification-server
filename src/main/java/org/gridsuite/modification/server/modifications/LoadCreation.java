@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.CreateFeederBay;
 import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
@@ -38,7 +37,7 @@ public class LoadCreation extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReporter) {
         // create the load in the network
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
@@ -55,33 +54,36 @@ public class LoadCreation extends AbstractModification {
             algo.apply(network, true, subReporter);
         } else {
             createLoadInBusBreaker(voltageLevel, modificationInfos);
-            subReporter.report(Report.builder()
-                .withKey("loadCreated")
-                .withDefaultMessage("New load with id=${id} created")
-                .withValue("id", modificationInfos.getEquipmentId())
+            subReporter.newReportNode()
+                .withMessageTemplate("loadCreated", "New load with id=${id} created")
+                .withUntypedValue("id", modificationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
-                .build());
+                .add();
         }
         reportElementaryCreations(subReporter);
-        ModificationUtils.getInstance().disconnectInjection(modificationInfos, network.getLoad(modificationInfos.getEquipmentId()), subReporter);
+        ModificationUtils.getInstance().disconnectCreatedInjection(modificationInfos, network.getLoad(modificationInfos.getEquipmentId()), subReporter);
+
+        // properties
+        Load load = network.getLoad(modificationInfos.getEquipmentId());
+        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
     }
 
-    private void reportElementaryCreations(Reporter subReporter) {
+    private void reportElementaryCreations(ReportNode subReportNode) {
         if (modificationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance()
-                    .reportElementaryCreation(subReporter, modificationInfos.getEquipmentName(), "Name");
+                    .reportElementaryCreation(subReportNode, modificationInfos.getEquipmentName(), "Name");
         }
 
         if (modificationInfos.getLoadType() != null) {
             ModificationUtils.getInstance()
-                    .reportElementaryCreation(subReporter, modificationInfos.getLoadType(), "Type");
+                    .reportElementaryCreation(subReportNode, modificationInfos.getLoadType(), "Type");
         }
 
         ModificationUtils.getInstance()
-                .reportElementaryCreation(subReporter, modificationInfos.getActivePower(), "Active power");
+                .reportElementaryCreation(subReportNode, modificationInfos.getP0(), "Active power");
 
         ModificationUtils.getInstance()
-                .reportElementaryCreation(subReporter, modificationInfos.getReactivePower(), "Reactive power");
+                .reportElementaryCreation(subReportNode, modificationInfos.getQ0(), "Reactive power");
     }
 
     private LoadAdder createLoadAdderInNodeBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
@@ -90,8 +92,8 @@ public class LoadCreation extends AbstractModification {
             .setId(loadCreationInfos.getEquipmentId())
             .setName(loadCreationInfos.getEquipmentName())
             .setLoadType(loadCreationInfos.getLoadType())
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower());
+            .setP0(loadCreationInfos.getP0())
+            .setQ0(loadCreationInfos.getQ0());
     }
 
     private Load createLoadInBusBreaker(VoltageLevel voltageLevel, LoadCreationInfos loadCreationInfos) {
@@ -104,7 +106,7 @@ public class LoadCreation extends AbstractModification {
             .setLoadType(loadCreationInfos.getLoadType())
             .setBus(bus.getId())
             .setConnectableBus(bus.getId())
-            .setP0(loadCreationInfos.getActivePower())
-            .setQ0(loadCreationInfos.getReactivePower()).add();
+            .setP0(loadCreationInfos.getP0())
+            .setQ0(loadCreationInfos.getQ0()).add();
     }
 }

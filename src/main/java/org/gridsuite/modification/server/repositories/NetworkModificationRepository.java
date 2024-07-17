@@ -7,17 +7,21 @@
 package org.gridsuite.modification.server.repositories;
 
 import lombok.NonNull;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.CompositeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.ModificationGroupEntity;
-import org.gridsuite.modification.server.entities.TabularModificationEntity;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.TabularModificationInfos;
+import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
@@ -32,11 +36,14 @@ public class NetworkModificationRepository {
 
     private final ModificationRepository modificationRepository;
 
+    private final GeneratorModificationRepository generatorModificationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository, GeneratorModificationRepository generatorModificationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -47,10 +54,33 @@ public class NetworkModificationRepository {
 
     @Transactional // To have all create in the same transaction (atomic)
     // TODO Remove transaction when errors will no longer be sent to the front
+    // This method should be package-private and not used as API of the service as it uses ModificationEntity and
+    // we want to encapsulate the use of Entity related objects to this service.
+    // Nevertheless We have to keep it public for transactional annotation.
     public void saveModifications(UUID groupUuid, List<? extends ModificationEntity> modifications) {
+        saveModificationsNonTransactional(groupUuid, modifications);
+    }
+
+    @Transactional // To have all create in the same transaction (atomic)
+    // TODO Remove transaction when errors will no longer be sent to the front
+    public void saveModificationInfos(UUID groupUuid, List<? extends ModificationInfos> modifications) {
+        saveModificationsNonTransactional(groupUuid, modifications.stream().map(ModificationInfos::toEntity).toList());
+    }
+
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) CompositeModificationInfos.builder().modifications(List.of()).build().toEntity();
+        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .map(this::getModificationInfos)
+                .map(ModificationInfos::toEntity)
+                .toList();
+        compositeEntity.setModifications(copyEntities);
+        return modificationRepository.save(compositeEntity).getId();
+    }
+
+    private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
         var modificationGroupEntity = this.modificationGroupRepository
-                .findById(groupUuid)
-                .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
+            .findById(groupUuid)
+            .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
         modifications.forEach(m -> {
             modificationGroupEntity.addModification(m);
             // We need here to call the save() method on the modification entity cause the ids of the ModificationEntity's are used in further treatments in the same transaction.
@@ -62,61 +92,97 @@ public class NetworkModificationRepository {
 
     @Transactional
     // TODO Remove transaction when errors will no longer be sent to the front
-    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsUuid, UUID referenceModificationUuid) {
+    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
+        // read origin group and modifications
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
+        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications();
 
-        Map<UUID, ModificationEntity> originModifications = getModificationsEntities(originGroupUuid).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
+        // To remove null entities when @orderColumn is not a contiguous sequence starting from 0 (to be fixed?)
+        // (there are several places in this file where we filter non-null modification entities)
+        originModificationEntities.removeIf(Objects::isNull);
 
-        List<UUID> modificationsToMoveUUID = modificationsUuid.stream().filter(originModifications::containsKey).collect(Collectors.toList());
-
-        List<ModificationEntity> newDestinationModificationList = List.of();
-        if (!modificationsToMoveUUID.isEmpty()) {
-            // if moving within the same group
-            if (originGroupUuid.equals(destinationGroupUuid)) {
-                if (referenceModificationUuid != null && !originModifications.containsKey(referenceModificationUuid)) {
-                    throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-                }
-
-                newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, originModifications, referenceModificationUuid);
-
-                originModificationGroupEntity.setModifications(newDestinationModificationList);
-            } else {
-                //if destination is empty, group does not exist, we create it here if needed
-                ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
-
-                Map<UUID, ModificationEntity> destinationModifications = getModificationsEntities(destinationGroupUuid).stream()
-                        .collect(Collectors.toMap(ModificationEntity::getId, Function.identity(), (x, y) -> y, LinkedHashMap::new));
-
-                // referenceModificationUuid must belong to destination one
-                if (referenceModificationUuid != null && !destinationModifications.containsKey(referenceModificationUuid)) {
-                    throw new NetworkModificationException(MOVE_MODIFICATION_ERROR);
-                }
-
-                newDestinationModificationList = updateModificationList(modificationsToMoveUUID, originModifications, destinationModifications, referenceModificationUuid);
-
-                originModificationGroupEntity.setModifications(new ArrayList<>(originModifications.values()));
-                destinationModificationGroupEntity.setModifications(newDestinationModificationList);
-            }
+        // remove from origin list
+        List<ModificationEntity> modificationsToMove = removeModifications(originModificationEntities, modificationsToMoveUUID);
+        if (modificationsToMove.isEmpty()) {
+            return List.of();
         }
-        return newDestinationModificationList;
+
+        if (originGroupUuid.equals(destinationGroupUuid)) { // single group case
+            // insert into origin list
+            insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
+        } else { // 2-group case
+            // read destination group and modifications (group must be created if missing)
+            ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
+            List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();
+            destinationModificationEntities.removeIf(Objects::isNull);
+            // insert into destination list
+            insertModifications(destinationModificationEntities, modificationsToMove, referenceModificationUuid);
+            // update destination group
+            destinationModificationGroupEntity.setModifications(destinationModificationEntities);
+        }
+
+        // update origin group
+        originModificationGroupEntity.setModifications(originModificationEntities);
+
+        return modificationsToMove;
     }
 
-    private List<ModificationEntity> updateModificationList(List<UUID> modificationsToMoveUuid, Map<UUID, ModificationEntity> originModifications, Map<UUID, ModificationEntity> destinationModifications, UUID referenceModificationUuid) {
-        List<ModificationEntity> movedModifications = modificationsToMoveUuid.stream().map(originModifications::remove).collect(Collectors.toList());
+    private void insertModifications(List<ModificationEntity> modificationsList, List<ModificationEntity> modificationsToAdd, UUID referenceModificationUuid) {
+        // If referenceModificationUuid == null we will append at the end of list, otherwise we will insert before referenceModification
+        int insertionIndex = referenceModificationUuid == null ?
+                modificationsList.size() : IntStream.range(0, modificationsList.size())
+                        .filter(i -> referenceModificationUuid.equals(modificationsList.get(i).getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new NetworkModificationException(MOVE_MODIFICATION_ERROR));
+        modificationsList.addAll(insertionIndex, modificationsToAdd);
+    }
 
-        List<ModificationEntity> newDestinationModificationList = new ArrayList<>(destinationModifications.values());
-        /* when referenceModification == null we move at the end of list */
-        int index = referenceModificationUuid == null ? newDestinationModificationList.size() : newDestinationModificationList.indexOf(destinationModifications.get(referenceModificationUuid));
-        newDestinationModificationList.addAll(index, movedModifications);
-
-        return newDestinationModificationList;
+    private List<ModificationEntity> removeModifications(List<ModificationEntity> modificationsList, List<UUID> orderedIdsToRemove) {
+        // Remove all UUID from modificationsList, in a single loop starting from the end.
+        // We memorize the removed elements in a map, to return them in the same order as in orderedIdsToRemove.
+        Set<UUID> uniqueUuids = new HashSet<>(orderedIdsToRemove);
+        Map<UUID, ModificationEntity> removedModificationsMap = new HashMap<>();
+        IntStream.iterate(modificationsList.size() - 1, i -> i >= 0, i -> i - 1).forEach(i -> {
+            UUID modificationId = modificationsList.get(i).getId();
+            if (uniqueUuids.contains(modificationId)) {
+                removedModificationsMap.put(modificationId, modificationsList.remove(i));
+            }
+        });
+        List<ModificationEntity> removedModifications = new ArrayList<>();
+        orderedIdsToRemove.forEach(i -> {
+            ModificationEntity e = removedModificationsMap.get(i);
+            if (e != null) {
+                removedModifications.add(e);
+            }
+        });
+        return removedModifications;
     }
 
     public List<UUID> getModificationGroupsUuids() {
         return this.modificationGroupRepository.findAll().stream()
                 .map(ModificationGroupEntity::getId)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
+        List<ModificationEntity> sourceEntities = modificationRepository.findAllById(sourceModificationUuids);
+        // findAllById does not keep sourceModificationUuids order, but
+        // sourceEntities, copyEntities, newEntities have the same order.
+        List<ModificationEntity> copyEntities = sourceEntities.stream()
+                .map(this::getModificationInfos)
+                .map(ModificationInfos::toEntity)
+                .toList();
+        List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
+
+        // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
+        Map<UUID, UUID> ids = new HashMap<>();
+        Iterator<ModificationEntity> sourceIterator = sourceEntities.iterator();
+        Iterator<ModificationEntity> newIterator = newEntities.iterator();
+        while (sourceIterator.hasNext() && newIterator.hasNext()) {
+            ids.put(sourceIterator.next().getId(), newIterator.next().getId());
+        }
+        return ids;
     }
 
     @Transactional(readOnly = true)
@@ -137,38 +203,73 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        Stream<ModificationEntity> modificationEntitySteam = modificationRepository
+        Stream<ModificationEntity> modificationEntityStream = modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
         if (onlyStashed) {
-            return modificationEntitySteam.filter(m -> m.getStashed())
+            return modificationEntityStream.filter(m -> m.getStashed())
                     .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         } else {
-            return modificationEntitySteam
+            return modificationEntityStream
                     .map(this::getModificationInfos)
                     .collect(Collectors.toList());
         }
     }
 
-    public TabularModificationEntity loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
+    public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
-                tabularModificationEntity = modificationRepository.findAllWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                        new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
+                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+                // We retrieve generator modifications by generatorModificationRepository and store them as a map by IDs to re-order them later on
+                Map<UUID, GeneratorModificationEntity> generatorModifications = generatorModificationRepository
+                    .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
+                    .stream()
+                    .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        Function.identity()
+                    ));
+                // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
+                generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+                // Then we can re-order the list of GeneratorModificationEntity based on ordered list of IDs
+                List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
+                    .stream()
+                    .map(generatorModifications::get)
+                    .toList();
+                return TabularModificationInfos.builder()
+                    .uuid(tabularModificationEntity.getId())
+                    .date(tabularModificationEntity.getDate())
+                    .stashed(tabularModificationEntity.getStashed())
+                    .modificationType(tabularModificationEntity.getModificationType())
+                    .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                    .build();
+            default:
+                break;
+        }
+        return tabularModificationEntity.toModificationInfos();
+    }
+
+    public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
+        TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
+        switch (tabularCreationEntity.getCreationType()) {
+            case GENERATOR_CREATION:
+                tabularCreationEntity = modificationRepository.findTabularCreationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
+                    new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
                 );
-                modificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(tabularModificationEntity.getModifications().stream().map(ModificationEntity::getId).toList());
+                modificationRepository.findAllCreationsWithReactiveCapabilityCurvePointsByIdIn(tabularCreationEntity.getCreations().stream().map(ModificationEntity::getId).toList());
                 break;
             default:
                 break;
         }
-        return tabularModificationEntity;
+        return tabularCreationEntity;
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity).toModificationInfos();
+            return loadTabularModificationSubEntities(modificationEntity);
+        } else if (modificationEntity instanceof TabularCreationEntity) {
+            return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
         }
         return modificationEntity.toModificationInfos();
     }
@@ -199,9 +300,10 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                modificationRepository.deleteAll(groupEntity.getModifications().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+                deleteModifications(groupEntity.getModifications().stream().filter(Objects::nonNull).toList());
+                groupEntity.getModifications().clear();
             }
-            this.modificationGroupRepository.delete(groupEntity);
+            modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return;
@@ -210,32 +312,29 @@ public class NetworkModificationRepository {
         }
     }
 
-    @Transactional
-    public int deleteModifications(UUID groupUuid, boolean onlyStashed) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications;
-        if (onlyStashed) {
-            modifications = getModificationEntityStream(groupUuid)
-                .filter(ModificationEntity::getStashed)
-                .collect(Collectors.toList());
-        } else {
-            modifications = getModificationEntityStream(groupUuid).collect(Collectors.toList());
-        }
-        modifications.forEach(groupEntity::removeModification);
-        int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
-        return count;
-    }
-
     @Transactional // To have the find and delete in the same transaction (atomic)
     public int deleteModifications(UUID groupUuid, List<UUID> uuids) {
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
-                .filter(m -> uuids.contains(m.getId()))
-                .collect(Collectors.toList());
-        modifications.forEach(groupEntity::removeModification);
+        List<ModificationEntity> modifications;
+        if (groupUuid != null) {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            Stream<ModificationEntity> modificationStream = getModificationEntityStream(groupUuid);
+            if (uuids != null) {
+                modificationStream = modificationStream.filter(m -> uuids.contains(m.getId()));
+            }
+            modifications = modificationStream.collect(Collectors.toList());
+            groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
+        } else if (uuids != null) {
+            modifications = modificationRepository.findAllById(uuids);
+            Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
+            if (optionalModificationWithGroup.isPresent()) {
+                throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
+                    optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId()));
+            }
+        } else {
+            throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, "need to specify the group or give a list of UUIDs");
+        }
         int count = modifications.size();
-        this.modificationRepository.deleteAll(modifications);
+        deleteModifications(modifications);
         return count;
     }
 
@@ -251,26 +350,41 @@ public class NetworkModificationRepository {
         return getModificationGroup(groupUuid).getModifications().stream().filter(Objects::nonNull);
     }
 
-    private List<ModificationEntity> getModificationsEntities(UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).collect(Collectors.toList());
-    }
-
     @Transactional(readOnly = true)
     public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
         return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(@NonNull List<UUID> uuids) {
+    public List<ModificationInfos> getModificationsInfos(@NonNull List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
-        List<ModificationEntity> entities = modificationRepository.findAllById(uuids);
-        entities.sort(Comparator.comparing(e -> uuids.indexOf(e.getId())));
+        Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
+            .stream()
+            .collect(Collectors.toMap(
+                ModificationEntity::getId,
+                Function.identity()
+            ));
+        return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
+        List<ModificationInfos> entities = new ArrayList<>();
+        uuids.forEach(uuid -> {
+            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+            List<ModificationInfos> orderedModifications = foundEntities
+                    .stream()
+                    .map(this::getModificationInfo)
+                    .toList();
+            entities.addAll(orderedModifications);
+        }
+        );
         return entities;
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> copyModificationsEntities(@NonNull UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(ModificationEntity::copy).collect(Collectors.toList());
+    public List<ModificationInfos> getActiveModificationsInfos(@NonNull UUID groupUuid) {
+        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::getModificationInfos).toList();
     }
 
     @Transactional
@@ -307,17 +421,56 @@ public class NetworkModificationRepository {
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-            List<UUID> stashedModificationUuids = groupEntity.getModifications().stream()
-                    .filter(modification -> modification != null && modification.getStashed())
-                    .map(ModificationEntity::getId).collect(Collectors.toList());
-            if (!stashedModificationUuids.isEmpty()) {
-                deleteModifications(groupUuid, stashedModificationUuids);
+            List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
+                .filter(Objects::nonNull)
+                .filter(ModificationEntity::getStashed)
+                .toList();
+            if (!modifications.isEmpty()) {
+                groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
+                deleteModifications(modifications);
             }
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return;
             }
             throw e;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationMetadata> getModificationsMetadata(List<UUID> uuids) {
+        // custom query to read only the required fields (id/type)
+        return modificationRepository.findMetadataIn(uuids)
+            .stream()
+            .map(entity -> ModificationMetadata.builder()
+                    .id(entity.getId())
+                    .type(ModificationType.valueOf(entity.getType()))
+                    .build())
+            .toList();
+    }
+
+    private void deleteModifications(List<ModificationEntity> modificationEntities) {
+        // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
+        // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
+        // efficient so no need to dig deeper about that for now.
+        modificationEntities.forEach(m -> {
+            if (m instanceof TabularModificationEntity tabularModificationEntity) {
+                deleteTabularModification(tabularModificationEntity);
+            } else {
+                modificationRepository.delete(m);
+            }
+        });
+    }
+
+    public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
+        switch (tabularModificationEntity.getModificationType()) {
+            case GENERATOR_MODIFICATION:
+                List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(tabularModificationEntity.getId());
+                generatorModificationRepository.deleteTabularModification(subModificationsIds, tabularModificationEntity.getId());
+                break;
+            default:
+                modificationRepository.delete(tabularModificationEntity);
+                break;
         }
     }
 }

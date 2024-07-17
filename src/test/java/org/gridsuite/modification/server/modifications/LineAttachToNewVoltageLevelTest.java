@@ -32,8 +32,8 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
         return LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId("attachmentLine")
-                .seriesResistance(50.6)
-                .seriesReactance(25.3)
+                .r(50.6)
+                .x(25.3)
                 .build();
     }
 
@@ -42,7 +42,7 @@ public class LineAttachToNewVoltageLevelTest extends AbstractNetworkModification
                 .stashed(false)
                 .equipmentId("newVoltageLevel")
                 .equipmentName("NewVoltageLevel")
-                .nominalVoltage(379.3)
+                .nominalV(379.3)
                 .substationId("s1")
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)

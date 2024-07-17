@@ -11,11 +11,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
 public class LineCreationInMixedTypologyTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -40,12 +45,12 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .stashed(false)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
-            .seriesResistance(100.0)
-            .seriesReactance(100.0)
-            .shuntConductance1(10.0)
-            .shuntSusceptance1(10.0)
-            .shuntConductance2(20.0)
-            .shuntSusceptance2(20.0)
+            .r(100.0)
+            .x(100.0)
+            .g1(10.0)
+            .b1(10.0)
+            .g2(20.0)
+            .b2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("1.1")
             .voltageLevelId2("v2")
@@ -56,6 +61,7 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .connectionDirection2(ConnectablePosition.Direction.TOP)
             .connectionPosition1(0)
             .connectionPosition2(0)
+            .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
             .build();
     }
 
@@ -65,12 +71,12 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
             .stashed(false)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
-            .seriesResistance(200.0)
-            .seriesReactance(200.0)
-            .shuntConductance1(20.0)
-            .shuntSusceptance1(20.0)
-            .shuntConductance2(30.0)
-            .shuntSusceptance2(20.0)
+            .r(200.0)
+            .x(200.0)
+            .g1(20.0)
+            .b1(20.0)
+            .g2(30.0)
+            .b2(20.0)
             .voltageLevelId1("v1Edited")
             .busOrBusbarSectionId1("2.1")
             .voltageLevelId2("v3")
@@ -87,6 +93,8 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertNotNull(getNetwork().getLine("idLine1"));
+        assertEquals(PROPERTY_VALUE, getNetwork().getLine("idLine1").getProperty(PROPERTY_NAME));
+
     }
 
     @Override

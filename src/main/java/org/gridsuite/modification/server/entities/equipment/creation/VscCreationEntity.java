@@ -8,21 +8,15 @@
 package org.gridsuite.modification.server.entities.equipment.creation;
 
 import com.powsybl.iidm.network.HvdcLine;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VscCreationInfos;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -33,14 +27,12 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "vscCreation")
 public class VscCreationEntity extends EquipmentCreationEntity {
-    @Column
-    private Double dcNominalVoltage;
+    private Double nominalV;
 
     @Column
-    private Double dcResistance;
+    private Double r;
 
-    @Column
-    private Double maximumActivePower;
+    private Double maxP;
 
     @Column
     private Float operatorActivePowerLimitSide1;
@@ -52,7 +44,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     private HvdcLine.ConvertersMode convertersMode;
 
     @Column
-    private Double activePower;
+    private Double activePowerSetpoint;
 
     @Column
     private Boolean angleDroopActivePowerControl;
@@ -93,15 +85,15 @@ public class VscCreationEntity extends EquipmentCreationEntity {
     }
 
     private void assignAttributes(VscCreationInfos vscCreationInfos) {
-        this.activePower = vscCreationInfos.getActivePower();
+        this.activePowerSetpoint = vscCreationInfos.getActivePowerSetpoint();
         this.angleDroopActivePowerControl = vscCreationInfos.getAngleDroopActivePowerControl();
         this.droop = vscCreationInfos.getDroop();
         this.convertersMode = vscCreationInfos.getConvertersMode();
-        this.dcNominalVoltage = vscCreationInfos.getDcNominalVoltage();
-        this.dcResistance = vscCreationInfos.getDcResistance();
+        this.nominalV = vscCreationInfos.getNominalV();
+        this.r = vscCreationInfos.getR();
         this.operatorActivePowerLimitSide1 = vscCreationInfos.getOperatorActivePowerLimitFromSide1ToSide2();
         this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitFromSide2ToSide1();
-        this.maximumActivePower = vscCreationInfos.getMaximumActivePower();
+        this.maxP = vscCreationInfos.getMaxP();
         this.p0 = vscCreationInfos.getP0();
         this.converterStation1 = vscCreationInfos.getConverterStation1().toEntity();
         this.converterStation2 = vscCreationInfos.getConverterStation2().toEntity();
@@ -121,17 +113,22 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
-                .activePower(getActivePower())
+                .activePowerSetpoint(getActivePowerSetpoint())
                 .angleDroopActivePowerControl(getAngleDroopActivePowerControl())
                 .droop(getDroop())
                 .convertersMode(getConvertersMode())
-                .dcNominalVoltage(getDcNominalVoltage())
-                .dcResistance(getDcResistance())
+                .nominalV(getNominalV())
+                .r(getR())
                 .operatorActivePowerLimitFromSide1ToSide2(getOperatorActivePowerLimitSide1())
                 .operatorActivePowerLimitFromSide2ToSide1(getOperatorActivePowerLimitSide2())
-                .maximumActivePower(getMaximumActivePower())
+                .maxP(getMaxP())
                 .p0(getP0())
                 .converterStation1(converterStationCreationInfos1)
-                .converterStation2(converterStationCreationInfos2);
+                .converterStation2(converterStationCreationInfos2)
+                // properties
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                        getProperties().stream()
+                                .map(FreePropertyEntity::toInfos)
+                                .toList());
     }
 }

@@ -44,19 +44,19 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Float lossFactor;
 
     @Column
-    private Double minimumReactivePower;
+    private Double minQ;
 
     @Column
-    private Double maximumReactivePower;
+    private Double maxQ;
 
     @Column
-    private Double reactivePower;
+    private Double reactivePowerSetpoint;
 
     @Column
     private Boolean voltageRegulationOn;
 
     @Column
-    private Double voltage;
+    private Double voltageSetpoint;
 
     @ElementCollection
     @CollectionTable(name = "converter_station_creation_rcc_points")
@@ -72,11 +72,11 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
 
     private void assignAttributes(ConverterStationCreationInfos converterStationCreationInfos) {
         this.lossFactor = converterStationCreationInfos.getLossFactor();
-        this.minimumReactivePower = converterStationCreationInfos.getMinimumReactivePower();
-        this.maximumReactivePower = converterStationCreationInfos.getMaximumReactivePower();
-        this.reactivePower = converterStationCreationInfos.getReactivePower();
+        this.minQ = converterStationCreationInfos.getMinQ();
+        this.maxQ = converterStationCreationInfos.getMaxQ();
+        this.reactivePowerSetpoint = converterStationCreationInfos.getReactivePowerSetpoint();
         this.voltageRegulationOn = converterStationCreationInfos.getVoltageRegulationOn();
-        this.voltage = converterStationCreationInfos.getVoltage();
+        this.voltageSetpoint = converterStationCreationInfos.getVoltageSetpoint();
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationCreationInfos.getReactiveCapabilityCurvePoints());
         this.reactiveCapabilityCurve = converterStationCreationInfos.getReactiveCapabilityCurve();
     }
@@ -95,11 +95,11 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .connected(isConnected())
                 // ConverterStation
                 .lossFactor(getLossFactor())
-                .minimumReactivePower(getMinimumReactivePower())
-                .maximumReactivePower(getMaximumReactivePower())
-                .reactivePower(getReactivePower())
+                .minQ(getMinQ())
+                .maxQ(getMaxQ())
+                .reactivePowerSetpoint(getReactivePowerSetpoint())
                 .voltageRegulationOn(getVoltageRegulationOn())
-                .voltage(getVoltage())
+                .voltageSetpoint(getVoltageSetpoint())
                 .reactiveCapabilityCurvePoints(toReactiveCapabilityCurveInfos(getReactiveCapabilityCurvePoints()))
                 .reactiveCapabilityCurve(getReactiveCapabilityCurve())
                 .build();
@@ -108,8 +108,8 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
             List<ReactiveCapabilityCurveCreationInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getQminP(),
-                        point.getQmaxP(),
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                        point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
@@ -122,8 +122,8 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
         return pointsEmbeddable.stream()
                 .map(pointEmbeddable -> ReactiveCapabilityCurveCreationInfos.builder()
                         .p(pointEmbeddable.getP())
-                        .qmaxP(pointEmbeddable.getQmaxP())
-                        .qminP(pointEmbeddable.getQminP())
+                        .maxQ(pointEmbeddable.getMaxQ())
+                        .minQ(pointEmbeddable.getMinQ())
                         .build())
                 .collect(Collectors.toList());
     }

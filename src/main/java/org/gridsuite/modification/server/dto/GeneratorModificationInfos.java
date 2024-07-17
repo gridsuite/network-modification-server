@@ -9,14 +9,13 @@ package org.gridsuite.modification.server.dto;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.powsybl.commons.report.ReportNode;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.GeneratorModification;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
 import com.powsybl.iidm.network.EnergySource;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -40,25 +39,25 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<EnergySource> energySource;
 
     @Schema(description = "Minimum active power")
-    private AttributeModification<Double> minActivePower;
+    private AttributeModification<Double> minP;
 
     @Schema(description = "Maximum active power")
-    private AttributeModification<Double> maxActivePower;
+    private AttributeModification<Double> maxP;
 
     @Schema(description = "Rated nominal power")
-    private AttributeModification<Double> ratedNominalPower;
+    private AttributeModification<Double> ratedS;
 
     @Schema(description = "Active power set point")
-    private AttributeModification<Double> activePowerSetpoint;
+    private AttributeModification<Double> targetP;
 
     @Schema(description = "Reactive power set point")
-    private AttributeModification<Double> reactivePowerSetpoint;
+    private AttributeModification<Double> targetQ;
 
     @Schema(description = "Voltage regulation on")
     private AttributeModification<Boolean> voltageRegulationOn;
 
     @Schema(description = "Voltage set point")
-    private AttributeModification<Double> voltageSetpoint;
+    private AttributeModification<Double> targetV;
 
     @Schema(description = "Planning active power set point")
     private AttributeModification<Double> plannedActivePowerSetPoint;
@@ -73,10 +72,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Double> forcedOutageRate;
 
     @Schema(description = "Minimum reactive power")
-    private AttributeModification<Double> minimumReactivePower;
+    private AttributeModification<Double> minQ;
 
     @Schema(description = "Maximum reactive power")
-    private AttributeModification<Double> maximumReactivePower;
+    private AttributeModification<Double> maxQ;
 
     @Schema(description = "Reactive capability curve points")
     private List<ReactiveCapabilityCurveModificationInfos> reactiveCapabilityCurvePoints;
@@ -88,10 +87,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     private AttributeModification<Float> droop;
 
     @Schema(description = "Transient reactance")
-    private AttributeModification<Double> transientReactance;
+    private AttributeModification<Double> directTransX;
 
     @Schema(description = "Step up transformer reactance")
-    private AttributeModification<Double> stepUpTransformerReactance;
+    private AttributeModification<Double> stepUpTransformerX;
 
     @Schema(description = "Voltage Regulation type")
     private AttributeModification<VoltageRegulationType> voltageRegulationType;
@@ -125,7 +124,10 @@ public class GeneratorModificationInfos extends InjectionModificationInfos {
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Generator modification ${generatorId}", "generatorId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Generator modification ${generatorId}")
+                .withUntypedValue("generatorId", this.getEquipmentId())
+                .add();
     }
 }

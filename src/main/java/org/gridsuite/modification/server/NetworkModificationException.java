@@ -9,7 +9,7 @@ package org.gridsuite.modification.server;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.BranchStatusModificationInfos;
+import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.springframework.http.HttpStatus;
 
 import java.util.Objects;
@@ -27,11 +27,11 @@ public class NetworkModificationException extends PowsyblException {
         NETWORK_NOT_FOUND(HttpStatus.NOT_FOUND),
         VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND),
         NOTHING_TO_DELETE(HttpStatus.BAD_REQUEST),
+        MODIFICATION_DELETION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         MODIFICATION_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
         MODIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         SWITCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
-        BRANCH_NOT_FOUND(HttpStatus.NOT_FOUND),
         LOAD_NOT_FOUND(HttpStatus.NOT_FOUND),
         BATTERY_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATOR_NOT_FOUND(HttpStatus.NOT_FOUND),
@@ -73,12 +73,15 @@ public class NetworkModificationException extends PowsyblException {
         LINE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         TWO_WINDINGS_TRANSFORMER_CREATION_ERROR(HttpStatus.BAD_REQUEST),
+        BRANCH_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        INJECTION_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CONNECTION_POSITION_ERROR(HttpStatus.BAD_REQUEST),
         MODIFY_BATTERY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BRANCH_ACTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BRANCH_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty branch action type"),
-        BRANCH_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
-        BRANCH_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        OPERATING_STATUS_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        OPERATING_ACTION_TYPE_EMPTY(HttpStatus.BAD_REQUEST, "Empty operating action type"),
+        OPERATING_ACTION_TYPE_UNKNOWN(HttpStatus.BAD_REQUEST),
+        OPERATING_ACTION_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
+        EQUIPMENT_TYPE_UNSUPPORTED(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         LINE_SPLIT_NOT_FOUND(HttpStatus.NOT_FOUND),
         LINE_ATTACH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
@@ -100,14 +103,19 @@ public class NetworkModificationException extends PowsyblException {
         DELETE_ATTACHING_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
         FILTERS_NOT_FOUND(HttpStatus.NOT_FOUND),
         GENERATION_DISPATCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        PRELOADING_STRATEGY_NOT_ALLOWED(HttpStatus.INTERNAL_SERVER_ERROR),
         VOLTAGE_INIT_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         TABULAR_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        TABULAR_CREATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         CREATE_VSC_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        MODIFY_VSC_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         HVDC_LINE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
         VSC_CONVERTER_STATION_NOT_FOUND(HttpStatus.NOT_FOUND),
         CREATE_CONVERTER_STATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
-        BY_FORMULA_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        MODIFY_CONVERTER_STATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        BY_FORMULA_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        HVDC_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
+        COMPOSITE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+
 
         public final HttpStatus status;
         private final String message;
@@ -151,8 +159,12 @@ public class NetworkModificationException extends PowsyblException {
         return new NetworkModificationException(Type.UNKNOWN_EQUIPMENT_TYPE, "The equipment type : " + type + " is unknown");
     }
 
-    public static NetworkModificationException createBranchActionTypeUnsupported(@NonNull BranchStatusModificationInfos.ActionType type) {
-        return new NetworkModificationException(Type.BRANCH_ACTION_TYPE_UNSUPPORTED, "The branch action type : " + type + " is unsupported");
+    public static NetworkModificationException createEquipmentTypeNotSupported(@NonNull String type) {
+        return new NetworkModificationException(Type.EQUIPMENT_TYPE_UNSUPPORTED, "The equipment type : " + type + " is not supported");
+    }
+
+    public static NetworkModificationException createOperatingActionTypeUnsupported(@NonNull OperatingStatusModificationInfos.ActionType type) {
+        return new NetworkModificationException(Type.OPERATING_ACTION_TYPE_UNSUPPORTED, "The operating action type : " + type + " is unsupported");
     }
 
     public static NetworkModificationException createEquipementAttributeNotEditable(@NonNull IdentifiableType equipmentType, @NonNull String attributeName) {

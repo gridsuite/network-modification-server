@@ -8,8 +8,7 @@ package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.Country;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -21,8 +20,6 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.equipment.modification.SubstationModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.SubstationModification;
-
-import java.util.List;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -38,11 +35,7 @@ import java.util.List;
 @ModificationErrorTypeName("MODIFY_SUBSTATION_ERROR")
 public class SubstationModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "country modification")
-    private AttributeModification<Country> substationCountry;
-
-    @Schema(description = "free properties")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<SubstationFreePropertyInfos> properties;
+    private AttributeModification<Country> country;
 
     @Override
     public SubstationModificationEntity toEntity() {
@@ -55,7 +48,10 @@ public class SubstationModificationInfos extends BasicEquipmentModificationInfos
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Substation modification ${substationId}", "substationId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Substation modification ${substationId}")
+                .withUntypedValue("substationId", this.getEquipmentId())
+                .add();
     }
 }

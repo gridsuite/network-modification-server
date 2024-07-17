@@ -14,8 +14,6 @@ import org.springframework.util.CollectionUtils;
 import org.gridsuite.modification.server.dto.*;
 
 import jakarta.persistence.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @Getter
@@ -23,17 +21,12 @@ import java.util.stream.Collectors;
 @Table(name = "substationModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "substationModification_id_fk_constraint"))
 public class SubstationModificationEntity extends BasicEquipmentModificationEntity {
-    @Column(name = "substationCountryValue")
-    private Country substationCountryValue;
+    @Column(name = "country")
+    private Country country;
 
-    @Column(name = "substationCountryOp")
+    @Column(name = "countryOp")
     @Enumerated(EnumType.STRING)
-    private OperationType substationCountryOp;
-
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "substation_modification_id")
-    @OrderColumn(name = "insert_position")
-    private List<SubstationFreePropertyEntity> properties;
+    private OperationType countryOp;
 
     public SubstationModificationEntity(@NonNull SubstationModificationInfos substationModificationInfos) {
         super(substationModificationInfos);
@@ -47,26 +40,8 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
     }
 
     private void assignAttributes(SubstationModificationInfos substationModificationInfos) {
-        this.substationCountryValue = substationModificationInfos.getSubstationCountry() != null ? substationModificationInfos.getSubstationCountry().getValue() : null;
-        this.substationCountryOp = substationModificationInfos.getSubstationCountry() != null ? substationModificationInfos.getSubstationCountry().getOp() : null;
-        List<SubstationFreePropertyEntity> newProperties = substationModificationInfos.getProperties() == null ? null :
-                substationModificationInfos.getProperties().stream()
-                        .map(prop -> SubstationFreePropertyEntity.builder()
-                                .name(prop.getName())
-                                .value(prop.getValue())
-                                .deletionMark(prop.isDeletionMark())
-                                .added(prop.isAdded())
-                                .build())
-                        .collect(Collectors.toList());
-        if (this.properties != null) {
-            // update using the same reference with clear/add (to avoid JPA exception)
-            this.properties.clear();
-            if (newProperties != null) {
-                this.properties.addAll(newProperties);
-            }
-        } else {
-            this.properties = newProperties;
-        }
+        this.country = substationModificationInfos.getCountry() != null ? substationModificationInfos.getCountry().getValue() : null;
+        this.countryOp = substationModificationInfos.getCountry() != null ? substationModificationInfos.getCountry().getOp() : null;
     }
 
     @Override
@@ -82,16 +57,10 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                 .stashed(getStashed())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .substationCountry(AttributeModification.toAttributeModification(getSubstationCountryValue(), getSubstationCountryOp()))
+                .country(AttributeModification.toAttributeModification(getCountry(), getCountryOp()))
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
-                        getProperties().stream()
-                                .map(prop -> SubstationFreePropertyInfos.builder()
-                                        .name(prop.getName())
-                                        .value(prop.getValue())
-                                        .deletionMark(prop.getDeletionMark())
-                                        .added(prop.getAdded())
-                                        .build())
-                                .collect(Collectors.toList())
-                        );
+                    getProperties().stream()
+                        .map(FreePropertyEntity::toInfos)
+                        .toList());
     }
 }

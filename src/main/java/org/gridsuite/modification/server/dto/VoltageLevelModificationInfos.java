@@ -8,8 +8,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +32,7 @@ import org.gridsuite.modification.server.modifications.VoltageLevelModification;
 @ModificationErrorTypeName("MODIFY_VOLTAGE_LEVEL_ERROR")
 public class VoltageLevelModificationInfos extends BasicEquipmentModificationInfos {
     @Schema(description = "nominal voltage in kV")
-    private AttributeModification<Double> nominalVoltage;
+    private AttributeModification<Double> nominalV;
 
     @Schema(description = "low voltage limit in kV")
     private AttributeModification<Double> lowVoltageLimit;
@@ -53,8 +52,11 @@ public class VoltageLevelModificationInfos extends BasicEquipmentModificationInf
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "VoltageLevel modification ${voltageLevelId}", "voltageLevelId", this.getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "VoltageLevel modification ${voltageLevelId}")
+                .withUntypedValue("voltageLevelId", getEquipmentId())
+                .add();
     }
 
     @Override

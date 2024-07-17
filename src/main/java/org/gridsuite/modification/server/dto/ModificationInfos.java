@@ -10,8 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -21,7 +20,7 @@ import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeNam
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,7 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = LineSplitWithVoltageLevelInfos.class),
     @JsonSubTypes.Type(value = LineAttachToVoltageLevelInfos.class),
     @JsonSubTypes.Type(value = LinesAttachToSplitLinesInfos.class),
-    @JsonSubTypes.Type(value = BranchStatusModificationInfos.class),
+    @JsonSubTypes.Type(value = OperatingStatusModificationInfos.class),
     @JsonSubTypes.Type(value = EquipmentAttributeModificationInfos.class),
     @JsonSubTypes.Type(value = GeneratorScalingInfos.class),
     @JsonSubTypes.Type(value = LoadScalingInfos.class),
@@ -68,7 +67,11 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = VscCreationInfos.class),
     @JsonSubTypes.Type(value = ConverterStationCreationInfos.class),
     @JsonSubTypes.Type(value = TabularModificationInfos.class),
-    @JsonSubTypes.Type(value = ByFormulaModificationInfos.class)
+    @JsonSubTypes.Type(value = ByFormulaModificationInfos.class),
+    @JsonSubTypes.Type(value = VscModificationInfos.class),
+    @JsonSubTypes.Type(value = ConverterStationModificationInfos.class),
+    @JsonSubTypes.Type(value = TabularCreationInfos.class),
+    @JsonSubTypes.Type(value = CompositeModificationInfos.class)
 })
 @SuperBuilder
 @NoArgsConstructor
@@ -85,7 +88,7 @@ public class ModificationInfos {
     private final AtomicReference<ModificationType> type = new AtomicReference<>(null); // Only accessor (automatically initialized)
 
     @Schema(description = "Modification date")
-    private ZonedDateTime date;
+    private Instant date;
 
     @Schema(description = "Modification flag")
     @Builder.Default
@@ -121,7 +124,7 @@ public class ModificationInfos {
     }
 
     @JsonIgnore
-    public Reporter createSubReporter(ReporterModel reporter) {
+    public ReportNode createSubReportNode(ReportNode reportNode) {
         throw new UnsupportedOperationException("TODO");
     }
 

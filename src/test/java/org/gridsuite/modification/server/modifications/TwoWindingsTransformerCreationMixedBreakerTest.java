@@ -31,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -49,13 +51,13 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
                 .voltageLevelId2("v3")
                 .busOrBusbarSectionId2("bus3")
                 .connected2(true)
-                .magnetizingConductance(100.0)
-                .magnetizingSusceptance(200.0)
-                .ratedVoltage1(1000)
-                .ratedVoltage2(1010)
+                .g(100.0)
+                .b(200.0)
+                .ratedU1(1000)
+                .ratedU2(1010)
                 .ratedS(1.)
-                .seriesReactance(300)
-                .seriesResistance(400)
+                .x(300)
+                .r(400)
                 .connectionName1("cnid2wt1")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cnid2wt2")
@@ -140,6 +142,7 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
                                         .build()
                         ))
                         .build())
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -149,12 +152,12 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
                 .stashed(false)
                 .equipmentId("new2wtUpdate")
                 .equipmentName("new2wtUpdate")
-                .seriesResistance(2.3)
-                .seriesReactance(3.2)
-                .magnetizingConductance(4.4)
-                .magnetizingSusceptance(5.5)
-                .ratedVoltage1(6.8)
-                .ratedVoltage2(7.9)
+                .r(2.3)
+                .x(3.2)
+                .g(4.4)
+                .b(5.5)
+                .ratedU1(6.8)
+                .ratedU2(7.9)
                 .ratedS(9.4)
                 .voltageLevelId1("v1")
                 .busOrBusbarSectionId1("bus1")
@@ -262,6 +265,7 @@ public class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetw
         assertEquals(4, getNetwork().getTwoWindingsTransformer("id2wt1").getRatioTapChanger().getStepCount());
         assertEquals(3, getNetwork().getTwoWindingsTransformer("id2wt1").getPhaseTapChanger().getStepCount());
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, getNetwork().getTwoWindingsTransformer("id2wt1").getPhaseTapChanger().getRegulationMode());
+        assertEquals(PROPERTY_VALUE, getNetwork().getTwoWindingsTransformer("id2wt1").getProperty(PROPERTY_NAME));
     }
 
     @Override

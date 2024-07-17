@@ -7,9 +7,8 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.PowsyblException;
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -27,7 +26,7 @@ public class TabularModification extends AbstractModification {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TabularModification.class);
 
-    private static final String TABULAR_MODIFICATION_REPORT_KEY = "tabularModification";
+    private static final String TABULAR_MODIFICATION_REPORT_KEY_PREFIX = "tabular";
 
     private final TabularModificationInfos modificationInfos;
 
@@ -43,97 +42,93 @@ public class TabularModification extends AbstractModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         int applicationFailuresCount = 0;
         for (var modifInfos : modificationInfos.getModifications()) {
             try {
                 AbstractModification modification = modifInfos.toModification();
                 modification.check(network);
                 if (modifInfos instanceof ShuntCompensatorModificationInfos shuntModification) {
-                    checkShuntCompensatorModification(network, shuntModification, subReporter);
+                    checkShuntCompensatorModification(network, shuntModification, subReportNode);
                 }
                 modification.apply(network);
             } catch (PowsyblException e) {
                 applicationFailuresCount++;
-                subReporter.report(Report.builder()
-                        .withKey(modifInfos.getType().name() + applicationFailuresCount)
-                        .withDefaultMessage(e.getMessage())
+                subReportNode.newReportNode()
+                        .withMessageTemplate(modifInfos.getType().name() + applicationFailuresCount, "${message}")
+                        .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
+                        .add();
                 LOGGER.warn(e.getMessage());
             }
         }
-        String defaultMessage = " have been modified";
-        defaultMessage = switch (modificationInfos.getModificationType()) {
-            case GENERATOR_MODIFICATION -> "generators" + defaultMessage;
-            case LOAD_MODIFICATION -> "loads" + defaultMessage;
-            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> "two windings transformers" + defaultMessage;
-            case BATTERY_MODIFICATION -> "batteries" + defaultMessage;
-            case VOLTAGE_LEVEL_MODIFICATION -> "voltage levels" + defaultMessage;
-            case SHUNT_COMPENSATOR_MODIFICATION -> "shunt compensators" + defaultMessage;
-            case LINE_MODIFICATION -> "lines" + defaultMessage;
-            case SUBSTATION_MODIFICATION -> "substations" + defaultMessage;
-            default -> "equipments of unknown type" + defaultMessage;
-        };
+        String defaultMessage = switch (modificationInfos.getModificationType()) {
+            case GENERATOR_MODIFICATION -> "generators";
+            case LOAD_MODIFICATION -> "loads";
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> "two windings transformers";
+            case BATTERY_MODIFICATION -> "batteries";
+            case VOLTAGE_LEVEL_MODIFICATION -> "voltage levels";
+            case SHUNT_COMPENSATOR_MODIFICATION -> "shunt compensators";
+            case LINE_MODIFICATION -> "lines";
+            case SUBSTATION_MODIFICATION -> "substations";
+            default -> "equipments of unknown type";
+        } + " have been modified";
 
         if (modificationInfos.getModifications().size() == applicationFailuresCount) {
-            subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_REPORT_KEY + "Error")
-                    .withDefaultMessage("Tabular modification: No " + defaultMessage)
+            subReportNode.newReportNode()
+                    .withMessageTemplate(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name() + "Error", "Tabular modification: No ${defaultMessage}")
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
+                    .add();
         } else if (applicationFailuresCount > 0) {
-            subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_REPORT_KEY + "Warning")
-                    .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage + " and ${failuresCount} have not been modified")
-                    .withValue("modificationsCount", modificationInfos.getModifications().size() - applicationFailuresCount)
-                    .withValue("failuresCount", applicationFailuresCount)
+            subReportNode.newReportNode()
+                    .withMessageTemplate(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name() + "Warning", "Tabular modification: ${modificationsCount} ${defaultMessage} and ${failuresCount} have not been modified")
+                    .withUntypedValue("modificationsCount", modificationInfos.getModifications().size() - applicationFailuresCount)
+                    .withUntypedValue("failuresCount", applicationFailuresCount)
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.WARN_SEVERITY)
-                    .build());
+                    .add();
         } else {
-            subReporter.report(Report.builder()
-                    .withKey(TABULAR_MODIFICATION_REPORT_KEY)
-                    .withDefaultMessage("Tabular modification: ${modificationsCount} " + defaultMessage)
-                    .withValue("modificationsCount", modificationInfos.getModifications().size())
+            subReportNode.newReportNode()
+                    .withMessageTemplate(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + modificationInfos.getModificationType().name(), "Tabular modification: ${modificationsCount} ${defaultMessage}")
+                    .withUntypedValue("modificationsCount", modificationInfos.getModifications().size())
+                    .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
+                    .add();
         }
     }
 
     public void checkShuntCompensatorModification(
             Network network,
             ShuntCompensatorModificationInfos shuntCompensatorModificationInfos,
-            Reporter subReporter
+            ReportNode subReportNode
     ) {
         var shuntCompensator = network.getShuntCompensator(shuntCompensatorModificationInfos.getEquipmentId());
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.NON_LINEAR) {
-            subReporter.report(Report.builder()
-                    .withKey(shuntCompensator.getId())
-                    .withDefaultMessage("Tabular modification: It is currently not possible to modify non-linear shunt compensator with id " + shuntCompensator.getId())
+            subReportNode.newReportNode()
+                    .withMessageTemplate(shuntCompensator.getId(), "Tabular modification: It is currently not possible to modify non-linear shunt compensator with id ${id}")
+                    .withUntypedValue("id", shuntCompensator.getId())
                     .withSeverity(TypedValue.ERROR_SEVERITY)
-                    .build());
+                    .add();
         } else if (shuntCompensatorModificationInfos.getMaxSusceptance() != null) {
             if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null && shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
-                subReporter.report(Report.builder()
-                        .withKey(shuntCompensator.getId())
-                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance for shunt compensator with id "
-                                + shuntCompensator.getId())
+                subReportNode.newReportNode()
+                        .withMessageTemplate(shuntCompensator.getId(), "Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type, maximum reactive power and maximum susceptance for shunt compensator with id ${id}")
+                        .withUntypedValue("id", shuntCompensator.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
+                        .add();
             } else if (shuntCompensatorModificationInfos.getShuntCompensatorType() != null) {
-                subReporter.report(Report.builder()
-                        .withKey(shuntCompensator.getId())
-                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance for shunt compensator with id "
-                                + shuntCompensator.getId())
+                subReportNode.newReportNode()
+                        .withMessageTemplate(shuntCompensator.getId(), "Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update type and maximum susceptance for shunt compensator with id ${id}")
+                        .withUntypedValue("id", shuntCompensator.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
+                        .add();
             } else if (shuntCompensatorModificationInfos.getMaxQAtNominalV() != null) {
-                subReporter.report(Report.builder()
-                        .withKey(shuntCompensator.getId())
-                        .withDefaultMessage("Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance for shunt compensator with id "
-                                + shuntCompensator.getId())
+                subReportNode.newReportNode()
+                        .withMessageTemplate(shuntCompensator.getId(), "Tabular modification: Input for maximum susceptance has been ignored since it is not possible to simultaneously update maximum reactive power and maximum susceptance for shunt compensator with id ${id}")
+                        .withUntypedValue("id", shuntCompensator.getId())
                         .withSeverity(TypedValue.WARN_SEVERITY)
-                        .build());
+                        .add();
             }
         }
     }

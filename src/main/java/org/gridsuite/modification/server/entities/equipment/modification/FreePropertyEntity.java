@@ -7,28 +7,24 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 
 import java.util.UUID;
 
 /**
- * @author David Braquart <david.braquart at rte-france.com>
+ * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @Getter
 @NoArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "substation_free_property")
-public class SubstationFreePropertyEntity {
+@Table(name = "free_property", indexes = @Index(name = "modification_idx", columnList = "equipment_modification_id"))
+public class FreePropertyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
@@ -45,5 +41,17 @@ public class SubstationFreePropertyEntity {
 
     @Column(name = "added")
     private Boolean added = false;
-}
 
+    @Column(name = "previous_value")
+    private String previousValue;
+
+    public FreePropertyInfos toInfos() {
+        return FreePropertyInfos.builder()
+            .name(name)
+            .value(value)
+            .deletionMark(deletionMark)
+            .added(added)
+            .previousValue(previousValue)
+            .build();
+    }
+}

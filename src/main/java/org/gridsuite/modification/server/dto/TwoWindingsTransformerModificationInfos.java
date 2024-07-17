@@ -7,8 +7,7 @@
 package org.gridsuite.modification.server.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.ReporterModel;
+import com.powsybl.commons.report.ReportNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -31,16 +30,16 @@ import org.gridsuite.modification.server.modifications.TwoWindingsTransformerMod
 public class TwoWindingsTransformerModificationInfos extends BranchModificationInfos {
 
     @Schema(description = "Magnetizing conductance")
-    private AttributeModification<Double> magnetizingConductance;
+    private AttributeModification<Double> g;
 
     @Schema(description = "Magnetizing susceptance")
-    private AttributeModification<Double> magnetizingSusceptance;
+    private AttributeModification<Double> b;
 
     @Schema(description = "Side 1 rated voltage")
-    private AttributeModification<Double> ratedVoltage1;
+    private AttributeModification<Double> ratedU1;
 
     @Schema(description = "Side 2 rated voltage")
-    private AttributeModification<Double> ratedVoltage2;
+    private AttributeModification<Double> ratedU2;
 
     @Schema(description = "Rated conductance in Siemens")
     private AttributeModification<Double> ratedS;
@@ -64,7 +63,10 @@ public class TwoWindingsTransformerModificationInfos extends BranchModificationI
     }
 
     @Override
-    public Reporter createSubReporter(ReporterModel reporter) {
-        return reporter.createSubReporter(getType().name(), "Two windings transformer modification ${twoWindingsTransformerId}", "twoWindingsTransformerId", getEquipmentId());
+    public ReportNode createSubReportNode(ReportNode reportNode) {
+        return reportNode.newReportNode()
+                .withMessageTemplate(getType().name(), "Two windings transformer modification ${twoWindingsTransformerId}")
+                .withUntypedValue("twoWindingsTransformerId", getEquipmentId())
+                .add();
     }
 }

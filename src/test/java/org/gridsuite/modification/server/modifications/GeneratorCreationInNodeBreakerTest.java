@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -37,6 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+    private static String PROPERTY_NAME = "property-name";
+    private static String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -52,17 +57,17 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1B")
                 .energySource(EnergySource.HYDRO)
-                .minActivePower(100.0)
-                .maxActivePower(600.0)
-                .ratedNominalPower(10.)
-                .activePowerSetpoint(400.)
-                .reactivePowerSetpoint(50.)
+                .minP(100.0)
+                .maxP(600.0)
+                .ratedS(10.)
+                .targetP(400.)
+                .targetQ(50.)
                 .voltageRegulationOn(true)
-                .voltageSetpoint(225.)
-                .stepUpTransformerReactance(60.0)
-                .transientReactance(61.0)
-                .minimumReactivePower(20.0)
-                .maximumReactivePower(25.0)
+                .targetV(225.)
+                .stepUpTransformerX(60.0)
+                .directTransX(61.0)
+                .minQ(20.0)
+                .maxQ(25.0)
                 .plannedActivePowerSetPoint(111.)
                 .marginalCost(0.40)
                 .plannedOutageRate(.45)
@@ -78,6 +83,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                         new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -90,17 +96,17 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
                 .voltageLevelId("v1")
                 .busOrBusbarSectionId("bus1")
                 .energySource(EnergySource.SOLAR)
-                .minActivePower(101.0)
-                .maxActivePower(601.0)
-                .ratedNominalPower(11.)
-                .activePowerSetpoint(401.)
-                .reactivePowerSetpoint(51.)
+                .minP(101.0)
+                .maxP(601.0)
+                .ratedS(11.)
+                .targetP(401.)
+                .targetQ(51.)
                 .voltageRegulationOn(true)
-                .voltageSetpoint(226.)
-                .stepUpTransformerReactance(61.0)
-                .transientReactance(62.0)
-                .minimumReactivePower(23.0)
-                .maximumReactivePower(26.0)
+                .targetV(226.)
+                .stepUpTransformerX(61.0)
+                .directTransX(62.0)
+                .minQ(23.0)
+                .maxQ(26.0)
                 .plannedActivePowerSetPoint(222.)
                 .marginalCost(0.50)
                 .plannedOutageRate(.85)
@@ -124,6 +130,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         assertNotNull(getNetwork().getGenerator("idGenerator1"));
         assertEquals(1, getNetwork().getVoltageLevel("v2").getGeneratorStream()
                 .filter(transformer -> transformer.getId().equals("idGenerator1")).count());
+        assertEquals(PROPERTY_VALUE, getNetwork().getGenerator("idGenerator1").getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -165,7 +172,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         generatorCreationInfos.setVoltageLevelId("v2");
 
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        generatorCreationInfos.setMinActivePower(Double.NaN);
+        generatorCreationInfos.setMinP(Double.NaN);
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -175,7 +182,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
         // invalid min max reactive limit
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
-        generatorCreationInfos.setMinimumReactivePower(Double.NaN);
+        generatorCreationInfos.setMinQ(Double.NaN);
 
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -185,7 +192,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
-        generatorCreationInfos.setMaximumReactivePower(Double.NaN);
+        generatorCreationInfos.setMaxQ(Double.NaN);
 
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -195,8 +202,8 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
-        generatorCreationInfos.setMinimumReactivePower(200.);
-        generatorCreationInfos.setMaximumReactivePower(100.);
+        generatorCreationInfos.setMinQ(200.);
+        generatorCreationInfos.setMaxQ(100.);
 
         generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -242,7 +249,7 @@ public class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificat
     public void testCreateWithShortCircuitErrors() throws Exception {
         // invalid short circuit transient reactance
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
-        generatorCreationInfos.setTransientReactance(Double.NaN);
+        generatorCreationInfos.setDirectTransX(Double.NaN);
 
         String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))

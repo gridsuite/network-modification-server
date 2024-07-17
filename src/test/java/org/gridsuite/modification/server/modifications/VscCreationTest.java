@@ -8,21 +8,13 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.HvdcLine;
-import com.powsybl.iidm.network.MinMaxReactiveLimits;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ReactiveCapabilityCurve;
-import com.powsybl.iidm.network.ReactiveLimitsKind;
-import com.powsybl.iidm.network.VscConverterStation;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
-import org.gridsuite.modification.server.dto.VscCreationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
@@ -32,13 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,6 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 
 public class VscCreationTest extends AbstractNetworkModificationTest {
+
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -58,19 +50,20 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("vsc1")
                 .equipmentName("vsc1Name")
-                .dcNominalVoltage(39.)
-                .dcResistance(4.)
-                .maximumActivePower(56.)
+                .nominalV(39.)
+                .r(4.)
+                .maxP(56.)
                 .p0(5F)
                 .operatorActivePowerLimitFromSide2ToSide1(5.6F)
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)
-                .activePower(5.)
+                .activePowerSetpoint(5.)
                 .operatorActivePowerLimitFromSide1ToSide2(6.0F)
                 .operatorActivePowerLimitFromSide2ToSide1(8F)
                 .droop(1F)
                 .angleDroopActivePowerControl(false)
                 .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
                 .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
@@ -79,12 +72,12 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .equipmentId("stationId2")
                 .equipmentName("station2")
                 .voltageRegulationOn(false)
-                .reactivePower(23.)
+                .reactivePowerSetpoint(23.)
                 .reactiveCapabilityCurve(false)
-                .maximumReactivePower(66.)
+                .maxQ(66.)
                 .lossFactor(4F)
-                .minimumReactivePower(55.)
-                .voltage(34.)
+                .minQ(55.)
+                .voltageSetpoint(34.)
                 .voltageLevelId("v2")
                 .busOrBusbarSectionId("1.1")
                 .connectionName("top")
@@ -97,21 +90,21 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     private ConverterStationCreationInfos buildConverterStationWithReactiveCapabilityCurve() {
         var point1 = ReactiveCapabilityCurveCreationInfos.builder()
                 .p(0.4)
-                .qmaxP(3.)
-                .qminP(0.)
+                .maxQ(3.)
+                .minQ(0.)
                 .build();
         var point2 = ReactiveCapabilityCurveCreationInfos.builder()
                 .p(0.6)
-                .qmaxP(2.)
-                .qminP(1.1)
+                .maxQ(2.)
+                .minQ(1.1)
                 .build();
 
         return ConverterStationCreationInfos.builder()
                 .equipmentId("stationId1")
                 .equipmentName("station1")
                 .voltageRegulationOn(true)
-                .voltage(66.)
-                .reactivePower(44.)
+                .voltageSetpoint(66.)
+                .reactivePowerSetpoint(44.)
                 .lossFactor(40F)
                 .reactiveCapabilityCurve(true)
                 .reactiveCapabilityCurvePoints(List.of(point1, point2))
@@ -128,13 +121,13 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("vsc1Edited")
                 .equipmentName("vsc2Name")
-                .dcNominalVoltage(53.)
-                .dcResistance(2.)
-                .maximumActivePower(77.)
+                .nominalV(53.)
+                .r(2.)
+                .maxP(77.)
                 .p0(8.3F)
                 .operatorActivePowerLimitFromSide2ToSide1(5.2F)
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER)
-                .activePower(7.)
+                .activePowerSetpoint(7.)
                 .operatorActivePowerLimitFromSide1ToSide2(6.1F)
                 .operatorActivePowerLimitFromSide2ToSide1(8.3F)
                 .angleDroopActivePowerControl(true)
@@ -161,6 +154,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         assertEquals(4, hvdcLine.getR(), 0);
         assertEquals(5, hvdcLine.getActivePowerSetpoint(), 0);
         assertEquals(56, hvdcLine.getMaxP(), 0);
+        assertEquals(PROPERTY_VALUE, hvdcLine.getProperty(PROPERTY_NAME));
 
         HvdcOperatorActivePowerRange hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
         assertEquals(6, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0);
@@ -246,7 +240,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setConnectionPosition(35);
         converterStationCreationInfos.setReactiveCapabilityCurve(false);
-        converterStationCreationInfos.setMinimumReactivePower(Double.NaN);
+        converterStationCreationInfos.setMinQ(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
@@ -259,7 +253,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setConnectionPosition(66);
         converterStationCreationInfos.setReactiveCapabilityCurve(false);
-        converterStationCreationInfos.setMaximumReactivePower(Double.NaN);
+        converterStationCreationInfos.setMaxQ(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
@@ -272,8 +266,8 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setConnectionPosition(15);
         converterStationCreationInfos.setReactiveCapabilityCurve(false);
-        converterStationCreationInfos.setMinimumReactivePower(200.);
-        converterStationCreationInfos.setMaximumReactivePower(100.);
+        converterStationCreationInfos.setMinQ(200.);
+        converterStationCreationInfos.setMaxQ(100.);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
         vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);

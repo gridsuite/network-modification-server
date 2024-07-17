@@ -6,9 +6,8 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.commons.reporter.Report;
-import com.powsybl.commons.reporter.Reporter;
-import com.powsybl.commons.reporter.TypedValue;
+import com.powsybl.commons.report.ReportNode;
+import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Branch;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
@@ -17,6 +16,7 @@ import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.LineModificationInfos;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -37,34 +37,34 @@ public class LineModification extends AbstractBranchModification {
     }
 
     @Override
-    public void apply(Network network, Reporter subReporter) {
+    public void apply(Network network, ReportNode subReportNode) {
         Line line = network.getLine(modificationInfos.getEquipmentId());
         // modify the line in the network
-        modifyLine(line, modificationInfos, subReporter);
+        modifyLine(line, modificationInfos, subReportNode);
     }
 
-    private void modifyLine(Line line, BranchModificationInfos lineModificationInfos, Reporter subReporter) {
-        modifyBranch(line, lineModificationInfos, subReporter, "lineModification", "Line with id=${id} modified :");
+    private void modifyLine(Line line, BranchModificationInfos lineModificationInfos, ReportNode subReportNode) {
+        modifyBranch(line, lineModificationInfos, subReportNode, "lineModification", "Line with id=${id} modified :");
+        PropertiesUtils.applyProperties(line, subReportNode, modificationInfos.getProperties());
     }
 
     @Override
-    protected void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, Reporter subReporter) {
+    protected void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos, ReportNode subReportNode) {
         Line line = (Line) branch;
-        Reporter characteristicsReporter = subReporter.createSubReporter("characteristics", "Characteristics");
-        characteristicsReporter.report(Report.builder()
-            .withKey("characteristicsModification")
-            .withDefaultMessage("Characteristics")
+        ReportNode characteristicsReporter = subReportNode.newReportNode().withMessageTemplate("characteristics", "Characteristics").add();
+        characteristicsReporter.newReportNode()
+            .withMessageTemplate("characteristicsModification", "Characteristics")
             .withSeverity(TypedValue.INFO_SEVERITY)
-            .build());
-        if (branchModificationInfos.getSeriesResistance() != null && branchModificationInfos.getSeriesResistance().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
-                    branchModificationInfos.getSeriesResistance().getValue(), "Series resistance", 1));
-            line.setR(branchModificationInfos.getSeriesResistance().getValue());
+            .add();
+        if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
+            insertReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getR(),
+                    branchModificationInfos.getR().getValue(), "Series resistance", 1));
+            line.setR(branchModificationInfos.getR().getValue());
         }
-        if (branchModificationInfos.getSeriesReactance() != null && branchModificationInfos.getSeriesReactance().getValue() != null) {
-            characteristicsReporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
-                    branchModificationInfos.getSeriesReactance().getValue(), "Series reactance", 1));
-            line.setX(branchModificationInfos.getSeriesReactance().getValue());
+        if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
+            insertReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(line.getX(),
+                    branchModificationInfos.getX().getValue(), "Series reactance", 1));
+            line.setX(branchModificationInfos.getX().getValue());
         }
 
         LineModificationInfos lineModificationInfos = (LineModificationInfos) branchModificationInfos;
@@ -74,59 +74,57 @@ public class LineModification extends AbstractBranchModification {
     }
 
     private void modifySide1Characteristics(Line line, LineModificationInfos lineModificationInfos,
-            Reporter characteristicsReporter) {
-        if (lineModificationInfos.getShuntConductance1() != null && lineModificationInfos.getShuntConductance1().getValue() != null
-                || lineModificationInfos.getShuntSusceptance1() != null && lineModificationInfos.getShuntSusceptance1().getValue() != null) {
-            Reporter side1Reporter = characteristicsReporter.createSubReporter("side1Characteristics", "Side 1");
-            side1Reporter.report(Report.builder()
-                    .withKey("side1CharacteristicsModification")
-                    .withDefaultMessage("    Side 1")
+            ReportNode characteristicsReportNode) {
+        if (lineModificationInfos.getG1() != null && lineModificationInfos.getG1().getValue() != null
+                || lineModificationInfos.getB1() != null && lineModificationInfos.getB1().getValue() != null) {
+            ReportNode side1ReportNode = characteristicsReportNode.newReportNode().withMessageTemplate("side1Characteristics", "Side 1").add();
+            side1ReportNode.newReportNode()
+                    .withMessageTemplate("side1CharacteristicsModification", "    Side 1")
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            if (lineModificationInfos.getShuntConductance1() != null && lineModificationInfos.getShuntConductance1().getValue() != null) {
+                    .add();
+            if (lineModificationInfos.getG1() != null && lineModificationInfos.getG1().getValue() != null) {
                 //convert reported value from siemens to microsiemens
-                double shuntConductance1ToReport = lineModificationInfos.getShuntConductance1().getValue() * Math.pow(10, 6);
+                double shuntConductance1ToReport = lineModificationInfos.getG1().getValue() * Math.pow(10, 6);
                 double oldShuntConductance1ToReport = line.getG1() * Math.pow(10, 6);
-                side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance1ToReport,
-                    shuntConductance1ToReport, "Shunt conductance", 2));
-                line.setG1(lineModificationInfos.getShuntConductance1().getValue());
+                insertReportNode(side1ReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance1ToReport,
+                        shuntConductance1ToReport, "Shunt conductance", 2));
+                line.setG1(lineModificationInfos.getG1().getValue());
             }
-            if (lineModificationInfos.getShuntSusceptance1() != null && lineModificationInfos.getShuntSusceptance1().getValue() != null) {
+            if (lineModificationInfos.getB1() != null && lineModificationInfos.getB1().getValue() != null) {
                 //convert reported value from siemens to microsiemens
-                double shuntSusceptance1ToReport = lineModificationInfos.getShuntSusceptance1().getValue() * Math.pow(10, 6);
+                double shuntSusceptance1ToReport = lineModificationInfos.getB1().getValue() * Math.pow(10, 6);
                 double oldShuntSusceptance1ToReport = line.getB1() * Math.pow(10, 6);
-                side1Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance1ToReport,
-                    shuntSusceptance1ToReport, "Shunt susceptance", 2));
-                line.setB1(lineModificationInfos.getShuntSusceptance1().getValue());
+                insertReportNode(side1ReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance1ToReport,
+                        shuntSusceptance1ToReport, "Shunt susceptance", 2));
+                line.setB1(lineModificationInfos.getB1().getValue());
             }
         }
     }
 
     private void modifySide2Characteristics(Line line, LineModificationInfos lineModificationInfos,
-            Reporter characteristicsReporter) {
-        if (lineModificationInfos.getShuntConductance2() != null && lineModificationInfos.getShuntConductance2().getValue() != null
-                || lineModificationInfos.getShuntSusceptance2() != null && lineModificationInfos.getShuntSusceptance2().getValue() != null) {
-            Reporter side2Reporter = characteristicsReporter.createSubReporter("side2Characteristics", "Side 2");
-            side2Reporter.report(Report.builder()
-                    .withKey("side2CharacteristicsModification")
-                    .withDefaultMessage("    Side 2")
+            ReportNode characteristicsReportNode) {
+        if (lineModificationInfos.getG2() != null && lineModificationInfos.getG2().getValue() != null
+                || lineModificationInfos.getB2() != null && lineModificationInfos.getB2().getValue() != null) {
+            ReportNode side2Reporter = characteristicsReportNode.newReportNode().withMessageTemplate("side2Characteristics", "Side 2").add();
+            side2Reporter.newReportNode()
+                    .withMessageTemplate("side2CharacteristicsModification", "    Side 2")
                     .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-            if (lineModificationInfos.getShuntConductance2() != null && lineModificationInfos.getShuntConductance2().getValue() != null) {
+                    .add();
+            if (lineModificationInfos.getG2() != null && lineModificationInfos.getG2().getValue() != null) {
                 // convert reported value from siemens to microsiemens
-                double shuntConductance2ToReport = lineModificationInfos.getShuntConductance2().getValue() * Math.pow(10, 6);
+                double shuntConductance2ToReport = lineModificationInfos.getG2().getValue() * Math.pow(10, 6);
                 double oldShuntConductance2ToReport = line.getG2() * Math.pow(10, 6);
-                side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance2ToReport,
-                    shuntConductance2ToReport, "Shunt conductance", 2));
-                line.setG2(lineModificationInfos.getShuntConductance2().getValue());
+                insertReportNode(side2Reporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntConductance2ToReport,
+                        shuntConductance2ToReport, "Shunt conductance", 2));
+                line.setG2(lineModificationInfos.getG2().getValue());
             }
-            if (lineModificationInfos.getShuntSusceptance2() != null && lineModificationInfos.getShuntSusceptance2().getValue() != null) {
+            if (lineModificationInfos.getB2() != null && lineModificationInfos.getB2().getValue() != null) {
                 // convert reported value from siemens to microsiemens
-                double shuntSusceptance2ToReport = lineModificationInfos.getShuntSusceptance2().getValue() * Math.pow(10, 6);
+                double shuntSusceptance2ToReport = lineModificationInfos.getB2().getValue() * Math.pow(10, 6);
                 double oldShuntSusceptance2ToReport = line.getB2() * Math.pow(10, 6);
-                side2Reporter.report(ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance2ToReport,
-                    shuntSusceptance2ToReport, "Shunt susceptance", 2));
-                line.setB2(lineModificationInfos.getShuntSusceptance2().getValue());
+                insertReportNode(side2Reporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldShuntSusceptance2ToReport,
+                        shuntSusceptance2ToReport, "Shunt susceptance", 2));
+                line.setB2(lineModificationInfos.getB2().getValue());
             }
         }
     }
@@ -135,14 +133,14 @@ public class LineModification extends AbstractBranchModification {
     protected boolean characteristicsModified(BranchModificationInfos branchModificationInfos) {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) branchModificationInfos;
         return super.characteristicsModified(branchModificationInfos)
-                || lineModificationInfos.getShuntConductance1() != null
-                        && lineModificationInfos.getShuntConductance1().getValue() != null
-                || lineModificationInfos.getShuntSusceptance1() != null
-                        && lineModificationInfos.getShuntSusceptance1().getValue() != null
-                || lineModificationInfos.getShuntConductance2() != null
-                        && lineModificationInfos.getShuntConductance2().getValue() != null
-                || lineModificationInfos.getShuntSusceptance2() != null
-                        && lineModificationInfos.getShuntSusceptance2().getValue() != null;
+                || lineModificationInfos.getG1() != null
+                        && lineModificationInfos.getG1().getValue() != null
+                || lineModificationInfos.getB1() != null
+                        && lineModificationInfos.getB1().getValue() != null
+                || lineModificationInfos.getG2() != null
+                        && lineModificationInfos.getG2().getValue() != null
+                || lineModificationInfos.getB2() != null
+                        && lineModificationInfos.getB2().getValue() != null;
     }
 
 }

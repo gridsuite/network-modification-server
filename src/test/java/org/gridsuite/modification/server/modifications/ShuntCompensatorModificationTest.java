@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,7 +37,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
-public class ShuntCompensatorModificationTest extends AbstractNetworkModificationTest {
+public class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest {
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -266,6 +270,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
                 .maxQAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
                 .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
                 .sectionCount(new AttributeModification<>(1, OperationType.SET))
+                .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
 
     }
@@ -285,6 +290,7 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);
         assertEquals(2.9629E-4, model.getBPerSection(), 0.0001);
+        Assertions.assertEquals(PROPERTY_VALUE, getNetwork().getShuntCompensator("v7shunt").getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -309,5 +315,25 @@ public class ShuntCompensatorModificationTest extends AbstractNetworkModificatio
         Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v2shunt", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    public void testDisconnection() throws Exception {
+        ShuntCompensatorModificationInfos shuntModificationInfos =
+                ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("v2shunt")
+                        .build();
+        assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, false);
+    }
+
+    @Test
+    public void testConnection() throws Exception {
+        ShuntCompensatorModificationInfos shuntModificationInfos =
+                ShuntCompensatorModificationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("v2shunt")
+                        .build();
+        assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, true);
     }
 }
