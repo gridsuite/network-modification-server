@@ -15,6 +15,7 @@ import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
+import com.powsybl.iidm.network.util.SwitchPredicates;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.slf4j.Logger;
@@ -158,11 +159,15 @@ public class OperatingStatusModification extends AbstractModification {
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {
-        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(this::disconnectOneTerminal);
+        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(this::disconnectNonFictionalOneTerminal);
     }
 
     private boolean disconnectOneTerminal(Terminal terminal) {
         return !terminal.isConnected() || terminal.disconnect();
+    }
+
+    private boolean disconnectNonFictionalOneTerminal(Terminal terminal) {
+        return !terminal.isConnected() || terminal.disconnect(SwitchPredicates.IS_NONFICTIONAL);
     }
 
     private boolean connectAllTerminals(Identifiable<?> equipment) {
