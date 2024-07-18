@@ -13,9 +13,12 @@ import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+
+import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkInfos;
@@ -33,6 +36,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -51,49 +57,66 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
+    private final ExecutorService executorService;
+
+    private final ExecutorService applicationExecutor = Executors.newFixedThreadPool(2);
+
     @Value("${impacts.collection-threshold:50}")
     @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService) {
+                                         ReportService reportService, FilterService filterService, @Value("${max-concurrent-voltage-init}") int maxConcurrentNadGenerations) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
+        this.executorService = Executors.newFixedThreadPool(maxConcurrentNadGenerations);
     }
 
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
-        ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
-        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
-        return
-            NetworkModificationResult.builder()
-                .applicationStatus(groupApplicationStatus)
-                .lastGroupApplicationStatus(groupApplicationStatus)
-                .networkImpacts(networkImpacts)
-                .build();
+        CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
+            NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
+            ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
+            List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+            return
+                NetworkModificationResult.builder()
+                    .applicationStatus(groupApplicationStatus)
+                    .lastGroupApplicationStatus(groupApplicationStatus)
+                    .networkImpacts(networkImpacts)
+                    .build();
+        }, applicationExecutor);
+        return future.join();
     }
 
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
-        List<ApplicationStatus> groupsApplicationStatuses =
-                modificationInfosGroups.stream()
-                        .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
-                        .toList();
-        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
-        return NetworkModificationResult.builder()
-                .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
-                .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
-                .networkImpacts(networkImpacts)
-                .build();
+        CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
+            NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
+            List<ApplicationStatus> groupsApplicationStatuses =
+                    modificationInfosGroups.stream()
+                            .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
+                            .toList();
+            List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+            return NetworkModificationResult.builder()
+                    .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
+                    .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
+                    .networkImpacts(networkImpacts)
+                    .build();
+        }, applicationExecutor);
+        return future.join();
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReportNode reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
-                .map(m -> apply(m, network, reportNode))
+                .map(m -> {
+                    if (m.getType() == ModificationType.VOLTAGE_INIT_MODIFICATION) {
+                        return CompletableFuture.supplyAsync(() -> apply(m, network, reportNode), executorService).join();
+                    } else {
+                        return apply(m, network, reportNode);
+                    }
+                })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         reportService.sendReport(reportInfos.getReportUuid(), reportNode);
@@ -157,5 +180,11 @@ public class NetworkModificationApplicator {
         } else {
             throw new IllegalArgumentException(String.format("Report severity '%s' unknown !", severity.getValue()));
         }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        executorService.shutdown();
+        applicationExecutor.shutdown();
     }
 }

@@ -40,3 +40,6 @@ powsybl-ws:
     name: networkmodifications
     queryBegin: '&'
     customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
+
+# 2 maximum concurrent voltage init modifications for the current configuration
+max-concurrent-voltage-init: 2
