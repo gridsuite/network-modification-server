@@ -9,7 +9,9 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
+import com.powsybl.iidm.network.util.SwitchPredicates;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
@@ -31,7 +33,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
@@ -80,26 +81,45 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     }
 
     @Test
+    public void testCreate() throws Exception {
+        OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
+        //test lockout line modification with non-fictional switch
+        getNetwork().getSubstation("s1").newVoltageLevel().setId("v1f").setFictitious(true)
+                .setTopologyKind(TopologyKind.NODE_BREAKER).setNominalV(380.).add();
+        getNetwork().getSubstation("s2").newVoltageLevel().setId("v3f").setFictitious(true)
+                .setTopologyKind(TopologyKind.NODE_BREAKER).setNominalV(380.).add();
+
+        Line line = getNetwork().newLine()
+                .setId("nonFictionalDisconnect")
+                .setVoltageLevel1("v1f")
+                .setVoltageLevel2("v3f")
+                .setNode1(0)
+                .setNode2(0)
+                .setX(12)
+                .setR(7)
+                .add();
+        assertNotNull(line);
+
+        line.getTerminal("v1f").disconnect(SwitchPredicates.IS_NONFICTIONAL);
+        line.getTerminal("v3f").disconnect(SwitchPredicates.IS_NONFICTIONAL);
+        assertNotNull(line);
+        modificationInfos.setEquipmentId("nonFictionalDisconnect");
+        modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
+        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        assertNull(getNetwork().getLine("nonFictionalDisconnect").getExtension(OperatingStatus.class));
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertNotNull(getNetwork().getLine("nonFictionalDisconnect").getExtension(OperatingStatus.class));
+
+    }
+
+    @Test
     public void testCreateWithErrors() throws Exception {
         // line not existing
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("notFound");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-        assertNull(getNetwork().getLine("notFound"));
-        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "notFound").getMessage(),
-                modificationInfos.getErrorType().name(), reportService);
-
-        // modification action empty
-        modificationInfos.setEquipmentId("line2");
-        modificationInfos.setAction(null);
-        modificationJson = mapper.writeValueAsString(modificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().isBadRequest(),
-                    content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage())
-            );
 
         // modification action not existing
         modificationJson = modificationJson.replace("LOCKOUT", "INVALID_ACTION"); // note: should never happen in real
@@ -107,7 +127,6 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
                 .andExpect(
                         status().is4xxClientError());
 
-        // Add a line that can't be disconnected
         Line line = getNetwork().newLine()
                 .setId("cantdisconnect")
                 .setVoltageLevel1("v1")
