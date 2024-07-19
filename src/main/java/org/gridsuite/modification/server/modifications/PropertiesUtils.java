@@ -16,7 +16,7 @@ public final class PropertiesUtils {
 
     public static void applyProperties(Identifiable<?> identifiable, ReportNode subReportNode, @Nullable List<FreePropertyInfos> properties, String propertiesLabelKey) {
         List<ReportNode> reportNodes = new ArrayList<>();
-        ReportNode propertiesReporter = subReportNode.newReportNode().withMessageTemplate(propertiesLabelKey, PROPERTIES).add();
+        ReportNode propertiesReporter = subReportNode.newReportNode().withMessageTemplate(PROPERTIES, PROPERTIES).add();
         Optional.ofNullable(properties).ifPresent(props ->
             props.forEach(prop ->
                 Optional.ofNullable(PropertiesUtils.applyProperty(identifiable, prop))
