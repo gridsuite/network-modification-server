@@ -65,7 +65,7 @@ public class LoadCreation extends AbstractModification {
 
         // properties
         Load load = network.getLoad(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties(), "LoadProperties");
     }
 
     private void reportElementaryCreations(ReportNode subReportNode) {
