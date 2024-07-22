@@ -33,6 +33,6 @@ public class VoltageLevelCreation extends AbstractModification {
         ModificationUtils.getInstance().createVoltageLevel(modificationInfos, subReportNode, network);
         // properties
         VoltageLevel voltageLevel = network.getVoltageLevel(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties(), "VlProperties");
     }
 }
