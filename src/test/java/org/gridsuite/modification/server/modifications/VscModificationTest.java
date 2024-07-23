@@ -63,8 +63,8 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
                 .operatorActivePowerLimitFromSide2ToSide1(new AttributeModification<>(8F, OperationType.SET))
                 .droop(new AttributeModification<>(1F, OperationType.SET))
                 .angleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET))
-                .converterStation1(buildConverterStationWithMinMaxReactiveLimits())
-                .converterStation2(buildConverterStationWithReactiveCapabilityCurve())
+                .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
+                .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
@@ -171,7 +171,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
             Assert.assertEquals(2, reactiveLimits1.getPointCount());
             Collection<ReactiveCapabilityCurve.Point> points = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
             List<ReactiveCapabilityCurve.Point> vscPoints = new ArrayList<>(points);
-            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = vscModificationInfos.getConverterStation2().getReactiveCapabilityCurvePoints();
+            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
             if (!CollectionUtils.isEmpty(points)) {
                 IntStream.range(0, vscPoints.size())
                         .forEach(i -> {
