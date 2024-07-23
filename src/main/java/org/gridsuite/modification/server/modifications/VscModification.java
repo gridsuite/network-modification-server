@@ -52,8 +52,9 @@ public class VscModification extends AbstractModification {
                 || modificationInfos.getConverterStation2() == null) {
             throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
         }
-        VscConverterStation converterStation1 = ModificationUtils.getInstance().getVscConverterStation(network, modificationInfos.getConverterStation1().getEquipmentId());
-        VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, modificationInfos.getConverterStation2().getEquipmentId());
+        HvdcLine hvdcLine = ModificationUtils.getInstance().getHvdcLine(network, modificationInfos.getEquipmentId());
+        VscConverterStation converterStation1 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation1().getId());
+        VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation2().getId());
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
     }
@@ -94,8 +95,8 @@ public class VscModification extends AbstractModification {
 
         hvdcAngleDroopActivePowerControlAdder(hvdcLine, subReportNode);
 
-        modifyConverterStation(network, modificationInfos.getConverterStation1(), subReportNode);
-        modifyConverterStation(network, modificationInfos.getConverterStation2(), subReportNode);
+        modifyConverterStation(ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation1().getId()), modificationInfos.getConverterStation1(), subReportNode);
+        modifyConverterStation(ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation2().getId()), modificationInfos.getConverterStation2(), subReportNode);
 
         PropertiesUtils.applyProperties(hvdcLine, subReportNode, modificationInfos.getProperties(), "VscProperties");
     }
@@ -212,11 +213,10 @@ public class VscModification extends AbstractModification {
         reports.forEach(report -> insertReportNode(subReportNode, report));
     }
 
-    private void modifyConverterStation(Network network, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
+    private void modifyConverterStation(VscConverterStation converterStation, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
         if (converterStationModificationInfos == null) {
             return;
         }
-        VscConverterStation converterStation = ModificationUtils.getInstance().getVscConverterStation(network, converterStationModificationInfos.getEquipmentId());
         if (!isConverterStationModified(converterStationModificationInfos)) {
             return;
         }
