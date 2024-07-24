@@ -10,6 +10,8 @@ import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 
@@ -53,8 +55,15 @@ public class LoadModification extends AbstractModification {
         ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReportNode, "Type");
         ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getP0(), subReportNode, "Constant active power");
         ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getQ0(), subReportNode, "Constant reactive power");
-        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, load, subReportNode);
+        modifyLoadConnectivityAttributes(modificationInfos, load, subReportNode);
         // properties
         PropertiesUtils.applyProperties(load, subReportNode, modificationInfos.getProperties(), "LoadProperties");
+    }
+
+    private ReportNode modifyLoadConnectivityAttributes(LoadModificationInfos modificationInfos,
+                                                        Load load, ReportNode subReportNode) {
+        ConnectablePosition<Load> connectablePosition = load.getExtension(ConnectablePosition.class);
+        ConnectablePositionAdder<Load> connectablePositionAdder = load.newExtension(ConnectablePositionAdder.class);
+        return ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(connectablePosition, connectablePositionAdder, load, modificationInfos, subReportNode);
     }
 }

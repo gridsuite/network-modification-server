@@ -9,11 +9,9 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.ShuntCompensator;
-import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
-import com.powsybl.iidm.network.ShuntCompensatorModelType;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
@@ -21,8 +19,8 @@ import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
@@ -79,7 +77,7 @@ public class ShuntCompensatorModification extends AbstractModification {
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.LINEAR) {
             applyModificationOnLinearModel(subReportNode, shuntCompensator, voltageLevel);
         }
-        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, shuntCompensator, subReportNode);
+        modifyShuntCompensatorConnectivityAttributes(modificationInfos, shuntCompensator, subReportNode);
         PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties(), "ShuntCompensatorProperties");
     }
 
@@ -185,5 +183,12 @@ public class ShuntCompensatorModification extends AbstractModification {
             double newSwitchedOnQAtNominalV = oldQAtNominalV * sectionCount;
             reports.add(ModificationUtils.getInstance().buildModificationReport(oldSwitchedOnQAtNominalV, newSwitchedOnQAtNominalV, SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE));
         }
+    }
+
+    private ReportNode modifyShuntCompensatorConnectivityAttributes(ShuntCompensatorModificationInfos modificationInfos,
+                                                        ShuntCompensator shuntCompensator, ReportNode subReportNode) {
+        ConnectablePosition<ShuntCompensator> connectablePosition = shuntCompensator.getExtension(ConnectablePosition.class);
+        ConnectablePositionAdder<ShuntCompensator> connectablePositionAdder = shuntCompensator.newExtension(ConnectablePositionAdder.class);
+        return ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(connectablePosition, connectablePositionAdder, shuntCompensator, modificationInfos, subReportNode);
     }
 }

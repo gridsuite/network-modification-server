@@ -15,6 +15,8 @@ import com.powsybl.iidm.network.ReactiveCapabilityCurveAdder;
 import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BatteryModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
@@ -85,7 +87,7 @@ public class BatteryModification extends AbstractModification {
 
         modifyBatteryLimitsAttributes(modificationInfos, battery, subReportNode);
         modifyBatterySetpointsAttributes(modificationInfos, battery, subReportNode);
-        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, battery, subReportNode);
+        modifyBatteryConnectivityAttributes(modificationInfos, battery, subReportNode);
         PropertiesUtils.applyProperties(battery, subReportNode, modificationInfos.getProperties(), "BatteryProperties");
     }
 
@@ -171,6 +173,13 @@ public class BatteryModification extends AbstractModification {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
         return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
+    }
+
+    private ReportNode modifyBatteryConnectivityAttributes(BatteryModificationInfos modificationInfos,
+                                                                 Battery battery, ReportNode subReportNode) {
+        ConnectablePosition<Battery> connectablePosition = battery.getExtension(ConnectablePosition.class);
+        ConnectablePositionAdder<Battery> connectablePositionAdder = battery.newExtension(ConnectablePositionAdder.class);
+        return ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(connectablePosition, connectablePositionAdder, battery, modificationInfos, subReportNode);
     }
 }
 

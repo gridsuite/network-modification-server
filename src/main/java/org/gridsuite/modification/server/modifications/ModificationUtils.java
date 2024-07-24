@@ -596,32 +596,73 @@ public final class ModificationUtils {
         }
     }
 
-    public void modifyInjectionConnectivityAttributes(InjectionModificationInfos modificationInfos, Injection<?> injection, ReportNode subReportNode) {
-        if (modificationInfos.getVoltageLevelId().getValue() == null || modificationInfos.getBusOrBusbarSectionId().getValue() == null) {
-            return;
+    public ReportNode modifyInjectionConnectivityAttributes(ConnectablePosition<?> connectablePosition,
+                                                      ConnectablePositionAdder<?> connectablePositionAdder,
+                                                      Injection<?> injection,
+                                                      InjectionModificationInfos modificationInfos,
+                                                      ReportNode connectivityReports) {
+        List<ReportNode> reports = new ArrayList<>();
+        if (connectablePosition != null) {
+            modifyExistingConnectivityPosition(connectablePosition, modificationInfos, reports);
+        } else {
+            createNewConnectivityPosition(connectablePositionAdder, modificationInfos, reports);
         }
-        var connectablePosition = injection.getExtension(ConnectablePosition.class);
-        if (connectablePosition == null) {
-            return;
+        modifyInjectionConnection(modificationInfos, injection, reports);
+        return ModificationUtils.getInstance().reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY, Map.of());
+    }
+
+    private void modifyExistingConnectivityPosition(ConnectablePosition<?> connectablePosition,
+                                                  InjectionModificationInfos modificationInfos,
+                                                  List<ReportNode> reports) {
+        String connectionName = modificationInfos.getConnectionName() != null ? modificationInfos.getConnectionName().getValue() : null;
+        ConnectablePosition.Direction connectionDirection = modificationInfos.getConnectionDirection() != null ? modificationInfos.getConnectionDirection().getValue() : null;
+        Integer connectionPosition = modificationInfos.getConnectionPosition() != null ? modificationInfos.getConnectionPosition().getValue() : null;
+
+        if (connectionName != null) {
+            connectablePosition.getFeeder().setName(connectionName);
+            reports.add(buildModificationReport(null, connectionName, "Connection name"));
         }
-        List<ReportNode> connectivityReports = new ArrayList<>();
-        if (Objects.nonNull(modificationInfos.getConnectionName())) {
-            connectablePosition.getFeeder().setName(modificationInfos.getConnectionName().getValue());
-            connectivityReports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(modificationInfos.getConnectionName().getValue(), "Connection name"));
+
+        if (connectionDirection != null) {
+            connectablePosition.getFeeder().setDirection(connectionDirection);
+            reports.add(buildModificationReport(null, connectionDirection, "Connection direction"));
         }
-        if (Objects.nonNull(modificationInfos.getConnectionDirection())) {
-            connectablePosition.getFeeder().setDirection(modificationInfos.getConnectionDirection().getValue());
-            connectivityReports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(modificationInfos.getConnectionDirection().getValue(), "Connection direction"));
+
+        if (connectionPosition != null) {
+            connectablePosition.getFeeder().setOrder(connectionPosition);
+            reports.add(buildModificationReport(null, connectionPosition, "Connection position"));
         }
-        if (Objects.nonNull(modificationInfos.getConnectionPosition())) {
-            connectablePosition.getFeeder().setOrder(modificationInfos.getConnectionPosition().getValue());
-            connectivityReports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(modificationInfos.getConnectionPosition().getValue(), "Connection position"));
+    }
+
+    private void createNewConnectivityPosition(ConnectablePositionAdder<?> adder,
+                                             InjectionModificationInfos modificationInfos,
+                                             List<ReportNode> reports) {
+        // Extract values with null checks
+        String connectionName = modificationInfos.getConnectionName() != null ? modificationInfos.getConnectionName().getValue() : null;
+        ConnectablePosition.Direction connectionDirection = modificationInfos.getConnectionDirection() != null ? modificationInfos.getConnectionDirection().getValue() : null;
+        Integer connectionPosition = modificationInfos.getConnectionPosition() != null ? modificationInfos.getConnectionPosition().getValue() : null;
+
+        // Create a single feeder instance
+        var feeder = adder.newFeeder();
+
+        // Set the feeder's properties based on available information
+        if (connectionName != null) {
+            feeder.withName(connectionName);
+            reports.add(buildModificationReport(null, connectionName, "Connection name"));
         }
-        modifyInjectionConnection(modificationInfos, injection, connectivityReports);
-        ModificationUtils.getInstance().reportModifications(subReportNode, connectivityReports, "ConnectivityModified", CONNECTIVITY, Map.of());
+
+        if (connectionDirection != null) {
+            feeder.withDirection(connectionDirection);
+            reports.add(buildModificationReport(null, connectionDirection, "Connection direction"));
+        }
+
+        if (connectionPosition != null) {
+            feeder.withOrder(connectionPosition);
+            reports.add(buildModificationReport(null, connectionPosition, "Connection position"));
+        }
+
+        // Finalize by adding the feeder
+        adder.add();
     }
 
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection, List<ReportNode> subReportNode) {
@@ -650,6 +691,41 @@ public final class ModificationUtils {
                         .build());
             }
         }
+    }
+
+    private void createNewConnectablePosition(
+            ConnectablePositionAdder<?> adder,
+            AttributeModification<String> connectionNameInfo,
+            AttributeModification<ConnectablePosition.Direction> connectionDirectionInfo,
+            AttributeModification<Integer> connectionPositionInfo,
+            List<ReportNode> reports
+    ) {
+        // Extract values with null checks
+        String connectionName = connectionNameInfo != null ? connectionNameInfo.getValue() : null;
+        ConnectablePosition.Direction connectionDirection = connectionDirectionInfo != null ? connectionDirectionInfo.getValue() : null;
+        Integer connectionPosition = connectionPositionInfo != null ? connectionPositionInfo.getValue() : null;
+
+        // Create a single feeder instance
+        var feeder = adder.newFeeder();
+
+        // Set the feeder's properties based on available information
+        if (connectionName != null) {
+            feeder.withName(connectionName);
+            reports.add(buildModificationReport(null, connectionName, "connectionName"));
+        }
+
+        if (connectionDirection != null) {
+            feeder.withDirection(connectionDirection);
+            reports.add(buildModificationReport(null, connectionDirection, "connectionDirection"));
+        }
+
+        if (connectionPosition != null) {
+            feeder.withOrder(connectionPosition);
+            reports.add(buildModificationReport(null, connectionPosition, "connectionPosition"));
+        }
+
+        // Finalize by adding the feeder
+        adder.add();
     }
 
     public void disconnectBranch(BranchCreationInfos modificationInfos, Branch<?> branch, ReportNode subReportNode) {

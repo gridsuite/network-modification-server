@@ -9,13 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -101,7 +95,7 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorSetpointsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorShortCircuitAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorStartUpAttributes(modificationInfos, generator, subReportNode);
-        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, generator, subReportNode);
+        modifyGeneratorConnectivityAttributes(modificationInfos, generator, subReportNode);
         PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties(), "GeneratorProperties");
     }
 
@@ -444,5 +438,12 @@ public class GeneratorModification extends AbstractModification {
                                                  Generator generator, ReportNode subReportNode) {
         ReportNode subReportNodeLimits = modifyGeneratorActiveLimitsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorReactiveLimitsAttributes(modificationInfos, generator, subReportNode, subReportNodeLimits);
+    }
+
+    private ReportNode modifyGeneratorConnectivityAttributes(GeneratorModificationInfos modificationInfos,
+                                                             Generator generator, ReportNode subReportNode) {
+        ConnectablePosition<Generator> connectablePosition = generator.getExtension(ConnectablePosition.class);
+        ConnectablePositionAdder<Generator> connectablePositionAdder = generator.newExtension(ConnectablePositionAdder.class);
+        return ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(connectablePosition, connectablePositionAdder, generator, modificationInfos, subReportNode);
     }
 }
