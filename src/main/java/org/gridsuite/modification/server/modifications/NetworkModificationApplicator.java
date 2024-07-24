@@ -66,13 +66,13 @@ public class NetworkModificationApplicator {
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService, @Value("${max-concurrent-voltage-init}") int maxConcurrentNadGenerations,
+                                         ReportService reportService, FilterService filterService, @Value("${max-concurrent-voltage-init}") int maxConcurrentVoltageInitApplications,
                                          @Value("${max-concurrent-applications}") int maxConcurrentApplications) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
-        this.executorService = Executors.newFixedThreadPool(maxConcurrentNadGenerations);
+        this.executorService = Executors.newFixedThreadPool(maxConcurrentVoltageInitApplications);
         this.applicationExecutor = Executors.newFixedThreadPool(maxConcurrentApplications);
     }
 
