@@ -53,10 +53,32 @@ public class VscModification extends AbstractModification {
             throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
         }
         HvdcLine hvdcLine = ModificationUtils.getInstance().getHvdcLine(network, modificationInfos.getEquipmentId());
+
         VscConverterStation converterStation1 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation1().getId());
         VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation2().getId());
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
+
+        boolean po = checkIfPossibleToModifyP0(hvdcLine);
+        if (!po) {
+            throw new NetworkModificationException(MODIFY_VSC_ERROR, "P0 is required to modify the equipment");
+        }
+
+    }
+
+    private boolean checkIfPossibleToModifyP0(HvdcLine hvdcLine) {
+        var hvdcAngleDroopActivePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        // if droop is not set but p0 is set, we can't modify the p0
+        if (hvdcAngleDroopActivePowerControl == null && modificationInfos.getDroop() == null && modificationInfos.getP0() != null) {
+            return false;
+        }
+
+        if (hvdcAngleDroopActivePowerControl != null && (Float.isNaN(hvdcAngleDroopActivePowerControl.getDroop())
+                || modificationInfos.getDroop() != null) && modificationInfos.getP0() == null) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
