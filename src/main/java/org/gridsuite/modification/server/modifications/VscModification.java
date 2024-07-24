@@ -59,26 +59,16 @@ public class VscModification extends AbstractModification {
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
 
-        boolean po = checkIfPossibleToModifyP0(hvdcLine);
-        if (!po) {
-            throw new NetworkModificationException(MODIFY_VSC_ERROR, "P0 is required to modify the equipment");
-        }
+        checkToModifyDroop();
+
 
     }
 
-    private boolean checkIfPossibleToModifyP0(HvdcLine hvdcLine) {
-        var hvdcAngleDroopActivePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        // if droop is not set but p0 is set, we can't modify the p0
-        if (hvdcAngleDroopActivePowerControl == null && modificationInfos.getDroop() == null && modificationInfos.getP0() != null) {
-            return false;
+    private void checkToModifyDroop() {
+        // if droop is set p0 should be also
+        if (modificationInfos.getP0() != null || modificationInfos.getDroop() == null) {
+            throw new NetworkModificationException(MODIFY_VSC_ERROR, "P0 is required to modify the equipment");
         }
-
-        if (hvdcAngleDroopActivePowerControl != null && (Float.isNaN(hvdcAngleDroopActivePowerControl.getDroop())
-                || modificationInfos.getDroop() != null) && modificationInfos.getP0() == null) {
-            return false;
-        }
-
-        return true;
     }
 
     @Override

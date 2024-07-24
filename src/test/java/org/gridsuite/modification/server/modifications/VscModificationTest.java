@@ -266,26 +266,15 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     @Test
     public void testActivateHvdcAngleDroopActivePowerControlWithoutP0() {
         var networkuuid = UUID.randomUUID();
-        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, false);
-        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
-        modificationInfos.setDroop(null);
-        modificationInfos.setP0(new AttributeModification<>(10F, OperationType.SET));
-        VscModification vscModification = new VscModification(modificationInfos);
-        Assert.assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
-    }
-
-    //Test : p0 sould be required if drop is enabled
-    @Test
-    public void testActivateHvdcAngleDroopActivePowerControlWithoutP02() { //To rename
-        var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
         modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
-        modificationInfos.setDroop(null);
-        modificationInfos.setP0(new AttributeModification<>(10F, OperationType.SET));
-        VscModification vscModification = new VscModification(modificationInfos);
-        Assert.assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
+        {
+            modificationInfos.setDroop(new AttributeModification<>(10F, OperationType.SET));
+            modificationInfos.setP0(null);
+            VscModification vscModification = new VscModification(modificationInfos);
+            Assert.assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
+        }
     }
 
     @Override
