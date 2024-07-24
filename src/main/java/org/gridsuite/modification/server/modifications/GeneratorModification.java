@@ -101,9 +101,8 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorSetpointsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorShortCircuitAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorStartUpAttributes(modificationInfos, generator, subReportNode);
-
         ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, generator, subReportNode);
-        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties(), "GeneratorProperties");
     }
 
     private void modifyGeneratorShortCircuitAttributes(GeneratorModificationInfos modificationInfos,

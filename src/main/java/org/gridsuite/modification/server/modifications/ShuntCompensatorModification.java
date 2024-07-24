@@ -79,10 +79,8 @@ public class ShuntCompensatorModification extends AbstractModification {
         if (shuntCompensator.getModelType() == ShuntCompensatorModelType.LINEAR) {
             applyModificationOnLinearModel(subReportNode, shuntCompensator, voltageLevel);
         }
-
         ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, shuntCompensator, subReportNode);
-        PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties());
-
+        PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties(), "ShuntCompensatorProperties");
     }
 
     private void modifyMaximumSectionCount(List<ReportNode> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {
