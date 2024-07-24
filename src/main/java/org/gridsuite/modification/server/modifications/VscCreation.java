@@ -38,6 +38,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class VscCreation extends AbstractModification {
     public static final String CHARACTERISTICS = "Characteristics";
     public static final String SETPOINTS = "Setpoints";
+    public static final String VSC_SETPOINTS = "vscSetPoints";
     private final VscCreationInfos modificationInfos;
 
     public VscCreation(VscCreationInfos modificationInfos) {
@@ -143,11 +144,11 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(limitsReport, limitsReports, "vscLimits", "Limits", Map.of());
 
         List<ReportNode> setPointsReports = new ArrayList<>();
-        ReportNode setPointsReporter = subReportNode.newReportNode().withMessageTemplate("vscSetPoints", SETPOINTS).add();
+        ReportNode setPointsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePowerSetpoint(), "Active power"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, "vscSetPoints", SETPOINTS, Map.of());
+        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, VSC_SETPOINTS, SETPOINTS, Map.of());
 
         List<ReportNode> angleDroopActivePowerControlReports = new ArrayList<>();
         angleDroopActivePowerControlReports.add(ModificationUtils.getInstance()
@@ -173,10 +174,8 @@ public class VscCreation extends AbstractModification {
         VscConverterStation vscConverterStation = voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ?
                 createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReporter) :
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
-
         converterStationReporter.newReportNode()
-                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
-                .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
+                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station " + converterStationCreationInfos.getEquipmentId() + " created")
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
