@@ -80,7 +80,7 @@ public class ShuntCompensatorModification extends AbstractModification {
             applyModificationOnLinearModel(subReportNode, shuntCompensator, voltageLevel);
         }
 
-        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, shuntCompensator);
+        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, shuntCompensator, subReportNode);
         PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties());
 
     }

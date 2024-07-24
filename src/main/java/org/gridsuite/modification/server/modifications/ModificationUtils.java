@@ -14,10 +14,7 @@ import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
 import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
 import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
 import com.powsybl.iidm.network.*;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.BusbarSectionPosition;
-import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -53,6 +50,7 @@ public final class ModificationUtils {
     private static final String SETPOINTS = "Setpoints";
     private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
     private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
+    private static final String CONNECTIVITY = "Connectivity";
 
     private ModificationUtils() {
     }
@@ -598,7 +596,35 @@ public final class ModificationUtils {
         }
     }
 
-    public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection) {
+    public void modifyInjectionConnectivityAttributes(InjectionModificationInfos modificationInfos, Injection<?> injection, ReportNode subReportNode) {
+        if (modificationInfos.getVoltageLevelId().getValue() == null || modificationInfos.getBusOrBusbarSectionId().getValue() == null) {
+            return;
+        }
+        var connectablePosition = injection.getExtension(ConnectablePosition.class);
+        if (connectablePosition == null) {
+            return;
+        }
+        List<ReportNode> connectivityReports = new ArrayList<>();
+        if (Objects.nonNull(modificationInfos.getConnectionName())) {
+            connectablePosition.getFeeder().setName(modificationInfos.getConnectionName().getValue());
+            connectivityReports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getConnectionName().getValue(), "Connection name"));
+        }
+        if (Objects.nonNull(modificationInfos.getConnectionDirection())) {
+            connectablePosition.getFeeder().setDirection(modificationInfos.getConnectionDirection().getValue());
+            connectivityReports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getConnectionDirection().getValue(), "Connection direction"));
+        }
+        if (Objects.nonNull(modificationInfos.getConnectionPosition())) {
+            connectablePosition.getFeeder().setOrder(modificationInfos.getConnectionPosition().getValue());
+            connectivityReports.add(ModificationUtils.getInstance()
+                    .buildCreationReport(modificationInfos.getConnectionPosition().getValue(), "Connection position"));
+        }
+        modifyInjectionConnection(modificationInfos, injection, connectivityReports);
+        ModificationUtils.getInstance().reportModifications(subReportNode, connectivityReports, "ConnectivityModified", CONNECTIVITY, Map.of());
+    }
+
+    public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection, List<ReportNode> subReportNode) {
         if (modificationInfos.getTerminalConnected() != null) {
             if (injection.getTerminal().isConnected() && Boolean.FALSE.equals(modificationInfos.getTerminalConnected().getValue())) {
                 injection.getTerminal().disconnect();
@@ -606,12 +632,22 @@ public final class ModificationUtils {
                     throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
                         String.format("Could not disconnect equipment '%s'", injection.getId()));
                 }
+                subReportNode.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withUntypedValue("id", modificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
             } else if (!injection.getTerminal().isConnected() && Boolean.TRUE.equals(modificationInfos.getTerminalConnected().getValue())) {
                 injection.getTerminal().connect();
                 if (!injection.getTerminal().isConnected()) {
                     throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR,
                         String.format("Could not connect equipment '%s'", injection.getId()));
                 }
+                subReportNode.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentConnected", "    Equipment with id=${id} connected")
+                        .withUntypedValue("id", modificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
             }
         }
     }

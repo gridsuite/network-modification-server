@@ -102,7 +102,7 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorShortCircuitAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorStartUpAttributes(modificationInfos, generator, subReportNode);
 
-        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, generator);
+        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, generator, subReportNode);
         PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties());
     }
 

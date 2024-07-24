@@ -53,10 +53,8 @@ public class LoadModification extends AbstractModification {
         ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReportNode, "Type");
         ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getP0(), subReportNode, "Constant active power");
         ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getQ0(), subReportNode, "Constant reactive power");
-
+        ModificationUtils.getInstance().modifyInjectionConnectivityAttributes(modificationInfos, load, subReportNode);
         // properties
         PropertiesUtils.applyProperties(load, subReportNode, modificationInfos.getProperties());
-
-        ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, load);
     }
 }
