@@ -84,7 +84,7 @@ public class GeneratorCreation extends AbstractModification {
         }
         // apply the properties
         Generator generator = network.getGenerator(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties(), "GeneratorProperties");
     }
 
     private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, ReportNode subReportNode) {

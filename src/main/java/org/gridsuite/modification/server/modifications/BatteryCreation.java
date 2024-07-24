@@ -69,7 +69,7 @@ public class BatteryCreation extends AbstractModification {
         }
         // properties
         Battery battery = network.getBattery(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(battery, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(battery, subReportNode, modificationInfos.getProperties(), "BatteryProperties");
     }
 
     private void createBatteryInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Network network, ReportNode subReportNode) {

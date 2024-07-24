@@ -75,7 +75,7 @@ public class LineCreation extends AbstractModification {
         ModificationUtils.getInstance().disconnectBranch(modificationInfos, network.getLine(modificationInfos.getEquipmentId()), subReportNode);
         // properties
         Line line = network.getLine(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(line, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(line, subReportNode, modificationInfos.getProperties(), "LineProperties");
     }
 
     private void addLine(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, LineCreationInfos lineCreationInfos, boolean withSwitch1, boolean withSwitch2, ReportNode subReportNode) {
