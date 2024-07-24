@@ -43,3 +43,5 @@ powsybl-ws:
 
 # 2 maximum concurrent voltage init modifications for the current configuration
 max-concurrent-voltage-init: 2
+# 2 maximum concurrent applications for the current configuration (same as rabbitmq consumer concurrency)
+max-concurrent-applications: 2

@@ -59,21 +59,27 @@ public class NetworkModificationApplicator {
 
     private final ExecutorService executorService;
 
-    private final ExecutorService applicationExecutor = Executors.newFixedThreadPool(2);
+    private final ExecutorService applicationExecutor;
 
     @Value("${impacts.collection-threshold:50}")
     @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService, @Value("${max-concurrent-voltage-init}") int maxConcurrentNadGenerations) {
+                                         ReportService reportService, FilterService filterService, @Value("${max-concurrent-voltage-init}") int maxConcurrentNadGenerations,
+                                         @Value("${max-concurrent-applications}") int maxConcurrentApplications) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
         this.executorService = Executors.newFixedThreadPool(maxConcurrentNadGenerations);
+        this.applicationExecutor = Executors.newFixedThreadPool(maxConcurrentApplications);
     }
 
+    /* This method is used when creating, inserting, moving or duplicating modifications
+     * Since there is no queue for these operations and they can be memory consuming
+     * so we limit the number of concurrent applications of these modifications to avoid memory issues
+     */
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
             NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
@@ -89,6 +95,12 @@ public class NetworkModificationApplicator {
         return future.join();
     }
 
+    /* This method is used when building a variant
+     * building a variant is limited to 2 concurrent builds thanks to rabbitmq queue
+     * but since the other operations (create, insert, move, duplicate) are not inserted in the same rabbitmq queue
+     * we use the same ExecutorService to control the number of concurrent applications in order to avoid memory issues
+     * Example: when building 2 variants, the user can insert one or more composite modification that will be applied immediately
+     */
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
             NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
@@ -111,6 +123,8 @@ public class NetworkModificationApplicator {
         ReportNode reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
                 .map(m -> {
+                    // voltage init modifications are the most memory consuming modifications
+                    // so we need to limit the number of concurrent applications to avoid memory issues
                     if (m.getType() == ModificationType.VOLTAGE_INIT_MODIFICATION) {
                         return CompletableFuture.supplyAsync(() -> apply(m, network, reportNode), executorService).join();
                     } else {
