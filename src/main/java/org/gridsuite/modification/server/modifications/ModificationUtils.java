@@ -680,7 +680,7 @@ public final class ModificationUtils {
     }
 
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection, List<ReportNode> subReportNode) {
-        if (modificationInfos.getTerminalConnected() != null) {
+        if (modificationInfos.getTerminalConnected() != null && injection != null) {
             if (isInjectionConnected(injection) && Boolean.FALSE.equals(modificationInfos.getTerminalConnected().getValue())) {
                 injection.getTerminal().disconnect();
                 if (isInjectionConnected(injection)) {
