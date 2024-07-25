@@ -13,6 +13,7 @@ import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
@@ -77,22 +78,33 @@ public class NetworkModificationApplicator {
     }
 
     /* This method is used when creating, inserting, moving or duplicating modifications
-     * Since there is no queue for these operations and they can be memory consuming
+     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is not NONE
      * so we limit the number of concurrent applications of these modifications to avoid memory issues
+     * while keeping the possibility to apply simple modifications (preloading strategy is NONE) immediately
      */
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
-        CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
-            NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
-            ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
-            List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
-            return
-                NetworkModificationResult.builder()
-                    .applicationStatus(groupApplicationStatus)
-                    .lastGroupApplicationStatus(groupApplicationStatus)
-                    .networkImpacts(networkImpacts)
-                    .build();
-        }, applicationExecutor);
-        return future.join();
+        PreloadingStrategy preloadingStrategy = modificationInfosList.stream()
+            .map(ModificationInfos::getType)
+            .reduce(ModificationType::maxStrategy)
+            .map(ModificationType::getStrategy)
+            .orElse(PreloadingStrategy.NONE);
+        if (preloadingStrategy != PreloadingStrategy.NONE) {
+            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosList, networkInfos, reportInfos), applicationExecutor);
+            return future.join();
+        } else {
+            return processApplication(modificationInfosList, networkInfos, reportInfos);
+        }
+    }
+
+    private NetworkModificationResult processApplication(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
+        ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
+        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        return NetworkModificationResult.builder()
+                .applicationStatus(groupApplicationStatus)
+                .lastGroupApplicationStatus(groupApplicationStatus)
+                .networkImpacts(networkImpacts)
+                .build();
     }
 
     /* This method is used when building a variant
