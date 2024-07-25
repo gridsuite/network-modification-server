@@ -58,8 +58,6 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    private final ExecutorService executorService;
-
     private final ExecutorService applicationExecutor;
 
     @Value("${impacts.collection-threshold:50}")
@@ -67,18 +65,17 @@ public class NetworkModificationApplicator {
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ReportService reportService, FilterService filterService, @Value("${max-concurrent-voltage-init}") int maxConcurrentVoltageInitApplications,
+                                         ReportService reportService, FilterService filterService,
                                          @Value("${max-concurrent-applications}") int maxConcurrentApplications) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
-        this.executorService = Executors.newFixedThreadPool(maxConcurrentVoltageInitApplications);
         this.applicationExecutor = Executors.newFixedThreadPool(maxConcurrentApplications);
     }
 
     /* This method is used when creating, inserting, moving or duplicating modifications
-     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is not NONE
+     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is not NONE (example: VOLTAGE_INIT_MODIFICATION)
      * so we limit the number of concurrent applications of these modifications to avoid memory issues
      * while keeping the possibility to apply simple modifications (preloading strategy is NONE) immediately
      */
@@ -134,15 +131,7 @@ public class NetworkModificationApplicator {
         String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
         ReportNode reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
-                .map(m -> {
-                    // voltage init modifications are the most memory consuming modifications
-                    // so we need to limit the number of concurrent applications to avoid memory issues
-                    if (m.getType() == ModificationType.VOLTAGE_INIT_MODIFICATION) {
-                        return CompletableFuture.supplyAsync(() -> apply(m, network, reportNode), executorService).join();
-                    } else {
-                        return apply(m, network, reportNode);
-                    }
-                })
+                .map(m -> apply(m, network, reportNode))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         reportService.sendReport(reportInfos.getReportUuid(), reportNode);
@@ -210,7 +199,6 @@ public class NetworkModificationApplicator {
 
     @PreDestroy
     public void shutdown() {
-        executorService.shutdown();
         applicationExecutor.shutdown();
     }
 }
