@@ -120,7 +120,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .connectionName(getConnectionName())
                 .connectionDirection(getConnectionDirection())
                 .connectionPosition(getConnectionPosition())
-                .terminalConnected(isConnected())
+                .terminalConnected(isTerminalConnected())
                 // battery
                 .minP(getMinP())
                 .maxP(getMaxP())

@@ -92,7 +92,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .connectionName(getConnectionName())
                 .connectionPosition(getConnectionPosition())
                 .connectionDirection(getConnectionDirection())
-                .terminalConnected(isConnected())
+                .terminalConnected(isTerminalConnected())
                 // ConverterStation
                 .lossFactor(getLossFactor())
                 .minQ(getMinQ())

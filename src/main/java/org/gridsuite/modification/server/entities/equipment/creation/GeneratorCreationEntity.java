@@ -175,7 +175,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition())
-            .terminalConnected(isConnected())
+            .terminalConnected(isTerminalConnected())
             // generator
             .energySource(getEnergySource())
             .minP(getMinP())

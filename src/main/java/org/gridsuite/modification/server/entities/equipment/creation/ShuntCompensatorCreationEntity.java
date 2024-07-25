@@ -80,7 +80,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition())
-            .terminalConnected(isConnected())
+            .terminalConnected(isTerminalConnected())
             // ShuntCompensator
             .maximumSectionCount(getMaximumSectionCount())
             .sectionCount(getSectionCount())

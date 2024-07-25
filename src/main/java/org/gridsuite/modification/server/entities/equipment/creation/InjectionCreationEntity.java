@@ -38,7 +38,7 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
     private Integer connectionPosition;
 
     @Column(name = "connected", columnDefinition = "boolean default true")
-    private boolean connected;
+    private boolean terminalConnected;
 
     protected InjectionCreationEntity(InjectionCreationInfos injectionCreationInfos) {
         super(injectionCreationInfos);
@@ -57,6 +57,6 @@ public class InjectionCreationEntity extends EquipmentCreationEntity {
         this.connectionName = injectionCreationInfos.getConnectionName();
         this.connectionPosition = injectionCreationInfos.getConnectionPosition();
         this.connectionDirection = injectionCreationInfos.getConnectionDirection();
-        this.connected = injectionCreationInfos.isTerminalConnected();
+        this.terminalConnected = injectionCreationInfos.isTerminalConnected();
     }
 }
