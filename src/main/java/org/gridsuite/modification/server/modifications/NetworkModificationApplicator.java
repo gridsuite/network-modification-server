@@ -85,7 +85,7 @@ public class NetworkModificationApplicator {
             .reduce(ModificationType::maxStrategy)
             .map(ModificationType::getStrategy)
             .orElse(PreloadingStrategy.NONE);
-        if (preloadingStrategy != PreloadingStrategy.NONE) {
+        if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosList, networkInfos, reportInfos), applicationExecutor);
             return future.join();
         } else {
@@ -93,6 +93,7 @@ public class NetworkModificationApplicator {
         }
     }
 
+    // used for creating, inserting, moving or duplicating modifications
     private NetworkModificationResult processApplication(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
@@ -108,23 +109,38 @@ public class NetworkModificationApplicator {
      * building a variant is limited to 2 concurrent builds thanks to rabbitmq queue
      * but since the other operations (create, insert, move, duplicate) are not inserted in the same rabbitmq queue
      * we use the same ExecutorService to control the number of concurrent applications in order to avoid memory issues
+     * we take into account the preloading strategy in order to build variants with simple modifications immediately if possible
      * Example: when building 2 variants, the user can insert one or more composite modification that will be applied immediately
      */
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
-        CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
-            NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
-            List<ApplicationStatus> groupsApplicationStatuses =
-                    modificationInfosGroups.stream()
-                            .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
-                            .toList();
-            List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
-            return NetworkModificationResult.builder()
-                    .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
-                    .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
-                    .networkImpacts(networkImpacts)
-                    .build();
-        }, applicationExecutor);
-        return future.join();
+        PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
+                .map(Pair::getRight)
+                .flatMap(List::stream)
+                .map(ModificationInfos::getType)
+                .reduce(ModificationType::maxStrategy)
+                .map(ModificationType::getStrategy)
+                .orElse(PreloadingStrategy.NONE);
+        if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
+            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosGroups, networkInfos, reportUuid), applicationExecutor);
+            return future.join();
+        } else {
+            return processApplication(modificationInfosGroups, networkInfos, reportUuid);
+        }
+    }
+
+    // used for building a variant
+    private NetworkModificationResult processApplication(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
+        List<ApplicationStatus> groupsApplicationStatuses =
+                modificationInfosGroups.stream()
+                        .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
+                        .toList();
+        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        return NetworkModificationResult.builder()
+                .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
+                .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
+                .networkImpacts(networkImpacts)
+                .build();
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
