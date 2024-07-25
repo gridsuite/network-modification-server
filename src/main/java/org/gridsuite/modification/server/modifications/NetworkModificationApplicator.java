@@ -75,9 +75,9 @@ public class NetworkModificationApplicator {
     }
 
     /* This method is used when creating, inserting, moving or duplicating modifications
-     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is not NONE (example: VOLTAGE_INIT_MODIFICATION)
-     * so we limit the number of concurrent applications of these modifications to avoid memory issues
-     * while keeping the possibility to apply simple modifications (preloading strategy is NONE) immediately
+     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy especially VOLTAGE_INIT_MODIFICATION,
+     * we limit the number of concurrent applications of these modifications to avoid memory issues
+     * while keeping the possibility to apply simple modifications (preloading strategy other than ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) immediately
      */
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosList.stream()
