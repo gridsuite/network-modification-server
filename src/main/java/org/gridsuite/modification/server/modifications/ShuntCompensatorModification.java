@@ -81,7 +81,7 @@ public class ShuntCompensatorModification extends AbstractModification {
         }
 
         ModificationUtils.getInstance().modifyInjectionConnection(modificationInfos, shuntCompensator);
-        PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties(), "ShuntCompensatorProperties");
 
     }
 
