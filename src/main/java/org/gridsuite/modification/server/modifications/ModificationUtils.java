@@ -637,9 +637,9 @@ public final class ModificationUtils {
             reports.add(buildModificationReport(null, connectionName, "Connection name"));
         }
 
-        if (connectionDirection != ConnectablePosition.Direction.UNDEFINED) {
+        if (connectionDirection != null) {
             feeder.setDirection(connectionDirection);
-            reports.add(buildModificationReport(ConnectablePosition.Direction.UNDEFINED, connectionDirection, "Connection direction"));
+            reports.add(buildModificationReport(null, connectionDirection, "Connection direction"));
         }
 
         if (connectionPosition != null) {
@@ -665,9 +665,9 @@ public final class ModificationUtils {
             reports.add(buildModificationReport(null, connectionName, "Connection name"));
         }
 
-        if (connectionDirection != ConnectablePosition.Direction.UNDEFINED) {
+        if (connectionDirection != null) {
             feeder.withDirection(connectionDirection);
-            reports.add(buildModificationReport(ConnectablePosition.Direction.UNDEFINED, connectionDirection, "Connection direction"));
+            reports.add(buildModificationReport(null, connectionDirection, "Connection direction"));
         }
 
         if (connectionPosition != null) {

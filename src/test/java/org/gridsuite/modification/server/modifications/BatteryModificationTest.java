@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
-import static com.powsybl.iidm.network.extensions.ConnectablePosition.Direction.BOTTOM;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,9 +48,6 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .stashed(false)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
-                .connectionName(new AttributeModification<>("v3Battery", OperationType.SET))
-                .connectionDirection(new AttributeModification<>(BOTTOM, OperationType.SET))
-                .connectionPosition(new AttributeModification<>(0, OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .minP(new AttributeModification<>(0., OperationType.SET))
@@ -74,7 +70,6 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .stashed(false)
                 .equipmentId("idBatteryEdited")
                 .equipmentName(new AttributeModification<>("newV1BatteryEdited", OperationType.SET))
-                .connectionName(new AttributeModification<>("v3BatteryEdited", OperationType.SET))
                 .targetP(new AttributeModification<>(81.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(41.0, OperationType.SET))
                 .minP(new AttributeModification<>(1., OperationType.SET))
