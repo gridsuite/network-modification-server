@@ -64,7 +64,7 @@ public class VscModification extends AbstractModification {
 
     private void checkToModifyDroop() {
         // if droop is set p0 should be also
-        if (modificationInfos.getP0() != null || modificationInfos.getDroop() == null) {
+        if (modificationInfos.getP0() == null && modificationInfos.getDroop() != null) {
             throw new NetworkModificationException(MODIFY_VSC_ERROR, "P0 is required to modify the equipment");
         }
     }
