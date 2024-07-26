@@ -61,7 +61,6 @@ public class VscModification extends AbstractModification {
 
         checkToModifyDroop();
 
-
     }
 
     private void checkToModifyDroop() {

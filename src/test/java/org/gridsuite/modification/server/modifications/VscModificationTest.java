@@ -264,7 +264,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
 
     //Test : p0 sould be required if drop is enabled
     @Test
-    public void testActivateHvdcAngleDroopActivePowerControlWithoutP0() {
+    public void testHvdcAngleDroopActivePowerControlWithoutP0() {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
