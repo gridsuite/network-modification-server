@@ -23,7 +23,8 @@ import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
-import static org.gridsuite.modification.server.modifications.VscCreation.*;
+import static org.gridsuite.modification.server.modifications.VscCreation.VSC_CHARACTERISTICS;
+import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SETPOINTS;
 
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
@@ -31,6 +32,7 @@ import static org.gridsuite.modification.server.modifications.VscCreation.*;
 
 public class VscModification extends AbstractModification {
     private final VscModificationInfos modificationInfos;
+    private static final String NO_VALUE = "No value";
 
     public VscModification(VscModificationInfos vscModificationInfos) {
         this.modificationInfos = vscModificationInfos;
@@ -72,7 +74,7 @@ public class VscModification extends AbstractModification {
 
         // Set Points
         //  Set Points
-        List<ReportNode> setPointsReports = setPoints(hvdcLine, modificationInfos);
+        List<ReportNode> setPointsReports = setPoints(hvdcLine);
         //  hvdc droop
         List<ReportNode> droopReports = hvdcAngleDroopActivePowerControlAdder(hvdcLine);
 
@@ -97,26 +99,27 @@ public class VscModification extends AbstractModification {
     }
 
     private static void characteristics(HvdcLine hvdcLine, VscModificationInfos modificationInfos, ReportNode subReportNode) {
-        List<ReportNode> characteristicsReports = new ArrayList<>();
+        List<ReportNode> characteristicsReportsContainer = new ArrayList<>();
         if (modificationInfos.getEquipmentName() != null && modificationInfos.getEquipmentName().getValue() != null) {
-            characteristicsReports.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setName, () -> hvdcLine.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), "Name"));
+            characteristicsReportsContainer.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setName,
+                () -> hvdcLine.getOptionalName().orElse(NO_VALUE),
+                modificationInfos.getEquipmentName(), "Name"));
         }
         if (modificationInfos.getNominalV() != null) {
-            characteristicsReports.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setNominalV, hvdcLine::getNominalV, modificationInfos.getNominalV(), "DC nominal voltage"));
+            characteristicsReportsContainer.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setNominalV, hvdcLine::getNominalV, modificationInfos.getNominalV(), "DC nominal voltage"));
         }
         if (modificationInfos.getR() != null) {
-            characteristicsReports.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setR, hvdcLine::getR, modificationInfos.getR(), "DC resistance"));
+            characteristicsReportsContainer.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setR, hvdcLine::getR, modificationInfos.getR(), "DC resistance"));
         }
         if (modificationInfos.getMaxP() != null) {
-            characteristicsReports.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaxP(), "Power max"));
+            characteristicsReportsContainer.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaxP(), "Power max"));
         }
-        if (!characteristicsReports.isEmpty()) {
-            ReportNode characteristicReport = subReportNode.newReportNode().withMessageTemplate("vscCharacteristics", CHARACTERISTICS).add();
-            ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS, Map.of());
+        if (!characteristicsReportsContainer.isEmpty()) {
+            ModificationUtils.getInstance().reportModifications(subReportNode, characteristicsReportsContainer, VSC_CHARACTERISTICS, CHARACTERISTICS, Map.of());
         }
     }
 
-    private static List<ReportNode> setPoints(HvdcLine hvdcLine, VscModificationInfos modificationInfos) {
+    private List<ReportNode> setPoints(HvdcLine hvdcLine) {
 
         List<ReportNode> setPointsReports = new ArrayList<>();
         if (modificationInfos.getActivePowerSetpoint() != null) {
@@ -142,8 +145,7 @@ public class VscModification extends AbstractModification {
             }
         }
         if (!reports.isEmpty()) {
-            ReportNode limitsReport = subReportNode.newReportNode().withMessageTemplate("vscLimits", "Limits").add();
-            ModificationUtils.getInstance().reportModifications(limitsReport, reports, "vscLimits", "Limits", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, reports, "vscLimits", "Limits", Map.of());
         }
     }
 
@@ -258,7 +260,7 @@ public class VscModification extends AbstractModification {
         List<ReportNode> characteristicReports = new ArrayList<>();
         if (converterStationModificationInfos.getEquipmentName() != null && converterStationModificationInfos.getEquipmentName().getValue() != null) {
             characteristicReports.add(ModificationUtils.getInstance().applyAndBuildModificationReport(converterStation::setName,
-                () -> converterStation.getOptionalName().orElse("No value"), converterStationModificationInfos.getEquipmentName(), "Name"));
+                () -> converterStation.getOptionalName().orElse(NO_VALUE), converterStationModificationInfos.getEquipmentName(), "Name"));
         }
 
         if (converterStationModificationInfos.getLossFactor() != null) {
@@ -289,7 +291,7 @@ public class VscModification extends AbstractModification {
         }
         if (!setPointsReports.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(converterStationReportNode,
-                setPointsReports, "SetPoints", "SetPoints", Map.of());
+                setPointsReports, SETPOINTS, SETPOINTS, Map.of());
         }
 
         // limits

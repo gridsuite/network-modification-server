@@ -36,9 +36,10 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
  */
 
 public class VscCreation extends AbstractModification {
-    public static final String CHARACTERISTICS = "Characteristics";
-    public static final String SETPOINTS = "Setpoints";
+
     public static final String VSC_SETPOINTS = "vscSetPoints";
+    public static final String VSC_CHARACTERISTICS = "vscCharacteristics";
+
     private final VscCreationInfos modificationInfos;
 
     public VscCreation(VscCreationInfos modificationInfos) {
@@ -131,23 +132,20 @@ public class VscCreation extends AbstractModification {
 
     private void reportHvdcLineInfos(ReportNode subReportNode) {
         List<ReportNode> characteristicsReports = new ArrayList<>();
-        ReportNode characteristicReport = subReportNode.newReportNode().withMessageTemplate("vscCharacteristics", CHARACTERISTICS).add();
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getNominalV(), "DC nominal voltage"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getR(), "DC resistance"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(characteristicReport, characteristicsReports, "vscCharacteristics", CHARACTERISTICS, Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, characteristicsReports, VSC_CHARACTERISTICS, CHARACTERISTICS, Map.of());
 
         List<ReportNode> limitsReports = new ArrayList<>();
-        ReportNode limitsReport = subReportNode.newReportNode().withMessageTemplate("vscLimits", "Limits").add();
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2(), "Operator active power limit (Side1 -> Side 2)"));
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1(), "Operator active power limit (Side2 -> Side 1)"));
-        ModificationUtils.getInstance().reportModifications(limitsReport, limitsReports, "vscLimits", "Limits", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, limitsReports, "vscLimits", "Limits", Map.of());
 
         List<ReportNode> setPointsReports = new ArrayList<>();
         ReportNode setPointsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePowerSetpoint(), "Active power"));
-        setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
         ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, VSC_SETPOINTS, SETPOINTS, Map.of());
 
         List<ReportNode> angleDroopActivePowerControlReports = new ArrayList<>();

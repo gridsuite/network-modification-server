@@ -23,8 +23,7 @@ public final class PropertiesUtils {
             )
         );
         if (!reportNodes.isEmpty()) {
-            ReportNode propertiesReporter = subReportNode.newReportNode().withMessageTemplate(PROPERTIES, PROPERTIES).add();
-            ModificationUtils.getInstance().reportModifications(propertiesReporter, reportNodes,
+            ModificationUtils.getInstance().reportModifications(subReportNode, reportNodes,
                 propertiesLabelKey, PROPERTIES, Map.of());
         }
     }
