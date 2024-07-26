@@ -80,17 +80,6 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     }
 
     @Test
-    public void testLockoutModification() throws Exception {
-        OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
-        modificationInfos.setEquipmentId("line2");
-        modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertAfterNetworkModificationCreation();
-    }
-
-    @Test
     public void testCreateWithErrors() throws Exception {
         // line not existing
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();

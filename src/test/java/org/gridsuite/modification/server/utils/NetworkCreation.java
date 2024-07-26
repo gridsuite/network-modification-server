@@ -27,6 +27,7 @@ public final class NetworkCreation {
         return create(uuid, createHvdcLine, new NetworkFactoryImpl());
     }
 
+    //Create a network with fictitious switch and different switch kind
     public static Network createSwitchNetwork(UUID uuid, NetworkFactory networkFactory) {
         Network network = networkFactory.createNetwork(uuid.toString(), "test");
 
