@@ -66,7 +66,7 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService,
-                                         @Value("${max-concurrent-applications}") int maxConcurrentApplications) {
+                                         @Value("${max-large-concurrent-applications}") int maxConcurrentApplications) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
@@ -75,9 +75,15 @@ public class NetworkModificationApplicator {
     }
 
     /* This method is used when creating, inserting, moving or duplicating modifications
-     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy especially VOLTAGE_INIT_MODIFICATION,
-     * we limit the number of concurrent applications of these modifications to avoid memory issues
-     * while keeping the possibility to apply simple modifications (preloading strategy other than ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) immediately
+     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is large
+     * (for example for VOLTAGE_INIT_MODIFICATION),
+     * we limit the number of concurrent applications of these modifications to avoid out of memory issues.
+     * We keep the possibility to apply small or medium modifications immediately in parallel without limits.
+     * And if in the future we also need to limit the memory consumption of medium modifications we can add more code here.
+     * Note : we currently have 3 sizes of modifications :
+     * small : preloadingStrategy = NONE
+     * medium : preloadingStrategy = COLLECTION
+     * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
      */
     public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosList.stream()
@@ -106,11 +112,13 @@ public class NetworkModificationApplicator {
     }
 
     /* This method is used when building a variant
-     * building a variant is limited to 2 concurrent builds thanks to rabbitmq queue
+     * building a variant is limited to ${consumer.concurrency} (typically 2) concurrent builds thanks to rabbitmq queue
      * but since the other operations (create, insert, move, duplicate) are not inserted in the same rabbitmq queue
-     * we use the same ExecutorService to control the number of concurrent applications in order to avoid memory issues
-     * we take into account the preloading strategy in order to build variants with simple modifications immediately if possible
-     * Example: when building 2 variants, the user can insert one or more composite modification that will be applied immediately
+     * we use the same ExecutorService to globally limit the number of concurrent large modifications in order to avoid out of memory issues
+     * We keep the possibility to apply small or medium modifications immediately.
+     * And if in the future we also need to limit the memory consumption of medium modifications we can add more code here.
+     * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModifications method
+     * and no more builds can go through. If this causes problems we should put them in separate rabbitmq queues.
      */
     public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()

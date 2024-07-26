@@ -41,5 +41,6 @@ powsybl-ws:
     queryBegin: '&'
     customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
 
-# 2 maximum concurrent applications for the current configuration (same as rabbitmq consumer concurrency)
-max-concurrent-applications: 2
+# maximum concurrent applications of modifications with preloadingStrategy=ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
+# to avoid out of memory issues
+max-large-concurrent-applications: 2
