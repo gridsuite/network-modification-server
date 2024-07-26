@@ -173,7 +173,8 @@ public class VscCreation extends AbstractModification {
                 createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReporter) :
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
         converterStationReporter.newReportNode()
-                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station " + converterStationCreationInfos.getEquipmentId() + " created")
+                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
+                .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
