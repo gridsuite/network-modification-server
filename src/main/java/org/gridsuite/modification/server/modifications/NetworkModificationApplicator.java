@@ -209,7 +209,7 @@ public class NetworkModificationApplicator {
                     .orElse(ApplicationStatus.ALL_OK);
         }
 
-        TypedValue severity = reportNode.getValues().get(ReportConstants.REPORT_SEVERITY_KEY);
+        TypedValue severity = reportNode.getValues().get(ReportConstants.SEVERITY_KEY);
         if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
         } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {

@@ -57,7 +57,7 @@ class NetworkModificationApplicatorTest {
 
     private static void addSubReport(ReportNode parent, ReportNode child) {
         ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(child.getMessageKey(), child.getMessageTemplate());
-        TypedValue severity = child.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+        TypedValue severity = child.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
         if (severity != null) {
             adder.withSeverity(severity);
         }

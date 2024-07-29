@@ -497,7 +497,7 @@ public final class ModificationUtils {
                 for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
                     reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
                 }
-                TypedValue severity = report.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+                TypedValue severity = report.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
                 if (severity != null) {
                     reportNodeAdder.withSeverity(severity);
                 }
@@ -1199,7 +1199,7 @@ public final class ModificationUtils {
         for (Map.Entry<String, TypedValue> valueEntry : child.getValues().entrySet()) {
             adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
         }
-        TypedValue severity = child.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+        TypedValue severity = child.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
         if (severity != null) {
             adder.withSeverity(severity);
         }
