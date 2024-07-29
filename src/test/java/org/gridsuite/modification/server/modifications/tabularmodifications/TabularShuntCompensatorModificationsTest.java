@@ -144,7 +144,7 @@ import static org.mockito.Mockito.when;
         shuntModification.setMaxQAtNominalV(null);
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
-        assertEquals(TypedValue.WARN_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.REPORT_SEVERITY_KEY));
+        assertEquals(TypedValue.WARN_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.SEVERITY_KEY));
     }
 
     @Test
@@ -172,7 +172,7 @@ import static org.mockito.Mockito.when;
                 .build();
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
-        assertEquals(TypedValue.ERROR_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.REPORT_SEVERITY_KEY));
+        assertEquals(TypedValue.ERROR_SEVERITY, reportNode.getChildren().get(0).getValues().get(ReportConstants.SEVERITY_KEY));
 
     }
 

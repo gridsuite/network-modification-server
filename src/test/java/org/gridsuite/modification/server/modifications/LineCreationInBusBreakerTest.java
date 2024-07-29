@@ -168,12 +168,12 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(0.0).build())
+                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(-1.0).build())
                 .build();
         String lineCreationInfosPermanentLimitNOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitNOK);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine2': permanent limit must be > 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
+        assertLogMessage("AC Line 'idLine2': permanent limit must be >= 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
     }
 
     @Test
