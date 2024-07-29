@@ -497,7 +497,7 @@ public final class ModificationUtils {
                 for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
                     reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
                 }
-                TypedValue severity = report.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+                TypedValue severity = report.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
                 if (severity != null) {
                     reportNodeAdder.withSeverity(severity);
                 }
@@ -517,6 +517,13 @@ public final class ModificationUtils {
 
             insertReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
         }
+    }
+
+    public <T> ReportNode applyAndBuildModificationReport(Consumer<T> setter, Supplier<T> getter, AttributeModification<T> modification, String fieldName) {
+        T oldValue = getter.get();
+        T newValue = modification.applyModification(oldValue);
+        setter.accept(newValue);
+        return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
     }
 
     public <T> ReportNode buildModificationReport(T oldValue, T newValue, String fieldName) {
@@ -1192,7 +1199,7 @@ public final class ModificationUtils {
         for (Map.Entry<String, TypedValue> valueEntry : child.getValues().entrySet()) {
             adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
         }
-        TypedValue severity = child.getValue(ReportConstants.REPORT_SEVERITY_KEY).orElse(null);
+        TypedValue severity = child.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
         if (severity != null) {
             adder.withSeverity(severity);
         }
