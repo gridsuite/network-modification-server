@@ -31,31 +31,60 @@ public final class NetworkCreation {
     public static Network createSwitchNetwork(UUID uuid, NetworkFactory networkFactory) {
         Network network = networkFactory.createNetwork(uuid.toString(), "test");
 
-        Substation s1 = createSubstation(network, "s1", "s1", Country.FR);
+        Substation s1 = network.newSubstation()
+                .setId("s1")
+                .setName("s1")
+                .add();
         VoltageLevel vl1 = createVoltageLevel(s1, "vl1", "vl1", TopologyKind.NODE_BREAKER, 400.0);
-        createBusBarSection(vl1, "1.1", "1.1", 0);
-        createSwitch(vl1, "br1", "br1", SwitchKind.LOAD_BREAK_SWITCH, false, false, false, 0, 1);
-        createSwitch(vl1, "br2", "br2", SwitchKind.LOAD_BREAK_SWITCH, false, false, false, 1, 2);
-        createSwitch(vl1, "br3", "br3", SwitchKind.LOAD_BREAK_SWITCH, false, false, false, 1, 3);
-        Substation s2 = createSubstation(network, "s2", "s2", Country.FR);
+        vl1.getNodeBreakerView().newBusbarSection()
+                .setId("b1")
+                .setName("b1")
+                .setNode(1)
+                .add();
 
-        VoltageLevel vl2 = createVoltageLevel(s2, "vl2", "vl2", TopologyKind.NODE_BREAKER, 400);
-        createBusBarSection(vl2, "b2", "b2", 1);
-        createSwitch(vl2, "br4", "br4", SwitchKind.BREAKER, false, false, true, 1, 0);
-        createSwitch(vl2, "br5", "br5", SwitchKind.LOAD_BREAK_SWITCH, false, false, false, 1, 2);
+        createSwitch(vl1, "br11", "br11", SwitchKind.BREAKER, false, false, false, 2, 1);
+        createSwitch(vl1, "b4", "b4", SwitchKind.DISCONNECTOR, false, false, false, 1, 4);
+        createSwitch(vl1, "br21", "br21", SwitchKind.BREAKER, false, false, true, 4, 5);
 
-        Substation s3 = createSubstation(network, "s3", "s3", Country.FR);
+        VoltageLevel vl2 = createVoltageLevel(s1, "vl2", "vl2", TopologyKind.NODE_BREAKER, 400.0);
+        vl2.getNodeBreakerView().newBusbarSection()
+                .setId("b2")
+                .setName("b2")
+                .setNode(2)
+                .add();
 
-        VoltageLevel vl3 = createVoltageLevel(s3, "vl3", "vl3", TopologyKind.NODE_BREAKER, 400);
-        createBusBarSection(vl3, "b3", "b3", 1);
-        createSwitch(vl3, "br6", "br6", SwitchKind.BREAKER, false, false, false, 0, 1);
-        createSwitch(vl3, "br7", "br7", SwitchKind.BREAKER, false, false, false, 1, 2);
-        createSwitch(vl3, "br8", "br8", SwitchKind.BREAKER, false, false, false, 1, 3);
-        createLoad(vl3, "l1", "l1", 0, 180, 18.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(vl2, "br12", "br12", SwitchKind.BREAKER, false, false, false, 3, 2);
+        createSwitch(vl2, "br22", "br22", SwitchKind.BREAKER, false, false, false, 2, 6);
 
-        createLine(network, "line1", "line1", "vl1", "vl2", 2, 0, 0.1, 10.0, 0.0, 0.0, 0.0, 0.0, "line1", 1, ConnectablePosition.Direction.TOP, "line1", 1, ConnectablePosition.Direction.TOP);
-        createLine(network, "line2", "line2", "vl2", "vl3", 2, 2, 0.1, 10.0, 0.0, 0.0, 0.0, 0.0, "line2", 1, ConnectablePosition.Direction.TOP, "line2", 1, ConnectablePosition.Direction.TOP);
-        createLine(network, "line3", "line3", "vl1", "vl3", 3, 3, 0.1, 10.0, 0.0, 0.0, 0.0, 0.0, "line3", 1, ConnectablePosition.Direction.TOP, "line3", 1, ConnectablePosition.Direction.TOP);
+        network.newLine()
+                .setId("line1")
+                .setName("line1")
+                .setVoltageLevel1("vl1")
+                .setVoltageLevel2("vl2")
+                .setR(0.1)
+                .setX(10.0)
+                .setG1(0.0)
+                .setG2(0.0)
+                .setB1(0.0)
+                .setB2(0.0)
+                .setNode1(2)
+                .setNode2(3)
+                .add();
+
+        network.newLine()
+                .setId("line2")
+                .setName("line2")
+                .setVoltageLevel1("vl1")
+                .setVoltageLevel2("vl2")
+                .setR(0.1)
+                .setX(10.0)
+                .setG1(0.0)
+                .setG2(0.0)
+                .setB1(0.0)
+                .setB2(0.0)
+                .setNode1(5)
+                .setNode2(6)
+                .add();
 
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);

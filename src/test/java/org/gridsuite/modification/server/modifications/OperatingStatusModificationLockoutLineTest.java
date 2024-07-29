@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
@@ -73,10 +74,38 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
     }
 
+    private void assertAfterNetworkModificationLockout(String lineID) throws Exception {
+        OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
+        modificationInfos.setEquipmentId(lineID);
+        modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
+        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
+    }
+
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         // go back to init status
         TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
+    }
+
+    @Test
+    public void testLockoutLinesWithLoadBreakerSwitches() throws Exception {
+        //Lockout line with switches of kind LOAD_BREAK_SWITCH
+        getNetwork().getSwitch("br11").setProperty("Kind", SwitchKind.LOAD_BREAK_SWITCH.toString());
+        getNetwork().getSwitch("br12").setProperty("Kind", SwitchKind.LOAD_BREAK_SWITCH.toString());
+        assertAfterNetworkModificationLockout("line1");
+    }
+
+    @Test
+    public void testLockoutLinesWithDisconnectorSwitches() throws Exception {
+        //Lockout line with switches of kind DISCONNECTOR
+        getNetwork().getSwitch("br11").setProperty("Kind", SwitchKind.DISCONNECTOR.toString());
+        getNetwork().getSwitch("br12").setProperty("Kind", SwitchKind.DISCONNECTOR.toString());
+        assertAfterNetworkModificationLockout("line1");
     }
 
     @Test
@@ -90,9 +119,11 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         assertNull(getNetwork().getLine("notFound"));
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "notFound").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
-
+        //Lockout line with fictitious switches of kind breaker
+        getNetwork().getSwitch("br11").setFictitious(true);
+        getNetwork().getSwitch("br12").setFictitious(true);
         // modification action empty
-        modificationInfos.setEquipmentId("line2");
+        modificationInfos.setEquipmentId("line1");
         modificationInfos.setAction(null);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
