@@ -40,3 +40,7 @@ powsybl-ws:
     name: networkmodifications
     queryBegin: '&'
     customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
+
+# maximum concurrent applications of modifications with preloadingStrategy=ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
+# to avoid out of memory issues
+max-large-concurrent-applications: 2

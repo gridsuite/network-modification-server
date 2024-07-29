@@ -519,6 +519,13 @@ public final class ModificationUtils {
         }
     }
 
+    public <T> ReportNode applyAndBuildModificationReport(Consumer<T> setter, Supplier<T> getter, AttributeModification<T> modification, String fieldName) {
+        T oldValue = getter.get();
+        T newValue = modification.applyModification(oldValue);
+        setter.accept(newValue);
+        return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
+    }
+
     public <T> ReportNode buildModificationReport(T oldValue, T newValue, String fieldName) {
         return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
     }
