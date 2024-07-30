@@ -53,24 +53,6 @@ public final class NetworkCreation {
                 .setNode(2)
                 .add();
 
-        createSwitch(vl2, "br12", "br12", SwitchKind.BREAKER, false, false, false, 3, 2);
-        createSwitch(vl2, "br22", "br22", SwitchKind.BREAKER, false, false, false, 2, 6);
-
-        network.newLine()
-                .setId("line1")
-                .setName("line1")
-                .setVoltageLevel1("vl1")
-                .setVoltageLevel2("vl2")
-                .setR(0.1)
-                .setX(10.0)
-                .setG1(0.0)
-                .setG2(0.0)
-                .setB1(0.0)
-                .setB2(0.0)
-                .setNode1(2)
-                .setNode2(3)
-                .add();
-
         network.newLine()
                 .setId("line2")
                 .setName("line2")
