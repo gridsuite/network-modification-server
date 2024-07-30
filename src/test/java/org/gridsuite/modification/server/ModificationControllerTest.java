@@ -1583,8 +1583,11 @@ public class ModificationControllerTest {
                 .equipmentId("v1b1")
                 .equipmentAttributeValue(true)
                 .build();
+        CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
+                .modifications(List.of(switchStatusModificationInfos))
+                .build();
         MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
-                .content(objectWriter.writeValueAsString(switchStatusModificationInfos))
+                .content(objectWriter.writeValueAsString(compositeModificationInfos))
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();

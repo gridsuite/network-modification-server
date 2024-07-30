@@ -319,11 +319,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public Optional<NetworkModificationResult> applyModificationsFromUuids(UUID networkUuid,
-                                                                           String variantId,
-                                                                           ReportInfos reportInfos,
-                                                                           List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
+    public Optional<NetworkModificationResult> applyCompositeModificationsFromUuids(UUID networkUuid,
+                                                                                    String variantId,
+                                                                                    ReportInfos reportInfos,
+                                                                                    List<UUID> modificationsUuids) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 }
