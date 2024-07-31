@@ -15,6 +15,7 @@ import com.powsybl.iidm.modification.tripping.Tripping;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
+import com.powsybl.iidm.network.util.SwitchPredicates;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_STATUS_MODIFICATION_ERROR;
@@ -142,7 +144,7 @@ public class OperatingStatusModification extends AbstractModification {
         }
 
         TwoSides oppositeSide = side == TwoSides.ONE ? TwoSides.TWO : TwoSides.ONE;
-        if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide))) {
+        if (connectOneTerminal(branch.getTerminal(side)) && disconnectOneTerminal(branch.getTerminal(oppositeSide), SwitchPredicates.IS_CLOSED_BREAKER)) {
             branch.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.IN_OPERATION).add();
         } else {
             throw new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end");
@@ -158,11 +160,11 @@ public class OperatingStatusModification extends AbstractModification {
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {
-        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(this::disconnectOneTerminal);
+        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(terminal -> disconnectOneTerminal(terminal, SwitchPredicates.IS_NONFICTIONAL));
     }
 
-    private boolean disconnectOneTerminal(Terminal terminal) {
-        return !terminal.isConnected() || terminal.disconnect();
+    private boolean disconnectOneTerminal(Terminal terminal, Predicate<Switch> switchPredicates) {
+        return !terminal.isConnected() || terminal.disconnect(switchPredicates);
     }
 
     private boolean connectAllTerminals(Identifiable<?> equipment) {
