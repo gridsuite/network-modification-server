@@ -384,7 +384,7 @@ public class GenerationDispatch extends AbstractModification {
         filtersWithGeneratorsNotFound.values().forEach(f -> {
             var generatorsIds = String.join(", ", f.getNotFoundEquipments());
             report(subReportNode, "", "filterGeneratorsNotFound", "Cannot find the following generators ${generatorsIds} in filter ${filterName}",
-                Map.of("generatorIds", generatorsIds, "filterName", filters.get(f.getFilterId())),
+                Map.of("generatorsIds", generatorsIds, "filterName", filters.get(f.getFilterId())),
                 TypedValue.WARN_SEVERITY);
         });
 
