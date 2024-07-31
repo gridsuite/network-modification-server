@@ -59,7 +59,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         createSwitch(vl2, "br12", "br12", switchKind, false, false, isFictitious, 3, 2);
         createSwitch(vl2, "br22", "br22", switchKind, false, false, isFictitious, 2, 6);
 
-        Line line1 = getNetwork().newLine()
+        return getNetwork().newLine()
                 .setId("line1")
                 .setName("line1")
                 .setVoltageLevel1("vl1")
@@ -73,7 +73,6 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
                 .setNode1(2)
                 .setNode2(3)
                 .add();
-        return line1;
     }
 
     @Override
@@ -99,7 +98,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
     }
 
-    private void assertAfterNetworkModificationLockout(String lineID) throws Exception {
+    private void testLockoutLine(String lineID) throws Exception {
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId(lineID);
         modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
@@ -121,14 +120,14 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     public void testLockoutLinesWithLoadBreakerSwitches() throws Exception {
         //Lockout line with switches of kind LOAD_BREAK_SWITCH
         createLineAndSwitches(SwitchKind.LOAD_BREAK_SWITCH, false);
-        assertAfterNetworkModificationLockout("line1");
+        testLockoutLine("line1");
     }
 
     @Test
     public void testLockoutLinesWithDisconnectorSwitches() throws Exception {
         //Lockout line with switches of kind DISCONNECTOR
         createLineAndSwitches(SwitchKind.DISCONNECTOR, false);
-        assertAfterNetworkModificationLockout("line1");
+        testLockoutLine("line1");
     }
 
     @Test
@@ -138,7 +137,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         modificationInfos.setEquipmentId("notFound");
         String modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "notFound").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
@@ -148,9 +147,10 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         modificationInfos.setAction(null);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpectAll(
-                        status().isBadRequest(),
-                        content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage()));
+            .andExpectAll(
+                    status().isBadRequest(),
+                    content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage())
+            );
 
         // modification action not existing
         modificationJson = modificationJson.replace("LOCKOUT", "INVALID_ACTION"); // note: should never happen in real
@@ -166,6 +166,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+        assertNull(getNetwork().getLine("line1").getExtension(OperatingStatus.class));
         assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to disconnect all equipment ends").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
 
