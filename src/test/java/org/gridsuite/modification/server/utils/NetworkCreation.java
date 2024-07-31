@@ -69,7 +69,7 @@ public final class NetworkCreation {
                 .add();
 
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
-         return network;
+        return network;
     }
 
     public static Network create(UUID uuid, boolean createHvdcLine, NetworkFactory networkFactory) {
