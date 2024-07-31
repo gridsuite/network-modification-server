@@ -68,9 +68,6 @@ public final class NetworkCreation {
                 .setNode2(6)
                 .add();
 
-        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
-        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
-
         return network;
     }
 
