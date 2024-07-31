@@ -68,7 +68,8 @@ public final class NetworkCreation {
                 .setNode2(6)
                 .add();
 
-        return network;
+        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
+         return network;
     }
 
     public static Network create(UUID uuid, boolean createHvdcLine, NetworkFactory networkFactory) {
