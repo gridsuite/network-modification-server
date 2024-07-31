@@ -58,11 +58,11 @@ public class VscModification extends AbstractModification {
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
 
-        checkToModifyDroop();
+        isDropModificationAllowed();
 
     }
 
-    private void checkToModifyDroop() {
+    private void isDropModificationAllowed() {
         // if droop is set p0 should be also
         if (modificationInfos.getP0() == null && modificationInfos.getDroop() != null) {
             throw new NetworkModificationException(MODIFY_VSC_ERROR, "P0 is required to modify the equipment");

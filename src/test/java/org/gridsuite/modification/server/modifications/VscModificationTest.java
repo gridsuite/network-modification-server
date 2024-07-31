@@ -262,19 +262,26 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         Assert.assertTrue(activePowerControl.isEnabled());
     }
 
-    //Test : p0 sould be required if drop is enabled
     @Test
     public void testHvdcAngleDroopActivePowerControlWithoutP0() {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
         modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
-        {
+        { //Test : p0 should be required if drop is changed
             modificationInfos.setDroop(new AttributeModification<>(10F, OperationType.SET));
             modificationInfos.setP0(null);
             VscModification vscModification = new VscModification(modificationInfos);
             Assert.assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
         }
+        { //Test : p0 should not be required if drop unchanged
+            modificationInfos.setDroop(null);
+            modificationInfos.setP0(new AttributeModification<>(10F, OperationType.SET));
+            VscModification vscModification = new VscModification(modificationInfos);
+            assertDoesNotThrow(() -> vscModification.check(networkWitoutExt));
+
+        }
+
     }
 
     @Override
