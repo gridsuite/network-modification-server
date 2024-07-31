@@ -1607,9 +1607,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(
                 put("/v1/network-modifications/uuids"
                     + "?networkUuid=" + TEST_NETWORK_ID
-                    + "&variantId=" + NetworkCreation.VARIANT_ID
-                    + "&reportUuid=" + TEST_REPORT_ID
-                    + "&reporterId=" + UUID.randomUUID())
+                    + "&variantId=" + NetworkCreation.VARIANT_ID)
                     .content(objectWriter.writeValueAsString(modificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();

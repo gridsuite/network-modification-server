@@ -275,8 +275,8 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The composite modifications have been applied")
     public ResponseEntity<Optional<NetworkModificationResult>> applyCompositeModificationsFromUuids(@Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
                                                                                            @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
-                                                                                           @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                                           @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") String reporterId,
+                                                                                           @Parameter(description = "the report uuid") @RequestParam(value = "reportUuid", required = false) UUID reportUuid,
+                                                                                           @Parameter(description = "the reporter id") @RequestParam(value = "reporterId", required = false) String reporterId,
                                                                                            @RequestBody List<UUID> modificationsUuidList) {
         return ResponseEntity.ok().body(networkModificationService.applyCompositeModificationsFromUuids(networkUuid, variantId, new ReportInfos(reportUuid, reporterId), modificationsUuidList));
     }
