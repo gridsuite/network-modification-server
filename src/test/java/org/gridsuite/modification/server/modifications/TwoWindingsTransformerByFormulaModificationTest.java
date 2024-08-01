@@ -15,10 +15,10 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.formula.FormulaInfos;
-import org.gridsuite.modification.server.dto.formula.Operator;
-import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
+import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
+import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.junit.Test;
 
 import java.util.Date;

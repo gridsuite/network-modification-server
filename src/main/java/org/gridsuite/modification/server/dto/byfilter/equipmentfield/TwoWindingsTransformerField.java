@@ -1,8 +1,9 @@
-package org.gridsuite.modification.server.dto.formula.equipmentfield;
+package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
 
 public enum TwoWindingsTransformerField {
     R,
@@ -65,6 +66,12 @@ public enum TwoWindingsTransformerField {
             case PHASE_LOW_TAP_POSITION -> phaseTapChanger.setLowTapPosition(newValue.intValue());
             case PHASE_TAP_POSITION -> phaseTapChanger.setTapPosition(newValue.intValue());
             case PHASE_TARGET_DEADBAND -> phaseTapChanger.setTargetDeadband(newValue);
+        }
+    }
+
+    public static void setNewValue(TwoWindingsTransformer transformer, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+        switch (fieldModificationInfos.getDataType()) {
+            case DOUBLE -> setNewValue(transformer, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }
     }
 }

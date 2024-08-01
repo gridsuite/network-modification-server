@@ -5,16 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.entities.equipment.modification;
+package org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.formula.FormulaInfos;
-import org.gridsuite.modification.server.dto.formula.Operator;
-import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
+import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,7 +61,7 @@ public class FormulaEntity {
 
     public FormulaEntity(FormulaInfos formulaInfos) {
         this.id = null;
-        this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
+        this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
         this.editedField = formulaInfos.getEditedField();
         this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField();
         this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField();

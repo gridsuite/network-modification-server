@@ -5,11 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.formula.equipmentfield;
+package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -55,6 +56,12 @@ public enum VoltageLevelField {
                 }
                 adder.add();
             }
+        }
+    }
+
+    public static void setNewValue(VoltageLevel voltageLevel, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+        switch (fieldModificationInfos.getDataType()) {
+            case DOUBLE -> setNewValue(voltageLevel, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }
     }
 }
