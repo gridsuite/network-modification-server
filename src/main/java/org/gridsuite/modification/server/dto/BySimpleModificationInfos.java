@@ -52,6 +52,6 @@ public class BySimpleModificationInfos extends ModificationInfos {
 
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_FILTER_MODIFICATION.name(), "By filter modification").add();
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_SIMPLE_MODIFICATION.name(), "By filter modification").add();
     }
 }

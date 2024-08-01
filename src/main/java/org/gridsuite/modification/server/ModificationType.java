@@ -50,7 +50,7 @@ public enum ModificationType {
     TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION),
     TABULAR_CREATION(PreloadingStrategy.COLLECTION),
     BY_FORMULA_MODIFICATION(PreloadingStrategy.COLLECTION),
-    BY_FILTER_MODIFICATION(PreloadingStrategy.COLLECTION),
+    BY_SIMPLE_MODIFICATION(PreloadingStrategy.COLLECTION),
     COMPOSITE_MODIFICATION(PreloadingStrategy.COLLECTION);
 
     private final PreloadingStrategy strategy;

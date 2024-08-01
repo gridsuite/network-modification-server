@@ -41,15 +41,15 @@ public class BySimpleModification extends AbstractByFilterModification {
     @Override
     public void check(Network network) throws NetworkModificationException {
         if (modificationInfos == null) {
-            throw new NetworkModificationException(NetworkModificationException.Type.BY_FILTER_MODIFICATION_ERROR, "Missing required attributes to modify the equipment");
+            throw new NetworkModificationException(NetworkModificationException.Type.BY_SIMPLE_MODIFICATION_ERROR, "Missing required attributes to modify the equipment");
         }
 
         if (CollectionUtils.isEmpty(modificationInfos.getSimpleModificationInfosList())) {
-            throw new NetworkModificationException(NetworkModificationException.Type.BY_FILTER_MODIFICATION_ERROR, "At least one modification is required");
+            throw new NetworkModificationException(NetworkModificationException.Type.BY_SIMPLE_MODIFICATION_ERROR, "At least one modification is required");
         }
 
         if (modificationInfos.getSimpleModificationInfosList().stream().anyMatch(formulaInfos -> CollectionUtils.isEmpty(formulaInfos.getFilters()))) {
-            throw new NetworkModificationException(NetworkModificationException.Type.BY_FILTER_MODIFICATION_ERROR, "Every modification must have at least one filter");
+            throw new NetworkModificationException(NetworkModificationException.Type.BY_SIMPLE_MODIFICATION_ERROR, "Every modification must have at least one filter");
         }
     }
 
@@ -167,7 +167,7 @@ public class BySimpleModification extends AbstractByFilterModification {
                 case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, simpleModificationInfos);
                 case LOAD -> LoadField.setNewValue((Load) identifiable, simpleModificationInfos);
                 case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) identifiable, simpleModificationInfos);
-                default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FILTER_MODIFICATION_ERROR, "Unsupported equipment");
+                default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_SIMPLE_MODIFICATION_ERROR, "Unsupported equipment");
             }
         }
         return simpleModificationInfos.getValue();
