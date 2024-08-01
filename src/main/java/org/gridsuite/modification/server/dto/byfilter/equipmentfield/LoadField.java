@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.formula.equipmentfield;
+package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Load;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -30,6 +31,12 @@ public enum LoadField {
         switch (field) {
             case ACTIVE_POWER -> load.setP0(newValue);
             case REACTIVE_POWER -> load.setQ0(newValue);
+        }
+    }
+
+    public static void setNewValue(Load load, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+        switch (fieldModificationInfos.getDataType()) {
+            case DOUBLE -> setNewValue(load, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }
     }
 }

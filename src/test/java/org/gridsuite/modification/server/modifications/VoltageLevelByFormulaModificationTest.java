@@ -16,15 +16,15 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.formula.FormulaInfos;
-import org.gridsuite.modification.server.dto.formula.Operator;
-import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
+import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
+import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
 
 import java.util.Date;
 import java.util.List;
 
-import static org.gridsuite.modification.server.modifications.ByFormulaModification.EQUIPMENT_MODIFIED_REPORT_ERROR;
+import static org.gridsuite.modification.server.modifications.byfilter.ByFormulaModification.EQUIPMENT_MODIFIED_REPORT_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

@@ -5,13 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.formula.equipmentfield;
+package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -55,6 +56,12 @@ public enum ShuntCompensatorField {
                 double newSusceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
                 model.setBPerSection(newSusceptancePerSection);
             }
+        }
+    }
+
+    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+        switch (fieldModificationInfos.getDataType()) {
+            case DOUBLE -> setNewValue(shuntCompensator, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }
     }
 }

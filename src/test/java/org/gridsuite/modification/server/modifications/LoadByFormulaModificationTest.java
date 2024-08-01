@@ -12,10 +12,10 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.formula.FormulaInfos;
-import org.gridsuite.modification.server.dto.formula.Operator;
-import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
+import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
+import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;

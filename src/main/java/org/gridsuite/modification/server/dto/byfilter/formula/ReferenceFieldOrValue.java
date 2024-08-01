@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.formula;
+package org.gridsuite.modification.server.dto.byfilter.formula;
 
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.Generator;
@@ -21,12 +21,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.GeneratorField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.LoadField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
-import org.gridsuite.modification.server.dto.formula.equipmentfield.VoltageLevelField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
 
 
 /**

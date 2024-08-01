@@ -1,4 +1,4 @@
-package org.gridsuite.modification.server.entities.equipment.modification;
+package org.gridsuite.modification.server.entities.equipment.modification.byfilter;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
@@ -8,8 +8,9 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.formula.FormulaInfos;
+import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
 
 import java.util.List;
 import java.util.stream.Collectors;
