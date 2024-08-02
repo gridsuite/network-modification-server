@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.tripping.BranchTripping;
+import com.powsybl.iidm.modification.tripping.BusbarSectionTripping;
 import com.powsybl.iidm.modification.tripping.HvdcLineTripping;
 import com.powsybl.iidm.modification.tripping.ThreeWindingsTransformerTripping;
 import com.powsybl.iidm.modification.tripping.Tripping;
@@ -178,6 +179,8 @@ public class OperatingStatusModification extends AbstractModification {
     public Tripping getTrippingFromIdentifiable(Identifiable<?> identifiable) {
         if (identifiable instanceof Branch<?> branch) {
             return new BranchTripping(branch.getId());
+        } else if (identifiable instanceof BusbarSection bbs) {
+            return new BusbarSectionTripping(bbs.getId());
         } else if (identifiable instanceof ThreeWindingsTransformer w3t) {
             return new ThreeWindingsTransformerTripping(w3t.getId());
         } else if (identifiable instanceof HvdcLine hvdcLine) {
