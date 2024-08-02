@@ -152,13 +152,20 @@ public class NetworkModificationApplicator {
     }
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
-        String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-        ReportNode reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
+        ReportNode reportNode;
+        if (reportInfos.getReporterId() != null) {
+            String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
+            reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
+        } else {
+            reportNode = ReportNode.NO_OP;
+        }
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
                 .map(m -> apply(m, network, reportNode))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
-        reportService.sendReport(reportInfos.getReportUuid(), reportNode);
+        if (reportInfos.getReportUuid() != null) {
+            reportService.sendReport(reportInfos.getReportUuid(), reportNode);
+        }
         return groupApplicationStatus;
     }
 

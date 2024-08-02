@@ -317,4 +317,13 @@ public class NetworkModificationService {
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
         return networkModificationRepository.getModificationsMetadata(ids);
     }
+
+    @Transactional
+    public Optional<NetworkModificationResult> applyModificationsFromUuids(UUID networkUuid,
+                                                                           String variantId,
+                                                                           ReportInfos reportInfos,
+                                                                           List<UUID> modificationsUuids) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
+        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
+    }
 }
