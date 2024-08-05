@@ -122,7 +122,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("busModificationsResume", "${count} bus(es) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
+                    .withTypedValue(ReportConstants.SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -165,7 +165,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("generatorModificationsResume", "${count} generator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
+                    .withTypedValue(ReportConstants.SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -254,7 +254,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("windingsTransformerModificationsResume", "${count} transformer(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
+                    .withTypedValue(ReportConstants.SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -297,7 +297,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("svcModificationsResume", "${count} static var compensator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
+                    .withTypedValue(ReportConstants.SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -340,7 +340,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("vscModificationsResume", "${count} vsc converter station(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
+                    .withTypedValue(ReportConstants.SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }
@@ -423,7 +423,7 @@ public class VoltageInitModification extends AbstractModification {
             subReportNode.newReportNode()
                     .withMessageTemplate("shuntCompensatorModificationsResume", "${count} shunt compensator(s) have been modified.")
                     .withUntypedValue(COUNT, modificationsCount)
-                    .withTypedValue(ReportConstants.REPORT_SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
+                    .withTypedValue(ReportConstants.SEVERITY_KEY, TypedValue.INFO_SEVERITY.toString(), TypedValue.SEVERITY)
                     .add();
         }
     }

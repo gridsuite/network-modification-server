@@ -1573,4 +1573,52 @@ public class ModificationControllerTest {
                         String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
             );
     }
+
+    @Test
+    public void testApplyModificationsFromUuids() throws Exception {
+        // create a modification (opening a closed switch) in the database
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+                .equipmentType(IdentifiableType.SWITCH)
+                .equipmentAttributeName("open")
+                .equipmentId("v1b1")
+                .equipmentAttributeValue(true)
+                .build();
+        CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
+                .modifications(List.of(switchStatusModificationInfos))
+                .build();
+        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
+                .content(objectWriter.writeValueAsString(compositeModificationInfos))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        UUID groupUuid = UUID.fromString(mapper.readValue(mvcResult.getResponse().getContentAsString(), String.class));
+
+        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
+                status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn();
+        List<ModificationInfos> modificationsInfos = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<UUID> modificationUuidList = modificationsInfos.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        Switch sw = network.getSwitch("v1b1");
+        assertNotNull(sw);
+        assertFalse(sw.isOpen());  // switch is closed
+
+        // apply the modification on the network
+        mvcResult = mockMvc.perform(
+                put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
+                    + "?variantId=" + NetworkCreation.VARIANT_ID)
+                    .content(objectWriter.writeValueAsString(modificationUuidList))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        var newModificationList = modificationRepository.getModifications(groupUuid, false, true);
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // still 1 modification : no new modification has been created
+        assertEquals(1, newModificationList.size());
+        assertEquals(modificationUuidList, newModificationUuidList);
+
+        assertTrue(sw.isOpen());  // switch is opened
+    }
 }
