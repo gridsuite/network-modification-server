@@ -360,7 +360,7 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters, Network network, ReportNode subReportNode) {
+    private List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters, Network network, ReportNode subReportNode, String reportMessagePrefix) {
         if (CollectionUtils.isEmpty(generatorsFilters)) {
             return List.of();
         }
@@ -372,9 +372,6 @@ public class GenerationDispatch extends AbstractModification {
             .map(f -> new FilterEquipments(f.getFilterId(), filters.get(f.getFilterId()),
                 f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
                 f.getNotFoundEquipments()))
-            // keep only generators filters
-            .filter(f -> !CollectionUtils.isEmpty(f.getIdentifiableAttributes()) &&
-               f.getIdentifiableAttributes().stream().allMatch(i -> i.getType() == IdentifiableType.GENERATOR))
             .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
         // report filters with generators not found
@@ -384,10 +381,10 @@ public class GenerationDispatch extends AbstractModification {
         filtersWithGeneratorsNotFound.values().forEach(f -> {
             var filterName = filters.get(f.getFilterId());
             var notFoundGenerators = f.getNotFoundEquipments();
-            report(subReportNode, "", "filterGeneratorsNotFound", "Cannot find ${nbNotFoundGen} generators in filter ${filterName}",
+            report(subReportNode, reportMessagePrefix, "filterGeneratorsNotFound", reportMessagePrefix + ": Cannot find ${nbNotFoundGen} generators in filter ${filterName}",
                 Map.of("nbNotFoundGen", notFoundGenerators.size(), "filterName", filterName),
                 TypedValue.WARN_SEVERITY);
-            f.getNotFoundEquipments().forEach(e -> report(subReportNode, "", "generatorNotFound", "Cannot find generator ${notFoundGeneratorId} in filter ${filterName}",
+            f.getNotFoundEquipments().forEach(e -> report(subReportNode, "", "generatorNotFound", reportMessagePrefix + ": Cannot find generator ${notFoundGeneratorId} in filter ${filterName}",
                 Map.of("notFoundGeneratorId", e, "filterName", filterName), TypedValue.TRACE_SEVERITY));
         });
 
@@ -401,16 +398,16 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     private List<String> collectGeneratorsWithoutOutage(Network network, ReportNode subReportNode) {
-        return exportFilters(generationDispatchInfos.getGeneratorsWithoutOutage(), network, subReportNode);
+        return exportFilters(generationDispatchInfos.getGeneratorsWithoutOutage(), network, subReportNode,"Generators without outage simulation");
     }
 
     private List<String> collectGeneratorsWithFixedSupply(Network network, ReportNode subReportNode) {
-        return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReportNode);
+        return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReportNode, "Generators with fixed active power");
     }
 
     private List<GeneratorsFrequencyReserve> collectGeneratorsWithFrequencyReserve(Network network, ReportNode subReportNode) {
         return generationDispatchInfos.getGeneratorsFrequencyReserve().stream().map(g -> {
-            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReportNode);
+            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReportNode, "Frequency reserve");
             return GeneratorsFrequencyReserve.builder().generators(generators).frequencyReserve(g.getFrequencyReserve()).build();
         }).collect(Collectors.toList());
     }
