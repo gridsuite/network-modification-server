@@ -341,7 +341,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(filtersForPmaxReduction))
                 .withHeader("Content-Type", "application/json"))).getId();
 
-        List<AbstractFilter> filtersForFixedSupply = List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH1_ID), getIdentifiableAttributes(GROUP1_ID))),
+        List<AbstractFilter> filtersForFixedSupply = List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH1_ID), getIdentifiableAttributes(GROUP1_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))),
             getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(TEST1_ID), getIdentifiableAttributes(GROUP2_ID))));
         UUID stubIdForFixedSupply = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_4)
             .willReturn(WireMock.ok()
@@ -355,7 +355,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(74.82, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(59.5, getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
         assertEquals(130., getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
-        assertEquals(90., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
+        assertEquals(27., getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
         assertEquals(0., getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
@@ -368,7 +368,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // test total demand and remaining power imbalance on synchronous components
         int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
         assertLogMessage("The total demand is : 60.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 90.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of fixed supply exceeds the total demand", "TotalAmountFixedSupplyExceedsTotalDemand" + firstSynchronousComponentNum, reportService);
 
@@ -407,7 +407,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
     private List<AbstractFilter> getGeneratorsFrequencyReserveFilters45() {
         return List.of(getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(GTH1_ID))),
-                getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID))));
+                getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))));
     }
 
     private List<AbstractFilter> getGeneratorsFrequencyReserveFilter6() {
@@ -445,14 +445,14 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
         assertEquals(74.82, getNetwork().getGenerator(GH1_ID).getTargetP(), 0.001);
         assertEquals(59.5, getNetwork().getGenerator(GH2_ID).getTargetP(), 0.001);
-        assertEquals(126.1, getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
+        assertEquals(130.0, getNetwork().getGenerator(GH3_ID).getTargetP(), 0.001);
         assertEquals(74.205, getNetwork().getGenerator(GTH1_ID).getTargetP(), 0.001);
-        assertEquals(145.5, getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
+        assertEquals(150.0, getNetwork().getGenerator(GTH2_ID).getTargetP(), 0.001);
         assertEquals(40.375, getNetwork().getGenerator(TEST1_ID).getTargetP(), 0.001);
         assertEquals(100., getNetwork().getGenerator(GROUP1_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(100., getNetwork().getGenerator(GROUP2_ID).getTargetP(), 0.001);  // not modified : disconnected
         assertEquals(0., getNetwork().getGenerator(GROUP3_ID).getTargetP(), 0.001);
-        assertEquals(69.58, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
+        assertEquals(65.68, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
@@ -462,7 +462,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 177.9 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 173.4 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
 
         int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
@@ -612,8 +612,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
         assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.4 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
         assertLogNthMessage("The active power set point of generator GTH1 has been set to 80.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 2);
-        assertLogNthMessage("The active power set point of generator GTH2 has been set to 146.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.6 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        assertLogNthMessage("The active power set point of generator GTH2 has been set to 150.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 167.6 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
         int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
         assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
@@ -621,8 +621,8 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
         assertLogNthMessage("The active power set point of generator GH1 has been set to 80.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 1);
         assertLogNthMessage("The active power set point of generator GH2 has been set to 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 2);
-        assertLogNthMessage("The active power set point of generator GH3 has been set to 126.1 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
-        assertLogNthMessage("The active power set point of generator ABC has been set to 63.9 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
+        assertLogNthMessage("The active power set point of generator GH3 has been set to 130.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
+        assertLogNthMessage("The active power set point of generator ABC has been set to 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
         assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
         assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
         assertLogMessage("Sum of generator active power setpoints in NORTH region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerNORTH" + secondSynchronousComponentNum, reportService);
