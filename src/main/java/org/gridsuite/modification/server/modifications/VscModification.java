@@ -224,6 +224,9 @@ public class VscModification extends AbstractModification {
                 return Collections.emptyList();
             }
             boolean isEnabled = modificationInfos.getAngleDroopActivePowerControl() != null && modificationInfos.getAngleDroopActivePowerControl().getValue();
+            if (isEnabled) {
+                checkHvdcAngleDroopActivePowerControlNullValues(hvdcLine);
+            }
             if (modificationInfos.getAngleDroopActivePowerControl() != null) {
                 activePowerControlExtension.withEnabled(isEnabled);
                 reports.add(ModificationUtils.getInstance().buildModificationReport(null, isEnabled, "AngleDroopActivePowerControl"));
@@ -243,6 +246,21 @@ public class VscModification extends AbstractModification {
 
         }
         return reports;
+    }
+
+    private void checkHvdcAngleDroopActivePowerControlNullValues(HvdcLine hvdcLine) {
+        if (modificationInfos.getDroop() == null && modificationInfos.getP0() == null) {
+            throw modifyHvdcAngleDroopActivePowerControl(hvdcLine.getId(), "Droop and P0");
+        } else if (modificationInfos.getDroop() == null) {
+            throw modifyHvdcAngleDroopActivePowerControl(hvdcLine.getId(), "Droop");
+        } else if (modificationInfos.getP0() == null) {
+            throw modifyHvdcAngleDroopActivePowerControl(hvdcLine.getId(), "P0");
+        }
+    }
+
+    private static NetworkModificationException modifyHvdcAngleDroopActivePowerControl(@lombok.NonNull String equipementName, @lombok.NonNull String attributeName) {
+        throw new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, equipementName + " attribute '" + attributeName
+            + "' can not be null if Angle droop active power control is activated");
     }
 
     private void modifyConverterStation(Network network, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
@@ -328,5 +346,4 @@ public class VscModification extends AbstractModification {
             }
         }
     }
-
 }
