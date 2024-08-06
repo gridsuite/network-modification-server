@@ -382,10 +382,13 @@ public class GenerationDispatch extends AbstractModification {
             .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         filtersWithGeneratorsNotFound.values().forEach(f -> {
-            var generatorsIds = String.join(", ", f.getNotFoundEquipments());
-            report(subReportNode, "", "filterGeneratorsNotFound", "Cannot find the following generators ${generatorsIds} in filter ${filterName}",
-                Map.of("generatorIds", generatorsIds, "filterName", filters.get(f.getFilterId())),
+            var filterName = filters.get(f.getFilterId());
+            var notFoundGenerators = f.getNotFoundEquipments();
+            report(subReportNode, "", "filterGeneratorsNotFound", "Cannot find ${nbNotFoundGen} generators in filter ${filterName}",
+                Map.of("nbNotFoundGen", notFoundGenerators.size(), "filterName", filterName),
                 TypedValue.WARN_SEVERITY);
+            f.getNotFoundEquipments().forEach(e -> report(subReportNode, "", "generatorNotFound", "Cannot find generator ${notFoundGeneratorId} in filter ${filterName}",
+                Map.of("notFoundGeneratorId", e, "filterName", filterName), TypedValue.TRACE_SEVERITY));
         });
 
         return exportedGenerators.values()

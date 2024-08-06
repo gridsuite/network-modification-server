@@ -27,6 +27,51 @@ public final class NetworkCreation {
         return create(uuid, createHvdcLine, new NetworkFactoryImpl());
     }
 
+    //Create a network with fictitious switch and different switch kind
+    public static Network createSwitchNetwork(UUID uuid, NetworkFactory networkFactory) {
+        Network network = networkFactory.createNetwork(uuid.toString(), "test");
+
+        Substation s1 = network.newSubstation()
+                .setId("s1")
+                .setName("s1")
+                .add();
+        VoltageLevel vl1 = createVoltageLevel(s1, "vl1", "vl1", TopologyKind.NODE_BREAKER, 400.0);
+        vl1.getNodeBreakerView().newBusbarSection()
+                .setId("b1")
+                .setName("b1")
+                .setNode(1)
+                .add();
+
+        createSwitch(vl1, "br11", "br11", SwitchKind.BREAKER, false, false, false, 2, 1);
+        createSwitch(vl1, "b4", "b4", SwitchKind.DISCONNECTOR, false, false, false, 1, 4);
+        createSwitch(vl1, "br21", "br21", SwitchKind.BREAKER, false, false, true, 4, 5);
+
+        VoltageLevel vl2 = createVoltageLevel(s1, "vl2", "vl2", TopologyKind.NODE_BREAKER, 400.0);
+        vl2.getNodeBreakerView().newBusbarSection()
+                .setId("b2")
+                .setName("b2")
+                .setNode(2)
+                .add();
+
+        network.newLine()
+                .setId("line2")
+                .setName("line2")
+                .setVoltageLevel1("vl1")
+                .setVoltageLevel2("vl2")
+                .setR(0.1)
+                .setX(10.0)
+                .setG1(0.0)
+                .setG2(0.0)
+                .setB1(0.0)
+                .setB2(0.0)
+                .setNode1(5)
+                .setNode2(6)
+                .add();
+
+        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
+        return network;
+    }
+
     public static Network create(UUID uuid, boolean createHvdcLine, NetworkFactory networkFactory) {
         Network network = networkFactory.createNetwork(uuid.toString(), "test");
 
