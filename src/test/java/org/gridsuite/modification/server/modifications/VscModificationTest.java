@@ -260,6 +260,42 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
+    public void testActivateHvdcAngleDroopActivePowerControlWithDroopNull() throws Exception {
+        var networkuuid = UUID.randomUUID();
+        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, false);
+        ReportNode subReporter = ReportNode.NO_OP;
+        ComputationManager computationManager = new LocalComputationManager();
+        VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
+        wrongModificationInfos.setDroop(null);
+        wrongModificationInfos.setP0(new AttributeModification<>(100f, OperationType.SET));
+        wrongModificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
+        VscModification wrongVscModification = new VscModification(wrongModificationInfos);
+        String message = Assert.assertThrows(NetworkModificationException.class,
+                () -> wrongVscModification.apply(networkWitoutExt, true, computationManager, subReporter))
+            .getMessage();
+        Assert.assertEquals("WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL : hvdcLine attribute 'Droop' " +
+            "can not be null if Angle droop active power control is activated", message);
+    }
+
+    @Test
+    public void testActivateHvdcAngleDroopActivePowerControlWithP0Null() throws Exception {
+        var networkuuid = UUID.randomUUID();
+        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, false);
+        ReportNode subReporter = ReportNode.NO_OP;
+        ComputationManager computationManager = new LocalComputationManager();
+        VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
+        wrongModificationInfos.setDroop(new AttributeModification<>(20f, OperationType.SET));
+        wrongModificationInfos.setP0(null);
+        wrongModificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
+        VscModification wrongVscModification = new VscModification(wrongModificationInfos);
+        String message = Assert.assertThrows(NetworkModificationException.class,
+                () -> wrongVscModification.apply(networkWitoutExt, true, computationManager, subReporter))
+            .getMessage();
+        Assert.assertEquals("WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL : hvdcLine attribute 'P0' " +
+            "can not be null if Angle droop active power control is activated", message);
+    }
+
+    @Test
     public void testUnchangedHVDCangleDroopActivePowerControl() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
