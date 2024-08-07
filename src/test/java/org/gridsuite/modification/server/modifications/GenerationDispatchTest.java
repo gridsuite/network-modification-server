@@ -410,7 +410,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
     private List<AbstractFilter> getGeneratorsFrequencyReserveFilters45() {
         return List.of(getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(GTH1_ID))),
-                getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID))));
+                getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))));
     }
 
     private List<AbstractFilter> getGeneratorsFrequencyReserveFilter6() {
