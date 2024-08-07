@@ -391,10 +391,9 @@ public class GenerationDispatch extends AbstractModification {
                 Map.of("notFoundGeneratorId", e, "filterName", filterName), TypedValue.TRACE_SEVERITY));
         });
 
-        return exportedGenerators.values()
-            .stream()
-            .filter(f -> !filtersWithGeneratorsNotFound.containsKey(f.getFilterId()))
-            .flatMap(f -> exportedGenerators.get(f.getFilterId()).getIdentifiableAttributes().stream())
+        // return existing generators
+        return exportedGenerators.values().stream()
+            .flatMap(f -> f.getIdentifiableAttributes().stream())
             .map(IdentifiableAttributes::getId)
             .distinct()
             .collect(Collectors.toList());
@@ -641,15 +640,11 @@ public class GenerationDispatch extends AbstractModification {
     }
 
     private static String getGeneratorsReportMessagePrefix(String generatorsType) {
-        switch (generatorsType) {
-            case GENERATORS_WITH_FIXED_SUPPLY:
-                return "Generators with fixed active power";
-            case GENERATORS_WITHOUT_OUTAGE:
-                return "Generators without outage simulation";
-            case GENERATORS_FREQUENCY_RESERVE:
-                return "Frequency reserve";
-            default:
-                return "";
-        }
+        return switch (generatorsType) {
+            case GENERATORS_WITH_FIXED_SUPPLY -> "Generators with fixed active power";
+            case GENERATORS_WITHOUT_OUTAGE -> "Generators without outage simulation";
+            case GENERATORS_FREQUENCY_RESERVE -> "Frequency reserve";
+            default -> "";
+        };
     }
 }
