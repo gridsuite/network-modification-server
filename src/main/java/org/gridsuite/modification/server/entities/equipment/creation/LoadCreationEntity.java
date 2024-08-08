@@ -71,7 +71,7 @@ public class LoadCreationEntity extends InjectionCreationEntity {
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition())
-            .connected(isConnected())
+            .terminalConnected(isTerminalConnected())
             // load
             .loadType(getLoadType())
             .p0(getP0())

@@ -40,5 +40,5 @@ public class InjectionCreationInfos extends EquipmentCreationInfos {
     private Integer connectionPosition;
 
     @Schema(description = "Connected")
-    private boolean connected;
+    private boolean terminalConnected;
 }

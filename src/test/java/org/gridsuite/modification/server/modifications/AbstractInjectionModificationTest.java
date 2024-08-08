@@ -27,7 +27,7 @@ public abstract class AbstractInjectionModificationTest extends AbstractNetworkM
     }
 
     void assertChangeConnectionState(Injection<?> existingEquipment, InjectionModificationInfos modificationInfos, boolean expectedState) throws Exception {
-        modificationInfos.setConnected(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setTerminalConnected(new AttributeModification<>(expectedState, OperationType.SET));
 
         if (expectedState) {
             if (existingEquipment.getTerminal().isConnected()) {

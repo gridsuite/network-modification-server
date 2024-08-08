@@ -1,0 +1,153 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1720026410915-29">
+        <addColumn tableName="battery_modification">
+            <column name="connection_direction" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-30">
+        <addColumn tableName="converter_station_modification">
+            <column name="connection_direction" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-31">
+        <addColumn tableName="generator_modification">
+            <column name="connection_direction" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-32">
+        <addColumn tableName="load_modification">
+            <column name="connection_direction" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-33">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="connection_direction" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-34">
+        <addColumn tableName="battery_modification">
+            <column name="connection_direction_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-35">
+        <addColumn tableName="converter_station_modification">
+            <column name="connection_direction_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-36">
+        <addColumn tableName="generator_modification">
+            <column name="connection_direction_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-37">
+        <addColumn tableName="load_modification">
+            <column name="connection_direction_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-38">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="connection_direction_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-39">
+        <addColumn tableName="battery_modification">
+            <column name="connection_name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-40">
+        <addColumn tableName="converter_station_modification">
+            <column name="connection_name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-41">
+        <addColumn tableName="generator_modification">
+            <column name="connection_name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-42">
+        <addColumn tableName="load_modification">
+            <column name="connection_name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-43">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="connection_name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-44">
+        <addColumn tableName="battery_modification">
+            <column name="connection_name_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-45">
+        <addColumn tableName="converter_station_modification">
+            <column name="connection_name_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-46">
+        <addColumn tableName="generator_modification">
+            <column name="connection_name_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-47">
+        <addColumn tableName="load_modification">
+            <column name="connection_name_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-48">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="connection_name_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-49">
+        <addColumn tableName="battery_modification">
+            <column name="connection_position" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-50">
+        <addColumn tableName="converter_station_modification">
+            <column name="connection_position" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-51">
+        <addColumn tableName="generator_modification">
+            <column name="connection_position" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-52">
+        <addColumn tableName="load_modification">
+            <column name="connection_position" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-53">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="connection_position" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-54">
+        <addColumn tableName="battery_modification">
+            <column name="connection_position_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-55">
+        <addColumn tableName="converter_station_modification">
+            <column name="connection_position_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-56">
+        <addColumn tableName="generator_modification">
+            <column name="connection_position_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-57">
+        <addColumn tableName="load_modification">
+            <column name="connection_position_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1720026410915-58">
+        <addColumn tableName="shunt_compensator_modification">
+            <column name="connection_position_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
