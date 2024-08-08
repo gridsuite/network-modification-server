@@ -341,7 +341,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(filtersForPmaxReduction))
                 .withHeader("Content-Type", "application/json"))).getId();
 
-        List<AbstractFilter> filtersForFixedSupply = List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH1_ID), getIdentifiableAttributes(GROUP1_ID))),
+        List<AbstractFilter> filtersForFixedSupply = List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH1_ID), getIdentifiableAttributes(GROUP1_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))),
             getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(TEST1_ID), getIdentifiableAttributes(GROUP2_ID))));
         UUID stubIdForFixedSupply = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_4)
             .willReturn(WireMock.ok()
@@ -364,6 +364,9 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(65.68, getNetwork().getGenerator(ABC_ID).getTargetP(), 0.001);
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
+
+        assertLogMessage("Generators without outage simulation: Cannot find 2 generators in filter filter3", "filterGeneratorsNotFoundgeneratorsWithoutOutage", reportService);
+        assertLogMessage("Generators with fixed active power: Cannot find 1 generators in filter filter1", "filterGeneratorsNotFoundgeneratorsWithFixedSupply", reportService);
 
         // test total demand and remaining power imbalance on synchronous components
         int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
@@ -407,7 +410,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
     private List<AbstractFilter> getGeneratorsFrequencyReserveFilters45() {
         return List.of(getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(GTH1_ID))),
-                getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID))));
+                getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))));
     }
 
     private List<AbstractFilter> getGeneratorsFrequencyReserveFilter6() {

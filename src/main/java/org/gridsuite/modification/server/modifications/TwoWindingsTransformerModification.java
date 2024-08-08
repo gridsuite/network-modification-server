@@ -185,8 +185,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             }
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports,
                     regulationMode != null ? regulationMode.name() : null,
-                    "${regulationMode}",
-                    Map.of("regulationMode", ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)));
+                    ModificationUtils.getInstance().formatRegulationModeReport(regulationMode),
+                    Map.of());
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports,
                     "phaseTapChangerPositionsAndStepsModification", "    Tap Changer", Map.of());
         }
