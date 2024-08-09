@@ -366,7 +366,10 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         assertLogMessage("Generators without outage simulation: Cannot find 2 generators in filter filter3", "filterGeneratorsNotFoundgeneratorsWithoutOutage", reportService);
+        assertLogMessage("Generators without outage simulation: Cannot find generator notFoundGen1 in filter filter3", "generatorNotFoundnotFoundGen1generatorsWithoutOutage", reportService);
+        assertLogMessage("Generators without outage simulation: Cannot find generator notFoundGen2 in filter filter3", "generatorNotFoundnotFoundGen2generatorsWithoutOutage", reportService);
         assertLogMessage("Generators with fixed active power: Cannot find 1 generators in filter filter1", "filterGeneratorsNotFoundgeneratorsWithFixedSupply", reportService);
+        assertLogMessage("Generators with fixed active power: Cannot find generator notFoundGen1 in filter filter1", "generatorNotFoundnotFoundGen1generatorsWithFixedSupply", reportService);
 
         // test total demand and remaining power imbalance on synchronous components
         int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
