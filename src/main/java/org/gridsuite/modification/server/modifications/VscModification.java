@@ -31,6 +31,7 @@ import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SE
  */
 
 public class VscModification extends AbstractModification {
+    public static final String ACTIVE_POWER_CONTROL_ERROR_MESSAGE = "%s attribute(s): %s can not be missing if angle droop active power control is activated";
     private final VscModificationInfos modificationInfos;
     private static final String NO_VALUE = "No value";
 
@@ -57,15 +58,22 @@ public class VscModification extends AbstractModification {
         VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation2().getId());
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
-
-        checkDroopModification();
-
+        boolean isEnabled = modificationInfos.getAngleDroopActivePowerControl() != null
+            && modificationInfos.getAngleDroopActivePowerControl().getValue();
+        if (isEnabled) {
+            checkDroopModification(hvdcLine.getId());
+        }
     }
 
-    private void checkDroopModification() {
-        // if droop is set p0 should be also
-        if (modificationInfos.getP0() == null && modificationInfos.getDroop() != null) {
-            throw new NetworkModificationException(MODIFY_VSC_ERROR, "P0 is required to modify the equipment");
+    private void checkDroopModification(String hvdcId) {
+        if (modificationInfos.getDroop() == null && modificationInfos.getP0() == null) {
+            throw modifyHvdcAngleDroopActivePowerControl(hvdcId, "Droop and P0");
+        }
+        if (modificationInfos.getDroop() == null) {
+            throw modifyHvdcAngleDroopActivePowerControl(hvdcId, "Droop");
+        }
+        if (modificationInfos.getP0() == null) {
+            throw modifyHvdcAngleDroopActivePowerControl(hvdcId, "P0");
         }
     }
 
@@ -236,9 +244,6 @@ public class VscModification extends AbstractModification {
                 return Collections.emptyList();
             }
             boolean isEnabled = modificationInfos.getAngleDroopActivePowerControl() != null && modificationInfos.getAngleDroopActivePowerControl().getValue();
-            if (isEnabled) {
-                checkHvdcAngleDroopActivePowerControlNullValues(hvdcLine);
-            }
             if (modificationInfos.getAngleDroopActivePowerControl() != null) {
                 activePowerControlExtension.withEnabled(isEnabled);
                 reports.add(ModificationUtils.getInstance().buildModificationReport(null, isEnabled, "AngleDroopActivePowerControl"));
@@ -260,19 +265,9 @@ public class VscModification extends AbstractModification {
         return reports;
     }
 
-    private void checkHvdcAngleDroopActivePowerControlNullValues(HvdcLine hvdcLine) {
-        if (modificationInfos.getDroop() == null && modificationInfos.getP0() == null) {
-            throw modifyHvdcAngleDroopActivePowerControl(hvdcLine.getId(), "Droop and P0");
-        } else if (modificationInfos.getDroop() == null) {
-            throw modifyHvdcAngleDroopActivePowerControl(hvdcLine.getId(), "Droop");
-        } else if (modificationInfos.getP0() == null) {
-            throw modifyHvdcAngleDroopActivePowerControl(hvdcLine.getId(), "P0");
-        }
-    }
-
     private static NetworkModificationException modifyHvdcAngleDroopActivePowerControl(@lombok.NonNull String equipementName, @lombok.NonNull String attributeName) {
-        throw new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, equipementName + " attribute '" + attributeName
-            + "' can not be null if Angle droop active power control is activated");
+        throw new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
+            String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipementName, attributeName));
     }
 
     private void modifyConverterStation(VscConverterStation converterStation, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
