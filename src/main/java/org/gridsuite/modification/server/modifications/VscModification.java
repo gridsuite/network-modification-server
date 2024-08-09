@@ -67,13 +67,13 @@ public class VscModification extends AbstractModification {
 
     private void checkDroopModification(String hvdcId) {
         if (modificationInfos.getDroop() == null && modificationInfos.getP0() == null) {
-            throw modifyHvdcAngleDroopActivePowerControl(hvdcId, "Droop and P0");
+            throw createWrongAngleDroopActivePowerControlException(hvdcId, "Droop and P0");
         }
         if (modificationInfos.getDroop() == null) {
-            throw modifyHvdcAngleDroopActivePowerControl(hvdcId, "Droop");
+            throw createWrongAngleDroopActivePowerControlException(hvdcId, "Droop");
         }
         if (modificationInfos.getP0() == null) {
-            throw modifyHvdcAngleDroopActivePowerControl(hvdcId, "P0");
+            throw createWrongAngleDroopActivePowerControlException(hvdcId, "P0");
         }
     }
 
@@ -265,9 +265,9 @@ public class VscModification extends AbstractModification {
         return reports;
     }
 
-    private static NetworkModificationException modifyHvdcAngleDroopActivePowerControl(@lombok.NonNull String equipementName, @lombok.NonNull String attributeName) {
-        throw new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-            String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipementName, attributeName));
+    private NetworkModificationException createWrongAngleDroopActivePowerControlException(@lombok.NonNull String equipmentName, @lombok.NonNull String attributeName) {
+        return new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
+            String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipmentName, attributeName));
     }
 
     private void modifyConverterStation(VscConverterStation converterStation, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
