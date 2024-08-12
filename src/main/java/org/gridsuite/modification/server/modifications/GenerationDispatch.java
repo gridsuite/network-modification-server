@@ -387,7 +387,7 @@ public class GenerationDispatch extends AbstractModification {
             report(subReportNode, generatorsType, "filterGeneratorsNotFound", getGeneratorsReportMessagePrefix(generatorsType) + ": Cannot find ${nbNotFoundGen} generators in filter ${filterName}",
                 Map.of("nbNotFoundGen", notFoundGenerators.size(), "filterName", filterName),
                 TypedValue.WARN_SEVERITY);
-            f.getNotFoundEquipments().forEach(e -> report(subReportNode, "", "generatorNotFound", getGeneratorsReportMessagePrefix(generatorsType) + ": Cannot find generator ${notFoundGeneratorId} in filter ${filterName}",
+            f.getNotFoundEquipments().forEach(e -> report(subReportNode, generatorsType, "generatorNotFound" + e, getGeneratorsReportMessagePrefix(generatorsType) + ": Cannot find generator ${notFoundGeneratorId} in filter ${filterName}",
                 Map.of("notFoundGeneratorId", e, "filterName", filterName), TypedValue.TRACE_SEVERITY));
         });
 
