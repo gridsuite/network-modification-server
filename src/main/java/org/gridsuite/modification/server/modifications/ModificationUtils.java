@@ -612,6 +612,13 @@ public final class ModificationUtils {
                                                       InjectionModificationInfos modificationInfos,
                                                       ReportNode connectivityReports) {
         List<ReportNode> reports = new ArrayList<>();
+        if (modificationInfos.getVoltageLevelId() == null || modificationInfos.getBusOrBusbarSectionId() == null) {
+            return ReportNode.newRootReportNode()
+                    .withMessageTemplate("VoltageLevelOrBusNotFound", "Voltage Level or Bus with id=${id} not found")
+                    .withUntypedValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build();
+        }
         if (connectablePosition != null) {
             modifyExistingConnectivityPosition(connectablePosition, modificationInfos, reports);
         } else {
