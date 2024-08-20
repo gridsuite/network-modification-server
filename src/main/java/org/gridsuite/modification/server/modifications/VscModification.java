@@ -62,9 +62,9 @@ public class VscModification extends AbstractModification {
         VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation2().getId());
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
-        boolean isEnabled = modificationInfos.getAngleDroopActivePowerControl() != null
+        boolean isEnabledAngleDroopActivePowerControl = modificationInfos.getAngleDroopActivePowerControl() != null
             && modificationInfos.getAngleDroopActivePowerControl().getValue();
-        if (isEnabled) {
+        if (isEnabledAngleDroopActivePowerControl) {
             checkDroopModification(hvdcLine.getId());
         }
     }
@@ -79,6 +79,11 @@ public class VscModification extends AbstractModification {
         if (modificationInfos.getP0() == null) {
             throw createWrongAngleDroopActivePowerControlException(hvdcId, P0_FIELD);
         }
+    }
+
+    private NetworkModificationException createWrongAngleDroopActivePowerControlException(@Nonnull String equipmentId, @Nonnull String attributeName) {
+        return new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
+                String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipmentId, attributeName));
     }
 
     @Override
@@ -267,11 +272,6 @@ public class VscModification extends AbstractModification {
 
         }
         return reports;
-    }
-
-    private NetworkModificationException createWrongAngleDroopActivePowerControlException(@Nonnull String equipmentId, @Nonnull String attributeName) {
-        return new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-            String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipmentId, attributeName));
     }
 
     private void modifyConverterStation(VscConverterStation converterStation, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
