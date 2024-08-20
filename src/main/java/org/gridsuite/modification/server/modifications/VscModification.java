@@ -13,12 +13,12 @@ import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
-import io.micrometer.common.lang.NonNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ConverterStationModificationInfos;
 import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.dto.VscModificationInfos;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
@@ -31,9 +31,11 @@ import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SE
  */
 
 public class VscModification extends AbstractModification {
+    public static final String NO_VALUE = "No value";
     public static final String ACTIVE_POWER_CONTROL_ERROR_MESSAGE = "%s attribute(s): %s can not be missing if angle droop active power control is activated";
     public static final String DROOP_FIELD = "Droop";
-    public static final String NO_VALUE = "No value";
+    public static final String DROOP_AND_P0_FIELD = "Droop and P0";
+    public static final String P0_FIELD = "P0";
 
     private final VscModificationInfos modificationInfos;
 
@@ -41,7 +43,7 @@ public class VscModification extends AbstractModification {
         this.modificationInfos = vscModificationInfos;
     }
 
-    protected void checkConverterStation(@NonNull ConverterStationModificationInfos converterStationModificationInfos, @NonNull VscConverterStation vscConverterStation) {
+    protected void checkConverterStation(@Nonnull ConverterStationModificationInfos converterStationModificationInfos, @Nonnull VscConverterStation vscConverterStation) {
         String errorMessage = "Converter station '" + converterStationModificationInfos.getEquipmentId() + "' : ";
         ModificationUtils.getInstance().checkReactiveLimit(vscConverterStation, converterStationModificationInfos.getMinQ(), converterStationModificationInfos.getMaxQ(),
                 converterStationModificationInfos.getReactiveCapabilityCurvePoints(), MODIFY_VSC_ERROR, errorMessage);
@@ -69,13 +71,13 @@ public class VscModification extends AbstractModification {
 
     private void checkDroopModification(String hvdcId) {
         if (modificationInfos.getDroop() == null && modificationInfos.getP0() == null) {
-            throw createWrongAngleDroopActivePowerControlException(hvdcId, "Droop and P0");
+            throw createWrongAngleDroopActivePowerControlException(hvdcId, DROOP_AND_P0_FIELD);
         }
         if (modificationInfos.getDroop() == null) {
             throw createWrongAngleDroopActivePowerControlException(hvdcId, DROOP_FIELD);
         }
         if (modificationInfos.getP0() == null) {
-            throw createWrongAngleDroopActivePowerControlException(hvdcId, "P0");
+            throw createWrongAngleDroopActivePowerControlException(hvdcId, P0_FIELD);
         }
     }
 
@@ -85,7 +87,7 @@ public class VscModification extends AbstractModification {
         modifyVsc(network, hvdcLine, modificationInfos, subReportNode);
     }
 
-    private void modifyVsc(@NonNull Network network, @NonNull HvdcLine hvdcLine, VscModificationInfos modificationInfos, ReportNode subReportNode) {
+    private void modifyVsc(@Nonnull Network network, @Nonnull HvdcLine hvdcLine, VscModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
                 .withMessageTemplate("VscModification", "Vsc with id=${id} modified :")
                 .withUntypedValue("id", modificationInfos.getEquipmentId())
@@ -224,7 +226,7 @@ public class VscModification extends AbstractModification {
 
         Optional.ofNullable(modificationInfos.getP0()).ifPresent(info -> {
             hvdcAngleDroopActivePowerControl.setP0(info.getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldP0, info.getValue(), "P0"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldP0, info.getValue(), P0_FIELD));
         });
     }
 
@@ -259,7 +261,7 @@ public class VscModification extends AbstractModification {
             var p0 = modificationInfos.getP0() != null ? modificationInfos.getP0().getValue() : Float.NaN;
             activePowerControlExtension.withP0(p0);
             if (modificationInfos.getP0() != null) {
-                reports.add(ModificationUtils.getInstance().buildModificationReport(Float.NaN, p0, "P0"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(Float.NaN, p0, P0_FIELD));
             }
             activePowerControlExtension.add();
 
@@ -267,9 +269,9 @@ public class VscModification extends AbstractModification {
         return reports;
     }
 
-    private NetworkModificationException createWrongAngleDroopActivePowerControlException(@lombok.NonNull String equipmentName, @lombok.NonNull String attributeName) {
+    private NetworkModificationException createWrongAngleDroopActivePowerControlException(@Nonnull String equipmentId, @Nonnull String attributeName) {
         return new NetworkModificationException(NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-            String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipmentName, attributeName));
+            String.format(ACTIVE_POWER_CONTROL_ERROR_MESSAGE, equipmentId, attributeName));
     }
 
     private void modifyConverterStation(VscConverterStation converterStation, ConverterStationModificationInfos converterStationModificationInfos, ReportNode subReportNode) {
