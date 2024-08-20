@@ -46,6 +46,8 @@ public class LoadModificationTest extends AbstractInjectionModificationTest {
             .equipmentId("v1load")
             .equipmentName(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
+            .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
+            .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
             .p0(new AttributeModification<>(200.0, OperationType.SET))
             .q0(new AttributeModification<>(30.0, OperationType.SET))
             .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
