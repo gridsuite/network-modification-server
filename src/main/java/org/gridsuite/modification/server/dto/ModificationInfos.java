@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicReference;
     @JsonSubTypes.Type(value = VoltageLevelModificationInfos.class),
     @JsonSubTypes.Type(value = ShuntCompensatorCreationInfos.class),
     @JsonSubTypes.Type(value = ShuntCompensatorModificationInfos.class),
+    @JsonSubTypes.Type(value = StaticVarCompensatorCreationInfos.class),
     @JsonSubTypes.Type(value = TwoWindingsTransformerCreationInfos.class),
     @JsonSubTypes.Type(value = TwoWindingsTransformerModificationInfos.class),
     @JsonSubTypes.Type(value = EquipmentDeletionInfos.class),
