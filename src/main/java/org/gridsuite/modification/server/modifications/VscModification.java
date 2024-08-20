@@ -32,8 +32,10 @@ import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SE
 
 public class VscModification extends AbstractModification {
     public static final String ACTIVE_POWER_CONTROL_ERROR_MESSAGE = "%s attribute(s): %s can not be missing if angle droop active power control is activated";
+    public static final String DROOP_FIELD = "Droop";
+    public static final String NO_VALUE = "No value";
+
     private final VscModificationInfos modificationInfos;
-    private static final String NO_VALUE = "No value";
 
     public VscModification(VscModificationInfos vscModificationInfos) {
         this.modificationInfos = vscModificationInfos;
@@ -70,7 +72,7 @@ public class VscModification extends AbstractModification {
             throw createWrongAngleDroopActivePowerControlException(hvdcId, "Droop and P0");
         }
         if (modificationInfos.getDroop() == null) {
-            throw createWrongAngleDroopActivePowerControlException(hvdcId, "Droop");
+            throw createWrongAngleDroopActivePowerControlException(hvdcId, DROOP_FIELD);
         }
         if (modificationInfos.getP0() == null) {
             throw createWrongAngleDroopActivePowerControlException(hvdcId, "P0");
@@ -217,7 +219,7 @@ public class VscModification extends AbstractModification {
 
         Optional.ofNullable(modificationInfos.getDroop()).ifPresent(info -> {
             hvdcAngleDroopActivePowerControl.setDroop(info.getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop, info.getValue(), "Droop"));
+            reports.add(ModificationUtils.getInstance().buildModificationReport(oldDroop, info.getValue(), DROOP_FIELD));
         });
 
         Optional.ofNullable(modificationInfos.getP0()).ifPresent(info -> {
@@ -252,7 +254,7 @@ public class VscModification extends AbstractModification {
             var droop = modificationInfos.getDroop() != null ? modificationInfos.getDroop().getValue() : Float.NaN;
             activePowerControlExtension.withDroop(droop);
             if (modificationInfos.getDroop() != null) {
-                reports.add(ModificationUtils.getInstance().buildModificationReport(Float.NaN, droop, "Droop"));
+                reports.add(ModificationUtils.getInstance().buildModificationReport(Float.NaN, droop, DROOP_FIELD));
             }
             var p0 = modificationInfos.getP0() != null ? modificationInfos.getP0().getValue() : Float.NaN;
             activePowerControlExtension.withP0(p0);
