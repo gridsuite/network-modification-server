@@ -48,6 +48,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+                .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
+                .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .targetV(new AttributeModification<>(48.0, OperationType.SET))
