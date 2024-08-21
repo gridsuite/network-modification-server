@@ -101,7 +101,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
             .connectionName(getConnectionName())
             .connectionDirection(getConnectionDirection())
             .connectionPosition(getConnectionPosition())
-            .connected(isConnected())
+            .terminalConnected(isTerminalConnected())
             .maxSusceptance(getMaxSusceptance())
             .minSusceptance(getMinSusceptance())
             .maxQAtNominalV(getMaxQAtNominalV())
