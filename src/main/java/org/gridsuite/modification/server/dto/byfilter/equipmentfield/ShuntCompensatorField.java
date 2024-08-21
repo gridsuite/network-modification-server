@@ -12,7 +12,7 @@ import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -59,7 +59,7 @@ public enum ShuntCompensatorField {
         }
     }
 
-    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+    public static void setNewValue(ShuntCompensator shuntCompensator, SimpleModificationByFilterInfos<?> fieldModificationInfos) {
         switch (fieldModificationInfos.getDataType()) {
             case DOUBLE -> setNewValue(shuntCompensator, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }

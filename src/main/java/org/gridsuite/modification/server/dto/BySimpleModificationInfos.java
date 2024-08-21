@@ -15,7 +15,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.BySimpleModificationEntity;
 import org.gridsuite.modification.server.modifications.byfilter.BySimpleModification;
 
@@ -38,7 +38,7 @@ public class BySimpleModificationInfos extends ModificationInfos {
     private IdentifiableType identifiableType;
 
     @Schema(description = "list of modifications")
-    private List<? extends AbstractSimpleModificationInfos<?>> simpleModificationInfosList;
+    private List<? extends SimpleModificationByFilterInfos<?>> simpleModificationInfosList;
 
     @Override
     public BySimpleModificationEntity toEntity() {

@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -15,7 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.FilterModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
 
 /**
@@ -26,22 +27,27 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
     property = "dataType",
     include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = StringSimpleModificationInfos.class, name = "STRING"),
-    @JsonSubTypes.Type(value = BooleanSimpleModificationInfos.class, name = "BOOLEAN"),
-    @JsonSubTypes.Type(value = EnumSimpleModificationInfos.class, name = "ENUM"),
-    @JsonSubTypes.Type(value = DoubleSimpleModificationInfos.class, name = "DOUBLE"),
-    @JsonSubTypes.Type(value = IntegerSimpleModificationInfos.class, name = "INTEGER"),
-    @JsonSubTypes.Type(value = PropertySimpleModificationInfos.class, name = "PROPERTY"),
+    @JsonSubTypes.Type(value = StringSimpleModificationByFilterInfos.class, name = "STRING"),
+    @JsonSubTypes.Type(value = BooleanSimpleModificationByFilterInfos.class, name = "BOOLEAN"),
+    @JsonSubTypes.Type(value = EnumSimpleModificationByFilterInfos.class, name = "ENUM"),
+    @JsonSubTypes.Type(value = DoubleSimpleModificationByFilterInfos.class, name = "DOUBLE"),
+    @JsonSubTypes.Type(value = IntegerSimpleModificationByFilterInfos.class, name = "INTEGER"),
+    @JsonSubTypes.Type(value = PropertySimpleModificationByFilterInfos.class, name = "PROPERTY"),
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @SuperBuilder
 @NoArgsConstructor
 @Data
-public abstract class AbstractSimpleModificationInfos<T> extends FilterModificationInfos {
+public class SimpleModificationByFilterInfos<T> extends AbstractModificationByFilterInfos {
     @Schema(description = "Data type")
     private DataType dataType;
 
-    public abstract SimpleModificationEntity toEntity();
+    @JsonIgnore
+    public SimpleModificationEntity toEntity() {
+        throw new UnsupportedOperationException("Unsupported operation toEntity for instant of class " + this.getClass().getName());
+    }
 
-    public abstract T getValue();
+    public T getValue() {
+        throw new UnsupportedOperationException("Unsupported operation getValue for instant of class " + this.getClass().getName());
+    }
 }

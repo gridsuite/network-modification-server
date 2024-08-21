@@ -3,7 +3,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 
 public enum TwoWindingsTransformerField {
     R,
@@ -69,7 +69,7 @@ public enum TwoWindingsTransformerField {
         }
     }
 
-    public static void setNewValue(TwoWindingsTransformer transformer, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+    public static void setNewValue(TwoWindingsTransformer transformer, SimpleModificationByFilterInfos<?> fieldModificationInfos) {
         switch (fieldModificationInfos.getDataType()) {
             case DOUBLE -> setNewValue(transformer, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }

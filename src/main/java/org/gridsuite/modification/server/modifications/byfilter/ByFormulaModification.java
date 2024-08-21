@@ -14,7 +14,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.FilterModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
@@ -147,7 +147,7 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected boolean preCheckValue(Identifiable<?> identifiable, FilterModificationInfos filterModificationInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
+    protected boolean preCheckValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
         FormulaInfos formulaInfos = (FormulaInfos) filterModificationInfos;
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
@@ -171,7 +171,7 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected Object applyValue(Identifiable<?> identifiable, FilterModificationInfos filterModificationInfos) {
+    protected Object applyValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos) {
         FormulaInfos formulaInfos = (FormulaInfos) filterModificationInfos;
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);

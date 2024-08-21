@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.dto.byfilter.FilterModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
 
 /**
@@ -21,7 +21,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @SuperBuilder
 @NoArgsConstructor
 @Data
-public class FormulaInfos extends FilterModificationInfos {
+public class FormulaInfos extends AbstractModificationByFilterInfos {
 
     @Schema(description = "First reference field or value")
     private ReferenceFieldOrValue fieldOrValue1;

@@ -12,7 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.byfilter.simple.BooleanSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.BooleanSimpleModificationByFilterInfos;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -25,17 +25,17 @@ public class BooleanSimpleModificationEntity extends SimpleModificationEntity {
     @Column(name = "value_") // "value" is not supported in UT with H2
     Boolean value;
 
-    public BooleanSimpleModificationEntity(BooleanSimpleModificationInfos booleanSimpleModificationInfos) {
-        super(booleanSimpleModificationInfos);
-        this.value = booleanSimpleModificationInfos.getValue();
+    public BooleanSimpleModificationEntity(BooleanSimpleModificationByFilterInfos booleanSimpleModificationByFilterInfos) {
+        super(booleanSimpleModificationByFilterInfos);
+        this.value = booleanSimpleModificationByFilterInfos.getValue();
     }
 
     @Override
-    public BooleanSimpleModificationInfos toSimpleModificationInfos() {
-        BooleanSimpleModificationInfos booleanSimpleModificationInfos = BooleanSimpleModificationInfos.builder()
+    public BooleanSimpleModificationByFilterInfos toSimpleModificationInfos() {
+        BooleanSimpleModificationByFilterInfos booleanSimpleModificationByFilterInfos = BooleanSimpleModificationByFilterInfos.builder()
                 .value(value)
                 .build();
-        assignAttributes(booleanSimpleModificationInfos);
-        return booleanSimpleModificationInfos;
+        assignAttributes(booleanSimpleModificationByFilterInfos);
+        return booleanSimpleModificationByFilterInfos;
     }
 }

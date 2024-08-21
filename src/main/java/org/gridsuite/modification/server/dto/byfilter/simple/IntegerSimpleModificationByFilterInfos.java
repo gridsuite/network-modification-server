@@ -19,7 +19,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @SuperBuilder
 @NoArgsConstructor
 @Data
-public class IntegerSimpleModificationInfos extends AbstractSimpleModificationInfos<Integer> {
+public class IntegerSimpleModificationByFilterInfos extends SimpleModificationByFilterInfos<Integer> {
     @Schema(description = "value")
     private Integer value;
 

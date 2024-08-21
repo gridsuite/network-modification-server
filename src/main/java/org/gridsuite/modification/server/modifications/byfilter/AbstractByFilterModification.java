@@ -7,7 +7,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.FilterModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -42,7 +42,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     }
 
     protected boolean isEquipmentEditable(Identifiable<?> identifiable,
-                                          FilterModificationInfos filterModificationInfos,
+                                          AbstractModificationByFilterInfos filterModificationInfos,
                                           List<ReportNode> equipmentsReport) {
         if (filterModificationInfos.getEditedField() == null) {
             return false;
@@ -82,7 +82,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
         return true;
     }
 
-    protected void createByFilterModificationReports(List<ReportNode> reports, FilterModificationInfos filterModificationInfos,
+    protected void createByFilterModificationReports(List<ReportNode> reports, AbstractModificationByFilterInfos filterModificationInfos,
                                                      FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
         if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
             reports.add(ReportNode.newRootReportNode()
@@ -129,7 +129,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     }
 
     protected void applyModification(Identifiable<?> identifiable,
-                                     FilterModificationInfos filterModificationInfos,
+                                     AbstractModificationByFilterInfos filterModificationInfos,
                                      List<ReportNode> reports,
                                      List<String> notEditableEquipments) {
 
@@ -161,9 +161,9 @@ public abstract class AbstractByFilterModification extends AbstractModification 
         }
     }
 
-    protected abstract boolean preCheckValue(Identifiable<?> identifiable, FilterModificationInfos filterModificationInfos,
+    protected abstract boolean preCheckValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos,
                                              List<ReportNode> reports, List<String> notEditableEquipments);
 
-    protected abstract Object applyValue(Identifiable<?> identifiable, FilterModificationInfos filterModificationInfos);
+    protected abstract Object applyValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos);
 
 }

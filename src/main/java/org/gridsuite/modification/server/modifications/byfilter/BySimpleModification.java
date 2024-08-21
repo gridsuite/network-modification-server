@@ -15,10 +15,10 @@ import org.gridsuite.modification.server.dto.BySimpleModificationInfos;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.FilterModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.PropertySimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.PropertySimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -110,7 +110,7 @@ public class BySimpleModification extends AbstractByFilterModification {
     private void applyModificationOnFilterEquipments(Network network,
                                                      Map<UUID, FilterEquipments> exportFilters,
                                                      List<ReportNode> formulaReports,
-                                                     AbstractSimpleModificationInfos<?> simpleModificationInfos,
+                                                     SimpleModificationByFilterInfos<?> simpleModificationInfos,
                                                      FilterInfos filterInfos) {
         FilterEquipments filterEquipments = exportFilters.get(filterInfos.getId());
 
@@ -147,16 +147,16 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected boolean preCheckValue(Identifiable<?> identifiable, FilterModificationInfos filterModificationInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
+    protected boolean preCheckValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
         return true;
     }
 
     @Override
-    protected Object applyValue(Identifiable<?> identifiable, FilterModificationInfos filterModificationInfos) {
-        AbstractSimpleModificationInfos<?> simpleModificationInfos = (AbstractSimpleModificationInfos<?>) filterModificationInfos;
+    protected Object applyValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos) {
+        SimpleModificationByFilterInfos<?> simpleModificationInfos = (SimpleModificationByFilterInfos<?>) filterModificationInfos;
         if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
             identifiable.setProperty(
-                    ((PropertySimpleModificationInfos) simpleModificationInfos).getPropertyName(),
+                    ((PropertySimpleModificationByFilterInfos) simpleModificationInfos).getPropertyName(),
                     (String) simpleModificationInfos.getValue()
             );
         } else {

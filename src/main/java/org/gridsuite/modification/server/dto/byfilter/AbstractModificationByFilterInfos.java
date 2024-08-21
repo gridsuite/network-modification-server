@@ -12,7 +12,7 @@ import java.util.UUID;
 @SuperBuilder
 @NoArgsConstructor
 @Data
-public class FilterModificationInfos {
+public abstract class AbstractModificationByFilterInfos {
     @Schema(description = "id")
     private UUID id;
 

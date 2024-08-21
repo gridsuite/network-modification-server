@@ -12,7 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.byfilter.simple.PropertySimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.PropertySimpleModificationByFilterInfos;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -25,18 +25,18 @@ public class PropertySimpleModificationEntity extends StringSimpleModificationEn
     @Column
     String propertyName;
 
-    public PropertySimpleModificationEntity(PropertySimpleModificationInfos propertySimpleModificationInfos) {
-        super(propertySimpleModificationInfos);
-        this.propertyName = propertySimpleModificationInfos.getPropertyName();
+    public PropertySimpleModificationEntity(PropertySimpleModificationByFilterInfos propertySimpleModificationByFilterInfos) {
+        super(propertySimpleModificationByFilterInfos);
+        this.propertyName = propertySimpleModificationByFilterInfos.getPropertyName();
     }
 
     @Override
-    public PropertySimpleModificationInfos toSimpleModificationInfos() {
-        PropertySimpleModificationInfos propertySimpleModificationInfos = PropertySimpleModificationInfos.builder()
+    public PropertySimpleModificationByFilterInfos toSimpleModificationInfos() {
+        PropertySimpleModificationByFilterInfos propertySimpleModificationByFilterInfos = PropertySimpleModificationByFilterInfos.builder()
                 .value(value)
                 .propertyName(propertyName)
                 .build();
-        assignAttributes(propertySimpleModificationInfos);
-        return propertySimpleModificationInfos;
+        assignAttributes(propertySimpleModificationByFilterInfos);
+        return propertySimpleModificationByFilterInfos;
     }
 }

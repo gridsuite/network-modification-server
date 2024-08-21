@@ -10,7 +10,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -59,7 +59,7 @@ public enum VoltageLevelField {
         }
     }
 
-    public static void setNewValue(VoltageLevel voltageLevel, AbstractSimpleModificationInfos<?> fieldModificationInfos) {
+    public static void setNewValue(VoltageLevel voltageLevel, SimpleModificationByFilterInfos<?> fieldModificationInfos) {
         switch (fieldModificationInfos.getDataType()) {
             case DOUBLE -> setNewValue(voltageLevel, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }

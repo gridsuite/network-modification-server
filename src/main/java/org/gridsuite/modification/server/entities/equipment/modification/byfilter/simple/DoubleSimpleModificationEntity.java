@@ -12,7 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.byfilter.simple.DoubleSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.DoubleSimpleModificationByFilterInfos;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -25,17 +25,17 @@ public class DoubleSimpleModificationEntity extends SimpleModificationEntity {
     @Column(name = "value_") // "value" is not supported in UT with H2
     Double value;
 
-    public DoubleSimpleModificationEntity(DoubleSimpleModificationInfos doubleSimpleModificationInfos) {
-        super(doubleSimpleModificationInfos);
-        this.value = doubleSimpleModificationInfos.getValue();
+    public DoubleSimpleModificationEntity(DoubleSimpleModificationByFilterInfos doubleSimpleModificationByFilterInfos) {
+        super(doubleSimpleModificationByFilterInfos);
+        this.value = doubleSimpleModificationByFilterInfos.getValue();
     }
 
     @Override
-    public DoubleSimpleModificationInfos toSimpleModificationInfos() {
-        DoubleSimpleModificationInfos doubleSimpleModificationInfos = DoubleSimpleModificationInfos.builder()
+    public DoubleSimpleModificationByFilterInfos toSimpleModificationInfos() {
+        DoubleSimpleModificationByFilterInfos doubleSimpleModificationByFilterInfos = DoubleSimpleModificationByFilterInfos.builder()
                 .value(value)
                 .build();
-        assignAttributes(doubleSimpleModificationInfos);
-        return doubleSimpleModificationInfos;
+        assignAttributes(doubleSimpleModificationByFilterInfos);
+        return doubleSimpleModificationByFilterInfos;
     }
 }

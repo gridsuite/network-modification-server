@@ -8,7 +8,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.BySimpleModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
 
@@ -44,13 +44,13 @@ public class BySimpleModificationEntity extends ModificationEntity {
         if (simpleModificationEntities == null) {
             simpleModificationEntities = bySimpleModificationInfos.getSimpleModificationInfosList()
                     .stream()
-                    .map(AbstractSimpleModificationInfos::toEntity)
+                    .map(SimpleModificationByFilterInfos::toEntity)
                     .toList();
         } else {
             simpleModificationEntities.clear();
             simpleModificationEntities.addAll(bySimpleModificationInfos.getSimpleModificationInfosList()
                     .stream()
-                    .map(AbstractSimpleModificationInfos::toEntity)
+                    .map(SimpleModificationByFilterInfos::toEntity)
                     .toList());
         }
     }

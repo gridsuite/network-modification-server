@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
 import java.util.List;
@@ -44,14 +44,14 @@ public class SimpleModificationEntity {
     @Enumerated(EnumType.STRING)
     private DataType dataType;
 
-    public SimpleModificationEntity(AbstractSimpleModificationInfos<?> simpleModificationInfos) {
+    public SimpleModificationEntity(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
         this.id = null;
         this.filters = simpleModificationInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
         this.editedField = simpleModificationInfos.getEditedField();
         this.dataType = simpleModificationInfos.getDataType();
     }
 
-    protected void assignAttributes(AbstractSimpleModificationInfos<?> simpleModificationInfos) {
+    protected void assignAttributes(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
         simpleModificationInfos.setId(id);
         simpleModificationInfos.setFilters(filters.stream()
                 .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
@@ -60,7 +60,7 @@ public class SimpleModificationEntity {
         simpleModificationInfos.setDataType(dataType);
     }
 
-    public <T> AbstractSimpleModificationInfos<T> toSimpleModificationInfos() {
+    public <T> SimpleModificationByFilterInfos<T> toSimpleModificationInfos() {
         return null;
     }
 }
