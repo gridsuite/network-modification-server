@@ -16,19 +16,18 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
 
 import java.util.Date;
 import java.util.List;
 
-import static org.gridsuite.modification.server.modifications.byfilter.ByFormulaModification.EQUIPMENT_MODIFIED_REPORT_ERROR;
+import static org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterModification.KEY_BY_FILTER_MODIFICATION_SOME;
+import static org.gridsuite.modification.server.modifications.byfilter.ByFormulaModification.KEY_EQUIPMENT_MODIFIED_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -242,8 +241,8 @@ public class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModi
 
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getLowVoltageLimit()));
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getHighVoltageLimit()));
-        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is null", EQUIPMENT_MODIFIED_REPORT_ERROR + "0", reportService);
-        assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 4 equipment(s) not modified", "byFormulaModificationSome", reportService);
+        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is null", KEY_EQUIPMENT_MODIFIED_ERROR + "0", reportService);
+        assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 4 equipment(s) not modified", KEY_BY_FILTER_MODIFICATION_SOME, reportService);
     }
 
     @Override
