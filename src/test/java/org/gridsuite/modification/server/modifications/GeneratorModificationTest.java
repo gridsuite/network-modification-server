@@ -24,8 +24,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -48,6 +48,8 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
+                .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
+                .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .targetV(new AttributeModification<>(48.0, OperationType.SET))

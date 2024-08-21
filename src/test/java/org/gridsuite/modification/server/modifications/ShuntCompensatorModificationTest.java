@@ -323,6 +323,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
                         .equipmentId("v2shunt")
+                        .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
+                        .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
                         .build();
         assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, false);
     }
@@ -333,6 +335,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
                         .equipmentId("v2shunt")
+                        .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
+                        .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
                         .build();
         assertChangeConnectionState(getNetwork().getShuntCompensator("v2shunt"), shuntModificationInfos, true);
     }

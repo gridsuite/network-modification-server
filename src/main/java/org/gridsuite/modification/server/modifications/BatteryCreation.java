@@ -64,7 +64,7 @@ public class BatteryCreation extends AbstractModification {
         } else {
             createBatteryInBusBreaker(voltageLevel, modificationInfos, subReportNode);
         }
-        if (!modificationInfos.isConnected()) {
+        if (!modificationInfos.isTerminalConnected()) {
             network.getBattery(modificationInfos.getEquipmentId()).getTerminal().disconnect();
         }
         // properties
@@ -171,7 +171,7 @@ public class BatteryCreation extends AbstractModification {
                 connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(batteryCreationInfos.getConnectionPosition(), "Connection position"));
             }
-            if (!batteryCreationInfos.isConnected()) {
+            if (!batteryCreationInfos.isTerminalConnected()) {
                 connectivityReports.add(ReportNode.newRootReportNode()
                         .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
                         .withUntypedValue("id", batteryCreationInfos.getEquipmentId())

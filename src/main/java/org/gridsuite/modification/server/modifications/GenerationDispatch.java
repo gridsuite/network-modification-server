@@ -47,6 +47,9 @@ public class GenerationDispatch extends AbstractModification {
     private static final String REGION_CVG = "regionCvg";
     private static final String IS_PLURAL = "isPlural";
     private static final double EPSILON = 0.001;
+    private static final String GENERATORS_WITH_FIXED_SUPPLY = "generatorsWithFixedSupply";
+    private static final String GENERATORS_WITHOUT_OUTAGE = "generatorsWithoutOutage";
+    private static final String GENERATORS_FREQUENCY_RESERVE = "generatorsFrequencyReserve";
 
     private final GenerationDispatchInfos generationDispatchInfos;
 
@@ -360,7 +363,7 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
-    private List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters, Network network, ReportNode subReportNode) {
+    private List<String> exportFilters(List<GeneratorsFilterInfos> generatorsFilters, Network network, ReportNode subReportNode, String generatorsType) {
         if (CollectionUtils.isEmpty(generatorsFilters)) {
             return List.of();
         }
@@ -372,9 +375,6 @@ public class GenerationDispatch extends AbstractModification {
             .map(f -> new FilterEquipments(f.getFilterId(), filters.get(f.getFilterId()),
                 f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
                 f.getNotFoundEquipments()))
-            // keep only generators filters
-            .filter(f -> !CollectionUtils.isEmpty(f.getIdentifiableAttributes()) &&
-               f.getIdentifiableAttributes().stream().allMatch(i -> i.getType() == IdentifiableType.GENERATOR))
             .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
 
         // report filters with generators not found
@@ -382,32 +382,34 @@ public class GenerationDispatch extends AbstractModification {
             .filter(e -> !CollectionUtils.isEmpty(e.getValue().getNotFoundEquipments()))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         filtersWithGeneratorsNotFound.values().forEach(f -> {
-            var generatorsIds = String.join(", ", f.getNotFoundEquipments());
-            report(subReportNode, "", "filterGeneratorsNotFound", "Cannot find the following generators ${generatorsIds} in filter ${filterName}",
-                Map.of("generatorsIds", generatorsIds, "filterName", filters.get(f.getFilterId())),
+            var filterName = filters.get(f.getFilterId());
+            var notFoundGenerators = f.getNotFoundEquipments();
+            report(subReportNode, generatorsType, "filterGeneratorsNotFound", getGeneratorsReportMessagePrefix(generatorsType) + ": Cannot find ${nbNotFoundGen} generators in filter ${filterName}",
+                Map.of("nbNotFoundGen", notFoundGenerators.size(), "filterName", filterName),
                 TypedValue.WARN_SEVERITY);
+            f.getNotFoundEquipments().forEach(e -> report(subReportNode, generatorsType, "generatorNotFound" + e, getGeneratorsReportMessagePrefix(generatorsType) + ": Cannot find generator ${notFoundGeneratorId} in filter ${filterName}",
+                Map.of("notFoundGeneratorId", e, "filterName", filterName), TypedValue.TRACE_SEVERITY));
         });
 
-        return exportedGenerators.values()
-            .stream()
-            .filter(f -> !filtersWithGeneratorsNotFound.containsKey(f.getFilterId()))
-            .flatMap(f -> exportedGenerators.get(f.getFilterId()).getIdentifiableAttributes().stream())
+        // return existing generators
+        return exportedGenerators.values().stream()
+            .flatMap(f -> f.getIdentifiableAttributes().stream())
             .map(IdentifiableAttributes::getId)
             .distinct()
             .collect(Collectors.toList());
     }
 
     private List<String> collectGeneratorsWithoutOutage(Network network, ReportNode subReportNode) {
-        return exportFilters(generationDispatchInfos.getGeneratorsWithoutOutage(), network, subReportNode);
+        return exportFilters(generationDispatchInfos.getGeneratorsWithoutOutage(), network, subReportNode, GENERATORS_WITHOUT_OUTAGE);
     }
 
     private List<String> collectGeneratorsWithFixedSupply(Network network, ReportNode subReportNode) {
-        return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReportNode);
+        return exportFilters(generationDispatchInfos.getGeneratorsWithFixedSupply(), network, subReportNode, GENERATORS_WITH_FIXED_SUPPLY);
     }
 
     private List<GeneratorsFrequencyReserve> collectGeneratorsWithFrequencyReserve(Network network, ReportNode subReportNode) {
         return generationDispatchInfos.getGeneratorsFrequencyReserve().stream().map(g -> {
-            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReportNode);
+            List<String> generators = exportFilters(g.getGeneratorsFilters(), network, subReportNode, GENERATORS_FREQUENCY_RESERVE);
             return GeneratorsFrequencyReserve.builder().generators(generators).frequencyReserve(g.getFrequencyReserve()).build();
         }).collect(Collectors.toList());
     }
@@ -635,5 +637,14 @@ public class GenerationDispatch extends AbstractModification {
 
     private static double round(double value) {
         return Math.round(value * 10) / 10.;
+    }
+
+    private static String getGeneratorsReportMessagePrefix(String generatorsType) {
+        return switch (generatorsType) {
+            case GENERATORS_WITH_FIXED_SUPPLY -> "Generators with fixed active power";
+            case GENERATORS_WITHOUT_OUTAGE -> "Generators without outage simulation";
+            case GENERATORS_FREQUENCY_RESERVE -> "Frequency reserve";
+            default -> "";
+        };
     }
 }
