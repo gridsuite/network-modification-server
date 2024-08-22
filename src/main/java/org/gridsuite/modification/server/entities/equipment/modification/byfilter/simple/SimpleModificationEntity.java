@@ -8,55 +8,30 @@
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
-
-import java.util.List;
-import java.util.UUID;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @NoArgsConstructor
-@Data
 @Entity
-@Table(name = "simpleModification", indexes = @Index(name = "by_simple_modification_id_idx", columnList = "by_simple_modification_id"))
+@Table(name = "simpleModification", indexes = @Index(name = "modification_by_filter_id_idx", columnList = "modification_by_filter_id"))
 @Inheritance(strategy = InheritanceType.JOINED)
-public class SimpleModificationEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private UUID id;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "simple_modification_id",
-            foreignKey = @ForeignKey(name = "simple_modification_id_fk"))
-    private List<VariationFilterEntity> filters;
-
-    @Column
-    private String editedField;
-
+public class SimpleModificationEntity extends ModificationByFilterEntity {
     @Column
     @Enumerated(EnumType.STRING)
     private DataType dataType;
 
     public SimpleModificationEntity(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
-        this.id = null;
-        this.filters = simpleModificationInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
-        this.editedField = simpleModificationInfos.getEditedField();
+        super(simpleModificationInfos);
         this.dataType = simpleModificationInfos.getDataType();
     }
 
     protected void assignAttributes(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
-        simpleModificationInfos.setId(id);
-        simpleModificationInfos.setFilters(filters.stream()
-                .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
-                .toList());
-        simpleModificationInfos.setEditedField(editedField);
+        super.assignAttributes(simpleModificationInfos);
         simpleModificationInfos.setDataType(dataType);
     }
 

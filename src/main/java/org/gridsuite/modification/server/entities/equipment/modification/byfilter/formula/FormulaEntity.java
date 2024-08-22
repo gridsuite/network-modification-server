@@ -7,43 +7,24 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula;
 
-import jakarta.persistence.*;
-import lombok.Getter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 
 @NoArgsConstructor
-@Getter
-@Setter
 @Entity
-@Table(name = "formula", indexes = @Index(name = "by_formula_modification_id_idx", columnList = "by_formula_modification_id"))
-public class FormulaEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private UUID id;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "formula_id",
-            foreignKey = @ForeignKey(name = "formula_id_fk"))
-    private List<VariationFilterEntity> filters;
-
-    @Column
-    private String editedField;
-
+@Table(name = "formula", indexes = @Index(name = "modification_by_filter_id_idx", columnList = "modification_by_filter_id"))
+public class FormulaEntity extends ModificationByFilterEntity {
     @Column
     private String equipmentField1;
 
@@ -60,9 +41,7 @@ public class FormulaEntity {
     private Operator operator;
 
     public FormulaEntity(FormulaInfos formulaInfos) {
-        this.id = null;
-        this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
-        this.editedField = formulaInfos.getEditedField();
+        super(formulaInfos);
         this.equipmentField1 = formulaInfos.getFieldOrValue1().getEquipmentField();
         this.equipmentField2 = formulaInfos.getFieldOrValue2().getEquipmentField();
         this.value1 = formulaInfos.getFieldOrValue1().getValue();
@@ -71,21 +50,18 @@ public class FormulaEntity {
     }
 
     public FormulaInfos toFormulaInfos() {
-        return FormulaInfos.builder()
-                .id(getId())
-                .filters(getFilters().stream()
-                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
-                        .collect(Collectors.toList()))
-                .editedField(getEditedField())
+        FormulaInfos formulaInfos = FormulaInfos.builder()
                 .fieldOrValue1(ReferenceFieldOrValue.builder()
-                        .equipmentField(getEquipmentField1())
-                        .value(getValue1())
+                        .equipmentField(equipmentField1)
+                        .value(value1)
                         .build())
                 .fieldOrValue2(ReferenceFieldOrValue.builder()
-                        .equipmentField(getEquipmentField2())
-                        .value(getValue2())
+                        .equipmentField(equipmentField2)
+                        .value(value2)
                         .build())
-                .operator(getOperator())
+                .operator(operator)
                 .build();
+        assignAttributes(formulaInfos);
+        return formulaInfos;
     }
 }
