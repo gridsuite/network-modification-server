@@ -9,7 +9,10 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
+import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
@@ -26,6 +29,7 @@ import java.util.UUID;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,10 +48,31 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        Network network = NetworkCreation.create(networkUuid, true);
+        Network network = NetworkCreation.createSwitchNetwork(networkUuid, new NetworkFactoryImpl());
         // force a branch status different from the expected one, after testCreate
         TestUtils.setOperatingStatus(network, TARGET_LINE_ID, OTHER_BRANCH_STATUS);
         return network;
+    }
+
+    private Line createLineAndSwitches(SwitchKind switchKind, boolean isFictitious) {
+        VoltageLevel vl2 = getNetwork().getVoltageLevel("vl2");
+        createSwitch(vl2, "br12", "br12", switchKind, false, false, isFictitious, 3, 2);
+        createSwitch(vl2, "br22", "br22", switchKind, false, false, isFictitious, 2, 6);
+
+        return getNetwork().newLine()
+                .setId("line1")
+                .setName("line1")
+                .setVoltageLevel1("vl1")
+                .setVoltageLevel2("vl2")
+                .setR(0.1)
+                .setX(10.0)
+                .setG1(0.0)
+                .setG2(0.0)
+                .setB1(0.0)
+                .setB2(0.0)
+                .setNode1(2)
+                .setNode2(3)
+                .add();
     }
 
     @Override
@@ -73,10 +98,36 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
         TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, TARGET_BRANCH_STATUS);
     }
 
+    private void testLockoutLine(String lineID) throws Exception {
+        OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
+        modificationInfos.setEquipmentId(lineID);
+        modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
+        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
+    }
+
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         // go back to init status
         TestUtils.assertOperatingStatus(getNetwork(), TARGET_LINE_ID, OTHER_BRANCH_STATUS);
+    }
+
+    @Test
+    public void testLockoutLinesWithLoadBreakerSwitches() throws Exception {
+        //Lockout line with switches of kind LOAD_BREAK_SWITCH
+        createLineAndSwitches(SwitchKind.LOAD_BREAK_SWITCH, false);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    public void testLockoutLinesWithDisconnectorSwitches() throws Exception {
+        //Lockout line with switches of kind DISCONNECTOR
+        createLineAndSwitches(SwitchKind.DISCONNECTOR, false);
+        testLockoutLine("line1");
     }
 
     @Test
@@ -107,23 +158,15 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
                 .andExpect(
                         status().is4xxClientError());
 
-        // Add a line that can't be disconnected
-        Line line = getNetwork().newLine()
-                .setId("cantdisconnect")
-                .setVoltageLevel1("v1")
-                .setVoltageLevel2("v3")
-                .setNode1(0)
-                .setNode2(0)
-                .setX(12)
-                .setR(7)
-                .add();
-        assertNotNull(line);
-        modificationInfos.setEquipmentId("cantdisconnect");
+        // Add a line that can't be disconnected : with fictitious switches
+        Line line1 = createLineAndSwitches(SwitchKind.BREAKER, true);
+        assertNotNull(line1);
+        modificationInfos.setEquipmentId("line1");
         modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
         modificationJson = mapper.writeValueAsString(modificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertNull(getNetwork().getLine("cantdisconnect").getExtension(OperatingStatus.class));
+        assertNull(getNetwork().getLine("line1").getExtension(OperatingStatus.class));
         assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to disconnect all equipment ends").getMessage(),
                 modificationInfos.getErrorType().name(), reportService);
 

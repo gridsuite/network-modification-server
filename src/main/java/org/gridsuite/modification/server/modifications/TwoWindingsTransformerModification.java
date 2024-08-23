@@ -50,7 +50,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     private void modifyTwoWindingsTransformer(TwoWindingsTransformer twoWindingsTransformer, BranchModificationInfos twoWindingsTransformerModificationInfos, ReportNode subReportNode, Network network) {
         modifyBranch(twoWindingsTransformer, twoWindingsTransformerModificationInfos, subReportNode, "twoWindingsTransformerModification", "TwoWindingsTransformer with id=${id} modified :");
         addTapChangersToTwoWindingsTransformer(network, (TwoWindingsTransformerModificationInfos) modificationInfos, twoWindingsTransformer, subReportNode);
-        PropertiesUtils.applyProperties(twoWindingsTransformer, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(twoWindingsTransformer, subReportNode, modificationInfos.getProperties(), "TwoWindingsTransformerProperties");
     }
 
     @Override
@@ -185,8 +185,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             }
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports,
                     regulationMode != null ? regulationMode.name() : null,
-                    "${regulationMode}",
-                    Map.of("regulationMode", ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)));
+                    ModificationUtils.getInstance().formatRegulationModeReport(regulationMode),
+                    Map.of());
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports,
                     "phaseTapChangerPositionsAndStepsModification", "    Tap Changer", Map.of());
         }

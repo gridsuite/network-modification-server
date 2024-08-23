@@ -269,4 +269,15 @@ public class NetworkModificationController {
     public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
     }
+
+    @PutMapping(value = "/networks/{networkUuid}/apply", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Apply a list of composite network modifications uuids passed in body")
+    @ApiResponse(responseCode = "200", description = "The composite modifications have been applied")
+    public ResponseEntity<Optional<NetworkModificationResult>> applyModifications(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                                                                  @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
+                                                                                  @Parameter(description = "the report uuid") @RequestParam(value = "reportUuid", required = false) UUID reportUuid,
+                                                                                  @Parameter(description = "the reporter id") @RequestParam(value = "reporterId", required = false) String reporterId,
+                                                                                  @RequestBody List<UUID> modificationsUuidList) {
+        return ResponseEntity.ok().body(networkModificationService.applyModificationsFromUuids(networkUuid, variantId, new ReportInfos(reportUuid, reporterId), modificationsUuidList));
+    }
 }

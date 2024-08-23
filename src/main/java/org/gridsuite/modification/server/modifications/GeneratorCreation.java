@@ -79,12 +79,12 @@ public class GeneratorCreation extends AbstractModification {
         } else {
             createGeneratorInBusBreaker(voltageLevel, modificationInfos, subReportNode);
         }
-        if (!modificationInfos.isConnected()) {
+        if (!modificationInfos.isTerminalConnected()) {
             network.getGenerator(modificationInfos.getEquipmentId()).getTerminal().disconnect();
         }
         // apply the properties
         Generator generator = network.getGenerator(modificationInfos.getEquipmentId());
-        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties(), "GeneratorProperties");
     }
 
     private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, ReportNode subReportNode) {
@@ -263,7 +263,7 @@ public class GeneratorCreation extends AbstractModification {
                 connectivityReports.add(ModificationUtils.getInstance()
                         .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
             }
-            if (!generatorCreationInfos.isConnected()) {
+            if (!generatorCreationInfos.isTerminalConnected()) {
                 connectivityReports.add(ReportNode.newRootReportNode()
                         .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
                         .withUntypedValue("id", generatorCreationInfos.getEquipmentId())

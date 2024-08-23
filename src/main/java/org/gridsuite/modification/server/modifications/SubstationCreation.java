@@ -38,6 +38,6 @@ public class SubstationCreation extends AbstractModification {
                     .reportElementaryCreation(subReportNode, modificationInfos.getCountry(), "Country");
         }
         // properties
-        PropertiesUtils.applyProperties(substation, subReportNode, modificationInfos.getProperties());
+        PropertiesUtils.applyProperties(substation, subReportNode, modificationInfos.getProperties(), "SubstationProperties");
     }
 }

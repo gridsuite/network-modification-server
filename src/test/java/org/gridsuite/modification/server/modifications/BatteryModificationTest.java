@@ -8,7 +8,10 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Battery;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.ReactiveCapabilityCurve;
+import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
@@ -45,6 +48,8 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .stashed(false)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
+                .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
+                .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .minP(new AttributeModification<>(0., OperationType.SET))
