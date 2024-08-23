@@ -21,8 +21,6 @@ import org.gridsuite.modification.server.entities.equipment.creation.StaticCompe
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.StaticVarCompensatorCreation;
 
-import java.util.List;
-
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
@@ -42,14 +40,8 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Minimum susceptance available")
     private Double minSusceptance;
 
-    @Schema(description = "Qmax available at nominal voltage")
-    private Double maxQAtNominalV;
-
-    @Schema(description = "Qmin available at nominal voltage")
-    private Double minQAtNominalV;
-
     @Schema(description = "regulation mode")
-    private AttributeModification<StaticVarCompensator.RegulationMode> regulationMode;
+    private StaticVarCompensator.RegulationMode regulationMode;
 
     @Schema(description = "Voltage set point")
     private Double voltageSetpoint;
@@ -67,7 +59,7 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
     private String regulatingTerminalVlId;
 
     @Schema(description = "Standby automaton")
-    private List<StandByAutomatonCreationInfos> standbyAutomatonCreationInfos;
+    private StandByAutomatonCreationInfos standbyAutomatonCreationInfos;
 
     @Override
     public StaticCompensatorCreationEntity toEntity() {

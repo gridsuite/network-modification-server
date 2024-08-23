@@ -6,15 +6,16 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.StaticVarCompensator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.StandByAutomatonCreationInfos;
+import org.gridsuite.modification.server.dto.StaticVarCompensatorCreationInfos;
+import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -32,12 +33,6 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     private Double minSusceptance;
 
     @Column
-    private Double maxQAtNominalV;
-
-    @Column
-    private Double minQAtNominalV;
-
-    @Column
     private Double voltageSetpoint;
 
     @Column
@@ -50,12 +45,21 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     @Column(name = "voltageRegulationType")
     private VoltageRegulationType voltageRegulationType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "regulationMode")
+    private StaticVarCompensator.RegulationMode regulationMode;
+
     @Column(name = "regulatingTerminalVlId")
     private String regulatingTerminalVlId;
 
-    @ElementCollection
-    @CollectionTable(name = "standBy_automaton_creation")
-    private List<StandByAutomatonCreationEmbeddable> standByAutomatonCreationEmbeddable;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "standBy_automaton_creation",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "standBy_automaton_creation_id_fk"
+            ))
+    private StandByAutomatonCreationEntity standByAutomatonCreation;
 
     public StaticCompensatorCreationEntity(StaticVarCompensatorCreationInfos creationInfos) {
         super(creationInfos);
@@ -72,14 +76,13 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     private void assignAttributes(StaticVarCompensatorCreationInfos creationInfos) {
         this.maxSusceptance = creationInfos.getMaxSusceptance();
         this.minSusceptance = creationInfos.getMinSusceptance();
-        this.maxQAtNominalV = creationInfos.getMaxQAtNominalV();
-        this.minQAtNominalV = creationInfos.getMinQAtNominalV();
+        this.regulationMode = creationInfos.getRegulationMode();
         this.voltageSetpoint = creationInfos.getVoltageSetpoint();
         this.reactivePowerSetpoint = creationInfos.getReactivePowerSetpoint();
         this.regulatingTerminalId = creationInfos.getRegulatingTerminalId();
         this.voltageRegulationType = creationInfos.getVoltageRegulationType();
         this.regulatingTerminalVlId = creationInfos.getRegulatingTerminalVlId();
-        this.standByAutomatonCreationEmbeddable = toEmbeddableStandByAutomaton(creationInfos.getStandbyAutomatonCreationInfos());
+        this.standByAutomatonCreation = toEmbeddableStandByAutomaton(creationInfos.getStandbyAutomatonCreationInfos());
     }
 
     @Override
@@ -104,14 +107,13 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
             .terminalConnected(isTerminalConnected())
             .maxSusceptance(getMaxSusceptance())
             .minSusceptance(getMinSusceptance())
-            .maxQAtNominalV(getMaxQAtNominalV())
-            .minQAtNominalV(getMinQAtNominalV())
+            .regulationMode(getRegulationMode())
             .reactivePowerSetpoint(getReactivePowerSetpoint())
             .voltageSetpoint(getVoltageSetpoint())
             .voltageRegulationType(getVoltageRegulationType())
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
-            .standbyAutomatonCreationInfos(toStandByAutomatonInfos(getStandByAutomatonCreationEmbeddable()))
+            .standbyAutomatonCreationInfos(toStandByAutomatonInfos(getStandByAutomatonCreation()))
              // properties
             .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
@@ -119,34 +121,31 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
                                 .toList());
     }
 
-    private static List<StandByAutomatonCreationEmbeddable> toEmbeddableStandByAutomaton(
-            List<StandByAutomatonCreationInfos> standByAutomaton) {
-        return standByAutomaton == null ? null : standByAutomaton.stream()
-                .map(automaton -> new StandByAutomatonCreationEmbeddable(automaton.isStandby(),
-                        automaton.getB0(),
-                        automaton.getQ0(),
-                        automaton.getLowVoltageSetpoint(),
-                        automaton.getHighVoltageSetpoint(),
-                        automaton.getLowVoltageThreshold(),
-                        automaton.getHighVoltageThreshold()))
-                .collect(Collectors.toList());
+    private static StandByAutomatonCreationEntity toEmbeddableStandByAutomaton(
+            StandByAutomatonCreationInfos standByAutomaton) {
+        return standByAutomaton == null ? null :
+                 StandByAutomatonCreationEntity.builder()
+                         .standby(standByAutomaton.isStandby())
+                         .b0(standByAutomaton.getB0())
+                         .lowVoltageSetpoint(standByAutomaton.getLowVoltageSetpoint())
+                         .highVoltageSetpoint(standByAutomaton.getHighVoltageSetpoint())
+                         .lowVoltageThreshold(standByAutomaton.getLowVoltageThreshold())
+                         .highVoltageThreshold(standByAutomaton.getHighVoltageThreshold())
+                         .build();
     }
 
-    private static List<StandByAutomatonCreationInfos> toStandByAutomatonInfos(List<StandByAutomatonCreationEmbeddable> standByAutomatonEmbeddable) {
+    private static StandByAutomatonCreationInfos toStandByAutomatonInfos(StandByAutomatonCreationEntity standByAutomatonEmbeddable) {
         if (standByAutomatonEmbeddable == null) {
             return null;
         }
 
-        return standByAutomatonEmbeddable.stream()
-                .map(automatonEmbeddable -> StandByAutomatonCreationInfos.builder()
-                        .b0(automatonEmbeddable.getB0())
-                        .q0(automatonEmbeddable.getQ0())
-                        .standby(automatonEmbeddable.isStandby())
-                        .highVoltageSetpoint(automatonEmbeddable.getHighVoltageSetpoint())
-                        .lowVoltageSetpoint(automatonEmbeddable.getLowVoltageSetpoint())
-                        .highVoltageThreshold(automatonEmbeddable.getHighVoltageThreshold())
-                        .lowVoltageSetpoint(automatonEmbeddable.getLowVoltageThreshold())
-                        .build())
-                .collect(Collectors.toList());
+        return StandByAutomatonCreationInfos.builder()
+                        .b0(standByAutomatonEmbeddable.getB0())
+                        .standby(standByAutomatonEmbeddable.isStandby())
+                        .highVoltageSetpoint(standByAutomatonEmbeddable.getHighVoltageSetpoint())
+                        .lowVoltageSetpoint(standByAutomatonEmbeddable.getLowVoltageSetpoint())
+                        .highVoltageThreshold(standByAutomatonEmbeddable.getHighVoltageThreshold())
+                        .lowVoltageSetpoint(standByAutomatonEmbeddable.getLowVoltageThreshold())
+                        .build();
     }
 }

@@ -28,11 +28,8 @@ public class StandByAutomatonCreationInfos {
     @Schema(description = "Minimum reactive power ")
     private boolean standby;
 
-    @Schema(description = "fix part of the susceptance")
+    @Schema(description = "Fix part of the susceptance")
     private double b0;
-
-    @Schema(description = "fix part of Q at nominal voltage")
-    private double q0;
 
     @Schema(description = "Low voltage set point ")
     private double lowVoltageSetpoint;

@@ -7,29 +7,35 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import java.util.UUID;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
-
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Embeddable
-public class StandByAutomatonCreationEmbeddable {
+@Entity
+@Table(name = "standByAutomatonCreation")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "standByAutomatonCreation_id_fk_constraint"))
+public class StandByAutomatonCreationEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id")
+    private UUID id;
+
     @Column
     private boolean standby;
 
     @Column
     private double b0;
-
-    @Column
-    private double q0;
 
     @Column
     private double lowVoltageSetpoint;
