@@ -24,7 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.modifications.VscCreation.ACTIVE_POWER_CONTROL_EXTENSION_CREATE_ERROR_MESSAGE;
+import static org.gridsuite.modification.server.modifications.VscModification.DROOP_AND_P0_FIELD;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -296,6 +299,36 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),
+                vscCreationInfos.getErrorType().name(), reportService);
+    }
+
+    @Test
+    public void testCreateWithoutEnablingDroopPowerControl() throws Exception {
+        // create without enabling droop power control
+        VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
+        vscCreationInfos.setAngleDroopActivePowerControl(false);
+        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertThat(getNetwork().getHvdcLine("vsc1")).isNotNull();
+        HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
+        assertThat(hvdcLine).isNotNull();
+        HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        assertThat(activePowerControl).isNull();
+    }
+
+    @Test
+    public void testCreateWithEnablingDroopPowerControl() throws Exception {
+        // create with enabling droop power control but not provide Droop and P0
+        VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
+        vscCreationInfos.setAngleDroopActivePowerControl(true);
+        vscCreationInfos.setDroop(null);
+        vscCreationInfos.setP0(null);
+        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
+                        String.format(ACTIVE_POWER_CONTROL_EXTENSION_CREATE_ERROR_MESSAGE, DROOP_AND_P0_FIELD)).getMessage(),
                 vscCreationInfos.getErrorType().name(), reportService);
     }
 }
