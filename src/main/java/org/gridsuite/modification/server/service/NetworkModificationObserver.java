@@ -21,7 +21,7 @@ public class NetworkModificationObserver {
         createObservation(name, modificationType).observeChecked(runnable);
     }
 
-    protected Observation createObservation(String name, ModificationType modificationType) {
+    private Observation createObservation(String name, ModificationType modificationType) {
         return Observation.createNotStarted(OBSERVATION_PREFIX + name, observationRegistry)
             .lowCardinalityKeyValue(MODIFICATION_TYPE_TAG_NAME, modificationType.name());
     }
