@@ -29,6 +29,7 @@ import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.NetworkModificationObserver;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,18 +61,23 @@ public class NetworkModificationApplicator {
 
     private final ExecutorService applicationExecutor;
 
+    private final NetworkModificationObserver networkModificationObserver;
+
     @Value("${impacts.collection-threshold:50}")
     @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService,
-                                         @Value("${max-large-concurrent-applications}") int maxConcurrentApplications) {
+                                         @Value("${max-large-concurrent-applications}") int maxConcurrentApplications,
+                                         NetworkModificationObserver networkModificationObserver) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
         this.applicationExecutor = Executors.newFixedThreadPool(maxConcurrentApplications);
+        this.networkModificationObserver = networkModificationObserver;
+
     }
 
     /* This method is used when creating, inserting, moving or duplicating modifications
@@ -172,7 +178,7 @@ public class NetworkModificationApplicator {
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            apply(modificationInfos.toModification(), network, subReportNode);
+            networkModificationObserver.observe("apply", modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
         } catch (Exception e) {
             handleException(modificationInfos.getErrorType(), subReportNode, e);
         }
