@@ -60,7 +60,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .operatorActivePowerLimitFromSide1ToSide2(6.0F)
                 .operatorActivePowerLimitFromSide2ToSide1(8F)
                 .droop(1F)
-                .angleDroopActivePowerControl(false)
+                .angleDroopActivePowerControl(true)
                 .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
                 .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))

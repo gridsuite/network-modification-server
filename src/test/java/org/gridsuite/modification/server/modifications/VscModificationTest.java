@@ -344,15 +344,6 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testShouldCreateDroopActivePowerControlExtension() {
-        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
-        modificationInfos.setDroop(null);
-        VscModification vscModification = new VscModification(modificationInfos);
-        Assert.assertFalse(vscModification.shouldCreateDroopActivePowerControlExtension());
-    }
-
-    @Test
     public void testDtoContainRequiredData() {
         VscModificationInfos modificationInfos = VscModificationInfos.builder()
                 .stashed(false)

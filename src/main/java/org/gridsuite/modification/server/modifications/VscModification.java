@@ -240,7 +240,7 @@ public class VscModification extends AbstractModification {
         });
     }
 
-    protected boolean shouldCreateDroopActivePowerControlExtension() {
+    private boolean shouldCreateDroopActivePowerControlExtension() {
         return modificationInfos.getAngleDroopActivePowerControl() != null &&
                modificationInfos.getAngleDroopActivePowerControl().getValue() &&
                modificationInfos.getDroop() != null &&
