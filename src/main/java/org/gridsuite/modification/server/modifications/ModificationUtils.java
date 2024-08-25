@@ -119,6 +119,14 @@ public final class ModificationUtils {
         return hvdcLine;
     }
 
+    StaticVarCompensator staticVarCompensator(Network network, String staticVarCompensatorId) {
+        StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(staticVarCompensatorId);
+        if (staticVarCompensator == null) {
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + " does not exist in network");
+        }
+        return staticVarCompensator;
+    }
+
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
         VoltageLevel voltageLevel = getVoltageLevel(network, voltageLevelId);
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
@@ -1144,6 +1152,55 @@ public final class ModificationUtils {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "max Q is not set in a reactive capability curve limits point");
                         }
                     });
+        }
+    }
+
+    public void checkReactivePowerLimitsAndSetPointsCreation(Double maxSusceptance, Double minSusceptance,
+                                                             Double maxQAtNominalV, Double minQAtNominalV,
+                                                             Double voltageSetpoint, Double reactivePowerSetpoint,
+                                                             StaticVarCompensator.RegulationMode regulationMode,
+                                                             NetworkModificationException.Type errorType,
+                                                             String equipmentId,
+                                                             String equipmentName) {
+        // check min max reactive limits
+        if (Objects.isNull(minSusceptance) && Objects.isNull(minQAtNominalV)) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum susceptance is not set");
+        } else if (Objects.isNull(maxSusceptance) && Objects.isNull(maxQAtNominalV)) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum susceptance is not set");
+        } else if (Objects.nonNull(maxSusceptance) && Objects.nonNull(minSusceptance) && maxSusceptance < minSusceptance ||
+                Objects.nonNull(maxQAtNominalV) && Objects.nonNull(minQAtNominalV) && maxQAtNominalV < minQAtNominalV) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
+        }
+
+        // check set points
+        switch (regulationMode) {
+            case VOLTAGE -> {
+                if (voltageSetpoint == null) {
+                    throw makeEquipmentException(errorType, equipmentId, equipmentName, "Voltage setpoint is not set");
+                }
+            }
+            case REACTIVE_POWER -> {
+                if (reactivePowerSetpoint == null) {
+                    throw makeEquipmentException(errorType, equipmentId, equipmentName, "Reactive power setpoint is not set");
+                }
+            }
+        }
+    }
+
+    public void checkStandByAutomateCreation(Boolean standBy, Double b0, Double q0,
+                                             Double minSusceptance, Double maxSusceptance,
+                                             Double minQAtNominalV, Double maxQAtNominalV,
+                                             StaticVarCompensator.RegulationMode regulationMode,
+                                             NetworkModificationException.Type errorType,
+                                             String equipmentId,
+                                             String equipmentName) {
+        if (Boolean.TRUE.equals(standBy) && regulationMode != StaticVarCompensator.RegulationMode.VOLTAGE) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Regulation mode is expected to be voltage");
+        }
+        if (Objects.nonNull(b0) && Objects.nonNull(minSusceptance) && Objects.nonNull(maxSusceptance) && (b0 < minSusceptance || b0 > maxSusceptance)
+            || Objects.nonNull(q0) && Objects.nonNull(minQAtNominalV) && Objects.nonNull(maxQAtNominalV) && (q0 < minQAtNominalV || q0 > maxQAtNominalV)) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName,
+                     "b0 is expected to be within the range of minimun susceptance and maximum susceptance");
         }
     }
 

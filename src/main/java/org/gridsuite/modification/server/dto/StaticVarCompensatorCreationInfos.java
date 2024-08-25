@@ -40,6 +40,12 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Minimum susceptance available")
     private Double minSusceptance;
 
+    @Schema(description = "Maximal qAtNominalV available")
+    private Double maxQAtNominalV;
+
+    @Schema(description = "Minimum qAtNominalV available")
+    private Double minQAtNominalV;
+
     @Schema(description = "regulation mode")
     private StaticVarCompensator.RegulationMode regulationMode;
 
@@ -55,11 +61,35 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Regulating terminal equipment id")
     private String regulatingTerminalId;
 
+    @Schema(description = "Regulating terminal equipment type")
+    private String regulatingTerminalType;
+
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
 
-    @Schema(description = "Standby automaton")
-    private StandByAutomatonCreationInfos standbyAutomatonCreationInfos;
+    @Schema(description = "add standby automate")
+    private boolean standByAutomateOn;
+
+    @Schema(description = "Minimum reactive power ")
+    private boolean standby;
+
+    @Schema(description = "Fix part of the susceptance")
+    private Double b0;
+
+    @Schema(description = "Fix part of the reactive power")
+    private Double q0;
+
+    @Schema(description = "Low voltage setpoint ")
+    private Double lowVoltageSetpoint;
+
+    @Schema(description = "High voltage setpoint")
+    private Double highVoltageSetpoint;
+
+    @Schema(description = "Low voltage threshold")
+    private Double lowVoltageThreshold;
+
+    @Schema(description = "High voltage threshold")
+    private Double highVoltageThreshold;
 
     @Override
     public StaticCompensatorCreationEntity toEntity() {

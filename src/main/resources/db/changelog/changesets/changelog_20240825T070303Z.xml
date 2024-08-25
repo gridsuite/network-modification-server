@@ -1,19 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="rehiligha (generated)" id="1724370036285-29">
-        <createTable tableName="stand_by_automaton_creation">
-            <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="stand_by_automaton_creationPK"/>
-            </column>
-            <column name="b0" type="FLOAT(53)"/>
-            <column name="high_voltage_setpoint" type="FLOAT(53)"/>
-            <column name="high_voltage_threshold" type="FLOAT(53)"/>
-            <column name="low_voltage_setpoint" type="FLOAT(53)"/>
-            <column name="low_voltage_threshold" type="FLOAT(53)"/>
-            <column name="standby" type="BOOLEAN"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="rehiligha (generated)" id="1724370036285-30">
+    <changeSet author="rehiligha (generated)" id="1724569400971-29">
         <createTable tableName="static_var_compensator_creation">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name" type="VARCHAR(255)"/>
@@ -23,24 +10,31 @@
             <column name="connection_position" type="INT"/>
             <column defaultValueBoolean="true" name="connected" type="BOOLEAN"/>
             <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="b0" type="FLOAT(53)"/>
+            <column name="high_voltage_setpoint" type="FLOAT(53)"/>
+            <column name="high_voltage_threshold" type="FLOAT(53)"/>
+            <column name="low_voltage_setpoint" type="FLOAT(53)"/>
+            <column name="low_voltage_threshold" type="FLOAT(53)"/>
+            <column name="maxqat_nominalv" type="FLOAT(53)"/>
             <column name="max_susceptance" type="FLOAT(53)"/>
+            <column name="minqat_nominalv" type="FLOAT(53)"/>
             <column name="min_susceptance" type="FLOAT(53)"/>
+            <column name="q0" type="FLOAT(53)"/>
             <column name="reactive_power_setpoint" type="FLOAT(53)"/>
             <column name="regulating_terminal_id" type="VARCHAR(255)"/>
+            <column name="regulating_terminal_type" type="VARCHAR(255)"/>
             <column name="regulating_terminal_vl_id" type="VARCHAR(255)"/>
             <column name="regulation_mode" type="VARCHAR(255)"/>
+            <column name="stand_by_automate_on" type="BOOLEAN"/>
+            <column name="standby" type="BOOLEAN"/>
             <column name="voltage_regulation_type" type="VARCHAR(255)"/>
             <column name="voltage_setpoint" type="FLOAT(53)"/>
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="static_var_compensator_creationPK"/>
             </column>
-            <column name="stand_by_automaton_creation" type="UUID"/>
         </createTable>
     </changeSet>
-    <changeSet author="rehiligha (generated)" id="1724370036285-52">
-        <addForeignKeyConstraint baseColumnNames="stand_by_automaton_creation" baseTableName="static_var_compensator_creation" constraintName="standBy_automaton_creation_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="stand_by_automaton_creation" validate="true"/>
-    </changeSet>
-    <changeSet author="rehiligha (generated)" id="1724370036285-53">
+    <changeSet author="rehiligha (generated)" id="1724569400971-80">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="static_var_compensator_creation" constraintName="staticVarCompensatorCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
