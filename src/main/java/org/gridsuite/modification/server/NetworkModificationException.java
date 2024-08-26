@@ -115,7 +115,8 @@ public class NetworkModificationException extends PowsyblException {
         BY_FORMULA_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         BY_SIMPLE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
         HVDC_LINE_NOT_FOUND(HttpStatus.NOT_FOUND),
-        COMPOSITE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+        COMPOSITE_MODIFICATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR),
+        WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL(HttpStatus.BAD_REQUEST);
 
         public final HttpStatus status;
         private final String message;
