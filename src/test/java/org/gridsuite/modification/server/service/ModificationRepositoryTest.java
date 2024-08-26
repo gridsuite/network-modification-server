@@ -35,9 +35,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.dto.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -1285,6 +1287,9 @@ public class ModificationRepositoryTest {
                 .busOrBusbarSectionId("busId1")
                 .minSusceptance(200.0)
                 .maxSusceptance(224.0)
+                .regulationMode(VOLTAGE)
+                .voltageSetpoint(200.0)
+                .voltageRegulationType(DISTANT)
                 .regulatingTerminalId("testTerminalId1")
                 .regulatingTerminalType("STATIC_VAR_COMPENSATOR").regulatingTerminalVlId("idVlTest1")
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
@@ -1304,7 +1309,11 @@ public class ModificationRepositoryTest {
                 .regulatingTerminalId(null)
                 .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
                 .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
-                .connectionPosition(2).build().toEntity();
+                .connectionPosition(2)
+                .regulationMode(VOLTAGE)
+                .standByAutomateOn(true)
+                .standby(true)
+                .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator1, createStaticVarCompensator2, createStaticVarCompensator3));
         assertRequestsCount(1, 3, 1, 0);
