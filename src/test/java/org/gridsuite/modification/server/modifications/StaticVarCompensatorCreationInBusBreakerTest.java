@@ -25,8 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -63,7 +62,13 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
                 .voltageSetpoint(120.0)
                 .reactivePowerSetpoint(300.0)
                 .voltageRegulationType(VoltageRegulationType.LOCAL)
-                .standByAutomateOn(false)
+                .standByAutomateOn(true)
+                .standby(true)
+                .b0(221.0)
+                .lowVoltageSetpoint(200.0)
+                .highVoltageSetpoint(400.0)
+                .lowVoltageThreshold(250.0)
+                .highVoltageThreshold(300.0)
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
@@ -74,13 +79,7 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
                 .stashed(false)
                 .equipmentId("idStaticVarCompensator2Edited")
                 .equipmentName("staticVarCompensatorNameEdited")
-                .standByAutomateOn(true)
-                .standby(true)
-                .b0(221.0)
-                .lowVoltageSetpoint(200.0)
-                .highVoltageSetpoint(400.0)
-                .lowVoltageThreshold(250.0)
-                .highVoltageThreshold(300.0)
+                .voltageRegulationType(VoltageRegulationType.LOCAL)
                 .regulatingTerminalId("idStaticVarCompensator1")
                 .regulatingTerminalType("STATIC_VAR_COMPENSATOR")
                 .regulatingTerminalVlId("v1")

@@ -122,7 +122,7 @@ public final class ModificationUtils {
     StaticVarCompensator staticVarCompensator(Network network, String staticVarCompensatorId) {
         StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(staticVarCompensatorId);
         if (staticVarCompensator == null) {
-            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + " does not exist in network");
+            throw new NetworkModificationException(STATIC_VAR_COMPENSATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + " does not exist in network");
         }
         return staticVarCompensator;
     }

@@ -30,7 +30,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class StaticVarCompensatorCreation extends AbstractModification {
 
     private final StaticVarCompensatorCreationInfos modificationInfos;
-    private static final String REACTIVE_LIMITS = "Reactive limits";
     private static final String CONNECTIVITY = "Connectivity";
 
     public StaticVarCompensatorCreation(StaticVarCompensatorCreationInfos modificationInfos) {
