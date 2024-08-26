@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.modifications.VscModification.DROOP_AND_P0_FIELD;
+import static org.gridsuite.modification.server.modifications.VscModification.DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -33,7 +33,6 @@ public class VscCreation extends AbstractModification {
 
     public static final String VSC_SETPOINTS = "vscSetPoints";
     public static final String VSC_CHARACTERISTICS = "vscCharacteristics";
-    public static final String ACTIVE_POWER_CONTROL_EXTENSION_CREATE_ERROR_MESSAGE = "Both %s are required when angle droop active power control is activated to create a new equipment";
 
     private final VscCreationInfos modificationInfos;
 
@@ -54,14 +53,14 @@ public class VscCreation extends AbstractModification {
 
     private void checkDroop() {
         // extension is not enabled => ignore check inside fields
-        if (modificationInfos.getAngleDroopActivePowerControl() == null || !modificationInfos.getAngleDroopActivePowerControl()) {
+        if (!Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl())) {
             return;
         }
 
         // enable the extension => should verify whether all fields have been filled
         if (modificationInfos.getDroop() == null || modificationInfos.getP0() == null) {
             throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-                    String.format(ACTIVE_POWER_CONTROL_EXTENSION_CREATE_ERROR_MESSAGE, DROOP_AND_P0_FIELD));
+                    String.format(DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG));
         }
     }
 
@@ -135,8 +134,7 @@ public class VscCreation extends AbstractModification {
     }
 
     private boolean shouldCreateDroopActivePowerControlExtension() {
-        return modificationInfos.getAngleDroopActivePowerControl() != null &&
-               modificationInfos.getAngleDroopActivePowerControl() &&
+        return Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl()) &&
                modificationInfos.getDroop() != null &&
                modificationInfos.getP0() != null;
     }
