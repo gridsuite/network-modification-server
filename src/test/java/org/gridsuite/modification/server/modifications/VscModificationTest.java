@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class VscModificationTest extends AbstractNetworkModificationTest {
+class VscModificationTest extends AbstractNetworkModificationTest {
 
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
@@ -255,7 +255,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         "false,true,true",
         "false,false,true",
         })
-    public void testHvdcAngleDroopActivePowerControlWithNullValues(boolean isNullAngleDroopActivePowerControl, boolean isNullDroop, boolean isNullP0) {
+    void testHvdcAngleDroopActivePowerControlWithNullValues(boolean isNullAngleDroopActivePowerControl, boolean isNullDroop, boolean isNullP0) {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
         VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
