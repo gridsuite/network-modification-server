@@ -22,6 +22,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
@@ -244,46 +246,31 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         Assert.assertTrue(activePowerControl.isEnabled());
     }
 
-    @Test
-    public void testActivateHvdcAngleDroopActivePowerControlWithNullValues() {
+    @ParameterizedTest(name = "Test lack of provided values")
+    @CsvSource({
+        "true,false,false",
+        "true,true,false",
+        "true,false,true",
+        "false,true,false",
+        "false,true,true",
+        "false,false,true",
+        })
+    public void testHvdcAngleDroopActivePowerControlWithNullValues(boolean isNullAngleDroopActivePowerControl, boolean isNullDroop, boolean isNullP0) {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
         VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
-        wrongModificationInfos.setDroop(null);
-        wrongModificationInfos.setP0(null);
-        wrongModificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
-        VscModification wrongVscModification = new VscModification(wrongModificationInfos);
-        String message = Assert.assertThrows(NetworkModificationException.class,
-                () -> wrongVscModification.check(networkWithoutExt))
-            .getMessage();
-        assertThat(message).isEqualTo(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL.name() + " : "
-              + ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
-    }
 
-    @Test
-    public void testActivateHvdcAngleDroopActivePowerControlWithDroopNull() {
-        var networkuuid = UUID.randomUUID();
-        Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
-        VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
-        wrongModificationInfos.setDroop(null);
-        wrongModificationInfos.setP0(new AttributeModification<>(100f, OperationType.SET));
-        wrongModificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
-        VscModification wrongVscModification = new VscModification(wrongModificationInfos);
-        String message = Assert.assertThrows(NetworkModificationException.class,
-                () -> wrongVscModification.check(networkWithoutExt))
-            .getMessage();
-        assertThat(message).isEqualTo(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL.name() + " : "
-              + ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
-    }
+        // reset null depending to test arguments
+        if (isNullAngleDroopActivePowerControl) {
+            wrongModificationInfos.setAngleDroopActivePowerControl(null);
+        }
+        if (isNullDroop) {
+            wrongModificationInfos.setDroop(null);
+        }
+        if (isNullP0) {
+            wrongModificationInfos.setP0(null);
+        }
 
-    @Test
-    public void testActivateHvdcAngleDroopActivePowerControlWithP0Null() {
-        var networkuuid = UUID.randomUUID();
-        Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
-        VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
-        wrongModificationInfos.setDroop(new AttributeModification<>(20f, OperationType.SET));
-        wrongModificationInfos.setP0(null);
-        wrongModificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(true, OperationType.SET));
         VscModification wrongVscModification = new VscModification(wrongModificationInfos);
         String message = Assert.assertThrows(NetworkModificationException.class,
                 () -> wrongVscModification.check(networkWithoutExt))
