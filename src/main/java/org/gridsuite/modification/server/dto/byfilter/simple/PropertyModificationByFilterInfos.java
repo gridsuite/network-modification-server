@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.StringSimpleModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -19,12 +19,14 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @SuperBuilder
 @NoArgsConstructor
 @Data
-public class StringSimpleModificationByFilterInfos extends SimpleModificationByFilterInfos<String> {
-    @Schema(description = "value")
-    private String value;
+public class PropertyModificationByFilterInfos extends StringModificationByFilterInfos {
+    @Schema(description = "Property name")
+    private String propertyName;
 
     @Override
-    public StringSimpleModificationEntity toEntity() {
-        return new StringSimpleModificationEntity(this);
+    public SimpleModificationEntity toEntity() {
+        SimpleModificationEntity simpleModificationEntity = super.toEntity();
+        simpleModificationEntity.setPropertyName(propertyName);
+        return simpleModificationEntity;
     }
 }

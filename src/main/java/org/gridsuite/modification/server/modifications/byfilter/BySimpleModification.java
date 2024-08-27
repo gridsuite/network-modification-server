@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
-import org.gridsuite.modification.server.dto.byfilter.simple.PropertySimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.PropertyModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
 
 import java.util.Collections;
@@ -66,7 +66,7 @@ public class BySimpleModification extends AbstractByFilterModification {
         SimpleModificationByFilterInfos<?> simpleModificationInfos = (SimpleModificationByFilterInfos<?>) filterModificationInfos;
         if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
             identifiable.setProperty(
-                    ((PropertySimpleModificationByFilterInfos) simpleModificationInfos).getPropertyName(),
+                    ((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName(),
                     (String) simpleModificationInfos.getValue()
             );
         } else {

@@ -7,11 +7,9 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.BooleanSimpleModificationEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -19,12 +17,5 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @SuperBuilder
 @NoArgsConstructor
 @Data
-public class BooleanSimpleModificationByFilterInfos extends SimpleModificationByFilterInfos<Boolean> {
-    @Schema(description = "value")
-    private Boolean value;
-
-    @Override
-    public BooleanSimpleModificationEntity toEntity() {
-        return new BooleanSimpleModificationEntity(this);
-    }
+public class StringModificationByFilterInfos extends SimpleModificationByFilterInfos<String> {
 }

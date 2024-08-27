@@ -27,12 +27,12 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
     property = "dataType",
     include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = StringSimpleModificationByFilterInfos.class, name = "STRING"),
-    @JsonSubTypes.Type(value = BooleanSimpleModificationByFilterInfos.class, name = "BOOLEAN"),
-    @JsonSubTypes.Type(value = EnumSimpleModificationByFilterInfos.class, name = "ENUM"),
-    @JsonSubTypes.Type(value = DoubleSimpleModificationByFilterInfos.class, name = "DOUBLE"),
-    @JsonSubTypes.Type(value = IntegerSimpleModificationByFilterInfos.class, name = "INTEGER"),
-    @JsonSubTypes.Type(value = PropertySimpleModificationByFilterInfos.class, name = "PROPERTY"),
+    @JsonSubTypes.Type(value = StringModificationByFilterInfos.class, name = "STRING"),
+    @JsonSubTypes.Type(value = BooleanModificationByFilterInfos.class, name = "BOOLEAN"),
+    @JsonSubTypes.Type(value = EnumModificationByFilterInfos.class, name = "ENUM"),
+    @JsonSubTypes.Type(value = DoubleModificationByFilterInfos.class, name = "DOUBLE"),
+    @JsonSubTypes.Type(value = IntegerModificationByFilterInfos.class, name = "INTEGER"),
+    @JsonSubTypes.Type(value = PropertyModificationByFilterInfos.class, name = "PROPERTY"),
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @SuperBuilder
@@ -42,12 +42,11 @@ public class SimpleModificationByFilterInfos<T> extends AbstractModificationByFi
     @Schema(description = "Data type")
     private DataType dataType;
 
+    @Schema(description = "Value")
+    private T value;
+
     @JsonIgnore
     public SimpleModificationEntity toEntity() {
-        throw new UnsupportedOperationException("Unsupported operation toEntity for instant of class " + this.getClass().getName());
-    }
-
-    public T getValue() {
-        throw new UnsupportedOperationException("Unsupported operation getValue for instant of class " + this.getClass().getName());
+        return new SimpleModificationEntity(this);
     }
 }

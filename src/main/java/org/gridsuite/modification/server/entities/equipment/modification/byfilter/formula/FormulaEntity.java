@@ -7,10 +7,7 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
@@ -23,7 +20,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 
 @NoArgsConstructor
 @Entity
-@Table(name = "formula", indexes = @Index(name = "modification_by_filter_id_idx", columnList = "modification_by_filter_id"))
+@Table(name = "formula", indexes = @Index(name = "by_formula_modification_id_idx", columnList = "by_formula_modification_id"))
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "formula_id_fk_constraint"))
 public class FormulaEntity extends ModificationByFilterEntity {
     @Column
     private String equipmentField1;

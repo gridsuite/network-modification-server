@@ -8,26 +8,37 @@
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.*;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
+
+import java.util.Optional;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @NoArgsConstructor
 @Entity
-@Table(name = "simpleModification", indexes = @Index(name = "modification_by_filter_id_idx", columnList = "modification_by_filter_id"))
-@Inheritance(strategy = InheritanceType.JOINED)
+@Data
+@Table(name = "simpleModification", indexes = @Index(name = "by_simple_modification_id_idx", columnList = "by_simple_modification_id"))
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "simple_modification_id_fk_constraint"))
 public class SimpleModificationEntity extends ModificationByFilterEntity {
     @Column
     @Enumerated(EnumType.STRING)
     private DataType dataType;
 
+    @Column(name = "value_") // "value" is not supported in UT with H2
+    private String value; // all values of different data types will be serialized as a string, deserialization is based on dataType
+
+    @Column
+    private String propertyName; // dedicated to an exceptional case, i.e. modify a property
+
     public SimpleModificationEntity(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
         super(simpleModificationInfos);
         this.dataType = simpleModificationInfos.getDataType();
+        this.value = Optional.ofNullable(simpleModificationInfos.getValue()).map(Object::toString).orElse(null);
     }
 
     protected void assignAttributes(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
@@ -35,7 +46,30 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
         simpleModificationInfos.setDataType(dataType);
     }
 
-    public <T> SimpleModificationByFilterInfos<T> toSimpleModificationInfos() {
-        return null;
+    public SimpleModificationByFilterInfos toSimpleModificationInfos() {
+        SimpleModificationByFilterInfos simpleModificationByFilterInfos = switch (dataType) {
+            case BOOLEAN -> BooleanModificationByFilterInfos.builder()
+                .value(value != null ? Boolean.valueOf(value) : null)
+                .build();
+            case INTEGER -> IntegerModificationByFilterInfos.builder()
+                .value(value != null ? Integer.valueOf(value) : null)
+                .build();
+            case DOUBLE -> DoubleModificationByFilterInfos.builder()
+                .value(value != null ? Double.valueOf(value) : null)
+                .build();
+            case STRING -> StringModificationByFilterInfos.builder()
+                .value(value)
+                .build();
+            case ENUM -> EnumModificationByFilterInfos.builder()
+                .value(value)
+                .build();
+            case PROPERTY -> PropertyModificationByFilterInfos.builder()
+                .value(value)
+                .propertyName(propertyName)
+                .build();
+        };
+
+        assignAttributes(simpleModificationByFilterInfos);
+        return simpleModificationByFilterInfos;
     }
 }

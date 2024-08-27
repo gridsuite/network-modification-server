@@ -2,10 +2,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
@@ -16,10 +13,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "byFormulaModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "byFormulaModification_id_fk_constraint"))
 public class ByFormulaModificationEntity extends ModificationEntity {
     @Column
     private IdentifiableType identifiableType;

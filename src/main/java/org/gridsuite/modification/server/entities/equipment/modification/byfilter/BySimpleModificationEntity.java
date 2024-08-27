@@ -19,6 +19,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "bySimpleModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "bySimpleModification_id_fk_constraint"))
 public class BySimpleModificationEntity extends ModificationEntity {
     @Column
     private IdentifiableType identifiableType;

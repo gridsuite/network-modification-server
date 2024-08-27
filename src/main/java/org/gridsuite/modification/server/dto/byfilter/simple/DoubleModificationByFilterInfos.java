@@ -7,7 +7,6 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -16,7 +15,5 @@ import lombok.experimental.SuperBuilder;
  */
 @SuperBuilder
 @NoArgsConstructor
-@Data
-public class EnumSimpleModificationByFilterInfos extends StringSimpleModificationByFilterInfos {
-
+public class DoubleModificationByFilterInfos extends SimpleModificationByFilterInfos<Double> {
 }

@@ -7,24 +7,13 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.DoubleSimpleModificationEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
-@Data
-public class DoubleSimpleModificationByFilterInfos extends SimpleModificationByFilterInfos<Double> {
-    @Schema(description = "value")
-    private Double value;
-
-    @Override
-    public DoubleSimpleModificationEntity toEntity() {
-        return new DoubleSimpleModificationEntity(this);
-    }
+public class IntegerModificationByFilterInfos extends SimpleModificationByFilterInfos<Integer> {
 }

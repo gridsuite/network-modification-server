@@ -9,8 +9,12 @@ import org.gridsuite.modification.server.entities.equipment.modification.Variati
 import java.util.List;
 import java.util.UUID;
 
+import static jakarta.persistence.InheritanceType.JOINED;
+
 @NoArgsConstructor
 @Entity
+@Inheritance(strategy = JOINED)
+@Table(name = "modification_by_filter")
 public class ModificationByFilterEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
