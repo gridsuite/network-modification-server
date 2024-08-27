@@ -47,11 +47,5 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
-    @EntityGraph(attributePaths = {"creations", "creations.reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Optional<TabularCreationEntity> findTabularCreationWithReactiveCapabilityCurvePointsById(UUID id);
-
-    @EntityGraph(attributePaths = {"reactiveCapabilityCurvePoints"}, type = EntityGraph.EntityGraphType.LOAD)
-    Set<GeneratorCreationEntity> findAllCreationsWithReactiveCapabilityCurvePointsByIdIn(List<UUID> ids);
-
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 }
