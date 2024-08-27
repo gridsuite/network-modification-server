@@ -7,9 +7,7 @@
 
 package org.gridsuite.modification.server.repositories;
 
-import com.powsybl.iidm.network.Generator;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
