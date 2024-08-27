@@ -8,8 +8,8 @@
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.simple.*;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
@@ -21,7 +21,6 @@ import java.util.Optional;
  */
 @NoArgsConstructor
 @Entity
-@Data
 @Table(name = "simpleModification", indexes = @Index(name = "by_simple_modification_id_idx", columnList = "by_simple_modification_id"))
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "simple_modification_id_fk_constraint"))
 public class SimpleModificationEntity extends ModificationByFilterEntity {
@@ -32,6 +31,7 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
     @Column(name = "value_") // "value" is not supported in UT with H2
     private String value; // all values of different data types will be serialized as a string, deserialization is based on dataType
 
+    @Setter
     @Column
     private String propertyName; // dedicated to an exceptional case, i.e. modify a property
 
@@ -46,8 +46,8 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
         simpleModificationInfos.setDataType(dataType);
     }
 
-    public SimpleModificationByFilterInfos toSimpleModificationInfos() {
-        SimpleModificationByFilterInfos simpleModificationByFilterInfos = switch (dataType) {
+    public SimpleModificationByFilterInfos<?> toSimpleModificationInfos() {
+        SimpleModificationByFilterInfos<?> simpleModificationByFilterInfos = switch (dataType) {
             case BOOLEAN -> BooleanModificationByFilterInfos.builder()
                 .value(value != null ? Boolean.valueOf(value) : null)
                 .build();
