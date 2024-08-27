@@ -34,8 +34,7 @@ public class VscModification extends AbstractModification {
     public static final String ANGLE_DROOP_ACTIVE_POWER_CONTROL_FIELD = "AngleDroopActivePowerControl";
     public static final String DROOP_FIELD = "Droop";
     public static final String P0_FIELD = "P0";
-    public static final String DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG = "Both Droop and P0 are required when angle droop active power control is activated";
-    public static final String DROOP_ACTIVE_POWER_CONTROL_P0_REQUIRED_ERROR_MSG = "P0 is required when Droop is provided";
+    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be provided together";
 
     private final VscModificationInfos modificationInfos;
 
@@ -66,29 +65,29 @@ public class VscModification extends AbstractModification {
     }
 
     private void checkDroopModification(HvdcLine hvdcLine) {
-        // the extension already exists
+        //--- the extension already exists ---//
         HvdcAngleDroopActivePowerControl hvdcAngleDroopActivePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
         if (hvdcAngleDroopActivePowerControl != null) {
-            // if droop is set p0 should be also
-            if (modificationInfos.getDroop() != null && modificationInfos.getP0() == null) {
-                throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-                        String.format(DROOP_ACTIVE_POWER_CONTROL_P0_REQUIRED_ERROR_MSG));
-            }
             return;
         }
 
-        // the extension doesn't exist yet and the modification wants to enable the extension =>
-        // should verify whether all fields have been filled
-        boolean isEnabledAngleDroopActivePowerControl = modificationInfos.getAngleDroopActivePowerControl() != null
-            && Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl().getValue());
-        if (!isEnabledAngleDroopActivePowerControl) {
+        //--- the extension doesn't exist yet ---//
+        // all fields should be filled => OK
+        if (modificationInfos.getAngleDroopActivePowerControl() != null &&
+            modificationInfos.getDroop() != null &&
+            modificationInfos.getP0() != null) {
             return;
         }
 
-        if (modificationInfos.getDroop() == null || modificationInfos.getP0() == null) {
+        // at least one field is filled but not for others => NOT OK
+        if (modificationInfos.getAngleDroopActivePowerControl() != null ||
+            modificationInfos.getDroop() != null ||
+            modificationInfos.getP0() != null) {
             throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-                    String.format(DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG));
+                    ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
         }
+
+        // all fields are not filled => OK => do nothing
     }
 
     @Override
