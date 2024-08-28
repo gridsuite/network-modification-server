@@ -224,7 +224,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testActivateAngleDroopActivePowerControl() throws Exception {
+    public void testCreateAngleDroopActivePowerControlWithEnabling() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
@@ -236,13 +236,13 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         vscModification.apply(networkWithoutExt, true, computationManager, subReporter);
 
         HvdcLine hvdcLine = networkWithoutExt.getHvdcLine("hvdcLine");
-        assertNotNull(hvdcLine);
+        assertThat(hvdcLine).isNotNull();
 
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        assertNotNull(activePowerControlExt);
+        assertThat(activePowerControlExt).isNotNull();
         Assert.assertEquals(5, activePowerControlExt.getP0(), 0);
         Assert.assertEquals(1, activePowerControlExt.getDroop(), 0);
-        Assert.assertTrue(activePowerControlExt.isEnabled());
+        assertThat(activePowerControlExt.isEnabled()).isTrue();
     }
 
     @Test
@@ -250,23 +250,19 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
 
-        VscModificationInfos modificationInfos = buildModificationWithDroopAbsentInfos(true, false, false);
-        checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
+        boolean[][] droopInfosIsPresentData = {
+                {true, false, false},
+                {true, true, false},
+                {true, false, true},
+                {false, true, false},
+                {false, true, true},
+                {false, false, true},
+        };
 
-        modificationInfos = buildModificationWithDroopAbsentInfos(true, true, false);
-        checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
-
-        modificationInfos = buildModificationWithDroopAbsentInfos(true, false, true);
-        checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
-
-        modificationInfos = buildModificationWithDroopAbsentInfos(false, true, false);
-        checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
-
-        modificationInfos = buildModificationWithDroopAbsentInfos(false, true, true);
-        checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
-
-        modificationInfos = buildModificationWithDroopAbsentInfos(false, false, true);
-        checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
+        for (boolean[] droopInfoIsPresent : droopInfosIsPresentData) {
+            VscModificationInfos modificationInfos = buildModificationWithDroopAbsentInfos(droopInfoIsPresent[0], droopInfoIsPresent[1], droopInfoIsPresent[2]);
+            checkDroopWithAbsentInfos(modificationInfos, networkWithoutExt);
+        }
     }
 
     private VscModificationInfos buildModificationWithDroopAbsentInfos(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
@@ -294,7 +290,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testNotCreateAngleDroopActivePowerControlExtension() throws Exception {
+    public void testNotCreateAngleDroopActivePowerControl() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, false);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
@@ -312,7 +308,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testNotChangeAngleDroopActivePowerControlExtension() throws Exception {
+    public void testNotChangeAngleDroopActivePowerControl() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
@@ -332,7 +328,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testChangeAngleDroopActivePowerControlExtension() throws Exception {
+    public void testChangeAngleDroopActivePowerControl() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
