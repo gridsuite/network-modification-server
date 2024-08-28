@@ -24,8 +24,8 @@ import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.checkHvdcDroop;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.shouldCreateHvdcDroopActivePowerControlExtension;
+import static org.gridsuite.modification.server.modifications.VscModification.checkHvdcDroop;
+import static org.gridsuite.modification.server.modifications.VscModification.shouldCreateHvdcDroopActivePowerControlExtension;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>

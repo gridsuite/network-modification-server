@@ -21,10 +21,7 @@ import org.gridsuite.modification.server.dto.VscModificationInfos;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.checkHvdcDroop;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.shouldCreateHvdcDroopActivePowerControlExtension;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_CHARACTERISTICS;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SETPOINTS;
 
@@ -37,11 +34,28 @@ public class VscModification extends AbstractModification {
     public static final String ANGLE_DROOP_ACTIVE_POWER_CONTROL_FIELD = "AngleDroopActivePowerControl";
     public static final String DROOP_FIELD = "Droop";
     public static final String P0_FIELD = "P0";
+    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be provided together";
 
     private final VscModificationInfos modificationInfos;
 
     public VscModification(VscModificationInfos vscModificationInfos) {
         this.modificationInfos = vscModificationInfos;
+    }
+
+    public static void checkHvdcDroop(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+        // all fields should be filled => OK extension will be created
+        if (isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0) {
+            return;
+        }
+        // at least one field is filled but not for others => NOT OK
+        if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
+            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+        }
+        // all fields are not filled => OK extension will not be created
+    }
+
+    public static boolean shouldCreateHvdcDroopActivePowerControlExtension(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+        return isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0;
     }
 
     protected void checkConverterStation(@Nonnull ConverterStationModificationInfos converterStationModificationInfos, @Nonnull VscConverterStation vscConverterStation) {
