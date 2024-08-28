@@ -23,7 +23,7 @@ import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.checkHvdcDroopInfos;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.checkHvdcDroop;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.shouldCreateHvdcDroopActivePowerControlExtension;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_CHARACTERISTICS;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SETPOINTS;
@@ -74,10 +74,7 @@ public class VscModification extends AbstractModification {
         }
 
         //--- the extension doesn't exist yet ---//
-        checkHvdcDroopInfos(
-                modificationInfos.getAngleDroopActivePowerControl() != null,
-                modificationInfos.getDroop() != null,
-                modificationInfos.getP0() != null);
+        checkHvdcDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 
     @Override
@@ -231,9 +228,7 @@ public class VscModification extends AbstractModification {
 
     private boolean shouldCreateDroopActivePowerControlExtension() {
         return shouldCreateHvdcDroopActivePowerControlExtension(
-                modificationInfos.getAngleDroopActivePowerControl() != null,
-                modificationInfos.getDroop() != null,
-                modificationInfos.getP0() != null);
+            modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 
     private List<ReportNode> hvdcAngleDroopActivePowerControlAdder(HvdcLine hvdcLine) {
