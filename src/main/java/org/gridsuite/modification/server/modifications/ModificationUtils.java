@@ -450,6 +450,15 @@ public final class ModificationUtils {
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
+    public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
+                                                                  AttributeModification<T> modification) {
+        if (modification != null) {
+            T oldValue = getter.get();
+            T newValue = modification.applyModification(oldValue);
+            setter.accept(newValue);
+        }
+    }
+
     public <T> ReportNode applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
                                                                   AttributeModification<T> modification, String fieldName) {
         if (modification != null) {
@@ -1032,7 +1041,7 @@ public final class ModificationUtils {
         }
 
         ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
-        if (subReporterSetpoints == null && !reports.isEmpty()) {
+        if (subReporterSetpoints == null && !reports.isEmpty() && subReportNode != null) { // tmp test : essayer de décorréler l'application des logs
             subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
             subReportNodeSetpoints2.newReportNode()
                     .withMessageTemplate(SETPOINTS, SETPOINTS)

@@ -129,9 +129,15 @@ public enum GeneratorField {
                                 .add();
                     }
                 }
-                case DROOP -> generator.newExtension(ActivePowerControlAdder.class)
-                        .withDroop(newValue)
-                        .add();
+                case DROOP -> {
+                    if (generator.getExtension(ActivePowerControl.class) != null) {
+                        generator.getExtension(ActivePowerControl.class).setDroop(newValue);
+                    } else {
+                        generator.newExtension(ActivePowerControlAdder.class)
+                                .withDroop(newValue)
+                                .add();
+                    }
+                }
                 case TRANSIENT_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
                         .withDirectTransX(newValue)
                         .withStepUpTransformerX(generatorShortCircuit == null ? Double.NaN : generatorShortCircuit.getStepUpTransformerX())
