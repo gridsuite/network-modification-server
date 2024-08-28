@@ -1,5 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="phamquy (generated)" id="1724766239846-0">
         <createTable tableName="by_simple_modification">
             <column name="identifiable_type" type="SMALLINT"/>
@@ -28,9 +30,10 @@
         </createTable>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1724766239846-3">
-        <addColumn tableName="variation_filter">
-            <column name="modification_by_filter_id" type="uuid"/>
-        </addColumn>
+        <dropForeignKeyConstraint baseTableName="VARIATION_FILTER" constraintName="FORMULA_ID_FK"/>
+    </changeSet>
+    <changeSet author="phamquy" id="1724766239846-formulaIdRename">
+        <renameColumn tableName="variation_filter" newColumnName="modification_by_filter_id" oldColumnName="formula_id"/>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1724766239846-4">
         <createIndex indexName="by_simple_modification_id_idx" tableName="simple_modification">
@@ -41,6 +44,14 @@
         <createIndex indexName="modification_by_filter_id_idx" tableName="variation_filter">
             <column name="modification_by_filter_id"/>
         </createIndex>
+    </changeSet>
+    <changeSet author="phamquy" id="1724766239846-migrationFormula">
+        <sqlFile
+                encoding="UTF-8"
+                path="migrationFormula_20240827T134336Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1724766239846-6">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="by_simple_modification" constraintName="bySimpleModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
@@ -58,12 +69,6 @@
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="simple_modification" constraintName="simple_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_by_filter" validate="true"/>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1724766239846-11">
-        <dropForeignKeyConstraint baseTableName="VARIATION_FILTER" constraintName="FORMULA_ID_FK"/>
-    </changeSet>
-    <changeSet author="phamquy (generated)" id="1724766239846-12">
         <dropColumn columnName="EDITED_FIELD" tableName="FORMULA"/>
-    </changeSet>
-    <changeSet author="phamquy (generated)" id="1724766239846-13">
-        <dropColumn columnName="FORMULA_ID" tableName="VARIATION_FILTER"/>
     </changeSet>
 </databaseChangeLog>
