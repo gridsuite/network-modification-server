@@ -224,7 +224,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testActivateHvdcAngleDroopActivePowerControl() throws Exception {
+    public void testActivateAngleDroopActivePowerControl() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
@@ -238,11 +238,11 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         HvdcLine hvdcLine = networkWithoutExt.getHvdcLine("hvdcLine");
         assertNotNull(hvdcLine);
 
-        HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        assertNotNull(activePowerControl);
-        Assert.assertEquals(5, activePowerControl.getP0(), 0);
-        Assert.assertEquals(1, activePowerControl.getDroop(), 0);
-        Assert.assertTrue(activePowerControl.isEnabled());
+        HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        assertNotNull(activePowerControlExt);
+        Assert.assertEquals(5, activePowerControlExt.getP0(), 0);
+        Assert.assertEquals(1, activePowerControlExt.getDroop(), 0);
+        Assert.assertTrue(activePowerControlExt.isEnabled());
     }
 
     @Test
@@ -294,7 +294,25 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testUnchangedHvdcAngleDroopActivePowerControl() throws Exception {
+    public void testNotCreateAngleDroopActivePowerControlExtension() throws Exception {
+        var networkuuid = UUID.randomUUID();
+        Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, false);
+        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
+        modificationInfos.setAngleDroopActivePowerControl(null);
+        modificationInfos.setDroop(null);
+        modificationInfos.setP0(null);
+        VscModification vscModification = new VscModification(modificationInfos);
+        ReportNode subReporter = ReportNode.NO_OP;
+        ComputationManager computationManager = new LocalComputationManager();
+        assertDoesNotThrow(() -> vscModification.check(networkWithExt));
+        vscModification.apply(networkWithExt, true, computationManager, subReporter);
+        HvdcLine hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
+        HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        assertThat(activePowerControlExt).isNull();
+    }
+
+    @Test
+    public void testNotChangeAngleDroopActivePowerControlExtension() throws Exception {
         var networkuuid = UUID.randomUUID();
         Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
@@ -307,10 +325,30 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         assertDoesNotThrow(() -> vscModification.check(networkWithExt));
         vscModification.apply(networkWithExt, true, computationManager, subReporter);
         HvdcLine hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
-        HvdcAngleDroopActivePowerControl activePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
-        Assert.assertEquals(0, activePowerControl.getP0(), 0);
-        Assert.assertEquals(10, activePowerControl.getDroop(), 0);
-        Assert.assertTrue(activePowerControl.isEnabled());
+        HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        Assert.assertEquals(10, activePowerControlExt.getDroop(), 0);
+        Assert.assertEquals(0, activePowerControlExt.getP0(), 0);
+        assertThat(activePowerControlExt.isEnabled()).isTrue();
+    }
+
+    @Test
+    public void testChangeAngleDroopActivePowerControlExtension() throws Exception {
+        var networkuuid = UUID.randomUUID();
+        Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
+        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
+        modificationInfos.setAngleDroopActivePowerControl(new AttributeModification<>(false, OperationType.SET));
+        modificationInfos.setDroop(new AttributeModification<>(2.F, OperationType.SET));
+        modificationInfos.setP0(new AttributeModification<>(6F, OperationType.SET));
+        VscModification vscModification = new VscModification(modificationInfos);
+        ReportNode subReporter = ReportNode.NO_OP;
+        ComputationManager computationManager = new LocalComputationManager();
+        assertDoesNotThrow(() -> vscModification.check(networkWithExt));
+        vscModification.apply(networkWithExt, true, computationManager, subReporter);
+        HvdcLine hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
+        HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        Assert.assertEquals(2, activePowerControlExt.getDroop(), 0);
+        Assert.assertEquals(6, activePowerControlExt.getP0(), 0);
+        assertThat(activePowerControlExt.isEnabled()).isFalse();
     }
 
     @Override
