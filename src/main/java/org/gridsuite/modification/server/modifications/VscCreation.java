@@ -176,13 +176,16 @@ public class VscCreation extends AbstractModification {
                                                        ConverterStationCreationInfos converterStationCreationInfos,
                                                        ReportNode subReportNode,
                                                        String logFieldName) {
-        ReportNode converterStationReporter = subReportNode.newReportNode().withMessageTemplate("converterStationCreated" + logFieldName, logFieldName).add();
+        ReportNode converterStationReporter = subReportNode.newReportNode()
+            .withMessageTemplate("converterStationCreated", "New converter station with id=${id} created")
+            .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
+            .add();
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());
         VscConverterStation vscConverterStation = voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ?
                 createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReporter) :
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
         converterStationReporter.newReportNode()
-                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
+                .withMessageTemplate("converterStationCreated" + logFieldName, logFieldName + " with id=${id} created :")
                 .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
