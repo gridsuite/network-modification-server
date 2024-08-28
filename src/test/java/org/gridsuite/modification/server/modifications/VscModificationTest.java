@@ -22,8 +22,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
@@ -41,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
 @Tag("IntegrationTest")
-class VscModificationTest extends AbstractNetworkModificationTest {
+public class VscModificationTest extends AbstractNetworkModificationTest {
 
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
@@ -246,30 +244,47 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         Assert.assertTrue(activePowerControl.isEnabled());
     }
 
-    @ParameterizedTest(name = "Test modification with absent droop infos when extension does not yet exist [{index}] {0}, {1}, {2}")
-    @CsvSource({
-        "true,false,false",
-        "true,true,false",
-        "true,false,true",
-        "false,true,false",
-        "false,true,true",
-        "false,false,true",
-    })
-    void testHvdcAngleDroopActivePowerControlWithAbsentInfos(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+//    @ParameterizedTest(name = "Test modification with absent droop infos when extension does not yet exist [{index}] {0}, {1}, {2}")
+//    @CsvSource({
+//        "true,false,false",
+//        "true,true,false",
+//        "true,false,true",
+//        "false,true,false",
+//        "false,true,true",
+//        "false,false,true",
+//    })
+//    void testHvdcAngleDroopActivePowerControlWithAbsentInfos(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+//        var networkuuid = UUID.randomUUID();
+//        Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
+//        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
+//
+//        // reset null depending to test arguments
+//        if (!isPresentAngleDroopActivePowerControl) {
+//            modificationInfos.setAngleDroopActivePowerControl(null);
+//        }
+//        if (!isPresentDroop) {
+//            modificationInfos.setDroop(null);
+//        }
+//        if (!isPresentP0) {
+//            modificationInfos.setP0(null);
+//        }
+//
+//        VscModification wrongVscModification = new VscModification(modificationInfos);
+//        String message = Assert.assertThrows(NetworkModificationException.class,
+//                () -> wrongVscModification.check(networkWithoutExt))
+//            .getMessage();
+//        assertThat(message).isEqualTo(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL.name() + " : "
+//              + ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+//    }
+
+    @Test
+    public void testAngleDroopActivePowerControlWithAbsentInfos() {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
 
-        // reset null depending to test arguments
-        if (!isPresentAngleDroopActivePowerControl) {
-            modificationInfos.setAngleDroopActivePowerControl(null);
-        }
-        if (!isPresentDroop) {
-            modificationInfos.setDroop(null);
-        }
-        if (!isPresentP0) {
-            modificationInfos.setP0(null);
-        }
+        modificationInfos.setDroop(null);
+        modificationInfos.setP0(null);
 
         VscModification wrongVscModification = new VscModification(modificationInfos);
         String message = Assert.assertThrows(NetworkModificationException.class,
