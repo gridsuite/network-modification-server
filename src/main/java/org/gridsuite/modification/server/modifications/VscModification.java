@@ -35,7 +35,7 @@ public class VscModification extends AbstractModification {
     public static final String ANGLE_DROOP_ACTIVE_POWER_CONTROL_FIELD = "AngleDroopActivePowerControl";
     public static final String DROOP_FIELD = "Droop";
     public static final String P0_FIELD = "P0";
-    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be provided together";
+    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be all provided or none";
 
     private final VscModificationInfos modificationInfos;
 
@@ -43,16 +43,16 @@ public class VscModification extends AbstractModification {
         this.modificationInfos = vscModificationInfos;
     }
 
-    public static void checkHvdcDroop(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
-        // all fields should be filled => OK extension will be created
+    public static void checkDroop(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+        // all fields should be provided => OK extension will be created
         if (isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0) {
             return;
         }
-        // at least one field is filled but not for others => NOT OK
+        // at least one field is provided but not for others => NOT OK
+        // all fields are not provided => OK extension will not be created
         if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
             throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
         }
-        // all fields are not filled => OK extension will not be created
     }
 
     public static boolean shouldCreateHvdcDroopActivePowerControlExtension(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
@@ -89,7 +89,7 @@ public class VscModification extends AbstractModification {
         }
 
         //--- the extension doesn't exist yet ---//
-        checkHvdcDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
+        checkDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 
     @Override

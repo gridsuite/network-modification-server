@@ -1304,6 +1304,5 @@ public final class ModificationUtils {
             child.getChildren().forEach(grandChild -> insertReportNode(insertedChild, grandChild));
         }
     }
-
 }
 

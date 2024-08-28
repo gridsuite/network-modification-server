@@ -24,7 +24,6 @@ import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.VscModification.checkHvdcDroop;
 import static org.gridsuite.modification.server.modifications.VscModification.shouldCreateHvdcDroopActivePowerControlExtension;
 
 /**
@@ -54,7 +53,7 @@ public class VscCreation extends AbstractModification {
     }
 
     private void checkDroop() {
-        checkHvdcDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
+        VscModification.checkDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 
     private void checkConverterStation(Network network,
