@@ -21,7 +21,8 @@ import org.gridsuite.modification.server.dto.VscModificationInfos;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_CHARACTERISTICS;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SETPOINTS;
 
@@ -69,7 +70,7 @@ public class VscModification extends AbstractModification {
         if (modificationInfos == null
                 || modificationInfos.getConverterStation1() == null
                 || modificationInfos.getConverterStation2() == null) {
-            throw new NetworkModificationException(MODIFY_BATTERY_ERROR, "Missing required attributes to modify the equipment");
+            throw new NetworkModificationException(MODIFY_VSC_ERROR, "Missing required attributes to modify the equipment");
         }
         HvdcLine hvdcLine = ModificationUtils.getInstance().getHvdcLine(network, modificationInfos.getEquipmentId());
 

@@ -298,8 +298,6 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         var networkuuid = UUID.randomUUID();
         Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
-        modificationInfos.setConverterStation1(null);
-        modificationInfos.setConverterStation2(null);
         modificationInfos.setAngleDroopActivePowerControl(null);
         modificationInfos.setDroop(null);
         modificationInfos.setP0(null);
@@ -341,13 +339,15 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         VscModificationInfos modificationInfos = VscModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("hvdcLine")
+                .converterStation1(buildConverterStationWithReactiveCapabilityCurve())
+                .converterStation2(buildConverterStationWithMinMaxReactiveLimits())
                 .operatorActivePowerLimitFromSide2ToSide1(new AttributeModification<>(99.f, OperationType.SET))
                 .operatorActivePowerLimitFromSide1ToSide2(new AttributeModification<>(100.f, OperationType.SET))
                 .build();
 
         var networkuuid = UUID.randomUUID();
-        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
-        var hvdcLine = networkWitoutExt.getHvdcLine("hvdcLine");
+        Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
+        var hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
         hvdcLine.newExtension(HvdcOperatorActivePowerRangeAdder.class)
                 .withOprFromCS1toCS2(10)
                 .withOprFromCS2toCS1(12)
@@ -355,7 +355,8 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         ReportNode subReporter = ReportNode.NO_OP;
         ComputationManager computationManager = new LocalComputationManager();
         VscModification vscModification = new VscModification(modificationInfos);
-        vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
+        assertDoesNotThrow(() -> vscModification.check(networkWithExt));
+        vscModification.apply(networkWithExt, true, computationManager, subReporter);
         var hvdcOperatorActivePowerRange = hvdcLine.getExtension(HvdcOperatorActivePowerRange.class);
         Assert.assertEquals(100.f, hvdcOperatorActivePowerRange.getOprFromCS1toCS2(), 0.1);
         Assert.assertEquals(99.f, hvdcOperatorActivePowerRange.getOprFromCS2toCS1(), 0.1);
@@ -365,13 +366,14 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
     public void testNoChangeOnConverterStation() throws IOException {
         var networkuuid = UUID.randomUUID();
         ConverterStationModificationInfos emptyConverterStation = buildEmptyConverterStation();
-        Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
+        Network networkWithExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
         modificationInfos.setConverterStation1(emptyConverterStation); // no change on converter station
         VscModification vscModification = new VscModification(modificationInfos);
         ReportNode subReporter = ReportNode.NO_OP;
         ComputationManager computationManager = new LocalComputationManager();
-        vscModification.apply(networkWitoutExt, true, computationManager, subReporter);
-        assertDoesNotThrow(() -> vscModification.apply(networkWitoutExt, true, computationManager, subReporter));
+        assertDoesNotThrow(() -> vscModification.check(networkWithExt));
+        vscModification.apply(networkWithExt, true, computationManager, subReporter);
+        assertDoesNotThrow(() -> vscModification.apply(networkWithExt, true, computationManager, subReporter));
     }
 }
