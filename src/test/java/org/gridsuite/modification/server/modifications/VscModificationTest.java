@@ -32,7 +32,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
-import static org.gridsuite.modification.server.modifications.VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -246,7 +246,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         Assert.assertTrue(activePowerControl.isEnabled());
     }
 
-    @ParameterizedTest(name = "Test lack of provided values")
+    @ParameterizedTest(name = "Test modification with absent droop infos when extension does not yet exist [{index}] {0}, {1}, {2}")
     @CsvSource({
         "true,false,false",
         "true,true,false",
@@ -254,24 +254,24 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         "false,true,false",
         "false,true,true",
         "false,false,true",
-        })
-    void testHvdcAngleDroopActivePowerControlWithNullValues(boolean isNullAngleDroopActivePowerControl, boolean isNullDroop, boolean isNullP0) {
+    })
+    void testHvdcAngleDroopActivePowerControlWithAbsentInfos(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
         var networkuuid = UUID.randomUUID();
         Network networkWithoutExt = NetworkCreation.createWithVSC(networkuuid, false);
-        VscModificationInfos wrongModificationInfos = (VscModificationInfos) buildModification();
+        VscModificationInfos modificationInfos = (VscModificationInfos) buildModification();
 
         // reset null depending to test arguments
-        if (isNullAngleDroopActivePowerControl) {
-            wrongModificationInfos.setAngleDroopActivePowerControl(null);
+        if (!isPresentAngleDroopActivePowerControl) {
+            modificationInfos.setAngleDroopActivePowerControl(null);
         }
-        if (isNullDroop) {
-            wrongModificationInfos.setDroop(null);
+        if (!isPresentDroop) {
+            modificationInfos.setDroop(null);
         }
-        if (isNullP0) {
-            wrongModificationInfos.setP0(null);
+        if (!isPresentP0) {
+            modificationInfos.setP0(null);
         }
 
-        VscModification wrongVscModification = new VscModification(wrongModificationInfos);
+        VscModification wrongVscModification = new VscModification(modificationInfos);
         String message = Assert.assertThrows(NetworkModificationException.class,
                 () -> wrongVscModification.check(networkWithoutExt))
             .getMessage();

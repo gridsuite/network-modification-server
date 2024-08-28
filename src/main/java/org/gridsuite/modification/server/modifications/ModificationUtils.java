@@ -55,6 +55,8 @@ public final class ModificationUtils {
     public static final String CONNECTION_DIRECTION_FIELD_NAME = "Connection direction";
     public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
 
+    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be provided together";
+
     private ModificationUtils() {
     }
 
@@ -1303,6 +1305,32 @@ public final class ModificationUtils {
         if (child.getChildren() != null) {
             child.getChildren().forEach(grandChild -> insertReportNode(insertedChild, grandChild));
         }
+    }
+
+    public static void checkHvdcDroopInfos(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+        // all fields should be filled => OK extension will be created
+        if (isPresentAngleDroopActivePowerControl &&
+            isPresentDroop &&
+            isPresentP0) {
+            return;
+        }
+
+        // at least one field is filled but not for others => NOT OK
+        if (isPresentAngleDroopActivePowerControl ||
+            isPresentDroop ||
+            isPresentP0) {
+            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+        }
+
+        // all fields are not filled => OK extension will not be created
+    }
+
+    public static boolean shouldCreateHvdcDroopActivePowerControlExtension(boolean isPresentAngleDroopActivePowerControl,
+                                                                           boolean isPresentDroop,
+                                                                           boolean isPresentP0) {
+        return isPresentAngleDroopActivePowerControl &&
+               isPresentDroop &&
+               isPresentP0;
     }
 }
 

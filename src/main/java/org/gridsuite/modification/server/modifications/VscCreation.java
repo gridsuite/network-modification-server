@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_VSC_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.checkHvdcDroopInfos;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.shouldCreateHvdcDroopActivePowerControlExtension;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -32,7 +35,6 @@ public class VscCreation extends AbstractModification {
 
     public static final String VSC_SETPOINTS = "vscSetPoints";
     public static final String VSC_CHARACTERISTICS = "vscCharacteristics";
-    public static final String DROOP_P0_REQUIRED_ERROR_MSG = "Droop and P0 are both required when angle droop active power control is activated";
 
     private final VscCreationInfos modificationInfos;
 
@@ -52,15 +54,10 @@ public class VscCreation extends AbstractModification {
     }
 
     private void checkDroop() {
-        // extension is not enabled => ignore check inside fields
-        if (!Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl())) {
-            return;
-        }
-
-        // enable the extension => should verify whether all fields have been filled
-        if (modificationInfos.getDroop() == null || modificationInfos.getP0() == null) {
-            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, DROOP_P0_REQUIRED_ERROR_MSG);
-        }
+        checkHvdcDroopInfos(
+                modificationInfos.getAngleDroopActivePowerControl() != null,
+                modificationInfos.getDroop() != null,
+                modificationInfos.getP0() != null);
     }
 
     private void checkConverterStation(Network network,
@@ -133,9 +130,10 @@ public class VscCreation extends AbstractModification {
     }
 
     private boolean shouldCreateDroopActivePowerControlExtension() {
-        return Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl()) &&
-               modificationInfos.getDroop() != null &&
-               modificationInfos.getP0() != null;
+        return shouldCreateHvdcDroopActivePowerControlExtension(
+                modificationInfos.getAngleDroopActivePowerControl() != null,
+                modificationInfos.getDroop() != null,
+                modificationInfos.getP0() != null);
     }
 
     private void reportHvdcLineInfos(ReportNode subReportNode) {

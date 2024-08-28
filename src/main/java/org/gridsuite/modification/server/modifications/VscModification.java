@@ -21,7 +21,10 @@ import org.gridsuite.modification.server.dto.VscModificationInfos;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.checkHvdcDroopInfos;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.shouldCreateHvdcDroopActivePowerControlExtension;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_CHARACTERISTICS;
 import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SETPOINTS;
 
@@ -34,7 +37,6 @@ public class VscModification extends AbstractModification {
     public static final String ANGLE_DROOP_ACTIVE_POWER_CONTROL_FIELD = "AngleDroopActivePowerControl";
     public static final String DROOP_FIELD = "Droop";
     public static final String P0_FIELD = "P0";
-    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be provided together";
 
     private final VscModificationInfos modificationInfos;
 
@@ -61,10 +63,10 @@ public class VscModification extends AbstractModification {
         VscConverterStation converterStation2 = ModificationUtils.getInstance().getVscConverterStation(network, hvdcLine.getConverterStation2().getId());
         checkConverterStation(modificationInfos.getConverterStation1(), converterStation1);
         checkConverterStation(modificationInfos.getConverterStation2(), converterStation2);
-        checkDroopModification(hvdcLine);
+        checkDroop(hvdcLine);
     }
 
-    private void checkDroopModification(HvdcLine hvdcLine) {
+    private void checkDroop(HvdcLine hvdcLine) {
         //--- the extension already exists ---//
         HvdcAngleDroopActivePowerControl hvdcAngleDroopActivePowerControl = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
         if (hvdcAngleDroopActivePowerControl != null) {
@@ -72,22 +74,10 @@ public class VscModification extends AbstractModification {
         }
 
         //--- the extension doesn't exist yet ---//
-        // all fields should be filled => OK
-        if (modificationInfos.getAngleDroopActivePowerControl() != null &&
-            modificationInfos.getDroop() != null &&
-            modificationInfos.getP0() != null) {
-            return;
-        }
-
-        // at least one field is filled but not for others => NOT OK
-        if (modificationInfos.getAngleDroopActivePowerControl() != null ||
-            modificationInfos.getDroop() != null ||
-            modificationInfos.getP0() != null) {
-            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-                    ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
-        }
-
-        // all fields are not filled => OK => do nothing
+        checkHvdcDroopInfos(
+                modificationInfos.getAngleDroopActivePowerControl() != null,
+                modificationInfos.getDroop() != null,
+                modificationInfos.getP0() != null);
     }
 
     @Override
@@ -240,10 +230,10 @@ public class VscModification extends AbstractModification {
     }
 
     private boolean shouldCreateDroopActivePowerControlExtension() {
-        return modificationInfos.getAngleDroopActivePowerControl() != null &&
-               modificationInfos.getAngleDroopActivePowerControl().getValue() &&
-               modificationInfos.getDroop() != null &&
-               modificationInfos.getP0() != null;
+        return shouldCreateHvdcDroopActivePowerControlExtension(
+                modificationInfos.getAngleDroopActivePowerControl() != null,
+                modificationInfos.getDroop() != null,
+                modificationInfos.getP0() != null);
     }
 
     private List<ReportNode> hvdcAngleDroopActivePowerControlAdder(HvdcLine hvdcLine) {
