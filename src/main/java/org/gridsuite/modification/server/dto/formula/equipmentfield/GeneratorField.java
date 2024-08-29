@@ -11,15 +11,15 @@ import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
-import com.powsybl.iidm.network.extensions.CoordinatedReactiveControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
+import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorShortCircuitAttributes;
 import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorStartUpAttributes;
 
 /**
@@ -68,7 +68,6 @@ public enum GeneratorField {
 
     public static void setNewValue(Generator generator, String generatorField, Double newValue) {
         if (!Double.isNaN(newValue)) {
-            GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
             GeneratorField field = GeneratorField.valueOf(generatorField);
             switch (field) {
                 case MAXIMUM_ACTIVE_POWER -> generator.setMaxP(newValue);
@@ -135,15 +134,17 @@ public enum GeneratorField {
                             new AttributeModification<>(newValue.floatValue(), OperationType.SET),
                             null);
                 }
-                case TRANSIENT_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
-                        .withDirectTransX(newValue)
-                        .withStepUpTransformerX(generatorShortCircuit == null ? Double.NaN : generatorShortCircuit.getStepUpTransformerX())
-                        .add();
-                case STEP_UP_TRANSFORMER_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
-                        .withDirectTransX(generatorShortCircuit == null ? 0.0D : generatorShortCircuit.getDirectTransX())
-                        .withStepUpTransformerX(newValue)
-                        .add();
-                case Q_PERCENT -> generator.newExtension(CoordinatedReactiveControlAdder.class)
+                case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(
+                                new AttributeModification<>(newValue, OperationType.SET),
+                                null,
+                                generator,
+                                null);
+                case STEP_UP_TRANSFORMER_REACTANCE -> modifyGeneratorShortCircuitAttributes(
+                        null,
+                        new AttributeModification<>(newValue, OperationType.SET),
+                        generator,
+                        null);
+                case Q_PERCENT -> generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
                         .withQPercent(newValue)
                         .add();
             }
