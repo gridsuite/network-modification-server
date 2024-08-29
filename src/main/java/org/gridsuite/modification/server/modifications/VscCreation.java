@@ -53,6 +53,10 @@ public class VscCreation extends AbstractModification {
     }
 
     private void checkDroop() {
+        // particular case, not enabling and others fields are not provided => OK extension will not be created
+        if (Boolean.FALSE.equals(modificationInfos.getAngleDroopActivePowerControl()) && modificationInfos.getDroop() == null && modificationInfos.getP0() == null) {
+            return;
+        }
         VscModification.checkDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 

@@ -319,6 +319,22 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
+    public void testNotCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
+        VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
+        vscCreationInfos.setAngleDroopActivePowerControl(false);
+        vscCreationInfos.setDroop(null);
+        vscCreationInfos.setP0(null);
+        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertThat(getNetwork().getHvdcLine("vsc1")).isNotNull();
+        HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
+        assertThat(hvdcLine).isNotNull();
+        HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
+        assertThat(activePowerControlExt).isNull();
+    }
+
+    @Test
     public void testAngleDroopPowerControlWithAbsentInfos() throws Exception {
         boolean[][] droopInfosIsPresentData = {
             {true, false, false},
