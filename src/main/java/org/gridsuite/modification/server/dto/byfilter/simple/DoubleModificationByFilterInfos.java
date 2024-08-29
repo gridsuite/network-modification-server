@@ -7,13 +7,20 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.dto.byfilter.DataType;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
-public class DoubleModificationByFilterInfos extends SimpleModificationByFilterInfos<Double> {
+public class DoubleModificationByFilterInfos extends AbstractSimpleModificationByFilterInfos<Double> {
+    @Override
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public DataType getDataType() {
+        return DataType.DOUBLE;
+    }
 }

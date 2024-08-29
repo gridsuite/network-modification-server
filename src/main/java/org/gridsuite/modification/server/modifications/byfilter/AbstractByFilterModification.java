@@ -215,7 +215,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
         }
 
         reports.add(ReportNode.newRootReportNode()
-                .withMessageTemplate(KEY_EDITED_FIELD_FILTER + reports.size(), "      Edited field :${" + KEY_FIELD_NAME + "}")
+                .withMessageTemplate(KEY_EDITED_FIELD_FILTER + reports.size(), "      Edited field : ${" + KEY_FIELD_NAME + "}")
                 .withUntypedValue(KEY_FIELD_NAME, filterModificationInfos.getEditedField())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .build());

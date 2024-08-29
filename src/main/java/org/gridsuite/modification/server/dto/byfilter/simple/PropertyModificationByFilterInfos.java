@@ -7,10 +7,13 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
 
 /**
@@ -18,10 +21,17 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
  */
 @SuperBuilder
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 public class PropertyModificationByFilterInfos extends StringModificationByFilterInfos {
     @Schema(description = "Property name")
     private String propertyName;
+
+    @Override
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public DataType getDataType() {
+        return DataType.PROPERTY;
+    }
 
     @Override
     public SimpleModificationEntity toEntity() {

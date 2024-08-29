@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.*;
-import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -141,7 +141,7 @@ public enum GeneratorField {
         }
     }
 
-    public static void setNewValue(Generator generator, SimpleModificationByFilterInfos<?> fieldModificationInfos) {
+    public static void setNewValue(Generator generator, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
         switch (fieldModificationInfos.getDataType()) {
             case DOUBLE -> setNewValue(generator, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }

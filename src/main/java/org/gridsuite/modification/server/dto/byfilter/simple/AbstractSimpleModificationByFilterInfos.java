@@ -1,5 +1,5 @@
  /**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12,11 +12,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
 
 /**
@@ -37,13 +38,13 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @SuperBuilder
 @NoArgsConstructor
-@Data
-public class SimpleModificationByFilterInfos<T> extends AbstractModificationByFilterInfos {
-    @Schema(description = "Data type")
-    private DataType dataType;
-
+@Getter
+@Setter
+public abstract class AbstractSimpleModificationByFilterInfos<T> extends AbstractModificationByFilterInfos {
     @Schema(description = "Value")
     private T value;
+
+    public abstract DataType getDataType();
 
     @JsonIgnore
     public SimpleModificationEntity toEntity() {

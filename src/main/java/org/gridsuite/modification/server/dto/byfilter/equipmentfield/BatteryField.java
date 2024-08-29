@@ -10,7 +10,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -48,7 +48,7 @@ public enum BatteryField {
         }
     }
 
-    public static void setNewValue(Battery battery, SimpleModificationByFilterInfos<?> fieldModificationInfos) {
+    public static void setNewValue(Battery battery, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
         switch (fieldModificationInfos.getDataType()) {
             case DOUBLE -> setNewValue(battery, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }

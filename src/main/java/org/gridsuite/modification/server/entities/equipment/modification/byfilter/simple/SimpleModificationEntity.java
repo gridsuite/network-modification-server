@@ -35,19 +35,18 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
     @Column
     private String propertyName; // dedicated to an exceptional case, i.e. modify a property
 
-    public SimpleModificationEntity(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
+    public SimpleModificationEntity(AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos) {
         super(simpleModificationInfos);
         this.dataType = simpleModificationInfos.getDataType();
         this.value = Optional.ofNullable(simpleModificationInfos.getValue()).map(Object::toString).orElse(null);
     }
 
-    protected void assignAttributes(SimpleModificationByFilterInfos<?> simpleModificationInfos) {
+    protected void assignAttributes(AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos) {
         super.assignAttributes(simpleModificationInfos);
-        simpleModificationInfos.setDataType(dataType);
     }
 
-    public SimpleModificationByFilterInfos<?> toSimpleModificationInfos() {
-        SimpleModificationByFilterInfos<?> simpleModificationByFilterInfos = switch (dataType) {
+    public AbstractSimpleModificationByFilterInfos<?> toSimpleModificationInfos() {
+        AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos = switch (dataType) {
             case BOOLEAN -> BooleanModificationByFilterInfos.builder()
                 .value(value != null ? Boolean.valueOf(value) : null)
                 .build();

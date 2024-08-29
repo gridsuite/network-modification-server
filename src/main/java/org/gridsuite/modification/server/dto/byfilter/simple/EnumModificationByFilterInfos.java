@@ -7,16 +7,20 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.dto.byfilter.DataType;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
-@Data
 public class EnumModificationByFilterInfos extends StringModificationByFilterInfos {
-
+    @Override
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public DataType getDataType() {
+        return DataType.ENUM;
+    }
 }

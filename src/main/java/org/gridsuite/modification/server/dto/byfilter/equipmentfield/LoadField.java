@@ -8,7 +8,7 @@
 package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Load;
-import org.gridsuite.modification.server.dto.byfilter.simple.SimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -34,7 +34,7 @@ public enum LoadField {
         }
     }
 
-    public static void setNewValue(Load load, SimpleModificationByFilterInfos<?> fieldModificationInfos) {
+    public static void setNewValue(Load load, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
         switch (fieldModificationInfos.getDataType()) {
             case DOUBLE -> setNewValue(load, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
         }
