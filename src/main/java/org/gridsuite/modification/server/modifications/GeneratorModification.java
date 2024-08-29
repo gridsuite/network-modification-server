@@ -255,7 +255,6 @@ public class GeneratorModification extends AbstractModification {
         }
     }
 
-
     private static boolean addForcedOutageRate(AttributeModification<Double> forcedOutageRate, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
         Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
         if (forcedOutageRate != null) {

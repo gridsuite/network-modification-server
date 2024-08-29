@@ -45,17 +45,17 @@ public enum BatteryField {
             case MINIMUM_ACTIVE_POWER -> battery.setMinP(newValue);
             case MAXIMUM_ACTIVE_POWER -> battery.setMaxP(newValue);
             case ACTIVE_POWER_SET_POINT -> {
-                    ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
-                            new AttributeModification<>(newValue, OperationType.SET),
-                            null,
-                            null,
-                            battery.getMinP(),
-                            battery.getMaxP(),
-                            battery.getTargetP(),
-                            MODIFY_GENERATOR_ERROR,
-                            "Battery '" + battery.getId() + "' : "
-                    );
-                    battery.setTargetP(newValue);
+                ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                    new AttributeModification<>(newValue, OperationType.SET),
+                    null,
+                    null,
+                    battery.getMinP(),
+                    battery.getMaxP(),
+                    battery.getTargetP(),
+                    MODIFY_GENERATOR_ERROR,
+                    "Battery '" + battery.getId() + "' : "
+                );
+                battery.setTargetP(newValue);
             }
             case REACTIVE_POWER_SET_POINT -> battery.setTargetQ(newValue);
             case DROOP -> {

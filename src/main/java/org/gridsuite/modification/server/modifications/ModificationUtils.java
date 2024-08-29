@@ -1022,7 +1022,6 @@ public final class ModificationUtils {
         adder.add();
     }
 
-
     /**
      * @param reports Data changes will be added to this list. The array may be null but no modification report will be created
      */
