@@ -36,6 +36,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
 
+    @Query(value = "SELECT cast(creations_id AS VARCHAR) FROM tabular_creation_creations WHERE tabular_creation_entity_id = :uuid ORDER BY creations_order", nativeQuery = true)
+    List<UUID> findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(UUID uuid);
+
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationId(UUID uuid);
 
