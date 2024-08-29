@@ -43,19 +43,7 @@ public class VscModification extends AbstractModification {
         this.modificationInfos = vscModificationInfos;
     }
 
-    public static void checkDroop(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
-        // all fields should be provided => OK extension will be created
-        if (isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0) {
-            return;
-        }
-        // at least one field is provided but not for others => NOT OK
-        // all fields are not provided => OK extension will not be created
-        if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
-            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
-        }
-    }
-
-    public static boolean shouldCreateHvdcDroopActivePowerControlExtension(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
+    public static boolean shouldCreateDroopActivePowerControlExtension(boolean isPresentAngleDroopActivePowerControl, boolean isPresentDroop, boolean isPresentP0) {
         return isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0;
     }
 
@@ -89,7 +77,18 @@ public class VscModification extends AbstractModification {
         }
 
         //--- the extension doesn't exist yet ---//
-        checkDroop(modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
+        boolean isPresentAngleDroopActivePowerControl = modificationInfos.getAngleDroopActivePowerControl() != null;
+        boolean isPresentDroop = modificationInfos.getDroop() != null;
+        boolean isPresentP0 = modificationInfos.getP0() != null;
+        // all fields are provided => OK extension will be created
+        if (isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0) {
+            return;
+        }
+        // at least one field is provided but not for others => NOT OK
+        if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
+            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+        }
+        // otherwise, i.e. all fields are not provided => OK extension will not be created
     }
 
     @Override
@@ -242,7 +241,7 @@ public class VscModification extends AbstractModification {
     }
 
     private boolean shouldCreateDroopActivePowerControlExtension() {
-        return shouldCreateHvdcDroopActivePowerControlExtension(
+        return shouldCreateDroopActivePowerControlExtension(
             modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 
