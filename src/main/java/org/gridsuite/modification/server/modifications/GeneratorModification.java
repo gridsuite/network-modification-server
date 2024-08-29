@@ -94,7 +94,7 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorLimitsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorSetpointsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorShortCircuitAttributes(modificationInfos, generator, subReportNode);
-        modifyGeneratorStartUpAttributes(modificationInfos, generator, subReportNode);
+        modifyGeneratorStartUpAttributesAndLog(modificationInfos, generator, subReportNode);
         modifyGeneratorConnectivityAttributes(modificationInfos, generator, subReportNode);
         PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties(), "GeneratorProperties");
     }
@@ -212,36 +212,60 @@ public class GeneratorModification extends AbstractModification {
                                                                  Generator generator, ReportNode subReportNode, ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
-        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributesAndLog(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
     }
 
-    private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
-                                                  ReportNode subReportNode) {
+    private void modifyGeneratorStartUpAttributesAndLog(GeneratorModificationInfos modificationInfos, Generator generator,
+                                                        ReportNode subReportNode) {
         List<ReportNode> reports = new ArrayList<>();
-        GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
+        modifyGeneratorStartUpAttributes(modificationInfos.getPlannedActivePowerSetPoint(),
+                modificationInfos.getMarginalCost(),
+                modificationInfos.getPlannedOutageRate(),
+                modificationInfos.getForcedOutageRate(),
+                generator,
+                subReportNode,
+                reports);
+    }
+
+    public static void modifyGeneratorStartUpAttributes(AttributeModification<Double> plannedActivePowerSetPoint,
+                                                        AttributeModification<Double> marginalCost,
+                                                        AttributeModification<Double> plannedOutageRate,
+                                                        AttributeModification<Double> forcedOutageRate,
+                                                        Generator generator,
+                                                        ReportNode subReportNode,
+                                                        List<ReportNode> reports) {
         GeneratorStartupAdder generatorStartupAdder = generator.newExtension(GeneratorStartupAdder.class);
-        boolean plannedActivePowerSetPointUpdated = addPlannedActivePowerSetPoint(modificationInfos, generatorStartupAdder, generatorStartup, reports);
-        boolean marginalCostUpdated = addMarginalCost(modificationInfos, generatorStartupAdder, generatorStartup, reports);
-        boolean plannedOutageRateUpdated = addPlannedOutageRate(modificationInfos, generatorStartupAdder, generatorStartup, reports);
-        boolean forcedOutageRateUpdated = addForcedOutageRate(modificationInfos, generatorStartupAdder, generatorStartup, reports);
+        GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
+        boolean plannedActivePowerSetPointUpdated = addPlannedActivePowerSetPoint(plannedActivePowerSetPoint,
+                generatorStartupAdder,
+                generatorStartup,
+                reports);
+        boolean marginalCostUpdated = addMarginalCost(marginalCost, generatorStartupAdder, generatorStartup, reports);
+        boolean plannedOutageRateUpdated = addPlannedOutageRate(plannedOutageRate, generatorStartupAdder, generatorStartup, reports);
+        boolean forcedOutageRateUpdated = addForcedOutageRate(forcedOutageRate, generatorStartupAdder, generatorStartup, reports);
 
         if (plannedActivePowerSetPointUpdated ||
                 marginalCostUpdated ||
                 plannedOutageRateUpdated ||
                 forcedOutageRateUpdated) {
             generatorStartupAdder.add();
-            ModificationUtils.getInstance().reportModifications(subReportNode, reports, "startUpAttributesModified", "Start up", Map.of());
+            if (subReportNode != null) {
+                ModificationUtils.getInstance().reportModifications(subReportNode, reports, "startUpAttributesModified", "Start up", Map.of());
+            }
         }
     }
 
-    private boolean addForcedOutageRate(GeneratorModificationInfos modificationInfos, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
+
+    private static boolean addForcedOutageRate(AttributeModification<Double> forcedOutageRate, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
         Double oldForcedOutageRate = generatorStartup != null ? generatorStartup.getForcedOutageRate() : Double.NaN;
-        if (modificationInfos.getForcedOutageRate() != null) {
+        if (forcedOutageRate != null) {
             generatorStartupAdder
-                    .withForcedOutageRate(modificationInfos.getForcedOutageRate().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldForcedOutageRate,
-                    modificationInfos.getForcedOutageRate().getValue(),
-                    "Forced outage rate"));
+                    .withForcedOutageRate(forcedOutageRate.getValue());
+            if (reports != null) {
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldForcedOutageRate,
+                        forcedOutageRate.getValue(),
+                        "Forced outage rate"));
+            }
             return true;
         } else {
             generatorStartupAdder
@@ -250,14 +274,16 @@ public class GeneratorModification extends AbstractModification {
         return false;
     }
 
-    private boolean addPlannedOutageRate(GeneratorModificationInfos modificationInfos, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
+    private static boolean addPlannedOutageRate(AttributeModification<Double> plannedOutageRate, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
         Double oldPlannedOutageRate = generatorStartup != null ? generatorStartup.getPlannedOutageRate() : Double.NaN;
-        if (modificationInfos.getPlannedOutageRate() != null) {
+        if (plannedOutageRate != null) {
             generatorStartupAdder
-                    .withPlannedOutageRate(modificationInfos.getPlannedOutageRate().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
-                    modificationInfos.getPlannedOutageRate().getValue(),
-                    "Planning outage rate"));
+                    .withPlannedOutageRate(plannedOutageRate.getValue());
+            if (reports != null) {
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedOutageRate,
+                        plannedOutageRate.getValue(),
+                        "Planning outage rate"));
+            }
             return true;
         } else {
             generatorStartupAdder
@@ -266,14 +292,16 @@ public class GeneratorModification extends AbstractModification {
         return false;
     }
 
-    private boolean addMarginalCost(GeneratorModificationInfos modificationInfos, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
+    private static boolean addMarginalCost(AttributeModification<Double> marginalCost, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
         Double oldMarginalCost = generatorStartup != null ? generatorStartup.getMarginalCost() : Double.NaN;
-        if (modificationInfos.getMarginalCost() != null) {
+        if (marginalCost != null) {
             generatorStartupAdder
-                    .withMarginalCost(modificationInfos.getMarginalCost().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
-                    modificationInfos.getMarginalCost().getValue(),
-                    "Marginal cost"));
+                    .withMarginalCost(marginalCost.getValue());
+            if (reports != null) {
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldMarginalCost,
+                        marginalCost.getValue(),
+                        "Marginal cost"));
+            }
             return true;
         } else {
             generatorStartupAdder
@@ -282,14 +310,17 @@ public class GeneratorModification extends AbstractModification {
         return false;
     }
 
-    private boolean addPlannedActivePowerSetPoint(GeneratorModificationInfos modificationInfos, GeneratorStartupAdder generatorStartupAdder, GeneratorStartup generatorStartup, List<ReportNode> reports) {
+    private static boolean addPlannedActivePowerSetPoint(AttributeModification<Double> plannedActivePowerSetPoint, GeneratorStartupAdder generatorStartupAdder,
+                                                  GeneratorStartup generatorStartup, List<ReportNode> reports) {
         Double oldPlannedActivePowerSetPoint = generatorStartup != null ? generatorStartup.getPlannedActivePowerSetpoint() : Double.NaN;
-        if (modificationInfos.getPlannedActivePowerSetPoint() != null) {
+        if (plannedActivePowerSetPoint != null) {
             generatorStartupAdder
-                    .withPlannedActivePowerSetpoint(modificationInfos.getPlannedActivePowerSetPoint().getValue());
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
-                    modificationInfos.getPlannedActivePowerSetPoint().getValue(),
-                    "Planning active power set point"));
+                    .withPlannedActivePowerSetpoint(plannedActivePowerSetPoint.getValue());
+            if (reports != null) {
+                reports.add(ModificationUtils.getInstance().buildModificationReport(oldPlannedActivePowerSetPoint,
+                        plannedActivePowerSetPoint.getValue(),
+                        "Planning active power set point"));
+            }
             return true;
         } else {
             generatorStartupAdder

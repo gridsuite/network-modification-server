@@ -15,7 +15,12 @@ import com.powsybl.iidm.network.extensions.CoordinatedReactiveControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.modifications.ModificationUtils;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorStartUpAttributes;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -63,80 +68,72 @@ public enum GeneratorField {
 
     public static void setNewValue(Generator generator, String generatorField, Double newValue) {
         if (!Double.isNaN(newValue)) {
-            GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
             GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
             GeneratorField field = GeneratorField.valueOf(generatorField);
             switch (field) {
                 case MAXIMUM_ACTIVE_POWER -> generator.setMaxP(newValue);
                 case MINIMUM_ACTIVE_POWER -> generator.setMinP(newValue);
-                case ACTIVE_POWER_SET_POINT -> generator.setTargetP(newValue);
+                case ACTIVE_POWER_SET_POINT -> {
+                    ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                            new AttributeModification<>(newValue, OperationType.SET),
+                            null,
+                            null,
+                            generator.getMinP(),
+                            generator.getMaxP(),
+                            generator.getTargetP(),
+                            MODIFY_GENERATOR_ERROR,
+                            "Generator '" + generator.getId() + "' : "
+                    );
+                    generator.setTargetP(newValue);
+                }
                 case RATED_NOMINAL_POWER -> generator.setRatedS(newValue);
                 case REACTIVE_POWER_SET_POINT -> generator.setTargetQ(newValue);
                 case VOLTAGE_SET_POINT -> generator.setTargetV(newValue);
-                case PLANNED_ACTIVE_POWER_SET_POINT -> {
-                    if (generatorStartup == null) {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withPlannedActivePowerSetpoint(newValue)
-                                .add();
-                    } else {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withMarginalCost(generatorStartup.getMarginalCost())
-                                .withPlannedActivePowerSetpoint(newValue)
-                                .withPlannedOutageRate(generatorStartup.getPlannedOutageRate())
-                                .withForcedOutageRate(generatorStartup.getForcedOutageRate())
-                                .add();
-                    }
-                }
-                case MARGINAL_COST -> {
-                    if (generatorStartup == null) {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withMarginalCost(newValue)
-                                .add();
-                    } else {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withMarginalCost(newValue)
-                                .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
-                                .withPlannedOutageRate(generatorStartup.getPlannedOutageRate())
-                                .withForcedOutageRate(generatorStartup.getForcedOutageRate())
-                                .add();
-                    }
-                }
-                case PLANNED_OUTAGE_RATE -> {
-                    if (generatorStartup == null) {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withPlannedOutageRate(newValue)
-                                .add();
-                    } else {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withMarginalCost(generatorStartup.getMarginalCost())
-                                .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
-                                .withPlannedOutageRate(newValue)
-                                .withForcedOutageRate(generatorStartup.getForcedOutageRate())
-                                .add();
-                    }
-                }
-                case FORCED_OUTAGE_RATE -> {
-                    if (generatorStartup == null) {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withForcedOutageRate(newValue)
-                                .add();
-                    } else {
-                        generator.newExtension(GeneratorStartupAdder.class)
-                                .withMarginalCost(generatorStartup.getMarginalCost())
-                                .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
-                                .withPlannedOutageRate(generatorStartup.getForcedOutageRate())
-                                .withForcedOutageRate(newValue)
-                                .add();
-                    }
-                }
+                case PLANNED_ACTIVE_POWER_SET_POINT ->
+                    modifyGeneratorStartUpAttributes(
+                            new AttributeModification<>(newValue, OperationType.SET),
+                            null,
+                            null,
+                            null,
+                            generator,
+                            null,
+                            null);
+                case MARGINAL_COST ->
+                        modifyGeneratorStartUpAttributes(
+                                null,
+                                new AttributeModification<>(newValue, OperationType.SET),
+                                null,
+                                null,
+                                generator,
+                                null,
+                                null);
+                case PLANNED_OUTAGE_RATE ->
+                        modifyGeneratorStartUpAttributes(
+                                null,
+                                null,
+                                new AttributeModification<>(newValue, OperationType.SET),
+                                null,
+                                generator,
+                                null,
+                                null);
+                case FORCED_OUTAGE_RATE ->
+                        modifyGeneratorStartUpAttributes(
+                                null,
+                                null,
+                                null,
+                                new AttributeModification<>(newValue, OperationType.SET),
+                                generator,
+                                null,
+                                null);
                 case DROOP -> {
-                    if (generator.getExtension(ActivePowerControl.class) != null) {
-                        generator.getExtension(ActivePowerControl.class).setDroop(newValue);
-                    } else {
-                        generator.newExtension(ActivePowerControlAdder.class)
-                                .withDroop(newValue)
-                                .add();
-                    }
+                    ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
+                    ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
+                    ModificationUtils.getInstance().modifyActivePowerControlAttributes(
+                            activePowerControl,
+                            activePowerControlAdder,
+                            null,
+                            new AttributeModification<>(newValue.floatValue(), OperationType.SET),
+                            null);
                 }
                 case TRANSIENT_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
                         .withDirectTransX(newValue)

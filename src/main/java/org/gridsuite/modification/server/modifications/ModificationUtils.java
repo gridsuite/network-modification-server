@@ -450,15 +450,6 @@ public final class ModificationUtils {
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
-    public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
-                                                                  AttributeModification<T> modification) {
-        if (modification != null) {
-            T oldValue = getter.get();
-            T newValue = modification.applyModification(oldValue);
-            setter.accept(newValue);
-        }
-    }
-
     public <T> ReportNode applyElementaryModificationsAndReturnReport(Consumer<T> setter, Supplier<T> getter,
                                                                   AttributeModification<T> modification, String fieldName) {
         if (modification != null) {
@@ -1001,12 +992,16 @@ public final class ModificationUtils {
 
         Optional.ofNullable(participateInfo).ifPresent(info -> {
             activePowerControl.setParticipate(info.getValue());
-            reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+            if (reports != null) {
+                reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+            }
         });
 
         Optional.ofNullable(droopInfo).ifPresent(info -> {
             activePowerControl.setDroop(info.getValue());
-            reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+            if (reports != null) {
+                reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+            }
         });
     }
 
@@ -1016,32 +1011,48 @@ public final class ModificationUtils {
                                              List<ReportNode> reports) {
         boolean participate = participateInfo != null ? participateInfo.getValue() : false;
         adder.withParticipate(participate);
-        if (participateInfo != null) {
+        if (participateInfo != null && reports != null) {
             reports.add(buildModificationReport(null, participate, "Participate"));
         }
         double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
         adder.withDroop(droop);
-        if (droopInfo != null) {
+        if (droopInfo != null && reports != null) {
             reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
         }
         adder.add();
     }
 
-    public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
-                                                       ActivePowerControlAdder<?> activePowerControlAdder,
-                                                       AttributeModification<Boolean> participateInfo,
-                                                       AttributeModification<Float> droopInfo,
-                                                        ReportNode subReportNode,
-                                                         ReportNode subReporterSetpoints) {
-        List<ReportNode> reports = new ArrayList<>();
+
+    /**
+     * @param reports Data changes will be added to this list. The array may be null but no modification report will be created
+     */
+    public void modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
+                                                   ActivePowerControlAdder<?> activePowerControlAdder,
+                                                   AttributeModification<Boolean> participateInfo,
+                                                   AttributeModification<Float> droopInfo,
+                                                   List<ReportNode> reports) {
         if (activePowerControl != null) {
             modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
             createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
+    }
+
+    public ReportNode modifyActivePowerControlAttributesAndLog(ActivePowerControl<?> activePowerControl,
+                                                               ActivePowerControlAdder<?> activePowerControlAdder,
+                                                               AttributeModification<Boolean> participateInfo,
+                                                               AttributeModification<Float> droopInfo,
+                                                               ReportNode subReportNode,
+                                                               ReportNode subReporterSetpoints) {
+        List<ReportNode> reports = new ArrayList<>();
+        modifyActivePowerControlAttributes(activePowerControl,
+                activePowerControlAdder,
+                participateInfo,
+                droopInfo,
+                reports);
 
         ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
-        if (subReporterSetpoints == null && !reports.isEmpty() && subReportNode != null) { // tmp test : essayer de décorréler l'application des logs
+        if (subReporterSetpoints == null && !reports.isEmpty()) {
             subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
             subReportNodeSetpoints2.newReportNode()
                     .withMessageTemplate(SETPOINTS, SETPOINTS)
