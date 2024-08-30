@@ -227,7 +227,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.duplicateModifications(sourceModificationUuids));
     }
 
-    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "stashed")
     @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
     public ResponseEntity<Void> stashNetworkModifications(
@@ -239,6 +239,17 @@ public class NetworkModificationController {
         } else {
             networkModificationService.restoreNetworkModifications(networkModificationUuids);
         }
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "active")
+    @Operation(summary = "stash or unstash network modifications")
+    @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
+    public ResponseEntity<Void> updateNetworkModificationsActivation(
+        @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+        @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
+        @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "active") Boolean active) {
+        networkModificationService.updateNetworkModificationActivation(networkModificationUuids, active);
         return ResponseEntity.ok().build();
     }
 

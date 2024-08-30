@@ -60,11 +60,15 @@ public class ModificationEntity {
     @Column(name = "message_values")
     private String messageValues;
 
-    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, String messageType, String messageValues) {
+    @Column(name = "active")
+    private Boolean active = true;
+
+    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean active, String messageType, String messageValues) {
         this.id = id;
         this.type = type;
         this.date = date;
         this.stashed = stashed;
+        this.active = active;
         this.messageType = messageType;
         this.messageValues = messageValues;
     }
@@ -82,6 +86,7 @@ public class ModificationEntity {
         this.date = Instant.now().truncatedTo(ChronoUnit.MICROS);
         // Do not put this stashed status in assignAttributes, it's not part of a network modification as such.
         this.stashed = modificationInfos.getStashed();
+        this.active = modificationInfos.getActive();
 
         assignAttributes(modificationInfos);
     }

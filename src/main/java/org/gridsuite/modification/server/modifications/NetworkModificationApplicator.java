@@ -166,6 +166,7 @@ public class NetworkModificationApplicator {
             reportNode = ReportNode.NO_OP;
         }
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
+                .filter(ModificationInfos::getActive)
                 .map(m -> apply(m, network, reportNode))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
