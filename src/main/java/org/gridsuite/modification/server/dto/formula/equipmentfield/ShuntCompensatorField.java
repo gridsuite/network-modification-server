@@ -14,8 +14,12 @@ import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
+import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifyMaxSusceptance;
+import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifyMaximumQAtNominalVoltage;
 import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifyMaximumSectionCount;
+import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifySectionCount;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -46,16 +50,15 @@ public enum ShuntCompensatorField {
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         ShuntCompensatorField field = ShuntCompensatorField.valueOf(shuntCompensatorField);
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
+        var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
         switch (field) {
             case MAXIMUM_SECTION_COUNT -> modifyMaximumSectionCount(new AttributeModification<>(newValue.intValue(), OperationType.SET),
                     null, null, null, shuntCompensator, model);
-            case SECTION_COUNT -> shuntCompensator.setSectionCount(newValue.intValue());
-            case MAXIMUM_SUSCEPTANCE -> model.setBPerSection(newValue / shuntCompensator.getMaximumSectionCount());
-            case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> {
-                double newQatNominalV = newValue / shuntCompensator.getMaximumSectionCount();
-                double newSusceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
-                model.setBPerSection(newSusceptancePerSection);
-            }
+            case SECTION_COUNT -> modifySectionCount(new AttributeModification<>(newValue.intValue(), OperationType.SET), null, shuntCompensator);
+            case MAXIMUM_SUSCEPTANCE -> modifyMaxSusceptance(new AttributeModification<>(newValue, OperationType.SET),
+                    shuntCompensator.getMaximumSectionCount(), null, model);
+            case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> modifyMaximumQAtNominalVoltage(new AttributeModification<>(newValue, OperationType.SET),
+                    voltageLevel, shuntCompensator.getMaximumSectionCount(), null, model, shuntCompensatorType);
         }
     }
 }
