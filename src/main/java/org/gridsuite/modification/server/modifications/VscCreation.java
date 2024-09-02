@@ -62,11 +62,11 @@ public class VscCreation extends AbstractModification {
         if (Boolean.FALSE.equals(modificationInfos.getAngleDroopActivePowerControl()) && !isPresentDroop && !isPresentP0) {
             return;
         }
-        // at least one field is provided but not for others => NOT OK
+        // at least one field is provided but not for the others => NOT OK
         if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
             throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
         }
-        // otherwise, i.e. all fields are not provided => OK extension will not be created
+        // otherwise, i.e. none of the fields is not provided => OK extension will not be created
     }
 
     private void checkConverterStation(Network network,

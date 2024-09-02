@@ -308,7 +308,6 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertThat(getNetwork().getHvdcLine("vsc1")).isNotNull();
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
@@ -327,7 +326,6 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
         String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertThat(getNetwork().getHvdcLine("vsc1")).isNotNull();
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);

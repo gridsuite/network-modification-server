@@ -303,6 +303,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         assertDoesNotThrow(() -> vscModification.check(networkWithExt));
         vscModification.apply(networkWithExt, true, computationManager, subReporter);
         HvdcLine hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
+        assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
         assertThat(activePowerControlExt).isNull();
     }
@@ -321,6 +322,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         assertDoesNotThrow(() -> vscModification.check(networkWithExt));
         vscModification.apply(networkWithExt, true, computationManager, subReporter);
         HvdcLine hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
+        assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
         Assert.assertEquals(10, activePowerControlExt.getDroop(), 0);
         Assert.assertEquals(0, activePowerControlExt.getP0(), 0);
@@ -341,6 +343,7 @@ public class VscModificationTest extends AbstractNetworkModificationTest {
         assertDoesNotThrow(() -> vscModification.check(networkWithExt));
         vscModification.apply(networkWithExt, true, computationManager, subReporter);
         HvdcLine hvdcLine = networkWithExt.getHvdcLine("hvdcLine");
+        assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
         Assert.assertEquals(2, activePowerControlExt.getDroop(), 0);
         Assert.assertEquals(6, activePowerControlExt.getP0(), 0);
