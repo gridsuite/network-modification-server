@@ -97,45 +97,50 @@ public class VoltageLevelModification extends AbstractModification {
                                                       AttributeModification<Double> ipMax,
                                                       ReportNode subReportNode,
                                                       VoltageLevel voltageLevel) {
-        if (ipMin != null || ipMax != null) {
-            List<ReportNode> reports = new ArrayList<>();
-            IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
-            IdentifiableShortCircuitAdder<VoltageLevel> identifiableShortCircuitAdder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class);
-            var oldIpMin = identifiableShortCircuit == null ? null : identifiableShortCircuit.getIpMin();
-            var oldIpMax = identifiableShortCircuit == null ? null : identifiableShortCircuit.getIpMax();
+        if (ipMin == null && ipMax == null) {
+            return;
+        }
 
-            if (ipMin != null) {
-                var newIpMin = ipMin.getValue();
+        List<ReportNode> reports = new ArrayList<>();
+        IdentifiableShortCircuitAdder<VoltageLevel> identifiableShortCircuitAdder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class);
+        Double oldIpMin = null;
+        Double oldIpMax = null;
+        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
+        if (identifiableShortCircuit != null) {
+            oldIpMin = identifiableShortCircuit.getIpMin();
+            oldIpMax = identifiableShortCircuit.getIpMax();
+        }
 
-                identifiableShortCircuitAdder.withIpMin(newIpMin);
+        if (ipMin != null) {
+            var newIpMin = ipMin.getValue();
 
-                //convert to kA to report it like the user set it.
-                var oldIpMinToReport = oldIpMin != null ? oldIpMin * 0.001 : null;
-                var newIpMinToReport = newIpMin * 0.001;
+            identifiableShortCircuitAdder.withIpMin(newIpMin);
 
-                reports.add(ModificationUtils.getInstance()
-                        .buildModificationReport(oldIpMinToReport, newIpMinToReport, "Low short circuit current limit"));
-            } else if (oldIpMin != null) {
-                identifiableShortCircuitAdder.withIpMin(oldIpMin);
-            }
+            //convert to kA to report it like the user set it.
+            var oldIpMinToReport = oldIpMin != null ? oldIpMin * 0.001 : null;
+            var newIpMinToReport = newIpMin * 0.001;
+            reports.add(ModificationUtils.getInstance()
+                    .buildModificationReport(oldIpMinToReport, newIpMinToReport, "Low short circuit current limit"));
+        } else if (oldIpMin != null) {
+            identifiableShortCircuitAdder.withIpMin(oldIpMin);
+        }
 
-            if (ipMax != null) {
-                var newIpMax = ipMax.getValue();
-                identifiableShortCircuitAdder.withIpMax(newIpMax);
+        if (ipMax != null) {
+            var newIpMax = ipMax.getValue();
+            identifiableShortCircuitAdder.withIpMax(newIpMax);
 
-                //Convert to kA to report it like the user set it.
-                var oldIpMaxToReport = oldIpMax != null ? oldIpMax * 0.001 : null;
-                var newIpMaxToReport = newIpMax * 0.001;
-                reports.add(ModificationUtils.getInstance()
-                        .buildModificationReport(oldIpMaxToReport, newIpMaxToReport, "High short circuit current limit"));
-            } else if (oldIpMax != null) {
-                identifiableShortCircuitAdder.withIpMax(oldIpMax);
-            }
+            //Convert to kA to report it like the user set it.
+            var oldIpMaxToReport = oldIpMax != null ? oldIpMax * 0.001 : null;
+            var newIpMaxToReport = newIpMax * 0.001;
+            reports.add(ModificationUtils.getInstance()
+                    .buildModificationReport(oldIpMaxToReport, newIpMaxToReport, "High short circuit current limit"));
+        } else if (oldIpMax != null) {
+            identifiableShortCircuitAdder.withIpMax(oldIpMax);
+        }
 
-            identifiableShortCircuitAdder.add();
-            if (subReportNode != null) {
-                reports.forEach(report -> insertReportNode(subReportNode, report));
-            }
+        identifiableShortCircuitAdder.add();
+        if (subReportNode != null) {
+            reports.forEach(report -> insertReportNode(subReportNode, report));
         }
     }
 }
