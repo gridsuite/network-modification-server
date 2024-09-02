@@ -81,6 +81,10 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
     public abstract String getModificationTypeLabel();
 
+    private String getEditedFieldLabel(AbstractModificationByFilterInfos modificationByFilterInfos) {
+        return modificationByFilterInfos.getEditedFieldLabel();
+    }
+
     public abstract ModificationInfos getModificationInfos();
 
     public abstract IdentifiableType getEquipmentType();
@@ -126,7 +130,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
         if (exportFilters != null) {
             ReportNode subReporter = subReportNode.newReportNode()
-                .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}")
+                .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}s")
                 .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, StringUtils.capitalize(getModificationTypeLabel()))
                 .add();
             List<ReportNode> reports = new ArrayList<>();
@@ -248,7 +252,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
         reports.add(ReportNode.newRootReportNode()
             .withMessageTemplate(REPORT_KEY_EDITED_FIELD_FILTER, "      Edited field : ${" + VALUE_KEY_FIELD_NAME + "}")
-            .withUntypedValue(VALUE_KEY_FIELD_NAME, modificationByFilterInfos.getEditedField())
+            .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(modificationByFilterInfos))
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
 
@@ -280,7 +284,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                         "        ${" + VALUE_KEY_EQUIPMENT_TYPE + "} id : ${" + VALUE_KEY_EQUIPMENT_NAME + "}, new value of ${" + VALUE_KEY_FIELD_NAME + "} : ${" + VALUE_KEY_VALUE + "}")
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_TYPE, equipment.getType().name())
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
-                .withUntypedValue(VALUE_KEY_FIELD_NAME, modificationByFilterInfos.getEditedField())
+                .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(modificationByFilterInfos))
                 .withUntypedValue(VALUE_KEY_VALUE, String.valueOf(newValue))
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .build());
@@ -345,7 +349,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
     private void report(ReportNode subReportNode, List<ReportNode> reports) {
         subReportNode.newReportNode()
-            .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS_INFO, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}")
+            .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS_INFO, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}s")
             .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, StringUtils.capitalize(getModificationTypeLabel()))
             .withSeverity(TypedValue.INFO_SEVERITY)
             .add();

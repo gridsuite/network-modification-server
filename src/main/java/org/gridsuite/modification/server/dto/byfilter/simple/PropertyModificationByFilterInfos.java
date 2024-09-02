@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto.byfilter.simple;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -29,6 +30,12 @@ public class PropertyModificationByFilterInfos extends StringModificationByFilte
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public DataType getDataType() {
         return DataType.PROPERTY;
+    }
+
+    @JsonIgnore
+    @Override
+    public String getEditedFieldLabel() {
+        return propertyName + " " + super.getEditedFieldLabel();
     }
 
     @Override

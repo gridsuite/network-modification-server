@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.dto.byfilter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,4 +34,9 @@ public abstract class AbstractModificationByFilterInfos {
 
     @Schema(description = "Edited field")
     private String editedField;
+
+    @JsonIgnore
+    public String getEditedFieldLabel() {
+        return editedField;
+    }
 }

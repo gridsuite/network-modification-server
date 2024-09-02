@@ -37,7 +37,7 @@ public class ByFormulaModification extends AbstractByFilterModification {
 
     @Override
     public String getModificationTypeLabel() {
-        return "modification by formula";
+        return "formula";
     }
 
     @Override
