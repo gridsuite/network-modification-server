@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,20 +89,23 @@ public class VoltageLevelModification extends AbstractModification {
         ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setLowVoltageLimit, voltageLevel::getLowVoltageLimit, modificationInfos.getLowVoltageLimit(), subReportNode, "Low voltage limit");
         ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setHighVoltageLimit, voltageLevel::getHighVoltageLimit, modificationInfos.getHighVoltageLimit(), subReportNode, "High voltage limit");
 
-        modifyVoltageLevelShortCircuit(subReportNode, voltageLevel);
+        modifyVoltageLevelShortCircuit(modificationInfos.getIpMin(), modificationInfos.getIpMax(), subReportNode, voltageLevel);
         PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties(), "VlProperties");
     }
 
-    private void modifyVoltageLevelShortCircuit(ReportNode subReportNode, VoltageLevel voltageLevel) {
-        if (modificationInfos.getIpMin() != null || modificationInfos.getIpMax() != null) {
+    public static void modifyVoltageLevelShortCircuit(AttributeModification<Double> ipMin,
+                                                      AttributeModification<Double> ipMax,
+                                                      ReportNode subReportNode,
+                                                      VoltageLevel voltageLevel) {
+        if (ipMin != null || ipMax != null) {
             List<ReportNode> reports = new ArrayList<>();
             IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
             IdentifiableShortCircuitAdder<VoltageLevel> identifiableShortCircuitAdder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class);
             var oldIpMin = identifiableShortCircuit == null ? null : identifiableShortCircuit.getIpMin();
             var oldIpMax = identifiableShortCircuit == null ? null : identifiableShortCircuit.getIpMax();
 
-            if (modificationInfos.getIpMin() != null) {
-                var newIpMin = modificationInfos.getIpMin().getValue();
+            if (ipMin != null) {
+                var newIpMin = ipMin.getValue();
 
                 identifiableShortCircuitAdder.withIpMin(newIpMin);
 
@@ -115,8 +119,8 @@ public class VoltageLevelModification extends AbstractModification {
                 identifiableShortCircuitAdder.withIpMin(oldIpMin);
             }
 
-            if (modificationInfos.getIpMax() != null) {
-                var newIpMax = modificationInfos.getIpMax().getValue();
+            if (ipMax != null) {
+                var newIpMax = ipMax.getValue();
                 identifiableShortCircuitAdder.withIpMax(newIpMax);
 
                 //Convert to kA to report it like the user set it.
@@ -129,7 +133,9 @@ public class VoltageLevelModification extends AbstractModification {
             }
 
             identifiableShortCircuitAdder.add();
-            reports.forEach(report -> insertReportNode(subReportNode, report));
+            if (subReportNode != null) {
+                reports.forEach(report -> insertReportNode(subReportNode, report));
+            }
         }
     }
 }

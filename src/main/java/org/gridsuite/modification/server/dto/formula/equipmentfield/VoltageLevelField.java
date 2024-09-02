@@ -9,7 +9,10 @@ package org.gridsuite.modification.server.dto.formula.equipmentfield;
 
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
-import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+
+import static org.gridsuite.modification.server.modifications.VoltageLevelModification.modifyVoltageLevelShortCircuit;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -35,26 +38,15 @@ public enum VoltageLevelField {
     }
 
     public static void setNewValue(VoltageLevel voltageLevel, String voltageLevelField, Double newValue) {
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         VoltageLevelField field = VoltageLevelField.valueOf(voltageLevelField);
         switch (field) {
             case NOMINAL_VOLTAGE -> voltageLevel.setNominalV(newValue);
             case LOW_VOLTAGE_LIMIT -> voltageLevel.setLowVoltageLimit(newValue);
             case HIGH_VOLTAGE_LIMIT -> voltageLevel.setHighVoltageLimit(newValue);
-            case LOW_SHORT_CIRCUIT_CURRENT_LIMIT -> {
-                IdentifiableShortCircuitAdder<VoltageLevel> adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(newValue);
-                if (identifiableShortCircuit != null) {
-                    adder.withIpMax(identifiableShortCircuit.getIpMax());
-                }
-                adder.add();
-            }
-            case HIGH_SHORT_CIRCUIT_CURRENT_LIMIT -> {
-                IdentifiableShortCircuitAdder<VoltageLevel> adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMax(newValue);
-                if (identifiableShortCircuit != null) {
-                    adder.withIpMin(identifiableShortCircuit.getIpMin());
-                }
-                adder.add();
-            }
+            case LOW_SHORT_CIRCUIT_CURRENT_LIMIT -> modifyVoltageLevelShortCircuit(
+                    new AttributeModification<>(newValue, OperationType.SET), null, null, voltageLevel);
+            case HIGH_SHORT_CIRCUIT_CURRENT_LIMIT -> modifyVoltageLevelShortCircuit(
+                    null, new AttributeModification<>(newValue, OperationType.SET), null, voltageLevel);
         }
     }
 }
