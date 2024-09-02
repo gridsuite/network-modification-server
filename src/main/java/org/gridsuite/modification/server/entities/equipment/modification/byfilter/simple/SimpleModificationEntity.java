@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,10 +10,13 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.simple.*;
+import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,7 +25,6 @@ import java.util.Optional;
 @NoArgsConstructor
 @Entity
 @Table(name = "simpleModification", indexes = @Index(name = "by_simple_modification_id_idx", columnList = "by_simple_modification_id"))
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "simple_modification_id_fk_constraint"))
 public class SimpleModificationEntity extends ModificationByFilterEntity {
     @Column
     @Enumerated(EnumType.STRING)
@@ -35,14 +37,16 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
     @Column
     private String propertyName; // dedicated to an exceptional case, i.e. modify a property
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "simple_modification_id",
+            foreignKey = @ForeignKey(name = "simple_modification_id_fk"))
+    private List<VariationFilterEntity> filters;
+
     public SimpleModificationEntity(AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos) {
         super(simpleModificationInfos);
         this.dataType = simpleModificationInfos.getDataType();
         this.value = Optional.ofNullable(simpleModificationInfos.getValue()).map(Object::toString).orElse(null);
-    }
-
-    protected void assignAttributes(AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos) {
-        super.assignAttributes(simpleModificationInfos);
+        this.filters = simpleModificationInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
     }
 
     public AbstractSimpleModificationByFilterInfos<?> toSimpleModificationInfos() {
@@ -69,6 +73,9 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
         };
 
         assignAttributes(simpleModificationByFilterInfos);
+        simpleModificationByFilterInfos.setFilters(filters.stream()
+                .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                .toList());
         return simpleModificationByFilterInfos;
     }
 }

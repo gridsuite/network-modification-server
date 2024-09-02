@@ -11,7 +11,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.IdentifiableType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
@@ -26,7 +29,6 @@ import java.util.List;
  */
 @SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
 @JsonTypeName("BY_SIMPLE_MODIFICATION")
@@ -34,8 +36,8 @@ import java.util.List;
 @ToString(callSuper = true)
 @Schema(description = "Modification by simple assignment")
 public class BySimpleModificationInfos extends ModificationInfos {
-    @Schema(description = "Identifiable type")
-    private IdentifiableType identifiableType;
+    @Schema(description = "Equipment type")
+    private IdentifiableType equipmentType;
 
     @Schema(description = "list of modifications")
     private List<? extends AbstractSimpleModificationByFilterInfos<?>> simpleModificationInfosList;

@@ -1,11 +1,16 @@
+/**
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Setter;
 import org.gridsuite.modification.server.dto.BySimpleModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
@@ -14,15 +19,17 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 
 import java.util.List;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 @NoArgsConstructor
-@Getter
-@Setter
 @Entity
 @Table(name = "bySimpleModification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "bySimpleModification_id_fk_constraint"))
 public class BySimpleModificationEntity extends ModificationEntity {
+    @Enumerated(EnumType.STRING)
     @Column
-    private IdentifiableType identifiableType;
+    private IdentifiableType equipmentType;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "by_simple_modification_id",
@@ -41,7 +48,7 @@ public class BySimpleModificationEntity extends ModificationEntity {
     }
 
     private void assignAttributes(BySimpleModificationInfos bySimpleModificationInfos) {
-        this.identifiableType = bySimpleModificationInfos.getIdentifiableType();
+        this.equipmentType = bySimpleModificationInfos.getEquipmentType();
         if (simpleModificationEntities == null) {
             simpleModificationEntities = bySimpleModificationInfos.getSimpleModificationInfosList()
                     .stream()
@@ -66,7 +73,7 @@ public class BySimpleModificationEntity extends ModificationEntity {
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
-            .identifiableType(getIdentifiableType())
+            .equipmentType(equipmentType)
             .simpleModificationInfosList(simpleModificationEntities.stream()
                 .map(SimpleModificationEntity::toSimpleModificationInfos)
                 .toList()

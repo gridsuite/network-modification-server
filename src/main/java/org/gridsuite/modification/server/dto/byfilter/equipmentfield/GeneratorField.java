@@ -141,9 +141,9 @@ public enum GeneratorField {
         }
     }
 
-    public static void setNewValue(Generator generator, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
-        switch (fieldModificationInfos.getDataType()) {
-            case DOUBLE -> setNewValue(generator, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
+    public static void setNewValue(Generator generator, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
+        switch (modificationByFilterInfos.getDataType()) {
+            case DOUBLE -> setNewValue(generator, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
         }
     }
 }

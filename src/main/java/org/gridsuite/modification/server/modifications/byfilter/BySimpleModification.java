@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -23,6 +23,9 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BY_SIMPLE_MODIFICATION_ERROR;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 public class BySimpleModification extends AbstractByFilterModification {
     private final BySimpleModificationInfos modificationInfos;
 
@@ -32,7 +35,7 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
-    public String getModificationLabel() {
+    public String getModificationTypeLabel() {
         return "simple modification";
     }
 
@@ -42,8 +45,8 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
-    public IdentifiableType getIdentifiableType() {
-        return modificationInfos.getIdentifiableType();
+    public IdentifiableType getEquipmentType() {
+        return modificationInfos.getEquipmentType();
     }
 
     @Override
@@ -57,26 +60,26 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected boolean preCheckValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
+    protected boolean preCheckValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
         return true;
     }
 
     @Override
-    protected Object applyValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos) {
-        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) filterModificationInfos;
+    protected Object applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
         if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
-            identifiable.setProperty(
+            equipment.setProperty(
                     ((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName(),
                     (String) simpleModificationInfos.getValue()
             );
         } else {
-            switch (identifiable.getType()) {
-                case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, simpleModificationInfos);
-                case BATTERY -> BatteryField.setNewValue((Battery) identifiable, simpleModificationInfos);
-                case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, simpleModificationInfos);
-                case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, simpleModificationInfos);
-                case LOAD -> LoadField.setNewValue((Load) identifiable, simpleModificationInfos);
-                case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) identifiable, simpleModificationInfos);
+            switch (equipment.getType()) {
+                case GENERATOR -> GeneratorField.setNewValue((Generator) equipment, simpleModificationInfos);
+                case BATTERY -> BatteryField.setNewValue((Battery) equipment, simpleModificationInfos);
+                case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) equipment, simpleModificationInfos);
+                case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) equipment, simpleModificationInfos);
+                case LOAD -> LoadField.setNewValue((Load) equipment, simpleModificationInfos);
+                case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) equipment, simpleModificationInfos);
                 default -> throw new NetworkModificationException(BY_SIMPLE_MODIFICATION_ERROR, "Unsupported equipment");
             }
         }

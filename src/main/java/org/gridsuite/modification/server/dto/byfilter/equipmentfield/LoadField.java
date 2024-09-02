@@ -34,9 +34,9 @@ public enum LoadField {
         }
     }
 
-    public static void setNewValue(Load load, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
-        switch (fieldModificationInfos.getDataType()) {
-            case DOUBLE -> setNewValue(load, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
+    public static void setNewValue(Load load, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
+        switch (modificationByFilterInfos.getDataType()) {
+            case DOUBLE -> setNewValue(load, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
         }
     }
 }

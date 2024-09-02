@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -24,6 +24,9 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR;
 
+/**
+ * @author Thang PHAM <quyet-thang.pham at rte-france.com>
+ */
 public class ByFormulaModification extends AbstractByFilterModification {
     private final ByFormulaModificationInfos modificationInfos;
 
@@ -33,7 +36,7 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    public String getModificationLabel() {
+    public String getModificationTypeLabel() {
         return "modification by formula";
     }
 
@@ -43,7 +46,7 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    public IdentifiableType getIdentifiableType() {
+    public IdentifiableType getEquipmentType() {
         return modificationInfos.getIdentifiableType();
     }
 
@@ -58,16 +61,16 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected boolean preCheckValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
-        FormulaInfos formulaInfos = (FormulaInfos) filterModificationInfos;
-        Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
-        Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
+    protected boolean preCheckValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
+        FormulaInfos formulaInfos = (FormulaInfos) modificationByFilterInfos;
+        Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(equipment);
+        Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(equipment);
         if (value1 == null || Double.isNaN(value1) || value2 == null || Double.isNaN(value2)) {
             equipmentNotModifiedCount += 1;
-            notEditableEquipments.add(identifiable.getId());
+            notEditableEquipments.add(equipment.getId());
             reports.add(ReportNode.newRootReportNode()
-                    .withMessageTemplate(KEY_EQUIPMENT_MODIFIED_ERROR + reports.size(), "        Cannot modify equipment ${" + KEY_EQPT_NAME + "} : At least one of the value or referenced field is null")
-                    .withUntypedValue(KEY_EQPT_NAME, identifiable.getId())
+                    .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_ERROR, "        Cannot modify equipment ${" + VALUE_KEY_EQUIPMENT_NAME + "} : At least one of the value or referenced field is null")
+                    .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .build());
             return false;
@@ -75,25 +78,25 @@ public class ByFormulaModification extends AbstractByFilterModification {
 
         if (value2 == 0 && formulaInfos.getOperator() == Operator.DIVISION) {
             equipmentNotModifiedCount += 1;
-            notEditableEquipments.add(identifiable.getId());
+            notEditableEquipments.add(equipment.getId());
             return false;
         }
         return true;
     }
 
     @Override
-    protected Object applyValue(Identifiable<?> identifiable, AbstractModificationByFilterInfos filterModificationInfos) {
-        FormulaInfos formulaInfos = (FormulaInfos) filterModificationInfos;
-        Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(identifiable);
-        Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(identifiable);
+    protected Object applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        FormulaInfos formulaInfos = (FormulaInfos) modificationByFilterInfos;
+        Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(equipment);
+        Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(equipment);
         final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
-        switch (identifiable.getType()) {
-            case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
-            case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
-            case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
-            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);
-            case LOAD -> LoadField.setNewValue((Load) identifiable, formulaInfos.getEditedField(), newValue);
-            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) identifiable, formulaInfos.getEditedField(), newValue);
+        switch (equipment.getType()) {
+            case GENERATOR -> GeneratorField.setNewValue((Generator) equipment, formulaInfos.getEditedField(), newValue);
+            case BATTERY -> BatteryField.setNewValue((Battery) equipment, formulaInfos.getEditedField(), newValue);
+            case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) equipment, formulaInfos.getEditedField(), newValue);
+            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) equipment, formulaInfos.getEditedField(), newValue);
+            case LOAD -> LoadField.setNewValue((Load) equipment, formulaInfos.getEditedField(), newValue);
+            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) equipment, formulaInfos.getEditedField(), newValue);
             default -> throw new NetworkModificationException(BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
         }
         return newValue;

@@ -69,9 +69,9 @@ public enum TwoWindingsTransformerField {
         }
     }
 
-    public static void setNewValue(TwoWindingsTransformer transformer, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
-        switch (fieldModificationInfos.getDataType()) {
-            case DOUBLE -> setNewValue(transformer, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
+    public static void setNewValue(TwoWindingsTransformer transformer, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
+        switch (modificationByFilterInfos.getDataType()) {
+            case DOUBLE -> setNewValue(transformer, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
         }
     }
 }

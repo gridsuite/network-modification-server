@@ -59,9 +59,9 @@ public enum ShuntCompensatorField {
         }
     }
 
-    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
-        switch (fieldModificationInfos.getDataType()) {
-            case DOUBLE -> setNewValue(shuntCompensator, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
+    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
+        switch (modificationByFilterInfos.getDataType()) {
+            case DOUBLE -> setNewValue(shuntCompensator, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
         }
     }
 }

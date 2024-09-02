@@ -9,10 +9,14 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
+
+import java.util.List;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -21,8 +25,12 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @NoArgsConstructor
 @Entity
 @Table(name = "formula", indexes = @Index(name = "by_formula_modification_id_idx", columnList = "by_formula_modification_id"))
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "formula_id_fk_constraint"))
 public class FormulaEntity extends ModificationByFilterEntity {
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "formula_id",
+            foreignKey = @ForeignKey(name = "formula_id_fk"))
+    private List<VariationFilterEntity> filters;
+
     @Column
     private String equipmentField1;
 
@@ -45,10 +53,14 @@ public class FormulaEntity extends ModificationByFilterEntity {
         this.value1 = formulaInfos.getFieldOrValue1().getValue();
         this.value2 = formulaInfos.getFieldOrValue2().getValue();
         this.operator = formulaInfos.getOperator();
+        this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
     }
 
     public FormulaInfos toFormulaInfos() {
         FormulaInfos formulaInfos = FormulaInfos.builder()
+                .filters(filters.stream()
+                        .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
+                        .toList())
                 .fieldOrValue1(ReferenceFieldOrValue.builder()
                         .equipmentField(equipmentField1)
                         .value(value1)

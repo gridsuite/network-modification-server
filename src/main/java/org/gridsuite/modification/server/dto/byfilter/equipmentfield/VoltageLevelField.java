@@ -59,9 +59,9 @@ public enum VoltageLevelField {
         }
     }
 
-    public static void setNewValue(VoltageLevel voltageLevel, AbstractSimpleModificationByFilterInfos<?> fieldModificationInfos) {
-        switch (fieldModificationInfos.getDataType()) {
-            case DOUBLE -> setNewValue(voltageLevel, fieldModificationInfos.getEditedField(), (Double) fieldModificationInfos.getValue());
+    public static void setNewValue(VoltageLevel voltageLevel, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
+        switch (modificationByFilterInfos.getDataType()) {
+            case DOUBLE -> setNewValue(voltageLevel, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
         }
     }
 }

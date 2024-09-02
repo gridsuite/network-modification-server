@@ -8,8 +8,9 @@
 package org.gridsuite.modification.server.dto.byfilter.formula;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
@@ -20,7 +21,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 
 @SuperBuilder
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 public class FormulaInfos extends AbstractModificationByFilterInfos {
 
     @Schema(description = "First reference field or value")

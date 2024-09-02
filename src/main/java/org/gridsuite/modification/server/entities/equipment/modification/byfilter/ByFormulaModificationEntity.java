@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "byFormulaModification")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "byFormulaModification_id_fk_constraint"))
 public class ByFormulaModificationEntity extends ModificationEntity {
     @Column
     private IdentifiableType identifiableType;

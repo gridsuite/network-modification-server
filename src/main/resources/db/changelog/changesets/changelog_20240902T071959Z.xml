@@ -1,0 +1,42 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="phamquy (generated)" id="1725261618500-1">
+        <createTable tableName="by_simple_modification">
+            <column name="equipment_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="by_simple_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1725261618500-2">
+        <createTable tableName="simple_modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="simple_modificationPK"/>
+            </column>
+            <column name="edited_field" type="VARCHAR(255)"/>
+            <column name="data_type" type="VARCHAR(255)"/>
+            <column name="property_name" type="VARCHAR(255)"/>
+            <column name="value_" type="VARCHAR(255)"/>
+            <column name="by_simple_modification_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1725261618500-3">
+        <addColumn tableName="variation_filter">
+            <column name="simple_modification_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1725261618500-4">
+        <createIndex indexName="by_simple_modification_id_idx" tableName="simple_modification">
+            <column name="by_simple_modification_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1725261618500-5">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="by_simple_modification" constraintName="bySimpleModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1725261618500-6">
+        <addForeignKeyConstraint baseColumnNames="by_simple_modification_id" baseTableName="simple_modification" constraintName="by_simple_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="by_simple_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1725261618500-7">
+        <addForeignKeyConstraint baseColumnNames="simple_modification_id" baseTableName="variation_filter" constraintName="simple_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="simple_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
