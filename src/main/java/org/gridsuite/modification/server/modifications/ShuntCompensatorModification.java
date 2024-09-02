@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
@@ -81,13 +82,20 @@ public class ShuntCompensatorModification extends AbstractModification {
         PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties(), "ShuntCompensatorProperties");
     }
 
-    private void modifyMaximumSectionCount(List<ReportNode> reports, ShuntCompensator shuntCompensator, ShuntCompensatorLinearModel model) {
-        if (modificationInfos.getMaximumSectionCount() != null) {
-            var maximumSectionCount = modificationInfos.getMaximumSectionCount().getValue();
-            if (modificationInfos.getMaxSusceptance() == null && modificationInfos.getMaxQAtNominalV() == null) {
+    public static void modifyMaximumSectionCount(AttributeModification<Integer> maximumSectionCountModif,
+                                                 AttributeModification<Double> maxSusceptance,
+                                                 AttributeModification<Double> maxQAtNominalV,
+                                                 List<ReportNode> reports,
+                                                 ShuntCompensator shuntCompensator,
+                                                 ShuntCompensatorLinearModel model) {
+        if (maximumSectionCountModif != null) {
+            var maximumSectionCount = maximumSectionCountModif.getValue();
+            if (maxSusceptance == null && maxQAtNominalV == null) {
                 model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
             }
-            reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensator.getMaximumSectionCount(), maximumSectionCount, "Maximum section count"));
+            if (reports != null) {
+                reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensator.getMaximumSectionCount(), maximumSectionCount, "Maximum section count"));
+            }
             model.setMaximumSectionCount(maximumSectionCount);
         }
     }
@@ -119,9 +127,15 @@ public class ShuntCompensatorModification extends AbstractModification {
         // when maximum section count old value is greater than the new one
         if (modificationInfos.getMaximumSectionCount() != null && modificationInfos.getMaximumSectionCount().getValue() < shuntCompensator.getMaximumSectionCount()) {
             modifySectionCount(reports, shuntCompensator);
-            modifyMaximumSectionCount(reports, shuntCompensator, model);
+            modifyMaximumSectionCount(modificationInfos.getMaximumSectionCount(),
+                    modificationInfos.getMaxSusceptance(),
+                    modificationInfos.getMaxQAtNominalV(),
+                    reports, shuntCompensator, model);
         } else {
-            modifyMaximumSectionCount(reports, shuntCompensator, model);
+            modifyMaximumSectionCount(modificationInfos.getMaximumSectionCount(),
+                    modificationInfos.getMaxSusceptance(),
+                    modificationInfos.getMaxQAtNominalV(),
+                    reports, shuntCompensator, model);
             modifySectionCount(reports, shuntCompensator);
         }
 
