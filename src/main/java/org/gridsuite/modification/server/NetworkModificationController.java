@@ -271,7 +271,6 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
-        // networkModificationService.reorderNetworkModifications(groupUuid);
         return ResponseEntity.ok().build();
     }
 
