@@ -236,8 +236,9 @@ public class NetworkModificationController {
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
         if (Boolean.TRUE.equals(stashed)) {
             networkModificationService.stashNetworkModifications(networkModificationUuids);
+            networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            networkModificationService.restoreNetworkModifications(networkModificationUuids);
+            networkModificationService.restoreNetworkModifications(networkModificationUuids, groupUuid);
         }
         return ResponseEntity.ok().build();
     }
@@ -270,6 +271,7 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
+        // networkModificationService.reorderNetworkModifications(groupUuid);
         return ResponseEntity.ok().build();
     }
 

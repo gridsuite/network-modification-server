@@ -78,16 +78,19 @@ public class NetworkModificationRepository {
     }
 
     private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
+        int order = modificationRepository.countByGroupIdAndStashed(groupUuid, false);
         var modificationGroupEntity = this.modificationGroupRepository
             .findById(groupUuid)
             .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modifications.forEach(m -> {
+        for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m);
+            m.setModificationsOrder(order);
             // We need here to call the save() method on the modification entity cause the ids of the ModificationEntity's are used in further treatments in the same transaction.
             // As we generate the id in Java with @GeneratedValue(strategy = GenerationType.AUTO), saving the entity in the JPA world is enough to generate the id (no need to flush it).
             // Without the saving, the id generation would be done only at the flush() and wouldn't be available for the further treatments.
             modificationRepository.save(m);
-        });
+            order++;
+        }
     }
 
     @Transactional
@@ -135,6 +138,11 @@ public class NetworkModificationRepository {
                         .findFirst()
                         .orElseThrow(() -> new NetworkModificationException(MOVE_MODIFICATION_ERROR));
         modificationsList.addAll(insertionIndex, modificationsToAdd);
+        int order = 0;
+        for (ModificationEntity m : modificationsList) {
+            m.setModificationsOrder(order);
+            order++;
+        }
     }
 
     private List<ModificationEntity> removeModifications(List<ModificationEntity> modificationsList, List<UUID> orderedIdsToRemove) {
@@ -395,17 +403,32 @@ public class NetworkModificationRepository {
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
+            modificationEntity.setModificationsOrder(-1);
             this.modificationRepository.save(modificationEntity);
         }
     }
 
     @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
+    public void reorderNetworkModifications(UUID groupId, Boolean stashed) {
+        List<ModificationEntity> entities = this.modificationRepository.findAllStashedByGroupId(groupId, stashed);
+        int order = 0;
+        for (ModificationEntity modificationEntity : entities) {
+            modificationEntity.setModificationsOrder(order);
+            order++;
+        }
+        this.modificationRepository.saveAll(entities);
+    }
+
+    @Transactional
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unStashedSize) {
+        int modificationOrder = unStashedSize;
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(false);
+            modificationEntity.setModificationsOrder(modificationOrder);
+            modificationOrder++;
             this.modificationRepository.save(modificationEntity);
         }
     }
