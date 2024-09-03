@@ -155,22 +155,25 @@ public class GeneratorModification extends AbstractModification {
         ModificationUtils.getInstance().modifyReactiveCapabilityCurvePoints(points, modificationPoints, adder, subReportNode, subReportNodeLimits);
     }
 
-    private ReportNode modifyGeneratorActiveLimitsAttributes(GeneratorModificationInfos modificationInfos,
-                                                           Generator generator, ReportNode subReportNode) {
+    public static ReportNode modifyGeneratorActiveLimitsAttributes(AttributeModification<Double> maxP,
+                                                                   AttributeModification<Double> minP,
+                                                                   AttributeModification<Double> ratedS,
+                                                                   Generator generator,
+                                                                   ReportNode subReportNode) {
         ReportNode subReporterLimits = null;
         ReportNode reportMaxActivePower;
         ReportNode reportMinActivePower;
 
-        if (modificationInfos.getMaxP() != null && modificationInfos.getMaxP().getValue() > generator.getMinP()) {
-            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxP(), "Max active power");
-            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinP(), "Min active power");
+        if (maxP != null && maxP.getValue() > generator.getMinP()) {
+            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, maxP, "Max active power");
+            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, minP, "Min active power");
 
         } else {
-            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, modificationInfos.getMinP(), "Min active power");
-            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, modificationInfos.getMaxP(), "Max active power");
+            reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMinP, generator::getMinP, minP, "Min active power");
+            reportMaxActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setMaxP, generator::getMaxP, maxP, "Max active power");
         }
-        ReportNode reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedS(), "Rated nominal power");
-        if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {
+        ReportNode reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, ratedS, "Rated nominal power");
+        if (subReportNode != null && (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null)) {
             subReporterLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
             subReporterLimits.newReportNode()
                     .withMessageTemplate(LIMITS, LIMITS)
@@ -384,15 +387,7 @@ public class GeneratorModification extends AbstractModification {
                                                                Generator generator, ReportNode subReportNode, ReportNode subReportNodeSetpoints) {
         List<ReportNode> voltageRegulationReports = new ArrayList<>();
 
-        ReportNode reportVoltageSetpoint = null;
-        if (modificationInfos.getTargetV() != null) {
-            if (modificationInfos.getTargetV().getOp() == OperationType.SET) {
-                reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
-                    modificationInfos.getTargetV(), "Voltage");
-            } else {
-                reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
-            }
-        }
+        ReportNode reportVoltageSetpoint = modifyTargetV(generator, modificationInfos.getTargetV());
 
         voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
                 modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
@@ -439,17 +434,24 @@ public class GeneratorModification extends AbstractModification {
         return subReportNodeSetpoints2;
     }
 
+    public static ReportNode modifyTargetV(Generator generator, AttributeModification<Double> modifTargetV) {
+        ReportNode reportVoltageSetpoint = null;
+        if (modifTargetV != null) {
+            if (modifTargetV.getOp() == OperationType.SET) {
+                reportVoltageSetpoint = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetV, generator::getTargetV,
+                        modifTargetV, "Voltage");
+            } else {
+                reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
+            }
+        }
+        return reportVoltageSetpoint;
+    }
+
     private void modifyGeneratorSetpointsAttributes(GeneratorModificationInfos modificationInfos,
                                                     Generator generator, ReportNode subReportNode) {
         ReportNode reportActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetP, generator::getTargetP, modificationInfos.getTargetP(), "Active power");
-        ReportNode reportReactivePower = null;
-        if (modificationInfos.getTargetQ() != null) {
-            if (modificationInfos.getTargetQ().getOp() == OperationType.SET) {
-                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modificationInfos.getTargetQ(), "Reactive power");
-            } else {
-                reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
-            }
-        }
+
+        ReportNode reportReactivePower = modifyTargetQ(generator, modificationInfos.getTargetQ());
 
         ReportNode subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
@@ -469,9 +471,25 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorActivePowerControlAttributes(modificationInfos, generator, subReportNode, subReporterSetpoints);
     }
 
+    public static ReportNode modifyTargetQ(Generator generator, AttributeModification<Double> modifTargetQ) {
+        ReportNode reportReactivePower = null;
+        if (modifTargetQ != null) {
+            if (modifTargetQ.getOp() == OperationType.SET) {
+                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modifTargetQ, "Reactive power");
+            } else {
+                reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
+            }
+        }
+        return reportReactivePower;
+    }
+
     private void modifyGeneratorLimitsAttributes(GeneratorModificationInfos modificationInfos,
                                                  Generator generator, ReportNode subReportNode) {
-        ReportNode subReportNodeLimits = modifyGeneratorActiveLimitsAttributes(modificationInfos, generator, subReportNode);
+        ReportNode subReportNodeLimits = modifyGeneratorActiveLimitsAttributes(modificationInfos.getMaxP(),
+                modificationInfos.getMinP(),
+                modificationInfos.getRatedS(),
+                generator,
+                subReportNode);
         modifyGeneratorReactiveLimitsAttributes(modificationInfos, generator, subReportNode, subReportNodeLimits);
     }
 

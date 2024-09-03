@@ -19,8 +19,11 @@ import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorActiveLimitsAttributes;
 import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorShortCircuitAttributes;
 import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorStartUpAttributes;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyTargetQ;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyTargetV;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -70,8 +73,16 @@ public enum GeneratorField {
         if (!Double.isNaN(newValue)) {
             GeneratorField field = GeneratorField.valueOf(generatorField);
             switch (field) {
-                case MAXIMUM_ACTIVE_POWER -> generator.setMaxP(newValue);
-                case MINIMUM_ACTIVE_POWER -> generator.setMinP(newValue);
+                case MAXIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(new AttributeModification<>(newValue, OperationType.SET),
+                        null,
+                        null,
+                        generator,
+                        null);
+                case MINIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(null,
+                        new AttributeModification<>(newValue, OperationType.SET),
+                        null,
+                        generator,
+                        null);
                 case ACTIVE_POWER_SET_POINT -> {
                     ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
                             new AttributeModification<>(newValue, OperationType.SET),
@@ -85,9 +96,13 @@ public enum GeneratorField {
                     );
                     generator.setTargetP(newValue);
                 }
-                case RATED_NOMINAL_POWER -> generator.setRatedS(newValue);
-                case REACTIVE_POWER_SET_POINT -> generator.setTargetQ(newValue);
-                case VOLTAGE_SET_POINT -> generator.setTargetV(newValue);
+                case RATED_NOMINAL_POWER -> modifyGeneratorActiveLimitsAttributes(null,
+                        null,
+                        new AttributeModification<>(newValue, OperationType.SET),
+                        generator,
+                        null);
+                case REACTIVE_POWER_SET_POINT -> modifyTargetQ(generator, new AttributeModification<>(newValue, OperationType.SET));
+                case VOLTAGE_SET_POINT -> modifyTargetV(generator, new AttributeModification<>(newValue, OperationType.SET));
                 case PLANNED_ACTIVE_POWER_SET_POINT ->
                     modifyGeneratorStartUpAttributes(
                             new AttributeModification<>(newValue, OperationType.SET),
