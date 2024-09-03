@@ -10,18 +10,22 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 public enum VoltageLevelField {
     NOMINAL_VOLTAGE,
     LOW_VOLTAGE_LIMIT,
     HIGH_VOLTAGE_LIMIT,
     LOW_SHORT_CIRCUIT_CURRENT_LIMIT,
     HIGH_SHORT_CIRCUIT_CURRENT_LIMIT;
+
+    public static final String UNSUPPORTED_VOLTAGE_LEVEL_DATA_TYPE_ERROR_MESSAGE = "Unsupported voltage level data type: ";
 
     public static Double getReferenceValue(VoltageLevel voltageLevel, String voltageLevelField) {
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
@@ -59,9 +63,10 @@ public enum VoltageLevelField {
         }
     }
 
-    public static void setNewValue(VoltageLevel voltageLevel, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
-        switch (modificationByFilterInfos.getDataType()) {
-            case DOUBLE -> setNewValue(voltageLevel, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
+    public static void setNewValue(VoltageLevel voltageLevel, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
+        switch (simpleModificationByFilterInfos.getDataType()) {
+            case DOUBLE, INTEGER -> setNewValue(voltageLevel, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
+            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_VOLTAGE_LEVEL_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
 }

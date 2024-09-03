@@ -14,15 +14,18 @@ import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
+
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 public enum ShuntCompensatorField {
     MAXIMUM_SECTION_COUNT,
     SECTION_COUNT,
     MAXIMUM_SUSCEPTANCE,
     MAXIMUM_Q_AT_NOMINAL_VOLTAGE;
+
+    public static final String UNSUPPORTED_SHUNT_COMPENSATOR_DATA_TYPE_ERROR_MESSAGE = "Unsupported shunt compensator data type: ";
 
     public static Double getReferenceValue(ShuntCompensator shuntCompensator, String shuntCompensatorField) {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
@@ -59,9 +62,10 @@ public enum ShuntCompensatorField {
         }
     }
 
-    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
-        switch (modificationByFilterInfos.getDataType()) {
-            case DOUBLE -> setNewValue(shuntCompensator, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
+    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
+        switch (simpleModificationByFilterInfos.getDataType()) {
+            case DOUBLE, INTEGER -> setNewValue(shuntCompensator, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
+            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_SHUNT_COMPENSATOR_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
 }

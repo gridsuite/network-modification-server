@@ -9,13 +9,16 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.*;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 public enum GeneratorField {
+    VOLTAGE_REGULATOR_ON,
     MINIMUM_ACTIVE_POWER,
     MAXIMUM_ACTIVE_POWER,
     RATED_NOMINAL_POWER,
@@ -30,6 +33,9 @@ public enum GeneratorField {
     TRANSIENT_REACTANCE,
     STEP_UP_TRANSFORMER_REACTANCE,
     Q_PERCENT;
+
+    public static final String UNSUPPORTED_GENERATOR_FIELD_ERROR_MESSAGE = "Unsupported generator field: ";
+    public static final String UNSUPPORTED_GENERATOR_DATA_TYPE_ERROR_MESSAGE = "Unsupported generator data type: ";
 
     public static Double getReferenceValue(Generator generator, String generatorField) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
@@ -52,6 +58,7 @@ public enum GeneratorField {
             case TRANSIENT_REACTANCE -> generatorShortCircuit != null ? generatorShortCircuit.getDirectTransX() : null;
             case STEP_UP_TRANSFORMER_REACTANCE -> generatorShortCircuit != null ? generatorShortCircuit.getStepUpTransformerX() : null;
             case Q_PERCENT -> coordinatedReactiveControl != null ? coordinatedReactiveControl.getQPercent() : null;
+            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_GENERATOR_FIELD_ERROR_MESSAGE + field);
         };
     }
 
@@ -137,13 +144,24 @@ public enum GeneratorField {
                 case Q_PERCENT -> generator.newExtension(CoordinatedReactiveControlAdder.class)
                         .withQPercent(newValue)
                         .add();
+                default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_GENERATOR_FIELD_ERROR_MESSAGE + field);
             }
         }
     }
 
-    public static void setNewValue(Generator generator, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
-        switch (modificationByFilterInfos.getDataType()) {
-            case DOUBLE -> setNewValue(generator, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
+    public static void setNewValue(Generator generator, String generatorField, Boolean newValue) {
+        GeneratorField field = GeneratorField.valueOf(generatorField);
+        switch (field) {
+            case VOLTAGE_REGULATOR_ON -> generator.setVoltageRegulatorOn(newValue);
+            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_GENERATOR_FIELD_ERROR_MESSAGE + field);
+        }
+    }
+
+    public static void setNewValue(Generator generator, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
+        switch (simpleModificationByFilterInfos.getDataType()) {
+            case DOUBLE, INTEGER -> setNewValue(generator, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
+            case BOOLEAN -> setNewValue(generator, simpleModificationByFilterInfos.getEditedField(), (Boolean) simpleModificationByFilterInfos.getValue());
+            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_GENERATOR_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
 }
