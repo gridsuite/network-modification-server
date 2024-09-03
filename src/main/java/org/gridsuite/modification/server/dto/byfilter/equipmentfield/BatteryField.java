@@ -10,7 +10,10 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -22,6 +25,8 @@ public enum BatteryField {
     ACTIVE_POWER_SET_POINT,
     REACTIVE_POWER_SET_POINT,
     DROOP;
+
+    public static final String UNSUPPORTED_BATTERY_DATA_TYPE_ERROR_MESSAGE = "Unsupported battery data type: ";
 
     public static Double getReferenceValue(Battery battery, String batteryField) {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
@@ -48,9 +53,10 @@ public enum BatteryField {
         }
     }
 
-    public static void setNewValue(Battery battery, AbstractSimpleModificationByFilterInfos<?> modificationByFilterInfos) {
-        switch (modificationByFilterInfos.getDataType()) {
-            case DOUBLE -> setNewValue(battery, modificationByFilterInfos.getEditedField(), (Double) modificationByFilterInfos.getValue());
+    public static void setNewValue(Battery battery, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
+        switch (simpleModificationByFilterInfos.getDataType()) {
+            case DOUBLE -> setNewValue(battery, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
+            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_BATTERY_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
 }
