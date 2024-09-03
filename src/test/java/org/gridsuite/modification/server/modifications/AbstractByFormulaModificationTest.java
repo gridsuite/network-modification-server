@@ -89,12 +89,12 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .andExpect(status().isBadRequest());
 
         // Test with empty list of formulas
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().active(true).identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with empty list of filters in formula
         List<FormulaInfos> formulaInfosWithNoFilters = getFormulaInfos().stream().peek(formula -> formula.setFilters(List.of())).toList();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(formulaInfosWithNoFilters).build(),
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().active(true).identifiableType(getIdentifiableType()).formulaInfosList(formulaInfosWithNoFilters).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with editedField = null
@@ -104,7 +104,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .operator(Operator.ADDITION)
                 .filters(List.of())
                 .build();
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfosWithNoEditedField)).build(),
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().active(true).identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfosWithNoEditedField)).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
@@ -117,6 +117,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                         .withHeader("Content-Type", "application/json"))).getId();
 
         ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .active(true)
                 .formulaInfosList(formulaInfos)
                 .identifiableType(getIdentifiableType())
                 .build();
@@ -138,6 +139,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                         .withHeader("Content-Type", "application/json"))).getId();
 
         ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .active(true)
                 .formulaInfosList(formulaInfos)
                 .identifiableType(getIdentifiableType())
                 .build();
@@ -164,6 +166,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                         .withHeader("Content-Type", "application/json"))).getId();
 
         ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
+                .active(true)
                 .formulaInfosList(formulaInfos)
                 .identifiableType(getIdentifiableType())
                 .build();
@@ -224,6 +227,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getFormulaInfos())
                 .stashed(false)
+                .active(true)
                 .build();
     }
 
@@ -233,6 +237,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getUpdatedFormulaInfos())
                 .stashed(false)
+                .active(true)
                 .build();
     }
 

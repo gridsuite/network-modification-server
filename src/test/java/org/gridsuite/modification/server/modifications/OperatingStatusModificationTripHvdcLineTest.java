@@ -45,6 +45,7 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(TARGET_HVDC_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
@@ -54,6 +55,7 @@ public class OperatingStatusModificationTripHvdcLineTest extends AbstractNetwork
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("hvdcLineEdited")
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();

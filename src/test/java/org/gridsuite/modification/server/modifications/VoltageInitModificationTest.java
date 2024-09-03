@@ -85,6 +85,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     protected ModificationInfos buildModification() {
         return VoltageInitModificationInfos.builder()
             .stashed(false)
+            .active(true)
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
@@ -210,6 +211,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     protected ModificationInfos buildModificationUpdate() {
         return VoltageInitModificationInfos.builder()
             .stashed(false)
+            .active(true)
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("idGenerator")
@@ -273,6 +275,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
 
         VoltageInitModificationInfos modification = VoltageInitModificationInfos.builder()
             .stashed(false)
+            .active(true)
             .generators(List.of())
             .transformers(List.of())
             .staticVarCompensators(List.of())

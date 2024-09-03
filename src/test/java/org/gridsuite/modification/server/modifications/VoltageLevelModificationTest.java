@@ -48,6 +48,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModification() {
         return VoltageLevelModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v1")
                 .equipmentName(new AttributeModification<>("test 1", OperationType.SET))
                 .nominalV(new AttributeModification<>(420D, OperationType.SET))
@@ -63,6 +64,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModificationUpdate() {
         return VoltageLevelModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v1Edited")
                 .equipmentName(new AttributeModification<>("test 2", OperationType.SET))
                 .nominalV(new AttributeModification<>(450D, OperationType.SET))
@@ -106,6 +108,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
 
         VoltageLevelModificationInfos updatedInfos = VoltageLevelModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v1")
                 .ipMax(new AttributeModification<>(0.9, OperationType.SET))
                 .build();
@@ -119,6 +122,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         assertEquals(0.7, identifiableShortCircuit1.getIpMin(), 0);
 
         VoltageLevelModificationInfos updatedInfos2 = VoltageLevelModificationInfos.builder()
+                .active(true)
                 .equipmentId("v1")
                 .ipMin(new AttributeModification<>(0.2, OperationType.SET))
                 .build();
@@ -135,6 +139,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
 
         VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(vlWithBothIcc)
                 .build();
         if (ipMin != null) {
@@ -209,6 +214,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         final String vlWithNoIcc = "v2";
         VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(vlWithNoIcc)
                 .ipMin(new AttributeModification<>(10.0, OperationType.SET))
                 .build();
@@ -229,6 +235,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
         final double targetIpMax = 29.0;
         VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(vlName)
                 .ipMax(new AttributeModification<>(targetIpMax, OperationType.SET))
                 .build();

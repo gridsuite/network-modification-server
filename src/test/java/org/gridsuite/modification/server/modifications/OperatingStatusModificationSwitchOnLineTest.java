@@ -42,6 +42,7 @@ public class OperatingStatusModificationSwitchOnLineTest extends AbstractNetwork
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
@@ -53,6 +54,7 @@ public class OperatingStatusModificationSwitchOnLineTest extends AbstractNetwork
                 .equipmentId("line1Edited")
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .stashed(false)
+                .active(true)
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
     }
 

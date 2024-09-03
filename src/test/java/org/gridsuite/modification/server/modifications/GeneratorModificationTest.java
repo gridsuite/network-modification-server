@@ -45,6 +45,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     protected ModificationInfos buildModification() {
         return GeneratorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("idGenerator")
                 .energySource(new AttributeModification<>(EnergySource.SOLAR, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
@@ -86,6 +87,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         return GeneratorModificationInfos.builder()
                 .equipmentId("idGeneratorEdited")
                 .stashed(false)
+                .active(true)
                 .energySource(new AttributeModification<>(EnergySource.HYDRO, OperationType.SET))
                 .equipmentName(new AttributeModification<>("newV1GeneratorEdited", OperationType.SET))
                 .targetP(new AttributeModification<>(81.0, OperationType.SET))

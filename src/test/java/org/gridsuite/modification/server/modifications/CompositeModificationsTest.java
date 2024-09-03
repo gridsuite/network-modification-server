@@ -73,6 +73,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
         return CompositeModificationInfos.builder()
                 .modifications(modifications)
                 .stashed(false)
+                .active(true)
                 .build();
     }
 

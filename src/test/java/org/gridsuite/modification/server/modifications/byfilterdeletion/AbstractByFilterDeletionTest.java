@@ -62,6 +62,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
                 .build();
 
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
+                .active(true)
                 .stashed(false)
                 .equipmentType(getIdentifiableType())
                 .filters(List.of(filter1))
@@ -107,6 +108,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
                 .build();
 
         ByFilterDeletionInfos byFilterDeletionInfos = ByFilterDeletionInfos.builder()
+                .active(true)
                 .stashed(false)
                 .equipmentType(getIdentifiableType())
                 .filters(List.of(filter1))
@@ -148,6 +150,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
                 .build();
 
         return ByFilterDeletionInfos.builder()
+                .active(true)
                 .stashed(false)
                 .equipmentType(getIdentifiableType())
                 .filters(List.of(filter1, filter2))
@@ -162,6 +165,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
                 .build();
 
         return ByFilterDeletionInfos.builder()
+                .active(true)
                 .stashed(false)
                 .equipmentType(getIdentifiableType())
                 .filters(List.of(filter2))

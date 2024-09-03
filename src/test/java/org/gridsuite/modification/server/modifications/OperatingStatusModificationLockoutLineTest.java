@@ -79,6 +79,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();
@@ -88,6 +89,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();

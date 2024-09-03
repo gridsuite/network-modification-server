@@ -165,6 +165,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
+                .active(getActive())
                 .lossCoefficient(getLossCoefficient())
                 .defaultOutageRate(getDefaultOutageRate())
                 .generatorsWithoutOutage(toGeneratorsFilters(generatorsWithoutOutage))

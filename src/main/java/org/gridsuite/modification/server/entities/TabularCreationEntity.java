@@ -55,6 +55,7 @@ public class TabularCreationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
+                .active(getActive())
                 .creationType(creationType)
                 .creations(creationsInfos)
                 .build();

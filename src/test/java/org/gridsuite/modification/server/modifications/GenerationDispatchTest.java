@@ -565,12 +565,12 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
     @Test
     public void testGenerationDispatchErrorCheck() {
-        GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
+        GenerationDispatchInfos modification = GenerationDispatchInfos.builder().active(true).lossCoefficient(150.).defaultOutageRate(0.).build();
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
         final GenerationDispatch generationDispatch1 = new GenerationDispatch(modification);
         assertThrows("GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch1.check(getNetwork()));
 
-        modification = GenerationDispatchInfos.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
+        modification = GenerationDispatchInfos.builder().active(true).lossCoefficient(20.).defaultOutageRate(140.).build();
         final GenerationDispatch generationDispatch2 = new GenerationDispatch(modification);
         assertThrows("GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch2.check(getNetwork()));
     }
@@ -578,6 +578,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     @Test
     public void testGenerationDispatchWithMaxValueLessThanMinP() throws Exception {
         ModificationInfos modification = GenerationDispatchInfos.builder()
+                .active(true)
                 .lossCoefficient(20.)
                 .defaultOutageRate(15.)
                 .generatorsWithoutOutage(getGeneratorsFiltersInfosWithFilters123())
@@ -647,6 +648,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return GenerationDispatchInfos.builder()
             .stashed(false)
+            .active(true)
             .lossCoefficient(20.)
             .defaultOutageRate(0.)
             .generatorsWithoutOutage(List.of())
@@ -660,6 +662,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return GenerationDispatchInfos.builder()
             .stashed(false)
+            .active(true)
             .lossCoefficient(50.)
             .defaultOutageRate(25.)
             .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(UUID.randomUUID()).name("name1").build()))

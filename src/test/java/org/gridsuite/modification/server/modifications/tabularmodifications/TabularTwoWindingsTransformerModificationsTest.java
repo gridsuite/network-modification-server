@@ -42,6 +42,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
                 buildOneModification("unknownTwt", 1.0)
         );
         return TabularModificationInfos.builder()
+                .active(true)
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
@@ -55,6 +56,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
                 buildOneModification("trf2", 4.0)
         );
         return TabularModificationInfos.builder()
+                .active(true)
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
@@ -63,6 +65,7 @@ public class TabularTwoWindingsTransformerModificationsTest extends AbstractNetw
 
     protected TwoWindingsTransformerModificationInfos buildOneModification(String equipmentId, Double seriesResistance) {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId(equipmentId)
+                .active(true)
                 .r(new AttributeModification<>(seriesResistance, OperationType.SET))
                 .build();
     }

@@ -51,6 +51,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     public void testEquipmentWithWrongId() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("wrong id")
                 .build();
 
@@ -65,6 +66,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testWrongMaximumSectionCount() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .active(true)
                 .equipmentId("v5shunt")
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
                 .maximumSectionCount(new AttributeModification<>(-1, OperationType.SET))
@@ -81,6 +83,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testWrongSectionCount() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .active(true)
                 .equipmentId("v5shunt")
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
                 .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
@@ -104,6 +107,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertNotNull(model);
 
         var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
+                .active(true)
                 .equipmentId("v7shunt")
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
                 .build();
@@ -126,6 +130,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertNotNull(model);
 
         var shuntCompensatorModifications = ShuntCompensatorModificationInfos.builder()
+                .active(true)
                 .equipmentId("v7shunt")
                 .sectionCount(new AttributeModification<>(-1, OperationType.SET))
                 .build();
@@ -142,6 +147,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     public void testNegativeQmaxAtNominalV() {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v5shunt")
                 .maxQAtNominalV(new AttributeModification<>(-15.0, OperationType.SET))
                 .build();
@@ -166,6 +172,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
                 .build();
@@ -189,6 +196,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertEquals(1.0, model.getBPerSection(), 0);
         ShuntCompensatorModificationInfos modificationInfos = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v7shunt")
                 .maxSusceptance(AttributeModification.toAttributeModification(3.0, OperationType.SET))
                 .build();
@@ -207,6 +215,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertNotNull(model);
 
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
+                .active(true)
                 .equipmentId("v5shunt")
                 .maximumSectionCount(AttributeModification.toAttributeModification(3, OperationType.SET))
                 .sectionCount(AttributeModification.toAttributeModification(2, OperationType.SET))
@@ -229,6 +238,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
 
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
+                        .active(true)
                         .equipmentId("v7shunt")
                         .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
                         .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
@@ -236,6 +246,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
 
         ShuntCompensatorModificationInfos modificationInfos2 = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v8shunt")
                 .maxQAtNominalV(new AttributeModification<>(30.5, OperationType.SET))
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
@@ -265,6 +276,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
 
         return ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
                 .maxQAtNominalV(new AttributeModification<>(15.0, OperationType.SET))
@@ -279,6 +291,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     protected ModificationInfos buildModificationUpdate() {
         return ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("v2shunt")
                 .maxSusceptance(new AttributeModification<>(0.5, OperationType.SET))
                 .build();
@@ -322,6 +335,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         ShuntCompensatorModificationInfos shuntModificationInfos =
                 ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
+                        .active(true)
                         .equipmentId("v2shunt")
                         .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                         .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
@@ -334,6 +348,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         ShuntCompensatorModificationInfos shuntModificationInfos =
                 ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
+                        .active(true)
                         .equipmentId("v2shunt")
                         .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                         .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))

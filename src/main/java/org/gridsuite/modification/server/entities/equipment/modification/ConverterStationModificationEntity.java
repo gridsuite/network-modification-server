@@ -111,6 +111,7 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private ConverterStationModificationInfos.ConverterStationModificationInfosBuilder<?, ?> toConverterStationModificationInfoBuilder() {
 
         return ConverterStationModificationInfos.builder()
+            .active(getActive())
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())

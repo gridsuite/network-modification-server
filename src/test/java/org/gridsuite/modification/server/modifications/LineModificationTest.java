@@ -49,6 +49,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return LineModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
@@ -77,6 +78,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return LineModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified1", OperationType.SET))
                 .x(new AttributeModification<>(1.1, OperationType.SET))
@@ -303,6 +305,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .add();
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
@@ -337,6 +340,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         line.setName(null);
         LineModificationInfos lineModificationInfos1 = LineModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("ModifiedName", OperationType.SET))
                 .build();

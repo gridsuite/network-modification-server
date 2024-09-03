@@ -43,6 +43,7 @@ public class OperatingStatusModificationTripLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();
@@ -52,6 +53,7 @@ public class OperatingStatusModificationTripLineTest extends AbstractNetworkModi
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
+                .active(true)
                 .equipmentId(UPDATE_BRANCH_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelIdEdited")
                 .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();

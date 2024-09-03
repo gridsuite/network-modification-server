@@ -52,29 +52,31 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().active(true).equipmentId("idGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("v5generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("v6generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("unknownGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
+                .active(true)
                 .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(300., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().active(true).equipmentId("idGenerator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("v5generator").maxP(new AttributeModification<>(300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("v6generator").maxP(new AttributeModification<>(300., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
+                .active(true)
                 .build();
     }
 
@@ -519,11 +521,12 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     @Test
     public void testAllModificationsHaveFailed() throws Exception {
         List<ModificationInfos> modifications = List.of(
-                GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
-                GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build()
+                GeneratorModificationInfos.builder().active(true).equipmentId("idGenerator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("v5generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
+                GeneratorModificationInfos.builder().active(true).equipmentId("v6generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build()
         );
         ModificationInfos modificationInfos = TabularModificationInfos.builder()
+                .active(true)
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
                 .build();
@@ -569,6 +572,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
 
     private Pair<UUID, ModificationInfos> createTabularGeneratorModification(int qty) {
         ModificationInfos tabularModification = TabularModificationInfos.builder()
+            .active(true)
             .modificationType(ModificationType.GENERATOR_MODIFICATION)
             .modifications(createGeneratorModificationList(qty))
             .build();
@@ -581,6 +585,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         return IntStream.range(0, qty)
             .mapToObj(i ->
                 (ModificationInfos) GeneratorModificationInfos.builder()
+                    .active(true)
                     .equipmentId(UUID.randomUUID().toString())
                     .maxP(new AttributeModification<>(300., OperationType.SET))
                     .properties(List.of(

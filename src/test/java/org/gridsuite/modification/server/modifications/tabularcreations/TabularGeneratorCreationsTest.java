@@ -56,7 +56,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModification() {
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
-                .equipmentId("id1").equipmentName("name1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
+                .active(true).equipmentId("id1").equipmentName("name1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
                 .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
                 .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
@@ -67,7 +67,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
+                .active(true).equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
                 .connectionName("feederId2").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false)
                 .energySource(EnergySource.NUCLEAR).minP(0).maxP(500)
                 .targetP(300).targetQ(400D).voltageRegulationOn(false)
@@ -77,14 +77,14 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id3").voltageLevelId("v3").busOrBusbarSectionId("3A")
+                .active(true).equipmentId("id3").voltageLevelId("v3").busOrBusbarSectionId("3A")
                 .connectionName("feederId3").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id4").equipmentName("name4").voltageLevelId("v4").busOrBusbarSectionId("1.A")
+                .active(true).equipmentId("id4").equipmentName("name4").voltageLevelId("v4").busOrBusbarSectionId("1.A")
                 .connectionName("feederId4").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false)
                 .energySource(EnergySource.OTHER).minP(0).maxP(800)
                 .targetP(700).targetQ(20D).voltageRegulationOn(true).targetV(373D)
@@ -95,14 +95,14 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
+                .active(true).equipmentId("id5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("name5").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("v5generator").voltageLevelId("v5").busOrBusbarSectionId("1A1")
+                .active(true).equipmentId("v5generator").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("v5generator").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
@@ -110,6 +110,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .build()
         );
         return TabularCreationInfos.builder()
+            .active(true)
             .creationType(ModificationType.GENERATOR_CREATION)
             .creations(creations)
             .stashed(false)
@@ -120,7 +121,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
-                .equipmentId("id1").equipmentName("name11").voltageLevelId("v1").busOrBusbarSectionId("1.1")
+                .active(true).equipmentId("id1").equipmentName("name11").voltageLevelId("v1").busOrBusbarSectionId("1.1")
                 .connectionName("feederId11").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(200).terminalConnected(false)
                 .energySource(EnergySource.SOLAR).minP(0).maxP(300).ratedS(20D)
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
@@ -131,7 +132,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id4").equipmentName("name44").voltageLevelId("v4").busOrBusbarSectionId("1.A")
+                .active(true).equipmentId("id4").equipmentName("name44").voltageLevelId("v4").busOrBusbarSectionId("1.A")
                 .connectionName("feederId44").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(300).terminalConnected(false)
                 .energySource(EnergySource.THERMAL).minP(0).maxP(800)
                 .targetP(350).targetQ(10D).voltageRegulationOn(false)
@@ -143,6 +144,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .build()
         );
         return TabularCreationInfos.builder()
+                .active(true)
                 .creationType(ModificationType.GENERATOR_CREATION)
                 .creations(creations)
                 .stashed(false)
@@ -187,6 +189,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
 
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
+                .active(true)
                 .equipmentId("id5").equipmentName("name5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("feederId5").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
                 .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
@@ -199,6 +202,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .build()
         );
         TabularCreationInfos creationInfos = TabularCreationInfos.builder()
+                .active(true)
                 .creationType(ModificationType.GENERATOR_CREATION)
                 .creations(creations)
                 .build();
@@ -223,7 +227,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     public void testAllModificationsHaveSucceeded() throws Exception {
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
-                .equipmentId("id1").equipmentName("name1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
+                .active(true).equipmentId("id1").equipmentName("name1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
                 .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
                 .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
@@ -234,7 +238,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
+                .active(true).equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
                 .connectionName("feederId2").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false)
                 .energySource(EnergySource.NUCLEAR).minP(0).maxP(500)
                 .targetP(300).targetQ(400D).voltageRegulationOn(false)
@@ -246,6 +250,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
         );
 
         ModificationInfos creationInfos = TabularCreationInfos.builder()
+            .active(true)
             .creationType(ModificationType.GENERATOR_CREATION)
             .creations(creations)
             .build();
@@ -261,7 +266,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     public void testAllModificationsHaveFailed() throws Exception {
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
-                .equipmentId("id1").equipmentName("name1").voltageLevelId("unknown_vl").busOrBusbarSectionId("1.1")
+                .active(true).equipmentId("id1").equipmentName("name1").voltageLevelId("unknown_vl").busOrBusbarSectionId("1.1")
                 .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
                 .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
@@ -272,7 +277,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false)
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id2").equipmentName("name2").voltageLevelId("v1").busOrBusbarSectionId("unknown_bbs")
+                .active(true).equipmentId("id2").equipmentName("name2").voltageLevelId("v1").busOrBusbarSectionId("unknown_bbs")
                 .connectionName("feederId1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
                 .energySource(EnergySource.HYDRO).minP(0).maxP(100).ratedS(10D)
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
@@ -283,7 +288,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .reactiveCapabilityCurve(false)
                 .build(),
             GeneratorCreationInfos.builder()
-                .equipmentId("id3").equipmentName("name3").voltageLevelId("v1").busOrBusbarSectionId("1.1")
+                .active(true).equipmentId("id3").equipmentName("name3").voltageLevelId("v1").busOrBusbarSectionId("1.1")
                 .connectionName("feederId3").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(100).terminalConnected(true)
                 .energySource(EnergySource.HYDRO).minP(0).maxP(-100).ratedS(10D)
                 .targetP(50).targetQ(20D).voltageRegulationOn(true).targetV(370D)
@@ -295,6 +300,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
                 .build()
         );
         ModificationInfos creationInfos = TabularCreationInfos.builder()
+                .active(true)
                 .creationType(ModificationType.GENERATOR_CREATION)
                 .creations(creations)
                 .build();

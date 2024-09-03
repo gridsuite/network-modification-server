@@ -72,6 +72,7 @@ public class ShuntCompensatorCreationEntity extends InjectionCreationEntity {
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
+            .active(getActive())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // Injection
