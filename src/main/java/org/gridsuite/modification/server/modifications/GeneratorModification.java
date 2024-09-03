@@ -217,7 +217,7 @@ public class GeneratorModification extends AbstractModification {
                                                                  Generator generator, ReportNode subReportNode, ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
-        return ModificationUtils.getInstance().modifyActivePowerControlAttributesAndLog(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
     }
 
     private void modifyGeneratorStartUpAttributesAndLog(GeneratorModificationInfos modificationInfos, Generator generator,

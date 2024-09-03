@@ -132,6 +132,7 @@ public enum GeneratorField {
                             activePowerControlAdder,
                             null,
                             new AttributeModification<>(newValue.floatValue(), OperationType.SET),
+                            null,
                             null);
                 }
                 case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(

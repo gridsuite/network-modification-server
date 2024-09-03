@@ -1025,33 +1025,21 @@ public final class ModificationUtils {
         adder.add();
     }
 
-    /**
-     * @param reports Data changes will be added to this list. The array may be null but no modification report will be created
-     */
-    public void modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
-                                                   ActivePowerControlAdder<?> activePowerControlAdder,
-                                                   AttributeModification<Boolean> participateInfo,
-                                                   AttributeModification<Float> droopInfo,
-                                                   List<ReportNode> reports) {
+    public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
+                                                         ActivePowerControlAdder<?> activePowerControlAdder,
+                                                         AttributeModification<Boolean> participateInfo,
+                                                         AttributeModification<Float> droopInfo,
+                                                         ReportNode subReportNode,
+                                                         ReportNode subReporterSetpoints) {
+        List<ReportNode> reports = new ArrayList<>();
         if (activePowerControl != null) {
             modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
             createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
-    }
-
-    public ReportNode modifyActivePowerControlAttributesAndLog(ActivePowerControl<?> activePowerControl,
-                                                               ActivePowerControlAdder<?> activePowerControlAdder,
-                                                               AttributeModification<Boolean> participateInfo,
-                                                               AttributeModification<Float> droopInfo,
-                                                               ReportNode subReportNode,
-                                                               ReportNode subReporterSetpoints) {
-        List<ReportNode> reports = new ArrayList<>();
-        modifyActivePowerControlAttributes(activePowerControl,
-                activePowerControlAdder,
-                participateInfo,
-                droopInfo,
-                reports);
+        if (subReportNode == null) {
+            return null;
+        }
 
         ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !reports.isEmpty()) {

@@ -15,6 +15,8 @@ import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.BatteryModification.modifyBatteryActiveLimitsAttributes;
+import static org.gridsuite.modification.server.modifications.BatteryModification.modifyBatterySetpointsAttributes;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -42,8 +44,18 @@ public enum BatteryField {
     public static void setNewValue(Battery battery, String batteryField, Double newValue) {
         BatteryField field = BatteryField.valueOf(batteryField);
         switch (field) {
-            case MINIMUM_ACTIVE_POWER -> battery.setMinP(newValue);
-            case MAXIMUM_ACTIVE_POWER -> battery.setMaxP(newValue);
+            case MINIMUM_ACTIVE_POWER ->
+                    modifyBatteryActiveLimitsAttributes(
+                            null,
+                            new AttributeModification<>(newValue, OperationType.SET),
+                            battery,
+                            null);
+            case MAXIMUM_ACTIVE_POWER ->
+                    modifyBatteryActiveLimitsAttributes(
+                            new AttributeModification<>(newValue, OperationType.SET),
+                            null,
+                            battery,
+                            null);
             case ACTIVE_POWER_SET_POINT -> {
                 ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
                     new AttributeModification<>(newValue, OperationType.SET),
@@ -55,9 +67,13 @@ public enum BatteryField {
                     MODIFY_GENERATOR_ERROR,
                     "Battery '" + battery.getId() + "' : "
                 );
-                battery.setTargetP(newValue);
+                modifyBatterySetpointsAttributes(
+                        new AttributeModification<>(newValue, OperationType.SET), null, null, null,
+                        battery, null);
             }
-            case REACTIVE_POWER_SET_POINT -> battery.setTargetQ(newValue);
+            case REACTIVE_POWER_SET_POINT -> modifyBatterySetpointsAttributes(
+                    null, new AttributeModification<>(newValue, OperationType.SET), null, null,
+                    battery, null);
             case DROOP -> {
                 ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
                 ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
@@ -66,6 +82,7 @@ public enum BatteryField {
                         activePowerControlAdder,
                         null,
                         new AttributeModification<>(newValue.floatValue(), OperationType.SET),
+                        null,
                         null);
             }
         }
