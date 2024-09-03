@@ -15,7 +15,6 @@ import org.gridsuite.modification.server.dto.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
@@ -172,8 +171,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         if (!phaseTapChangerReports.isEmpty() || !regulationReports.isEmpty() || !positionsAndStepsReports.isEmpty()) {
             ReportNode phaseTapChangerSubreporter = ModificationUtils.getInstance().reportModifications(subReportNode,
-                    phaseTapChangerReports, TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE,
-                    Map.of());
+                    phaseTapChangerReports, TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE
+            );
             if (phaseTapChangerSubreporter == null) {
                 phaseTapChangerSubreporter = subReportNode.newReportNode()
                         .withMessageTemplate(TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
@@ -185,10 +184,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             }
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports,
                     regulationMode != null ? regulationMode.name() : null,
-                    ModificationUtils.getInstance().formatRegulationModeReport(regulationMode),
-                    Map.of());
+                    ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)
+            );
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports,
-                    "phaseTapChangerPositionsAndStepsModification", "    Tap Changer", Map.of());
+                    "phaseTapChangerPositionsAndStepsModification", "    Tap Changer");
         }
     }
 
@@ -253,7 +252,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         if (!ratioTapChangerReports.isEmpty() || !voltageRegulationReports.isEmpty()
                 || !positionsAndStepsReports.isEmpty()) {
             ReportNode ratioTapChangerReporter = ModificationUtils.getInstance().reportModifications(subReporter,
-                    ratioTapChangerReports, TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE, Map.of());
+                    ratioTapChangerReports, TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE);
             if (ratioTapChangerReporter == null) {
                 ratioTapChangerReporter = subReporter.newReportNode()
                         .withMessageTemplate(TapChangerType.RATIO.name(), RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
@@ -264,9 +263,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                         .add();
             }
             ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, voltageRegulationReports,
-                    "ratioTapChangerVoltageRegulationModification", "    Voltage regulation", Map.of());
+                    "ratioTapChangerVoltageRegulationModification", "    Voltage regulation");
             ModificationUtils.getInstance().reportModifications(ratioTapChangerReporter, positionsAndStepsReports,
-                    "ratioTapChangerPositionsAndStepsModification", "    Tap Changer", Map.of());
+                    "ratioTapChangerPositionsAndStepsModification", "    Tap Changer");
         }
     }
 

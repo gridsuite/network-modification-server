@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
@@ -139,7 +138,7 @@ public class GeneratorModification extends AbstractModification {
                     modificationInfos.getStepUpTransformerX().getValue(),
                     "Transformer reactance"));
         }
-        ModificationUtils.getInstance().reportModifications(subReportNode, reports, "shortCircuitAttributesModified", "Short-circuit", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, reports, "shortCircuitAttributesModified", "Short-circuit");
     }
 
     private void modifyGeneratorReactiveCapabilityCurvePoints(GeneratorModificationInfos modificationInfos,
@@ -230,7 +229,7 @@ public class GeneratorModification extends AbstractModification {
                 plannedOutageRateUpdated ||
                 forcedOutageRateUpdated) {
             generatorStartupAdder.add();
-            ModificationUtils.getInstance().reportModifications(subReportNode, reports, "startUpAttributesModified", "Start up", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, reports, "startUpAttributesModified", "Start up");
         }
     }
 
@@ -400,7 +399,7 @@ public class GeneratorModification extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
-        ModificationUtils.getInstance().reportModifications(subReportNodeSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNodeSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation");
         return subReportNodeSetpoints2;
     }
 

@@ -482,19 +482,14 @@ public final class ModificationUtils {
                 .build();
     }
 
-    public ReportNode reportModifications(ReportNode subReportNode, List<ReportNode> reports, String subReportNodeKey,
-                                        String subReportNodeDefaultMessage, Map<String, Object> values) {
+    public ReportNode reportModifications(ReportNode reportNode, List<ReportNode> reports, String subReportNodeKey, String subReportNodeMessage) {
         List<ReportNode> validReports = reports.stream().filter(Objects::nonNull).toList();
-        ReportNode modificationSubReportNode = null;
-        if (!validReports.isEmpty() && subReportNode != null) {
-            modificationSubReportNode = subReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).add();
-            ReportNodeAdder adder = modificationSubReportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeDefaultMessage).withSeverity(TypedValue.INFO_SEVERITY);
-            for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
-                adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
-            }
-            adder.add();
+        ReportNode subReportNode = null;
+        if (!validReports.isEmpty() && reportNode != null) {
+            // new child report node
+            subReportNode = reportNode.newReportNode().withMessageTemplate(subReportNodeKey, subReportNodeMessage).add();
             for (ReportNode report : validReports) {
-                ReportNodeAdder reportNodeAdder = modificationSubReportNode.newReportNode().withMessageTemplate(report.getMessageKey(), report.getMessageTemplate()).withSeverity(TypedValue.INFO_SEVERITY);
+                ReportNodeAdder reportNodeAdder = subReportNode.newReportNode().withMessageTemplate(report.getMessageKey(), report.getMessageTemplate()).withSeverity(TypedValue.INFO_SEVERITY);
                 for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
                     reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
                 }
@@ -505,7 +500,7 @@ public final class ModificationUtils {
                 reportNodeAdder.add();
             }
         }
-        return modificationSubReportNode;
+        return subReportNode;
     }
 
     public <T> void applyElementaryModifications(Consumer<T> setter, Supplier<T> getter,
@@ -626,7 +621,7 @@ public final class ModificationUtils {
             createNewConnectivityPosition(connectablePositionAdder, modificationInfos, reports);
         }
         modifyInjectionConnection(modificationInfos, injection, reports);
-        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY, Map.of());
+        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
 
     private void modifyExistingConnectivityPosition(ConnectablePosition<?> connectablePosition,
@@ -873,7 +868,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
-        reportModifications(subReportNodeReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram", Map.of());
+        reportModifications(subReportNodeReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram");
     }
 
     public void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
@@ -983,7 +978,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
-        reportModifications(subReportNodeReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range", Map.of());
+        reportModifications(subReportNodeReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
     }
 
     private void modifyExistingActivePowerControl(ActivePowerControl<?> activePowerControl,
@@ -1042,7 +1037,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
         }
-        reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation", Map.of());
+        reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
         return subReportNodeSetpoints2;
     }
 
@@ -1190,7 +1185,7 @@ public final class ModificationUtils {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
 
-            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
         }
     }
 
@@ -1219,7 +1214,7 @@ public final class ModificationUtils {
                 .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
-        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
     }
 
     private void createReactiveCapabilityCurvePoint(ReactiveCapabilityCurveAdder adder,
