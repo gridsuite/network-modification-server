@@ -85,12 +85,24 @@ public class VoltageLevelModification extends AbstractModification {
                 .add();
 
         ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setName, () -> voltageLevel.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReportNode, "Name");
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setNominalV, voltageLevel::getNominalV, modificationInfos.getNominalV(), subReportNode, "Nominal voltage");
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setLowVoltageLimit, voltageLevel::getLowVoltageLimit, modificationInfos.getLowVoltageLimit(), subReportNode, "Low voltage limit");
-        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setHighVoltageLimit, voltageLevel::getHighVoltageLimit, modificationInfos.getHighVoltageLimit(), subReportNode, "High voltage limit");
+        modifyNominalV(voltageLevel, modificationInfos.getNominalV(), subReportNode);
+        modifLowVoltageLimit(voltageLevel, modificationInfos.getLowVoltageLimit(), subReportNode);
+        modifyHighVoltageLimit(voltageLevel, modificationInfos.getHighVoltageLimit(), subReportNode);
 
         modifyVoltageLevelShortCircuit(modificationInfos.getIpMin(), modificationInfos.getIpMax(), subReportNode, voltageLevel);
         PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties(), "VlProperties");
+    }
+
+    public static void modifyHighVoltageLimit(VoltageLevel voltageLevel, AttributeModification<Double> highVoltageLimit, ReportNode subReportNode) {
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setHighVoltageLimit, voltageLevel::getHighVoltageLimit, highVoltageLimit, subReportNode, "High voltage limit");
+    }
+
+    public static void modifLowVoltageLimit(VoltageLevel voltageLevel, AttributeModification<Double> lowVoltageLimit, ReportNode subReportNode) {
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setLowVoltageLimit, voltageLevel::getLowVoltageLimit, lowVoltageLimit, subReportNode, "Low voltage limit");
+    }
+
+    public static void modifyNominalV(VoltageLevel voltageLevel, AttributeModification<Double> modifNominalV, ReportNode subReportNode) {
+        ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setNominalV, voltageLevel::getNominalV, modifNominalV, subReportNode, "Nominal voltage");
     }
 
     public static void modifyVoltageLevelShortCircuit(AttributeModification<Double> ipMin,
