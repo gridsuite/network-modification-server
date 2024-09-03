@@ -156,6 +156,32 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     @Test
+    public void testCreateDisabledModification() throws Exception {
+        MvcResult mvcResult;
+        Optional<NetworkModificationResult> networkModificationResult;
+        ModificationInfos modificationToCreate = buildModification();
+        modificationToCreate.setActive(false);
+        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+        assertEquals(0, networkModificationResult.get().getNetworkImpacts().size());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
+        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+
+        assertThat(createdModification).recursivelyEquals(modificationToCreate);
+        testNetworkModificationsCount(TEST_GROUP_ID, 1);
+        // when modification is not active, element created by the modifications should NOT be present in network
+        assertAfterNetworkModificationDeletion();
+
+        ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        testCreationModificationMessage(createdModificationWithOnlyMetadata);
+        assertEquals(false, createdModificationWithOnlyMetadata.getActive());
+    }
+
+    @Test
     public void testRead() throws Exception {
         MvcResult mvcResult;
         Optional<NetworkModificationResult> networkModificationResult;
