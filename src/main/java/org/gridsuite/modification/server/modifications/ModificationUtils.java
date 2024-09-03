@@ -516,7 +516,9 @@ public final class ModificationUtils {
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            insertReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
+            if (subReportNode != null) {
+                insertReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
+            }
         }
     }
 
