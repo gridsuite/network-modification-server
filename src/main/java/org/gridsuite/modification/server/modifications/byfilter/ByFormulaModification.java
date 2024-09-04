@@ -9,12 +9,12 @@ package org.gridsuite.modification.server.modifications.byfilter;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 
@@ -85,21 +85,11 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected Object applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+    protected <T> T getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
         FormulaInfos formulaInfos = (FormulaInfos) modificationByFilterInfos;
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(equipment);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(equipment);
-        final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
-        switch (equipment.getType()) {
-            case GENERATOR -> GeneratorField.setNewValue((Generator) equipment, formulaInfos.getEditedField(), newValue);
-            case BATTERY -> BatteryField.setNewValue((Battery) equipment, formulaInfos.getEditedField(), newValue);
-            case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) equipment, formulaInfos.getEditedField(), newValue);
-            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) equipment, formulaInfos.getEditedField(), newValue);
-            case LOAD -> LoadField.setNewValue((Load) equipment, formulaInfos.getEditedField(), newValue);
-            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) equipment, formulaInfos.getEditedField(), newValue);
-            default -> throw new NetworkModificationException(BY_FORMULA_MODIFICATION_ERROR, "Unsupported equipment");
-        }
-        return newValue;
+        return (T) applyOperation(formulaInfos.getOperator(), value1, value2);
     }
 
     private Double applyOperation(Operator operator, @Nonnull Double value1, @Nonnull Double value2) {

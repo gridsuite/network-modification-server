@@ -8,15 +8,15 @@
 package org.gridsuite.modification.server.modifications.byfilter;
 
 import com.powsybl.commons.report.ReportNode;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BySimpleModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
-import org.gridsuite.modification.server.dto.byfilter.simple.PropertyModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.PropertyModificationByFilterInfos;
 
 import java.util.Collections;
 import java.util.List;
@@ -65,24 +65,20 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected Object applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
-        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
-        if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
-            equipment.setProperty(
-                    ((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName(),
-                    (String) simpleModificationInfos.getValue()
-            );
-        } else {
-            switch (equipment.getType()) {
-                case GENERATOR -> GeneratorField.setNewValue((Generator) equipment, simpleModificationInfos);
-                case BATTERY -> BatteryField.setNewValue((Battery) equipment, simpleModificationInfos);
-                case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) equipment, simpleModificationInfos);
-                case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) equipment, simpleModificationInfos);
-                case LOAD -> LoadField.setNewValue((Load) equipment, simpleModificationInfos);
-                case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) equipment, simpleModificationInfos);
-                default -> throw new NetworkModificationException(BY_SIMPLE_MODIFICATION_ERROR, "Unsupported equipment");
-            }
-        }
+    protected <T> T getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        AbstractSimpleModificationByFilterInfos<T> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<T>) modificationByFilterInfos;
         return simpleModificationInfos.getValue();
+    }
+
+    @Override
+    protected <T> T applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        AbstractSimpleModificationByFilterInfos<T> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<T>) modificationByFilterInfos;
+        if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
+            T newValue = getNewValue(equipment, modificationByFilterInfos);
+            equipment.setProperty(((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName(), (String) newValue);
+            return newValue;
+        } else {
+            return super.applyValue(equipment, modificationByFilterInfos);
+        }
     }
 }

@@ -9,17 +9,14 @@ package org.gridsuite.modification.server.modifications.byfilter;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.*;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -97,8 +94,24 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                                              AbstractModificationByFilterInfos modificationByFilterInfos,
                                              List<ReportNode> reports, List<String> notEditableEquipments);
 
-    protected abstract Object applyValue(Identifiable<?> equipment,
-                                         AbstractModificationByFilterInfos modificationByFilterInfos);
+    protected abstract <T> T getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos);
+
+    protected <T> T applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        // get new value
+        T newValue = getNewValue(equipment, modificationByFilterInfos);
+
+        // set new value for the equipment
+        switch (equipment.getType()) {
+            case GENERATOR -> GeneratorField.setNewValue((Generator) equipment, modificationByFilterInfos.getEditedField(), newValue);
+            case BATTERY -> BatteryField.setNewValue((Battery) equipment, modificationByFilterInfos.getEditedField(), newValue);
+            case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) equipment, modificationByFilterInfos.getEditedField(), newValue);
+            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) equipment, modificationByFilterInfos.getEditedField(), newValue);
+            case LOAD -> LoadField.setNewValue((Load) equipment, modificationByFilterInfos.getEditedField(), newValue);
+            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) equipment, modificationByFilterInfos.getEditedField(), newValue);
+            default -> throw new NetworkModificationException(getExceptionType(), "Unsupported equipment");
+        }
+        return newValue;
+    }
 
     @Override
     public void initApplicationContext(NetworkModificationApplicator modificationApplicator) {

@@ -10,10 +10,6 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -26,9 +22,7 @@ public enum BatteryField {
     REACTIVE_POWER_SET_POINT,
     DROOP;
 
-    public static final String UNSUPPORTED_BATTERY_DATA_TYPE_ERROR_MESSAGE = "Unsupported battery data type: ";
-
-    public static Double getReferenceValue(Battery battery, String batteryField) {
+    public static Object getReferenceValue(Battery battery, String batteryField) {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
         BatteryField field = BatteryField.valueOf(batteryField);
         return switch (field) {
@@ -40,23 +34,16 @@ public enum BatteryField {
         };
     }
 
-    public static void setNewValue(Battery battery, String batteryField, Double newValue) {
+    public static <T> void setNewValue(Battery battery, String batteryField, T newValue) {
         BatteryField field = BatteryField.valueOf(batteryField);
         switch (field) {
-            case MINIMUM_ACTIVE_POWER -> battery.setMinP(newValue);
-            case MAXIMUM_ACTIVE_POWER -> battery.setMaxP(newValue);
-            case ACTIVE_POWER_SET_POINT -> battery.setTargetP(newValue);
-            case REACTIVE_POWER_SET_POINT -> battery.setTargetQ(newValue);
+            case MINIMUM_ACTIVE_POWER -> battery.setMinP((double) newValue);
+            case MAXIMUM_ACTIVE_POWER -> battery.setMaxP((double) newValue);
+            case ACTIVE_POWER_SET_POINT -> battery.setTargetP((double) newValue);
+            case REACTIVE_POWER_SET_POINT -> battery.setTargetQ((double) newValue);
             case DROOP -> battery.newExtension(ActivePowerControlAdder.class)
-                    .withDroop(newValue)
+                    .withDroop((double) newValue)
                     .add();
-        }
-    }
-
-    public static void setNewValue(Battery battery, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
-        switch (simpleModificationByFilterInfos.getDataType()) {
-            case DOUBLE -> setNewValue(battery, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
-            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_BATTERY_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
 }

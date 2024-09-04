@@ -10,10 +10,6 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -35,9 +31,7 @@ public enum TwoWindingsTransformerField {
     PHASE_TAP_POSITION,
     PHASE_TARGET_DEADBAND;
 
-    public static final String UNSUPPORTED_TWO_WINDINGS_TRANSFORMER_DATA_TYPE_ERROR_MESSAGE = "Unsupported two windings transformer data type: ";
-
-    public static Double getReferenceValue(TwoWindingsTransformer transformer, String twoWindingsTransformerField) {
+    public static Object getReferenceValue(TwoWindingsTransformer transformer, String twoWindingsTransformerField) {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
@@ -60,34 +54,27 @@ public enum TwoWindingsTransformerField {
         };
     }
 
-    public static void setNewValue(TwoWindingsTransformer transformer, String twoWindingsTransformerField, Double newValue) {
+    public static <T> void setNewValue(TwoWindingsTransformer transformer, String twoWindingsTransformerField, T newValue) {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
 
         switch (field) {
-            case R -> transformer.setR(newValue);
-            case X -> transformer.setX(newValue);
-            case G -> transformer.setG(newValue);
-            case B -> transformer.setB(newValue);
-            case RATED_U1 -> transformer.setRatedU1(newValue);
-            case RATED_U2 -> transformer.setRatedU2(newValue);
-            case RATED_S -> transformer.setRatedS(newValue);
-            case TARGET_V -> ratioTapChanger.setTargetV(newValue);
-            case RATIO_LOW_TAP_POSITION -> ratioTapChanger.setLowTapPosition(newValue.intValue());
-            case RATIO_TAP_POSITION -> ratioTapChanger.setTapPosition(newValue.intValue());
-            case RATIO_TARGET_DEADBAND -> ratioTapChanger.setTargetDeadband(newValue);
-            case REGULATION_VALUE -> phaseTapChanger.setRegulationValue(newValue);
-            case PHASE_LOW_TAP_POSITION -> phaseTapChanger.setLowTapPosition(newValue.intValue());
-            case PHASE_TAP_POSITION -> phaseTapChanger.setTapPosition(newValue.intValue());
-            case PHASE_TARGET_DEADBAND -> phaseTapChanger.setTargetDeadband(newValue);
-        }
-    }
-
-    public static void setNewValue(TwoWindingsTransformer transformer, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
-        switch (simpleModificationByFilterInfos.getDataType()) {
-            case DOUBLE, INTEGER -> setNewValue(transformer, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
-            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_TWO_WINDINGS_TRANSFORMER_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
+            case R -> transformer.setR((double) newValue);
+            case X -> transformer.setX((double) newValue);
+            case G -> transformer.setG((double) newValue);
+            case B -> transformer.setB((double) newValue);
+            case RATED_U1 -> transformer.setRatedU1((double) newValue);
+            case RATED_U2 -> transformer.setRatedU2((double) newValue);
+            case RATED_S -> transformer.setRatedS((double) newValue);
+            case TARGET_V -> ratioTapChanger.setTargetV((double) newValue);
+            case RATIO_LOW_TAP_POSITION -> ratioTapChanger.setLowTapPosition(((Number) newValue).intValue());
+            case RATIO_TAP_POSITION -> ratioTapChanger.setTapPosition(((Number) newValue).intValue());
+            case RATIO_TARGET_DEADBAND -> ratioTapChanger.setTargetDeadband((double) newValue);
+            case REGULATION_VALUE -> phaseTapChanger.setRegulationValue((double) newValue);
+            case PHASE_LOW_TAP_POSITION -> phaseTapChanger.setLowTapPosition(((Number) newValue).intValue());
+            case PHASE_TAP_POSITION -> phaseTapChanger.setTapPosition(((Number) newValue).intValue());
+            case PHASE_TARGET_DEADBAND -> phaseTapChanger.setTargetDeadband((double) newValue);
         }
     }
 }

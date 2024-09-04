@@ -12,9 +12,6 @@ import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import com.powsybl.iidm.network.VoltageLevel;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -25,9 +22,7 @@ public enum ShuntCompensatorField {
     MAXIMUM_SUSCEPTANCE,
     MAXIMUM_Q_AT_NOMINAL_VOLTAGE;
 
-    public static final String UNSUPPORTED_SHUNT_COMPENSATOR_DATA_TYPE_ERROR_MESSAGE = "Unsupported shunt compensator data type: ";
-
-    public static Double getReferenceValue(ShuntCompensator shuntCompensator, String shuntCompensatorField) {
+    public static Object getReferenceValue(ShuntCompensator shuntCompensator, String shuntCompensatorField) {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
         ShuntCompensatorField field = ShuntCompensatorField.valueOf(shuntCompensatorField);
         return switch (field) {
@@ -38,7 +33,7 @@ public enum ShuntCompensatorField {
         };
     }
 
-    public static void setNewValue(ShuntCompensator shuntCompensator, String shuntCompensatorField, Double newValue) {
+    public static <T> void setNewValue(ShuntCompensator shuntCompensator, String shuntCompensatorField, T newValue) {
         if (shuntCompensator.getModelType() != ShuntCompensatorModelType.LINEAR) {
             throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
                     String.format("Shunt compensator with %s model is not supported", shuntCompensator.getModelType()));
@@ -48,24 +43,17 @@ public enum ShuntCompensatorField {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
         switch (field) {
             case MAXIMUM_SECTION_COUNT -> {
-                int maximumSectionCount = newValue.intValue();
+                int maximumSectionCount = ((Number) newValue).intValue();
                 model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
                 model.setMaximumSectionCount(maximumSectionCount);
             }
-            case SECTION_COUNT -> shuntCompensator.setSectionCount(newValue.intValue());
-            case MAXIMUM_SUSCEPTANCE -> model.setBPerSection(newValue / shuntCompensator.getMaximumSectionCount());
+            case SECTION_COUNT -> shuntCompensator.setSectionCount(((Number) newValue).intValue());
+            case MAXIMUM_SUSCEPTANCE -> model.setBPerSection(((double) newValue) / shuntCompensator.getMaximumSectionCount());
             case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> {
-                double newQatNominalV = newValue / shuntCompensator.getMaximumSectionCount();
+                double newQatNominalV = ((double) newValue) / shuntCompensator.getMaximumSectionCount();
                 double newSusceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
                 model.setBPerSection(newSusceptancePerSection);
             }
-        }
-    }
-
-    public static void setNewValue(ShuntCompensator shuntCompensator, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
-        switch (simpleModificationByFilterInfos.getDataType()) {
-            case DOUBLE, INTEGER -> setNewValue(shuntCompensator, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
-            default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_SHUNT_COMPENSATOR_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
 }

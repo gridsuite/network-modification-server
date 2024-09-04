@@ -7,26 +7,10 @@
 
 package org.gridsuite.modification.server.dto.byfilter.formula;
 
-import com.powsybl.iidm.network.Battery;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.Load;
-import com.powsybl.iidm.network.ShuntCompensator;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
-import com.powsybl.iidm.network.VoltageLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.powsybl.iidm.network.*;
+import lombok.*;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
 
 
 /**
@@ -54,7 +38,7 @@ public class ReferenceFieldOrValue {
         }
 
         IdentifiableType identifiableType = identifiable.getType();
-        return switch (identifiableType) {
+        return (Double) switch (identifiableType) {
             case GENERATOR -> GeneratorField.getReferenceValue((Generator) identifiable, equipmentField);
             case BATTERY -> BatteryField.getReferenceValue((Battery) identifiable, equipmentField);
             case SHUNT_COMPENSATOR -> ShuntCompensatorField.getReferenceValue((ShuntCompensator) identifiable, equipmentField);
