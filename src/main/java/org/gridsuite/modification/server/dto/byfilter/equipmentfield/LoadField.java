@@ -54,7 +54,7 @@ public enum LoadField {
     public static void setNewValue(Load load, AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos) {
         switch (simpleModificationByFilterInfos.getDataType()) {
             case DOUBLE, INTEGER -> setNewValue(load, simpleModificationByFilterInfos.getEditedField(), (Double) simpleModificationByFilterInfos.getValue());
-            case ENUM, STRING -> setNewValue(load, simpleModificationByFilterInfos.getEditedField(), (String) simpleModificationByFilterInfos.getValue());
+            case ENUM -> setNewValue(load, simpleModificationByFilterInfos.getEditedField(), (String) simpleModificationByFilterInfos.getValue());
             default -> throw new NetworkModificationException(MODIFICATION_ERROR, UNSUPPORTED_LOAD_DATA_TYPE_ERROR_MESSAGE + simpleModificationByFilterInfos.getDataType());
         }
     }
