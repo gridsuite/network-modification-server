@@ -54,6 +54,12 @@ public final class ModificationUtils {
     public static final String CONNECTION_NAME_FIELD_NAME = "Connection name";
     public static final String CONNECTION_DIRECTION_FIELD_NAME = "Connection direction";
     public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
+    public static final String CONNECTION_NAME_FIELD_NAME_1 = "Connection name 1";
+    public static final String CONNECTION_DIRECTION_FIELD_NAME_1 = "Connection direction 1";
+    public static final String CONNECTION_POSITION_FIELD_NAME_1 = "Connection position 1";
+    public static final String CONNECTION_NAME_FIELD_NAME_2 = "Connection name 2";
+    public static final String CONNECTION_DIRECTION_FIELD_NAME_2 = "Connection direction 2";
+    public static final String CONNECTION_POSITION_FIELD_NAME_2 = "Connection position 2";
 
     private ModificationUtils() {
     }
@@ -629,29 +635,133 @@ public final class ModificationUtils {
         return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY, Map.of());
     }
 
+    public ReportNode modifyBranchConnectivityAttributes(ConnectablePosition<?> connectablePosition,
+                                                         ConnectablePositionAdder<?> connectablePositionAdder,
+                                                         Branch<?> branch,
+                                                         BranchModificationInfos modificationInfos,
+                                                         ReportNode connectivityReports) {
+        List<ReportNode> reports = new ArrayList<>();
+        if (modificationInfos.getVoltageLevelId1() == null || modificationInfos.getBusOrBusbarSectionId1() == null) {
+            return ReportNode.newRootReportNode()
+                    .withMessageTemplate("VoltageLevelOrBusbarSectionNotFound",
+                            "Voltage level id or Bus bar section id of equipment id=${id} not found")
+                    .withUntypedValue("id", modificationInfos.getEquipmentId())
+                    .withSeverity(TypedValue.WARN_SEVERITY)
+                    .build();
+        }
+        if (connectablePosition != null) {
+            modifyExistingBranchConnectivityPosition(connectablePosition, modificationInfos, reports);
+        } else {
+            createNewBranchConnectivityPosition(connectablePositionAdder, modificationInfos, reports);
+        }
+        modifyBranchConnection1(modificationInfos, branch, reports);
+        modifyBranchConnection2(modificationInfos, branch, reports);
+        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY, Map.of());
+    }
+
+    private void modifyExistingBranchConnectivityPosition(ConnectablePosition<?> connectablePosition,
+                                                    BranchModificationInfos modificationInfos,
+                                                    List<ReportNode> reports) {
+        ConnectablePosition.Feeder feeder1 = connectablePosition.getFeeder1();
+        ConnectablePosition.Feeder feeder2 = connectablePosition.getFeeder2();
+        ReportNode connectionName1Report = applyElementaryModificationsAndReturnReport(
+                feeder1::setName,
+                feeder1.getName()::get,
+                modificationInfos.getConnectionName1(),
+                CONNECTION_NAME_FIELD_NAME_1);
+        if (connectionName1Report != null) {
+            reports.add(connectionName1Report);
+        }
+        ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(
+                feeder1::setDirection,
+                feeder1::getDirection,
+                modificationInfos.getConnectionDirection1(),
+                CONNECTION_DIRECTION_FIELD_NAME_1);
+        if (connectionDirectionReport != null) {
+            reports.add(connectionDirectionReport);
+        }
+        ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(
+                feeder1::setOrder,
+                feeder1.getOrder()::get,
+                modificationInfos.getConnectionPosition1(),
+                CONNECTION_POSITION_FIELD_NAME_1);
+        if (connectionPositionReport != null) {
+            reports.add(connectionPositionReport);
+        }
+        ReportNode connectionName2Report = applyElementaryModificationsAndReturnReport(
+                feeder2::setName,
+                feeder2.getName()::get,
+                modificationInfos.getConnectionName2(),
+                CONNECTION_NAME_FIELD_NAME_2);
+        if (connectionName2Report != null) {
+            reports.add(connectionName2Report);
+        }
+        ReportNode connectionDirection2Report = applyElementaryModificationsAndReturnReport(
+                feeder2::setDirection,
+                feeder2::getDirection,
+                modificationInfos.getConnectionDirection2(),
+                CONNECTION_DIRECTION_FIELD_NAME_2);
+        if (connectionDirection2Report != null) {
+            reports.add(connectionDirection2Report);
+        }
+        ReportNode connectionPosition2Report = applyElementaryModificationsAndReturnReport(
+                feeder2::setOrder,
+                feeder2.getOrder()::get,
+                modificationInfos.getConnectionPosition2(),
+                CONNECTION_POSITION_FIELD_NAME_2);
+        if (connectionPosition2Report != null) {
+            reports.add(connectionPosition2Report);
+        }
+    }
+
     private void modifyExistingConnectivityPosition(ConnectablePosition<?> connectablePosition,
                                                   InjectionModificationInfos modificationInfos,
                                                   List<ReportNode> reports) {
-        ConnectablePosition.Feeder feeder = connectablePosition.getFeeder();
-        ReportNode connectionNameReport = applyElementaryModificationsAndReturnReport(
-                feeder::setName,
-                feeder.getName()::get,
+        ConnectablePosition.Feeder feeder1 = connectablePosition.getFeeder1();
+        ConnectablePosition.Feeder feeder2 = connectablePosition.getFeeder2();
+        ReportNode connectionName1Report = applyElementaryModificationsAndReturnReport(
+                feeder1::setName,
+                feeder1.getName()::get,
                 modificationInfos.getConnectionName(),
                 CONNECTION_NAME_FIELD_NAME);
-        if (connectionNameReport != null) {
-            reports.add(connectionNameReport);
+        if (connectionName1Report != null) {
+            reports.add(connectionName1Report);
+        }
+        ReportNode connectionDirection1Report = applyElementaryModificationsAndReturnReport(
+                feeder1::setDirection,
+                feeder1::getDirection,
+                modificationInfos.getConnectionDirection(),
+                CONNECTION_DIRECTION_FIELD_NAME);
+        if (connectionDirection1Report != null) {
+            reports.add(connectionDirection1Report);
+        }
+        ReportNode connectionPosition1Report = applyElementaryModificationsAndReturnReport(
+                feeder1::setOrder,
+                feeder1.getOrder()::get,
+                modificationInfos.getConnectionPosition(),
+                CONNECTION_POSITION_FIELD_NAME);
+        if (connectionPosition1Report != null) {
+            reports.add(connectionPosition1Report);
+        }
+        ReportNode connectionName2Report = applyElementaryModificationsAndReturnReport(
+                feeder2::setName,
+                feeder2.getName()::get,
+                modificationInfos.getConnectionName(),
+                CONNECTION_NAME_FIELD_NAME_1);
+        if (connectionName2Report != null) {
+            reports.add(connectionName2Report);
         }
         ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(
-                feeder::setDirection,
-                feeder::getDirection,
+                feeder1::setDirection,
+                feeder1::getDirection,
                 modificationInfos.getConnectionDirection(),
                 CONNECTION_DIRECTION_FIELD_NAME);
         if (connectionDirectionReport != null) {
             reports.add(connectionDirectionReport);
         }
         ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(
-                feeder::setOrder,
-                feeder.getOrder()::get,
+                feeder1::setOrder,
+                feeder1.getOrder()::get,
                 modificationInfos.getConnectionPosition(),
                 CONNECTION_POSITION_FIELD_NAME);
         if (connectionPositionReport != null) {
@@ -692,6 +802,125 @@ public final class ModificationUtils {
 
         // Finalize by adding the feeder
         adder.add();
+    }
+
+    private void createNewBranchConnectivityPosition(ConnectablePositionAdder<?> adder,
+                                                     BranchModificationInfos modificationInfos,
+                                               List<ReportNode> reports) {
+        ConnectablePositionAdder.FeederAdder<?> feeder1 = adder.newFeeder1();
+        ConnectablePositionAdder.FeederAdder<?> feeder2 = adder.newFeeder2();
+        ReportNode connectionName1Report = applyElementaryModificationsAndReturnReport(
+                feeder1::withName,
+                () -> null,
+                modificationInfos.getConnectionName1(),
+                CONNECTION_NAME_FIELD_NAME_1);
+        if (connectionName1Report != null) {
+            reports.add(connectionName1Report);
+        }
+
+        ReportNode connectionDirection1Report = applyElementaryModificationsAndReturnReport(
+                feeder1::withDirection,
+                () -> null,
+                modificationInfos.getConnectionDirection1(),
+                CONNECTION_DIRECTION_FIELD_NAME_1);
+        if (connectionDirection1Report != null) {
+            reports.add(connectionDirection1Report);
+        }
+
+        ReportNode connectionPosition2Report = applyElementaryModificationsAndReturnReport(
+                feeder1::withOrder,
+                () -> null,
+                modificationInfos.getConnectionPosition1(),
+                CONNECTION_POSITION_FIELD_NAME_1);
+        if (connectionPosition2Report != null) {
+            reports.add(connectionPosition2Report);
+        }
+
+        ReportNode connectionName2Report = applyElementaryModificationsAndReturnReport(
+                feeder1::withName,
+                () -> null,
+                modificationInfos.getConnectionName2(),
+                CONNECTION_NAME_FIELD_NAME_2);
+        if (connectionName2Report != null) {
+            reports.add(connectionName2Report);
+        }
+
+        ReportNode connectionDirection2Report = applyElementaryModificationsAndReturnReport(
+                feeder1::withDirection,
+                () -> null,
+                modificationInfos.getConnectionDirection2(),
+                CONNECTION_DIRECTION_FIELD_NAME_2);
+        if (connectionDirection2Report != null) {
+            reports.add(connectionDirection2Report);
+        }
+
+        ReportNode connectionPosition3Report = applyElementaryModificationsAndReturnReport(
+                feeder1::withOrder,
+                () -> null,
+                modificationInfos.getConnectionPosition2(),
+                CONNECTION_POSITION_FIELD_NAME_2);
+        if (connectionPosition3Report != null) {
+            reports.add(connectionPosition3Report);
+        }
+
+        // Finalize by adding the feeder
+        adder.add();
+    }
+
+    public void modifyBranchConnection1(BranchModificationInfos modificationInfos, Branch<?> branch, List<ReportNode> subReportNode) {
+        if (modificationInfos.getTerminal1Connected() != null && branch != null) {
+            if (branch.getTerminal1().isConnected() && Boolean.FALSE.equals(modificationInfos.getTerminal1Connected().getValue())) {
+                branch.getTerminal1().disconnect();
+                if (branch.getTerminal1().isConnected()) {
+                    throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR,
+                            String.format("Could not disconnect equipment '%s'", branch.getId()));
+                }
+                subReportNode.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withUntypedValue("id", modificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            } else if (!branch.getTerminal1().isConnected() && Boolean.TRUE.equals(modificationInfos.getTerminal1Connected().getValue())) {
+                branch.getTerminal1().connect();
+                if (!branch.getTerminal1().isConnected()) {
+                    throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR,
+                            String.format("Could not connect equipment '%s'", branch.getId()));
+                }
+                subReportNode.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentConnected", "    Equipment with id=${id} connected")
+                        .withUntypedValue("id", modificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+        }
+    }
+
+    public void modifyBranchConnection2(BranchModificationInfos modificationInfos, Branch<?> branch, List<ReportNode> subReportNode) {
+        if (modificationInfos.getTerminal2Connected() != null && branch != null) {
+            if (branch.getTerminal2().isConnected() && Boolean.FALSE.equals(modificationInfos.getTerminal2Connected().getValue())) {
+                branch.getTerminal2().disconnect();
+                if (branch.getTerminal2().isConnected()) {
+                    throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR,
+                            String.format("Could not disconnect equipment '%s'", branch.getId()));
+                }
+                subReportNode.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withUntypedValue("id", modificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            } else if (!branch.getTerminal2().isConnected() && Boolean.TRUE.equals(modificationInfos.getTerminal2Connected().getValue())) {
+                branch.getTerminal2().connect();
+                if (!branch.getTerminal2().isConnected()) {
+                    throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR,
+                            String.format("Could not connect equipment '%s'", branch.getId()));
+                }
+                subReportNode.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentConnected", "    Equipment with id=${id} connected")
+                        .withUntypedValue("id", modificationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+        }
     }
 
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection, List<ReportNode> subReportNode) {

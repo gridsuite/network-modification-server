@@ -598,8 +598,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 TwoWindingsTransformerModificationInfos.builder()
                         .stashed(false)
                         .equipmentId(existingEquipment.getId())
-                        .connected1(side == TwoSides.ONE ? new AttributeModification<>(expectedState, OperationType.SET) : null)
-                        .connected2(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
+                        .terminal1Connected(side == TwoSides.ONE ? new AttributeModification<>(expectedState, OperationType.SET) : null)
+                        .terminal2Connected(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
                         .build();
         String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))

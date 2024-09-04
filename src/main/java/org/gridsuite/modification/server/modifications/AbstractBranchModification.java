@@ -10,6 +10,8 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.CurrentLimitsModificationInfos;
@@ -48,6 +50,8 @@ public abstract class AbstractBranchModification extends AbstractModification {
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
+        modifyBranchConnectivity1Attributes(branchModificationInfos, branch, subReportNode);
+
         if (characteristicsModified(branchModificationInfos)) {
             modifyCharacteristics(branch, branchModificationInfos, subReportNode);
         }
@@ -82,13 +86,13 @@ public abstract class AbstractBranchModification extends AbstractModification {
     private void updateConnections(Branch<?> branch, BranchModificationInfos branchModificationInfos) {
         List<TwoSides> errorSides = new ArrayList<>();
         List<String> errorTypes = new ArrayList<>();
-        if (branchModificationInfos.getConnected1() != null && !updateConnection(branch, TwoSides.ONE, modificationInfos.getConnected1().getValue())) {
+        if (branchModificationInfos.getTerminal1Connected() != null && !updateConnection(branch, TwoSides.ONE, modificationInfos.getTerminal1Connected().getValue())) {
             errorSides.add(TwoSides.ONE);
-            errorTypes.add(Boolean.TRUE.equals(modificationInfos.getConnected1().getValue()) ? "connect" : "disconnect");
+            errorTypes.add(Boolean.TRUE.equals(modificationInfos.getTerminal1Connected().getValue()) ? "connect" : "disconnect");
         }
-        if (branchModificationInfos.getConnected2() != null && !updateConnection(branch, TwoSides.TWO, modificationInfos.getConnected2().getValue())) {
+        if (branchModificationInfos.getTerminal2Connected() != null && !updateConnection(branch, TwoSides.TWO, modificationInfos.getTerminal2Connected().getValue())) {
             errorSides.add(TwoSides.TWO);
-            errorTypes.add(Boolean.TRUE.equals(modificationInfos.getConnected2().getValue()) ? "connect" : "disconnect");
+            errorTypes.add(Boolean.TRUE.equals(modificationInfos.getTerminal2Connected().getValue()) ? "connect" : "disconnect");
         }
         if (!errorSides.isEmpty()) {
             throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR,
@@ -223,4 +227,11 @@ public abstract class AbstractBranchModification extends AbstractModification {
 
     protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos,
             ReportNode subReportNode);
+
+    private ReportNode modifyBranchConnectivity1Attributes(BranchModificationInfos branchModificationInfos,
+                                                           Branch<?> branch, ReportNode subReportNode) {
+        ConnectablePosition<?> connectablePosition = (ConnectablePosition<?>) branch.getExtension(ConnectablePosition.class);
+        ConnectablePositionAdder<?> connectablePositionAdder = branch.newExtension(ConnectablePositionAdder.class);
+        return ModificationUtils.getInstance().modifyBranchConnectivityAttributes(connectablePosition, connectablePositionAdder, branch, branchModificationInfos, subReportNode);
+    }
 }

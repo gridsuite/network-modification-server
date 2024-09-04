@@ -378,8 +378,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     private void changeLineConnectionState(Line existingEquipment, boolean expectedState) throws Exception {
         LineModificationInfos modificationInfos = (LineModificationInfos) buildModification();
-        modificationInfos.setConnected1(new AttributeModification<>(expectedState, OperationType.SET));
-        modificationInfos.setConnected2(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setTerminal1Connected(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setTerminal2Connected(new AttributeModification<>(expectedState, OperationType.SET));
 
         if (expectedState) {
             if (existingEquipment.getTerminal1().isConnected()) {

@@ -1,0 +1,203 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1725484515185-29">
+        <addColumn tableName="line_modification">
+            <column name="bus_or_busbar_section_id1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-30">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="bus_or_busbar_section_id1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-31">
+        <addColumn tableName="line_modification">
+            <column name="bus_or_busbar_section_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-32">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="bus_or_busbar_section_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-33">
+        <addColumn tableName="line_modification">
+            <column name="bus_or_busbar_section_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-34">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="bus_or_busbar_section_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-35">
+        <addColumn tableName="line_modification">
+            <column name="bus_or_busbar_section_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-36">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="bus_or_busbar_section_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-37">
+        <addColumn tableName="line_modification">
+            <column name="connection_direction1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-38">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_direction1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-39">
+        <addColumn tableName="line_modification">
+            <column name="connection_direction1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-40">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_direction1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-41">
+        <addColumn tableName="line_modification">
+            <column name="connection_direction2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-42">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_direction2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-43">
+        <addColumn tableName="line_modification">
+            <column name="connection_direction2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-44">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_direction2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-45">
+        <addColumn tableName="line_modification">
+            <column name="connection_name1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-46">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_name1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-47">
+        <addColumn tableName="line_modification">
+            <column name="connection_name1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-48">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_name1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-49">
+        <addColumn tableName="line_modification">
+            <column name="connection_name2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-50">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_name2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-51">
+        <addColumn tableName="line_modification">
+            <column name="connection_name2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-52">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_name2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-53">
+        <addColumn tableName="line_modification">
+            <column name="connection_position1" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-54">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_position1" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-55">
+        <addColumn tableName="line_modification">
+            <column name="connection_position1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-56">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_position1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-57">
+        <addColumn tableName="line_modification">
+            <column name="connection_position2" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-58">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_position2" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-59">
+        <addColumn tableName="line_modification">
+            <column name="connection_position2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-60">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="connection_position2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-61">
+        <addColumn tableName="line_modification">
+            <column name="voltage_level_id1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-62">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="voltage_level_id1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-63">
+        <addColumn tableName="line_modification">
+            <column name="voltage_level_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-64">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="voltage_level_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-65">
+        <addColumn tableName="line_modification">
+            <column name="voltage_level_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-66">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="voltage_level_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-67">
+        <addColumn tableName="line_modification">
+            <column name="voltage_level_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1725484515185-68">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="voltage_level_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
