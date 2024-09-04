@@ -436,29 +436,37 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 addStepAttributeReports(tapChangerStepsReports, step);
             }
             if (tapChangerStepReplacer instanceof RatioTapChangerStepsReplacer || tapChangerAdder instanceof RatioTapChangerAdder) {
-                if (isModification) {
-                    tapChangerStepReplacer.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
-                            .setB(step.getB()).setRho(step.getRho()).endStep();
-                } else {
-                    tapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
-                            .setB(step.getB()).setRho(step.getRho()).endStep();
-                }
+                processRatioTapChangerStep(tapChangerAdder, tapChangerStepReplacer, isModification, step);
             } else {
-                if (tapChangerStepsReports != null) {
-                    addStepAttributeReport(tapChangerStepsReports, "newStepAlpha" + step.getAlpha(),
-                            "                Shift angle : ${alpha}", "alpha", String.valueOf(step.getAlpha()));
-                }
-                if (isModification) {
-                    ((PhaseTapChangerStepsReplacer) tapChangerStepReplacer).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
-                            .setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
-                } else {
-                    ((PhaseTapChangerAdder) tapChangerAdder).beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
-                            .setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
-                }
+                processPhaseTapChangerStep(tapChangerStepsReports, (PhaseTapChangerAdder) tapChangerAdder, (PhaseTapChangerStepsReplacer) tapChangerStepReplacer, isModification, step);
             }
         }
         if (isModification) {
             tapChangerStepReplacer.replaceSteps();
+        }
+    }
+
+    private static void processPhaseTapChangerStep(List<ReportNode> tapChangerStepsReports, PhaseTapChangerAdder tapChangerAdder, PhaseTapChangerStepsReplacer tapChangerStepReplacer, boolean isModification, TapChangerStepCreationInfos step) {
+        if (tapChangerStepsReports != null) {
+            addStepAttributeReport(tapChangerStepsReports, "newStepAlpha" + step.getAlpha(),
+                    "                Shift angle : ${alpha}", "alpha", String.valueOf(step.getAlpha()));
+        }
+        if (isModification) {
+            tapChangerStepReplacer.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
+                    .setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
+        } else {
+            tapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
+                    .setB(step.getB()).setRho(step.getRho()).setAlpha(step.getAlpha()).endStep();
+        }
+    }
+
+    private static void processRatioTapChangerStep(TapChangerAdder<?, ?, ?, ?, ?, ?> tapChangerAdder, TapChangerStepsReplacer<?, ?> tapChangerStepReplacer, boolean isModification, TapChangerStepCreationInfos step) {
+        if (isModification) {
+            tapChangerStepReplacer.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
+                    .setB(step.getB()).setRho(step.getRho()).endStep();
+        } else {
+            tapChangerAdder.beginStep().setR(step.getR()).setX(step.getX()).setG(step.getG())
+                    .setB(step.getB()).setRho(step.getRho()).endStep();
         }
     }
 
