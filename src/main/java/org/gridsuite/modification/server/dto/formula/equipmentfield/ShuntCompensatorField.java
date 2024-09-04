@@ -16,10 +16,7 @@ import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 
-import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifyMaxSusceptance;
-import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifyMaximumQAtNominalVoltage;
-import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifyMaximumSectionCount;
-import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.modifySectionCount;
+import static org.gridsuite.modification.server.modifications.ShuntCompensatorModification.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>

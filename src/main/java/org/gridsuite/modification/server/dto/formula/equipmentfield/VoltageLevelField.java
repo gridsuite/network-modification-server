@@ -12,10 +12,7 @@ import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
-import static org.gridsuite.modification.server.modifications.VoltageLevelModification.modifLowVoltageLimit;
-import static org.gridsuite.modification.server.modifications.VoltageLevelModification.modifyHighVoltageLimit;
-import static org.gridsuite.modification.server.modifications.VoltageLevelModification.modifyNominalV;
-import static org.gridsuite.modification.server.modifications.VoltageLevelModification.modifyVoltageLevelShortCircuit;
+import static org.gridsuite.modification.server.modifications.VoltageLevelModification.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>

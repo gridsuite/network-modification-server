@@ -94,7 +94,7 @@ public class GeneratorModification extends AbstractModification {
         modifyGeneratorLimitsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorSetpointsAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorShortCircuitAttributes(modificationInfos.getDirectTransX(), modificationInfos.getStepUpTransformerX(), generator, subReportNode);
-        modifyGeneratorStartUpAttributesAndLog(modificationInfos, generator, subReportNode);
+        modifyGeneratorStartUpAttributes(modificationInfos, generator, subReportNode);
         modifyGeneratorConnectivityAttributes(modificationInfos, generator, subReportNode);
         PropertiesUtils.applyProperties(generator, subReportNode, modificationInfos.getProperties(), "GeneratorProperties");
     }
@@ -223,8 +223,8 @@ public class GeneratorModification extends AbstractModification {
         return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
     }
 
-    private void modifyGeneratorStartUpAttributesAndLog(GeneratorModificationInfos modificationInfos, Generator generator,
-                                                        ReportNode subReportNode) {
+    private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,
+                                                  ReportNode subReportNode) {
         List<ReportNode> reports = new ArrayList<>();
         modifyGeneratorStartUpAttributes(modificationInfos.getPlannedActivePowerSetPoint(),
                 modificationInfos.getMarginalCost(),

@@ -286,7 +286,7 @@ public class ByFormulaModification extends AbstractModification {
                         .withUntypedValue(KEY_VALUE, newValue)
                         .withSeverity(TypedValue.TRACE_SEVERITY)
                         .build());
-            } catch (Exception e) { // ATTENTION : ce catch attrape bien mes throw mais sans utiliser les messages donc c'est un peu gâché; En faire un spécifique pour les NetworkModificationException ?
+            } catch (Exception e) {
                 notEditableEquipments.add(identifiable.getId());
                 equipmentNotModifiedCount += 1;
                 reports.add(ReportNode.newRootReportNode()

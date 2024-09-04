@@ -66,7 +66,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         // Transformer specific fields
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) branchModificationInfos;
-        modifyTransformerFields(twoWindingsTransformer, twoWindingsTransformerModificationInfos.getG(), twoWindingsTransformerModificationInfos.getB(), twoWindingsTransformerModificationInfos.getRatedS(), twoWindingsTransformerModificationInfos.getRatedU1(), twoWindingsTransformerModificationInfos.getRatedU2(), characteristicsReporter);
+        modifyTransformerFields(twoWindingsTransformer,
+                twoWindingsTransformerModificationInfos.getG(),
+                twoWindingsTransformerModificationInfos.getB(),
+                twoWindingsTransformerModificationInfos.getRatedS(),
+                twoWindingsTransformerModificationInfos.getRatedU1(),
+                twoWindingsTransformerModificationInfos.getRatedU2(),
+                characteristicsReporter);
     }
 
     public static void modifyTransformerFields(TwoWindingsTransformer transformer,

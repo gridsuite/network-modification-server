@@ -19,11 +19,7 @@ import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
-import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorActiveLimitsAttributes;
-import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorShortCircuitAttributes;
-import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyGeneratorStartUpAttributes;
-import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyTargetQ;
-import static org.gridsuite.modification.server.modifications.GeneratorModification.modifyTargetV;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -89,7 +85,7 @@ public enum GeneratorField {
                 case REACTIVE_POWER_SET_POINT -> modifyTargetQ(generator, attrModif);
                 case VOLTAGE_SET_POINT -> modifyTargetV(generator, attrModif);
                 case PLANNED_ACTIVE_POWER_SET_POINT ->
-                    modifyGeneratorStartUpAttributes(attrModif, null, null, null, generator, null, null);
+                        modifyGeneratorStartUpAttributes(attrModif, null, null, null, generator, null, null);
                 case MARGINAL_COST ->
                         modifyGeneratorStartUpAttributes(null, attrModif, null, null, generator, null, null);
                 case PLANNED_OUTAGE_RATE ->

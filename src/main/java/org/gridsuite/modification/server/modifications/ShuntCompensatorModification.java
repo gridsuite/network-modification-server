@@ -167,9 +167,9 @@ public class ShuntCompensatorModification extends AbstractModification {
     }
 
     public static void modifyMaxSusceptance(AttributeModification<Double> maxSusceptance,
-                                             int maximumSectionCount,
-                                             List<ReportNode> reports,
-                                             ShuntCompensatorLinearModel model) {
+                                            int maximumSectionCount,
+                                            List<ReportNode> reports,
+                                            ShuntCompensatorLinearModel model) {
         double newSusceptancePerSection = maxSusceptance.getValue() / maximumSectionCount;
         if (reports != null) {
             double oldSusceptancePerSection = model.getBPerSection();
