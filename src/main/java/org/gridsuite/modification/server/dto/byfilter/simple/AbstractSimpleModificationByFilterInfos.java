@@ -28,7 +28,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
     property = "dataType",
     include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = StringModificationByFilterInfos.class, name = "STRING"),
     @JsonSubTypes.Type(value = BooleanModificationByFilterInfos.class, name = "BOOLEAN"),
     @JsonSubTypes.Type(value = EnumModificationByFilterInfos.class, name = "ENUM"),
     @JsonSubTypes.Type(value = DoubleModificationByFilterInfos.class, name = "DOUBLE"),

@@ -11,7 +11,6 @@ package org.gridsuite.modification.server.dto.byfilter;
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public enum DataType {
-    STRING,
     ENUM,
     BOOLEAN,
     INTEGER,

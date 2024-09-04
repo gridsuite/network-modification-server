@@ -21,7 +21,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
  */
 @SuperBuilder
 @NoArgsConstructor
-public class PropertyModificationByFilterInfos extends StringModificationByFilterInfos {
+public class PropertyModificationByFilterInfos extends AbstractSimpleModificationByFilterInfos<String> {
     @Schema(description = "Property name")
     @Getter
     private String propertyName;

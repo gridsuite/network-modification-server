@@ -60,9 +60,6 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
             case DOUBLE -> DoubleModificationByFilterInfos.builder()
                 .value(value != null ? Double.valueOf(value) : null)
                 .build();
-            case STRING -> StringModificationByFilterInfos.builder()
-                .value(value)
-                .build();
             case ENUM -> EnumModificationByFilterInfos.builder()
                 .value(value)
                 .build();

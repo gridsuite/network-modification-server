@@ -17,7 +17,7 @@ import org.gridsuite.modification.server.dto.byfilter.DataType;
  */
 @SuperBuilder
 @NoArgsConstructor
-public class EnumModificationByFilterInfos extends StringModificationByFilterInfos {
+public class EnumModificationByFilterInfos extends AbstractSimpleModificationByFilterInfos<String> {
     @Override
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public DataType getDataType() {
