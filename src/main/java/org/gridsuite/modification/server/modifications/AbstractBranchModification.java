@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.dto.TemporaryLimitModificationType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_MODIFICATION_ERROR;
@@ -43,7 +44,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
         if (branchModificationInfos.getEquipmentName() != null) {
-            insertReportNode(subReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(branch.getOptionalName().isEmpty() ? null : branch.getOptionalName().get(), branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
+            insertReportNode(subReportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(Optional.of(branch.getOptionalName()).orElse(null), branchModificationInfos.getEquipmentName().getValue(), "Name", 0));
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
@@ -65,10 +66,6 @@ public abstract class AbstractBranchModification extends AbstractModification {
         }
         if (!side1LimitsReports.isEmpty() || !side2LimitsReports.isEmpty()) {
             ReportNode limitsReportNode = subReportNode.newReportNode().withMessageTemplate("limits", "Limits").add();
-            limitsReportNode.newReportNode()
-                    .withMessageTemplate("limitsModification", "Limits")
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
             ModificationUtils.getInstance().reportModifications(limitsReportNode, side1LimitsReports, "side1LimitsModification",
                     "    Side 1");
             ModificationUtils.getInstance().reportModifications(limitsReportNode, side2LimitsReports, "side2LimitsModification",
@@ -205,7 +202,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
             }
         }
         if (!temporaryLimitsReports.isEmpty()) {
-            temporaryLimitsReports.add(ReportNode.newRootReportNode()
+            temporaryLimitsReports.add(0, ReportNode.newRootReportNode()
                     .withMessageTemplate("temporaryLimitsModification", "            Temporary current limits :")
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());

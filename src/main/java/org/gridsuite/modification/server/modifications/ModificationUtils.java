@@ -853,20 +853,13 @@ public final class ModificationUtils {
         adder.add();
         ReportNode subReportNodeReactiveLimits = null;
         ReportNode subReporterLimits2 = subReportNodeLimits;
-        if (subReportNodeLimits == null && !reports.isEmpty()) {
-            subReporterLimits2 = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-            subReporterLimits2.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-            subReporterLimits2.newReportNode()
-                    .withMessageTemplate(LIMITS, LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
-        }
-        if (subReporterLimits2 != null && !reports.isEmpty()) {
-            subReportNodeReactiveLimits = subReporterLimits2.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
-            subReportNodeReactiveLimits.newReportNode()
-                    .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
+        if (!reports.isEmpty()) {
+            if (subReportNodeLimits == null) {
+                subReporterLimits2 = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
+            }
+            if (subReporterLimits2 != null) {
+                subReportNodeReactiveLimits = subReporterLimits2.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
+            }
         }
         reportModifications(subReportNodeReactiveLimits, reports, "curveReactiveLimitsModified", "By diagram");
     }
@@ -966,17 +959,9 @@ public final class ModificationUtils {
         ReportNode subReportNodeLimits2 = subReportNodeLimits;
         if (subReportNodeLimits == null && !reports.isEmpty()) {
             subReportNodeLimits2 = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-            subReportNodeLimits2.newReportNode()
-                    .withMessageTemplate(LIMITS, LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
         }
         if (subReportNodeLimits2 != null && !reports.isEmpty()) {
             subReportNodeReactiveLimits = subReportNodeLimits2.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
-            subReportNodeReactiveLimits.newReportNode()
-                    .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
         }
         reportModifications(subReportNodeReactiveLimits, reports, "minMaxReactiveLimitsModified", "By range");
     }
@@ -1032,10 +1017,6 @@ public final class ModificationUtils {
         ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
         if (subReporterSetpoints == null && !reports.isEmpty()) {
             subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
-            subReportNodeSetpoints2.newReportNode()
-                    .withMessageTemplate(SETPOINTS, SETPOINTS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
         }
         reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
         return subReportNodeSetpoints2;
@@ -1180,10 +1161,6 @@ public final class ModificationUtils {
                     MAX_REACTIVE_POWER_FIELDNAME));
 
             ReportNode subReporterReactiveLimits = subReportNode.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
-            subReporterReactiveLimits.newReportNode()
-                    .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
 
             ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, minMaxReactiveLimitsReports, "minMaxReactiveLimitsCreated", "By range");
         }
@@ -1210,10 +1187,6 @@ public final class ModificationUtils {
                 });
         adder.add();
         ReportNode subReporterReactiveLimits = subReportNode.newReportNode().withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS).add();
-        subReporterReactiveLimits.newReportNode()
-                .withMessageTemplate(REACTIVE_LIMITS, REACTIVE_LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
         ModificationUtils.getInstance().reportModifications(subReporterReactiveLimits, pointsReports, "curveReactiveLimitsCreated", "By diagram");
     }
 

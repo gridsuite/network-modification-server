@@ -280,10 +280,6 @@ public class VscCreation extends AbstractModification {
 
     private void reportConverterStationSetPoints(ConverterStationCreationInfos converterStationCreationInfos, ReportNode subReportNode) {
         ReportNode setPointReporter = subReportNode.newReportNode().withMessageTemplate("converterStationSetPoint", SETPOINTS).add();
-        setPointReporter.newReportNode()
-                .withMessageTemplate(SETPOINTS, SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
 
         if (converterStationCreationInfos.getReactivePowerSetpoint() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(setPointReporter,

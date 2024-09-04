@@ -166,16 +166,7 @@ public class GeneratorModification extends AbstractModification {
         ReportNode reportRatedNominalPower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setRatedS, generator::getRatedS, modificationInfos.getRatedS(), "Rated nominal power");
         if (reportMaxActivePower != null || reportMinActivePower != null || reportRatedNominalPower != null) {
             subReporterLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-            subReporterLimits.newReportNode()
-                    .withMessageTemplate(LIMITS, LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
-
             ReportNode subReporterActiveLimits = subReporterLimits.newReportNode().withMessageTemplate(ACTIVE_LIMITS, ACTIVE_LIMITS).add();
-            subReporterActiveLimits.newReportNode()
-                    .withMessageTemplate(ACTIVE_LIMITS, ACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
             if (reportMaxActivePower != null) {
                 insertReportNode(subReporterActiveLimits, reportMaxActivePower);
             }
@@ -394,10 +385,6 @@ public class GeneratorModification extends AbstractModification {
             subReportNodeSetpoints2 = subReportNode.newReportNode()
                             .withMessageTemplate(SETPOINTS, SETPOINTS)
                             .add();
-            subReportNodeSetpoints2.newReportNode()
-                    .withMessageTemplate(SETPOINTS, SETPOINTS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
         }
         ModificationUtils.getInstance().reportModifications(subReportNodeSetpoints2, voltageRegulationReports, "voltageRegulationModified", "Voltage regulation");
         return subReportNodeSetpoints2;
@@ -418,10 +405,6 @@ public class GeneratorModification extends AbstractModification {
         ReportNode subReporterSetpoints = null;
         if (reportActivePower != null || reportReactivePower != null) {
             subReporterSetpoints = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
-            subReporterSetpoints.newReportNode()
-                    .withMessageTemplate(SETPOINTS, SETPOINTS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
             if (reportActivePower != null) {
                 insertReportNode(subReporterSetpoints, reportActivePower);
             }

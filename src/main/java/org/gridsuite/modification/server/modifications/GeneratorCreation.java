@@ -274,19 +274,12 @@ public class GeneratorCreation extends AbstractModification {
     }
 
     private ReportNode reportGeneratorActiveLimits(GeneratorCreationInfos generatorCreationInfos, ReportNode subReportNode) {
-        List<ReportNode> limitsReports = new ArrayList<>();
         ReportNode subReportNodeLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-        subReportNodeLimits.newReportNode()
-                .withMessageTemplate(LIMITS, LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
-
+        List<ReportNode> limitsReports = new ArrayList<>();
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             generatorCreationInfos.getMinP(), "Min active power"));
-
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             generatorCreationInfos.getMaxP(), "Max active power"));
-
         if (generatorCreationInfos.getRatedS() != null) {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
                 generatorCreationInfos.getRatedS(), "Rated nominal power"));

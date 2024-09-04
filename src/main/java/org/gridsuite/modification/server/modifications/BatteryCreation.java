@@ -182,18 +182,12 @@ public class BatteryCreation extends AbstractModification {
     }
 
     private ReportNode reportBatteryActiveLimits(BatteryCreationInfos batteryCreationInfos, ReportNode subReportNode) {
-        List<ReportNode> limitsReports = new ArrayList<>();
         ReportNode subReportNodeLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-        subReportNodeLimits.newReportNode()
-            .withMessageTemplate(LIMITS, LIMITS)
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .add();
+        List<ReportNode> limitsReports = new ArrayList<>();
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             batteryCreationInfos.getMinP(), "Min active power"));
-
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             batteryCreationInfos.getMaxP(), "Max active power"));
-
         ModificationUtils.getInstance().reportModifications(subReportNodeLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
         return subReportNodeLimits;
     }
