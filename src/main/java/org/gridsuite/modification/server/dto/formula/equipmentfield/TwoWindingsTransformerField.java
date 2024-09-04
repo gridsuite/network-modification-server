@@ -5,8 +5,7 @@ import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
-
-import static org.gridsuite.modification.server.modifications.TwoWindingsTransformerModification.modifyBranchValues;
+import static org.gridsuite.modification.server.modifications.TwoWindingsTransformerModification.*;
 
 public enum TwoWindingsTransformerField {
     R,
@@ -55,21 +54,29 @@ public enum TwoWindingsTransformerField {
         final AttributeModification<Double> attrModif = new AttributeModification<>(newValue, OperationType.SET);
 
         switch (field) {
-            case R -> modifyBranchValues(transformer, attrModif, null, null);
-            case X -> modifyBranchValues(transformer, null, attrModif, null);
-            case G -> transformer.setG(newValue);
-            case B -> transformer.setB(newValue);
-            case RATED_U1 -> transformer.setRatedU1(newValue);
-            case RATED_U2 -> transformer.setRatedU2(newValue);
-            case RATED_S -> transformer.setRatedS(newValue);
-            case TARGET_V -> ratioTapChanger.setTargetV(newValue);
-            case RATIO_LOW_TAP_POSITION -> ratioTapChanger.setLowTapPosition(newValue.intValue());
-            case RATIO_TAP_POSITION -> ratioTapChanger.setTapPosition(newValue.intValue());
-            case RATIO_TARGET_DEADBAND -> ratioTapChanger.setTargetDeadband(newValue);
-            case REGULATION_VALUE -> phaseTapChanger.setRegulationValue(newValue);
-            case PHASE_LOW_TAP_POSITION -> phaseTapChanger.setLowTapPosition(newValue.intValue());
-            case PHASE_TAP_POSITION -> phaseTapChanger.setTapPosition(newValue.intValue());
-            case PHASE_TARGET_DEADBAND -> phaseTapChanger.setTargetDeadband(newValue);
+            case R -> modifyBranchFields(transformer, attrModif, null, null);
+            case X -> modifyBranchFields(transformer, null, attrModif, null);
+            case G -> modifyG(transformer, attrModif, null);
+            case B -> modifyB(transformer, attrModif, null);
+            case RATED_U1 -> modifyRatedU1(transformer, attrModif, null);
+            case RATED_U2 -> modifyRatedU2(transformer, attrModif, null);
+            case RATED_S -> modifyRatedS(transformer, attrModif, null);
+            case TARGET_V -> modifyTargets(ratioTapChanger, null, true, attrModif, null, null);
+            case RATIO_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
+                    new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null, null);
+            case RATIO_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
+                    null, new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null);
+            case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attrModif, null);
+            case REGULATION_VALUE -> processPhaseTapRegulation(
+                    phaseTapChanger, null, null, true, attrModif, null, null
+            );
+            case PHASE_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
+                    new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null, null);
+            case PHASE_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
+                    null, new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null);
+            case PHASE_TARGET_DEADBAND -> processPhaseTapRegulation(
+                    phaseTapChanger, null, null, true, null, attrModif, null
+            );
         }
     }
 }
