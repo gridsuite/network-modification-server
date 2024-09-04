@@ -348,9 +348,11 @@ public class GeneratorModification extends AbstractModification {
                 reportVoltageSetpoint = ModificationUtils.getInstance().buildModificationReport(generator.getTargetV(), Double.NaN, "Voltage");
             }
         }
-
-        voltageRegulationReports.add(ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
-                modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn"));
+        ReportNode voltageRegulationOn = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setVoltageRegulatorOn, generator::isVoltageRegulatorOn,
+                modificationInfos.getVoltageRegulationOn(), "VoltageRegulationOn");
+        if (voltageRegulationOn != null) {
+            voltageRegulationReports.add(voltageRegulationOn);
+        }
         if (reportVoltageSetpoint != null) {
             voltageRegulationReports.add(reportVoltageSetpoint);
         }
