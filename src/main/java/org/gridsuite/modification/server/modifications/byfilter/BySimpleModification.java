@@ -65,17 +65,17 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected <T> T getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
-        AbstractSimpleModificationByFilterInfos<T> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<T>) modificationByFilterInfos;
-        return simpleModificationInfos.getValue();
+    protected String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
+        return simpleModificationInfos.getValue().toString();
     }
 
     @Override
-    protected <T> T applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
-        AbstractSimpleModificationByFilterInfos<T> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<T>) modificationByFilterInfos;
+    protected String applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
         if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
-            T newValue = getNewValue(equipment, modificationByFilterInfos);
-            equipment.setProperty(((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName(), (String) newValue);
+            String newValue = getNewValue(equipment, modificationByFilterInfos);
+            equipment.setProperty(((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName(), newValue);
             return newValue;
         } else {
             return super.applyValue(equipment, modificationByFilterInfos);

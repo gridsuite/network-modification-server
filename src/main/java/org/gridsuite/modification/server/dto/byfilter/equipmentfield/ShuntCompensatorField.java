@@ -22,18 +22,18 @@ public enum ShuntCompensatorField {
     MAXIMUM_SUSCEPTANCE,
     MAXIMUM_Q_AT_NOMINAL_VOLTAGE;
 
-    public static Object getReferenceValue(ShuntCompensator shuntCompensator, String shuntCompensatorField) {
+    public static String getReferenceValue(ShuntCompensator shuntCompensator, String shuntCompensatorField) {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
         ShuntCompensatorField field = ShuntCompensatorField.valueOf(shuntCompensatorField);
         return switch (field) {
-            case MAXIMUM_SECTION_COUNT -> (double) shuntCompensator.getMaximumSectionCount();
-            case SECTION_COUNT -> (double) shuntCompensator.getSectionCount();
-            case MAXIMUM_SUSCEPTANCE -> shuntCompensator.getB() * shuntCompensator.getMaximumSectionCount();
-            case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * shuntCompensator.getB()) * shuntCompensator.getMaximumSectionCount();
+            case MAXIMUM_SECTION_COUNT -> String.valueOf(shuntCompensator.getMaximumSectionCount());
+            case SECTION_COUNT -> String.valueOf(shuntCompensator.getSectionCount());
+            case MAXIMUM_SUSCEPTANCE -> String.valueOf(shuntCompensator.getB() * shuntCompensator.getMaximumSectionCount());
+            case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> String.valueOf(Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * shuntCompensator.getB()) * shuntCompensator.getMaximumSectionCount());
         };
     }
 
-    public static <T> void setNewValue(ShuntCompensator shuntCompensator, String shuntCompensatorField, T newValue) {
+    public static void setNewValue(ShuntCompensator shuntCompensator, String shuntCompensatorField, String newValue) {
         if (shuntCompensator.getModelType() != ShuntCompensatorModelType.LINEAR) {
             throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
                     String.format("Shunt compensator with %s model is not supported", shuntCompensator.getModelType()));
@@ -43,14 +43,14 @@ public enum ShuntCompensatorField {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
         switch (field) {
             case MAXIMUM_SECTION_COUNT -> {
-                int maximumSectionCount = ((Number) newValue).intValue();
+                int maximumSectionCount = (int) Double.parseDouble(newValue);
                 model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
                 model.setMaximumSectionCount(maximumSectionCount);
             }
-            case SECTION_COUNT -> shuntCompensator.setSectionCount(((Number) newValue).intValue());
-            case MAXIMUM_SUSCEPTANCE -> model.setBPerSection(((double) newValue) / shuntCompensator.getMaximumSectionCount());
+            case SECTION_COUNT -> shuntCompensator.setSectionCount((int) Double.parseDouble(newValue));
+            case MAXIMUM_SUSCEPTANCE -> model.setBPerSection(Double.parseDouble(newValue) / shuntCompensator.getMaximumSectionCount());
             case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> {
-                double newQatNominalV = ((double) newValue) / shuntCompensator.getMaximumSectionCount();
+                double newQatNominalV = Double.parseDouble(newValue) / shuntCompensator.getMaximumSectionCount();
                 double newSusceptancePerSection = newQatNominalV / Math.pow(voltageLevel.getNominalV(), 2);
                 model.setBPerSection(newSusceptancePerSection);
             }

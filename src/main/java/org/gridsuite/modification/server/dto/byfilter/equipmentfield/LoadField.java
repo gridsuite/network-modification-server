@@ -18,21 +18,21 @@ public enum LoadField {
     ACTIVE_POWER,
     REACTIVE_POWER;
 
-    public static Object getReferenceValue(Load load, String loadField) {
+    public static String getReferenceValue(Load load, String loadField) {
         LoadField field = LoadField.valueOf(loadField);
         return switch (field) {
-            case LOAD_TYPE -> load.getLoadType();
-            case ACTIVE_POWER -> load.getP0();
-            case REACTIVE_POWER -> load.getQ0();
+            case LOAD_TYPE -> load.getLoadType().name();
+            case ACTIVE_POWER -> String.valueOf(load.getP0());
+            case REACTIVE_POWER -> String.valueOf(load.getQ0());
         };
     }
 
-    public static <T> void setNewValue(Load load, String loadField, T newValue) {
+    public static void setNewValue(Load load, String loadField, String newValue) {
         LoadField field = LoadField.valueOf(loadField);
         switch (field) {
-            case LOAD_TYPE -> load.setLoadType(newValue != null ? LoadType.valueOf((String) newValue) : null);
-            case ACTIVE_POWER -> load.setP0((double) newValue);
-            case REACTIVE_POWER -> load.setQ0((double) newValue);
+            case LOAD_TYPE -> load.setLoadType(newValue != null ? LoadType.valueOf(newValue) : null);
+            case ACTIVE_POWER -> load.setP0(Double.parseDouble(newValue));
+            case REACTIVE_POWER -> load.setQ0(Double.parseDouble(newValue));
         }
     }
 }

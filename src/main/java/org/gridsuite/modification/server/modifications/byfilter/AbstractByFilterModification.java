@@ -9,14 +9,17 @@ package org.gridsuite.modification.server.modifications.byfilter;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Identifiable;
+import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -29,6 +32,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.dto.byfilter.equipmentfield.FieldUtils.getFieldValue;
+import static org.gridsuite.modification.server.dto.byfilter.equipmentfield.FieldUtils.setFieldValue;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
@@ -43,7 +48,8 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     public static final String VALUE_KEY_EQUIPMENT_IDS = "equipmentIds";
     public static final String VALUE_KEY_NB_CHANGED = "nbChanged";
     public static final String VALUE_KEY_NB_UNCHANGED = "nbUnchanged";
-    public static final String VALUE_KEY_VALUE = "value";
+    public static final String VALUE_KEY_OLD_VALUE = "oldValue";
+    public static final String VALUE_KEY_NEW_VALUE = "newValue";
     public static final String VALUE_KEY_MODIFICATION_TYPE_LABEL = "modificationTypeLabel";
     public static final String VALUE_KEY_ERROR_MESSAGE = "errorMessage";
     public static final String REPORT_KEY_RATIO_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR = "ratioTapChangerEquipmentModifiedError";
@@ -94,22 +100,14 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                                              AbstractModificationByFilterInfos modificationByFilterInfos,
                                              List<ReportNode> reports, List<String> notEditableEquipments);
 
-    protected abstract <T> T getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos);
+    protected abstract String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos);
 
-    protected <T> T applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+    protected String applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
         // get new value
-        T newValue = getNewValue(equipment, modificationByFilterInfos);
+        String newValue = getNewValue(equipment, modificationByFilterInfos);
 
         // set new value for the equipment
-        switch (equipment.getType()) {
-            case GENERATOR -> GeneratorField.setNewValue((Generator) equipment, modificationByFilterInfos.getEditedField(), newValue);
-            case BATTERY -> BatteryField.setNewValue((Battery) equipment, modificationByFilterInfos.getEditedField(), newValue);
-            case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) equipment, modificationByFilterInfos.getEditedField(), newValue);
-            case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) equipment, modificationByFilterInfos.getEditedField(), newValue);
-            case LOAD -> LoadField.setNewValue((Load) equipment, modificationByFilterInfos.getEditedField(), newValue);
-            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.setNewValue((TwoWindingsTransformer) equipment, modificationByFilterInfos.getEditedField(), newValue);
-            default -> throw new NetworkModificationException(getExceptionType(), "Unsupported equipment");
-        }
+        setFieldValue(equipment, modificationByFilterInfos.getEditedField(), newValue);
         return newValue;
     }
 
@@ -291,14 +289,17 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
         // perform to apply new value
         try {
-            final Object newValue = applyValue(equipment, modificationByFilterInfos);
+            final String oldValue = getFieldValue(equipment, modificationByFilterInfos.getEditedField());
+            final String newValue = applyValue(equipment, modificationByFilterInfos);
             reports.add(ReportNode.newRootReportNode()
                 .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_REPORT,
-                        "        ${" + VALUE_KEY_EQUIPMENT_TYPE + "} id : ${" + VALUE_KEY_EQUIPMENT_NAME + "}, new value of ${" + VALUE_KEY_FIELD_NAME + "} : ${" + VALUE_KEY_VALUE + "}")
+                    "        ${" + VALUE_KEY_EQUIPMENT_TYPE + "} id : ${" + VALUE_KEY_EQUIPMENT_NAME +
+                    "}, new value of ${" + VALUE_KEY_FIELD_NAME + "} : ${" + VALUE_KEY_OLD_VALUE + "} -> ${" + VALUE_KEY_NEW_VALUE + "}")
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_TYPE, equipment.getType().name())
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
                 .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(modificationByFilterInfos))
-                .withUntypedValue(VALUE_KEY_VALUE, String.valueOf(newValue))
+                .withUntypedValue(VALUE_KEY_OLD_VALUE, oldValue)
+                .withUntypedValue(VALUE_KEY_NEW_VALUE, newValue)
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .build());
         } catch (Exception e) {
@@ -311,6 +312,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                 .withUntypedValue(VALUE_KEY_ERROR_MESSAGE, e.getMessage())
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .build());
+            throw e;
         }
     }
 

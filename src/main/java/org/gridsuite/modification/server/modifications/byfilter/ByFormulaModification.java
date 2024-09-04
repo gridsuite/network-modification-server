@@ -85,11 +85,11 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected <T> T getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+    protected String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
         FormulaInfos formulaInfos = (FormulaInfos) modificationByFilterInfos;
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(equipment);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(equipment);
-        return (T) applyOperation(formulaInfos.getOperator(), value1, value2);
+        return applyOperation(formulaInfos.getOperator(), value1, value2).toString();
     }
 
     private Double applyOperation(Operator operator, @Nonnull Double value1, @Nonnull Double value2) {

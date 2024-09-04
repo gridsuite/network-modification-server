@@ -7,10 +7,11 @@
 
 package org.gridsuite.modification.server.dto.byfilter.formula;
 
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.Identifiable;
 import lombok.*;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.*;
+
+import static org.gridsuite.modification.server.dto.byfilter.equipmentfield.FieldUtils.getFieldValue;
 
 
 /**
@@ -37,16 +38,13 @@ public class ReferenceFieldOrValue {
             return value;
         }
 
-        IdentifiableType identifiableType = identifiable.getType();
-        return (Double) switch (identifiableType) {
-            case GENERATOR -> GeneratorField.getReferenceValue((Generator) identifiable, equipmentField);
-            case BATTERY -> BatteryField.getReferenceValue((Battery) identifiable, equipmentField);
-            case SHUNT_COMPENSATOR -> ShuntCompensatorField.getReferenceValue((ShuntCompensator) identifiable, equipmentField);
-            case VOLTAGE_LEVEL -> VoltageLevelField.getReferenceValue((VoltageLevel) identifiable, equipmentField);
-            case LOAD -> LoadField.getReferenceValue((Load) identifiable, equipmentField);
-            case TWO_WINDINGS_TRANSFORMER -> TwoWindingsTransformerField.getReferenceValue((TwoWindingsTransformer) identifiable, equipmentField);
-            default -> throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
-                    String.format("Unsupported equipment type : %s", identifiableType.name()));
-        };
+        String referenceValue = getFieldValue(identifiable, equipmentField);
+
+        if (referenceValue == null) {
+            return Double.NaN;
+        }
+
+        return Double.parseDouble(referenceValue);
     }
+
 }
