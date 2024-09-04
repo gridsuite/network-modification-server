@@ -3,6 +3,10 @@ package org.gridsuite.modification.server.dto.formula.equipmentfield;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+
+import static org.gridsuite.modification.server.modifications.TwoWindingsTransformerModification.modifyBranchValues;
 
 public enum TwoWindingsTransformerField {
     R,
@@ -48,10 +52,11 @@ public enum TwoWindingsTransformerField {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
+        final AttributeModification<Double> attrModif = new AttributeModification<>(newValue, OperationType.SET);
 
         switch (field) {
-            case R -> transformer.setR(newValue);
-            case X -> transformer.setX(newValue);
+            case R -> modifyBranchValues(transformer, attrModif, null, null);
+            case X -> modifyBranchValues(transformer, null, attrModif, null);
             case G -> transformer.setG(newValue);
             case B -> transformer.setB(newValue);
             case RATED_U1 -> transformer.setRatedU1(newValue);

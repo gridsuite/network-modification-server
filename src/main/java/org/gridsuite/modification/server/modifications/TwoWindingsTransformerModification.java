@@ -62,17 +62,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
-        // Branch specific fields
-        if (branchModificationInfos.getR() != null && branchModificationInfos.getR().getValue() != null) {
-            insertReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getR(),
-                    branchModificationInfos.getR().getValue(), "Series resistance", 1));
-            twoWindingsTransformer.setR(branchModificationInfos.getR().getValue());
-        }
-        if (branchModificationInfos.getX() != null && branchModificationInfos.getX().getValue() != null) {
-            insertReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getX(),
-                    branchModificationInfos.getX().getValue(), "Series reactance", 1));
-            twoWindingsTransformer.setX(branchModificationInfos.getX().getValue());
-        }
+        modifyBranchValues(twoWindingsTransformer, branchModificationInfos.getR(), branchModificationInfos.getX(), characteristicsReporter);
 
         // Transformer specific fields
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) branchModificationInfos;
@@ -106,6 +96,23 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             insertReportNode(characteristicsReporter, ModificationUtils.getInstance().buildModificationReportWithIndentation(twoWindingsTransformer.getRatedU2(),
                     twoWindingsTransformerModificationInfos.getRatedU2().getValue(), "Rated Voltage (Side 2)", 1));
             twoWindingsTransformer.setRatedU2(twoWindingsTransformerModificationInfos.getRatedU2().getValue());
+        }
+    }
+
+    public static void modifyBranchValues(TwoWindingsTransformer twt, AttributeModification<Double> modifR, AttributeModification<Double> modifX, ReportNode reportNode) {
+        if (modifR != null && modifR.getValue() != null) {
+            if (reportNode != null) {
+                insertReportNode(reportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getR(),
+                        modifR.getValue(), "Series resistance", 1));
+            }
+            twt.setR(modifR.getValue());
+        }
+        if (modifX != null && modifX.getValue() != null) {
+            if (reportNode != null) {
+                insertReportNode(reportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getX(),
+                        modifX.getValue(), "Series reactance", 1));
+            }
+            twt.setX(modifX.getValue());
         }
     }
 
