@@ -469,7 +469,7 @@ public final class ModificationUtils {
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            return buildModificationReportWithIndentation(oldValue, newValue, fieldName, indentationLevel);
+            return buildModificationReport(oldValue, newValue, fieldName, indentationLevel);
         }
         return null;
     }
@@ -526,8 +526,7 @@ public final class ModificationUtils {
         return buildModificationReport(oldValue, newValue, fieldName, 1, TypedValue.INFO_SEVERITY);
     }
 
-    //TODO rename to buildModificationReport()
-    public <T> ReportNode buildModificationReportWithIndentation(T oldValue, T newValue, String fieldName, int indentationLevel) {
+    public <T> ReportNode buildModificationReport(T oldValue, T newValue, String fieldName, int indentationLevel) {
         return buildModificationReport(oldValue, newValue, fieldName, indentationLevel, TypedValue.INFO_SEVERITY);
     }
 
