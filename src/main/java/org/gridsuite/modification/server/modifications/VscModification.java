@@ -107,17 +107,20 @@ public class VscModification extends AbstractModification {
         characteristics(hvdcLine, modificationInfos, subReportNode);
 
         // Set Points
-        //  Set Points
         List<ReportNode> setPointsReports = setPoints(hvdcLine);
-        //  hvdc droop
+        // Hvdc droop
         List<ReportNode> droopReports = hvdcAngleDroopActivePowerControlAdder(hvdcLine);
 
         if (!setPointsReports.isEmpty() || !droopReports.isEmpty()) {
-            ReportNode setPointsReport = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
+            ReportNode setPointsReport = null;
             if (!setPointsReports.isEmpty()) {
-                ModificationUtils.getInstance().reportModifications(setPointsReport, setPointsReports, VSC_SETPOINTS, SETPOINTS);
+                setPointsReport = ModificationUtils.getInstance().reportModifications(subReportNode, setPointsReports, VSC_SETPOINTS, SETPOINTS);
             }
             if (!droopReports.isEmpty()) {
+                if (setPointsReport == null) {
+                    setPointsReport = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
+                }
+                // Hvdc droop logs are in a subReport of Set Points
                 ModificationUtils.getInstance().reportModifications(setPointsReport, droopReports, "vscAngleDroop", "Angle droop active power control");
             }
         }

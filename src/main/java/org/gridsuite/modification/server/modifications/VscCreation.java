@@ -155,23 +155,19 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(subReportNode, limitsReports, "vscLimits", "Limits");
 
         List<ReportNode> setPointsReports = new ArrayList<>();
-        ReportNode setPointsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePowerSetpoint(), "Active power"));
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, VSC_SETPOINTS, SETPOINTS);
+        ReportNode setPointsReporter = ModificationUtils.getInstance().reportModifications(subReportNode, setPointsReports, VSC_SETPOINTS, SETPOINTS);
 
         List<ReportNode> angleDroopActivePowerControlReports = new ArrayList<>();
         angleDroopActivePowerControlReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("angleDroopActivePowerControl", modificationInfos.getAngleDroopActivePowerControl()));
-
         if (modificationInfos.getP0() != null) {
             angleDroopActivePowerControlReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getP0(), "P0"));
         }
-
         if (modificationInfos.getDroop() != null) {
             angleDroopActivePowerControlReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDroop(), "Droop"));
         }
-
         ModificationUtils.getInstance().reportModifications(setPointsReporter, angleDroopActivePowerControlReports, "vscAngleDroop", "Angle droop active power control");
     }
 
