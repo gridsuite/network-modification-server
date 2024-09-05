@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.Before;
@@ -264,8 +265,8 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
         return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    String getPath(boolean isRegexPhat) {
-        if (isRegexPhat) {
+    String getPath(boolean isRegexPath) {
+        if (isRegexPath) {
             return "/v1/filters/metadata\\?ids=";
         }
         return "/v1/filters/metadata?ids=";

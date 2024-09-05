@@ -1,4 +1,4 @@
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.iidm.network.IdentifiableType;

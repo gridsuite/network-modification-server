@@ -198,9 +198,9 @@ public class NetworkModificationApplicator {
 
     private void handleException(NetworkModificationException.Type typeIfError, ReportNode subReportNode, Exception e) {
         boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
-        if (!isApplicationException && LOGGER.isErrorEnabled()) {
+        //if (!isApplicationException /*&& LOGGER.isErrorEnabled()*/) {
             LOGGER.error(e.toString(), e);
-        }
+        //}
         String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
 
         subReportNode.newReportNode()
