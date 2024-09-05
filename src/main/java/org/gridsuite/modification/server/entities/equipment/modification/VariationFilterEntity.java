@@ -28,7 +28,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "VariationFilter", indexes = @Index(name = "formula_id_idx", columnList = "formula_id"))
+@Table(name = "VariationFilter", indexes = @Index(name = "modification_by_filter_id_idx", columnList = "modification_by_filter_id"))
 public class VariationFilterEntity {
 
     @Id
