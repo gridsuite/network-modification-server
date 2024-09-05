@@ -133,6 +133,18 @@
             <!-- FIXME: network-store modules' version is overloaded in the dependencies section. The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
             <version>1.16.0</version>
         </dependency>
+        <!-- FIXME: network-store modules' version is overloaded in the dependencies section. This section have to be removed at next gridsuite-dependencies.version upgrade -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-iidm-impl</artifactId>
+            <version>1.16.0</version>
+        </dependency>
+        <!-- FIXME: network-store modules' version is overloaded in the dependencies section. This section have to be removed at next gridsuite-dependencies.version upgrade -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-model</artifactId>
+            <version>1.16.0</version>
+        </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>

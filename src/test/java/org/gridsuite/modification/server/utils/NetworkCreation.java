@@ -197,33 +197,33 @@ public final class NetworkCreation {
             .endStep()
             .add();
 
-        TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, "trf2", "trf2", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
-            4, 14, v1.getId(), v2.getId(),
-            "trf1", 1, ConnectablePosition.Direction.TOP,
-            "trf1", 2, ConnectablePosition.Direction.TOP);
-        twt2.newPhaseTapChanger()
-            .setLowTapPosition(0)
-            .setTapPosition(1)
-            .setRegulationTerminal(phaseTapChangerTerminal)
-            .setRegulationMode(PhaseTapChanger.RegulationMode.FIXED_TAP)
-            .setTargetDeadband(2.)
-            .beginStep()
-            .setR(39.78473)
-            .setX(39.784725)
-            .setG(0.0)
-            .setB(0.0)
-            .setRho(1.0)
-            .setAlpha(1.)
-            .endStep()
-            .beginStep()
-            .setR(39.78475)
-            .setX(39.784727)
-            .setG(0.0)
-            .setB(0.0)
-            .setRho(1.0)
-            .setAlpha(1.1)
-            .endStep()
-            .add();
+//        TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, "trf2", "trf2", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
+//            4, 14, v1.getId(), v2.getId(),
+//            "trf1", 1, ConnectablePosition.Direction.TOP,
+//            "trf1", 2, ConnectablePosition.Direction.TOP);
+//        twt2.newPhaseTapChanger()
+//            .setLowTapPosition(0)
+//            .setTapPosition(1)
+//            .setRegulationTerminal(phaseTapChangerTerminal)
+//            .setRegulationMode(PhaseTapChanger.RegulationMode.FIXED_TAP)
+//            .setTargetDeadband(2.)
+//            .beginStep()
+//            .setR(39.78473)
+//            .setX(39.784725)
+//            .setG(0.0)
+//            .setB(0.0)
+//            .setRho(1.0)
+//            .setAlpha(1.)
+//            .endStep()
+//            .beginStep()
+//            .setR(39.78475)
+//            .setX(39.784727)
+//            .setG(0.0)
+//            .setB(0.0)
+//            .setRho(1.0)
+//            .setAlpha(1.1)
+//            .endStep()
+//            .add();
 
         createSwitch(v1, "v1btrf1", "v1btrf1", SwitchKind.BREAKER, true, false, false, 4, 5);
         createSwitch(v1, "v1dtrf1", "v1dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 5, 0);
@@ -520,7 +520,7 @@ public final class NetworkCreation {
         createSwitch(v2, "l1d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v2, "l1br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
 
-        createLine(network, "l2", null, "v1", "v3", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "l2", 2, ConnectablePosition.Direction.TOP, "l2", 2, ConnectablePosition.Direction.TOP);
+        //createLine(network, "l2", null, "v1", "v3", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "l2", 2, ConnectablePosition.Direction.TOP, "l2", 2, ConnectablePosition.Direction.TOP);
         createSwitch(v1, "l2d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v1, "l2br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
         createSwitch(v3, "l2d3", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);

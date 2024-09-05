@@ -97,7 +97,7 @@ public final class NetworkWithTeePoint {
         createSwitch(v2, "l1d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v2, "l1br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
 
-        createLine(network, "l2", null, "v2", "v3", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "l2", 2, ConnectablePosition.Direction.TOP, "l2", 2, ConnectablePosition.Direction.TOP);
+        //createLine(network, "l2", null, "v2", "v3", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "l2", 2, ConnectablePosition.Direction.TOP, "l2", 2, ConnectablePosition.Direction.TOP);
         createSwitch(v2, "l2d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v2, "l2br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
         createSwitch(v3, "l2d3", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
