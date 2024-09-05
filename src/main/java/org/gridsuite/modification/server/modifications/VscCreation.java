@@ -23,7 +23,6 @@ import java.util.Map;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createInjectionInNodeBreaker;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.reportInjectionCreationConnectivity;
-import static org.gridsuite.modification.server.modifications.VscModification.DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
