@@ -102,6 +102,10 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
     protected abstract String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos);
 
+    protected String getOldValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        return getFieldValue(equipment, modificationByFilterInfos.getEditedField());
+    }
+
     protected String applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
         // get new value
         String newValue = getNewValue(equipment, modificationByFilterInfos);
@@ -289,16 +293,16 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
         // perform to apply new value
         try {
-            final String oldValue = getFieldValue(equipment, modificationByFilterInfos.getEditedField());
+            final String oldValue = getOldValue(equipment, modificationByFilterInfos);
             final String newValue = applyValue(equipment, modificationByFilterInfos);
             reports.add(ReportNode.newRootReportNode()
                 .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_REPORT,
                     "        ${" + VALUE_KEY_EQUIPMENT_TYPE + "} id : ${" + VALUE_KEY_EQUIPMENT_NAME +
-                    "}, new value of ${" + VALUE_KEY_FIELD_NAME + "} : ${" + VALUE_KEY_OLD_VALUE + "} -> ${" + VALUE_KEY_NEW_VALUE + "}")
+                    "}, ${" + VALUE_KEY_FIELD_NAME + "} : ${" + VALUE_KEY_OLD_VALUE + "} → ${" + VALUE_KEY_NEW_VALUE + "}")
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_TYPE, equipment.getType().name())
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
                 .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(modificationByFilterInfos))
-                .withUntypedValue(VALUE_KEY_OLD_VALUE, oldValue)
+                .withUntypedValue(VALUE_KEY_OLD_VALUE, oldValue == null ? NO_VALUE : oldValue)
                 .withUntypedValue(VALUE_KEY_NEW_VALUE, newValue)
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .build());

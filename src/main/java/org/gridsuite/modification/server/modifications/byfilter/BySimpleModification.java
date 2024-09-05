@@ -65,6 +65,16 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
+    protected String getOldValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
+        if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
+            return equipment.getProperty(((PropertyModificationByFilterInfos) simpleModificationInfos).getPropertyName());
+        } else {
+            return super.getOldValue(equipment, modificationByFilterInfos);
+        }
+    }
+
+    @Override
     protected String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
         AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
         return simpleModificationInfos.getValue().toString();
