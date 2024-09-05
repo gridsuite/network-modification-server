@@ -44,6 +44,7 @@ public final class ModificationUtils {
     public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
 
     public static final String DOES_NOT_EXIST_IN_NETWORK = " does not exist in network";
+    public static final String EQUIPMENT_DISCONNECTED = "equipmentDisconnected";
     public static final String NO_VALUE = "No value";
     public static final String LIMITS = "Limits";
     public static final String REACTIVE_LIMITS = "Reactive limits";
@@ -603,7 +604,7 @@ public final class ModificationUtils {
         if (!modificationInfos.isTerminalConnected()) {
             injection.getTerminal().disconnect();
             subReportNode.newReportNode()
-                    .withMessageTemplate("equipmentDisconnected", "Equipment with id=${id} disconnected")
+                    .withMessageTemplate(EQUIPMENT_DISCONNECTED, "Equipment with id=${id} disconnected")
                     .withUntypedValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
@@ -707,7 +708,7 @@ public final class ModificationUtils {
                         String.format("Could not disconnect equipment '%s'", injection.getId()));
                 }
                 subReportNode.add(ReportNode.newRootReportNode()
-                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withMessageTemplate(EQUIPMENT_DISCONNECTED, "    Equipment with id=${id} disconnected")
                         .withUntypedValue("id", modificationInfos.getEquipmentId())
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
@@ -1357,19 +1358,19 @@ public final class ModificationUtils {
             List<ReportNode> connectivityReports = new ArrayList<>();
             if (injectionCreationInfos.getConnectionName() != null) {
                 connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(injectionCreationInfos.getConnectionName(), "Connection name"));
+                        .buildCreationReport(injectionCreationInfos.getConnectionName(), CONNECTION_NAME_FIELD_NAME));
             }
             if (injectionCreationInfos.getConnectionDirection() != null) {
                 connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(injectionCreationInfos.getConnectionDirection(), "Connection direction"));
+                        .buildCreationReport(injectionCreationInfos.getConnectionDirection(), CONNECTION_DIRECTION_FIELD_NAME));
             }
             if (injectionCreationInfos.getConnectionPosition() != null) {
                 connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(injectionCreationInfos.getConnectionPosition(), "Connection position"));
+                        .buildCreationReport(injectionCreationInfos.getConnectionPosition(), CONNECTION_POSITION_FIELD_NAME));
             }
             if (!injectionCreationInfos.isTerminalConnected()) {
                 connectivityReports.add(ReportNode.newRootReportNode()
-                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withMessageTemplate(EQUIPMENT_DISCONNECTED, "    Equipment with id=${id} disconnected")
                         .withUntypedValue("id", injectionCreationInfos.getEquipmentId())
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());

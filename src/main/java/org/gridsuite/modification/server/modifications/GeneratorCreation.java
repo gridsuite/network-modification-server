@@ -32,7 +32,6 @@ public class GeneratorCreation extends AbstractModification {
     private final GeneratorCreationInfos modificationInfos;
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
-    private static final String CONNECTIVITY = "Connectivity";
 
     public GeneratorCreation(GeneratorCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;

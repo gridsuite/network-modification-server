@@ -29,7 +29,6 @@ public class BatteryCreation extends AbstractModification {
     private final BatteryCreationInfos modificationInfos;
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
-    private static final String CONNECTIVITY = "Connectivity";
 
     public BatteryCreation(BatteryCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
