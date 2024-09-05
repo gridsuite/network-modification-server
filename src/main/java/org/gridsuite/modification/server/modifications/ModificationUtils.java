@@ -10,9 +10,7 @@ import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
-import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
-import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
+import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
@@ -44,6 +42,8 @@ public final class ModificationUtils {
     public static final String DISCONNECTOR = "disconnector_";
     public static final String BREAKER = "breaker_";
     public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
+
+    public static final String DOES_NOT_EXIST_IN_NETWORK = " does not exist in network";
     public static final String NO_VALUE = "No value";
     public static final String LIMITS = "Limits";
     public static final String REACTIVE_LIMITS = "Reactive limits";
@@ -89,7 +89,7 @@ public final class ModificationUtils {
     Battery getBattery(Network network, String batteryId) {
         Battery battery = network.getBattery(batteryId);
         if (battery == null) {
-            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + batteryId + " does not exist in network");
+            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + batteryId + DOES_NOT_EXIST_IN_NETWORK);
         }
         return battery;
     }
@@ -97,7 +97,7 @@ public final class ModificationUtils {
     Generator getGenerator(Network network, String generatorId) {
         Generator generator = network.getGenerator(generatorId);
         if (generator == null) {
-            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + " does not exist in network");
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + DOES_NOT_EXIST_IN_NETWORK);
         }
         return generator;
     }
@@ -105,7 +105,7 @@ public final class ModificationUtils {
     VscConverterStation getVscConverterStation(Network network, String converterStationId) {
         VscConverterStation vscConverterStation = network.getVscConverterStation(converterStationId);
         if (vscConverterStation == null) {
-            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + " does not exist in network");
+            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + DOES_NOT_EXIST_IN_NETWORK);
         }
         return vscConverterStation;
     }
@@ -114,7 +114,7 @@ public final class ModificationUtils {
     HvdcLine getHvdcLine(Network network, String hvdcLineId) {
         HvdcLine hvdcLine = network.getHvdcLine(hvdcLineId);
         if (hvdcLine == null) {
-            throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + " does not exist in network");
+            throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + DOES_NOT_EXIST_IN_NETWORK);
         }
         return hvdcLine;
     }
@@ -122,7 +122,7 @@ public final class ModificationUtils {
     StaticVarCompensator staticVarCompensator(Network network, String staticVarCompensatorId) {
         StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(staticVarCompensatorId);
         if (staticVarCompensator == null) {
-            throw new NetworkModificationException(STATIC_VAR_COMPENSATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + " does not exist in network");
+            throw new NetworkModificationException(STATIC_VAR_COMPENSATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + DOES_NOT_EXIST_IN_NETWORK);
         }
         return staticVarCompensator;
     }
@@ -286,8 +286,7 @@ public final class ModificationUtils {
         if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
         }
-        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.nonNull(voltageLevelCreationInfos.getIpMax())
-            && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
         }
     }
@@ -506,10 +505,7 @@ public final class ModificationUtils {
                 for (Map.Entry<String, TypedValue> valueEntry : report.getValues().entrySet()) {
                     reportNodeAdder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
                 }
-                TypedValue severity = report.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
-                if (severity != null) {
-                    reportNodeAdder.withSeverity(severity);
-                }
+                report.getValue(ReportConstants.SEVERITY_KEY).ifPresent(reportNodeAdder::withSeverity);
                 reportNodeAdder.add();
             }
         }
@@ -752,38 +748,23 @@ public final class ModificationUtils {
             return null;
         }
 
-        switch (type) {
-            case HVDC_LINE:
-                return network.getHvdcLine(equipmentId);
-            case LINE:
-                return network.getLine(equipmentId);
-            case TWO_WINDINGS_TRANSFORMER:
-                return network.getTwoWindingsTransformer(equipmentId);
-            case THREE_WINDINGS_TRANSFORMER:
-                return network.getThreeWindingsTransformer(equipmentId);
-            case GENERATOR:
-                return network.getGenerator(equipmentId);
-            case LOAD:
-                return network.getLoad(equipmentId);
-            case BATTERY:
-                return network.getBattery(equipmentId);
-            case SHUNT_COMPENSATOR:
-                return network.getShuntCompensator(equipmentId);
-            case STATIC_VAR_COMPENSATOR:
-                return network.getStaticVarCompensator(equipmentId);
-            case DANGLING_LINE:
-                return network.getDanglingLine(equipmentId);
-            case HVDC_CONVERTER_STATION:
-                return network.getHvdcConverterStation(equipmentId);
-            case SUBSTATION:
-                return network.getSubstation(equipmentId);
-            case VOLTAGE_LEVEL:
-                return network.getVoltageLevel(equipmentId);
-            case BUSBAR_SECTION:
-                return network.getBusbarSection(equipmentId);
-            default:
-                return null;
-        }
+        return switch (type) {
+            case HVDC_LINE -> network.getHvdcLine(equipmentId);
+            case LINE -> network.getLine(equipmentId);
+            case TWO_WINDINGS_TRANSFORMER -> network.getTwoWindingsTransformer(equipmentId);
+            case THREE_WINDINGS_TRANSFORMER -> network.getThreeWindingsTransformer(equipmentId);
+            case GENERATOR -> network.getGenerator(equipmentId);
+            case LOAD -> network.getLoad(equipmentId);
+            case BATTERY -> network.getBattery(equipmentId);
+            case SHUNT_COMPENSATOR -> network.getShuntCompensator(equipmentId);
+            case STATIC_VAR_COMPENSATOR -> network.getStaticVarCompensator(equipmentId);
+            case DANGLING_LINE -> network.getDanglingLine(equipmentId);
+            case HVDC_CONVERTER_STATION -> network.getHvdcConverterStation(equipmentId);
+            case SUBSTATION -> network.getSubstation(equipmentId);
+            case VOLTAGE_LEVEL -> network.getVoltageLevel(equipmentId);
+            case BUSBAR_SECTION -> network.getBusbarSection(equipmentId);
+            default -> null;
+        };
     }
 
     public void setCurrentLimits(CurrentLimitsInfos currentLimitsInfos, CurrentLimitsAdder limitsAdder) {
@@ -824,17 +805,11 @@ public final class ModificationUtils {
     }
 
     public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
-        switch (regulationMode) {
-            case FIXED_TAP:
-                return "    Fixed tap";
-            case CURRENT_LIMITER :
-                return "    Current limiter";
-            case ACTIVE_POWER_CONTROL :
-                return "    Active power control";
-            default :
-                return "";
-
-        }
+        return switch (regulationMode) {
+            case FIXED_TAP -> "    Fixed tap";
+            case CURRENT_LIMITER -> "    Current limiter";
+            case ACTIVE_POWER_CONTROL -> "    Active power control";
+        };
     }
 
     public void modifyReactiveCapabilityCurvePoints(Collection<ReactiveCapabilityCurve.Point> points,
@@ -886,9 +861,9 @@ public final class ModificationUtils {
                                                     ReactiveCapabilityCurve.Point oldPoint,
                                                     List<ReportNode> reports,
                                                     String fieldSuffix) {
-        Double oldMaxQ = Double.NaN;
-        Double oldMinQ = Double.NaN;
-        Double oldP = Double.NaN;
+        double oldMaxQ = Double.NaN;
+        double oldMinQ = Double.NaN;
+        double oldP = Double.NaN;
         if (oldPoint != null) {
             oldMaxQ = oldPoint.getMaxQ();
             oldMinQ = oldPoint.getMinQ();
@@ -1013,7 +988,7 @@ public final class ModificationUtils {
                                              AttributeModification<Boolean> participateInfo,
                                              AttributeModification<Float> droopInfo,
                                              List<ReportNode> reports) {
-        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
+        boolean participate = participateInfo != null && participateInfo.getValue();
         adder.withParticipate(participate);
         if (participateInfo != null) {
             reports.add(buildModificationReport(null, participate, "Participate"));
@@ -1081,10 +1056,10 @@ public final class ModificationUtils {
     }
 
     public void checkMaxReactivePowerGreaterThanMinReactivePower(MinMaxReactiveLimits minMaxReactiveLimits, AttributeModification<Double> minimumReactivePowerInfo, AttributeModification<Double> maximumReactivePowerInfo, NetworkModificationException.Type exceptionType, String errorMessage) {
-        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
-        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
-        Double minReactivePower = minimumReactivePowerInfo != null ? minimumReactivePowerInfo.getValue() : previousMinimumReactivePower;
-        Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
+        double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
+        double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
+        double minReactivePower = minimumReactivePowerInfo != null ? minimumReactivePowerInfo.getValue() : previousMinimumReactivePower;
+        double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
         if (minReactivePower > maxReactivePower) {
             throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
         }
@@ -1173,17 +1148,10 @@ public final class ModificationUtils {
         }
 
         // check set points
-        switch (regulationMode) {
-            case VOLTAGE -> {
-                if (voltageSetpoint == null) {
-                    throw makeEquipmentException(errorType, equipmentId, equipmentName, "Voltage setpoint is not set");
-                }
-            }
-            case REACTIVE_POWER -> {
-                if (reactivePowerSetpoint == null) {
-                    throw makeEquipmentException(errorType, equipmentId, equipmentName, "Reactive power setpoint is not set");
-                }
-            }
+        if (Objects.requireNonNull(regulationMode) == StaticVarCompensator.RegulationMode.VOLTAGE && voltageSetpoint == null) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Voltage setpoint is not set");
+        } else if (regulationMode == StaticVarCompensator.RegulationMode.REACTIVE_POWER && reactivePowerSetpoint == null) {
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Reactive power setpoint is not set");
         }
     }
 
@@ -1352,13 +1320,58 @@ public final class ModificationUtils {
         for (Map.Entry<String, TypedValue> valueEntry : child.getValues().entrySet()) {
             adder.withUntypedValue(valueEntry.getKey(), valueEntry.getValue().toString());
         }
-        TypedValue severity = child.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
-        if (severity != null) {
-            adder.withSeverity(severity);
-        }
+        child.getValue(ReportConstants.SEVERITY_KEY).ifPresent(adder::withSeverity);
         ReportNode insertedChild = adder.add();
         if (child.getChildren() != null) {
             child.getChildren().forEach(grandChild -> insertReportNode(insertedChild, grandChild));
+        }
+    }
+
+    public static void createInjectionInNodeBreaker(VoltageLevel voltageLevel, InjectionCreationInfos injectionCreationInfos,
+                                                         Network network, InjectionAdder<?, ?> injectionAdder, ReportNode subReportNode) {
+        var position = ModificationUtils.getInstance().getPosition(injectionCreationInfos.getConnectionPosition(),
+                injectionCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+        CreateFeederBay algo = new CreateFeederBayBuilder()
+                .withBusOrBusbarSectionId(injectionCreationInfos.getBusOrBusbarSectionId())
+                .withInjectionDirection(injectionCreationInfos.getConnectionDirection())
+                .withInjectionFeederName(injectionCreationInfos.getConnectionName() != null
+                        ? injectionCreationInfos.getConnectionName()
+                        : injectionCreationInfos.getEquipmentId())
+                .withInjectionPositionOrder(position)
+                .withInjectionAdder(injectionAdder)
+                .build();
+        algo.apply(network, true, subReportNode);
+    }
+
+    public static void reportInjectionCreationConnectivity(InjectionCreationInfos injectionCreationInfos, ReportNode subReporter) {
+        if (injectionCreationInfos.getVoltageLevelId() == null || injectionCreationInfos.getBusOrBusbarSectionId() == null) {
+            return;
+        }
+
+        if (injectionCreationInfos.getConnectionName() != null ||
+                injectionCreationInfos.getConnectionDirection() != null ||
+                injectionCreationInfos.getConnectionPosition() != null) {
+            List<ReportNode> connectivityReports = new ArrayList<>();
+            if (injectionCreationInfos.getConnectionName() != null) {
+                connectivityReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(injectionCreationInfos.getConnectionName(), "Connection name"));
+            }
+            if (injectionCreationInfos.getConnectionDirection() != null) {
+                connectivityReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(injectionCreationInfos.getConnectionDirection(), "Connection direction"));
+            }
+            if (injectionCreationInfos.getConnectionPosition() != null) {
+                connectivityReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(injectionCreationInfos.getConnectionPosition(), "Connection position"));
+            }
+            if (!injectionCreationInfos.isTerminalConnected()) {
+                connectivityReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
+                        .withUntypedValue("id", injectionCreationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
         }
     }
 }

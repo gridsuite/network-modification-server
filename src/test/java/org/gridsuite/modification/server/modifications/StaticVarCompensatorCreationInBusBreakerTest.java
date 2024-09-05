@@ -105,7 +105,7 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
     }
 
     @Test
-    public void testCreateWithBusbarSectionErrors() throws Exception {
+    public void testCreateWithBusBarSectionErrors() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(staticVarCompensatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))

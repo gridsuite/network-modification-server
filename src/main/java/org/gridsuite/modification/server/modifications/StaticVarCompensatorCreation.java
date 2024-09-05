@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateFeederBay;
-import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.StandbyAutomatonAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -23,6 +21,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.STATIC_VAR_COMPENSATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createInjectionInNodeBreaker;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.reportInjectionCreationConnectivity;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -30,7 +30,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class StaticVarCompensatorCreation extends AbstractModification {
 
     private final StaticVarCompensatorCreationInfos modificationInfos;
-    private static final String CONNECTIVITY = "Connectivity";
 
     public StaticVarCompensatorCreation(StaticVarCompensatorCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
@@ -97,18 +96,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
     private void createStaticVarCompensatorInNodeBreaker(VoltageLevel voltageLevel, StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
             Network network, ReportNode subReportNode) {
         StaticVarCompensatorAdder staticVarCompensatorAdder = createStaticVarCompensatorAdderInNodeBreaker(voltageLevel, staticVarCompensatorCreationInfos);
-        var position = ModificationUtils.getInstance().getPosition(staticVarCompensatorCreationInfos.getConnectionPosition(),
-                staticVarCompensatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
-        CreateFeederBay algo = new CreateFeederBayBuilder()
-                .withBusOrBusbarSectionId(staticVarCompensatorCreationInfos.getBusOrBusbarSectionId())
-                .withInjectionDirection(staticVarCompensatorCreationInfos.getConnectionDirection())
-                .withInjectionFeederName(staticVarCompensatorCreationInfos.getConnectionName() != null
-                        ? staticVarCompensatorCreationInfos.getConnectionName()
-                        : staticVarCompensatorCreationInfos.getEquipmentId())
-                .withInjectionPositionOrder(position)
-                .withInjectionAdder(staticVarCompensatorAdder)
-                .build();
-        algo.apply(network, true, subReportNode);
+        createInjectionInNodeBreaker(voltageLevel, staticVarCompensatorCreationInfos, network, staticVarCompensatorAdder, subReportNode);
         var staticVarCompensator = ModificationUtils.getInstance().staticVarCompensator(network, staticVarCompensatorCreationInfos.getEquipmentId());
         addExtensionsToStaticVarCompensator(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
     }
@@ -143,41 +131,9 @@ public class StaticVarCompensatorCreation extends AbstractModification {
             ModificationUtils.getInstance().reportElementaryCreation(subReportNode, staticVarCompensatorCreationInfos.getEquipmentName(), "Name");
         }
 
-        reportStaticVarCompensatorConnectivity(staticVarCompensatorCreationInfos, subReportNode);
+        reportInjectionCreationConnectivity(staticVarCompensatorCreationInfos, subReportNode);
         createCompensatorVoltageRegulation(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
         reportStaticVarCompensatorStandByAutomate(staticVarCompensatorCreationInfos, staticVarCompensator, subReportNode);
-    }
-
-    private void reportStaticVarCompensatorConnectivity(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos, ReportNode subReporter) {
-        if (staticVarCompensatorCreationInfos.getVoltageLevelId() == null || staticVarCompensatorCreationInfos.getBusOrBusbarSectionId() == null) {
-            return;
-        }
-
-        if (staticVarCompensatorCreationInfos.getConnectionName() != null ||
-                staticVarCompensatorCreationInfos.getConnectionDirection() != null ||
-                staticVarCompensatorCreationInfos.getConnectionPosition() != null) {
-            List<ReportNode> connectivityReports = new ArrayList<>();
-            if (staticVarCompensatorCreationInfos.getConnectionName() != null) {
-                connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(staticVarCompensatorCreationInfos.getConnectionName(), "Connection name"));
-            }
-            if (staticVarCompensatorCreationInfos.getConnectionDirection() != null) {
-                connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(staticVarCompensatorCreationInfos.getConnectionDirection(), "Connection direction"));
-            }
-            if (staticVarCompensatorCreationInfos.getConnectionPosition() != null) {
-                connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(staticVarCompensatorCreationInfos.getConnectionPosition(), "Connection position"));
-            }
-            if (!staticVarCompensatorCreationInfos.isTerminalConnected()) {
-                connectivityReports.add(ReportNode.newRootReportNode()
-                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
-                        .withUntypedValue("id", staticVarCompensatorCreationInfos.getEquipmentId())
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
-            }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
-        }
     }
 
     private void reportStaticVarCompensatorStandByAutomate(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
@@ -222,7 +178,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
 
             }
             ModificationUtils.getInstance().reportModifications(subReportNode, standByAutomateReports,
-                    "StandByAutomateCreated", "stand by automate", Map.of());
+                    "StandByAutomateCreated", "Stand by automate", Map.of());
         }
     }
 

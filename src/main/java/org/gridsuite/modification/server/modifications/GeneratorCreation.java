@@ -9,15 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateFeederBay;
-import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
-import com.powsybl.iidm.network.Bus;
-import com.powsybl.iidm.network.Generator;
-import com.powsybl.iidm.network.GeneratorAdder;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.TopologyKind;
-import com.powsybl.iidm.network.VoltageLevel;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
@@ -30,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
@@ -89,20 +81,7 @@ public class GeneratorCreation extends AbstractModification {
 
     private void createGeneratorInNodeBreaker(VoltageLevel voltageLevel, GeneratorCreationInfos generatorCreationInfos, Network network, ReportNode subReportNode) {
         GeneratorAdder generatorAdder = createGeneratorAdderInNodeBreaker(voltageLevel, generatorCreationInfos);
-        var position = ModificationUtils.getInstance().getPosition(generatorCreationInfos.getConnectionPosition(),
-                generatorCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
-
-        CreateFeederBay algo = new CreateFeederBayBuilder()
-                .withBusOrBusbarSectionId(generatorCreationInfos.getBusOrBusbarSectionId())
-                .withInjectionDirection(generatorCreationInfos.getConnectionDirection())
-                .withInjectionFeederName(generatorCreationInfos.getConnectionName() != null
-                        ? generatorCreationInfos.getConnectionName()
-                        : generatorCreationInfos.getEquipmentId())
-                .withInjectionPositionOrder(position)
-                .withInjectionAdder(generatorAdder)
-                .build();
-
-        algo.apply(network, true, subReportNode);
+        createInjectionInNodeBreaker(voltageLevel, generatorCreationInfos, network, generatorAdder, subReportNode);
 
         // CreateFeederBayBuilder already create the generator using
         // (withInjectionAdder(generatorAdder)) so then we can add the additional informations and extensions
@@ -144,7 +123,7 @@ public class GeneratorCreation extends AbstractModification {
         if (generatorCreationInfos.getEnergySource() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(subReportNode, generatorCreationInfos.getEnergySource(), "Energy source");
         }
-        reportGeneratorConnectivity(generatorCreationInfos, subReportNode);
+        reportInjectionCreationConnectivity(generatorCreationInfos, subReportNode);
         ReportNode subReporterLimits = reportGeneratorActiveLimits(generatorCreationInfos, subReportNode);
         ModificationUtils.getInstance().createReactiveLimits(generatorCreationInfos, generator, subReporterLimits);
         ReportNode subReporterSetpoints = reportGeneratorSetPoints(generatorCreationInfos, subReportNode);
@@ -239,38 +218,6 @@ public class GeneratorCreation extends AbstractModification {
                     generatorCreationInfos.getRegulatingTerminalType() + ":"
                             + generatorCreationInfos.getRegulatingTerminalId(),
                     "Equipment"));
-        }
-    }
-
-    private void reportGeneratorConnectivity(GeneratorCreationInfos generatorCreationInfos, ReportNode subReporter) {
-        if (generatorCreationInfos.getVoltageLevelId() == null || generatorCreationInfos.getBusOrBusbarSectionId() == null) {
-            return;
-        }
-
-        if (generatorCreationInfos.getConnectionName() != null ||
-            generatorCreationInfos.getConnectionDirection() != null ||
-            generatorCreationInfos.getConnectionPosition() != null) {
-            List<ReportNode> connectivityReports = new ArrayList<>();
-            if (generatorCreationInfos.getConnectionName() != null) {
-                connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionName(), "Connection name"));
-            }
-            if (generatorCreationInfos.getConnectionDirection() != null) {
-                connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionDirection(), "Connection direction"));
-            }
-            if (generatorCreationInfos.getConnectionPosition() != null) {
-                connectivityReports.add(ModificationUtils.getInstance()
-                        .buildCreationReport(generatorCreationInfos.getConnectionPosition(), "Connection position"));
-            }
-            if (!generatorCreationInfos.isTerminalConnected()) {
-                connectivityReports.add(ReportNode.newRootReportNode()
-                        .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
-                        .withUntypedValue("id", generatorCreationInfos.getEquipmentId())
-                        .withSeverity(TypedValue.INFO_SEVERITY)
-                        .build());
-            }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
         }
     }
 
