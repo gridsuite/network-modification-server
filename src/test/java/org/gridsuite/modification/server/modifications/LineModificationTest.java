@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -51,6 +52,16 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
+                .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
+                .voltageLevelId1(new AttributeModification<>("v2", OperationType.SET))
+                .busOrBusbarSectionId1(new AttributeModification<>("1B", OperationType.SET))
+                .busOrBusbarSectionId2(new AttributeModification<>("2B", OperationType.SET))
+                .connectionName1(new AttributeModification<>("2B", OperationType.SET))
+                .connectionName2(new AttributeModification<>("2B", OperationType.SET))
+                .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionDirection2(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
+                .connectionPosition2(new AttributeModification<>(2, OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(12.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
