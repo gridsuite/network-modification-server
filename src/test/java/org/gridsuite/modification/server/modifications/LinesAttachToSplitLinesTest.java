@@ -112,16 +112,16 @@ public class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest
         lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-//        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
-//                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
+                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
         lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-//        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
-//                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
+                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
     }
 
     @Override

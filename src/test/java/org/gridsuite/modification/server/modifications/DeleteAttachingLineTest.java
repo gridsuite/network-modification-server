@@ -122,8 +122,8 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteAttachingLineInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-//        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
-//                deleteAttachingLineInfos.getErrorType().name(), reportService);
+        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
+                deleteAttachingLineInfos.getErrorType().name(), reportService);
     }
 
     @Override

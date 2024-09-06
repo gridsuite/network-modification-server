@@ -143,42 +143,48 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     protected void createEquipments() {
         Substation s1 = getNetwork().getSubstation("s1");
         Substation s3 = getNetwork().getSubstation("s3");
-        TwoWindingsTransformer twt1 = createTwoWindingsTransformer(s1, TWT_ID_1, TWT_ID_1, 30, 40, 50, 60, 10, 20, 100, 110,
+        TwoWindingsTransformer twt1 = createTwoWindingsTransformer(s1, TWT_ID_1, TWT_ID_1, 30, 40, 50,
+            60, 10, 20, 100, 100,
                 "v1", "v2",
                 "trf1", 11, ConnectablePosition.Direction.TOP,
                 "trf1", 22, ConnectablePosition.Direction.BOTTOM);
         twt1.setRatedS(11);
         addRatioTapChangerSteps(twt1.newRatioTapChanger().setTargetV(50).setLowTapPosition(0).setTapPosition(1).setTargetDeadband(55));
 
-        TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, TWT_ID_2, TWT_ID_2, 35, 45, 55, 65, 15, 25, 105, 115,
+        TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, TWT_ID_2, TWT_ID_2, 35, 45, 55,
+            65, 15, 25, 101, 100,
                 "v1", "v4",
                 "trf1", 33, ConnectablePosition.Direction.TOP,
                 "trf1", 44, ConnectablePosition.Direction.BOTTOM);
         twt2.setRatedS(10);
         addRatioTapChangerSteps(twt2.newRatioTapChanger().setTargetV(53).setLowTapPosition(3).setTapPosition(4).setTargetDeadband(58));
 
-//        TwoWindingsTransformer twt3 = createTwoWindingsTransformer(s1, TWT_ID_3, TWT_ID_3, 40, 50, 60, 70, 20, 30, 110, 120,
-//                "v2", "v4",
-//                "trf1", 10, ConnectablePosition.Direction.TOP,
-//                "trf1", 20, ConnectablePosition.Direction.BOTTOM);
-//        twt3.setRatedS(25);
-//        addRatioTapChangerSteps(twt3.newRatioTapChanger().setTargetV(56).setLowTapPosition(0).setTapPosition(1).setTargetDeadband(61));
+        TwoWindingsTransformer twt3 = createTwoWindingsTransformer(s1, TWT_ID_3, TWT_ID_3, 40, 50, 60,
+            70, 20, 30, 101, 101,
+                "v2", "v4",
+                "trf1", 10, ConnectablePosition.Direction.TOP,
+                "trf1", 20, ConnectablePosition.Direction.BOTTOM);
+        twt3.setRatedS(25);
+        addRatioTapChangerSteps(twt3.newRatioTapChanger().setTargetV(56).setLowTapPosition(0).setTapPosition(1).setTargetDeadband(61));
 
-        TwoWindingsTransformer twt4 = createTwoWindingsTransformer(s3, TWT_ID_4, TWT_ID_4, 45, 55, 65, 75, 25, 35, 115, 125,
+        TwoWindingsTransformer twt4 = createTwoWindingsTransformer(s3, TWT_ID_4, TWT_ID_4, 45, 55, 65,
+            75, 25, 35, 100, 100,
                 "v5", "v6",
                 "trf1", 30, ConnectablePosition.Direction.TOP,
                 "trf1", 40, ConnectablePosition.Direction.BOTTOM);
         twt4.setRatedS(15);
         addPhaseTapChangerSteps(twt4.newPhaseTapChanger().setRegulationValue(45).setLowTapPosition(1).setTapPosition(2).setTargetDeadband(34));
 
-        TwoWindingsTransformer twt5 = createTwoWindingsTransformer(s3, TWT_ID_5, TWT_ID_5, 50, 60, 70, 80, 30, 40, 120, 130,
+        TwoWindingsTransformer twt5 = createTwoWindingsTransformer(s3, TWT_ID_5, TWT_ID_5, 50, 60, 70,
+            80, 30, 40, 101, 101,
                 "v5", "v6",
                 "trf1", 15, ConnectablePosition.Direction.TOP,
                 "trf1", 26, ConnectablePosition.Direction.BOTTOM);
         twt5.setRatedS(30);
         addPhaseTapChangerSteps(twt5.newPhaseTapChanger().setRegulationValue(46).setLowTapPosition(2).setTapPosition(2).setTargetDeadband(35));
 
-        TwoWindingsTransformer twt6 = createTwoWindingsTransformer(s3, TWT_ID_6, TWT_ID_6, 55, 65, 75, 85, 35, 45, 125, 135,
+        TwoWindingsTransformer twt6 = createTwoWindingsTransformer(s3, TWT_ID_6, TWT_ID_6, 55, 65, 75, 85,
+            35, 45, 102, 102,
                 "v5", "v6",
                 "trf1", 38, ConnectablePosition.Direction.TOP,
                 "trf1", 49, ConnectablePosition.Direction.BOTTOM);
@@ -381,16 +387,16 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
         assertEquals(15, twt2.getRatedU1(), 0);
         assertEquals(20, twt2.getRatedS(), 0);
 
-//        TwoWindingsTransformer twt3 = getNetwork().getTwoWindingsTransformer(TWT_ID_3);
-//        RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
-//        assertNotNull(ratioTapChanger3);
-//        assertEquals(1, ratioTapChanger3.getLowTapPosition());
-//        assertEquals(4, ratioTapChanger3.getTapPosition());
-//        assertEquals(80, twt3.getR(), 0);
-//        assertEquals(85, twt3.getG(), 0);
-//        assertEquals(35, twt3.getRatedU1(), 0);
-//        assertEquals(15, twt3.getRatedU2(), 0);
-//        assertEquals(50, twt3.getRatedS(), 0);
+        TwoWindingsTransformer twt3 = getNetwork().getTwoWindingsTransformer(TWT_ID_3);
+        RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
+        assertNotNull(ratioTapChanger3);
+        assertEquals(1, ratioTapChanger3.getLowTapPosition());
+        assertEquals(4, ratioTapChanger3.getTapPosition());
+        assertEquals(80, twt3.getR(), 0);
+        assertEquals(85, twt3.getG(), 0);
+        assertEquals(35, twt3.getRatedU1(), 0);
+        assertEquals(15, twt3.getRatedU2(), 0);
+        assertEquals(50, twt3.getRatedS(), 0);
 
         TwoWindingsTransformer twt4 = getNetwork().getTwoWindingsTransformer(TWT_ID_4);
         PhaseTapChanger phaseTapChanger4 = twt4.getPhaseTapChanger();
@@ -454,16 +460,16 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
         assertEquals(15, twt2.getRatedU1(), 0);
         assertEquals(10, twt2.getRatedS(), 0);
 
-//        TwoWindingsTransformer twt3 = getNetwork().getTwoWindingsTransformer(TWT_ID_3);
-//        RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
-//        assertNotNull(ratioTapChanger3);
-//        assertEquals(0, ratioTapChanger3.getLowTapPosition());
-//        assertEquals(1, ratioTapChanger3.getTapPosition());
-//        assertEquals(40, twt3.getR(), 0);
-//        assertEquals(60, twt3.getG(), 0);
-//        assertEquals(20, twt3.getRatedU1(), 0);
-//        assertEquals(30, twt3.getRatedU2(), 0);
-//        assertEquals(25, twt3.getRatedS(), 0);
+        TwoWindingsTransformer twt3 = getNetwork().getTwoWindingsTransformer(TWT_ID_3);
+        RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
+        assertNotNull(ratioTapChanger3);
+        assertEquals(0, ratioTapChanger3.getLowTapPosition());
+        assertEquals(1, ratioTapChanger3.getTapPosition());
+        assertEquals(40, twt3.getR(), 0);
+        assertEquals(60, twt3.getG(), 0);
+        assertEquals(20, twt3.getRatedU1(), 0);
+        assertEquals(30, twt3.getRatedU2(), 0);
+        assertEquals(25, twt3.getRatedS(), 0);
 
         TwoWindingsTransformer twt4 = getNetwork().getTwoWindingsTransformer(TWT_ID_4);
         PhaseTapChanger phaseTapChanger4 = twt4.getPhaseTapChanger();

@@ -82,26 +82,26 @@ public class OperatingStatusModificationEnergiseSideOneLineTest extends Abstract
     }
 
     @Test
-//    public void testCreateWithErrors() throws Exception {
-//        // Add a line that can't be disconnected
-//        Line line = getNetwork().newLine()
-//                .setId("cantdisconnect")
-//                .setVoltageLevel1("v1")
-//                .setVoltageLevel2("v3")
-//                .setNode1(0)
-//                .setNode2(0)
-//                .setX(12)
-//                .setR(7)
-//                .add();
-//        assertNotNull(line);
-//        OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
-//        modificationInfos.setEquipmentId("cantdisconnect");
-//        String modificationJson = mapper.writeValueAsString(modificationInfos);
-//        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(status().isOk());
-//        assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),
-//                modificationInfos.getErrorType().name(), reportService);
-//    }
+    public void testCreateWithErrors() throws Exception {
+        // Add a line that can't be disconnected
+        Line line = getNetwork().newLine()
+                .setId("cantdisconnect")
+                .setVoltageLevel1("v1")
+                .setVoltageLevel2("v3")
+                .setNode1(3)
+                .setNode2(7)
+                .setX(12)
+                .setR(7)
+                .add();
+        assertNotNull(line);
+        OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
+        modificationInfos.setEquipmentId("cantdisconnect");
+        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),
+                modificationInfos.getErrorType().name(), reportService);
+    }
 
     @Override
     @SneakyThrows
