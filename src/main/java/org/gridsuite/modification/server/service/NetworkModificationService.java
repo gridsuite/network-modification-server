@@ -161,9 +161,9 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public NetworkModificationResult buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
-        List<Pair<String, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
+        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
 
-        Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReporterIds().stream(),
+        Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reporterId) -> {
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
@@ -194,7 +194,7 @@ public class NetworkModificationService {
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
 
-        return modificationApplicator.applyModifications(modificationInfos, networkInfos, buildInfos.getReportUuid());
+        return modificationApplicator.applyModifications(modificationInfos, networkInfos);
     }
 
     public void buildVariantRequest(UUID networkUuid, BuildInfos buildInfos, String receiver) {

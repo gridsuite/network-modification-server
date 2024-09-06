@@ -35,7 +35,7 @@ public class BuildInfos {
 
     private List<UUID> modificationGroupUuids = new ArrayList<>();
 
-    private List<String> reporterIds = new ArrayList<>();
+    private List<ReportInfos> reportsInfos = new ArrayList<>();
 
     private Set<UUID> modificationsToExclude = new HashSet<>();
 
