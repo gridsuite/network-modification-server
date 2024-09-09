@@ -20,10 +20,8 @@ import org.gridsuite.modification.server.dto.VscCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.modifications.VscModification.DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -52,16 +50,22 @@ public class VscCreation extends AbstractModification {
     }
 
     private void checkDroop() {
-        // extension is not enabled => ignore check inside fields
-        if (!Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl())) {
+        boolean isPresentAngleDroopActivePowerControl = modificationInfos.getAngleDroopActivePowerControl() != null;
+        boolean isPresentDroop = modificationInfos.getDroop() != null;
+        boolean isPresentP0 = modificationInfos.getP0() != null;
+        // all fields are provided => OK extension will be created
+        if (isPresentAngleDroopActivePowerControl && isPresentDroop && isPresentP0) {
             return;
         }
-
-        // enable the extension => should verify whether all fields have been filled
-        if (modificationInfos.getDroop() == null || modificationInfos.getP0() == null) {
-            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
-                    String.format(DROOP_ACTIVE_POWER_CONTROL_P0_DROOP_REQUIRED_ERROR_MSG));
+        // particular case, not enabling extension and others fields are not provided => OK extension will not be created
+        if (Boolean.FALSE.equals(modificationInfos.getAngleDroopActivePowerControl()) && !isPresentDroop && !isPresentP0) {
+            return;
         }
+        // at least one field is provided but not for the others => NOT OK
+        if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
+            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+        }
+        // otherwise, i.e. none of the fields is not provided => OK extension will not be created
     }
 
     private void checkConverterStation(Network network,
@@ -134,9 +138,8 @@ public class VscCreation extends AbstractModification {
     }
 
     private boolean shouldCreateDroopActivePowerControlExtension() {
-        return Boolean.TRUE.equals(modificationInfos.getAngleDroopActivePowerControl()) &&
-               modificationInfos.getDroop() != null &&
-               modificationInfos.getP0() != null;
+        return VscModification.shouldCreateDroopActivePowerControlExtension(
+            modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);
     }
 
     private void reportHvdcLineInfos(ReportNode subReportNode) {
@@ -144,45 +147,41 @@ public class VscCreation extends AbstractModification {
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getNominalV(), "DC nominal voltage"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getR(), "DC resistance"));
         characteristicsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getMaxP(), "Pmax"));
-        ModificationUtils.getInstance().reportModifications(subReportNode, characteristicsReports, VSC_CHARACTERISTICS, CHARACTERISTICS, Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, characteristicsReports, VSC_CHARACTERISTICS, CHARACTERISTICS);
 
         List<ReportNode> limitsReports = new ArrayList<>();
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide1ToSide2(), "Operator active power limit (Side1 -> Side 2)"));
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getOperatorActivePowerLimitFromSide2ToSide1(), "Operator active power limit (Side2 -> Side 1)"));
-        ModificationUtils.getInstance().reportModifications(subReportNode, limitsReports, "vscLimits", "Limits", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, limitsReports, "vscLimits", "Limits");
 
         List<ReportNode> setPointsReports = new ArrayList<>();
-        ReportNode setPointsReporter = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getConvertersMode(), "Converters mode"));
         setPointsReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getActivePowerSetpoint(), "Active power"));
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, setPointsReports, VSC_SETPOINTS, SETPOINTS, Map.of());
+        ReportNode setPointsReporter = ModificationUtils.getInstance().reportModifications(subReportNode, setPointsReports, VSC_SETPOINTS, SETPOINTS);
 
         List<ReportNode> angleDroopActivePowerControlReports = new ArrayList<>();
         angleDroopActivePowerControlReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("angleDroopActivePowerControl", modificationInfos.getAngleDroopActivePowerControl()));
-
         if (modificationInfos.getP0() != null) {
             angleDroopActivePowerControlReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getP0(), "P0"));
         }
-
         if (modificationInfos.getDroop() != null) {
             angleDroopActivePowerControlReports.add(ModificationUtils.getInstance().buildCreationReport(modificationInfos.getDroop(), "Droop"));
         }
-
-        ModificationUtils.getInstance().reportModifications(setPointsReporter, angleDroopActivePowerControlReports, "vscAngleDroop", "Angle droop active power control", Map.of());
+        ModificationUtils.getInstance().reportModifications(setPointsReporter, angleDroopActivePowerControlReports, "vscAngleDroop", "Angle droop active power control");
     }
 
     private VscConverterStation createConverterStation(Network network,
                                                        ConverterStationCreationInfos converterStationCreationInfos,
                                                        ReportNode subReportNode,
                                                        String logFieldName) {
-        ReportNode converterStationReporter = subReportNode.newReportNode().withMessageTemplate("converterStationCreated" + logFieldName, logFieldName).add();
+        ReportNode converterStationReporter = subReportNode.newReportNode().withMessageTemplate("converterStationCreationContainer" + logFieldName, logFieldName).add();
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());
         VscConverterStation vscConverterStation = voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ?
                 createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReporter) :
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
         converterStationReporter.newReportNode()
-                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
+                .withMessageTemplate("converterStationCreationLog" + logFieldName, "New converter station with id=${id} created")
                 .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
@@ -268,7 +267,7 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(subReporter,
                 List.of(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getLossFactor(), "Loss Factor")),
                 "converterStationCharacteristics",
-                CHARACTERISTICS, Map.of());
+                CHARACTERISTICS);
 
         ModificationUtils.getInstance().createReactiveLimits(converterStationCreationInfos, vscConverterStation, subReporter);
 
@@ -277,10 +276,6 @@ public class VscCreation extends AbstractModification {
 
     private void reportConverterStationSetPoints(ConverterStationCreationInfos converterStationCreationInfos, ReportNode subReportNode) {
         ReportNode setPointReporter = subReportNode.newReportNode().withMessageTemplate("converterStationSetPoint", SETPOINTS).add();
-        setPointReporter.newReportNode()
-                .withMessageTemplate(SETPOINTS, SETPOINTS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
 
         if (converterStationCreationInfos.getReactivePowerSetpoint() != null) {
             ModificationUtils.getInstance().reportElementaryCreation(setPointReporter,
@@ -298,7 +293,7 @@ public class VscCreation extends AbstractModification {
         ModificationUtils.getInstance().reportModifications(setPointReporter,
                 setPointsVoltageReports,
                 "converterStationSetPointsVoltageRegulation",
-                "Voltage regulation", Map.of());
+                "Voltage regulation");
     }
 
     private void reportConnectivity(ConverterStationCreationInfos converterStationCreationInfos, ReportNode subReportNode) {
@@ -328,6 +323,6 @@ public class VscCreation extends AbstractModification {
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .build());
         }
-        ModificationUtils.getInstance().reportModifications(subReportNode, connectivityReports, "ConnectivityCreated", "Connectivity", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, connectivityReports, "ConnectivityCreated", "Connectivity");
     }
 }
