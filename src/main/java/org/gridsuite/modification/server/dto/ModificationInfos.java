@@ -101,7 +101,7 @@ public class ModificationInfos {
     private String messageValues;
 
     @Schema(description = "Modification enabled")
-    @NonNull
+    @Builder.Default
     private Boolean active = true;
 
     // Only for metadata

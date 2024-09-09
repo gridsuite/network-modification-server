@@ -44,7 +44,6 @@ public class LineCreationInMixedTypologyTest extends AbstractNetworkModification
         return LineCreationInfos.builder()
             .stashed(false)
             .active(true)
-            .active(true)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
             .r(100.0)

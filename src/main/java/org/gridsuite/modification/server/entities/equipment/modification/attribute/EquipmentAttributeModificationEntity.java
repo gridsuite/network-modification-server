@@ -71,7 +71,6 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             .date(getDate())
             .stashed(getStashed())
             .active(getActive())
-            .active(getActive())
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())

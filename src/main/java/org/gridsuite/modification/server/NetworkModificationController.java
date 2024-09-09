@@ -243,12 +243,11 @@ public class NetworkModificationController {
     }
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "active")
-    @Operation(summary = "stash or unstash network modifications")
-    @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
+    @Operation(summary = "enable or disable network modifications")
+    @ApiResponse(responseCode = "200", description = "The network modifications were updated successfully")
     public ResponseEntity<Void> updateNetworkModificationsActivation(
         @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-        @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
-        @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "active") Boolean active) {
+        @Parameter(description = "enable or disable network modifications") @RequestParam(name = "active") Boolean active) {
         networkModificationService.updateNetworkModificationActivation(networkModificationUuids, active);
         return ResponseEntity.ok().build();
     }
