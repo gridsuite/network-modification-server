@@ -88,8 +88,8 @@ public class OperatingStatusModificationEnergiseSideOneLineTest extends Abstract
                 .setId("cantdisconnect")
                 .setVoltageLevel1("v1")
                 .setVoltageLevel2("v3")
-                .setNode1(0)
-                .setNode2(0)
+                .setNode1(3)
+                .setNode2(7)
                 .setX(12)
                 .setR(7)
                 .add();

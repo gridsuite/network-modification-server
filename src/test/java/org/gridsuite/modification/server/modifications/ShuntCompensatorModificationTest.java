@@ -97,7 +97,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testWrongSectionCountChangeSectionCount() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
@@ -119,7 +119,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testWrongSectionCountChangeMaximumSectionCount() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
@@ -157,7 +157,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testCreateModificationWithShuntCompensatorType() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
@@ -180,7 +180,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testCreateModificationWithSusceptancePerSection() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         var shuntCompensator = getNetwork().getShuntCompensator("v7shunt");
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
@@ -223,9 +223,9 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Test
     public void testCreateModificationWithQAtNominalV() {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
-        createShuntCompensator(v5, "v7shunt", "v7shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
         VoltageLevel v6 = getNetwork().getVoltageLevel("v6");
-        createShuntCompensator(v6, "v8shunt", "v8shunt", 6, 225., 10, true, 1, 1, 2, 1, "feeder_v8shunt", 50, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v6, "v8shunt", "v8shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v8shunt", 50, ConnectablePosition.Direction.BOTTOM);
 
         ShuntCompensatorModificationInfos modificationInfos1 = ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
@@ -261,7 +261,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     @Override
     protected ModificationInfos buildModification() {
         VoltageLevel v2 = getNetwork().getVoltageLevel("v2");
-        createShuntCompensator(v2, "v7shunt", "v7shunt", 15, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
+        createShuntCompensator(v2, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
         return ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
