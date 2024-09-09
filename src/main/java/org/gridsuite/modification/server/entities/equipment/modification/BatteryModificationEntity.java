@@ -123,6 +123,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .active(getActive())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))

@@ -84,6 +84,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     public ConverterStationCreationInfos toConverterStationInfos() {
         return ConverterStationCreationInfos.builder()
                 .stashed(getStashed())
+                .active(getActive())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // Injection

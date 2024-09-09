@@ -111,6 +111,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .active(getActive())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .activePowerSetpoint(getActivePowerSetpoint())

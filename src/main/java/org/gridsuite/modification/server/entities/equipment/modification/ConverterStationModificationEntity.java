@@ -114,6 +114,7 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
+            .active(getActive())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .lossFactor(toAttributeModification(getLossFactor()))
