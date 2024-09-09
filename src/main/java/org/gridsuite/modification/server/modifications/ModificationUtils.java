@@ -610,7 +610,7 @@ public final class ModificationUtils {
         processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, reports, false);
         modifyConnection(modificationInfos.getTerminalConnected(), injection, injection.getTerminal(), reports);
 
-        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY, Map.of());
+        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
 
     public ReportNode modifyBranchConnectivityAttributes(ConnectablePosition<?> connectablePosition,
@@ -628,7 +628,7 @@ public final class ModificationUtils {
         modifyConnection(modificationInfos.getTerminal1Connected(), branch, branch.getTerminal1(), reports);
         modifyConnection(modificationInfos.getTerminal2Connected(), branch, branch.getTerminal2(), reports);
 
-        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY, Map.of());
+        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
 
     private boolean isVoltageOrBusbarIdMissing(AttributeModification<String> voltageLevelId, AttributeModification<String> busbarSectionId, String equipmentId, List<ReportNode> reports) {
@@ -654,8 +654,6 @@ public final class ModificationUtils {
         } else {
             createNewConnectivityPosition(connectablePositionAdder, modificationInfos, reports, isBranch);
         }
-        modifyInjectionConnection(modificationInfos, injection, reports);
-        return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
 
     private void modifyExistingConnectivityPosition(ConnectablePosition<?> connectablePosition,
@@ -724,7 +722,7 @@ public final class ModificationUtils {
                                    Object modificationInfos,
                                    List<ReportNode> reports,
                                    int feederNumber) {
-        ReportNode connectionNameReport =  applyElementaryModificationsAndReturnReport(feeder::withName,
+        ReportNode connectionNameReport = applyElementaryModificationsAndReturnReport(feeder::withName,
                 () -> null,
                 getConnectionName(modificationInfos, feederNumber),
                 getConnectionNameField(feederNumber));
