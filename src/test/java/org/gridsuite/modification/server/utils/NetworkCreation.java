@@ -194,10 +194,15 @@ public final class NetworkCreation {
             .endStep()
             .add();
 
+        createSwitch(v1, "v1btrf1", "v1btrf1", SwitchKind.BREAKER, true, false, false, 4, 5);
+        createSwitch(v1, "v1dtrf1", "v1dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 5, 0);
+        createSwitch(v2, "v2btrf1", "v2btrf1", SwitchKind.BREAKER, true, false, false, 14, 15);
+        createSwitch(v2, "v2dtrf1", "v2dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 15, 1);
+
         TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, "trf2", "trf2", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
-            5, 15, v1.getId(), v2.getId(),
-            "trf1", 1, ConnectablePosition.Direction.TOP,
-            "trf1", 2, ConnectablePosition.Direction.TOP);
+            40, 150, v1.getId(), v2.getId(),
+            "trf2", 1, ConnectablePosition.Direction.TOP,
+            "trf2", 2, ConnectablePosition.Direction.TOP);
         Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
             "v3load",
             "LOAD",
@@ -226,10 +231,9 @@ public final class NetworkCreation {
             .endStep()
             .add();
 
-        createSwitch(v1, "v1btrf1", "v1btrf1", SwitchKind.BREAKER, true, false, false, 4, 5);
-        createSwitch(v1, "v1dtrf1", "v1dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 5, 0);
-        createSwitch(v2, "v2btrf1", "v2btrf1", SwitchKind.BREAKER, true, false, false, 14, 15);
-        createSwitch(v2, "v2dtrf1", "v2dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 15, 1);
+        createSwitch(v1, "v1btrf2", "v1btrf2", SwitchKind.BREAKER, true, false, false, 40, 50);
+        createSwitch(v1, "v1dtrf2", "v1dtrf2", SwitchKind.DISCONNECTOR, true, false, false, 50, 0);
+        createSwitch(v2, "v2dtrf2", "v2dtrf2", SwitchKind.DISCONNECTOR, true, false, false, 150, 1);
 
         ThreeWindingsTransformer t3 = createThreeWindingsTransformer(s1, "trf6", "trf6", v1.getId(), v2.getId(), v4.getId(),
             0.5, 0.5, 0.5, 1., 1., 1., 0.1, 0.1,
