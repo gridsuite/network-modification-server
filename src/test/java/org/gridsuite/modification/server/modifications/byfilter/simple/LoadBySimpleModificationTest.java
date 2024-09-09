@@ -17,7 +17,6 @@ import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.EnumModificationByFilterInfos;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;
 import java.util.List;
@@ -92,16 +91,6 @@ public class LoadBySimpleModificationTest extends AbstractBySimpleModificationTe
     }
 
     @Override
-    protected IdentifiableType getIdentifiableType() {
-        return IdentifiableType.LOAD;
-    }
-
-    @Override
-    protected EquipmentType getEquipmentType() {
-        return EquipmentType.LOAD;
-    }
-
-    @Override
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(25, getNetwork().getLoad(LOAD_ID_1).getP0(), 0);
         assertEquals(25, getNetwork().getLoad(LOAD_ID_2).getP0(), 0);
@@ -120,7 +109,13 @@ public class LoadBySimpleModificationTest extends AbstractBySimpleModificationTe
     }
 
     @Override
-    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // TODO later
+    protected IdentifiableType getIdentifiableType() {
+        return IdentifiableType.LOAD;
     }
+
+    @Override
+    protected EquipmentType getEquipmentType() {
+        return EquipmentType.LOAD;
+    }
+
 }
