@@ -118,10 +118,6 @@ public class ByFormulaModification extends AbstractModification {
     }
 
     private void report(ReportNode formulaSubReportNode, List<ReportNode> formulaReports) {
-        formulaSubReportNode.newReportNode()
-                .withMessageTemplate("appliedFormulasModifications", "  Formulas")
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
         formulaReports.forEach(report -> insertReportNode(formulaSubReportNode, report));
     }
 
