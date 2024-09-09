@@ -168,7 +168,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                     .withUntypedValue(VALUE_KEY_EQUIPMENT_COUNT, equipmentCount)
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
-                report(subReporter, reports);
+                reports.forEach(report -> insertReportNode(subReporter, report));
             } else {
                 if (equipmentNotModifiedCount == equipmentCount) {
                     createReport(subReportNode, REPORT_KEY_BY_FILTER_MODIFICATION_NONE,
@@ -182,7 +182,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                         .withUntypedValue(VALUE_KEY_NB_UNCHANGED, equipmentNotModifiedCount + equipmentNotFoundCount)
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .add();
-                    report(subReporter, reports);
+                    reports.forEach(report -> insertReportNode(subReporter, report));
                 }
             }
         }
@@ -364,15 +364,6 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
             reports.addAll(equipmentsReport);
         }
-    }
-
-    private void report(ReportNode subReportNode, List<ReportNode> reports) {
-        subReportNode.newReportNode()
-            .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS_INFO, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}s")
-            .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, StringUtils.capitalize(getModificationTypeLabel()))
-            .withSeverity(TypedValue.INFO_SEVERITY)
-            .add();
-        reports.forEach(report -> insertReportNode(subReportNode, report));
     }
 
 }
