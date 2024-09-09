@@ -101,7 +101,6 @@ class VoltageInitReportTest {
                 .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
                 .date(Instant.EPOCH)
                 .stashed(false)
-                .active(true)
                 .generators(List.of(
                     VoltageInitGeneratorModificationInfos.builder().generatorId("GTH2").targetV(0.1).build())) //added for test case
                 .transformers(List.of(
@@ -119,7 +118,6 @@ class VoltageInitReportTest {
                 .uuid(UUID.fromString("44444444-4444-4444-4444-444444444444"))
                 .date(Instant.EPOCH)
                 .stashed(false)
-                .active(true)
                 .generators(List.of(
                     VoltageInitGeneratorModificationInfos.builder().generatorId("G1").targetQ(10.).build(),
                     VoltageInitGeneratorModificationInfos.builder().generatorId("G2").targetV(226.).build()))

@@ -96,7 +96,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
-                .active(getActive())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 .substationId(getSubstationId())

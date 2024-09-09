@@ -40,11 +40,10 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
     protected ModificationInfos buildModification() {
 
         List<ModificationInfos> modifications = List.of(
-                SubstationModificationInfos.builder().active(true).equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.BE, OperationType.SET)).build(),
-                SubstationModificationInfos.builder().active(true).equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.BE, OperationType.SET)).build()
+                SubstationModificationInfos.builder().equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.BE, OperationType.SET)).build(),
+                SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.BE, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
                 .stashed(false)
@@ -54,11 +53,10 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                SubstationModificationInfos.builder().active(true).equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.JP, OperationType.SET)).build(),
-                SubstationModificationInfos.builder().active(true).equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.JP, OperationType.SET)).build()
+                SubstationModificationInfos.builder().equipmentId("s1").equipmentName(new AttributeModification<>("s1", OperationType.SET)).country(new AttributeModification<>(Country.JP, OperationType.SET)).build(),
+                SubstationModificationInfos.builder().equipmentId("s2").equipmentName(new AttributeModification<>("s2", OperationType.SET)).country(new AttributeModification<>(Country.JP, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
                 .stashed(false)

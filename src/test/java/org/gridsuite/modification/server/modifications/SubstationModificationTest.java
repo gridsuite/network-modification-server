@@ -44,7 +44,6 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     protected ModificationInfos buildModification() {
         return SubstationModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentId("s3")
             .equipmentName(new AttributeModification<>("newName", OperationType.SET))
             .country(new AttributeModification<>(Country.BQ, OperationType.SET))
@@ -60,7 +59,6 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
         return SubstationModificationInfos.builder()
             .equipmentId("s3Edited")
             .stashed(false)
-            .active(true)
             .equipmentName(new AttributeModification<>("newNameEdited1", OperationType.SET))
             .country(new AttributeModification<>(Country.JP, OperationType.SET))
             .properties(null)
@@ -96,7 +94,6 @@ public class SubstationModificationTest extends AbstractNetworkModificationTest 
     public void testCreateWithErrors() throws Exception {
         // Try to modify an unknown substation
         SubstationModificationInfos infos = SubstationModificationInfos.builder()
-                .active(true)
                 .equipmentId("unknown")
                 .country(new AttributeModification<>(Country.JP, OperationType.SET))
                 .build();

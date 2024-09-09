@@ -50,7 +50,6 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return VscCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("vsc1")
                 .equipmentName("vsc1Name")
                 .nominalV(39.)
@@ -72,7 +71,6 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
 
     private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
         return ConverterStationCreationInfos.builder()
-                .active(true)
                 .equipmentId("stationId2")
                 .equipmentName("station2")
                 .voltageRegulationOn(false)
@@ -104,7 +102,6 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .build();
 
         return ConverterStationCreationInfos.builder()
-                .active(true)
                 .equipmentId("stationId1")
                 .equipmentName("station1")
                 .voltageRegulationOn(true)
@@ -124,7 +121,6 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return VscCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("vsc1Edited")
                 .equipmentName("vsc2Name")
                 .nominalV(53.)

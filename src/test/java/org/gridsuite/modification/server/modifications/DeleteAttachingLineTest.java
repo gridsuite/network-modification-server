@@ -45,7 +45,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return DeleteAttachingLineInfos.builder()
                 .stashed(false)
-                .active(true)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -58,7 +57,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return DeleteAttachingLineInfos.builder()
                 .stashed(false)
-                .active(true)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l2")
                 .attachedLineId("l3")
@@ -86,7 +84,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         // test create with incorrect line id
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
                 .stashed(false)
-                .active(true)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("ll")
                 .attachedLineId("l2")
@@ -104,7 +101,6 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     public void createWithNoAttachmentPointTest() throws Exception {
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
                 .stashed(false)
-                .active(true)
                 .lineToAttachTo1Id("l1")
                 .lineToAttachTo2Id("l3")
                 .attachedLineId("l1")

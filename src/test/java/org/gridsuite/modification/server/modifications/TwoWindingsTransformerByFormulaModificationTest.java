@@ -95,7 +95,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .editedField(TwoWindingsTransformerField.R.name())
                 .build();
 
-        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().active(true).identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
+        checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of(formulaInfos2)).build(),
                 NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_ID_4)), false);
@@ -124,7 +124,6 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .build();
 
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder()
-                        .active(true)
                         .identifiableType(getIdentifiableType())
                         .formulaInfosList(List.of(formulaInfos))
                         .build(),

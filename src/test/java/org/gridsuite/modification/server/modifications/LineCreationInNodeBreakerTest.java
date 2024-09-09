@@ -102,7 +102,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Test
     public void testCreateLineWithOnlyPermanentCurrentLimits() throws Exception {
         LineCreationInfos lineCreation = LineCreationInfos.builder()
-                .active(true)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .r(110.0)
@@ -141,7 +140,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Test
     public void testCreateLineWithOnlyTemporaryCurrentLimits() throws Exception {
         LineCreationInfos lineCreation = LineCreationInfos.builder()
-                .active(true)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .r(110.0)
@@ -186,7 +184,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     @Test
     public void testCreateLineWithBothCurrentLimits() throws Exception {
         LineCreationInfos lineCreation = LineCreationInfos.builder()
-                .active(true)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .r(110.0)
@@ -230,7 +227,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, active=true), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
             lineCreation.toString()
         );
     }
@@ -244,7 +241,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModification() {
         return LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine")
                 .equipmentName("nameLine")
                 .r(100.0)
@@ -271,7 +267,6 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
                 .r(110.0)

@@ -56,7 +56,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .r(100.0)
@@ -81,7 +80,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine1")
                 .equipmentName("nameLine1")
                 .r(100.0)
@@ -110,7 +108,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters3() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .r(100.0)
@@ -136,7 +133,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters4() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .r(100.0)
@@ -164,7 +160,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters5() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine2")
                 .equipmentName("nameLine2")
                 .r(100.0)
@@ -185,7 +180,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     public void testCreateLineOptionalParameters6() throws Exception {
         LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("idLine3")
                 .equipmentName("nameLine3")
                 .r(100.0)
@@ -214,7 +208,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
         //         voltage level "v2" and busbar section "bus2"
         return LineCreationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentId("idLine1")
             .equipmentName("nameLine1")
             .r(100.0)
@@ -237,7 +230,6 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     protected ModificationInfos buildModificationUpdate() {
         return LineCreationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentId("idLineEdited1")
             .equipmentName("nameLineEdited1")
             .r(200.0)

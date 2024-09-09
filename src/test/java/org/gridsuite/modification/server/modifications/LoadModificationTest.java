@@ -43,7 +43,6 @@ public class LoadModificationTest extends AbstractInjectionModificationTest {
     protected ModificationInfos buildModification() {
         return LoadModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentId("v1load")
             .equipmentName(new AttributeModification<>("nameLoad1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.FICTITIOUS, OperationType.SET))
@@ -60,7 +59,6 @@ public class LoadModificationTest extends AbstractInjectionModificationTest {
         return LoadModificationInfos.builder()
             .equipmentId("v1loadEdited")
             .stashed(false)
-            .active(true)
             .equipmentName(new AttributeModification<>("nameLoadEdited1", OperationType.SET))
             .loadType(new AttributeModification<>(LoadType.AUXILIARY, OperationType.SET))
             .p0(new AttributeModification<>(300.0, OperationType.SET))
@@ -95,7 +93,6 @@ public class LoadModificationTest extends AbstractInjectionModificationTest {
         // Unset an attribute that should not be null
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("v1load")
                 .loadType(new AttributeModification<>(null, OperationType.UNSET))
                 .build();

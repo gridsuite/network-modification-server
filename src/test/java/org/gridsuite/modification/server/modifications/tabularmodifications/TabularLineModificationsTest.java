@@ -37,14 +37,13 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LineModificationInfos.builder().active(true).equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("line3").b1(new AttributeModification<>(40., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET)).build()
+                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(40., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
@@ -54,14 +53,13 @@ public class TabularLineModificationsTest extends AbstractNetworkModificationTes
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                LineModificationInfos.builder().active(true).equipmentId("line1").r(new AttributeModification<>(1., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET)).build(),
-                LineModificationInfos.builder().active(true).equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET)).build()
+                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(1., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(ModificationType.LINE_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)

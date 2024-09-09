@@ -36,11 +36,10 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                VoltageLevelModificationInfos.builder().active(true).equipmentId("v1").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build(),
-                VoltageLevelModificationInfos.builder().active(true).equipmentId("v2").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
+                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build(),
+                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(300., OperationType.SET)).highVoltageLimit(new AttributeModification<>(400., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(299., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
@@ -50,11 +49,10 @@ public class TabularVoltageLevelModificationsTest extends AbstractNetworkModific
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                VoltageLevelModificationInfos.builder().active(true).equipmentId("v1").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build(),
-                VoltageLevelModificationInfos.builder().active(true).equipmentId("v2").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
+                VoltageLevelModificationInfos.builder().equipmentId("v1").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build(),
+                VoltageLevelModificationInfos.builder().equipmentId("v2").nominalV(new AttributeModification<>(500., OperationType.SET)).highVoltageLimit(new AttributeModification<>(502., OperationType.SET)).lowVoltageLimit(new AttributeModification<>(499., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)

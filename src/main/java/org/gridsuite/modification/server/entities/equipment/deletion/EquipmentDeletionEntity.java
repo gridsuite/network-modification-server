@@ -60,7 +60,6 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
-                .active(getActive())
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
         if (equipmentInfos != null) {

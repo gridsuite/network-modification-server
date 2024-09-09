@@ -44,7 +44,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         EquipmentAttributeModificationInfos modificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .uuid(modificationUuid)
             .date(Instant.parse("2021-02-19T00:00:00Z"))
             .equipmentId("equipmentId")
@@ -52,11 +51,10 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00:00Z, stashed=false, messageType=null, messageValues=null, active=true), equipmentId=equipmentId, properties=null), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00:00Z, stashed=false, messageType=null, messageValues=null), equipmentId=equipmentId, properties=null), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -136,7 +134,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("close") // bad
             .equipmentAttributeValue(true)
@@ -168,7 +165,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     protected EquipmentAttributeModificationInfos buildModification() {
         return EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(true)
@@ -180,7 +176,6 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     protected EquipmentAttributeModificationInfos buildModificationUpdate() {
         return EquipmentAttributeModificationInfos.builder()
             .stashed(false)
-            .active(true)
             .equipmentType(IdentifiableType.SWITCH)
             .equipmentAttributeName("open")
             .equipmentAttributeValue(false)

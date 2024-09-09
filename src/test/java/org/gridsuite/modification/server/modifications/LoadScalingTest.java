@@ -202,7 +202,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         ModificationInfos modificationToCreate = LoadScalingInfos.builder()
             .stashed(false)
-            .active(true)
             .uuid(LOAD_SCALING_ID)
             .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
@@ -237,7 +236,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
-            .active(true)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
@@ -286,7 +284,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
 
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
-            .active(true)
             .variationType(VariationType.TARGET_P)
             .variations(List.of(variation))
             .build();
@@ -378,7 +375,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .stashed(false)
-            .active(true)
             .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1, variation2, variation3, variation4, variation5))
@@ -401,7 +397,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
 
         return LoadScalingInfos.builder()
             .stashed(false)
-            .active(true)
             .uuid(LOAD_SCALING_ID)
             .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
             .variationType(VariationType.TARGET_P)
@@ -507,7 +502,6 @@ public class LoadScalingTest extends AbstractNetworkModificationTest {
                 .build();
         LoadScalingInfos loadScalingInfo = LoadScalingInfos.builder()
                 .stashed(false)
-                .active(true)
                 .uuid(LOAD_SCALING_ID)
                 .date(Instant.now().truncatedTo(ChronoUnit.MICROS))
                 .variationType(VariationType.TARGET_P)

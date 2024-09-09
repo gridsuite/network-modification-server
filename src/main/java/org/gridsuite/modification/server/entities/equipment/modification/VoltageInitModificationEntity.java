@@ -180,7 +180,6 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .date(getDate())
             .uuid(getId())
             .stashed(getStashed())
-            .active(getActive())
             .generators(toGeneratorsModification(generators))
             .transformers(toTransformersModification(transformers))
             .staticVarCompensators(toStaticVarCompensatorsModification(staticVarCompensators))

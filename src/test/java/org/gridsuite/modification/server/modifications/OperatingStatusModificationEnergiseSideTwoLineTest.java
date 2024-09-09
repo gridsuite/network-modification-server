@@ -48,7 +48,6 @@ public class OperatingStatusModificationEnergiseSideTwoLineTest extends Abstract
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId(TARGET_LINE_ID)
                 .energizedVoltageLevelId("vl2")
                 .action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_TWO).build();
@@ -58,7 +57,6 @@ public class OperatingStatusModificationEnergiseSideTwoLineTest extends Abstract
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("line1")
                 .energizedVoltageLevelId("vl2_bis")
                 .action(OperatingStatusModificationInfos.ActionType.TRIP).build();

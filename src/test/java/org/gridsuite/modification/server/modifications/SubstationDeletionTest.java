@@ -34,7 +34,6 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModification() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentType(IdentifiableType.SUBSTATION)
                 .equipmentId("s1")
                 .build();
@@ -44,7 +43,6 @@ public class SubstationDeletionTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         return EquipmentDeletionInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentType(IdentifiableType.LINE)
                 .equipmentId("v2")
                 .build();

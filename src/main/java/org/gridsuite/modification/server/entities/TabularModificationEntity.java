@@ -48,7 +48,6 @@ public class TabularModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
-                .active(getActive())
                 .modificationType(modificationType)
                 .modifications(modificationsInfos)
                 .build();

@@ -144,7 +144,6 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
 
     private VscModificationInfos.VscModificationInfosBuilder<?, ?> toVscModificationInfosBuilder() {
         return VscModificationInfos.builder()
-                .active(getActive())
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())

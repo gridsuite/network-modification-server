@@ -55,7 +55,6 @@ public class SubstationModificationEntity extends BasicEquipmentModificationEnti
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
-                .active(getActive())
                 .equipmentId(getEquipmentId())
                 .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .country(AttributeModification.toAttributeModification(getCountry(), getCountryOp()))

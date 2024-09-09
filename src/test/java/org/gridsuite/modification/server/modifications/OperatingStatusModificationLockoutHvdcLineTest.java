@@ -43,7 +43,6 @@ public class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetw
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId(TARGET_HVDC_LINE_ID)
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();
@@ -53,7 +52,6 @@ public class OperatingStatusModificationLockoutHvdcLineTest extends AbstractNetw
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
                 .stashed(false)
-                .active(true)
                 .equipmentId("hvdcLineEdited")
                 .energizedVoltageLevelId("energizedVoltageLevelId")
                 .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();

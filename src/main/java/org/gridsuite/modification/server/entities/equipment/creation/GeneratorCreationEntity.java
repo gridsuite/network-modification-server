@@ -167,7 +167,6 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
-            .active(getActive())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // injection

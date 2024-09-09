@@ -57,11 +57,10 @@ import static org.mockito.Mockito.when;
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                ShuntCompensatorModificationInfos.builder().active(true).equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(100, OperationType.SET)).sectionCount(new AttributeModification<>(10, OperationType.SET)).build(),
-                ShuntCompensatorModificationInfos.builder().active(true).equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(200, OperationType.SET)).sectionCount(new AttributeModification<>(20, OperationType.SET)).build()
+                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(100, OperationType.SET)).sectionCount(new AttributeModification<>(10, OperationType.SET)).build(),
+                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(200, OperationType.SET)).sectionCount(new AttributeModification<>(20, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
@@ -71,11 +70,10 @@ import static org.mockito.Mockito.when;
     @Override
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
-                ShuntCompensatorModificationInfos.builder().active(true).equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build(),
-                ShuntCompensatorModificationInfos.builder().active(true).equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build()
+                ShuntCompensatorModificationInfos.builder().equipmentId("v2shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build(),
+                ShuntCompensatorModificationInfos.builder().equipmentId("v5shunt").maximumSectionCount(new AttributeModification<>(500, OperationType.SET)).sectionCount(new AttributeModification<>(50, OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
-                .active(true)
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
                 .stashed(false)
@@ -118,7 +116,6 @@ import static org.mockito.Mockito.when;
     void testCheckModificationConflict() {
         var shuntModification = ShuntCompensatorModificationInfos
                 .builder()
-                .active(true)
                 .equipmentId("id")
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .maxSusceptance(AttributeModification.toAttributeModification(10.0, OperationType.SET))
@@ -126,7 +123,6 @@ import static org.mockito.Mockito.when;
 
         var tabularModificationInfos = TabularModificationInfos
                 .builder()
-                .active(true)
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
@@ -155,14 +151,12 @@ import static org.mockito.Mockito.when;
     void testCheckModificationNonLinear() {
         var shuntModification = ShuntCompensatorModificationInfos
                 .builder()
-                .active(true)
                 .equipmentId("id")
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .build();
 
         var tabularModificationInfos = TabularModificationInfos
                 .builder()
-                .active(true)
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
@@ -186,14 +180,12 @@ import static org.mockito.Mockito.when;
     void testCheckModificationOK() {
         var shuntModification = ShuntCompensatorModificationInfos
                 .builder()
-                .active(true)
                 .equipmentId("id")
                 .maxQAtNominalV(AttributeModification.toAttributeModification(1.0, OperationType.SET))
                 .build();
 
         var tabularModificationInfos = TabularModificationInfos
                 .builder()
-                .active(true)
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(Collections.singletonList(shuntModification))
                 .build();
