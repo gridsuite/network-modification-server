@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.EnumModificationByFilterInfos;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;
 import java.util.List;
@@ -116,6 +117,11 @@ public class LoadBySimpleModificationTest extends AbstractBySimpleModificationTe
     @Override
     protected EquipmentType getEquipmentType() {
         return EquipmentType.LOAD;
+    }
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        // TODO later
     }
 
 }
