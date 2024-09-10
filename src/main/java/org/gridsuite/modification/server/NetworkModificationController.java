@@ -232,13 +232,8 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")
     public ResponseEntity<Void> stashNetworkModifications(
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-            @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
-            @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
-        if (Boolean.TRUE.equals(stashed)) {
-            networkModificationService.stashNetworkModifications(networkModificationUuids);
-        } else {
-            networkModificationService.restoreNetworkModifications(networkModificationUuids);
-        }
+            @Parameter(description = "stash or restore network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
+        networkModificationService.stashNetworkModifications(networkModificationUuids, stashed);
         return ResponseEntity.ok().build();
     }
 

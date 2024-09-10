@@ -388,23 +388,12 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, Boolean stashed) {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
-            modificationEntity.setStashed(true);
-            this.modificationRepository.save(modificationEntity);
-        }
-    }
-
-    @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
-            modificationEntity.setStashed(false);
+            modificationEntity.setStashed(stashed);
             this.modificationRepository.save(modificationEntity);
         }
     }
