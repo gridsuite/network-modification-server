@@ -274,8 +274,8 @@ public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySi
                 .editedField(TwoWindingsTransformerField.RATED_S.name())
                 .value(2.)
                 .build();
-
-        return List.of(simpleInfos1,
+        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
+        infosList.addAll(List.of(simpleInfos1,
                 simpleInfos2,
                 simpleInfos3,
                 simpleInfos4,
@@ -289,7 +289,9 @@ public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySi
                 simpleInfos12,
                 simpleInfos13,
                 simpleInfos14,
-                simpleInfos15);
+                simpleInfos15));
+
+        return infosList;
     }
 
     @Override

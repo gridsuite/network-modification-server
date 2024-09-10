@@ -60,6 +60,16 @@ public class BySimpleModification extends AbstractByFilterModification {
     }
 
     @Override
+    protected boolean isEquipmentEditable(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos, List<ReportNode> equipmentsReport) {
+        AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos = (AbstractSimpleModificationByFilterInfos<?>) modificationByFilterInfos;
+        if (simpleModificationInfos.getDataType() == DataType.PROPERTY) {
+            return true;
+        } else {
+            return super.isEquipmentEditable(equipment, modificationByFilterInfos, equipmentsReport);
+        }
+    }
+
+    @Override
     protected boolean preCheckValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
         return true;
     }

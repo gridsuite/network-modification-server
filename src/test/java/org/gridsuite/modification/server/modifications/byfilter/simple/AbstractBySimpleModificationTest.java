@@ -19,8 +19,10 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.BySimpleModificationInfos;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.simple.PropertyModificationByFilterInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.service.FilterService;
@@ -38,6 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -254,7 +258,16 @@ public abstract class AbstractBySimpleModificationTest extends AbstractNetworkMo
 
     protected abstract List<AbstractFilter> getTestFilters();
 
-    protected abstract List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos();
+    protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
+        PropertyModificationByFilterInfos spySimpleInfos = spy(PropertyModificationByFilterInfos.builder()
+                .editedField(DataType.PROPERTY.name())
+                .propertyName("propertyName")
+                .value("propertyValue")
+                .filters(List.of(filter1))
+                .build());
+        doReturn(DataType.PROPERTY).when(spySimpleInfos).getDataType();
+        return new ArrayList<>(List.of(spySimpleInfos));
+    }
 
     protected abstract List<AbstractSimpleModificationByFilterInfos<?>> getUpdatedSimpleModificationInfos();
 

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Tag;
 import java.util.Date;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -169,6 +170,7 @@ public class GeneratorBySimpleModificationTest extends AbstractBySimpleModificat
 
     @Override
     protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
+
         DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
                 .editedField(GeneratorField.REACTIVE_POWER_SET_POINT.name())
                 .value(50.)
@@ -253,7 +255,9 @@ public class GeneratorBySimpleModificationTest extends AbstractBySimpleModificat
                 .filters(List.of(filter1))
                 .build();
 
-        return List.of(simpleInfos1,
+        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
+        infosList.addAll(List.of(
+                simpleInfos1,
                 simpleInfos2,
                 simpleInfos3,
                 simpleInfos4,
@@ -267,7 +271,9 @@ public class GeneratorBySimpleModificationTest extends AbstractBySimpleModificat
                 simpleInfos12,
                 simpleInfos13,
                 simpleInfos14
-        );
+        ));
+
+        return infosList;
     }
 
     @Override
@@ -292,6 +298,7 @@ public class GeneratorBySimpleModificationTest extends AbstractBySimpleModificat
         Generator generator1 = getNetwork().getGenerator(GENERATOR_ID_1);
         GeneratorStartup generatorStartup1 = generator1.getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup1);
+        assertThat(generator1.getProperty("propertyName")).isEqualTo("propertyValue");
         assertEquals(100, generator1.getTargetP(), 0);
         assertEquals(2, generatorStartup1.getMarginalCost(), 0);
         assertEquals(55, generatorStartup1.getPlannedOutageRate(), 0);
@@ -304,6 +311,7 @@ public class GeneratorBySimpleModificationTest extends AbstractBySimpleModificat
         Generator generator2 = getNetwork().getGenerator(GENERATOR_ID_2);
         GeneratorStartup generatorStartup2 = generator2.getExtension(GeneratorStartup.class);
         assertNotNull(generatorStartup2);
+        assertThat(generator2.getProperty("propertyName")).isEqualTo("propertyValue");
         assertEquals(200, generator2.getTargetP(), 0);
         assertEquals(2, generatorStartup2.getMarginalCost(), 0);
         assertEquals(55, generatorStartup2.getPlannedOutageRate(), 0);

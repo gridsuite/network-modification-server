@@ -151,7 +151,10 @@ public class VoltageLevelBySimpleModificationTest extends AbstractBySimpleModifi
                 .filters(List.of(filter4))
                 .build();
 
-        return List.of(simpleInfos1, simpleInfos2, simpleInfos3);
+        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
+        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3));
+
+        return infosList;
     }
 
     @Override

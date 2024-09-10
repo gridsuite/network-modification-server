@@ -106,7 +106,10 @@ public class ShuntCompensatorBySimpleModificationTest extends AbstractBySimpleMo
                 .filters(List.of(filter5))
                 .build();
 
-        return List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4);
+        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
+        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4));
+
+        return infosList;
     }
 
     @Override

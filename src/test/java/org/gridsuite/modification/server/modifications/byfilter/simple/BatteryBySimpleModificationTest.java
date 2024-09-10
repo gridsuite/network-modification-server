@@ -127,7 +127,10 @@ public class BatteryBySimpleModificationTest extends AbstractBySimpleModificatio
                 .value(2.)
                 .build();
 
-        return List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4, simpleInfos5);
+        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
+        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4, simpleInfos5));
+
+        return infosList;
     }
 
     @Override

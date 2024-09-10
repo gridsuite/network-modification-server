@@ -65,7 +65,6 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     public static final String REPORT_KEY_EQUIPMENT_MODIFIED_REPORT = "equipmentModifiedReport";
     public static final String REPORT_KEY_EQUIPMENT_MODIFIED_REPORT_EXCEPTION = "equipmentModifiedReportException";
     public static final String REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS = "appliedByFilterModifications";
-    public static final String REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS_INFO = "appliedByFilterModificationsInfo";
     public static final String REPORT_KEY_BY_FILTER_MODIFICATION = "byFilterModification";
     public static final String REPORT_KEY_BY_FILTER_MODIFICATION_ALL = "byFilterModificationAll";
     public static final String REPORT_KEY_BY_FILTER_MODIFICATION_NONE = "byFilterModificationNone";
@@ -188,7 +187,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
         }
     }
 
-    private boolean isEquipmentEditable(Identifiable<?> equipment,
+    protected boolean isEquipmentEditable(Identifiable<?> equipment,
                                           AbstractModificationByFilterInfos modificationByFilterInfos,
                                           List<ReportNode> equipmentsReport) {
         if (modificationByFilterInfos.getEditedField() == null) {

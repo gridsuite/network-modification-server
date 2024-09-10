@@ -77,7 +77,10 @@ public class LoadBySimpleModificationTest extends AbstractBySimpleModificationTe
                 .filters(List.of(filter1))
                 .build();
 
-        return List.of(simpleInfos1, simpleInfos2, simpleInfos3);
+        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
+        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3));
+
+        return infosList;
     }
 
     @Override
