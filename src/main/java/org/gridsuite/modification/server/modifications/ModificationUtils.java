@@ -1134,14 +1134,14 @@ public final class ModificationUtils {
         }
     }
 
-    public void checkStandByAutomateCreation(Boolean standBy, Double b0, Double q0,
-                                             Double minSusceptance, Double maxSusceptance,
-                                             Double minQAtNominalV, Double maxQAtNominalV,
-                                             StaticVarCompensator.RegulationMode regulationMode,
-                                             NetworkModificationException.Type errorType,
-                                             String equipmentId,
-                                             String equipmentName) {
-        if (Boolean.TRUE.equals(standBy) && regulationMode != StaticVarCompensator.RegulationMode.VOLTAGE) {
+    public void checkStandbyAutomatonCreation(Boolean standby, Double b0, Double q0,
+                                              Double minSusceptance, Double maxSusceptance,
+                                              Double minQAtNominalV, Double maxQAtNominalV,
+                                              StaticVarCompensator.RegulationMode regulationMode,
+                                              NetworkModificationException.Type errorType,
+                                              String equipmentId,
+                                              String equipmentName) {
+        if (Boolean.TRUE.equals(standby) && regulationMode != StaticVarCompensator.RegulationMode.VOLTAGE) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName, "Regulation mode is expected to be voltage");
         }
         if (Objects.nonNull(b0) && Objects.nonNull(minSusceptance) && Objects.nonNull(maxSusceptance) && (b0 < minSusceptance || b0 > maxSusceptance)
@@ -1342,7 +1342,7 @@ public final class ModificationUtils {
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
         }
     }
 }

@@ -1311,7 +1311,7 @@ public class ModificationRepositoryTest {
                 .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
                 .connectionPosition(2)
                 .regulationMode(VOLTAGE)
-                .standByAutomateOn(true)
+                .standbyAutomateOn(true)
                 .standby(true)
                 .build().toEntity();
 

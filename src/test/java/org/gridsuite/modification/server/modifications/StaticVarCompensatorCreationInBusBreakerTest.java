@@ -65,7 +65,7 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
                 .regulatingTerminalVlId("v1")
                 .regulatingTerminalId("idGenerator1")
                 .regulatingTerminalType("GENERATOR")
-                .standByAutomateOn(true)
+                .standbyAutomateOn(true)
                 .standby(true)
                 .b0(221.0)
                 .lowVoltageSetpoint(200.0)

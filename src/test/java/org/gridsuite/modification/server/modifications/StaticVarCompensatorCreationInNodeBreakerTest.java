@@ -62,7 +62,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
                 .voltageSetpoint(120.0)
                 .reactivePowerSetpoint(300.0)
                 .voltageRegulationType(VoltageRegulationType.LOCAL)
-                .standByAutomateOn(false)
+                .standbyAutomateOn(false)
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
@@ -73,7 +73,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
                 .stashed(false)
                 .equipmentId("idStaticVarCompensator1Edited")
                 .equipmentName("staticVarCompensatorNameEdited")
-                .standByAutomateOn(true)
+                .standbyAutomateOn(true)
                 .standby(true)
                 .b0(221.0)
                 .lowVoltageSetpoint(200.0)
@@ -195,9 +195,9 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
     }
 
     @Test
-    public void testCreateWithStandByAutomateErrors() throws Exception {
+    public void testCreateWithStandbyAutomatonErrors() throws Exception {
         StaticVarCompensatorCreationInfos compensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
-        compensatorCreationInfos.setStandByAutomateOn(true);
+        compensatorCreationInfos.setStandbyAutomateOn(true);
         compensatorCreationInfos.setB0(300.0);
 
         String compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);

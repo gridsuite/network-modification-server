@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="rehiligha (generated)" id="1724569400971-29">
+    <changeSet author="rehiligha (generated)" id="1726090378366-29">
         <createTable tableName="static_var_compensator_creation">
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name" type="VARCHAR(255)"/>
@@ -25,8 +25,8 @@
             <column name="regulating_terminal_type" type="VARCHAR(255)"/>
             <column name="regulating_terminal_vl_id" type="VARCHAR(255)"/>
             <column name="regulation_mode" type="VARCHAR(255)"/>
-            <column name="stand_by_automate_on" type="BOOLEAN"/>
             <column name="standby" type="BOOLEAN"/>
+            <column name="standby_automate_on" type="BOOLEAN"/>
             <column name="voltage_regulation_type" type="VARCHAR(255)"/>
             <column name="voltage_setpoint" type="FLOAT(53)"/>
             <column name="id" type="UUID">
@@ -34,7 +34,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="rehiligha (generated)" id="1724569400971-80">
+    <changeSet author="rehiligha (generated)" id="1726090378366-50">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="static_var_compensator_creation" constraintName="staticVarCompensatorCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>

@@ -34,16 +34,16 @@ import org.gridsuite.modification.server.modifications.StaticVarCompensatorCreat
 @JsonTypeName("STATIC_VAR_COMPENSATOR_CREATION")
 @ModificationErrorTypeName("CREATE_STATIC_VAR_COMPENSATOR_ERROR")
 public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
-    @Schema(description = "Maximal susceptance available")
+    @Schema(description = "Susceptance max")
     private Double maxSusceptance;
 
-    @Schema(description = "Minimum susceptance available")
+    @Schema(description = "Susceptance min")
     private Double minSusceptance;
 
-    @Schema(description = "Maximal qAtNominalV available")
+    @Schema(description = "Q max at nominal voltage")
     private Double maxQAtNominalV;
 
-    @Schema(description = "Minimum qAtNominalV available")
+    @Schema(description = "Q min at nominal voltage")
     private Double minQAtNominalV;
 
     @Schema(description = "regulation mode")
@@ -68,21 +68,21 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
     private String regulatingTerminalVlId;
 
     @Schema(description = "add standby automate")
-    private boolean standByAutomateOn;
+    private boolean standbyAutomateOn;
 
-    @Schema(description = "Minimum reactive power ")
+    @Schema(description = "Standby")
     private boolean standby;
 
-    @Schema(description = "Fix part of the susceptance")
+    @Schema(description = "Fixed part of susceptance")
     private Double b0;
 
-    @Schema(description = "Fix part of the reactive power")
+    @Schema(description = "Fixed part of Q at nominal voltage")
     private Double q0;
 
-    @Schema(description = "Low voltage setpoint ")
+    @Schema(description = "Low voltage set point ")
     private Double lowVoltageSetpoint;
 
-    @Schema(description = "High voltage setpoint")
+    @Schema(description = "High voltage set point")
     private Double highVoltageSetpoint;
 
     @Schema(description = "Low voltage threshold")
