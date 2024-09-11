@@ -39,19 +39,20 @@ public final class NetworkCreation {
         vl1.getNodeBreakerView().newBusbarSection()
                 .setId("b1")
                 .setName("b1")
-                .setNode(1)
+                .setNode(0)
                 .add();
-
-        createSwitch(vl1, "br11", "br11", SwitchKind.BREAKER, false, false, false, 2, 1);
-        createSwitch(vl1, "b4", "b4", SwitchKind.DISCONNECTOR, false, false, false, 1, 4);
-        createSwitch(vl1, "br21", "br21", SwitchKind.BREAKER, false, false, true, 4, 5);
 
         VoltageLevel vl2 = createVoltageLevel(s1, "vl2", "vl2", TopologyKind.NODE_BREAKER, 400.0);
         vl2.getNodeBreakerView().newBusbarSection()
                 .setId("b2")
                 .setName("b2")
-                .setNode(2)
+                .setNode(0)
                 .add();
+
+        createSwitch(vl1, "b4", "b4", SwitchKind.DISCONNECTOR, false, false, false, 0, 1);
+        createSwitch(vl1, "br11", "br11", SwitchKind.BREAKER, false, false, false, 1, 2);
+        createSwitch(vl2, "b5", "b5", SwitchKind.DISCONNECTOR, false, false, false, 0, 1);
+        createSwitch(vl2, "br21", "br21", SwitchKind.BREAKER, false, false, true, 1, 2);
 
         network.newLine()
                 .setId("line2")
@@ -64,8 +65,8 @@ public final class NetworkCreation {
                 .setG2(0.0)
                 .setB1(0.0)
                 .setB2(0.0)
-                .setNode1(5)
-                .setNode2(6)
+                .setNode1(2)
+                .setNode2(2)
                 .add();
 
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
@@ -158,10 +159,6 @@ public final class NetworkCreation {
         createSwitch(v3, "v3dBattery", "v3dBattery", SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v3, "v3bBattery", "v3bBattery", SwitchKind.BREAKER, true, false, false, 5, 6);
 
-        Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
-            "v3load",
-            "LOAD",
-            "V3");
         TwoWindingsTransformer t2 = createTwoWindingsTransformer(s1, "trf1", "trf1", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
             4, 14, v1.getId(), v2.getId(),
             "trf1", 1, ConnectablePosition.Direction.TOP,
@@ -197,10 +194,19 @@ public final class NetworkCreation {
             .endStep()
             .add();
 
+        createSwitch(v1, "v1btrf1", "v1btrf1", SwitchKind.BREAKER, true, false, false, 4, 5);
+        createSwitch(v1, "v1dtrf1", "v1dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 5, 0);
+        createSwitch(v2, "v2btrf1", "v2btrf1", SwitchKind.BREAKER, true, false, false, 14, 15);
+        createSwitch(v2, "v2dtrf1", "v2dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 15, 1);
+
         TwoWindingsTransformer twt2 = createTwoWindingsTransformer(s1, "trf2", "trf2", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
-            4, 14, v1.getId(), v2.getId(),
-            "trf1", 1, ConnectablePosition.Direction.TOP,
-            "trf1", 2, ConnectablePosition.Direction.TOP);
+            40, 150, v1.getId(), v2.getId(),
+            "trf2", 1, ConnectablePosition.Direction.TOP,
+            "trf2", 2, ConnectablePosition.Direction.TOP);
+        Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
+            "v3load",
+            "LOAD",
+            "V3");
         twt2.newPhaseTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)
@@ -225,10 +231,9 @@ public final class NetworkCreation {
             .endStep()
             .add();
 
-        createSwitch(v1, "v1btrf1", "v1btrf1", SwitchKind.BREAKER, true, false, false, 4, 5);
-        createSwitch(v1, "v1dtrf1", "v1dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 5, 0);
-        createSwitch(v2, "v2btrf1", "v2btrf1", SwitchKind.BREAKER, true, false, false, 14, 15);
-        createSwitch(v2, "v2dtrf1", "v2dtrf1", SwitchKind.DISCONNECTOR, true, false, false, 15, 1);
+        createSwitch(v1, "v1btrf2", "v1btrf2", SwitchKind.BREAKER, true, false, false, 40, 50);
+        createSwitch(v1, "v1dtrf2", "v1dtrf2", SwitchKind.DISCONNECTOR, true, false, false, 50, 0);
+        createSwitch(v2, "v2dtrf2", "v2dtrf2", SwitchKind.DISCONNECTOR, true, false, false, 150, 1);
 
         ThreeWindingsTransformer t3 = createThreeWindingsTransformer(s1, "trf6", "trf6", v1.getId(), v2.getId(), v4.getId(),
             0.5, 0.5, 0.5, 1., 1., 1., 0.1, 0.1,
@@ -520,11 +525,11 @@ public final class NetworkCreation {
         createSwitch(v2, "l1d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
         createSwitch(v2, "l1br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
 
-        createLine(network, "l2", null, "v1", "v3", 4, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "l2", 2, ConnectablePosition.Direction.TOP, "l2", 2, ConnectablePosition.Direction.TOP);
-        createSwitch(v1, "l2d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
-        createSwitch(v1, "l2br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
-        createSwitch(v3, "l2d3", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
-        createSwitch(v3, "l2br3", null, SwitchKind.BREAKER, true, false, false, 5, 4);
+        createLine(network, "l2", null, "v1", "v3", 6, 4, 10.0, 5.0, 3.5, 5.5, 4.5, 6.5, "l2", 2, ConnectablePosition.Direction.TOP, "l2", 2, ConnectablePosition.Direction.TOP);
+        createSwitch(v1, "l2d1", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 7);
+        createSwitch(v1, "l2br1", null, SwitchKind.BREAKER, true, false, false, 7, 6);
+        createSwitch(v3, "l2d2", null, SwitchKind.DISCONNECTOR, true, false, false, 0, 5);
+        createSwitch(v3, "l2br2", null, SwitchKind.BREAKER, true, false, false, 5, 4);
 
         return network;
     }
