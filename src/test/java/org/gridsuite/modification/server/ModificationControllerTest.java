@@ -103,7 +103,7 @@ public class ModificationControllerTest {
     private static final String URI_NETWORK_WITH_TEE_POINT_MODIF = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_TEE_POINT_ID + URI_NETWORK_MODIF_PARAMS;
 
     private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/line_types_catalog_1.json";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json";
 
     @Autowired
