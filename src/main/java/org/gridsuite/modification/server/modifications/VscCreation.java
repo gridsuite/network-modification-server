@@ -175,31 +175,14 @@ public class VscCreation extends AbstractModification {
                                                        ConverterStationCreationInfos converterStationCreationInfos,
                                                        ReportNode subReportNode,
                                                        String logFieldName) {
-<<<<<<< HEAD
         ReportNode converterStationReporter = subReportNode.newReportNode()
             .withMessageTemplate("converterStationCreated", "New converter station with id=${id} created")
             .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
             .add();
-||||||| 4d9293cf
-        ReportNode converterStationReporter = subReportNode.newReportNode().withMessageTemplate("converterStationCreated" + logFieldName, logFieldName).add();
-=======
-        ReportNode converterStationReporter = subReportNode.newReportNode().withMessageTemplate("converterStationCreationContainer" + logFieldName, logFieldName).add();
->>>>>>> main
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());
         VscConverterStation vscConverterStation = voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER ?
                 createConverterStationInNodeBreaker(network, voltageLevel, converterStationCreationInfos, converterStationReporter) :
                 createConverterStationInBusBreaker(voltageLevel, converterStationCreationInfos, converterStationReporter);
-        converterStationReporter.newReportNode()
-<<<<<<< HEAD
-                .withMessageTemplate("converterStationCreated" + logFieldName, logFieldName + " with id=${id} created :")
-||||||| 4d9293cf
-                .withMessageTemplate("converterStationCreated" + logFieldName, "New converter station with id=${id} created")
-=======
-                .withMessageTemplate("converterStationCreationLog" + logFieldName, "New converter station with id=${id} created")
->>>>>>> main
-                .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
 
         if (!converterStationCreationInfos.isTerminalConnected()) {
             vscConverterStation.getTerminal().disconnect();
