@@ -176,7 +176,8 @@ public class VscCreation extends AbstractModification {
                                                        ReportNode subReportNode,
                                                        String logFieldName) {
         ReportNode converterStationReporter = subReportNode.newReportNode()
-            .withMessageTemplate("converterStationCreated", "New converter station with id=${id} created")
+            .withMessageTemplate("converterStationCreated", "${fieldName} with id=${id} created")
+            .withUntypedValue("fieldName", logFieldName)
             .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
             .add();
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, converterStationCreationInfos.getVoltageLevelId());
