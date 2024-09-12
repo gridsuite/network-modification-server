@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -33,7 +34,7 @@ public enum VoltageLevelField {
         };
     }
 
-    public static void setNewValue(VoltageLevel voltageLevel, String voltageLevelField, String newValue) {
+    public static void setNewValue(VoltageLevel voltageLevel, String voltageLevelField, @NotNull String newValue) {
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         VoltageLevelField field = VoltageLevelField.valueOf(voltageLevelField);
         switch (field) {

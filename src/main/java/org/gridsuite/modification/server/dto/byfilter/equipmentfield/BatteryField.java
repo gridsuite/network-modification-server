@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -34,7 +35,7 @@ public enum BatteryField {
         };
     }
 
-    public static void setNewValue(Battery battery, String batteryField, String newValue) {
+    public static void setNewValue(Battery battery, String batteryField, @NotNull String newValue) {
         BatteryField field = BatteryField.valueOf(batteryField);
         switch (field) {
             case MINIMUM_ACTIVE_POWER -> battery.setMinP(Double.parseDouble(newValue));

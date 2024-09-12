@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -54,7 +55,7 @@ public enum TwoWindingsTransformerField {
         };
     }
 
-    public static void setNewValue(TwoWindingsTransformer transformer, String twoWindingsTransformerField, String newValue) {
+    public static void setNewValue(TwoWindingsTransformer transformer, String twoWindingsTransformerField, @NotNull String newValue) {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();

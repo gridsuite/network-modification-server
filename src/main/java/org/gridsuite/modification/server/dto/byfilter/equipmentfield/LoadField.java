@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Load;
 import com.powsybl.iidm.network.LoadType;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -27,10 +28,10 @@ public enum LoadField {
         };
     }
 
-    public static void setNewValue(Load load, String loadField, String newValue) {
+    public static void setNewValue(Load load, String loadField, @NotNull String newValue) {
         LoadField field = LoadField.valueOf(loadField);
         switch (field) {
-            case LOAD_TYPE -> load.setLoadType(newValue != null ? LoadType.valueOf(newValue) : null);
+            case LOAD_TYPE -> load.setLoadType(LoadType.valueOf(newValue));
             case ACTIVE_POWER -> load.setP0(Double.parseDouble(newValue));
             case REACTIVE_POWER -> load.setQ0(Double.parseDouble(newValue));
         }

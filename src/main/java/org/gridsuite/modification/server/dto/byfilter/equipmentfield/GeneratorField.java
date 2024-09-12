@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.*;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -55,7 +56,7 @@ public enum GeneratorField {
         };
     }
 
-    public static void setNewValue(Generator generator, String generatorField, String newValue) {
+    public static void setNewValue(Generator generator, String generatorField, @NotNull String newValue) {
         GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
         GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
         GeneratorField field = GeneratorField.valueOf(generatorField);

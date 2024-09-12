@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.ShuntCompensator;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.ShuntCompensatorModelType;
 import com.powsybl.iidm.network.VoltageLevel;
+import jakarta.validation.constraints.NotNull;
 import org.gridsuite.modification.server.NetworkModificationException;
 
 /**
@@ -33,7 +34,7 @@ public enum ShuntCompensatorField {
         };
     }
 
-    public static void setNewValue(ShuntCompensator shuntCompensator, String shuntCompensatorField, String newValue) {
+    public static void setNewValue(ShuntCompensator shuntCompensator, String shuntCompensatorField, @NotNull String newValue) {
         if (shuntCompensator.getModelType() != ShuntCompensatorModelType.LINEAR) {
             throw new NetworkModificationException(NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR,
                     String.format("Shunt compensator with %s model is not supported", shuntCompensator.getModelType()));
