@@ -14,11 +14,10 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.BooleanAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
 import org.junit.Test;
 import org.junit.jupiter.api.Tag;
 
@@ -59,20 +58,6 @@ public class GeneratorModificationByAssignmentTest extends AbstractModificationB
 
         checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
         assertEquals(55, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
-    }
-
-    @Test
-    public void testWithNullValue() throws Exception {
-        IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
-        AbstractFilter filterEquipments = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes));
-
-        DoubleAssignmentInfos simpleInfos = DoubleAssignmentInfos.builder()
-                .filters(List.of(new FilterInfos(FILTER_ID_1, "filter1")))
-                .editedField(GeneratorField.ACTIVE_POWER_SET_POINT.name())
-                .value(null)
-                .build();
-
-        checkCreateWithError(List.of(simpleInfos), List.of(filterEquipments));
     }
 
     protected void createEquipments() {

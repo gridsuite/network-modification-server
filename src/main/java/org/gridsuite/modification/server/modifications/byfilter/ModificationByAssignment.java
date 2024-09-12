@@ -87,6 +87,9 @@ public class ModificationByAssignment extends AbstractModificationByAssignment {
     @Override
     protected String getNewValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos) {
         AssignmentInfos<?> simpleModificationInfos = (AssignmentInfos<?>) abstractAssignmentInfos;
+        if (simpleModificationInfos.getValue() == null) {
+            throw new NetworkModificationException(MODIFICATION_BY_ASSIGNMENT_ERROR, "There is no value in assignment");
+        }
         return simpleModificationInfos.getValue().toString();
     }
 
