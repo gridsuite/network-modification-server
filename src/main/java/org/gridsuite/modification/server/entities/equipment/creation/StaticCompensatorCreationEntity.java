@@ -61,7 +61,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     private String regulatingTerminalVlId;
 
     @Column
-    private boolean standbyAutomateOn;
+    private boolean standbyAutomatonOn;
 
     @Column
     private boolean standby;
@@ -108,7 +108,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
         this.regulatingTerminalId = creationInfos.getRegulatingTerminalId();
         this.regulatingTerminalType = creationInfos.getRegulatingTerminalType();
         this.regulatingTerminalVlId = creationInfos.getRegulatingTerminalVlId();
-        this.standbyAutomateOn = creationInfos.isStandbyAutomateOn();
+        this.standbyAutomatonOn = creationInfos.isStandbyAutomatonOn();
         this.standby = creationInfos.isStandby();
         this.b0 = creationInfos.getB0();
         this.q0 = creationInfos.getQ0();
@@ -150,7 +150,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())
             // Standby automaton
-            .standbyAutomateOn(isStandbyAutomateOn())
+            .standbyAutomatonOn(isStandbyAutomatonOn())
             .standby(isStandby())
             .b0(getB0())
             .q0(getQ0())

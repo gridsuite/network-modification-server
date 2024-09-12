@@ -77,7 +77,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         if (Objects.isNull(modificationInfos.getMinSusceptance()) && Objects.nonNull(modificationInfos.getMinQAtNominalV())) {
             modificationInfos.setMinSusceptance((modificationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2));
         }
-        if (Boolean.TRUE.equals(modificationInfos.isStandbyAutomateOn()) && Objects.isNull(modificationInfos.getB0())
+        if (Boolean.TRUE.equals(modificationInfos.isStandbyAutomatonOn()) && Objects.isNull(modificationInfos.getB0())
             && Objects.nonNull(modificationInfos.getQ0())) {
             modificationInfos.setB0((modificationInfos.getQ0()) / Math.pow(voltageLevel.getNominalV(), 2));
         }
@@ -142,7 +142,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
 
     private void reportStaticVarCompensatorStandbyAutomaton(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
                                                             StaticVarCompensator staticVarCompensator, ReportNode subReportNode) {
-        if (Boolean.TRUE.equals(staticVarCompensatorCreationInfos.isStandbyAutomateOn())) {
+        if (Boolean.TRUE.equals(staticVarCompensatorCreationInfos.isStandbyAutomatonOn())) {
             List<ReportNode> standbyAutomatonReports = new ArrayList<>();
             try {
                 staticVarCompensator.newExtension(StandbyAutomatonAdder.class)

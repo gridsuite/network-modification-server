@@ -67,8 +67,8 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
     @Schema(description = "Regulating terminal voltage level id")
     private String regulatingTerminalVlId;
 
-    @Schema(description = "add standby automate")
-    private boolean standbyAutomateOn;
+    @Schema(description = "standby automaton on")
+    private boolean standbyAutomatonOn;
 
     @Schema(description = "Standby")
     private boolean standby;
