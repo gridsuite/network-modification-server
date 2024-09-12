@@ -8,6 +8,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.FilterInfos;
@@ -17,7 +18,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.Variati
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -30,6 +30,7 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
     @Enumerated(EnumType.STRING)
     private DataType dataType;
 
+    @NotNull
     @Column(name = "value_") // "value" is not supported in UT with H2
     private String value; // all values of different data types will be serialized as a string, deserialization is based on dataType
 
@@ -45,20 +46,20 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
     public AssignmentEntity(AssignmentInfos<?> assignmentInfos) {
         super(assignmentInfos);
         this.dataType = assignmentInfos.getDataType();
-        this.value = Optional.ofNullable(assignmentInfos.getValue()).map(Object::toString).orElse(null);
+        this.value = assignmentInfos.getValue().toString();
         this.filters = assignmentInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
     }
 
-    public AssignmentInfos<?> toSimpleModificationInfos() {
+    public AssignmentInfos<?> toAssignmentInfos() {
         AssignmentInfos<?> assignmentInfos = switch (dataType) {
             case BOOLEAN -> BooleanAssignmentInfos.builder()
-                .value(value != null ? Boolean.valueOf(value) : null)
+                .value(Boolean.valueOf(value))
                 .build();
             case INTEGER -> IntegerAssignmentInfos.builder()
-                .value(value != null ? Integer.valueOf(value) : null)
+                .value(Integer.valueOf(value))
                 .build();
             case DOUBLE -> DoubleAssignmentInfos.builder()
-                .value(value != null ? Double.valueOf(value) : null)
+                .value(Double.valueOf(value))
                 .build();
             case ENUM -> EnumAssignmentInfos.builder()
                 .value(value)

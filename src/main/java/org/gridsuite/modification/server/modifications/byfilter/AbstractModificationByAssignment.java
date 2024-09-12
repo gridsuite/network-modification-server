@@ -51,6 +51,7 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
     public static final String VALUE_KEY_OLD_VALUE = "oldValue";
     public static final String VALUE_KEY_NEW_VALUE = "newValue";
     public static final String VALUE_KEY_MODIFICATION_TYPE_LABEL = "modificationTypeLabel";
+    public static final String VALUE_KEY_FILTERS_EACH_ASSIGNMENT = "filtersEachAssignment";
     public static final String VALUE_KEY_ERROR_MESSAGE = "errorMessage";
     public static final String REPORT_KEY_RATIO_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR = "ratioTapChangerEquipmentModifiedError";
     public static final String REPORT_KEY_PHASE_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR = "phaseTapChangerEquipmentModifiedError";
@@ -65,7 +66,7 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
     public static final String REPORT_KEY_EQUIPMENT_MODIFIED_REPORT = "equipmentModifiedReport";
     public static final String REPORT_KEY_EQUIPMENT_MODIFIED_REPORT_EXCEPTION = "equipmentModifiedReportException";
     public static final String REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS = "appliedByFilterModifications";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION = "byFilterModification";
+    public static final String REPORT_KEY_APPLIED_ASSIGNMENT = "appliedAssignment";
     public static final String REPORT_KEY_BY_FILTER_MODIFICATION_ALL = "byFilterModificationAll";
     public static final String REPORT_KEY_BY_FILTER_MODIFICATION_NONE = "byFilterModificationNone";
     public static final String REPORT_KEY_BY_FILTER_MODIFICATION_NOT_FOUND = "byFilterModificationNotFound";
@@ -144,30 +145,31 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
 
         if (exportFilters != null) {
             ReportNode subReporter = subReportNode.newReportNode()
-                .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}s")
+                .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}s on ${" + VALUE_KEY_EQUIPMENT_TYPE + "} type")
                 .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, StringUtils.capitalize(getModificationTypeLabel()))
-                .add();
-            List<ReportNode> reports = new ArrayList<>();
-            // perform modifications
-            getAssignmentInfosList().forEach(abstractAssignmentInfos ->
-                abstractAssignmentInfos.getFilters().forEach(filterInfos ->
-                    applyOnFilterEquipments(network, exportFilters, reports, abstractAssignmentInfos, filterInfos)));
-            // reporting
-            subReportNode.newReportNode()
-                .withMessageTemplate(REPORT_KEY_BY_FILTER_MODIFICATION,
-                        "New ${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "} on ${" + VALUE_KEY_EQUIPMENT_TYPE + "}")
-                .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, getModificationTypeLabel())
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_TYPE, getEquipmentType().name())
-                .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
+            // perform modifications
+            getAssignmentInfosList().forEach(abstractAssignmentInfos -> {
+                List<ReportNode> reports = new ArrayList<>();
+                ReportNode eachAssignmentReporter = subReporter.newReportNode()
+                    .withMessageTemplate(REPORT_KEY_APPLIED_ASSIGNMENT, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "} on filters : ${" + VALUE_KEY_FILTERS_EACH_ASSIGNMENT + "}")
+                    .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, StringUtils.capitalize(getModificationTypeLabel()))
+                    .withUntypedValue(VALUE_KEY_FILTERS_EACH_ASSIGNMENT, abstractAssignmentInfos.getFilters().stream().map(FilterInfos::getName)
+                    .collect(Collectors.joining(", ")))
+                    .add();
+                abstractAssignmentInfos.getFilters().forEach(filterInfos -> applyOnFilterEquipments(network, exportFilters, reports, abstractAssignmentInfos, filterInfos));
+                reports.forEach(report -> insertReportNode(eachAssignmentReporter, report));
+            });
+            // reporting
             if (equipmentNotModifiedCount == 0 && equipmentNotFoundCount == 0) {
                 subReportNode.newReportNode()
                     .withMessageTemplate(REPORT_KEY_BY_FILTER_MODIFICATION_ALL,
-                            "All equipment have been modified : ${" + VALUE_KEY_EQUIPMENT_COUNT + "} equipment(s)")
+                            "All equipments have been modified : ${" + VALUE_KEY_EQUIPMENT_COUNT + "} equipment(s)")
                     .withUntypedValue(VALUE_KEY_EQUIPMENT_COUNT, equipmentCount)
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
-                reports.forEach(report -> insertReportNode(subReporter, report));
+
             } else {
                 if (equipmentNotModifiedCount == equipmentCount) {
                     createReport(subReportNode, REPORT_KEY_BY_FILTER_MODIFICATION_NONE,
@@ -181,7 +183,6 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
                         .withUntypedValue(VALUE_KEY_NB_UNCHANGED, equipmentNotModifiedCount + equipmentNotFoundCount)
                         .withSeverity(TypedValue.WARN_SEVERITY)
                         .add();
-                    reports.forEach(report -> insertReportNode(subReporter, report));
                 }
             }
         }

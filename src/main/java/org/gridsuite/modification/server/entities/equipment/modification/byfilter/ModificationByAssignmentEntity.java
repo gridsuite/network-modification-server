@@ -75,7 +75,7 @@ public class ModificationByAssignmentEntity extends ModificationEntity {
             .stashed(getStashed())
             .equipmentType(equipmentType)
             .assignmentInfosList(assignmentEntities.stream()
-                .map(AssignmentEntity::toSimpleModificationInfos)
+                .map(AssignmentEntity::toAssignmentInfos)
                 .toList()
             );
     }
