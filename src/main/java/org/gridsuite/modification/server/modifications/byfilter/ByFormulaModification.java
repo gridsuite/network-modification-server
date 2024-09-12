@@ -14,7 +14,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 
@@ -27,7 +27,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class ByFormulaModification extends AbstractByFilterModification {
+public class ByFormulaModification extends AbstractModificationByAssignment {
     private final ByFormulaModificationInfos modificationInfos;
 
     public ByFormulaModification(ByFormulaModificationInfos modificationInfos) {
@@ -51,7 +51,7 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    public List<AbstractModificationByFilterInfos> getModificationByFilterInfosList() {
+    public List<AbstractAssignmentInfos> getAssignmentInfosList() {
         return Collections.unmodifiableList(modificationInfos.getFormulaInfosList());
     }
 
@@ -61,8 +61,8 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected boolean preCheckValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
-        FormulaInfos formulaInfos = (FormulaInfos) modificationByFilterInfos;
+    protected boolean preCheckValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
+        FormulaInfos formulaInfos = (FormulaInfos) abstractAssignmentInfos;
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(equipment);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(equipment);
         if (value1 == null || Double.isNaN(value1) || value2 == null || Double.isNaN(value2)) {
@@ -85,8 +85,8 @@ public class ByFormulaModification extends AbstractByFilterModification {
     }
 
     @Override
-    protected String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
-        FormulaInfos formulaInfos = (FormulaInfos) modificationByFilterInfos;
+    protected String getNewValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos) {
+        FormulaInfos formulaInfos = (FormulaInfos) abstractAssignmentInfos;
         Double value1 = formulaInfos.getFieldOrValue1().getRefOrValue(equipment);
         Double value2 = formulaInfos.getFieldOrValue2().getRefOrValue(equipment);
         return applyOperation(formulaInfos.getOperator(), value1, value2).toString();

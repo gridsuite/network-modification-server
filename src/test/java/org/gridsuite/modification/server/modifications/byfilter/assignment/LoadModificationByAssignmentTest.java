@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications.byfilter.simple;
+package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.LoadType;
@@ -14,9 +14,9 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.EnumModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.EnumAssignmentInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class LoadBySimpleModificationTest extends AbstractBySimpleModificationTest {
+public class LoadModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String LOAD_ID_1 = "load1";
     private static final String LOAD_ID_2 = "load2";
     private static final String LOAD_ID_3 = "load3";
@@ -58,40 +58,40 @@ public class LoadBySimpleModificationTest extends AbstractBySimpleModificationTe
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .editedField(LoadField.ACTIVE_POWER.name())
                 .value(25.)
                 .filters(List.of(filter1))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .editedField(LoadField.REACTIVE_POWER.name())
                 .value(2.5)
                 .filters(List.of(filter2))
                 .build();
 
-        EnumModificationByFilterInfos simpleInfos3 = EnumModificationByFilterInfos.builder()
+        EnumAssignmentInfos assignmentInfos3 = EnumAssignmentInfos.builder()
                 .editedField(LoadField.LOAD_TYPE.name())
                 .value(LoadType.AUXILIARY.name())
                 .filters(List.of(filter1))
                 .build();
 
-        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
-        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3));
+        List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
+        infosList.addAll(List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3));
 
         return infosList;
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getUpdatedSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .editedField(LoadField.ACTIVE_POWER.name())
                 .value(200.)
                 .filters(List.of(filter1))
                 .build();
 
-        return List.of(simpleInfos1);
+        return List.of(assignmentInfos1);
     }
 
     @Override

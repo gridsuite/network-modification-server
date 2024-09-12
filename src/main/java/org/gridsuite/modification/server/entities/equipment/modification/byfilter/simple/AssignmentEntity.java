@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.simple.*;
+import org.gridsuite.modification.server.dto.byfilter.assignment.*;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +24,8 @@ import java.util.Optional;
  */
 @NoArgsConstructor
 @Entity
-@Table(name = "simpleModification", indexes = @Index(name = "by_simple_modification_id_idx", columnList = "by_simple_modification_id"))
-public class SimpleModificationEntity extends ModificationByFilterEntity {
+@Table(name = "assignment", indexes = @Index(name = "modification_by_assignment_id_idx", columnList = "modification_by_assignment_id"))
+public class AssignmentEntity extends AbstractAssignmentEntity {
     @Column
     @Enumerated(EnumType.STRING)
     private DataType dataType;
@@ -38,41 +38,41 @@ public class SimpleModificationEntity extends ModificationByFilterEntity {
     private String propertyName; // dedicated to an exceptional case, i.e. modify a property
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "simple_modification_id",
-            foreignKey = @ForeignKey(name = "simple_modification_id_fk"))
+    @JoinColumn(name = "assignment_id",
+            foreignKey = @ForeignKey(name = "assignment_id_fk"))
     private List<VariationFilterEntity> filters;
 
-    public SimpleModificationEntity(AbstractSimpleModificationByFilterInfos<?> simpleModificationInfos) {
-        super(simpleModificationInfos);
-        this.dataType = simpleModificationInfos.getDataType();
-        this.value = Optional.ofNullable(simpleModificationInfos.getValue()).map(Object::toString).orElse(null);
-        this.filters = simpleModificationInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
+    public AssignmentEntity(AssignmentInfos<?> assignmentInfos) {
+        super(assignmentInfos);
+        this.dataType = assignmentInfos.getDataType();
+        this.value = Optional.ofNullable(assignmentInfos.getValue()).map(Object::toString).orElse(null);
+        this.filters = assignmentInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
     }
 
-    public AbstractSimpleModificationByFilterInfos<?> toSimpleModificationInfos() {
-        AbstractSimpleModificationByFilterInfos<?> simpleModificationByFilterInfos = switch (dataType) {
-            case BOOLEAN -> BooleanModificationByFilterInfos.builder()
+    public AssignmentInfos<?> toSimpleModificationInfos() {
+        AssignmentInfos<?> assignmentInfos = switch (dataType) {
+            case BOOLEAN -> BooleanAssignmentInfos.builder()
                 .value(value != null ? Boolean.valueOf(value) : null)
                 .build();
-            case INTEGER -> IntegerModificationByFilterInfos.builder()
+            case INTEGER -> IntegerAssignmentInfos.builder()
                 .value(value != null ? Integer.valueOf(value) : null)
                 .build();
-            case DOUBLE -> DoubleModificationByFilterInfos.builder()
+            case DOUBLE -> DoubleAssignmentInfos.builder()
                 .value(value != null ? Double.valueOf(value) : null)
                 .build();
-            case ENUM -> EnumModificationByFilterInfos.builder()
+            case ENUM -> EnumAssignmentInfos.builder()
                 .value(value)
                 .build();
-            case PROPERTY -> PropertyModificationByFilterInfos.builder()
+            case PROPERTY -> PropertyAssignmentInfos.builder()
                 .value(value)
                 .propertyName(propertyName)
                 .build();
         };
 
-        assignAttributes(simpleModificationByFilterInfos);
-        simpleModificationByFilterInfos.setFilters(filters.stream()
+        assignAttributes(assignmentInfos);
+        assignmentInfos.setFilters(filters.stream()
                 .map(filterEntity -> new FilterInfos(filterEntity.getFilterId(), filterEntity.getName()))
                 .toList());
-        return simpleModificationByFilterInfos;
+        return assignmentInfos;
     }
 }

@@ -14,7 +14,7 @@ import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByFilterEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "formula", indexes = @Index(name = "by_formula_modification_id_idx", columnList = "by_formula_modification_id"))
-public class FormulaEntity extends ModificationByFilterEntity {
+public class FormulaEntity extends AbstractAssignmentEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "formula_id",
             foreignKey = @ForeignKey(name = "formula_id_fk"))

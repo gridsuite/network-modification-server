@@ -18,9 +18,9 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.BySimpleModificationEntity;
-import org.gridsuite.modification.server.modifications.byfilter.BySimpleModification;
+import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ModificationByAssignmentEntity;
+import org.gridsuite.modification.server.modifications.byfilter.ModificationByAssignment;
 
 import java.util.List;
 
@@ -31,29 +31,29 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-@JsonTypeName("BY_SIMPLE_MODIFICATION")
-@ModificationErrorTypeName("BY_SIMPLE_MODIFICATION_ERROR")
+@JsonTypeName("MODIFICATION_BY_ASSIGNMENT")
+@ModificationErrorTypeName("MODIFICATION_BY_ASSIGNMENT_ERROR")
 @ToString(callSuper = true)
-@Schema(description = "Modification by simple assignment")
-public class BySimpleModificationInfos extends ModificationInfos {
+@Schema(description = "Modification by assignment")
+public class ModificationByAssignmentInfos extends ModificationInfos {
     @Schema(description = "Equipment type")
     private IdentifiableType equipmentType;
 
     @Schema(description = "list of modifications")
-    private List<? extends AbstractSimpleModificationByFilterInfos<?>> simpleModificationInfosList;
+    private List<? extends AssignmentInfos<?>> assignmentInfosList;
 
     @Override
-    public BySimpleModificationEntity toEntity() {
-        return new BySimpleModificationEntity(this);
+    public ModificationByAssignmentEntity toEntity() {
+        return new ModificationByAssignmentEntity(this);
     }
 
     @Override
-    public BySimpleModification toModification() {
-        return new BySimpleModification(this);
+    public ModificationByAssignment toModification() {
+        return new ModificationByAssignment(this);
     }
 
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_SIMPLE_MODIFICATION.name(), "By filter modification").add();
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.MODIFICATION_BY_ASSIGNMENT.name(), "Modification by filter").add();
     }
 }

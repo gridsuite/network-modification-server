@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications.byfilter.simple;
+package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.powsybl.iidm.network.*;
@@ -14,11 +14,11 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.BySimpleModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.junit.Test;
 
 import java.util.Date;
@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySimpleModificationTest {
+public class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String TWT_ID_1 = "twt1";
     private static final String TWT_ID_2 = "twt2";
     private static final String TWT_ID_3 = "twt3";
@@ -45,13 +45,13 @@ public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySi
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
         AbstractFilter filter = getFilterEquipments(FILTER_ID_4, List.of(identifiableAttributes1, identifiableAttributes2));
-        DoubleModificationByFilterInfos simpleInfos = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .value(1.)
                 .filters(List.of(filter4))
                 .build();
 
-        checkCreateWithError(List.of(simpleInfos), List.of(filter));
+        checkCreateWithError(List.of(assignmentInfos), List.of(filter));
 
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_4).getRatioTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_6).getRatioTapChanger());
@@ -60,13 +60,13 @@ public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySi
         IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes4 = getIdentifiableAttributes(TWT_ID_2, 1.);
         AbstractFilter filter2 = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes3, identifiableAttributes4));
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
                 .value(1.)
                 .filters(List.of(filter1))
                 .build();
 
-        checkCreateWithError(List.of(simpleInfos2), List.of(filter2));
+        checkCreateWithError(List.of(assignmentInfos2), List.of(filter2));
 
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getPhaseTapChanger());
         assertNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getPhaseTapChanger());
@@ -86,15 +86,15 @@ public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySi
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
                         .withHeader("Content-Type", "application/json"))).getId();
 
-        DoubleModificationByFilterInfos simpleInfos = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter4))
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .value(4.)
                 .build();
 
-        checkCreationApplicationStatus(BySimpleModificationInfos.builder()
+        checkCreationApplicationStatus(ModificationByAssignmentInfos.builder()
                         .equipmentType(getIdentifiableType())
-                        .simpleModificationInfosList(List.of(simpleInfos))
+                        .assignmentInfosList(List.of(assignmentInfos))
                         .build(),
                 NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
@@ -184,139 +184,139 @@ public class TwoWindingsTransformerBySimpleModificationTest extends AbstractBySi
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1))
                 .editedField(TwoWindingsTransformerField.TARGET_V.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .value(4.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name())
                 .value(4.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos4 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1))
                 .editedField(TwoWindingsTransformerField.RATIO_TARGET_DEADBAND.name())
                 .value(5.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos5 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos5 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter4))
                 .editedField(TwoWindingsTransformerField.REGULATION_VALUE.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos6 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos6 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos7 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos7 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(TwoWindingsTransformerField.PHASE_LOW_TAP_POSITION.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos8 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos8 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter4))
                 .editedField(TwoWindingsTransformerField.PHASE_TARGET_DEADBAND.name())
                 .value(10.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos9 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos9 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter4))
                 .editedField(TwoWindingsTransformerField.X.name())
                 .value(20.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos10 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos10 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter2, filter3))
                 .editedField(TwoWindingsTransformerField.R.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos11 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos11 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter4, filter2))
                 .editedField(TwoWindingsTransformerField.G.name())
                 .value(25.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos12 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos12 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter3))
                 .editedField(TwoWindingsTransformerField.B.name())
                 .value(2.5)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos13 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos13 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATED_U1.name())
                 .value(15.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos14 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos14 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3, filter2))
                 .editedField(TwoWindingsTransformerField.RATED_U2.name())
                 .value(0.5)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos15 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos15 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter2))
                 .editedField(TwoWindingsTransformerField.RATED_S.name())
                 .value(2.)
                 .build();
-        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
-        infosList.addAll(List.of(simpleInfos1,
-                simpleInfos2,
-                simpleInfos3,
-                simpleInfos4,
-                simpleInfos5,
-                simpleInfos6,
-                simpleInfos7,
-                simpleInfos8,
-                simpleInfos9,
-                simpleInfos10,
-                simpleInfos11,
-                simpleInfos12,
-                simpleInfos13,
-                simpleInfos14,
-                simpleInfos15));
+        List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
+        infosList.addAll(List.of(assignmentInfos1,
+                assignmentInfos2,
+                assignmentInfos3,
+                assignmentInfos4,
+                assignmentInfos5,
+                assignmentInfos6,
+                assignmentInfos7,
+                assignmentInfos8,
+                assignmentInfos9,
+                assignmentInfos10,
+                assignmentInfos11,
+                assignmentInfos12,
+                assignmentInfos13,
+                assignmentInfos14,
+                assignmentInfos15));
 
         return infosList;
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getUpdatedSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(TwoWindingsTransformerField.TARGET_V.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
                 .value(3.5)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1))
                 .editedField(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name())
                 .value(3.)
                 .build();
 
-        return List.of(simpleInfos1,
-                simpleInfos2,
-                simpleInfos3);
+        return List.of(assignmentInfos1,
+                assignmentInfos2,
+                assignmentInfos3);
     }
 
     @Override

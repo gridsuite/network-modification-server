@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications.byfilter.simple;
+package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
@@ -15,8 +15,8 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class BatteryBySimpleModificationTest extends AbstractBySimpleModificationTest {
+public class BatteryModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String BATTERY_ID_1 = "v3Battery";
     private static final String BATTERY_ID_2 = "battery2";
     private static final String BATTERY_ID_3 = "battery3";
@@ -43,13 +43,13 @@ public class BatteryBySimpleModificationTest extends AbstractBySimpleModificatio
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
-        DoubleModificationByFilterInfos simpleInfos = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
                 .filters(List.of(filterWithOneWrongId))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .value(55.)
                 .build();
 
-        checkCreateWithWarning(List.of(simpleInfos), List.of(identifiableAttributes, wrongIdAttributes));
+        checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
         assertEquals(55, getNetwork().getBattery(BATTERY_ID_1).getTargetP(), 0);
     }
 
@@ -96,64 +96,64 @@ public class BatteryBySimpleModificationTest extends AbstractBySimpleModificatio
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter2))
                 .editedField(BatteryField.MAXIMUM_ACTIVE_POWER.name())
                 .value(80.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(BatteryField.MINIMUM_ACTIVE_POWER.name())
                 .value(30.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter5))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .value(30.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos4 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter4))
                 .editedField(BatteryField.REACTIVE_POWER_SET_POINT.name())
                 .value(2.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos5 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos5 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter4))
                 .editedField(BatteryField.DROOP.name())
                 .value(2.)
                 .build();
 
-        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
-        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4, simpleInfos5));
+        List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
+        infosList.addAll(List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3, assignmentInfos4, assignmentInfos5));
 
         return infosList;
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getUpdatedSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter2))
                 .editedField(BatteryField.MAXIMUM_ACTIVE_POWER.name())
                 .value(200.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(BatteryField.MINIMUM_ACTIVE_POWER.name())
                 .value(35.)
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
                 .value(10.)
                 .build();
 
-        return List.of(simpleInfos1, simpleInfos2, simpleInfos3);
+        return List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3);
     }
 
     @Override

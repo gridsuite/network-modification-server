@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.byfilter.simple;
+package org.gridsuite.modification.server.dto.byfilter.assignment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,14 +14,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.AssignmentEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @SuperBuilder
 @NoArgsConstructor
-public class PropertyModificationByFilterInfos extends AbstractSimpleModificationByFilterInfos<String> {
+public class PropertyAssignmentInfos extends AssignmentInfos<String> {
     @Schema(description = "Property name")
     @Getter
     private String propertyName;
@@ -39,9 +39,9 @@ public class PropertyModificationByFilterInfos extends AbstractSimpleModificatio
     }
 
     @Override
-    public SimpleModificationEntity toEntity() {
-        SimpleModificationEntity simpleModificationEntity = super.toEntity();
-        simpleModificationEntity.setPropertyName(propertyName);
-        return simpleModificationEntity;
+    public AssignmentEntity toEntity() {
+        AssignmentEntity assignmentEntity = super.toEntity();
+        assignmentEntity.setPropertyName(propertyName);
+        return assignmentEntity;
     }
 }

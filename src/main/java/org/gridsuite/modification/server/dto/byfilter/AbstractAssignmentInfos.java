@@ -25,7 +25,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public abstract class AbstractModificationByFilterInfos {
+public abstract class AbstractAssignmentInfos {
     @Schema(description = "id")
     private UUID id;
 

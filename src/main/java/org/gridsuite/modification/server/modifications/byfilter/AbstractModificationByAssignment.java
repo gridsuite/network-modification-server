@@ -18,7 +18,7 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
@@ -39,7 +39,7 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public abstract class AbstractByFilterModification extends AbstractModification {
+public abstract class AbstractModificationByAssignment extends AbstractModification {
     public static final String VALUE_KEY_FILTER_NAME = "filterName";
     public static final String VALUE_KEY_FIELD_NAME = "fieldName";
     public static final String VALUE_KEY_EQUIPMENT_NAME = "equipmentName";
@@ -75,7 +75,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     protected long equipmentCount;
     protected long equipmentNotFoundCount;
 
-    protected AbstractByFilterModification() {
+    protected AbstractModificationByAssignment() {
         equipmentNotModifiedCount = 0;
         equipmentCount = 0;
         equipmentNotFoundCount = 0;
@@ -83,7 +83,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
     public abstract String getModificationTypeLabel();
 
-    private String getEditedFieldLabel(AbstractModificationByFilterInfos modificationByFilterInfos) {
+    private String getEditedFieldLabel(AbstractAssignmentInfos modificationByFilterInfos) {
         return modificationByFilterInfos.getEditedFieldLabel();
     }
 
@@ -93,24 +93,24 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
     public abstract NetworkModificationException.Type getExceptionType();
 
-    public abstract List<AbstractModificationByFilterInfos> getModificationByFilterInfosList();
+    public abstract List<AbstractAssignmentInfos> getAssignmentInfosList();
 
     protected abstract boolean preCheckValue(Identifiable<?> equipment,
-                                             AbstractModificationByFilterInfos modificationByFilterInfos,
+                                             AbstractAssignmentInfos abstractAssignmentInfos,
                                              List<ReportNode> reports, List<String> notEditableEquipments);
 
-    protected abstract String getNewValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos);
+    protected abstract String getNewValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos);
 
-    protected String getOldValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
-        return getFieldValue(equipment, modificationByFilterInfos.getEditedField());
+    protected String getOldValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos) {
+        return getFieldValue(equipment, abstractAssignmentInfos.getEditedField());
     }
 
-    protected String applyValue(Identifiable<?> equipment, AbstractModificationByFilterInfos modificationByFilterInfos) {
+    protected String applyValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos) {
         // get new value
-        String newValue = getNewValue(equipment, modificationByFilterInfos);
+        String newValue = getNewValue(equipment, abstractAssignmentInfos);
 
         // set new value for the equipment
-        setFieldValue(equipment, modificationByFilterInfos.getEditedField(), newValue);
+        setFieldValue(equipment, abstractAssignmentInfos.getEditedField(), newValue);
         return newValue;
     }
 
@@ -125,11 +125,11 @@ public abstract class AbstractByFilterModification extends AbstractModification 
             throw new NetworkModificationException(getExceptionType(), "Missing required attributes to modify the equipment");
         }
 
-        if (CollectionUtils.isEmpty(getModificationByFilterInfosList())) {
+        if (CollectionUtils.isEmpty(getAssignmentInfosList())) {
             throw new NetworkModificationException(getExceptionType(), String.format("At least one %s is required", getModificationTypeLabel()));
         }
 
-        if (getModificationByFilterInfosList().stream().anyMatch(modificationByFilterInfos -> CollectionUtils.isEmpty(modificationByFilterInfos.getFilters()))) {
+        if (getAssignmentInfosList().stream().anyMatch(modificationByFilterInfos -> CollectionUtils.isEmpty(modificationByFilterInfos.getFilters()))) {
             throw new NetworkModificationException(getExceptionType(), String.format("Every %s must have at least one filter", getModificationTypeLabel()));
         }
     }
@@ -149,9 +149,9 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                 .add();
             List<ReportNode> reports = new ArrayList<>();
             // perform modifications
-            getModificationByFilterInfosList().forEach(modificationByFilterInfos ->
-                modificationByFilterInfos.getFilters().forEach(filterInfos ->
-                    applyOnFilterEquipments(network, exportFilters, reports, modificationByFilterInfos, filterInfos)));
+            getAssignmentInfosList().forEach(abstractAssignmentInfos ->
+                abstractAssignmentInfos.getFilters().forEach(filterInfos ->
+                    applyOnFilterEquipments(network, exportFilters, reports, abstractAssignmentInfos, filterInfos)));
             // reporting
             subReportNode.newReportNode()
                 .withMessageTemplate(REPORT_KEY_BY_FILTER_MODIFICATION,
@@ -188,14 +188,14 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     }
 
     protected boolean isEquipmentEditable(Identifiable<?> equipment,
-                                          AbstractModificationByFilterInfos modificationByFilterInfos,
+                                          AbstractAssignmentInfos abstractAssignmentInfos,
                                           List<ReportNode> equipmentsReport) {
-        if (modificationByFilterInfos.getEditedField() == null) {
+        if (abstractAssignmentInfos.getEditedField() == null) {
             return false;
         }
 
         if (equipment.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER) {
-            TwoWindingsTransformerField editedField = TwoWindingsTransformerField.valueOf(modificationByFilterInfos.getEditedField());
+            TwoWindingsTransformerField editedField = TwoWindingsTransformerField.valueOf(abstractAssignmentInfos.getEditedField());
             TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) equipment;
             return switch (editedField) {
                 case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> {
@@ -230,8 +230,8 @@ public abstract class AbstractByFilterModification extends AbstractModification 
         return true;
     }
 
-    private void createByFilterModificationReports(List<ReportNode> reports, AbstractModificationByFilterInfos modificationByFilterInfos,
-                                                     FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
+    private void createAssignmentReports(List<ReportNode> reports, AbstractAssignmentInfos abstractAssignmentInfos,
+                                         FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
         if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
             reports.add(ReportNode.newRootReportNode()
                 .withMessageTemplate(REPORT_KEY_BY_FILTER_MODIFICATION_FAILED,
@@ -266,7 +266,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
 
         reports.add(ReportNode.newRootReportNode()
             .withMessageTemplate(REPORT_KEY_EDITED_FIELD_FILTER, "      Edited field : ${" + VALUE_KEY_FIELD_NAME + "}")
-            .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(modificationByFilterInfos))
+            .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(abstractAssignmentInfos))
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build());
 
@@ -281,26 +281,26 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     }
 
     private void applyModification(Identifiable<?> equipment,
-                                     AbstractModificationByFilterInfos modificationByFilterInfos,
+                                     AbstractAssignmentInfos abstractAssignmentInfos,
                                      List<ReportNode> reports,
                                      List<String> notEditableEquipments) {
 
         // check pre-conditions
-        if (!preCheckValue(equipment, modificationByFilterInfos, reports, notEditableEquipments)) {
+        if (!preCheckValue(equipment, abstractAssignmentInfos, reports, notEditableEquipments)) {
             return;
         }
 
         // perform to apply new value
         try {
-            final String oldValue = getOldValue(equipment, modificationByFilterInfos);
-            final String newValue = applyValue(equipment, modificationByFilterInfos);
+            final String oldValue = getOldValue(equipment, abstractAssignmentInfos);
+            final String newValue = applyValue(equipment, abstractAssignmentInfos);
             reports.add(ReportNode.newRootReportNode()
                 .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_REPORT,
                     "        ${" + VALUE_KEY_EQUIPMENT_TYPE + "} id : ${" + VALUE_KEY_EQUIPMENT_NAME +
                     "}, ${" + VALUE_KEY_FIELD_NAME + "} : ${" + VALUE_KEY_OLD_VALUE + "} → ${" + VALUE_KEY_NEW_VALUE + "}")
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_TYPE, equipment.getType().name())
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
-                .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(modificationByFilterInfos))
+                .withUntypedValue(VALUE_KEY_FIELD_NAME, getEditedFieldLabel(abstractAssignmentInfos))
                 .withUntypedValue(VALUE_KEY_OLD_VALUE, oldValue == null ? NO_VALUE : oldValue)
                 .withUntypedValue(VALUE_KEY_NEW_VALUE, newValue)
                 .withSeverity(TypedValue.TRACE_SEVERITY)
@@ -320,7 +320,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     }
 
     private Map<UUID, String> getFilters() {
-        return getModificationByFilterInfosList().stream()
+        return getAssignmentInfosList().stream()
             .flatMap(v -> v.getFilters().stream())
             .filter(distinctByKey(FilterInfos::getId))
             .collect(Collectors.toMap(FilterInfos::getId, FilterInfos::getName));
@@ -329,7 +329,7 @@ public abstract class AbstractByFilterModification extends AbstractModification 
     private void applyOnFilterEquipments(Network network,
                                         Map<UUID, FilterEquipments> exportFilters,
                                         List<ReportNode> reports,
-                                        AbstractModificationByFilterInfos modificationByFilterInfos,
+                                        AbstractAssignmentInfos abstractAssignmentInfos,
                                         FilterInfos filterInfos) {
         FilterEquipments filterEquipments = exportFilters.get(filterInfos.getId());
 
@@ -350,16 +350,16 @@ public abstract class AbstractByFilterModification extends AbstractModification 
                 .stream()
                 .map(attributes -> network.getIdentifiable(attributes.getId()))
                 .filter(equipment -> {
-                    boolean isEditableEquipment = isEquipmentEditable(equipment, modificationByFilterInfos, equipmentsReport);
+                    boolean isEditableEquipment = isEquipmentEditable(equipment, abstractAssignmentInfos, equipmentsReport);
                     if (!isEditableEquipment) {
                         notEditableEquipments.add(equipment.getId());
                         equipmentNotModifiedCount += 1;
                     }
                     return isEditableEquipment;
                 })
-                .forEach(equipment -> applyModification(equipment, modificationByFilterInfos, equipmentsReport, notEditableEquipments));
+                .forEach(equipment -> applyModification(equipment, abstractAssignmentInfos, equipmentsReport, notEditableEquipments));
 
-            createByFilterModificationReports(reports, modificationByFilterInfos, filterInfos, filterEquipments, notEditableEquipments);
+            createAssignmentReports(reports, abstractAssignmentInfos, filterInfos, filterEquipments, notEditableEquipments);
 
             reports.addAll(equipmentsReport);
         }

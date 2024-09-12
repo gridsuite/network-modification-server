@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.byfilter.simple;
+package org.gridsuite.modification.server.dto.byfilter.assignment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.NoArgsConstructor;
@@ -17,10 +17,10 @@ import org.gridsuite.modification.server.dto.byfilter.DataType;
  */
 @SuperBuilder
 @NoArgsConstructor
-public class EnumModificationByFilterInfos extends AbstractSimpleModificationByFilterInfos<String> {
+public class BooleanAssignmentInfos extends AssignmentInfos<Boolean> {
     @Override
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public DataType getDataType() {
-        return DataType.ENUM;
+        return DataType.BOOLEAN;
     }
 }

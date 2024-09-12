@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.dto.byfilter.simple;
+package org.gridsuite.modification.server.dto.byfilter.assignment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -16,9 +16,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.SimpleModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.AssignmentEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
@@ -28,25 +28,27 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
     property = "dataType",
     include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = BooleanModificationByFilterInfos.class, name = "BOOLEAN"),
-    @JsonSubTypes.Type(value = EnumModificationByFilterInfos.class, name = "ENUM"),
-    @JsonSubTypes.Type(value = DoubleModificationByFilterInfos.class, name = "DOUBLE"),
-    @JsonSubTypes.Type(value = IntegerModificationByFilterInfos.class, name = "INTEGER"),
-    @JsonSubTypes.Type(value = PropertyModificationByFilterInfos.class, name = "PROPERTY"),
+    @JsonSubTypes.Type(value = BooleanAssignmentInfos.class, name = "BOOLEAN"),
+    @JsonSubTypes.Type(value = EnumAssignmentInfos.class, name = "ENUM"),
+    @JsonSubTypes.Type(value = DoubleAssignmentInfos.class, name = "DOUBLE"),
+    @JsonSubTypes.Type(value = IntegerAssignmentInfos.class, name = "INTEGER"),
+    @JsonSubTypes.Type(value = PropertyAssignmentInfos.class, name = "PROPERTY"),
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
-public abstract class AbstractSimpleModificationByFilterInfos<T> extends AbstractModificationByFilterInfos {
+public class AssignmentInfos<T> extends AbstractAssignmentInfos {
     @Schema(description = "Value")
     private T value;
 
-    public abstract DataType getDataType();
+    public DataType getDataType() {
+        throw new UnsupportedOperationException("This method should not be called");
+    }
 
     @JsonIgnore
-    public SimpleModificationEntity toEntity() {
-        return new SimpleModificationEntity(this);
+    public AssignmentEntity toEntity() {
+        return new AssignmentEntity(this);
     }
 }

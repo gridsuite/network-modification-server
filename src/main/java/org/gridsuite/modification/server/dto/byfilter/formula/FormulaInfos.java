@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
 
 /**
@@ -23,7 +23,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.byfilte
 @NoArgsConstructor
 @Getter
 @Setter
-public class FormulaInfos extends AbstractModificationByFilterInfos {
+public class FormulaInfos extends AbstractAssignmentInfos {
 
     @Schema(description = "First reference field or value")
     private ReferenceFieldOrValue fieldOrValue1;

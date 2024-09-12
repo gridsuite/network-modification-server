@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications.byfilter.simple;
+package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.ShuntCompensator;
@@ -16,8 +16,8 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class ShuntCompensatorBySimpleModificationTest extends AbstractBySimpleModificationTest {
+public class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String SHUNT_COMPENSATOR_ID_1 = "v1shunt";
     private static final String SHUNT_COMPENSATOR_ID_2 = "v2shunt";
     private static final String SHUNT_COMPENSATOR_ID_3 = "v3shunt";
@@ -42,13 +42,13 @@ public class ShuntCompensatorBySimpleModificationTest extends AbstractBySimpleMo
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
-        DoubleModificationByFilterInfos simpleInfos = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
                 .value(2.)
                 .filters(List.of(filterWithOneWrongId))
                 .build();
 
-        checkCreateWithWarning(List.of(simpleInfos), List.of(identifiableAttributes, wrongIdAttributes));
+        checkCreateWithWarning(List.of(assignmentInfos), List.of(identifiableAttributes, wrongIdAttributes));
         assertEquals(2, getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1).getMaximumSectionCount(), 0);
     }
 
@@ -81,51 +81,51 @@ public class ShuntCompensatorBySimpleModificationTest extends AbstractBySimpleMo
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
                 .value(8.)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.SECTION_COUNT.name())
                 .value(2.)
                 .filters(List.of(filter3))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SUSCEPTANCE.name())
                 .value(5.)
                 .filters(List.of(filter4))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos4 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_Q_AT_NOMINAL_VOLTAGE.name())
                 .value(10.)
                 .filters(List.of(filter5))
                 .build();
 
-        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
-        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4));
+        List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
+        infosList.addAll(List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3, assignmentInfos4));
 
         return infosList;
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getUpdatedSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
                 .value(150.)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.SECTION_COUNT.name())
                 .value(2.)
                 .filters(List.of(filter3))
                 .build();
-        return List.of(simpleInfos1, simpleInfos2);
+        return List.of(assignmentInfos1, assignmentInfos2);
     }
 
     @Override

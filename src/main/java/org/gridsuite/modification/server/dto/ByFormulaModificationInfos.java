@@ -57,6 +57,6 @@ public class ByFormulaModificationInfos extends ModificationInfos {
 
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_FORMULA_MODIFICATION.name(), "By formula modification").add();
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_FORMULA_MODIFICATION.name(), "Modification by formula").add();
     }
 }

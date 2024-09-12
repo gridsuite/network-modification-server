@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications.byfilter.simple;
+package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.VoltageLevel;
@@ -16,8 +16,8 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
-import org.gridsuite.modification.server.dto.byfilter.simple.AbstractSimpleModificationByFilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.simple.DoubleModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class VoltageLevelBySimpleModificationTest extends AbstractBySimpleModificationTest {
+public class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String VOLTAGE_LEVEL_ID_1 = "v1";
     private static final String VOLTAGE_LEVEL_ID_2 = "v2";
     private static final String VOLTAGE_LEVEL_ID_3 = "v3";
@@ -97,62 +97,62 @@ public class VoltageLevelBySimpleModificationTest extends AbstractBySimpleModifi
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
             .editedField(VoltageLevelField.LOW_VOLTAGE_LIMIT.name())
             .value(10.)
             .filters(List.of(filter1, filter2))
             .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
             .editedField(VoltageLevelField.HIGH_VOLTAGE_LIMIT.name())
             .value(120.)
             .filters(List.of(filter3))
             .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
             .editedField(VoltageLevelField.NOMINAL_VOLTAGE.name())
             .value(150.)
             .filters(List.of(filter4))
             .build();
 
-        DoubleModificationByFilterInfos simpleInfos4 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
                 .editedField(VoltageLevelField.LOW_SHORT_CIRCUIT_CURRENT_LIMIT.name())
                 .value(2.)
                 .filters(List.of(filter5))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos5 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos5 = DoubleAssignmentInfos.builder()
                 .editedField(VoltageLevelField.HIGH_SHORT_CIRCUIT_CURRENT_LIMIT.name())
                 .value(5.)
                 .filters(List.of(filter4, filter5))
                 .build();
 
-        return List.of(simpleInfos1, simpleInfos2, simpleInfos3, simpleInfos4, simpleInfos5);
+        return List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3, assignmentInfos4, assignmentInfos5);
     }
 
     @Override
-    protected List<AbstractSimpleModificationByFilterInfos<?>> getUpdatedSimpleModificationInfos() {
-        DoubleModificationByFilterInfos simpleInfos1 = DoubleModificationByFilterInfos.builder()
+    protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
+        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
                 .editedField(VoltageLevelField.LOW_VOLTAGE_LIMIT.name())
                 .value(5.)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos2 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
                 .editedField(VoltageLevelField.HIGH_VOLTAGE_LIMIT.name())
                 .value(1.5)
                 .filters(List.of(filter3))
                 .build();
 
-        DoubleModificationByFilterInfos simpleInfos3 = DoubleModificationByFilterInfos.builder()
+        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .editedField(VoltageLevelField.NOMINAL_VOLTAGE.name())
                 .value(150.)
                 .filters(List.of(filter4))
                 .build();
 
-        List<AbstractSimpleModificationByFilterInfos<?>> infosList = super.getSimpleModificationInfos();
-        infosList.addAll(List.of(simpleInfos1, simpleInfos2, simpleInfos3));
+        List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
+        infosList.addAll(List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3));
 
         return infosList;
     }

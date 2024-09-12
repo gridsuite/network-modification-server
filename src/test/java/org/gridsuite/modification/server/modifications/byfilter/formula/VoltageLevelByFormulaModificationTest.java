@@ -24,7 +24,7 @@ import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrVa
 import java.util.Date;
 import java.util.List;
 
-import static org.gridsuite.modification.server.modifications.byfilter.AbstractByFilterModification.REPORT_KEY_BY_FILTER_MODIFICATION_SOME;
+import static org.gridsuite.modification.server.modifications.byfilter.AbstractModificationByAssignment.REPORT_KEY_BY_FILTER_MODIFICATION_SOME;
 import static org.gridsuite.modification.server.modifications.byfilter.ByFormulaModification.REPORT_KEY_EQUIPMENT_MODIFIED_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
 import static org.junit.Assert.*;

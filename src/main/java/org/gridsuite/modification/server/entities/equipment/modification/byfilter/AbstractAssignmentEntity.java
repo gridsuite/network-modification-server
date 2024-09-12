@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.byfilter.AbstractModificationByFilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
 
 import java.util.UUID;
 
@@ -18,7 +18,7 @@ import java.util.UUID;
  */
 @NoArgsConstructor
 @MappedSuperclass
-public class ModificationByFilterEntity {
+public abstract class AbstractAssignmentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
@@ -27,12 +27,12 @@ public class ModificationByFilterEntity {
     @Column
     private String editedField;
 
-    protected ModificationByFilterEntity(AbstractModificationByFilterInfos modificationByFilterInfos) {
+    protected AbstractAssignmentEntity(AbstractAssignmentInfos abstractAssignmentInfos) {
         this.id = null;
-        this.editedField = modificationByFilterInfos.getEditedField();
+        this.editedField = abstractAssignmentInfos.getEditedField();
     }
 
-    protected void assignAttributes(AbstractModificationByFilterInfos modificationByFilterInfos) {
+    protected void assignAttributes(AbstractAssignmentInfos modificationByFilterInfos) {
         modificationByFilterInfos.setId(id);
         modificationByFilterInfos.setEditedField(editedField);
     }
