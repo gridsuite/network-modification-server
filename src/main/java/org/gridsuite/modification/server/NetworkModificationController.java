@@ -234,6 +234,9 @@ public class NetworkModificationController {
             @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
+        if (groupUuid == null) {
+            throw new IllegalArgumentException("groupUuid cannot be null");
+        }
         if (Boolean.TRUE.equals(stashed)) {
             networkModificationService.stashNetworkModifications(networkModificationUuids);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);

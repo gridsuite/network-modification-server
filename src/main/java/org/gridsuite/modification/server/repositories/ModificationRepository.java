@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCr
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
-    List<ModificationEntity> findAllStashedByGroupId(UUID uuid, Boolean stashed);
+    List<ModificationEntity> findAllStashedByGroupId(@Param("groupId") UUID groupId, @Param("stashed") Boolean stashed);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
