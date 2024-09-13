@@ -244,8 +244,8 @@ public class NetworkModificationController {
 
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "active")
     @Operation(summary = "enable or disable network modifications")
-    @ApiResponse(responseCode = "200", description = "The network modifications were updated successfully")
-    public ResponseEntity<Void> updateNetworkModificationsActivation(
+    @ApiResponse(responseCode = "200", description = "The activation status related to the network modification was successfully updated")
+    public ResponseEntity<Void> updateNetworkModificationsActivationStatus(
         @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
         @Parameter(description = "enable or disable network modifications") @RequestParam(name = "active") Boolean active) {
         networkModificationService.updateNetworkModificationActivation(networkModificationUuids, active);
