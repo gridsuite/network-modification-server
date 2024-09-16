@@ -664,7 +664,6 @@ public final class ModificationUtils {
                 CONNECTION_NAME_FIELD_NAME);
         if (connectionNameReport != null) {
             reports.add(connectionNameReport);
-            adder.add();
         }
 
         ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(
@@ -674,7 +673,6 @@ public final class ModificationUtils {
                 CONNECTION_DIRECTION_FIELD_NAME);
         if (connectionDirectionReport != null) {
             reports.add(connectionDirectionReport);
-            adder.add();
         }
 
         ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(
@@ -684,6 +682,9 @@ public final class ModificationUtils {
                 CONNECTION_POSITION_FIELD_NAME);
         if (connectionPositionReport != null) {
             reports.add(connectionPositionReport);
+        }
+
+        if (connectionNameReport != null || connectionDirectionReport != null || connectionPositionReport != null) {
             adder.add();
         }
     }
