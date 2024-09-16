@@ -100,7 +100,7 @@ public class ModificationInfos {
     @Schema(description = "Message values")
     private String messageValues;
 
-    @Schema(description = "Modification enabled")
+    @Schema(description = "Modification activated")
     @Builder.Default
     private Boolean active = true;
 
