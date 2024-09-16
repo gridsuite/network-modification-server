@@ -664,6 +664,7 @@ public final class ModificationUtils {
                 CONNECTION_NAME_FIELD_NAME);
         if (connectionNameReport != null) {
             reports.add(connectionNameReport);
+            adder.add();
         }
 
         ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(
@@ -673,6 +674,7 @@ public final class ModificationUtils {
                 CONNECTION_DIRECTION_FIELD_NAME);
         if (connectionDirectionReport != null) {
             reports.add(connectionDirectionReport);
+            adder.add();
         }
 
         ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(
@@ -682,10 +684,8 @@ public final class ModificationUtils {
                 CONNECTION_POSITION_FIELD_NAME);
         if (connectionPositionReport != null) {
             reports.add(connectionPositionReport);
+            adder.add();
         }
-
-        // Finalize by adding the feeder
-        adder.add();
     }
 
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection, List<ReportNode> subReportNode) {
