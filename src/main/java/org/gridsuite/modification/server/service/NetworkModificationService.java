@@ -113,8 +113,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, boolean active) {
-        networkModificationRepository.updateNetworkModificationsActivation(modificationUuids, active);
+    public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, boolean activated) {
+        networkModificationRepository.updateNetworkModificationsActivation(modificationUuids, activated);
     }
 
     @Transactional

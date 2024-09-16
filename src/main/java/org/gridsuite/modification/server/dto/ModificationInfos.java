@@ -102,7 +102,7 @@ public class ModificationInfos {
 
     @Schema(description = "Modification activated")
     @Builder.Default
-    private Boolean active = true;
+    private Boolean activated = true;
 
     // Only for metadata
     public static ModificationInfos fromEntity(@NonNull ModificationEntity entity) {
@@ -110,7 +110,7 @@ public class ModificationInfos {
             .uuid(entity.getId())
             .date(entity.getDate())
             .stashed(entity.getStashed())
-            .active(entity.getActive())
+            .activated(entity.getActivated())
             .messageType(entity.getMessageType())
             .messageValues(entity.getMessageValues())
             .build();

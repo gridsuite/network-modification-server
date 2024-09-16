@@ -37,7 +37,7 @@ public class LoadScalingEntity extends ScalingEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
-                .active(getActive())
+                .activated(getActivated())
                 .variationType(getVariationType())
                 .variations(getVariations().stream()
                         .map(ScalingVariationEntity::toScalingVariationInfos)

@@ -85,7 +85,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
-            .active(getActive())
+            .activated(getActivated())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .connected1(toAttributeModification(getConnected1()))

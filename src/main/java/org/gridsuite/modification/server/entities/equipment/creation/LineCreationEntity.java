@@ -67,7 +67,7 @@ public class LineCreationEntity extends BranchCreationEntity {
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
-            .active(getActive())
+            .activated(getActivated())
             .equipmentId(getEquipmentId())
             .equipmentName(getEquipmentName())
             // branch

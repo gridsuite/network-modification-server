@@ -241,7 +241,7 @@ public class NetworkModificationRepository {
                     .uuid(tabularModificationEntity.getId())
                     .date(tabularModificationEntity.getDate())
                     .stashed(tabularModificationEntity.getStashed())
-                    .active(tabularModificationEntity.getActive())
+                    .activated(tabularModificationEntity.getActivated())
                     .modificationType(tabularModificationEntity.getModificationType())
                     .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
                     .build();
@@ -411,12 +411,12 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateNetworkModificationsActivation(@NonNull List<UUID> modificationUuids, boolean active) {
+    public void updateNetworkModificationsActivation(@NonNull List<UUID> modificationUuids, boolean activated) {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                 .findById(modificationUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
-            modificationEntity.setActive(active);
+            modificationEntity.setActivated(activated);
             this.modificationRepository.save(modificationEntity);
         }
     }

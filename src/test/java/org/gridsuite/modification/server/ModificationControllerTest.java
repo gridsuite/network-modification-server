@@ -347,7 +347,7 @@ public class ModificationControllerTest {
             .equipmentAttributeValue(true)
             .equipmentId("v1b1")
             .stashed(false)
-            .active(true)
+            .activated(true)
             .build();
         String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
 
@@ -357,15 +357,15 @@ public class ModificationControllerTest {
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modifications.size());
-        assertEquals(true, modifications.get(0).getActive());
+        assertEquals(true, modifications.get(0).getActivated());
 
         String uuidString = modifications.get(0).getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", uuidString)
-                .queryParam("active", "false"))
+                .queryParam("activated", "false"))
             .andExpect(status().isOk());
-        assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getActive());
+        assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getActivated());
     }
 
     @Test

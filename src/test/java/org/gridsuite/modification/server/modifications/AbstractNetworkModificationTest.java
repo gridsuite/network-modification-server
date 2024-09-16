@@ -48,7 +48,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -160,7 +159,7 @@ public abstract class AbstractNetworkModificationTest {
         MvcResult mvcResult;
         Optional<NetworkModificationResult> networkModificationResult;
         ModificationInfos modificationToCreate = buildModification();
-        modificationToCreate.setActive(false);
+        modificationToCreate.setActivated(false);
         String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -178,7 +177,7 @@ public abstract class AbstractNetworkModificationTest {
 
         ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
-        assertEquals(false, createdModificationWithOnlyMetadata.getActive());
+        assertEquals(false, createdModificationWithOnlyMetadata.getActivated());
     }
 
     @Test
