@@ -113,13 +113,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
-        networkModificationRepository.stashNetworkModifications(modificationUuids);
-    }
-
-    @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
-        networkModificationRepository.restoreNetworkModifications(modificationUuids);
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, boolean stashed) {
+        networkModificationRepository.stashNetworkModifications(modificationUuids, stashed);
     }
 
     // No transactional because we need to save modification in DB also in case of error
