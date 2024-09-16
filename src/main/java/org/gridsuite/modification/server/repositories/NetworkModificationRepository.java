@@ -417,7 +417,6 @@ public class NetworkModificationRepository {
                 .findById(modificationUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setActivated(activated);
-            this.modificationRepository.save(modificationEntity);
         }
     }
 
