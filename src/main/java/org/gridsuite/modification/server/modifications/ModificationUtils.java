@@ -120,7 +120,7 @@ public final class ModificationUtils {
         return hvdcLine;
     }
 
-    StaticVarCompensator staticVarCompensator(Network network, String staticVarCompensatorId) {
+    StaticVarCompensator getStaticVarCompensator(Network network, String staticVarCompensatorId) {
         StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(staticVarCompensatorId);
         if (staticVarCompensator == null) {
             throw new NetworkModificationException(STATIC_VAR_COMPENSATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + DOES_NOT_EXIST_IN_NETWORK);
@@ -1120,9 +1120,11 @@ public final class ModificationUtils {
         // check min max reactive limits
         if (Objects.isNull(minSusceptance) && Objects.isNull(minQAtNominalV)) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum susceptance is not set");
-        } else if (Objects.isNull(maxSusceptance) && Objects.isNull(maxQAtNominalV)) {
+        }
+        if (Objects.isNull(maxSusceptance) && Objects.isNull(maxQAtNominalV)) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum susceptance is not set");
-        } else if (Objects.nonNull(maxSusceptance) && Objects.nonNull(minSusceptance) && maxSusceptance < minSusceptance ||
+        }
+        if (Objects.nonNull(maxSusceptance) && Objects.nonNull(minSusceptance) && maxSusceptance < minSusceptance ||
                 Objects.nonNull(maxQAtNominalV) && Objects.nonNull(minQAtNominalV) && maxQAtNominalV < minQAtNominalV) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
         }
@@ -1130,7 +1132,8 @@ public final class ModificationUtils {
         // check set points
         if (Objects.requireNonNull(regulationMode) == StaticVarCompensator.RegulationMode.VOLTAGE && voltageSetpoint == null) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName, "Voltage setpoint is not set");
-        } else if (regulationMode == StaticVarCompensator.RegulationMode.REACTIVE_POWER && reactivePowerSetpoint == null) {
+        }
+        if (regulationMode == StaticVarCompensator.RegulationMode.REACTIVE_POWER && reactivePowerSetpoint == null) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName, "Reactive power setpoint is not set");
         }
     }
@@ -1143,12 +1146,12 @@ public final class ModificationUtils {
                                               String equipmentId,
                                               String equipmentName) {
         if (Boolean.TRUE.equals(standby) && regulationMode != StaticVarCompensator.RegulationMode.VOLTAGE) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Regulation mode is expected to be voltage");
+            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Standby is only supported in Voltage Regulation mode");
         }
         if (Objects.nonNull(b0) && Objects.nonNull(minSusceptance) && Objects.nonNull(maxSusceptance) && (b0 < minSusceptance || b0 > maxSusceptance)
             || Objects.nonNull(q0) && Objects.nonNull(minQAtNominalV) && Objects.nonNull(maxQAtNominalV) && (q0 < minQAtNominalV || q0 > maxQAtNominalV)) {
             throw makeEquipmentException(errorType, equipmentId, equipmentName,
-                     "b0 is expected to be within the range of minimun susceptance and maximum susceptance");
+                     "b0 must be within the range of minimun susceptance and maximum susceptance");
         }
     }
 
@@ -1301,7 +1304,7 @@ public final class ModificationUtils {
 
     public static void createInjectionInNodeBreaker(VoltageLevel voltageLevel, InjectionCreationInfos injectionCreationInfos,
                                                          Network network, InjectionAdder<?, ?> injectionAdder, ReportNode subReportNode) {
-        var position = ModificationUtils.getInstance().getPosition(injectionCreationInfos.getConnectionPosition(),
+        int position = ModificationUtils.getInstance().getPosition(injectionCreationInfos.getConnectionPosition(),
                 injectionCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
         CreateFeederBay algo = new CreateFeederBayBuilder()
                 .withBusOrBusbarSectionId(injectionCreationInfos.getBusOrBusbarSectionId())

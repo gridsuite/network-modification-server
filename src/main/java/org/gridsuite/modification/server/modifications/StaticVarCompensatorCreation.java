@@ -100,7 +100,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
             Network network, ReportNode subReportNode) {
         StaticVarCompensatorAdder staticVarCompensatorAdder = createStaticVarCompensatorAdderInNodeBreaker(voltageLevel, staticVarCompensatorCreationInfos);
         createInjectionInNodeBreaker(voltageLevel, staticVarCompensatorCreationInfos, network, staticVarCompensatorAdder, subReportNode);
-        var staticVarCompensator = ModificationUtils.getInstance().staticVarCompensator(network, staticVarCompensatorCreationInfos.getEquipmentId());
+        var staticVarCompensator = ModificationUtils.getInstance().getStaticVarCompensator(network, staticVarCompensatorCreationInfos.getEquipmentId());
         addExtensionsToStaticVarCompensator(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
     }
 

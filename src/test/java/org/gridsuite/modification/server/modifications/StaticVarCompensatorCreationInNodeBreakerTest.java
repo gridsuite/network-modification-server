@@ -204,7 +204,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
-                        "StaticVarCompensator 'idStaticVarCompensator1' : b0 is expected to be within the range of minimun susceptance and maximum susceptance",
+                        "StaticVarCompensator 'idStaticVarCompensator1' : b0 must be within the range of minimun susceptance and maximum susceptance",
                 compensatorCreationInfos.getErrorType().name(), reportService);
 
         compensatorCreationInfos.setB0(200.0);
@@ -215,7 +215,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
-                        "StaticVarCompensator 'idStaticVarCompensator1' : Regulation mode is expected to be voltage",
+                        "StaticVarCompensator 'idStaticVarCompensator1' : Standby is only supported in Voltage Regulation mode",
                 compensatorCreationInfos.getErrorType().name(), reportService);
 
     }

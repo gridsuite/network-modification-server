@@ -157,18 +157,6 @@ public final class ModificationCreation {
         return builder.build();
     }
 
-    public static StaticVarCompensatorCreationInfos getCreationStaticVarCompensator(String vlId, String loadId, String loadName, String busOrBusBarSectionId) {
-        return StaticVarCompensatorCreationInfos.builder()
-                .stashed(false)
-                .equipmentId(loadId)
-                .equipmentName(loadName)
-                .voltageLevelId(vlId)
-                .busOrBusbarSectionId(busOrBusBarSectionId)
-                .connectionName("top")
-                .connectionDirection(ConnectablePosition.Direction.TOP)
-                .build();
-    }
-
     public static VoltageLevelModificationInfos getModificationVoltageLevel(String vlId, String vlName) {
         VoltageLevelModificationInfos.VoltageLevelModificationInfosBuilder builder = VoltageLevelModificationInfos.builder()
             .stashed(false)

@@ -103,6 +103,7 @@ public class StaticVarCompensatorCreationInfos extends InjectionCreationInfos {
 
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode().withMessageTemplate(ModificationType.STATIC_VAR_COMPENSATOR_CREATION.name(), "Static Compensator ${staticCompensatorId}").withUntypedValue("staticCompensatorId", this.getEquipmentId()).add();
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.STATIC_VAR_COMPENSATOR_CREATION.name(),
+                "Static var compensator creation ${id}").withUntypedValue("id", this.getEquipmentId()).add();
     }
 }
