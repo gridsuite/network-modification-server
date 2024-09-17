@@ -140,10 +140,10 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
         // collect all filters from all variations
         Map<UUID, String> filters = getFilters();
 
-        Map<UUID, FilterEquipments> exportFilters =
+        Map<UUID, FilterEquipments> filterUuidEquipmentsMap =
             ModificationUtils.getUuidFilterEquipmentsMap(filterService, network, subReportNode, filters, getModificationInfos().getErrorType());
 
-        if (exportFilters != null) {
+        if (filterUuidEquipmentsMap != null) {
             ReportNode subReporter = subReportNode.newReportNode()
                 .withMessageTemplate(REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS, "${" + VALUE_KEY_MODIFICATION_TYPE_LABEL + "}s on ${" + VALUE_KEY_EQUIPMENT_TYPE + "} type")
                 .withUntypedValue(VALUE_KEY_MODIFICATION_TYPE_LABEL, StringUtils.capitalize(getModificationTypeLabel()))
@@ -158,7 +158,7 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
                     .withUntypedValue(VALUE_KEY_FILTERS_EACH_ASSIGNMENT, abstractAssignmentInfos.getFilters().stream().map(FilterInfos::getName)
                     .collect(Collectors.joining(", ")))
                     .add();
-                abstractAssignmentInfos.getFilters().forEach(filterInfos -> applyOnFilterEquipments(network, exportFilters, reports, abstractAssignmentInfos, filterInfos));
+                abstractAssignmentInfos.getFilters().forEach(filterInfos -> applyOnFilterEquipments(network, filterUuidEquipmentsMap, reports, abstractAssignmentInfos, filterInfos));
                 reports.forEach(report -> insertReportNode(eachAssignmentReporter, report));
             });
             // reporting
@@ -328,11 +328,11 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
     }
 
     private void applyOnFilterEquipments(Network network,
-                                        Map<UUID, FilterEquipments> exportFilters,
+                                        Map<UUID, FilterEquipments> filterUuidEquipmentsMap,
                                         List<ReportNode> reports,
                                         AbstractAssignmentInfos abstractAssignmentInfos,
                                         FilterInfos filterInfos) {
-        FilterEquipments filterEquipments = exportFilters.get(filterInfos.getId());
+        FilterEquipments filterEquipments = filterUuidEquipmentsMap.get(filterInfos.getId());
 
         if (CollectionUtils.isEmpty(filterEquipments.getIdentifiableAttributes())) {
             reports.add(ReportNode.newRootReportNode()

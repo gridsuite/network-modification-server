@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.AssignmentEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.assignment.AssignmentEntity;
 
 import java.util.List;
 

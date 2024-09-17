@@ -18,7 +18,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple.AssignmentEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.assignment.AssignmentEntity;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

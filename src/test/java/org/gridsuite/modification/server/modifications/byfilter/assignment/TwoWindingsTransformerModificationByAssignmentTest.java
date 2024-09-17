@@ -14,11 +14,10 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.junit.Test;
 
 import java.util.Date;
@@ -92,11 +91,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 .value(4.)
                 .build();
 
-        checkCreationApplicationStatus(ModificationByAssignmentInfos.builder()
-                        .equipmentType(getIdentifiableType())
-                        .assignmentInfosList(List.of(assignmentInfos))
-                        .build(),
-                NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_1).getRatioTapChanger());
         assertNotNull(getNetwork().getTwoWindingsTransformer(TWT_ID_2).getRatioTapChanger());

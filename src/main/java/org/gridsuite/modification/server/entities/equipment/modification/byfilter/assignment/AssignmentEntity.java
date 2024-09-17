@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.entities.equipment.modification.byfilter.simple;
+package org.gridsuite.modification.server.entities.equipment.modification.byfilter.assignment;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

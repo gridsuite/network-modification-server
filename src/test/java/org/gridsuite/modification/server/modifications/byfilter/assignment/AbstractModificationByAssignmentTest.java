@@ -16,8 +16,8 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.byfilter.DataType;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
@@ -87,25 +87,22 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        // Test with empty list of simple modification
-        checkCreationApplicationStatus(ModificationByAssignmentInfos.builder().equipmentType(getIdentifiableType()).assignmentInfosList(List.of()).build(),
-                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        // Test with empty list of assignment
+        checkCreationApplicationStatus(List.of(), NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
-        // Test with empty list of filters in simple modification
-        List<AssignmentInfos<?>> simpleInfosWithNoFilters = getAssignmentInfos().stream().peek(simpleInfos -> simpleInfos.setFilters(List.of())).toList();
-        checkCreationApplicationStatus(ModificationByAssignmentInfos.builder().equipmentType(getIdentifiableType()).assignmentInfosList(simpleInfosWithNoFilters).build(),
-                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        // Test with empty list of filters in assignment
+        List<AssignmentInfos<?>> assignmentsWithNoFilters = getAssignmentInfos().stream().peek(assignmentInfos -> assignmentInfos.setFilters(List.of())).toList();
+        checkCreationApplicationStatus(assignmentsWithNoFilters, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         // Test with editedField = null
-        AssignmentInfos<?> simpleInfosWithNoEditedField = DoubleAssignmentInfos.builder()
+        AssignmentInfos<?> assignmentWithNoEditedField = DoubleAssignmentInfos.builder()
                 .value(50.)
                 .filters(List.of())
                 .build();
-        checkCreationApplicationStatus(ModificationByAssignmentInfos.builder().equipmentType(getIdentifiableType()).assignmentInfosList(List.of(simpleInfosWithNoEditedField)).build(),
-                NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        checkCreationApplicationStatus(List.of(assignmentWithNoEditedField), NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
     }
 
-    protected void checkCreateWithWarning(List<AssignmentInfos<?>> simpleInfos, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
+    protected void checkCreateWithWarning(List<AssignmentInfos<?>> assignments, List<IdentifierListFilterEquipmentAttributes> existingEquipmentList) throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ONE_WRONG_ID, existingEquipmentList);
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
@@ -113,17 +110,12 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
                         .withBody(mapper.writeValueAsString(List.of(filter)))
                         .withHeader("Content-Type", "application/json"))).getId();
 
-        ModificationByAssignmentInfos modificationByAssignmentInfos = ModificationByAssignmentInfos.builder()
-                .assignmentInfosList(simpleInfos)
-                .equipmentType(getIdentifiableType())
-                .build();
-
-        checkCreationApplicationStatus(modificationByAssignmentInfos, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
+        checkCreationApplicationStatus(assignments, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ONE_WRONG_ID)), false);
     }
 
-    protected void checkCreateWithError(List<AssignmentInfos<?>> simpleInfos, List<AbstractFilter> filterEquipments) throws Exception {
+    protected void checkCreateWithError(List<AssignmentInfos<?>> assignments, List<AbstractFilter> filterEquipments) throws Exception {
         String filterIds = filterEquipments.stream()
                 .map(AbstractFilter::getId)
                 .map(UUID::toString)
@@ -134,16 +126,11 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
                         .withBody(mapper.writeValueAsString(filterEquipments))
                         .withHeader("Content-Type", "application/json"))).getId();
 
-        ModificationByAssignmentInfos modificationByAssignmentInfos = ModificationByAssignmentInfos.builder()
-                .assignmentInfosList(simpleInfos)
-                .equipmentType(getIdentifiableType())
-                .build();
-
-        checkCreationApplicationStatus(modificationByAssignmentInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        checkCreationApplicationStatus(assignments, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         wireMockUtils.verifyGetRequest(stubId,
                 PATH,
-                handleQueryParams(filterEquipments.stream().map(AbstractFilter::getId).collect(Collectors.toList())),
+                handleQueryParams(filterEquipments.stream().map(AbstractFilter::getId).toList()),
                 false);
     }
 
@@ -151,8 +138,8 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
     public void testModificationWithAllWrongEquipmentIds() throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
 
-        List<AssignmentInfos<?>> simpleInfosList = getAssignmentInfos().stream()
-                .peek(simpleInfos -> simpleInfos.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
+        List<AssignmentInfos<?>> assignmentsWithWrongFilter = getAssignmentInfos().stream()
+                .peek(assignmentInfos -> assignmentInfos.setFilters(List.of(new FilterInfos(FILTER_WITH_ALL_WRONG_IDS, "filterWithWrongId"))))
                 .toList();
 
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
@@ -160,12 +147,7 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
                         .withBody(mapper.writeValueAsString(List.of(filter)))
                         .withHeader("Content-Type", "application/json"))).getId();
 
-        ModificationByAssignmentInfos modificationByAssignmentInfos = ModificationByAssignmentInfos.builder()
-                .assignmentInfosList(simpleInfosList)
-                .equipmentType(getIdentifiableType())
-                .build();
-
-        checkCreationApplicationStatus(modificationByAssignmentInfos, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
+        checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(List.of(FILTER_WITH_ALL_WRONG_IDS)), false);
     }
@@ -181,7 +163,7 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
 
         super.testCreate();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).toList()), false);
     }
 
     @Test
@@ -195,11 +177,15 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
 
         super.testCopy();
 
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).toList()), false);
     }
 
-    protected void checkCreationApplicationStatus(ModificationByAssignmentInfos modificationByAssignmentInfos,
+    protected void checkCreationApplicationStatus(List<? extends AssignmentInfos<?>> assignmentInfos,
                                                   NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
+        ModificationByAssignmentInfos modificationByAssignmentInfos = ModificationByAssignmentInfos.builder()
+            .equipmentType(getIdentifiableType())
+            .assignmentInfosList(assignmentInfos)
+            .build();
         String modificationToCreateJson = mapper.writeValueAsString(modificationByAssignmentInfos);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -259,14 +245,14 @@ public abstract class AbstractModificationByAssignmentTest extends AbstractNetwo
     protected abstract List<AbstractFilter> getTestFilters();
 
     protected List<AssignmentInfos<?>> getAssignmentInfos() {
-        PropertyAssignmentInfos spySimpleInfos = spy(PropertyAssignmentInfos.builder()
+        PropertyAssignmentInfos spyAssignmentInfos = spy(PropertyAssignmentInfos.builder()
                 .editedField(DataType.PROPERTY.name())
                 .propertyName("propertyName")
                 .value("propertyValue")
                 .filters(List.of(filter1))
                 .build());
-        doReturn(DataType.PROPERTY).when(spySimpleInfos).getDataType();
-        return new ArrayList<>(List.of(spySimpleInfos));
+        doReturn(DataType.PROPERTY).when(spyAssignmentInfos).getDataType();
+        return new ArrayList<>(List.of(spyAssignmentInfos));
     }
 
     protected abstract List<AssignmentInfos<?>> getUpdatedAssignmentInfos();

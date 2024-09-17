@@ -69,7 +69,8 @@ public class ByFormulaModification extends AbstractModificationByAssignment {
             equipmentNotModifiedCount += 1;
             notEditableEquipments.add(equipment.getId());
             reports.add(ReportNode.newRootReportNode()
-                    .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_ERROR, "        Cannot modify equipment ${" + VALUE_KEY_EQUIPMENT_NAME + "} : At least one of the value or referenced field is null")
+                    .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_ERROR, "        Cannot modify equipment ${" +
+                                      VALUE_KEY_EQUIPMENT_NAME + "} : At least one of the value or referenced field is null")
                     .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
                     .withSeverity(TypedValue.TRACE_SEVERITY)
                     .build());
@@ -79,6 +80,12 @@ public class ByFormulaModification extends AbstractModificationByAssignment {
         if (value2 == 0 && formulaInfos.getOperator() == Operator.DIVISION) {
             equipmentNotModifiedCount += 1;
             notEditableEquipments.add(equipment.getId());
+            reports.add(ReportNode.newRootReportNode()
+                    .withMessageTemplate(REPORT_KEY_EQUIPMENT_MODIFIED_ERROR, "        Cannot modify equipment ${" +
+                                      VALUE_KEY_EQUIPMENT_NAME + "} : The value or referenced field of the second operand in the division operator is zero")
+                    .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
+                    .withSeverity(TypedValue.TRACE_SEVERITY)
+                    .build());
             return false;
         }
         return true;
