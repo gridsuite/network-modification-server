@@ -743,6 +743,9 @@ public final class ModificationUtils {
         if (connectionPositionReport != null) {
             reports.add(connectionPositionReport);
         }
+        if (connectionNameReport != null || connectionDirectionReport != null || connectionPositionReport != null) {
+            feeder.add();
+        }
     }
 
     private <T> T getConnectionDetail(Object modificationInfos, int feederNumber,
