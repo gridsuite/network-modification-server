@@ -684,8 +684,9 @@ public final class ModificationUtils {
             reports.add(connectionPositionReport);
         }
 
-        // Finalize by adding the feeder
-        adder.add();
+        if (connectionNameReport != null || connectionDirectionReport != null || connectionPositionReport != null) {
+            adder.add();
+        }
     }
 
     public void modifyInjectionConnection(InjectionModificationInfos modificationInfos, Injection<?> injection, List<ReportNode> subReportNode) {
