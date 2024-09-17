@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.STATIC_VAR_COMPENSATOR_ALREADY_EXISTS;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.createInjectionInNodeBreaker;
-import static org.gridsuite.modification.server.modifications.ModificationUtils.reportInjectionCreationConnectivity;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -47,8 +46,8 @@ public class StaticVarCompensatorCreation extends AbstractModification {
 
         // check reactive power limits and set points
         ModificationUtils.getInstance().checkReactivePowerLimitsAndSetPointsCreation(modificationInfos.getMaxSusceptance(),
-                modificationInfos.getMinSusceptance(), modificationInfos.getMinQAtNominalV(),
-                modificationInfos.getMaxQAtNominalV(), modificationInfos.getVoltageSetpoint(),
+                modificationInfos.getMinSusceptance(), modificationInfos.getMaxQAtNominalV(),
+                modificationInfos.getMinQAtNominalV(), modificationInfos.getVoltageSetpoint(),
                 modificationInfos.getReactivePowerSetpoint(), modificationInfos.getRegulationMode(),
                 modificationInfos.getErrorType(),
                 modificationInfos.getEquipmentId(),
@@ -114,10 +113,10 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         StaticVarCompensatorAdder staticVarCompensatorAdder = voltageLevel.newStaticVarCompensator()
                 .setId(staticVarCompensatorCreationInfos.getEquipmentId())
                 .setName(staticVarCompensatorCreationInfos.getEquipmentName())
-                .setBmax(staticVarCompensatorCreationInfos.getMaxSusceptance())
-                .setBmin(staticVarCompensatorCreationInfos.getMinSusceptance())
-                .setVoltageSetpoint(staticVarCompensatorCreationInfos.getVoltageSetpoint())
-                .setReactivePowerSetpoint(staticVarCompensatorCreationInfos.getReactivePowerSetpoint())
+                .setBmax(nanIfNull(staticVarCompensatorCreationInfos.getMaxSusceptance()))
+                .setBmin(nanIfNull(staticVarCompensatorCreationInfos.getMinSusceptance()))
+                .setVoltageSetpoint(nanIfNull(staticVarCompensatorCreationInfos.getVoltageSetpoint()))
+                .setReactivePowerSetpoint(nanIfNull(staticVarCompensatorCreationInfos.getReactivePowerSetpoint()))
                 .setRegulationMode(staticVarCompensatorCreationInfos.getRegulationMode());
 
         if (terminal != null) {
