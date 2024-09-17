@@ -27,6 +27,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
     private static final String RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE = "Ratio tap changer";
     private static final String PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE = "Phase tap changer";
+    public static final String MAGNETIZING_CONDUCTANCE_FIELD_NAME = "Magnetizing conductance";
 
     public TwoWindingsTransformerModification(TwoWindingsTransformerModificationInfos modificationInfos) {
         super(modificationInfos);
@@ -62,7 +63,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
 
-        modifyBranchFields(twoWindingsTransformer, branchModificationInfos.getR(), branchModificationInfos.getX(), characteristicsReporter);
+        // Branch specific fields
+        modifyR(twoWindingsTransformer, branchModificationInfos.getR(), characteristicsReporter);
+        modifyX(twoWindingsTransformer, branchModificationInfos.getX(), characteristicsReporter);
 
         // Transformer specific fields
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) branchModificationInfos;
@@ -138,27 +141,34 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             if (reportNode != null) {
                 double oldMagnetizingConductanceToReport = transformer.getG() * Math.pow(10, 6);
                 double newMagnetizingConductanceToReport = modifG.getValue() * Math.pow(10, 6);
-                insertReportNode(reportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(oldMagnetizingConductanceToReport,
-                        newMagnetizingConductanceToReport, "Magnetizing conductance", 1));
+                ReportNode gReportNode = ModificationUtils.getInstance().buildModificationReportWithIndentation(
+                        oldMagnetizingConductanceToReport,
+                        newMagnetizingConductanceToReport,
+                        MAGNETIZING_CONDUCTANCE_FIELD_NAME,
+                        1);
+                insertReportNode(reportNode, gReportNode);
             }
             transformer.setG(modifG.getValue());
         }
     }
 
-    public static void modifyBranchFields(TwoWindingsTransformer twt, AttributeModification<Double> modifR, AttributeModification<Double> modifX, ReportNode reportNode) {
-        if (modifR != null && modifR.getValue() != null) {
-            if (reportNode != null) {
-                insertReportNode(reportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getR(),
-                        modifR.getValue(), "Series resistance", 1));
-            }
-            twt.setR(modifR.getValue());
-        }
+    public static void modifyX(TwoWindingsTransformer twt, AttributeModification<Double> modifX, ReportNode reportNode) {
         if (modifX != null && modifX.getValue() != null) {
             if (reportNode != null) {
                 insertReportNode(reportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getX(),
                         modifX.getValue(), "Series reactance", 1));
             }
             twt.setX(modifX.getValue());
+        }
+    }
+
+    public static void modifyR(TwoWindingsTransformer twt, AttributeModification<Double> modifR, ReportNode reportNode) {
+        if (modifR != null && modifR.getValue() != null) {
+            if (reportNode != null) {
+                insertReportNode(reportNode, ModificationUtils.getInstance().buildModificationReportWithIndentation(twt.getR(),
+                        modifR.getValue(), "Series resistance", 1));
+            }
+            twt.setR(modifR.getValue());
         }
     }
 

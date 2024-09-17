@@ -51,31 +51,31 @@ public enum TwoWindingsTransformerField {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
-        final AttributeModification<Double> attrModif = new AttributeModification<>(newValue, OperationType.SET);
+        final AttributeModification<Double> attributeModification = new AttributeModification<>(newValue, OperationType.SET);
 
         switch (field) {
-            case R -> modifyBranchFields(transformer, attrModif, null, null);
-            case X -> modifyBranchFields(transformer, null, attrModif, null);
-            case G -> modifyG(transformer, attrModif, null);
-            case B -> modifyB(transformer, attrModif, null);
-            case RATED_U1 -> modifyRatedU1(transformer, attrModif, null);
-            case RATED_U2 -> modifyRatedU2(transformer, attrModif, null);
-            case RATED_S -> modifyRatedS(transformer, attrModif, null);
-            case TARGET_V -> modifyTargets(ratioTapChanger, null, true, attrModif, null, null);
+            case R -> modifyR(transformer, attributeModification, null);
+            case X -> modifyX(transformer, attributeModification, null);
+            case G -> modifyG(transformer, attributeModification, null);
+            case B -> modifyB(transformer, attributeModification, null);
+            case RATED_U1 -> modifyRatedU1(transformer, attributeModification, null);
+            case RATED_U2 -> modifyRatedU2(transformer, attributeModification, null);
+            case RATED_S -> modifyRatedS(transformer, attributeModification, null);
+            case TARGET_V -> modifyTargets(ratioTapChanger, null, true, attributeModification, null, null);
             case RATIO_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
                     new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null, null);
             case RATIO_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
                     null, new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null);
-            case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attrModif, null);
+            case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attributeModification, null);
             case REGULATION_VALUE -> processPhaseTapRegulation(
-                    phaseTapChanger, null, null, true, attrModif, null, null
+                    phaseTapChanger, null, null, true, attributeModification, null, null
             );
             case PHASE_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
                     new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null, null);
             case PHASE_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
                     null, new AttributeModification<>(newValue.intValue(), OperationType.SET), null, null);
             case PHASE_TARGET_DEADBAND -> processPhaseTapRegulation(
-                    phaseTapChanger, null, null, true, null, attrModif, null
+                    phaseTapChanger, null, null, true, null, attributeModification, null
             );
         }
     }

@@ -47,7 +47,10 @@ public enum ShuntCompensatorField {
         ShuntCompensatorLinearModel model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         ShuntCompensatorField field = ShuntCompensatorField.valueOf(shuntCompensatorField);
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
-        var shuntCompensatorType = model.getBPerSection() > 0 ? ShuntCompensatorType.CAPACITOR : ShuntCompensatorType.REACTOR;
+        var shuntCompensatorType = ShuntCompensatorType.REACTOR;
+        if (model != null && model.getBPerSection() > 0) {
+            shuntCompensatorType = ShuntCompensatorType.CAPACITOR;
+        }
         switch (field) {
             case MAXIMUM_SECTION_COUNT -> modifyMaximumSectionCount(new AttributeModification<>(newValue.intValue(), OperationType.SET),
                     null, null, null, shuntCompensator, model);

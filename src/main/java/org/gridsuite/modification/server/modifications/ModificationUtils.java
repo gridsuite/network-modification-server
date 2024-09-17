@@ -1039,20 +1039,19 @@ public final class ModificationUtils {
         } else {
             createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
-        if (subReportNode == null) {
-            return null;
+        if (subReportNode != null) {
+            ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
+            if (subReporterSetpoints == null && !reports.isEmpty()) {
+                subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
+                subReportNodeSetpoints2.newReportNode()
+                        .withMessageTemplate(SETPOINTS, SETPOINTS)
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .add();
+            }
+            reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation", Map.of());
+            return subReportNodeSetpoints2;
         }
-
-        ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
-        if (subReporterSetpoints == null && !reports.isEmpty()) {
-            subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
-            subReportNodeSetpoints2.newReportNode()
-                    .withMessageTemplate(SETPOINTS, SETPOINTS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
-        }
-        reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation", Map.of());
-        return subReportNodeSetpoints2;
+        return null;
     }
 
     public void checkMaxQGreaterThanMinQ(
