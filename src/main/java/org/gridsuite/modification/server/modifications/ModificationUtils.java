@@ -54,7 +54,7 @@ public final class ModificationUtils {
     public static final String CONNECTION_NAME_FIELD_NAME = "Connection name";
     public static final String CONNECTION_DIRECTION_FIELD_NAME = "Connection direction";
     public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
-    public static final String NETWORK_NOT_EXIST = " does not exist in network";
+    public static final String NOT_EXIST_IN_NETWORK = " does not exist in network";
 
     private ModificationUtils() {
     }
@@ -90,7 +90,7 @@ public final class ModificationUtils {
     Battery getBattery(Network network, String batteryId) {
         Battery battery = network.getBattery(batteryId);
         if (battery == null) {
-            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + batteryId + NETWORK_NOT_EXIST);
+            throw new NetworkModificationException(BATTERY_NOT_FOUND, "Battery " + batteryId + NOT_EXIST_IN_NETWORK);
         }
         return battery;
     }
@@ -98,7 +98,7 @@ public final class ModificationUtils {
     Generator getGenerator(Network network, String generatorId) {
         Generator generator = network.getGenerator(generatorId);
         if (generator == null) {
-            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + NETWORK_NOT_EXIST);
+            throw new NetworkModificationException(GENERATOR_NOT_FOUND, "Generator " + generatorId + NOT_EXIST_IN_NETWORK);
         }
         return generator;
     }
@@ -106,7 +106,7 @@ public final class ModificationUtils {
     VscConverterStation getVscConverterStation(Network network, String converterStationId) {
         VscConverterStation vscConverterStation = network.getVscConverterStation(converterStationId);
         if (vscConverterStation == null) {
-            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + NETWORK_NOT_EXIST);
+            throw new NetworkModificationException(VSC_CONVERTER_STATION_NOT_FOUND, "Vsc converter station  " + converterStationId + NOT_EXIST_IN_NETWORK);
         }
         return vscConverterStation;
     }
@@ -115,7 +115,7 @@ public final class ModificationUtils {
     HvdcLine getHvdcLine(Network network, String hvdcLineId) {
         HvdcLine hvdcLine = network.getHvdcLine(hvdcLineId);
         if (hvdcLine == null) {
-            throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + NETWORK_NOT_EXIST);
+            throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + NOT_EXIST_IN_NETWORK);
         }
         return hvdcLine;
     }
