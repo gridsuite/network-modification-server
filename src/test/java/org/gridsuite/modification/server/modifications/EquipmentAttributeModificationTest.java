@@ -51,7 +51,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
             .equipmentAttributeValue("equipmentAttributeValue")
             .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
             .build();
-        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00:00Z, stashed=false, messageType=null, messageValues=null), equipmentId=equipmentId, properties=null), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
+        assertEquals(String.format("EquipmentAttributeModificationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=%s, type=EQUIPMENT_ATTRIBUTE_MODIFICATION, date=2021-02-19T00:00:00Z, stashed=false, messageType=null, messageValues=null, activated=true), equipmentId=equipmentId, properties=null), equipmentAttributeName=equipmentAttributeName, equipmentAttributeValue=equipmentAttributeValue, equipmentType=VOLTAGE_LEVEL)", modificationUuid), modificationInfos.toString());
 
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)

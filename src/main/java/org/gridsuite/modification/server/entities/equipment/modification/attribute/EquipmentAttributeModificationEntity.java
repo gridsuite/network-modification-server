@@ -70,6 +70,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
+            .activated(getActivated())
             .equipmentId(getEquipmentId())
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())

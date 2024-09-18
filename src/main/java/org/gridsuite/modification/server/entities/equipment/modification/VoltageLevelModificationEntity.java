@@ -101,6 +101,7 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .equipmentId(getEquipmentId())
                 .date(getDate())
                 .stashed(getStashed())
+                .activated(getActivated())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .nominalV(toAttributeModification(getNominalV()))
                 .lowVoltageLimit(toAttributeModification(getLowVoltageLimit()))

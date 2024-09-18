@@ -108,6 +108,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .activated(getActivated())
                 .lineToAttachToId(getLineToAttachToId())
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
