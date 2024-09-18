@@ -9,11 +9,9 @@ package org.gridsuite.modification.server.repositories;
 import lombok.NonNull;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.CompositeModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.TabularModificationInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.*;
+import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,12 +36,18 @@ public class NetworkModificationRepository {
 
     private final GeneratorModificationRepository generatorModificationRepository;
 
+    private final GeneratorCreationRepository generatorCreationRepository;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository, ModificationRepository modificationRepository, GeneratorModificationRepository generatorModificationRepository) {
+    public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
+                                         ModificationRepository modificationRepository,
+                                         GeneratorModificationRepository generatorModificationRepository,
+                                         GeneratorCreationRepository generatorCreationRepository) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
+        this.generatorCreationRepository = generatorCreationRepository;
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -251,26 +255,41 @@ public class NetworkModificationRepository {
         return tabularModificationEntity.toModificationInfos();
     }
 
-    public TabularCreationEntity loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
+    public TabularCreationInfos loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
         TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
         switch (tabularCreationEntity.getCreationType()) {
             case GENERATOR_CREATION:
-                tabularCreationEntity = modificationRepository.findTabularCreationWithReactiveCapabilityCurvePointsById(modificationEntity.getId()).orElseThrow(() ->
-                    new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationEntity.getId()))
-                );
-                modificationRepository.findAllCreationsWithReactiveCapabilityCurvePointsByIdIn(tabularCreationEntity.getCreations().stream().map(ModificationEntity::getId).toList());
-                break;
+                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
+                Map<UUID, GeneratorCreationEntity> generatorCreations = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                ModificationEntity::getId,
+                                Function.identity()
+                        ));
+                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+                List<GeneratorCreationEntity> orderedGeneratorCreation = subModificationsUuids
+                        .stream()
+                        .map(generatorCreations::get)
+                        .toList();
+                return TabularCreationInfos.builder()
+                        .uuid(tabularCreationEntity.getId())
+                        .date(tabularCreationEntity.getDate())
+                        .stashed(tabularCreationEntity.getStashed())
+                        .activated(tabularCreationEntity.getActivated())
+                        .creationType(tabularCreationEntity.getCreationType())
+                        .creations(orderedGeneratorCreation.stream().map(GeneratorCreationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                        .build();
             default:
                 break;
         }
-        return tabularCreationEntity;
+        return tabularCreationEntity.toModificationInfos();
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
             return loadTabularModificationSubEntities(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
-            return loadTabularCreationSubEntities(modificationEntity).toModificationInfos();
+            return loadTabularCreationSubEntities(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
