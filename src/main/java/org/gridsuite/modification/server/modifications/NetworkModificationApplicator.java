@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -158,9 +159,9 @@ public class NetworkModificationApplicator {
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
         ReportNode reportNode;
-        if (reportInfos.getReporterId() != null) {
-            String rootReporterId = reportInfos.getReporterId();
-            reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
+        if (reportInfos.getNodeUuid() != null) {
+            UUID nodeUuid = reportInfos.getNodeUuid();
+            reportNode = ReportNode.newRootReportNode().withMessageTemplate(nodeUuid.toString(), nodeUuid.toString()).build();
         } else {
             reportNode = ReportNode.NO_OP;
         }

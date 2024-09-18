@@ -31,8 +31,6 @@ public class BuildInfos {
 
     private String destinationVariantId;
 
-    private UUID reportUuid;
-
     private List<UUID> modificationGroupUuids = new ArrayList<>();
 
     private List<ReportInfos> reportsInfos = new ArrayList<>();

@@ -99,8 +99,8 @@ public class BuildTest {
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final UUID TEST_ERROR_REPORT_ID = UUID.randomUUID();
-    private static final String TEST_SUB_REPORTER_ID_1 = UUID.randomUUID().toString();
-    private static final String TEST_SUB_REPORTER_ID_2 = UUID.randomUUID().toString();
+    private static final UUID TEST_SUB_REPORTER_ID_1 = UUID.randomUUID();
+    private static final UUID TEST_SUB_REPORTER_ID_2 = UUID.randomUUID();
 
     private static final int TIMEOUT = 1000;
 
@@ -280,7 +280,6 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
             List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
             new HashSet<>());
@@ -298,7 +297,6 @@ public class BuildTest {
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            TEST_REPORT_ID,
             List.of(),
             List.of(),
             new HashSet<>());
@@ -324,12 +322,11 @@ public class BuildTest {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
             List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             new HashSet<>());
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
-                .withMessageTemplate(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_1)
+                .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
                 .build());
 
         // Group does not exist
@@ -428,7 +425,6 @@ public class BuildTest {
         // Create build infos
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
             List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             new HashSet<>());
@@ -708,7 +704,6 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
             List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
             new HashSet<>());
@@ -808,7 +803,6 @@ public class BuildTest {
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            TEST_REPORT_ID,
             Collections.emptyList(),
             Collections.emptyList(),
             new HashSet<>());
@@ -925,7 +919,6 @@ public class BuildTest {
 
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
             List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             new HashSet<>());
@@ -952,7 +945,6 @@ public class BuildTest {
         // Because TestChannelBinder implementation is synchronous the build is made in a different thread
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
             List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             Set.of());
@@ -992,7 +984,6 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_ERROR_REPORT_ID,
             List.of(TEST_GROUP_ID),
             List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)),
             Set.of());
@@ -1018,7 +1009,7 @@ public class BuildTest {
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID groupUuid = UUID.randomUUID();
         UUID reportUuid = UUID.randomUUID();
-        String reporterId = UUID.randomUUID().toString();
+        UUID reporterId = UUID.randomUUID();
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
@@ -1044,12 +1035,12 @@ public class BuildTest {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID reportUuid = UUID.randomUUID();
-        String reporterId = UUID.randomUUID().toString();
-        String reporterId2 = UUID.randomUUID().toString();
+        UUID nodeUuid1 = UUID.randomUUID();
+        UUID nodeUuid2 = UUID.randomUUID();
 
         List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
-        modificationInfosGroups.add(Pair.of(new ReportInfos(reportUuid, reporterId), List.of(loadCreationInfos)));
-        modificationInfosGroups.add(Pair.of(new ReportInfos(UUID.randomUUID(), reporterId2), List.of()));
+        modificationInfosGroups.add(Pair.of(new ReportInfos(reportUuid, nodeUuid1), List.of(loadCreationInfos)));
+        modificationInfosGroups.add(Pair.of(new ReportInfos(UUID.randomUUID(), nodeUuid2), List.of()));
 
         //Global application status should be in error and last application status should be OK
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
