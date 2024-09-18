@@ -124,40 +124,37 @@ public class VoltageLevelModification extends AbstractModification {
             oldIpMin = identifiableShortCircuit.getIpMin();
             oldIpMax = identifiableShortCircuit.getIpMax();
         }
-        updateShortCircuitLimits(ipMin, ipMax, oldIpMin, oldIpMax, identifiableShortCircuitAdder, reports);
+
+        if (ipMin != null) {
+            var newIpMin = ipMin.getValue();
+
+            identifiableShortCircuitAdder.withIpMin(newIpMin);
+
+            //convert to kA to report it like the user set it.
+            var oldIpMinToReport = convertToKiloAmps(oldIpMin);
+            var newIpMinToReport = convertToKiloAmps(newIpMin);
+            reports.add(ModificationUtils.getInstance()
+                    .buildModificationReport(oldIpMinToReport, newIpMinToReport, "Low short circuit current limit"));
+        } else if (oldIpMin != null) {
+            identifiableShortCircuitAdder.withIpMin(oldIpMin);
+        }
+
+        if (ipMax != null) {
+            var newIpMax = ipMax.getValue();
+            identifiableShortCircuitAdder.withIpMax(newIpMax);
+
+            //Convert to kA to report it like the user set it.
+            var oldIpMaxToReport = convertToKiloAmps(oldIpMax);
+            var newIpMaxToReport = convertToKiloAmps(newIpMax);
+            reports.add(ModificationUtils.getInstance()
+                    .buildModificationReport(oldIpMaxToReport, newIpMaxToReport, "High short circuit current limit"));
+        } else if (oldIpMax != null) {
+            identifiableShortCircuitAdder.withIpMax(oldIpMax);
+        }
 
         identifiableShortCircuitAdder.add();
         if (subReportNode != null) {
             reports.forEach(report -> insertReportNode(subReportNode, report));
-        }
-    }
-
-    private static void updateShortCircuitLimits(AttributeModification<Double> ipMin,
-                                                 AttributeModification<Double> ipMax,
-                                                 Double oldIpMin,
-                                                 Double oldIpMax,
-                                                 IdentifiableShortCircuitAdder identifiableShortCircuitAdder,
-                                                 List<ReportNode> reports) {
-        if (ipMin != null) {
-            updateShortCircuitLimit(ipMin.getValue(), oldIpMin, "Low short circuit current limit", identifiableShortCircuitAdder::withIpMin, reports);
-        }
-        if (ipMax != null) {
-            updateShortCircuitLimit(ipMax.getValue(), oldIpMax, "High short circuit current limit", identifiableShortCircuitAdder::withIpMax, reports);
-        }
-    }
-
-    private static void updateShortCircuitLimit(Double newValue,
-                                         Double oldValue,
-                                         String limitDescription,
-                                         Consumer<Double> setterMethod,
-                                         List<ReportNode> reports) {
-        if (newValue != null) {
-            setterMethod.accept(newValue);
-            Double oldValueToReport = convertToKiloAmps(oldValue);
-            Double newValueToReport = convertToKiloAmps(newValue);
-            reports.add(ModificationUtils.getInstance().buildModificationReport(oldValueToReport, newValueToReport, limitDescription));
-        } else if (oldValue != null) {
-            setterMethod.accept(oldValue);
         }
     }
 
