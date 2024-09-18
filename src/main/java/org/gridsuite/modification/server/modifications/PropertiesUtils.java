@@ -24,7 +24,7 @@ public final class PropertiesUtils {
         );
         if (!reportNodes.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(subReportNode, reportNodes,
-                propertiesLabelKey, PROPERTIES, Map.of());
+                propertiesLabelKey, PROPERTIES);
         }
     }
 

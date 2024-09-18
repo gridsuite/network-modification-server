@@ -56,8 +56,8 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
 
     private Line createLineAndSwitches(SwitchKind switchKind, boolean isFictitious) {
         VoltageLevel vl2 = getNetwork().getVoltageLevel("vl2");
-        createSwitch(vl2, "br12", "br12", switchKind, false, false, isFictitious, 3, 2);
-        createSwitch(vl2, "br22", "br22", switchKind, false, false, isFictitious, 2, 6);
+        createSwitch(vl2, "br12", "br12", switchKind, false, false, isFictitious, 0, 3);
+        createSwitch(vl2, "br22", "br22", switchKind, false, false, isFictitious, 0, 3);
 
         return getNetwork().newLine()
                 .setId("line1")
@@ -70,7 +70,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
                 .setG2(0.0)
                 .setB1(0.0)
                 .setB2(0.0)
-                .setNode1(2)
+                .setNode1(3)
                 .setNode2(3)
                 .add();
     }

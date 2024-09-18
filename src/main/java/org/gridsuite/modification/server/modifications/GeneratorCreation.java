@@ -27,7 +27,6 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.nanIfNull;
@@ -190,7 +189,7 @@ public class GeneratorCreation extends AbstractModification {
             setPointReports.add(ModificationUtils.getInstance()
                 .buildCreationReport(generatorCreationInfos.getTargetQ(), "Reactive power"));
         }
-        return ModificationUtils.getInstance().reportModifications(subReportNode, setPointReports, "SetPointCreated", "Setpoints", Map.of());
+        return ModificationUtils.getInstance().reportModifications(subReportNode, setPointReports, "SetPointCreated", "Setpoints");
     }
 
     private void createGeneratorVoltageRegulation(GeneratorCreationInfos generatorCreationInfos, Generator generator, VoltageLevel voltageLevel, ReportNode subReportNode) {
@@ -222,7 +221,7 @@ public class GeneratorCreation extends AbstractModification {
                         .build());
             }
         }
-        ModificationUtils.getInstance().reportModifications(subReportNode, voltageReports, "VoltageRegulationCreated", "Voltage regulation", Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNode, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
 
     }
 
@@ -270,29 +269,22 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY, Map.of());
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
         }
     }
 
     private ReportNode reportGeneratorActiveLimits(GeneratorCreationInfos generatorCreationInfos, ReportNode subReportNode) {
-        List<ReportNode> limitsReports = new ArrayList<>();
         ReportNode subReportNodeLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-        subReportNodeLimits.newReportNode()
-                .withMessageTemplate(LIMITS, LIMITS)
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .add();
-
+        List<ReportNode> limitsReports = new ArrayList<>();
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             generatorCreationInfos.getMinP(), "Min active power"));
-
         limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
             generatorCreationInfos.getMaxP(), "Max active power"));
-
         if (generatorCreationInfos.getRatedS() != null) {
             limitsReports.add(ModificationUtils.getInstance().buildCreationReport(
                 generatorCreationInfos.getRatedS(), "Rated nominal power"));
         }
-        ModificationUtils.getInstance().reportModifications(subReportNodeLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS, Map.of());
+        ModificationUtils.getInstance().reportModifications(subReportNodeLimits, limitsReports, "ActiveLimitsCreated", ACTIVE_LIMITS);
         return subReportNodeLimits;
     }
 
@@ -319,7 +311,7 @@ public class GeneratorCreation extends AbstractModification {
                         .build());
 
             }
-            ModificationUtils.getInstance().reportModifications(subReportNode, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, activePowerRegulationReports, "ActivePowerRegulationCreated", "Active power regulation");
         }
     }
 
@@ -345,7 +337,7 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReportNode, shortCircuitReports, "shortCircuitCreated", "Short-circuit", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, shortCircuitReports, "shortCircuitCreated", "Short-circuit");
         }
     }
 
@@ -386,7 +378,7 @@ public class GeneratorCreation extends AbstractModification {
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
             }
-            ModificationUtils.getInstance().reportModifications(subReportNode, startupReports, "startUpAttributesCreated", "Start up", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, startupReports, "startUpAttributesCreated", "Start up");
         }
     }
 }

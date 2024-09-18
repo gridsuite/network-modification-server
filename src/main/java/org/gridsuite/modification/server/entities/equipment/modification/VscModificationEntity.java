@@ -147,6 +147,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .activated(getActivated())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .nominalV(toAttributeModification(getNominalV()))
