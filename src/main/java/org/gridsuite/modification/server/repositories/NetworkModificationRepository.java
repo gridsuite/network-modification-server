@@ -275,6 +275,7 @@ public class NetworkModificationRepository {
                         .uuid(tabularCreationEntity.getId())
                         .date(tabularCreationEntity.getDate())
                         .stashed(tabularCreationEntity.getStashed())
+                        .activated(tabularCreationEntity.getActivated())
                         .creationType(tabularCreationEntity.getCreationType())
                         .creations(orderedGeneratorCreation.stream().map(GeneratorCreationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
                         .build();
