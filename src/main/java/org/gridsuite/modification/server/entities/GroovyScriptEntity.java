@@ -52,6 +52,7 @@ public class GroovyScriptEntity extends ModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .activated(getActivated())
                 .script(getScript());
     }
 }
