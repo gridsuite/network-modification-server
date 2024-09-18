@@ -104,6 +104,7 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .activated(getActivated())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
