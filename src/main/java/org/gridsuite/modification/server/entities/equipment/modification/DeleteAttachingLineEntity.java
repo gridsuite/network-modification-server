@@ -62,6 +62,7 @@ public class DeleteAttachingLineEntity extends ModificationEntity {
                 .uuid(getId())
                 .date(getDate())
                 .stashed(getStashed())
+                .activated(getActivated())
                 .lineToAttachTo1Id(getLineToAttachTo1Id())
                 .lineToAttachTo2Id(getLineToAttachTo2Id())
                 .attachedLineId(getAttachedLineId())
