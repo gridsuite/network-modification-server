@@ -100,12 +100,17 @@ public class ModificationInfos {
     @Schema(description = "Message values")
     private String messageValues;
 
+    @Schema(description = "Modification activated")
+    @Builder.Default
+    private Boolean activated = true;
+
     // Only for metadata
     public static ModificationInfos fromEntity(@NonNull ModificationEntity entity) {
         ModificationInfos modificationInfos = ModificationInfos.builder()
             .uuid(entity.getId())
             .date(entity.getDate())
             .stashed(entity.getStashed())
+            .activated(entity.getActivated())
             .messageType(entity.getMessageType())
             .messageValues(entity.getMessageValues())
             .build();
