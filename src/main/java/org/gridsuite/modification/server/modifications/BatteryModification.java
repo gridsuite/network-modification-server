@@ -106,10 +106,6 @@ public class BatteryModification extends AbstractModification {
         ReportNode subReporterSetpoints = null;
         if (subReportNode != null && (reportActivePower != null || reportReactivePower != null)) {
             subReporterSetpoints = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
-            subReporterSetpoints.newReportNode()
-                    .withMessageTemplate(SETPOINTS, SETPOINTS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
             if (reportActivePower != null) {
                 insertReportNode(subReporterSetpoints, reportActivePower);
             }
@@ -143,16 +139,7 @@ public class BatteryModification extends AbstractModification {
         ReportNode reportMinActivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(battery::setMinP, battery::getMinP, minP, "Min active power");
         if (subReportNode != null && (reportMaxActivePower != null || reportMinActivePower != null)) {
             subReportNodeLimits = subReportNode.newReportNode().withMessageTemplate(LIMITS, LIMITS).add();
-            subReportNodeLimits.newReportNode()
-                    .withMessageTemplate(LIMITS, LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
-
             ReportNode subReporterActiveLimits = subReportNodeLimits.newReportNode().withMessageTemplate(ACTIVE_LIMITS, ACTIVE_LIMITS).add();
-            subReporterActiveLimits.newReportNode()
-                    .withMessageTemplate(ACTIVE_LIMITS, ACTIVE_LIMITS)
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .add();
             if (reportMaxActivePower != null) {
                 insertReportNode(subReporterActiveLimits, reportMaxActivePower);
             }

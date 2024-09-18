@@ -107,18 +107,21 @@ public class VscModification extends AbstractModification {
         characteristics(hvdcLine, modificationInfos, subReportNode);
 
         // Set Points
-        //  Set Points
         List<ReportNode> setPointsReports = setPoints(hvdcLine);
-        //  hvdc droop
+        // Hvdc droop
         List<ReportNode> droopReports = hvdcAngleDroopActivePowerControlAdder(hvdcLine);
 
         if (!setPointsReports.isEmpty() || !droopReports.isEmpty()) {
-            ReportNode setPointsReport = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
+            ReportNode setPointsReport = null;
             if (!setPointsReports.isEmpty()) {
-                ModificationUtils.getInstance().reportModifications(setPointsReport, setPointsReports, VSC_SETPOINTS, SETPOINTS, Map.of());
+                setPointsReport = ModificationUtils.getInstance().reportModifications(subReportNode, setPointsReports, VSC_SETPOINTS, SETPOINTS);
             }
             if (!droopReports.isEmpty()) {
-                ModificationUtils.getInstance().reportModifications(setPointsReport, droopReports, "vscAngleDroop", "Angle droop active power control", Map.of());
+                if (setPointsReport == null) {
+                    setPointsReport = subReportNode.newReportNode().withMessageTemplate(VSC_SETPOINTS, SETPOINTS).add();
+                }
+                // Hvdc droop logs are in a subReport of Set Points
+                ModificationUtils.getInstance().reportModifications(setPointsReport, droopReports, "vscAngleDroop", "Angle droop active power control");
             }
         }
 
@@ -149,7 +152,7 @@ public class VscModification extends AbstractModification {
             characteristicsReportsContainer.add(ModificationUtils.getInstance().applyAndBuildModificationReport(hvdcLine::setMaxP, hvdcLine::getMaxP, modificationInfos.getMaxP(), "Power max"));
         }
         if (!characteristicsReportsContainer.isEmpty()) {
-            ModificationUtils.getInstance().reportModifications(subReportNode, characteristicsReportsContainer, VSC_CHARACTERISTICS, CHARACTERISTICS, Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, characteristicsReportsContainer, VSC_CHARACTERISTICS, CHARACTERISTICS);
         }
     }
 
@@ -179,7 +182,7 @@ public class VscModification extends AbstractModification {
             }
         }
         if (!reports.isEmpty()) {
-            ModificationUtils.getInstance().reportModifications(subReportNode, reports, "vscLimits", "Limits", Map.of());
+            ModificationUtils.getInstance().reportModifications(subReportNode, reports, "vscLimits", "Limits");
         }
     }
 
@@ -296,7 +299,7 @@ public class VscModification extends AbstractModification {
 
         if (!characteristicReports.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(converterStationReportNode,
-                characteristicReports, "Characteristics", "Characteristics", Map.of());
+                characteristicReports, "Characteristics", "Characteristics");
         }
 
         // set points
@@ -317,7 +320,7 @@ public class VscModification extends AbstractModification {
         }
         if (!setPointsReports.isEmpty()) {
             ModificationUtils.getInstance().reportModifications(converterStationReportNode,
-                setPointsReports, SETPOINTS, SETPOINTS, Map.of());
+                setPointsReports, SETPOINTS, SETPOINTS);
         }
 
         // limits
