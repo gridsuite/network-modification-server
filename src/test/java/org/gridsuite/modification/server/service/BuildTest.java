@@ -96,7 +96,6 @@ public class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
-    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final UUID TEST_ERROR_REPORT_ID = UUID.randomUUID();
     private static final UUID TEST_SUB_REPORTER_ID_1 = UUID.randomUUID();

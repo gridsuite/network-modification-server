@@ -49,8 +49,6 @@ import java.util.concurrent.Executors;
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
 
-    public static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
-
     private final NetworkStoreService networkStoreService;
 
     private final EquipmentInfosService equipmentInfosService;
