@@ -50,7 +50,7 @@ public abstract class AbstractBranchModification extends AbstractModification {
             branch.setName(branchModificationInfos.getEquipmentName().getValue());
         }
 
-        modifyBranchConnectivity1Attributes(branchModificationInfos, branch, subReportNode);
+        modifyBranchConnectivityAttributes(branchModificationInfos, branch, subReportNode);
 
         if (characteristicsModified(branchModificationInfos)) {
             modifyCharacteristics(branch, branchModificationInfos, subReportNode);
@@ -224,8 +224,8 @@ public abstract class AbstractBranchModification extends AbstractModification {
     protected abstract void modifyCharacteristics(Branch<?> branch, BranchModificationInfos branchModificationInfos,
             ReportNode subReportNode);
 
-    private ReportNode modifyBranchConnectivity1Attributes(BranchModificationInfos branchModificationInfos,
-                                                           Branch<?> branch, ReportNode subReportNode) {
+    private ReportNode modifyBranchConnectivityAttributes(BranchModificationInfos branchModificationInfos,
+                                                          Branch<?> branch, ReportNode subReportNode) {
         ConnectablePosition<?> connectablePosition = (ConnectablePosition<?>) branch.getExtension(ConnectablePosition.class);
         ConnectablePositionAdder<?> connectablePositionAdder = branch.newExtension(ConnectablePositionAdder.class);
         return ModificationUtils.getInstance().modifyBranchConnectivityAttributes(connectablePosition, connectablePositionAdder, branch, branchModificationInfos, subReportNode);
