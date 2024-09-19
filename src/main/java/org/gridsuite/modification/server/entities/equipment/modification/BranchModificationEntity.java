@@ -6,14 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.BranchModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
-
-import jakarta.persistence.*;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -55,17 +54,87 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
 
     @Embedded
     @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "voltageLevelId1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltageLevelId1Op"))
+    })
+    private StringModificationEmbedded voltageLevelId1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "voltageLevelId2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "voltageLevelId2Op"))
+    })
+    private StringModificationEmbedded voltageLevelId2;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "busOrBusbarSectionId1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "busOrBusbarSectionId1Op"))
+    })
+    private StringModificationEmbedded busOrBusbarSectionId1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "busOrBusbarSectionId2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "busOrBusbarSectionId2Op"))
+    })
+    private StringModificationEmbedded busOrBusbarSectionId2;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connectionName1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectionName1Op"))
+    })
+    private StringModificationEmbedded connectionName1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connectionName2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectionName2Op"))
+    })
+    private StringModificationEmbedded connectionName2;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connectionPosition1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectionPosition1Op"))
+    })
+    private IntegerModificationEmbedded connectionPosition1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connectionPosition2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectionPosition2Op"))
+    })
+    private IntegerModificationEmbedded connectionPosition2;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connectionDirection1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectionDirection1Op"))
+    })
+    private EnumModificationEmbedded<ConnectablePosition.Direction> connectionDirection1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "connectionDirection2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "connectionDirection2Op"))
+    })
+    private EnumModificationEmbedded<ConnectablePosition.Direction> connectionDirection2;
+
+    @Embedded
+    @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "connected1")),
         @AttributeOverride(name = "opType", column = @Column(name = "connected1Op"))
     })
-    private BooleanModificationEmbedded connected1;
+    private BooleanModificationEmbedded terminal1Connected;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "connected2")),
         @AttributeOverride(name = "opType", column = @Column(name = "connected2Op"))
     })
-    private BooleanModificationEmbedded connected2;
+    private BooleanModificationEmbedded terminal2Connected;
 
     protected BranchModificationEntity(BranchModificationInfos branchModificationInfos) {
         super(branchModificationInfos);
@@ -92,7 +161,17 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         } else {
             currentLimits2 = branchModificationInfos.getCurrentLimits2().toEntity();
         }
-        this.connected1 = branchModificationInfos.getConnected1() != null ? new BooleanModificationEmbedded(branchModificationInfos.getConnected1()) : null;
-        this.connected2 = branchModificationInfos.getConnected2() != null ? new BooleanModificationEmbedded(branchModificationInfos.getConnected2()) : null;
+        this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
+        this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
+        this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;
+        this.busOrBusbarSectionId2 = branchModificationInfos.getBusOrBusbarSectionId2() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId2()) : null;
+        this.connectionName1 = branchModificationInfos.getConnectionName1() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName1()) : null;
+        this.connectionName2 = branchModificationInfos.getConnectionName2() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName2()) : null;
+        this.connectionDirection1 = branchModificationInfos.getConnectionDirection1() != null ? new EnumModificationEmbedded<>(branchModificationInfos.getConnectionDirection1()) : null;
+        this.connectionDirection2 = branchModificationInfos.getConnectionDirection2() != null ? new EnumModificationEmbedded<>(branchModificationInfos.getConnectionDirection2()) : null;
+        this.connectionPosition1 = branchModificationInfos.getConnectionPosition1() != null ? new IntegerModificationEmbedded(branchModificationInfos.getConnectionPosition1()) : null;
+        this.connectionPosition2 = branchModificationInfos.getConnectionPosition2() != null ? new IntegerModificationEmbedded(branchModificationInfos.getConnectionPosition2()) : null;
+        this.terminal1Connected = branchModificationInfos.getTerminal1Connected() != null ? new BooleanModificationEmbedded(branchModificationInfos.getTerminal1Connected()) : null;
+        this.terminal2Connected = branchModificationInfos.getTerminal2Connected() != null ? new BooleanModificationEmbedded(branchModificationInfos.getTerminal2Connected()) : null;
     }
 }
