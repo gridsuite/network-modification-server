@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -51,6 +52,16 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
+                .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
+                .voltageLevelId2(new AttributeModification<>("v4", OperationType.SET))
+                .busOrBusbarSectionId1(new AttributeModification<>("1B", OperationType.SET))
+                .busOrBusbarSectionId2(new AttributeModification<>("2B", OperationType.SET))
+                .connectionName1(new AttributeModification<>("cn1Line1", OperationType.SET))
+                .connectionName2(new AttributeModification<>("cn2Line1", OperationType.SET))
+                .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionDirection2(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
+                .connectionPosition2(new AttributeModification<>(1, OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(12.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -378,8 +389,8 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
 
     private void changeLineConnectionState(Line existingEquipment, boolean expectedState) throws Exception {
         LineModificationInfos modificationInfos = (LineModificationInfos) buildModification();
-        modificationInfos.setConnected1(new AttributeModification<>(expectedState, OperationType.SET));
-        modificationInfos.setConnected2(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setTerminal1Connected(new AttributeModification<>(expectedState, OperationType.SET));
+        modificationInfos.setTerminal2Connected(new AttributeModification<>(expectedState, OperationType.SET));
 
         if (expectedState) {
             if (existingEquipment.getTerminal1().isConnected()) {
