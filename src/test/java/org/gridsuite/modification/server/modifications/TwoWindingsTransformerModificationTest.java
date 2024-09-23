@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.Terminal;
 import com.powsybl.iidm.network.TwoSides;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -79,6 +80,16 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                                 .modificationType(TemporaryLimitModificationType.ADDED)
                                 .build()))
                         .build())
+                .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
+                .voltageLevelId2(new AttributeModification<>("v2", OperationType.SET))
+                .busOrBusbarSectionId1(new AttributeModification<>("1B", OperationType.SET))
+                .busOrBusbarSectionId2(new AttributeModification<>("2B", OperationType.SET))
+                .connectionName1(new AttributeModification<>("trf1", OperationType.SET))
+                .connectionName2(new AttributeModification<>("trf1", OperationType.SET))
+                .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionDirection2(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
+                .connectionPosition2(new AttributeModification<>(2, OperationType.SET))
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
@@ -603,8 +614,8 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
                 TwoWindingsTransformerModificationInfos.builder()
                         .stashed(false)
                         .equipmentId(existingEquipment.getId())
-                        .connected1(side == TwoSides.ONE ? new AttributeModification<>(expectedState, OperationType.SET) : null)
-                        .connected2(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
+                        .terminal1Connected(side == TwoSides.ONE ? new AttributeModification<>(expectedState, OperationType.SET) : null)
+                        .terminal2Connected(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
                         .build();
         String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
