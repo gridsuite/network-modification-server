@@ -215,10 +215,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             regulationReports.add(targetDeadbandReport);
         }
 
-        if (isModification) {
-            phaseTapChanger.setRegulating(true);
-        } else {
-            phaseTapChangerAdder.setRegulating(true);
+        ReportNode regulatingReport = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
+            isModification ? phaseTapChanger::setRegulating
+                : phaseTapChangerAdder::setRegulating,
+            isModification ? phaseTapChanger::isRegulating : () -> null,
+            phaseTapChangerInfos.getRegulating(), "Regulating", 2);
+        if (regulatingReport != null) {
+            regulationReports.add(regulatingReport);
         }
     }
 
