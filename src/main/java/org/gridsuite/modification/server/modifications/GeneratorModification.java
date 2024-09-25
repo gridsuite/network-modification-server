@@ -460,9 +460,9 @@ public class GeneratorModification extends AbstractModification {
         ReportNode reportReactivePower = null;
         if (modifTargetQ != null) {
             if (modifTargetQ.getOp() == OperationType.SET) {
-                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modifTargetQ, "Reactive power");
+                reportReactivePower = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(generator::setTargetQ, generator::getTargetQ, modifTargetQ, "Target reactive power");
             } else {
-                reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Reactive power");
+                reportReactivePower = ModificationUtils.getInstance().buildModificationReport(generator.getTargetQ(), Double.NaN, "Target reactive power");
             }
         }
         return reportReactivePower;

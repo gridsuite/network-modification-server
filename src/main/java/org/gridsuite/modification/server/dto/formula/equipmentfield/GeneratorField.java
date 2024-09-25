@@ -14,7 +14,6 @@ import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
-import jakarta.validation.constraints.NotNull;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
@@ -66,7 +65,7 @@ public enum GeneratorField {
         };
     }
 
-    public static void setNewValue(Generator generator, String generatorField, @NotNull Double newValue) {
+    public static void setNewValue(Generator generator, String generatorField, double newValue) {
         if (!Double.isNaN(newValue)) {
             GeneratorField field = GeneratorField.valueOf(generatorField);
             final AttributeModification<Double> attributeModification = new AttributeModification<>(newValue, OperationType.SET);
@@ -97,7 +96,7 @@ public enum GeneratorField {
                     ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
                     ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
                     ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, null,
-                            new AttributeModification<>(newValue.floatValue(), OperationType.SET), null, null);
+                            new AttributeModification<>((float) newValue, OperationType.SET), null, null);
                 }
                 case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(attributeModification, null, generator, null);
                 case STEP_UP_TRANSFORMER_REACTANCE -> modifyGeneratorShortCircuitAttributes(null, attributeModification, generator, null);
