@@ -9,12 +9,11 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
+import jakarta.validation.constraints.NotNull;
 import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.OperationType;
 
 import static org.gridsuite.modification.server.modifications.VoltageLevelModification.*;
-import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
-import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
