@@ -90,16 +90,16 @@ public class NetworkModificationController {
                                                                                           @RequestBody List<UUID> modificationsUuidList) {
         switch (action) {
             case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
+                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId), modificationsUuidList));
             case INSERT:
-                return ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList));
+                return ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId), modificationsUuidList));
             case MOVE:
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
-                return ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), modificationsUuidList, canBuildNode));
+                return ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId), modificationsUuidList, canBuildNode));
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
@@ -134,7 +134,7 @@ public class NetworkModificationController {
             @Parameter(description = "Reporter ID") @RequestParam("reporterId") String reporterId,
             @RequestBody ModificationInfos modificationInfos) {
         modificationInfos.check();
-        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, new ReportInfos(reportUuid, reporterId), modificationInfos));
+        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, new ReportInfos(reportUuid, UUID.fromString(reporterId)), modificationInfos));
     }
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -265,7 +265,7 @@ public class NetworkModificationController {
                                                                                              @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
                                                                                              @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
                                                                                              @Parameter(description = "origin group UUID, from where modifications are copied") @RequestParam(value = "duplicateFrom") UUID originGroupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateModificationsInGroup(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId.toString()), originGroupUuid));
+        return ResponseEntity.ok().body(networkModificationService.duplicateModificationsInGroup(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId), originGroupUuid));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
@@ -292,6 +292,6 @@ public class NetworkModificationController {
                                                                                   @Parameter(description = "the report uuid") @RequestParam(value = "reportUuid", required = false) UUID reportUuid,
                                                                                   @Parameter(description = "the reporter id") @RequestParam(value = "reporterId", required = false) String reporterId,
                                                                                   @RequestBody List<UUID> modificationsUuidList) {
-        return ResponseEntity.ok().body(networkModificationService.applyModificationsFromUuids(networkUuid, variantId, new ReportInfos(reportUuid, reporterId), modificationsUuidList));
+        return ResponseEntity.ok().body(networkModificationService.applyModificationsFromUuids(networkUuid, variantId, new ReportInfos(reportUuid, UUID.fromString(reporterId)), modificationsUuidList));
     }
 }
