@@ -1637,7 +1637,7 @@ public class ModificationControllerTest {
         // apply the modification on the network
         mvcResult = mockMvc.perform(
                 put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
-                    + "?variantId=" + NetworkCreation.VARIANT_ID)
+                    + "?variantId=" + NetworkCreation.VARIANT_ID + "&reporterId=" + UUID.randomUUID().toString())
                     .content(objectWriter.writeValueAsString(modificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
