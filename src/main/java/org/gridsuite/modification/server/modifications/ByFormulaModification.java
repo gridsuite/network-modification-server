@@ -98,7 +98,6 @@ public class ByFormulaModification extends AbstractModification {
                         .withUntypedValue(KEY_VALUE, equipmentCount)
                         .withSeverity(TypedValue.INFO_SEVERITY)
                         .add();
-                report(formulaSubReporter, formulaReports);
             } else {
                 if (equipmentNotModifiedCount == equipmentCount) {
                     createReport(subReportNode, "byFormulaModificationNone",
@@ -111,9 +110,9 @@ public class ByFormulaModification extends AbstractModification {
                             .withUntypedValue(KEY_NB_UNCHANGED, equipmentNotModifiedCount + equipmentNotFoundCount)
                             .withSeverity(TypedValue.WARN_SEVERITY)
                             .add();
-                    report(formulaSubReporter, formulaReports);
                 }
             }
+            report(formulaSubReporter, formulaReports);
         }
     }
 
@@ -267,7 +266,7 @@ public class ByFormulaModification extends AbstractModification {
             try {
                 final Double newValue = applyOperation(formulaInfos.getOperator(), value1, value2);
                 switch (identifiable.getType()) {
-                    case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue);
+                    case GENERATOR -> GeneratorField.setNewValue((Generator) identifiable, formulaInfos.getEditedField(), newValue.doubleValue());
                     case BATTERY -> BatteryField.setNewValue((Battery) identifiable, formulaInfos.getEditedField(), newValue);
                     case SHUNT_COMPENSATOR -> ShuntCompensatorField.setNewValue((ShuntCompensator) identifiable, formulaInfos.getEditedField(), newValue);
                     case VOLTAGE_LEVEL -> VoltageLevelField.setNewValue((VoltageLevel) identifiable, formulaInfos.getEditedField(), newValue);

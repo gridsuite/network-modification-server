@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.server.dto.AttributeModification;
 import org.gridsuite.modification.server.dto.LoadModificationInfos;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_NOT_FOUND;
@@ -53,11 +54,19 @@ public class LoadModification extends AbstractModification {
 
         ModificationUtils.getInstance().applyElementaryModifications(load::setName, () -> load.getOptionalName().orElse("No value"), modificationInfos.getEquipmentName(), subReportNode, "Name");
         ModificationUtils.getInstance().applyElementaryModifications(load::setLoadType, load::getLoadType, modificationInfos.getLoadType(), subReportNode, "Type");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, modificationInfos.getP0(), subReportNode, "Constant active power");
-        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, modificationInfos.getQ0(), subReportNode, "Constant reactive power");
+        modifyP0(load, modificationInfos.getP0(), subReportNode);
+        modifyQ0(load, modificationInfos.getQ0(), subReportNode);
         modifyLoadConnectivityAttributes(modificationInfos, load, subReportNode);
         // properties
         PropertiesUtils.applyProperties(load, subReportNode, modificationInfos.getProperties(), "LoadProperties");
+    }
+
+    public static void modifyQ0(Load load, AttributeModification<Double> q0, ReportNode subReportNode) {
+        ModificationUtils.getInstance().applyElementaryModifications(load::setQ0, load::getQ0, q0, subReportNode, "Constant reactive power");
+    }
+
+    public static void modifyP0(Load load, AttributeModification<Double> p0, ReportNode subReportNode) {
+        ModificationUtils.getInstance().applyElementaryModifications(load::setP0, load::getP0, p0, subReportNode, "Constant active power");
     }
 
     private ReportNode modifyLoadConnectivityAttributes(LoadModificationInfos modificationInfos,
