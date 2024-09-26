@@ -63,6 +63,7 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -335,6 +336,36 @@ public class ModificationControllerTest {
                         .queryParam("stashed", "true"))
                 .andExpect(status().isOk());
         assertEquals(true, modificationRepository.getModificationInfo(UUID.fromString(uuidString)).getStashed());
+    }
+
+    @Test
+    public void testDisableNetworkModifications() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .equipmentType(IdentifiableType.SWITCH)
+            .equipmentAttributeName("open")
+            .equipmentAttributeValue(true)
+            .equipmentId("v1b1")
+            .stashed(false)
+            .activated(true)
+            .build();
+        String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
+
+        mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modifications.size());
+        assertEquals(true, modifications.get(0).getActivated());
+
+        String uuidString = modifications.get(0).getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                .queryParam("uuids", uuidString)
+                .queryParam("activated", "false"))
+            .andExpect(status().isOk());
+        assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getActivated());
     }
 
     @Test
@@ -1606,7 +1637,7 @@ public class ModificationControllerTest {
         // apply the modification on the network
         mvcResult = mockMvc.perform(
                 put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
-                    + "?variantId=" + NetworkCreation.VARIANT_ID)
+                    + "?variantId=" + NetworkCreation.VARIANT_ID + "&reporterId=" + UUID.randomUUID().toString())
                     .content(objectWriter.writeValueAsString(modificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();

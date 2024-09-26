@@ -8,6 +8,11 @@
 package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Load;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+
+import static org.gridsuite.modification.server.modifications.LoadModification.modifyP0;
+import static org.gridsuite.modification.server.modifications.LoadModification.modifyQ0;
 import com.powsybl.iidm.network.LoadType;
 import jakarta.validation.constraints.NotNull;
 
@@ -32,8 +37,8 @@ public enum LoadField {
         LoadField field = LoadField.valueOf(loadField);
         switch (field) {
             case LOAD_TYPE -> load.setLoadType(LoadType.valueOf(newValue));
-            case ACTIVE_POWER -> load.setP0(Double.parseDouble(newValue));
-            case REACTIVE_POWER -> load.setQ0(Double.parseDouble(newValue));
+            case ACTIVE_POWER -> modifyP0(load, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null);
+            case REACTIVE_POWER -> modifyQ0(load, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null);
         }
     }
 }

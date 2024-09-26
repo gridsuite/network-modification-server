@@ -21,5 +21,5 @@ import java.util.UUID;
 public class ReportInfos {
     private UUID reportUuid;
 
-    private String reporterId;
+    private UUID nodeUuid;
 }

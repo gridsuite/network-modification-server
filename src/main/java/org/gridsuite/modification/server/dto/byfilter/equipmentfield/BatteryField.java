@@ -11,6 +11,13 @@ import com.powsybl.iidm.network.Battery;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
 import jakarta.validation.constraints.NotNull;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.modifications.ModificationUtils;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
+import static org.gridsuite.modification.server.modifications.BatteryModification.modifyBatteryActiveLimitsAttributes;
+import static org.gridsuite.modification.server.modifications.BatteryModification.modifyBatterySetpointsAttributes;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -37,14 +44,28 @@ public enum BatteryField {
 
     public static void setNewValue(Battery battery, String batteryField, @NotNull String newValue) {
         BatteryField field = BatteryField.valueOf(batteryField);
+        final AttributeModification<Double> attributeModification = new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET);
         switch (field) {
-            case MINIMUM_ACTIVE_POWER -> battery.setMinP(Double.parseDouble(newValue));
-            case MAXIMUM_ACTIVE_POWER -> battery.setMaxP(Double.parseDouble(newValue));
-            case ACTIVE_POWER_SET_POINT -> battery.setTargetP(Double.parseDouble(newValue));
-            case REACTIVE_POWER_SET_POINT -> battery.setTargetQ(Double.parseDouble(newValue));
-            case DROOP -> battery.newExtension(ActivePowerControlAdder.class)
-                    .withDroop(Double.parseDouble(newValue))
-                    .add();
+            case MINIMUM_ACTIVE_POWER ->
+                    modifyBatteryActiveLimitsAttributes(null, attributeModification, battery, null);
+            case MAXIMUM_ACTIVE_POWER ->
+                    modifyBatteryActiveLimitsAttributes(attributeModification, null, battery, null);
+            case ACTIVE_POWER_SET_POINT -> {
+                ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                        attributeModification, null, null, battery.getMinP(),
+                        battery.getMaxP(), battery.getTargetP(), MODIFY_BATTERY_ERROR, "Battery '" + battery.getId() + "' : "
+                );
+                modifyBatterySetpointsAttributes(attributeModification, null, null, null, battery, null);
+            }
+            case REACTIVE_POWER_SET_POINT -> modifyBatterySetpointsAttributes(
+                    null, attributeModification, null, null, battery, null);
+            case DROOP -> {
+                ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
+                ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
+                ModificationUtils.getInstance().modifyActivePowerControlAttributes(
+                        activePowerControl, activePowerControlAdder, null,
+                        new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null);
+            }
         }
     }
 }

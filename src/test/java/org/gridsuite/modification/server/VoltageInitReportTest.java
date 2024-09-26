@@ -79,7 +79,7 @@ class VoltageInitReportTest {
         assertThat(networkModificationApplicator.applyModifications(
                 List.of(modificationInfos),
                 new NetworkInfos(network, networkUuuid, true),
-                new ReportInfos(reportUuid, "99999999-9999-9999-9999-999999999999")))
+                new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))))
                 .as("network modifications results")
             .isNotNull()
             .extracting(NetworkModificationResult::getApplicationStatus)

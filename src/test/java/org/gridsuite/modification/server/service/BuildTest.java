@@ -66,7 +66,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
-import static org.gridsuite.modification.server.modifications.NetworkModificationApplicator.NETWORK_MODIFICATION_TYPE_REPORT;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -97,11 +96,10 @@ public class BuildTest {
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
-    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final UUID TEST_ERROR_REPORT_ID = UUID.randomUUID();
-    private static final String TEST_SUB_REPORTER_ID_1 = UUID.randomUUID().toString();
-    private static final String TEST_SUB_REPORTER_ID_2 = UUID.randomUUID().toString();
+    private static final UUID TEST_SUB_REPORTER_ID_1 = UUID.randomUUID();
+    private static final UUID TEST_SUB_REPORTER_ID_2 = UUID.randomUUID();
 
     private static final int TIMEOUT = 1000;
 
@@ -281,9 +279,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_2),
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
             new HashSet<>());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -299,7 +296,6 @@ public class BuildTest {
 
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            TEST_REPORT_ID,
             List.of(),
             List.of(),
             new HashSet<>());
@@ -325,12 +321,11 @@ public class BuildTest {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             new HashSet<>());
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
-                .withMessageTemplate(TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT, TEST_SUB_REPORTER_ID_1 + "@" + NETWORK_MODIFICATION_TYPE_REPORT)
+                .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
                 .build());
 
         // Group does not exist
@@ -429,9 +424,8 @@ public class BuildTest {
         // Create build infos
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             new HashSet<>());
 
         // Build variant
@@ -709,9 +703,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(TEST_SUB_REPORTER_ID_1, TEST_SUB_REPORTER_ID_2),
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
             new HashSet<>());
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
@@ -809,7 +802,6 @@ public class BuildTest {
         // to check
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
-            TEST_REPORT_ID,
             Collections.emptyList(),
             Collections.emptyList(),
             new HashSet<>());
@@ -926,9 +918,8 @@ public class BuildTest {
 
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             new HashSet<>());
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
@@ -953,9 +944,8 @@ public class BuildTest {
         // Because TestChannelBinder implementation is synchronous the build is made in a different thread
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_REPORT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
             Set.of());
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
@@ -993,9 +983,8 @@ public class BuildTest {
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
-            TEST_ERROR_REPORT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(TEST_SUB_REPORTER_ID_1),
+            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)),
             Set.of());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)
@@ -1019,7 +1008,7 @@ public class BuildTest {
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID groupUuid = UUID.randomUUID();
         UUID reportUuid = UUID.randomUUID();
-        String reporterId = UUID.randomUUID().toString();
+        UUID reporterId = UUID.randomUUID();
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
@@ -1045,15 +1034,15 @@ public class BuildTest {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID reportUuid = UUID.randomUUID();
-        String reporterId = UUID.randomUUID().toString();
-        String reporterId2 = UUID.randomUUID().toString();
+        UUID nodeUuid1 = UUID.randomUUID();
+        UUID nodeUuid2 = UUID.randomUUID();
 
-        List<Pair<String, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
-        modificationInfosGroups.add(Pair.of(reporterId, List.of(loadCreationInfos)));
-        modificationInfosGroups.add(Pair.of(reporterId2, List.of()));
+        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
+        modificationInfosGroups.add(Pair.of(new ReportInfos(reportUuid, nodeUuid1), List.of(loadCreationInfos)));
+        modificationInfosGroups.add(Pair.of(new ReportInfos(UUID.randomUUID(), nodeUuid2), List.of()));
 
         //Global application status should be in error and last application status should be OK
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), reportUuid);
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));

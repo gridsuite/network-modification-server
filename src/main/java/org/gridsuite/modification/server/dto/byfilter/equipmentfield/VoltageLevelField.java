@@ -9,6 +9,10 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+
+import static org.gridsuite.modification.server.modifications.VoltageLevelModification.*;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 import jakarta.validation.constraints.NotNull;
 
@@ -35,26 +39,15 @@ public enum VoltageLevelField {
     }
 
     public static void setNewValue(VoltageLevel voltageLevel, String voltageLevelField, @NotNull String newValue) {
-        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = voltageLevel.getExtension(IdentifiableShortCircuit.class);
         VoltageLevelField field = VoltageLevelField.valueOf(voltageLevelField);
         switch (field) {
-            case NOMINAL_VOLTAGE -> voltageLevel.setNominalV(Double.parseDouble(newValue));
-            case LOW_VOLTAGE_LIMIT -> voltageLevel.setLowVoltageLimit(Double.parseDouble(newValue));
-            case HIGH_VOLTAGE_LIMIT -> voltageLevel.setHighVoltageLimit(Double.parseDouble(newValue));
-            case LOW_SHORT_CIRCUIT_CURRENT_LIMIT -> {
-                IdentifiableShortCircuitAdder<VoltageLevel> adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMin(Double.parseDouble(newValue));
-                if (identifiableShortCircuit != null) {
-                    adder.withIpMax(identifiableShortCircuit.getIpMax());
-                }
-                adder.add();
-            }
-            case HIGH_SHORT_CIRCUIT_CURRENT_LIMIT -> {
-                IdentifiableShortCircuitAdder<VoltageLevel> adder = voltageLevel.newExtension(IdentifiableShortCircuitAdder.class).withIpMax(Double.parseDouble(newValue));
-                if (identifiableShortCircuit != null) {
-                    adder.withIpMin(identifiableShortCircuit.getIpMin());
-                }
-                adder.add();
-            }
+            case NOMINAL_VOLTAGE -> modifyNominalV(voltageLevel, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null);
+            case LOW_VOLTAGE_LIMIT -> modifLowVoltageLimit(voltageLevel, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null);
+            case HIGH_VOLTAGE_LIMIT -> modifyHighVoltageLimit(voltageLevel, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null);
+            case LOW_SHORT_CIRCUIT_CURRENT_LIMIT -> modifyVoltageLevelShortCircuit(
+                    new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null, null, voltageLevel);
+            case HIGH_SHORT_CIRCUIT_CURRENT_LIMIT -> modifyVoltageLevelShortCircuit(
+                    null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null, voltageLevel);
         }
     }
 }

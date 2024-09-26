@@ -9,7 +9,14 @@ package org.gridsuite.modification.server.dto.byfilter.equipmentfield;
 
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.network.store.iidm.impl.extensions.CoordinatedReactiveControlAdderImpl;
 import jakarta.validation.constraints.NotNull;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.server.modifications.ModificationUtils;
+
+import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -57,84 +64,40 @@ public enum GeneratorField {
     }
 
     public static void setNewValue(Generator generator, String generatorField, @NotNull String newValue) {
-        GeneratorStartup generatorStartup = generator.getExtension(GeneratorStartup.class);
-        GeneratorShortCircuit generatorShortCircuit = generator.getExtension(GeneratorShortCircuit.class);
         GeneratorField field = GeneratorField.valueOf(generatorField);
+        final AttributeModification<Double> attributeModification = new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET);
         switch (field) {
-            case MAXIMUM_ACTIVE_POWER -> generator.setMaxP(Double.parseDouble(newValue));
-            case MINIMUM_ACTIVE_POWER -> generator.setMinP(Double.parseDouble(newValue));
-            case ACTIVE_POWER_SET_POINT -> generator.setTargetP(Double.parseDouble(newValue));
-            case RATED_NOMINAL_POWER -> generator.setRatedS(Double.parseDouble(newValue));
-            case REACTIVE_POWER_SET_POINT -> generator.setTargetQ(Double.parseDouble(newValue));
-            case VOLTAGE_SET_POINT -> generator.setTargetV(Double.parseDouble(newValue));
-            case PLANNED_ACTIVE_POWER_SET_POINT -> {
-                if (generatorStartup == null) {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withPlannedActivePowerSetpoint(Double.parseDouble(newValue))
-                            .add();
-                } else {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withMarginalCost(generatorStartup.getMarginalCost())
-                            .withPlannedActivePowerSetpoint(Double.parseDouble(newValue))
-                            .withPlannedOutageRate(generatorStartup.getPlannedOutageRate())
-                            .withForcedOutageRate(generatorStartup.getForcedOutageRate())
-                            .add();
-                }
+            case MAXIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(
+                    attributeModification, null, null, generator, null);
+            case MINIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(null, attributeModification, null, generator, null);
+            case ACTIVE_POWER_SET_POINT -> {
+                ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
+                        attributeModification, null, null,
+                        generator.getMinP(), generator.getMaxP(), generator.getTargetP(),
+                        MODIFY_GENERATOR_ERROR, "Generator '" + generator.getId() + "' : "
+                );
+                generator.setTargetP(Double.parseDouble(newValue));
             }
-            case MARGINAL_COST -> {
-                if (generatorStartup == null) {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withMarginalCost(Double.parseDouble(newValue))
-                            .add();
-                } else {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withMarginalCost(Double.parseDouble(newValue))
-                            .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
-                            .withPlannedOutageRate(generatorStartup.getPlannedOutageRate())
-                            .withForcedOutageRate(generatorStartup.getForcedOutageRate())
-                            .add();
-                }
+            case RATED_NOMINAL_POWER -> modifyGeneratorActiveLimitsAttributes(null, null, attributeModification, generator, null);
+            case REACTIVE_POWER_SET_POINT -> modifyTargetQ(generator, attributeModification);
+            case VOLTAGE_SET_POINT -> modifyTargetV(generator, attributeModification);
+            case PLANNED_ACTIVE_POWER_SET_POINT ->
+                    modifyGeneratorStartUpAttributes(attributeModification, null, null, null, generator, null, null);
+            case MARGINAL_COST ->
+                    modifyGeneratorStartUpAttributes(null, attributeModification, null, null, generator, null, null);
+            case PLANNED_OUTAGE_RATE ->
+                    modifyGeneratorStartUpAttributes(null, null, attributeModification, null, generator, null, null);
+            case FORCED_OUTAGE_RATE ->
+                    modifyGeneratorStartUpAttributes(null, null, null, attributeModification, generator, null, null);
+            case DROOP -> {
+                ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
+                ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
+                ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, null,
+                        new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null);
             }
-            case PLANNED_OUTAGE_RATE -> {
-                if (generatorStartup == null) {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withPlannedOutageRate(Double.parseDouble(newValue))
-                            .add();
-                } else {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withMarginalCost(generatorStartup.getMarginalCost())
-                            .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
-                            .withPlannedOutageRate(Double.parseDouble(newValue))
-                            .withForcedOutageRate(generatorStartup.getForcedOutageRate())
-                            .add();
-                }
-            }
-            case FORCED_OUTAGE_RATE -> {
-                if (generatorStartup == null) {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withForcedOutageRate(Double.parseDouble(newValue))
-                            .add();
-                } else {
-                    generator.newExtension(GeneratorStartupAdder.class)
-                            .withMarginalCost(generatorStartup.getMarginalCost())
-                            .withPlannedActivePowerSetpoint(generatorStartup.getPlannedActivePowerSetpoint())
-                            .withPlannedOutageRate(generatorStartup.getForcedOutageRate())
-                            .withForcedOutageRate(Double.parseDouble(newValue))
-                            .add();
-                }
-            }
-            case DROOP -> generator.newExtension(ActivePowerControlAdder.class)
-                    .withDroop(Double.parseDouble(newValue))
-                    .add();
-            case TRANSIENT_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withDirectTransX(Double.parseDouble(newValue))
-                    .withStepUpTransformerX(generatorShortCircuit == null ? Double.NaN : generatorShortCircuit.getStepUpTransformerX())
-                    .add();
-            case STEP_UP_TRANSFORMER_REACTANCE -> generator.newExtension(GeneratorShortCircuitAdder.class)
-                    .withDirectTransX(generatorShortCircuit == null ? 0.0D : generatorShortCircuit.getDirectTransX())
-                    .withStepUpTransformerX(Double.parseDouble(newValue))
-                    .add();
-            case Q_PERCENT -> generator.newExtension(CoordinatedReactiveControlAdder.class)
+            case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(attributeModification, null, generator, null);
+            case STEP_UP_TRANSFORMER_REACTANCE -> modifyGeneratorShortCircuitAttributes(null, attributeModification, generator, null);
+            case Q_PERCENT -> generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
                     .withQPercent(Double.parseDouble(newValue))
                     .add();
             case VOLTAGE_REGULATOR_ON -> generator.setVoltageRegulatorOn(Boolean.parseBoolean(newValue));

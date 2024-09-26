@@ -48,14 +48,15 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
     @Before
     public void specificSetUp() {
         // Currently we never apply composite modifications (apply mocked)
-        NetworkModificationResult networkModificationResultMock =
-                NetworkModificationResult.builder()
-                        .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
-                        .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
-                        .networkImpacts(List.of())
-                        .build();
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class))).then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
-        when(networkModificationApplicator.applyModifications(any(), any(), any(UUID.class))).then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
+        NetworkModificationResult networkModificationResultMock = NetworkModificationResult.builder()
+                .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
+                .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
+                .networkImpacts(List.of())
+                .build();
+        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class)))
+                .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
+        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class)))
+                .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
     }
 
     @Override
@@ -66,10 +67,10 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                ModificationCreation.getCreationGenerator("v1", "idGenerator", "nameGenerator", "1B", "v2load", "LOAD", "v1"),
+                ModificationCreation.getCreationGenerator("v1", "idGenerator", "nameGenerator", "1B", "v2load", "LOAD",
+                        "v1"),
                 ModificationCreation.getCreationLoad("v1", "idLoad", "nameLoad", "1.1", LoadType.UNDEFINED),
-                ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1")
-        );
+                ModificationCreation.getCreationBattery("v1", "idBattery", "nameBattry", "1.1"));
         return CompositeModificationInfos.builder()
                 .modifications(modifications)
                 .stashed(false)
@@ -107,7 +108,7 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
         SQLStatementCountValidator.reset();
 
         mockMvc.perform(get("/v1/network-modifications/{uuid}", modificationUuid)).andExpectAll(
-                        status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+                status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         assertSelectCount(7);
         SQLStatementCountValidator.reset();

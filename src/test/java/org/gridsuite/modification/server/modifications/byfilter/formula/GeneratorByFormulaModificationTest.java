@@ -299,7 +299,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         assertNotNull(generatorStartup1);
         assertEquals(50, generator1.getTargetP(), 0);
         assertEquals(15, generatorStartup1.getMarginalCost(), 0);
-        assertEquals(55, generatorStartup1.getPlannedOutageRate(), 0);
+        assertEquals(2.5, generatorStartup1.getPlannedOutageRate(), 0);
         assertEquals(1100, generatorStartup1.getForcedOutageRate(), 0);
         assertEquals(50, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
         assertEquals(502, generator1.getMaxP(), 0);
@@ -310,7 +310,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         assertNotNull(generatorStartup2);
         assertEquals(100, generator2.getTargetP(), 0);
         assertEquals(15, generatorStartup2.getMarginalCost(), 0);
-        assertEquals(55, generatorStartup2.getPlannedOutageRate(), 0);
+        assertEquals(2.5, generatorStartup2.getPlannedOutageRate(), 0);
         assertEquals(1100, generatorStartup2.getForcedOutageRate(), 0);
         assertEquals(50, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
         assertEquals(2002, generator2.getMaxP(), 0);

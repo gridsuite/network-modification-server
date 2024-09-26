@@ -49,8 +49,6 @@ import java.util.concurrent.Executors;
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
 
-    public static final String NETWORK_MODIFICATION_TYPE_REPORT = "NetworkModification";
-
     private final NetworkStoreService networkStoreService;
 
     private final EquipmentInfosService equipmentInfosService;
@@ -126,7 +124,7 @@ public class NetworkModificationApplicator {
      * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModifications method
      * and no more builds can go through. If this causes problems we should put them in separate rabbitmq queues.
      */
-    public NetworkModificationResult applyModifications(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
+    public NetworkModificationResult applyModifications(List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
                 .map(Pair::getRight)
                 .flatMap(List::stream)
@@ -135,19 +133,19 @@ public class NetworkModificationApplicator {
                 .map(ModificationType::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosGroups, networkInfos, reportUuid), applicationExecutor);
+            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosGroups, networkInfos), applicationExecutor);
             return future.join();
         } else {
-            return processApplication(modificationInfosGroups, networkInfos, reportUuid);
+            return processApplication(modificationInfosGroups, networkInfos);
         }
     }
 
     // used for building a variant
-    private NetworkModificationResult processApplication(List<Pair<String, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, UUID reportUuid) {
+    private NetworkModificationResult processApplication(List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
-                        .map(g -> apply(g.getRight(), listener.getNetwork(), new ReportInfos(reportUuid, g.getLeft())))
+                        .map(g -> apply(g.getRight(), listener.getNetwork(), g.getLeft()))
                         .toList();
         List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
         return NetworkModificationResult.builder()
@@ -159,13 +157,14 @@ public class NetworkModificationApplicator {
 
     private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos) {
         ReportNode reportNode;
-        if (reportInfos.getReporterId() != null) {
-            String rootReporterId = reportInfos.getReporterId() + "@" + NETWORK_MODIFICATION_TYPE_REPORT;
-            reportNode = ReportNode.newRootReportNode().withMessageTemplate(rootReporterId, rootReporterId).build();
+        if (reportInfos.getNodeUuid() != null) {
+            UUID nodeUuid = reportInfos.getNodeUuid();
+            reportNode = ReportNode.newRootReportNode().withMessageTemplate(nodeUuid.toString(), nodeUuid.toString()).build();
         } else {
             reportNode = ReportNode.NO_OP;
         }
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
+                .filter(ModificationInfos::getActivated)
                 .map(m -> apply(m, network, reportNode))
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);

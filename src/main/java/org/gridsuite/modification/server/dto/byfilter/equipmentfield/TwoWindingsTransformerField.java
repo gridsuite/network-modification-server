@@ -11,6 +11,10 @@ import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.RatioTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import jakarta.validation.constraints.NotNull;
+import org.gridsuite.modification.server.dto.AttributeModification;
+import org.gridsuite.modification.server.dto.OperationType;
+
+import static org.gridsuite.modification.server.modifications.TwoWindingsTransformerModification.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -59,23 +63,33 @@ public enum TwoWindingsTransformerField {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
+        final PhaseTapChanger.RegulationMode regulationMode = phaseTapChanger != null ? phaseTapChanger.getRegulationMode() : null;
+        final AttributeModification<Double> attributeModification = new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET);
 
         switch (field) {
-            case R -> transformer.setR(Double.parseDouble(newValue));
-            case X -> transformer.setX(Double.parseDouble(newValue));
-            case G -> transformer.setG(Double.parseDouble(newValue));
-            case B -> transformer.setB(Double.parseDouble(newValue));
-            case RATED_U1 -> transformer.setRatedU1(Double.parseDouble(newValue));
-            case RATED_U2 -> transformer.setRatedU2(Double.parseDouble(newValue));
-            case RATED_S -> transformer.setRatedS(Double.parseDouble(newValue));
-            case TARGET_V -> ratioTapChanger.setTargetV(Double.parseDouble(newValue));
-            case RATIO_LOW_TAP_POSITION -> ratioTapChanger.setLowTapPosition((int) Double.parseDouble(newValue));
-            case RATIO_TAP_POSITION -> ratioTapChanger.setTapPosition((int) Double.parseDouble(newValue));
-            case RATIO_TARGET_DEADBAND -> ratioTapChanger.setTargetDeadband(Double.parseDouble(newValue));
-            case REGULATION_VALUE -> phaseTapChanger.setRegulationValue(Double.parseDouble(newValue));
-            case PHASE_LOW_TAP_POSITION -> phaseTapChanger.setLowTapPosition((int) Double.parseDouble(newValue));
-            case PHASE_TAP_POSITION -> phaseTapChanger.setTapPosition((int) Double.parseDouble(newValue));
-            case PHASE_TARGET_DEADBAND -> phaseTapChanger.setTargetDeadband(Double.parseDouble(newValue));
+            case R -> modifyR(transformer, attributeModification, null);
+            case X -> modifyX(transformer, attributeModification, null);
+            case G -> modifyG(transformer, attributeModification, null);
+            case B -> modifyB(transformer, attributeModification, null);
+            case RATED_U1 -> modifyRatedU1(transformer, attributeModification, null);
+            case RATED_U2 -> modifyRatedU2(transformer, attributeModification, null);
+            case RATED_S -> modifyRatedS(transformer, attributeModification, null);
+            case TARGET_V -> modifyTargets(ratioTapChanger, null, true, attributeModification, null, null);
+            case RATIO_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
+                    new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null, null);
+            case RATIO_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
+                    null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
+            case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attributeModification, null);
+            case REGULATION_VALUE -> processPhaseTapRegulation(
+                    phaseTapChanger, null, regulationMode, true, attributeModification, null, null
+            );
+            case PHASE_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
+                    new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null, null);
+            case PHASE_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
+                    null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
+            case PHASE_TARGET_DEADBAND -> processPhaseTapRegulation(
+                    phaseTapChanger, null, null, true, null, attributeModification, null
+            );
         }
     }
 }
