@@ -65,38 +65,46 @@ public enum GeneratorField {
 
     public static void setNewValue(Generator generator, String generatorField, @NotNull String newValue) {
         GeneratorField field = GeneratorField.valueOf(generatorField);
-        final AttributeModification<Double> attributeModification = new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET);
         switch (field) {
             case MAXIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(
-                    attributeModification, null, null, generator, null);
-            case MINIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(null, attributeModification, null, generator, null);
+                    new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
+                    null, null, generator, null);
+            case MINIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(
+                    null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null, generator, null);
             case ACTIVE_POWER_SET_POINT -> {
                 ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
-                        attributeModification, null, null,
-                        generator.getMinP(), generator.getMaxP(), generator.getTargetP(),
-                        MODIFY_GENERATOR_ERROR, "Generator '" + generator.getId() + "' : "
+                    new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
+                    null, null, generator.getMinP(), generator.getMaxP(), generator.getTargetP(),
+                    MODIFY_GENERATOR_ERROR, "Generator '" + generator.getId() + "' : "
                 );
                 generator.setTargetP(Double.parseDouble(newValue));
             }
-            case RATED_NOMINAL_POWER -> modifyGeneratorActiveLimitsAttributes(null, null, attributeModification, generator, null);
-            case REACTIVE_POWER_SET_POINT -> modifyTargetQ(generator, attributeModification);
-            case VOLTAGE_SET_POINT -> modifyTargetV(generator, attributeModification);
-            case PLANNED_ACTIVE_POWER_SET_POINT ->
-                    modifyGeneratorStartUpAttributes(attributeModification, null, null, null, generator, null, null);
-            case MARGINAL_COST ->
-                    modifyGeneratorStartUpAttributes(null, attributeModification, null, null, generator, null, null);
-            case PLANNED_OUTAGE_RATE ->
-                    modifyGeneratorStartUpAttributes(null, null, attributeModification, null, generator, null, null);
+            case RATED_NOMINAL_POWER -> modifyGeneratorActiveLimitsAttributes(
+                    null, null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), generator, null);
+            case REACTIVE_POWER_SET_POINT -> modifyTargetQ(generator, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET));
+            case VOLTAGE_SET_POINT -> modifyTargetV(generator, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET));
+            case PLANNED_ACTIVE_POWER_SET_POINT -> modifyGeneratorStartUpAttributes(
+                    new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), null,
+                    null, null, generator, null, null);
+            case MARGINAL_COST -> modifyGeneratorStartUpAttributes(
+                    null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
+                    null, null, generator, null, null);
+            case PLANNED_OUTAGE_RATE -> modifyGeneratorStartUpAttributes(
+                    null, null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
+                    null, generator, null, null);
             case FORCED_OUTAGE_RATE ->
-                    modifyGeneratorStartUpAttributes(null, null, null, attributeModification, generator, null, null);
+                    modifyGeneratorStartUpAttributes(null, null, null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), generator, null, null);
             case DROOP -> {
                 ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
                 ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
                 ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, null,
                         new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null);
             }
-            case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(attributeModification, null, generator, null);
-            case STEP_UP_TRANSFORMER_REACTANCE -> modifyGeneratorShortCircuitAttributes(null, attributeModification, generator, null);
+            case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(
+                    new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
+                    null, generator, null);
+            case STEP_UP_TRANSFORMER_REACTANCE -> modifyGeneratorShortCircuitAttributes(
+                    null, new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET), generator, null);
             case Q_PERCENT -> generator.newExtension(CoordinatedReactiveControlAdderImpl.class)
                     .withQPercent(Double.parseDouble(newValue))
                     .add();

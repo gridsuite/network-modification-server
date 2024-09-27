@@ -286,7 +286,7 @@ public class GeneratorModificationByAssignmentTest extends AbstractModificationB
         assertThat(generator1.getProperty("propertyName")).isEqualTo("propertyValue");
         assertEquals(100, generator1.getTargetP(), 0);
         assertEquals(2, generatorStartup1.getMarginalCost(), 0);
-        assertEquals(55, generatorStartup1.getPlannedOutageRate(), 0);
+        assertEquals(0.1, generatorStartup1.getPlannedOutageRate(), 0);
         assertEquals(0.05, generatorStartup1.getForcedOutageRate(), 0);
         assertEquals(10, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
         assertEquals(50, generator1.getMaxP(), 0);
@@ -299,7 +299,7 @@ public class GeneratorModificationByAssignmentTest extends AbstractModificationB
         assertThat(generator2.getProperty("propertyName")).isEqualTo("propertyValue");
         assertEquals(200, generator2.getTargetP(), 0);
         assertEquals(2, generatorStartup2.getMarginalCost(), 0);
-        assertEquals(55, generatorStartup2.getPlannedOutageRate(), 0);
+        assertEquals(0.1, generatorStartup2.getPlannedOutageRate(), 0);
         assertEquals(0.05, generatorStartup2.getForcedOutageRate(), 0);
         assertEquals(10, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
         assertEquals(50, generator2.getMaxP(), 0);

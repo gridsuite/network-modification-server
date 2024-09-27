@@ -14,9 +14,9 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.junit.Test;
 
@@ -112,7 +112,7 @@ public class BatteryModificationByAssignmentTest extends AbstractModificationByA
         DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter5))
                 .editedField(BatteryField.ACTIVE_POWER_SET_POINT.name())
-                .value(30.)
+                .value(75.)
                 .build();
 
         DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
@@ -165,9 +165,9 @@ public class BatteryModificationByAssignmentTest extends AbstractModificationByA
         assertEquals(2, activePowerControl1.getDroop(), 0);
 
         assertEquals(80, getNetwork().getBattery(BATTERY_ID_2).getMaxP(), 0);
-        assertEquals(30, getNetwork().getBattery(BATTERY_ID_2).getTargetP(), 0);
+        assertEquals(75, getNetwork().getBattery(BATTERY_ID_2).getTargetP(), 0);
         assertEquals(80, getNetwork().getBattery(BATTERY_ID_3).getMaxP(), 0);
-        assertEquals(30, getNetwork().getBattery(BATTERY_ID_3).getTargetP(), 0);
+        assertEquals(75, getNetwork().getBattery(BATTERY_ID_3).getTargetP(), 0);
         assertEquals(80, getNetwork().getBattery(BATTERY_ID_4).getMaxP(), 0);
 
         assertEquals(30, getNetwork().getBattery(BATTERY_ID_5).getMinP(), 0);

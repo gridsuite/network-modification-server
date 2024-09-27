@@ -137,7 +137,12 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 "trf1", 30, ConnectablePosition.Direction.TOP,
                 "trf1", 40, ConnectablePosition.Direction.BOTTOM);
         twt4.setRatedS(15);
-        addPhaseTapChangerSteps(twt4.newPhaseTapChanger().setRegulationValue(45).setLowTapPosition(1).setTapPosition(2).setTargetDeadband(34));
+        addPhaseTapChangerSteps(twt4.newPhaseTapChanger()
+                .setRegulationValue(45)
+                .setLowTapPosition(1)
+                .setTapPosition(2)
+                .setTargetDeadband(34)
+                .setRegulationMode(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL));
 
         TwoWindingsTransformer twt5 = createTwoWindingsTransformer(s3, TWT_ID_5, TWT_ID_5, 50, 60, 70,
             80, 30, 40, 101, 101,
