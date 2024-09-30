@@ -316,7 +316,6 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
                 .withUntypedValue(VALUE_KEY_ERROR_MESSAGE, e.getMessage())
                 .withSeverity(TypedValue.TRACE_SEVERITY)
                 .build());
-            throw e;
         }
     }
 
