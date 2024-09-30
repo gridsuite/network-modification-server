@@ -12,12 +12,14 @@ import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.TwoWindingsTransformer;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FilterEquipments;
 import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.byfilter.AbstractAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.modifications.AbstractModification;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -186,6 +188,49 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
         }
     }
 
+    protected boolean isEquipmentEditable(Identifiable<?> equipment,
+                                          AbstractAssignmentInfos abstractAssignmentInfos,
+                                          List<ReportNode> equipmentsReport) {
+        if (abstractAssignmentInfos.getEditedField() == null) {
+            return false;
+        }
+
+        if (equipment.getType() == IdentifiableType.TWO_WINDINGS_TRANSFORMER) {
+            TwoWindingsTransformerField editedField = TwoWindingsTransformerField.valueOf(abstractAssignmentInfos.getEditedField());
+            TwoWindingsTransformer twoWindingsTransformer = (TwoWindingsTransformer) equipment;
+            return switch (editedField) {
+                case TARGET_V, RATIO_LOW_TAP_POSITION, RATIO_TAP_POSITION, RATIO_TARGET_DEADBAND -> {
+                    boolean isEditable = twoWindingsTransformer.getRatioTapChanger() != null;
+                    if (!isEditable) {
+                        equipmentsReport.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate(REPORT_KEY_RATIO_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR + equipmentsReport.size(),
+                                    "        Cannot modify field ${" + VALUE_KEY_FIELD_NAME + "} of equipment ${" + VALUE_KEY_EQUIPMENT_NAME + "} : Ratio tab changer is null")
+                            .withUntypedValue(VALUE_KEY_FIELD_NAME, editedField.name())
+                            .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
+                            .withSeverity(TypedValue.TRACE_SEVERITY)
+                            .build());
+                    }
+                    yield isEditable;
+                }
+                case REGULATION_VALUE, PHASE_LOW_TAP_POSITION, PHASE_TAP_POSITION, PHASE_TARGET_DEADBAND -> {
+                    boolean isEditable = twoWindingsTransformer.getPhaseTapChanger() != null;
+                    if (!isEditable) {
+                        equipmentsReport.add(ReportNode.newRootReportNode()
+                            .withMessageTemplate(REPORT_KEY_PHASE_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR + equipmentsReport.size(),
+                                    "        Cannot modify field ${" + VALUE_KEY_FIELD_NAME + "} of equipment ${" + VALUE_KEY_EQUIPMENT_NAME + "} : Phase tab changer is null")
+                            .withUntypedValue(VALUE_KEY_FIELD_NAME, editedField.name())
+                            .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
+                            .withSeverity(TypedValue.TRACE_SEVERITY)
+                            .build());
+                    }
+                    yield isEditable;
+                }
+                default -> true;
+            };
+        }
+        return true;
+    }
+
     private void createAssignmentReports(List<ReportNode> reports, AbstractAssignmentInfos abstractAssignmentInfos,
                                          FilterInfos filterInfos, FilterEquipments filterEquipments, List<String> notEditableEquipments) {
         if (notEditableEquipments.size() == filterEquipments.getIdentifiableAttributes().size()) {
@@ -305,6 +350,14 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
             filterEquipments.getIdentifiableAttributes()
                 .stream()
                 .map(attributes -> network.getIdentifiable(attributes.getId()))
+                .filter(equipment -> {
+                    boolean isEditableEquipment = isEquipmentEditable(equipment, abstractAssignmentInfos, equipmentsReport);
+                    if (!isEditableEquipment) {
+                        notEditableEquipments.add(equipment.getId());
+                        equipmentNotModifiedCount += 1;
+                    }
+                    return isEditableEquipment;
+                })
                 .forEach(equipment -> applyModification(equipment, abstractAssignmentInfos, equipmentsReport, notEditableEquipments));
 
             createAssignmentReports(reports, abstractAssignmentInfos, filterInfos, filterEquipments, notEditableEquipments);
