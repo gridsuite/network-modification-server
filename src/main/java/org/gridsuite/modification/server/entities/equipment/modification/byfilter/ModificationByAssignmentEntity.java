@@ -73,6 +73,7 @@ public class ModificationByAssignmentEntity extends ModificationEntity {
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())
+            .activated(getActivated())
             .equipmentType(equipmentType)
             .assignmentInfosList(assignmentEntities.stream()
                 .map(AssignmentEntity::toAssignmentInfos)

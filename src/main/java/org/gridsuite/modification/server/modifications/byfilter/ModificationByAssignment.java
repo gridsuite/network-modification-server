@@ -60,16 +60,6 @@ public class ModificationByAssignment extends AbstractModificationByAssignment {
     }
 
     @Override
-    protected boolean isEquipmentEditable(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos, List<ReportNode> equipmentsReport) {
-        AssignmentInfos<?> assignmentInfos = (AssignmentInfos<?>) abstractAssignmentInfos;
-        if (assignmentInfos.getDataType() == DataType.PROPERTY) {
-            return true;
-        } else {
-            return super.isEquipmentEditable(equipment, abstractAssignmentInfos, equipmentsReport);
-        }
-    }
-
-    @Override
     protected boolean preCheckValue(Identifiable<?> equipment, AbstractAssignmentInfos abstractAssignmentInfos, List<ReportNode> reports, List<String> notEditableEquipments) {
         return true;
     }
