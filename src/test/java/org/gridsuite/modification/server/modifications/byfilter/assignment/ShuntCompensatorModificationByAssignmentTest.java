@@ -15,10 +15,9 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
 import org.junit.Test;
 
 import java.util.Date;
@@ -181,8 +180,4 @@ public class ShuntCompensatorModificationByAssignmentTest extends AbstractModifi
         return EquipmentType.SHUNT_COMPENSATOR;
     }
 
-    @Override
-    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // TODO later
-    }
 }

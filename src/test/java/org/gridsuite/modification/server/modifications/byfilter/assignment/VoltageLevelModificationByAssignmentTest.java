@@ -15,10 +15,9 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLevelField;
 
 import java.util.Date;
 import java.util.List;
@@ -223,8 +222,4 @@ public class VoltageLevelModificationByAssignmentTest extends AbstractModificati
         assertEquals(200, identifiableShortCircuit6.getIpMax(), 0);
     }
 
-    @Override
-    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // TODO later
-    }
 }

@@ -17,7 +17,6 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.junit.Test;
 
 import java.util.Date;
@@ -212,8 +211,4 @@ public class BatteryModificationByAssignmentTest extends AbstractModificationByA
         return EquipmentType.BATTERY;
     }
 
-    @Override
-    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // TODO later
-    }
 }
