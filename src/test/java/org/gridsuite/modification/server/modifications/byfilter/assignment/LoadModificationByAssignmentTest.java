@@ -13,16 +13,18 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.EnumAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createSubstationImpacts;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
 import static org.junit.Assert.assertEquals;
 
@@ -124,7 +126,9 @@ public class LoadModificationByAssignmentTest extends AbstractModificationByAssi
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
-        // TODO later
+        // NOTE: this assert is based on the return of NetworkStoreListener#reduceNetworkImpacts()
+        // since the test network has only 4 loads which is less than the collectionThreshold 5
+        assertThat(impacts).containsAll(createSubstationImpacts(Set.of("s1", "s2")));
     }
 
 }
