@@ -76,16 +76,16 @@ public enum TwoWindingsTransformerField {
             case RATED_S -> modifyRatedS(transformer, attributeModification, null);
             case TARGET_V -> modifyTargets(ratioTapChanger, null, true, attributeModification, null, null);
             case RATIO_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
-                    new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null, null);
+                    new AttributeModification<>(Integer.parseInt(newValue), OperationType.SET), null, null, null);
             case RATIO_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
-                    null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
+                    null, new AttributeModification<>(Integer.parseInt(newValue), OperationType.SET), null, null);
             case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attributeModification, null);
             case REGULATION_VALUE -> processPhaseTapRegulation(
                     phaseTapChanger, null, regulationMode, true, attributeModification, null, null);
             case PHASE_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
-                    new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null, null);
+                    new AttributeModification<>(Integer.parseInt(newValue), OperationType.SET), null, null, null);
             case PHASE_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
-                    null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
+                    null, new AttributeModification<>(Integer.parseInt(newValue), OperationType.SET), null, null);
             case PHASE_TARGET_DEADBAND -> processPhaseTapRegulation(
                     phaseTapChanger, null, null, true, null, attributeModification, null
             );
