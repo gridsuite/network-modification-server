@@ -6,7 +6,7 @@
       "2WindingsTransformersModifications": "2 windings transformers",
       "3WindingsTransformerNotFound": "3 windings transformer with id=${id} not found",
       "3WindingsTransformersModifications": "3 windings transformers",
-      "99999999-9999-9999-9999-999999999999@NetworkModification": "99999999-9999-9999-9999-999999999999@NetworkModification",
+      "99999999-9999-9999-9999-999999999999": "99999999-9999-9999-9999-999999999999",
       "GeneratorsModifications": "Generators",
       "ShuntCompensatorsModifications": "Shunt compensators",
       "StaticVarCompensatorsModifications": "Static var compensators",
@@ -21,7 +21,7 @@
     }
   },
   "reportRoot": {
-    "messageKey": "99999999-9999-9999-9999-999999999999@NetworkModification",
+    "messageKey": "99999999-9999-9999-9999-999999999999",
     "children": [
       {
         "messageKey": "VOLTAGE_INIT_MODIFICATION",

@@ -509,7 +509,9 @@ public final class ModificationUtils {
             T newValue = modification.applyModification(oldValue);
             setter.accept(newValue);
 
-            insertReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
+            if (subReportNode != null) {
+                insertReportNode(subReportNode, buildModificationReport(oldValue, newValue, fieldName));
+            }
         }
     }
 
@@ -1073,12 +1075,16 @@ public final class ModificationUtils {
 
         Optional.ofNullable(participateInfo).ifPresent(info -> {
             activePowerControl.setParticipate(info.getValue());
-            reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+            if (reports != null) {
+                reports.add(buildModificationReport(oldParticipate, info.getValue(), "Participate"));
+            }
         });
 
         Optional.ofNullable(droopInfo).ifPresent(info -> {
             activePowerControl.setDroop(info.getValue());
-            reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+            if (reports != null) {
+                reports.add(buildModificationReport(oldDroop, info.getValue(), "Droop"));
+            }
         });
     }
 
@@ -1088,22 +1094,22 @@ public final class ModificationUtils {
                                              List<ReportNode> reports) {
         boolean participate = participateInfo != null ? participateInfo.getValue() : false;
         adder.withParticipate(participate);
-        if (participateInfo != null) {
+        if (participateInfo != null && reports != null) {
             reports.add(buildModificationReport(null, participate, "Participate"));
         }
         double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
         adder.withDroop(droop);
-        if (droopInfo != null) {
+        if (droopInfo != null && reports != null) {
             reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
         }
         adder.add();
     }
 
     public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
-                                                       ActivePowerControlAdder<?> activePowerControlAdder,
-                                                       AttributeModification<Boolean> participateInfo,
-                                                       AttributeModification<Float> droopInfo,
-                                                        ReportNode subReportNode,
+                                                         ActivePowerControlAdder<?> activePowerControlAdder,
+                                                         AttributeModification<Boolean> participateInfo,
+                                                         AttributeModification<Float> droopInfo,
+                                                         ReportNode subReportNode,
                                                          ReportNode subReporterSetpoints) {
         List<ReportNode> reports = new ArrayList<>();
         if (activePowerControl != null) {
@@ -1111,13 +1117,15 @@ public final class ModificationUtils {
         } else {
             createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
         }
-
-        ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
-        if (subReporterSetpoints == null && !reports.isEmpty()) {
-            subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
+        if (subReportNode != null) {
+            ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
+            if (subReporterSetpoints == null && !reports.isEmpty()) {
+                subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
+            }
+            reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
+            return subReportNodeSetpoints2;
         }
-        reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
-        return subReportNodeSetpoints2;
+        return null;
     }
 
     public void checkMaxQGreaterThanMinQ(
