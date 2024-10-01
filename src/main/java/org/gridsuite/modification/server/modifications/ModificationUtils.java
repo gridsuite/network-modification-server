@@ -609,7 +609,7 @@ public final class ModificationUtils {
         if (isVoltageOrBusbarIdMissing(modificationInfos.getVoltageLevelId(), modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getEquipmentId(), reports)) {
             return reports.get(0);
         }
-        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, reports, false);
+        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, injection.getNetwork(), reports, false);
         modifyConnection(modificationInfos.getTerminalConnected(), injection, injection.getTerminal(), reports);
 
         return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
@@ -626,7 +626,7 @@ public final class ModificationUtils {
             return reports.get(0);
         }
 
-        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, reports, true);
+        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, branch.getNetwork(), reports, true);
         modifyConnection(modificationInfos.getTerminal1Connected(), branch, branch.getTerminal1(), reports);
         modifyConnection(modificationInfos.getTerminal2Connected(), branch, branch.getTerminal2(), reports);
 
@@ -649,12 +649,13 @@ public final class ModificationUtils {
     private void processConnectivityPosition(ConnectablePosition<?> connectablePosition,
                                              ConnectablePositionAdder<?> connectablePositionAdder,
                                              Object modificationInfos,
+                                             Network network,
                                              List<ReportNode> reports,
                                              boolean isBranch) {
         if (connectablePosition != null) {
             modifyExistingConnectivityPosition(connectablePosition, modificationInfos, reports, isBranch);
         } else {
-            createNewConnectivityPosition(connectablePositionAdder, modificationInfos, reports, isBranch);
+            createNewConnectivityPosition(connectablePositionAdder, modificationInfos, network, reports, isBranch);
         }
     }
 
@@ -672,18 +673,18 @@ public final class ModificationUtils {
 
     private void createNewConnectivityPosition(ConnectablePositionAdder<?> adder,
                                                Object modificationInfos,
+                                               Network network,
                                                List<ReportNode> reports,
                                                boolean isBranch) {
         if (isBranch) {
             ConnectablePositionAdder.FeederAdder<?> feeder1 = adder.newFeeder1();
             ConnectablePositionAdder.FeederAdder<?> feeder2 = adder.newFeeder2();
-            modifyFeederAdder(feeder1, modificationInfos, reports, 1);
-            modifyFeederAdder(feeder2, modificationInfos, reports, 2);
+            modifyFeederAdder(feeder1, modificationInfos, network, reports, 1);
+            modifyFeederAdder(feeder2, modificationInfos, network, reports, 2);
         } else {
             ConnectablePositionAdder.FeederAdder<?> feeder = adder.newFeeder();
-            modifyFeederAdder(feeder, modificationInfos, reports, 0);
+            modifyFeederAdder(feeder, modificationInfos, network, reports, 0);
         }
-        adder.add();
     }
 
     private void modifyFeeder(ConnectablePosition.Feeder feeder,
@@ -722,25 +723,38 @@ public final class ModificationUtils {
 
     private void modifyFeederAdder(ConnectablePositionAdder.FeederAdder<?> feeder,
                                    Object modificationInfos,
+                                   Network network,
                                    List<ReportNode> reports,
                                    int feederNumber) {
+        var connectionName = getConnectionName(modificationInfos, feederNumber);
+        var connectionDirection = getConnectionDirection(modificationInfos, feederNumber);
+        var connectionPosition = getConnectionPosition(modificationInfos, feederNumber);
+        var equipmentId = getEquipmentId(modificationInfos);
+        var voltageLevelId = getVoltageLevelId(modificationInfos, feederNumber);
+        var busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederNumber);
+        var position = getPosition(connectionPosition == null ? null : connectionPosition.getValue(),
+                busOrBusbarSectionId == null ? null : busOrBusbarSectionId.getValue(),
+                network,
+                getVoltageLevel(network, voltageLevelId == null ? null : voltageLevelId.getValue()));
         ReportNode connectionNameReport = applyElementaryModificationsAndReturnReport(feeder::withName,
                 () -> null,
-                getConnectionName(modificationInfos, feederNumber),
+                connectionName == null && (connectionDirection != null || connectionPosition != null) ? equipmentId : connectionName,
                 getConnectionNameField(feederNumber));
         if (connectionNameReport != null) {
             reports.add(connectionNameReport);
         }
         ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(feeder::withDirection,
                 () -> null,
-                getConnectionDirection(modificationInfos, feederNumber),
+                connectionDirection == null && (connectionName != null || connectionPosition != null) ?
+                        new AttributeModification<>(ConnectablePosition.Direction.UNDEFINED, OperationType.SET) : connectionDirection,
                 getConnectionDirectionField(feederNumber));
         if (connectionDirectionReport != null) {
             reports.add(connectionDirectionReport);
         }
         ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(feeder::withOrder,
                 () -> null,
-                getConnectionPosition(modificationInfos, feederNumber),
+                connectionPosition == null && (connectionName != null || connectionDirection != null) ?
+                        new AttributeModification<>(position, OperationType.SET) : connectionPosition,
                 getConnectionPositionField(feederNumber));
         if (connectionPositionReport != null) {
             reports.add(connectionPositionReport);
@@ -769,6 +783,27 @@ public final class ModificationUtils {
             case 2 -> baseFieldName + " 2";
             default -> "";
         };
+    }
+
+    private AttributeModification<String> getVoltageLevelId(Object modificationInfos, int feederNumber) {
+        return getConnectionDetail(modificationInfos, feederNumber,
+                BranchModificationInfos::getVoltageLevelId1, BranchModificationInfos::getVoltageLevelId2,
+                InjectionModificationInfos::getVoltageLevelId);
+    }
+
+    private AttributeModification<String> getBusOrBusbarSectionId(Object modificationInfos, int feederNumber) {
+        return getConnectionDetail(modificationInfos, feederNumber,
+                BranchModificationInfos::getBusOrBusbarSectionId1, BranchModificationInfos::getBusOrBusbarSectionId2,
+                InjectionModificationInfos::getBusOrBusbarSectionId);
+    }
+
+    private AttributeModification<String> getEquipmentId(Object modificationInfos) {
+        if (modificationInfos instanceof BranchModificationInfos branchInfo) {
+            return AttributeModification.toAttributeModification(branchInfo.getEquipmentId(), OperationType.SET);
+        } else if (modificationInfos instanceof InjectionModificationInfos injectionInfo) {
+            return AttributeModification.toAttributeModification(injectionInfo.getEquipmentId(), OperationType.SET);
+        }
+        return null;
     }
 
     private AttributeModification<String> getConnectionName(Object modificationInfos, int feederNumber) {
