@@ -17,6 +17,7 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.IntegerAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
 import org.junit.Test;
 
@@ -41,9 +42,9 @@ public class ShuntCompensatorModificationByAssignmentTest extends AbstractModifi
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
-        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
-                .value(2.)
+                .value(2)
                 .filters(List.of(filterWithOneWrongId))
                 .build();
 
@@ -81,15 +82,15 @@ public class ShuntCompensatorModificationByAssignmentTest extends AbstractModifi
 
     @Override
     protected List<AssignmentInfos<?>> getAssignmentInfos() {
-        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos1 = IntegerAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
-                .value(8.)
+                .value(8)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos2 = IntegerAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.SECTION_COUNT.name())
-                .value(2.)
+                .value(2)
                 .filters(List.of(filter3))
                 .build();
 
@@ -113,15 +114,15 @@ public class ShuntCompensatorModificationByAssignmentTest extends AbstractModifi
 
     @Override
     protected List<AssignmentInfos<?>> getUpdatedAssignmentInfos() {
-        DoubleAssignmentInfos assignmentInfos1 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos1 = IntegerAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name())
-                .value(150.)
+                .value(150)
                 .filters(List.of(filter1, filter2))
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos2 = IntegerAssignmentInfos.builder()
                 .editedField(ShuntCompensatorField.SECTION_COUNT.name())
-                .value(2.)
+                .value(2)
                 .filters(List.of(filter3))
                 .build();
         return List.of(assignmentInfos1, assignmentInfos2);

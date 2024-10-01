@@ -17,6 +17,7 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.server.dto.byfilter.assignment.IntegerAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.junit.Test;
 
@@ -85,10 +86,10 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
                         .withHeader("Content-Type", "application/json"))).getId();
 
-        DoubleAssignmentInfos assignmentInfos = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter1, filter4))
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
-                .value(4.)
+                .value(4)
                 .build();
 
         checkCreationApplicationStatus(List.of(assignmentInfos), NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
@@ -191,16 +192,16 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 .value(2.)
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos2 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
-                .value(4.)
+                .value(4)
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos3 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name())
-                .value(4.)
+                .value(4)
                 .build();
 
         DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
@@ -215,16 +216,16 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 .value(2.)
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos6 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos6 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(TwoWindingsTransformerField.PHASE_TAP_POSITION.name())
-                .value(2.)
+                .value(2)
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos7 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos7 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(TwoWindingsTransformerField.PHASE_LOW_TAP_POSITION.name())
-                .value(2.)
+                .value(2)
                 .build();
 
         DoubleAssignmentInfos assignmentInfos8 = DoubleAssignmentInfos.builder()
@@ -302,16 +303,16 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 .value(2.)
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos2 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos2 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter2))
                 .editedField(TwoWindingsTransformerField.RATIO_TAP_POSITION.name())
-                .value(3.5)
+                .value(3)
                 .build();
 
-        DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
+        IntegerAssignmentInfos assignmentInfos3 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter1))
                 .editedField(TwoWindingsTransformerField.RATIO_LOW_TAP_POSITION.name())
-                .value(3.)
+                .value(3)
                 .build();
 
         return List.of(assignmentInfos1,

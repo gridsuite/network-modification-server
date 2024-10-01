@@ -52,9 +52,9 @@ public enum ShuntCompensatorField {
             shuntCompensatorType = ShuntCompensatorType.CAPACITOR;
         }
         switch (field) {
-            case MAXIMUM_SECTION_COUNT -> modifyMaximumSectionCount(new AttributeModification<>(Integer.parseInt(newValue), OperationType.SET),
+            case MAXIMUM_SECTION_COUNT -> modifyMaximumSectionCount(new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET),
                     null, null, null, shuntCompensator, model);
-            case SECTION_COUNT -> modifySectionCount(new AttributeModification<>(Integer.parseInt(newValue), OperationType.SET), null, shuntCompensator);
+            case SECTION_COUNT -> modifySectionCount(new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, shuntCompensator);
             case MAXIMUM_SUSCEPTANCE -> modifyMaxSusceptance(new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
                     shuntCompensator.getMaximumSectionCount(), null, model);
             case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> modifyMaximumQAtNominalVoltage(new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
