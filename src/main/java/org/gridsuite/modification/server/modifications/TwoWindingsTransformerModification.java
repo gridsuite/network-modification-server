@@ -215,8 +215,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             regulationMode = phaseTapChangerInfos.getRegulationMode().getValue();
         }
         if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
-            processPhaseTapRegulation(phaseTapChanger, phaseTapChangerAdder, regulationMode, isModification, phaseTapChangerInfos.getRegulationValue(), phaseTapChangerInfos.getTargetDeadband(), regulationReports
-            );
+            processPhaseTapRegulation(phaseTapChanger, phaseTapChangerAdder, regulationMode, isModification,
+                phaseTapChangerInfos.getRegulationValue(), phaseTapChangerInfos.getTargetDeadband(),
+                phaseTapChangerInfos.getRegulating(), regulationReports);
         }
 
         processRegulatingTerminal(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, regulationReports,
@@ -254,6 +255,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                                                  boolean isModification,
                                                  AttributeModification<Double> modifyRegulationValue,
                                                  AttributeModification<Double> modifyTargetDeadband,
+                                                 AttributeModification<Boolean> regulating,
                                                  List<ReportNode> regulationReports) {
 
         if (regulationMode != null) {
@@ -284,8 +286,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             isModification ? phaseTapChanger::setRegulating
                 : phaseTapChangerAdder::setRegulating,
             isModification ? phaseTapChanger::isRegulating : () -> null,
-            phaseTapChangerInfos.getRegulating(), "Regulating", 2);
-        if (regulatingReport != null) {
+            regulating, "Regulating", 2);
+        if (regulationReports != null && regulatingReport != null) {
             regulationReports.add(regulatingReport);
         }
     }
