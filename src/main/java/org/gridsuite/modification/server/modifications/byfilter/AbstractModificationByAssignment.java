@@ -314,7 +314,7 @@ public abstract class AbstractModificationByAssignment extends AbstractModificat
                         "        Cannot modify equipment ${" + VALUE_KEY_EQUIPMENT_NAME + "} : ${" + VALUE_KEY_ERROR_MESSAGE + "}")
                 .withUntypedValue(VALUE_KEY_EQUIPMENT_NAME, equipment.getId())
                 .withUntypedValue(VALUE_KEY_ERROR_MESSAGE, e.getMessage())
-                .withSeverity(TypedValue.TRACE_SEVERITY)
+                .withSeverity(TypedValue.WARN_SEVERITY)
                 .build());
         }
     }
