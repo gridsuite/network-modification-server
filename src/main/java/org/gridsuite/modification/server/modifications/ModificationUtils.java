@@ -1443,7 +1443,7 @@ public final class ModificationUtils {
     }
 
     public static void reportInjectionCreationConnectivity(InjectionCreationInfos injectionCreationInfos, ReportNode subReporter) {
-        if (injectionCreationInfos.getVoltageLevelId() == null || injectionCreationInfos.getBusOrBusbarSectionId() == null) {
+        if (Objects.isNull(injectionCreationInfos.getVoltageLevelId()) || Objects.isNull(injectionCreationInfos.getBusOrBusbarSectionId())) {
             return;
         }
 

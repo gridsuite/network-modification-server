@@ -135,7 +135,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         }
 
         reportInjectionCreationConnectivity(staticVarCompensatorCreationInfos, subReportNode);
-        createCompensatorVoltageRegulation(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
+        createStaticVarCompensatorVoltageRegulation(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
         reportStaticVarCompensatorStandbyAutomaton(staticVarCompensatorCreationInfos, staticVarCompensator, subReportNode);
     }
 
@@ -205,8 +205,8 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         addExtensionsToStaticVarCompensator(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
     }
 
-    private void createCompensatorVoltageRegulation(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
-                                                    StaticVarCompensator staticVarCompensator, VoltageLevel voltageLevel, ReportNode subReportNode) {
+    private void createStaticVarCompensatorVoltageRegulation(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
+                                                             StaticVarCompensator staticVarCompensator, VoltageLevel voltageLevel, ReportNode subReportNode) {
         List<ReportNode> voltageReports = new ArrayList<>();
         voltageReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("VoltageRegulationOn", modificationInfos.getVoltageRegulationType() == VoltageRegulationType.DISTANT &&
