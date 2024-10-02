@@ -664,10 +664,10 @@ public final class ModificationUtils {
                                                     List<ReportNode> reports,
                                                     boolean isBranch) {
         if (isBranch) {
-            modifyFeeder(connectablePosition.getFeeder1(), modificationInfos, reports, 1);
-            modifyFeeder(connectablePosition.getFeeder2(), modificationInfos, reports, 2);
+            modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, 1);
+            modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, 2);
         } else {
-            modifyFeeder(connectablePosition.getFeeder(), modificationInfos, reports, 0);
+            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, 0);
         }
     }
 
@@ -677,20 +677,20 @@ public final class ModificationUtils {
                                                List<ReportNode> reports,
                                                boolean isBranch) {
         if (isBranch) {
-            ConnectablePositionAdder.FeederAdder<?> feeder1 = adder.newFeeder1();
-            ConnectablePositionAdder.FeederAdder<?> feeder2 = adder.newFeeder2();
-            modifyFeederAdder(feeder1, modificationInfos, network, reports, 1);
-            modifyFeederAdder(feeder2, modificationInfos, network, reports, 2);
+            ConnectablePositionAdder.FeederAdder<?> feederAdder1 = adder.newFeeder1();
+            ConnectablePositionAdder.FeederAdder<?> feederAdder2 = adder.newFeeder2();
+            addConnectablePosition(feederAdder1, modificationInfos, network, reports, 1);
+            addConnectablePosition(feederAdder2, modificationInfos, network, reports, 2);
         } else {
-            ConnectablePositionAdder.FeederAdder<?> feeder = adder.newFeeder();
-            modifyFeederAdder(feeder, modificationInfos, network, reports, 0);
+            ConnectablePositionAdder.FeederAdder<?> feederAdder = adder.newFeeder();
+            addConnectablePosition(feederAdder, modificationInfos, network, reports, 0);
         }
     }
 
-    private void modifyFeeder(ConnectablePosition.Feeder feeder,
-                              BasicEquipmentModificationInfos modificationInfos,
-                              List<ReportNode> reports,
-                              int feederNumber) {
+    private void modifyConnectablePosition(ConnectablePosition.Feeder feeder,
+                                        BasicEquipmentModificationInfos modificationInfos,
+                                        List<ReportNode> reports,
+                                        int feederNumber) {
         applyModifications(feeder, modificationInfos, reports, feederNumber);
     }
 
@@ -721,11 +721,11 @@ public final class ModificationUtils {
         }
     }
 
-    private void modifyFeederAdder(ConnectablePositionAdder.FeederAdder<?> feeder,
-                                   BasicEquipmentModificationInfos modificationInfos,
-                                   Network network,
-                                   List<ReportNode> reports,
-                                   int feederNumber) {
+    private void addConnectablePosition(ConnectablePositionAdder.FeederAdder<?> feeder,
+                                        BasicEquipmentModificationInfos modificationInfos,
+                                        Network network,
+                                        List<ReportNode> reports,
+                                        int feederNumber) {
         AttributeModification<String> connectionName = getConnectionName(modificationInfos, feederNumber);
         AttributeModification<ConnectablePosition.Direction> connectionDirection = getConnectionDirection(modificationInfos, feederNumber);
         AttributeModification<Integer> connectionPosition = getConnectionPosition(modificationInfos, feederNumber);
