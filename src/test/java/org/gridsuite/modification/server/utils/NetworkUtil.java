@@ -108,7 +108,7 @@ public final class NetworkUtil {
 
     public static void createLineWithoutConnectivity(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
                                   double r, double x, double g1, double g2, double b1, double b2) {
-        var l = network.newLine()
+        network.newLine()
                 .setId(id)
                 .setName(name)
                 .setR(r)
@@ -178,7 +178,7 @@ public final class NetworkUtil {
     }
 
     public static void createGeneratorOnBus(VoltageLevel vl, String id, String busId, double targetP, double targetQ) {
-        var g = vl.newGenerator()
+        vl.newGenerator()
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
