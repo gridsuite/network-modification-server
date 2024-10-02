@@ -814,7 +814,7 @@ public final class ModificationUtils {
     }
 
     private AttributeModification<String> getEquipmentId(BasicEquipmentModificationInfos modificationInfos) {
-            return AttributeModification.toAttributeModification(modificationInfos.getEquipmentId(), OperationType.SET);
+        return AttributeModification.toAttributeModification(modificationInfos.getEquipmentId(), OperationType.SET);
     }
 
     private AttributeModification<String> getConnectionName(BasicEquipmentModificationInfos modificationInfos, int feederNumber) {
