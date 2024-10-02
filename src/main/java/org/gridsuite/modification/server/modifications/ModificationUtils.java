@@ -679,11 +679,11 @@ public final class ModificationUtils {
         if (isBranch) {
             ConnectablePositionAdder.FeederAdder<?> feederAdder1 = adder.newFeeder1();
             ConnectablePositionAdder.FeederAdder<?> feederAdder2 = adder.newFeeder2();
-            addConnectablePosition(feederAdder1, modificationInfos, network, reports, 1);
-            addConnectablePosition(feederAdder2, modificationInfos, network, reports, 2);
+            addConnectablePosition(adder, feederAdder1, modificationInfos, network, reports, 1);
+            addConnectablePosition(adder, feederAdder2, modificationInfos, network, reports, 2);
         } else {
             ConnectablePositionAdder.FeederAdder<?> feederAdder = adder.newFeeder();
-            addConnectablePosition(feederAdder, modificationInfos, network, reports, 0);
+            addConnectablePosition(adder, feederAdder, modificationInfos, network, reports, 0);
         }
     }
 
@@ -721,7 +721,8 @@ public final class ModificationUtils {
         }
     }
 
-    private void addConnectablePosition(ConnectablePositionAdder.FeederAdder<?> feeder,
+    private void addConnectablePosition(ConnectablePositionAdder<?> adder,
+                                        ConnectablePositionAdder.FeederAdder<?> feeder,
                                         BasicEquipmentModificationInfos modificationInfos,
                                         Network network,
                                         List<ReportNode> reports,
@@ -755,6 +756,7 @@ public final class ModificationUtils {
 
         if (connectionNameReport != null || connectionDirectionReport != null || connectionPositionReport != null) {
             feeder.add();
+            adder.add();
         }
     }
 
