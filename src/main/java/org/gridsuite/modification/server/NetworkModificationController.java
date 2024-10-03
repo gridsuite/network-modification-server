@@ -288,6 +288,6 @@ public class NetworkModificationController {
                                                                                   @Parameter(description = "the report uuid") @RequestParam(value = "reportUuid", required = false) UUID reportUuid,
                                                                                   @Parameter(description = "the reporter id") @RequestParam(value = "reporterId", required = false) String reporterId,
                                                                                   @RequestBody List<UUID> modificationsUuidList) {
-        return ResponseEntity.ok().body(networkModificationService.applyModificationsFromUuids(networkUuid, variantId, new ReportInfos(reportUuid, UUID.fromString(reporterId)), modificationsUuidList));
+        return ResponseEntity.ok().body(networkModificationService.applyModificationsFromUuids(networkUuid, variantId, new ReportInfos(reportUuid, reporterId != null ? UUID.fromString(reporterId) : null), modificationsUuidList));
     }
 }
