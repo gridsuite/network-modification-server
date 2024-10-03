@@ -14,7 +14,6 @@ import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-
 import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.Setter;
@@ -197,9 +196,9 @@ public class NetworkModificationApplicator {
 
     private void handleException(NetworkModificationException.Type typeIfError, ReportNode subReportNode, Exception e) {
         boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
-        if (!isApplicationException && LOGGER.isErrorEnabled()) {
-            LOGGER.error(e.toString(), e);
-        }
+        //if (!isApplicationException && LOGGER.isErrorEnabled()) {
+        LOGGER.error(e.toString(), e);
+        //}
         String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
 
         subReportNode.newReportNode()

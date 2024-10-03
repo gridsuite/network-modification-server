@@ -19,9 +19,9 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.annotation.ModificationErrorTypeName;
-import org.gridsuite.modification.server.dto.formula.FormulaInfos;
-import org.gridsuite.modification.server.entities.equipment.modification.ByFormulaModificationEntity;
-import org.gridsuite.modification.server.modifications.ByFormulaModification;
+import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.byfilter.ByFormulaModificationEntity;
+import org.gridsuite.modification.server.modifications.byfilter.ByFormulaModification;
 
 import java.util.List;
 
@@ -57,6 +57,6 @@ public class ByFormulaModificationInfos extends ModificationInfos {
 
     @Override
     public ReportNode createSubReportNode(ReportNode reportNode) {
-        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_FORMULA_MODIFICATION.name(), "By formula modification").add();
+        return reportNode.newReportNode().withMessageTemplate(ModificationType.BY_FORMULA_MODIFICATION.name(), "Modification by formula").add();
     }
 }

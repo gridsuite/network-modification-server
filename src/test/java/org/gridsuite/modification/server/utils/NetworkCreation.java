@@ -288,7 +288,7 @@ public final class NetworkCreation {
         createSwitch(v3, "v3dl2", "v3dl2", SwitchKind.DISCONNECTOR, true, false, false, 0, 30);
         createSwitch(v3, "v3bl2", "v3bl2", SwitchKind.BREAKER, true, false, false, 30, 31);
 
-        createLine(network, "line3", "line3", "v1", "v3", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5, "cn1line3", 3, ConnectablePosition.Direction.TOP, "cn2line3", 3, ConnectablePosition.Direction.TOP);
+        createLineWithoutConnectivity(network, "line3", "line3", "v1", "v3", 10, 12, 12.0, 7.0, 5.5, 7.5, 6.5, 8.5);
         createSwitch(v1, "v1dl3", "v1dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 9);
         createSwitch(v1, "v1bl3", "v1bl3", SwitchKind.BREAKER, true, false, true, 9, 10);
         createSwitch(v3, "v3dl3", "v3dl3", SwitchKind.DISCONNECTOR, true, false, false, 0, 11);
