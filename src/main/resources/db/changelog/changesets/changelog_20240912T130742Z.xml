@@ -1,0 +1,44 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="phamquy (generated)" id="1726146482277-1">
+        <createTable tableName="modification_by_assignment">
+            <column name="equipment_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="modification_by_assignmentPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1726146482277-2">
+        <createTable tableName="assignment">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="assignmentPK"/>
+            </column>
+            <column name="edited_field" type="VARCHAR(255)"/>
+            <column name="data_type" type="VARCHAR(255)"/>
+            <column name="property_name" type="VARCHAR(255)"/>
+            <column name="value_" type="VARCHAR(255)"/>
+            <column name="modification_by_assignment_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1726146482277-3">
+        <addColumn tableName="variation_filter">
+            <column name="assignment_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+   <changeSet author="phamquy (generated)" id="1726146482277-4">
+        <createIndex indexName="modification_by_assignment_id_idx" tableName="assignment">
+            <column name="modification_by_assignment_id"/>
+        </createIndex>
+    </changeSet>
+     <changeSet author="phamquy (generated)" id="1726146482277-5">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="modification_by_assignment" constraintName="modificationByAssignment_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1726146482277-6">
+        <addForeignKeyConstraint baseColumnNames="modification_by_assignment_id" baseTableName="assignment" constraintName="modification_by_assignment_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification_by_assignment" validate="true"/>
+    </changeSet>
+    <changeSet author="phamquy (generated)" id="1726146482277-7">
+        <addForeignKeyConstraint baseColumnNames="assignment_id" baseTableName="variation_filter" constraintName="assignment_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="assignment" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
