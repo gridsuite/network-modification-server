@@ -80,13 +80,13 @@ public enum TwoWindingsTransformerField {
             case RATIO_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
                     null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
             case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attributeModification, null);
-            case REGULATION_VALUE -> processPhaseTapRegulation(phaseTapChanger, null, regulationMode, true, attributeModification, null, null, null);
+            case REGULATION_VALUE -> processPhaseTapRegulation(phaseTapChanger, null, regulationMode, true, attributeModification, null, null);
             case PHASE_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
                     new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null, null);
             case PHASE_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
                     null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
             case PHASE_TARGET_DEADBAND -> processPhaseTapRegulation(
-                    phaseTapChanger, null, null, true, null, attributeModification, null, null
+                    phaseTapChanger, null, null, true, null, attributeModification, null
             );
         }
     }
