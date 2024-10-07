@@ -914,17 +914,11 @@ public final class ModificationUtils {
     }
 
     public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
-        switch (regulationMode) {
-            case FIXED_TAP:
-                return "    Fixed tap";
-            case CURRENT_LIMITER :
-                return "    Current limiter";
-            case ACTIVE_POWER_CONTROL :
-                return "    Active power control";
-            default :
-                return "";
-
-        }
+        return switch (regulationMode) {
+            case FIXED_TAP -> "    Fixed tap";
+            case CURRENT_LIMITER -> "    Current limiter";
+            case ACTIVE_POWER_CONTROL -> "    Active power control";
+        };
     }
 
     public void modifyReactiveCapabilityCurvePoints(Collection<ReactiveCapabilityCurve.Point> points,
