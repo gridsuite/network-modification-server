@@ -45,13 +45,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                 modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getConnectionPosition());
 
         // check reactive power limits and set points
-        ModificationUtils.getInstance().checkReactivePowerLimitsAndSetPointsCreation(modificationInfos.getMaxSusceptance(),
-                modificationInfos.getMinSusceptance(), modificationInfos.getMaxQAtNominalV(),
-                modificationInfos.getMinQAtNominalV(), modificationInfos.getVoltageSetpoint(),
-                modificationInfos.getReactivePowerSetpoint(), modificationInfos.getRegulationMode(),
-                modificationInfos.getErrorType(),
-                modificationInfos.getEquipmentId(),
-                "StaticVarCompensator");
+        ModificationUtils.getInstance().checkReactivePowerLimitsAndSetPointsCreation(modificationInfos);
 
         // check regulated terminal
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
@@ -59,11 +53,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                 modificationInfos.getRegulatingTerminalType(), modificationInfos.getRegulatingTerminalVlId());
 
         // check standby automaton
-        ModificationUtils.getInstance().checkStandbyAutomatonCreation(modificationInfos.isStandby(), modificationInfos.getB0(),
-                modificationInfos.getQ0(), modificationInfos.getMinSusceptance(), modificationInfos.getMaxSusceptance(),
-                modificationInfos.getMinQAtNominalV(), modificationInfos.getMaxQAtNominalV(),
-                modificationInfos.getRegulationMode(), modificationInfos.getErrorType(), modificationInfos.getEquipmentId(),
-                "StaticVarCompensator");
+        ModificationUtils.getInstance().checkStandbyAutomatonCreation(modificationInfos);
     }
 
     @Override

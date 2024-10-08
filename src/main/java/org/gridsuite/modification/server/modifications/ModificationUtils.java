@@ -288,7 +288,8 @@ public final class ModificationUtils {
         if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.isNull(voltageLevelCreationInfos.getIpMax())) {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
         }
-        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
+        if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.nonNull(voltageLevelCreationInfos.getIpMax())
+                && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
         }
     }
@@ -982,11 +983,17 @@ public final class ModificationUtils {
     }
 
     public String formatRegulationModeReport(PhaseTapChanger.RegulationMode regulationMode) {
-        return switch (regulationMode) {
-            case FIXED_TAP -> "    Fixed tap";
-            case CURRENT_LIMITER -> "    Current limiter";
-            case ACTIVE_POWER_CONTROL -> "    Active power control";
-        };
+        switch (regulationMode) {
+            case FIXED_TAP:
+                return "    Fixed tap";
+            case CURRENT_LIMITER :
+                return "    Current limiter";
+            case ACTIVE_POWER_CONTROL :
+                return "    Active power control";
+            default :
+                return "";
+
+        }
     }
 
     public void modifyReactiveCapabilityCurvePoints(Collection<ReactiveCapabilityCurve.Point> points,
@@ -1031,9 +1038,9 @@ public final class ModificationUtils {
                                                     ReactiveCapabilityCurve.Point oldPoint,
                                                     List<ReportNode> reports,
                                                     String fieldSuffix) {
-        double oldMaxQ = Double.NaN;
-        double oldMinQ = Double.NaN;
-        double oldP = Double.NaN;
+        Double oldMaxQ = Double.NaN;
+        Double oldMinQ = Double.NaN;
+        Double oldP = Double.NaN;
         if (oldPoint != null) {
             oldMaxQ = oldPoint.getMaxQ();
             oldMinQ = oldPoint.getMinQ();
@@ -1154,7 +1161,7 @@ public final class ModificationUtils {
                                              AttributeModification<Boolean> participateInfo,
                                              AttributeModification<Float> droopInfo,
                                              List<ReportNode> reports) {
-        boolean participate = participateInfo != null && participateInfo.getValue();
+        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
         adder.withParticipate(participate);
         if (participateInfo != null && reports != null) {
             reports.add(buildModificationReport(null, participate, "Participate"));
@@ -1294,47 +1301,39 @@ public final class ModificationUtils {
         }
     }
 
-    public void checkReactivePowerLimitsAndSetPointsCreation(Double maxSusceptance, Double minSusceptance,
-                                                             Double maxQAtNominalV, Double minQAtNominalV,
-                                                             Double voltageSetpoint, Double reactivePowerSetpoint,
-                                                             StaticVarCompensator.RegulationMode regulationMode,
-                                                             NetworkModificationException.Type errorType,
-                                                             String equipmentId,
-                                                             String equipmentName) {
+    public void checkReactivePowerLimitsAndSetPointsCreation(StaticVarCompensatorCreationInfos creationInfos) {
+        String equipmentName = "StaticVarCompensator";
         // check min max reactive limits
-        if (Objects.isNull(minSusceptance) && Objects.isNull(minQAtNominalV)) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "minimum susceptance is not set");
+        if (Objects.isNull(creationInfos.getMinSusceptance()) && Objects.isNull(creationInfos.getMinQAtNominalV())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "minimum susceptance is not set");
         }
-        if (Objects.isNull(maxSusceptance) && Objects.isNull(maxQAtNominalV)) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum susceptance is not set");
+        if (Objects.isNull(creationInfos.getMaxSusceptance()) && Objects.isNull(creationInfos.getMaxQAtNominalV())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is not set");
         }
-        if (Objects.nonNull(maxSusceptance) && Objects.nonNull(minSusceptance) && maxSusceptance < minSusceptance ||
-                Objects.nonNull(maxQAtNominalV) && Objects.nonNull(minQAtNominalV) && maxQAtNominalV < minQAtNominalV) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
+        if (Objects.nonNull(creationInfos.getMaxSusceptance()) && Objects.nonNull(creationInfos.getMinSusceptance()) && creationInfos.getMaxSusceptance() < creationInfos.getMinSusceptance() ||
+                Objects.nonNull(creationInfos.getMaxQAtNominalV()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && creationInfos.getMaxQAtNominalV() < creationInfos.getMinQAtNominalV()) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
         }
 
         // check set points
-        if (Objects.requireNonNull(regulationMode) == StaticVarCompensator.RegulationMode.VOLTAGE && voltageSetpoint == null) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Voltage setpoint is not set");
+        if (Objects.requireNonNull(creationInfos.getRegulationMode()) == StaticVarCompensator.RegulationMode.VOLTAGE && creationInfos.getVoltageSetpoint() == null) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Voltage setpoint is not set");
         }
-        if (regulationMode == StaticVarCompensator.RegulationMode.REACTIVE_POWER && reactivePowerSetpoint == null) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Reactive power setpoint is not set");
+        if (creationInfos.getRegulationMode() == StaticVarCompensator.RegulationMode.REACTIVE_POWER && creationInfos.getReactivePowerSetpoint() == null) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Reactive power setpoint is not set");
         }
     }
 
-    public void checkStandbyAutomatonCreation(Boolean standby, Double b0, Double q0,
-                                              Double minSusceptance, Double maxSusceptance,
-                                              Double minQAtNominalV, Double maxQAtNominalV,
-                                              StaticVarCompensator.RegulationMode regulationMode,
-                                              NetworkModificationException.Type errorType,
-                                              String equipmentId,
-                                              String equipmentName) {
-        if (Boolean.TRUE.equals(standby) && regulationMode != StaticVarCompensator.RegulationMode.VOLTAGE) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName, "Standby is only supported in Voltage Regulation mode");
+    public void checkStandbyAutomatonCreation(StaticVarCompensatorCreationInfos creationInfos) {
+        String equipmentName = "StaticVarCompensator";
+        if (Boolean.TRUE.equals(creationInfos.isStandby()) && creationInfos.getRegulationMode() != StaticVarCompensator.RegulationMode.VOLTAGE) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Standby is only supported in Voltage Regulation mode");
         }
-        if (Objects.nonNull(b0) && Objects.nonNull(minSusceptance) && Objects.nonNull(maxSusceptance) && (b0 < minSusceptance || b0 > maxSusceptance)
-            || Objects.nonNull(q0) && Objects.nonNull(minQAtNominalV) && Objects.nonNull(maxQAtNominalV) && (q0 < minQAtNominalV || q0 > maxQAtNominalV)) {
-            throw makeEquipmentException(errorType, equipmentId, equipmentName,
+        if (Objects.nonNull(creationInfos.getB0()) && Objects.nonNull(creationInfos.getMinSusceptance()) && Objects.nonNull(creationInfos.getMaxSusceptance()) &&
+                (creationInfos.getB0() < creationInfos.getMinSusceptance() || creationInfos.getB0() > creationInfos.getMaxSusceptance())
+            || Objects.nonNull(creationInfos.getQ0()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && Objects.nonNull(creationInfos.getMaxQAtNominalV()) &&
+                (creationInfos.getQ0() < creationInfos.getMinQAtNominalV() || creationInfos.getQ0() > creationInfos.getMaxQAtNominalV())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName,
                      "b0 must be within the range of minimun susceptance and maximum susceptance");
         }
     }
