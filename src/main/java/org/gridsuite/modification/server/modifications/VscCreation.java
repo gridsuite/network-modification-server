@@ -9,8 +9,6 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateFeederBay;
-import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
@@ -22,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createInjectionInNodeBreaker;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.reportInjectionCreationConnectivity;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -212,22 +212,7 @@ public class VscCreation extends AbstractModification {
         if (converterStationCreationInfos.getVoltageSetpoint() != null) {
             converterStationAdder.setVoltageSetpoint(converterStationCreationInfos.getVoltageSetpoint());
         }
-        int position = ModificationUtils.getInstance().getPosition(converterStationCreationInfos.getConnectionPosition(),
-                converterStationCreationInfos.getBusOrBusbarSectionId(),
-                network,
-                voltageLevel);
-
-        CreateFeederBay algo = new CreateFeederBayBuilder()
-                .withBusOrBusbarSectionId(converterStationCreationInfos.getBusOrBusbarSectionId())
-                .withInjectionDirection(converterStationCreationInfos.getConnectionDirection())
-                .withInjectionFeederName(converterStationCreationInfos.getConnectionName() != null
-                        ? converterStationCreationInfos.getConnectionName()
-                        : converterStationCreationInfos.getEquipmentId())
-                .withInjectionPositionOrder(position)
-                .withInjectionAdder(converterStationAdder)
-                .build();
-
-        algo.apply(network, true, subReportNode);
+        createInjectionInNodeBreaker(voltageLevel, converterStationCreationInfos, network, converterStationAdder, subReportNode);
         VscConverterStation vscConverterStation = ModificationUtils.getInstance()
                 .getVscConverterStation(network, converterStationCreationInfos.getEquipmentId());
 
@@ -261,7 +246,7 @@ public class VscCreation extends AbstractModification {
     private void addExtensionsAndReports(VscConverterStation vscConverterStation,
                                          ConverterStationCreationInfos converterStationCreationInfos,
                                          ReportNode subReporter) {
-        reportConnectivity(converterStationCreationInfos, subReporter);
+        reportInjectionCreationConnectivity(converterStationCreationInfos, subReporter);
 
         ModificationUtils.getInstance().reportModifications(subReporter,
                 List.of(ModificationUtils.getInstance().buildCreationReport(converterStationCreationInfos.getLossFactor(), "Loss Factor")),
@@ -293,35 +278,5 @@ public class VscCreation extends AbstractModification {
                 setPointsVoltageReports,
                 "converterStationSetPointsVoltageRegulation",
                 "Voltage regulation");
-    }
-
-    private void reportConnectivity(ConverterStationCreationInfos converterStationCreationInfos, ReportNode subReportNode) {
-        if (converterStationCreationInfos.getConnectionName() == null &&
-                converterStationCreationInfos.getConnectionDirection() == null &&
-                converterStationCreationInfos.getConnectionPosition() == null) {
-            return;
-        }
-
-        List<ReportNode> connectivityReports = new ArrayList<>();
-        if (converterStationCreationInfos.getConnectionName() != null) {
-            connectivityReports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(converterStationCreationInfos.getConnectionName(), "Connection name"));
-        }
-        if (converterStationCreationInfos.getConnectionDirection() != null) {
-            connectivityReports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(converterStationCreationInfos.getConnectionDirection(), "Connection direction"));
-        }
-        if (converterStationCreationInfos.getConnectionPosition() != null) {
-            connectivityReports.add(ModificationUtils.getInstance()
-                    .buildCreationReport(converterStationCreationInfos.getConnectionPosition(), "Connection position"));
-        }
-        if (!converterStationCreationInfos.isTerminalConnected()) {
-            connectivityReports.add(ReportNode.newRootReportNode()
-                    .withMessageTemplate("equipmentDisconnected", "    Equipment with id=${id} disconnected")
-                    .withUntypedValue("id", converterStationCreationInfos.getEquipmentId())
-                    .withSeverity(TypedValue.INFO_SEVERITY)
-                    .build());
-        }
-        ModificationUtils.getInstance().reportModifications(subReportNode, connectivityReports, "ConnectivityCreated", "Connectivity");
     }
 }
