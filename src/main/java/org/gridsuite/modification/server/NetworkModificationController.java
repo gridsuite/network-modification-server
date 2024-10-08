@@ -238,10 +238,11 @@ public class NetworkModificationController {
             throw new IllegalArgumentException("groupUuid cannot be null");
         }
         if (Boolean.TRUE.equals(stashed)) {
-            networkModificationService.stashNetworkModifications(networkModificationUuids);
+            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids);
             networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
             networkModificationService.restoreNetworkModifications(networkModificationUuids, groupUuid);
+            networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
         return ResponseEntity.ok().build();
     }

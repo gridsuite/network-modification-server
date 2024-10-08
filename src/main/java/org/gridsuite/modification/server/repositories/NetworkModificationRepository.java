@@ -414,14 +414,17 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
+        int stashModificationOrder = -stashedModificationCount - 1;
+        Collections.reverse(modificationUuids);
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
-            modificationEntity.setModificationsOrder(-1);
+            modificationEntity.setModificationsOrder(stashModificationOrder);
             this.modificationRepository.save(modificationEntity);
+            stashModificationOrder--;
         }
     }
 
@@ -431,15 +434,20 @@ public class NetworkModificationRepository {
         if (entities.isEmpty()) {
             return;
         }
-        IntStream.range(0, entities.size())
-            .forEach(i -> entities.get(i).setModificationsOrder(i));
+        if (Boolean.TRUE.equals(stashed)) {
+            IntStream.range(1, entities.size() + 1)
+                .forEach(i -> entities.get(i - 1).setModificationsOrder(-i));
+        } else {
+            IntStream.range(0, entities.size())
+                .forEach(i -> entities.get(i).setModificationsOrder(i));
+        }
         this.modificationRepository.saveAll(entities);
     }
 
     @Transactional
     public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unStashedSize) {
         int modificationOrder = unStashedSize;
-        List<ModificationEntity> modifications = modificationRepository.findAllById(modificationUuids);
+        List<ModificationEntity> modifications = modificationRepository.findAllByIdIn(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }

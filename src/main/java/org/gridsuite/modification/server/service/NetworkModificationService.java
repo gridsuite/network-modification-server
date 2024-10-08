@@ -118,8 +118,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
-        networkModificationRepository.stashNetworkModifications(modificationUuids);
+    public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
+        networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
     }
 
     @Transactional
