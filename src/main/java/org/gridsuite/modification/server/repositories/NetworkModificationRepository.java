@@ -387,8 +387,11 @@ public class NetworkModificationRepository {
         return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
     }
 
+    /**
+     * @return the data from all the network modification contained in the composite modification sent as parameters
+     */
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
+    public List<ModificationInfos> getCompositeModificationsContentInfos(@NonNull List<UUID> uuids) {
         List<ModificationInfos> entities = new ArrayList<>();
         uuids.forEach(uuid -> {
             List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
