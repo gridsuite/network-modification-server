@@ -78,8 +78,8 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     // Need a transaction for collections lazy loading ==> TODO : this is copy pasted, is this true here ?
-    public List<ModificationInfos> getCompositeModificationContentInfos(UUID compositeModificationUuid) {
-        return networkModificationRepository.getCompositeModificationsContentInfos(List.of(compositeModificationUuid));
+    public List<ModificationInfos> getCompositeModificationContentMetadata(UUID compositeModificationUuid) {
+        return networkModificationRepository.getCompositeModificationsContentInfos(List.of(compositeModificationUuid), true);
     }
 
     @Transactional(readOnly = true)
@@ -291,7 +291,7 @@ public class NetworkModificationService {
     public Optional<NetworkModificationResult> insertCompositeModifications(UUID targetGroupUuid,
                                                                             UUID networkUuid, String variantId,
                                                                             ReportInfos reportInfos, List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsContentInfos(modificationsUuids);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsContentInfos(modificationsUuids, false);
         networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
@@ -334,7 +334,7 @@ public class NetworkModificationService {
                                                                            String variantId,
                                                                            ReportInfos reportInfos,
                                                                            List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsContentInfos(modificationsUuids);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsContentInfos(modificationsUuids, false);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 }

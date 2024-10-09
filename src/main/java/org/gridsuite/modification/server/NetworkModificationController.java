@@ -225,11 +225,10 @@ public class NetworkModificationController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Content of the composite modification"),
         @ApiResponse(responseCode = "404", description = "This composite modification does not exist")}
     )
-    // TODO : renvoyer plutôt des métadonnées plutôt que des modifications complètes ?? (List<ModificationMetadata>) ?? => bof pas de name dedans !
     public ResponseEntity<List<ModificationInfos>> getCompositeModificationContent(@PathVariable("id") UUID compositeModificationId) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.getCompositeModificationContentInfos(compositeModificationId)
+                .body(networkModificationService.getCompositeModificationContentMetadata(compositeModificationId)
         );
     }
 
