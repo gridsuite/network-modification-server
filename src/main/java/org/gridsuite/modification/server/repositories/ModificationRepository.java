@@ -28,6 +28,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder desc")
+    List<ModificationEntity> findAllBaseByGroupIdReverse(UUID uuid);
+
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllStashedByGroupId(@Param("groupId") UUID groupId, @Param("stashed") Boolean stashed);
 
@@ -36,6 +39,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
     List<ModificationEntity> findAllByIdIn(List<UUID> uuids);
+
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder desc")
+    List<ModificationEntity> findAllByIdInReverse(List<UUID> uuids);
 
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);

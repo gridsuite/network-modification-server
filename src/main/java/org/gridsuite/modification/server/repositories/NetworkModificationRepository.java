@@ -215,19 +215,19 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        Stream<ModificationEntity> modificationEntityStream = modificationRepository
-                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-                .stream();
         if (onlyStashed) {
-            List<ModificationInfos> stashedModification = modificationEntityStream.filter(m -> m.getStashed())
+            return modificationRepository
+                .findAllBaseByGroupIdReverse(getModificationGroup(groupUuid).getId())
+                .stream()
+                .filter(ModificationEntity::getStashed)
                 .map(this::getModificationInfos)
                 .collect(Collectors.toList());
-            Collections.reverse(stashedModification);
-            return stashedModification;
         } else {
-            return modificationEntityStream
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
+            return modificationRepository
+                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+                .stream()
+                .map(this::getModificationInfos)
+                .collect(Collectors.toList());
         }
     }
 
@@ -450,11 +450,10 @@ public class NetworkModificationRepository {
     @Transactional
     public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unStashedSize) {
         int modificationOrder = unStashedSize;
-        List<ModificationEntity> modifications = modificationRepository.findAllByIdIn(modificationUuids);
+        List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
-        Collections.reverse(modifications);
         for (ModificationEntity modification : modifications) {
             modification.setStashed(false);
             modification.setModificationsOrder(modificationOrder++);
