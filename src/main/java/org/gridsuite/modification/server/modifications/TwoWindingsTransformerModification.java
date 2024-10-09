@@ -209,16 +209,11 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         List<ReportNode> regulationReports = new ArrayList<>();
-        PhaseTapChanger.RegulationMode regulationMode = isModification ? phaseTapChanger.getRegulationMode() : null;
-        if (phaseTapChangerInfos.getRegulationMode() != null
-                && phaseTapChangerInfos.getRegulationMode().getValue() != null) {
-            regulationMode = phaseTapChangerInfos.getRegulationMode().getValue();
-        }
-        if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
-            processPhaseTapRegulation(phaseTapChanger, phaseTapChangerAdder, regulationMode, isModification,
-                phaseTapChangerInfos.getRegulationValue(), phaseTapChangerInfos.getTargetDeadband(),
-                phaseTapChangerInfos.getRegulating(), regulationReports);
-        }
+        PhaseTapChanger.RegulationMode regulationMode = isModification &&
+            phaseTapChangerInfos.getRegulationMode() != null ? phaseTapChangerInfos.getRegulationMode().getValue() : null;
+
+        processPhaseTapRegulation(phaseTapChanger, phaseTapChangerAdder, regulationMode, isModification,
+            phaseTapChangerInfos.getRegulationValue(), phaseTapChangerInfos.getTargetDeadband(), regulationReports);
 
         processRegulatingTerminal(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, regulationReports,
                 network,
@@ -240,10 +235,11 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                         .withMessageTemplate(TapChangerType.PHASE.name(), PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE)
                         .add();
             }
-            ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports,
-                    regulationMode != null ? regulationMode.name() : null,
-                    ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)
-            );
+            if (regulationMode != null) {
+                ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, regulationReports,
+                    regulationMode.name(), ModificationUtils.getInstance().formatRegulationModeReport(regulationMode)
+                );
+            }
             ModificationUtils.getInstance().reportModifications(phaseTapChangerSubreporter, positionsAndStepsReports,
                     "phaseTapChangerPositionsAndStepsModification", "    Tap Changer");
         }
@@ -255,7 +251,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                                                  boolean isModification,
                                                  AttributeModification<Double> modifyRegulationValue,
                                                  AttributeModification<Double> modifyTargetDeadband,
-                                                 AttributeModification<Boolean> regulating,
                                                  List<ReportNode> regulationReports) {
 
         if (regulationMode != null) {
@@ -270,6 +265,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             if (regulationReports != null && regulationValueReportNode != null) {
                 regulationReports.add(regulationValueReportNode);
             }
+            setRegulating(isModification, phaseTapChanger, phaseTapChangerAdder,
+                !regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER));
         }
 
         ReportNode targetDeadbandReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
@@ -281,14 +278,13 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         if (regulationReports != null && targetDeadbandReportNode != null) {
             regulationReports.add(targetDeadbandReportNode);
         }
+    }
 
-        ReportNode regulatingReport = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
-            isModification ? phaseTapChanger::setRegulating
-                : phaseTapChangerAdder::setRegulating,
-            isModification ? phaseTapChanger::isRegulating : () -> null,
-            regulating, "Regulating", 2);
-        if (regulationReports != null && regulatingReport != null) {
-            regulationReports.add(regulatingReport);
+    private static void setRegulating(boolean isModification, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder, boolean value) {
+        if (isModification) {
+            phaseTapChanger.setRegulating(value);
+        } else {
+            phaseTapChangerAdder.setRegulating(value);
         }
     }
 
