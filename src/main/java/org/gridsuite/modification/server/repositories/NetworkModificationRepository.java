@@ -102,8 +102,10 @@ public class NetworkModificationRepository {
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         // read origin group and modifications
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
-        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications();
-
+        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications()
+            .stream()
+            .filter(modificationEntity -> !modificationEntity.getStashed())
+            .collect(Collectors.toList());
         // To remove null entities when @orderColumn is not a contiguous sequence starting from 0 (to be fixed?)
         // (there are several places in this file where we filter non-null modification entities)
         originModificationEntities.removeIf(Objects::isNull);
@@ -217,9 +219,11 @@ public class NetworkModificationRepository {
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream();
         if (onlyStashed) {
-            return modificationEntityStream.filter(m -> m.getStashed())
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
+            List<ModificationInfos> stashedModification = modificationEntityStream.filter(m -> m.getStashed())
+                .map(this::getModificationInfos)
+                .collect(Collectors.toList());
+            Collections.reverse(stashedModification);
+            return stashedModification;
         } else {
             return modificationEntityStream
                     .map(this::getModificationInfos)
@@ -416,7 +420,6 @@ public class NetworkModificationRepository {
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
-        Collections.reverse(modificationUuids);
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
@@ -451,6 +454,7 @@ public class NetworkModificationRepository {
         if (modifications.size() != modificationUuids.size()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
         }
+        Collections.reverse(modifications);
         for (ModificationEntity modification : modifications) {
             modification.setStashed(false);
             modification.setModificationsOrder(modificationOrder++);
