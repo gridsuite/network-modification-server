@@ -280,8 +280,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(buildInfos)))
@@ -297,8 +296,7 @@ public class BuildTest {
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             List.of(),
-            List.of(),
-            new HashSet<>());
+            List.of());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(newBuildInfos)))
@@ -322,8 +320,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
                 .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
                 .build());
@@ -425,8 +422,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
 
         // Build variant
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
@@ -704,8 +700,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
             .andExpect(status().isOk());
@@ -803,8 +798,7 @@ public class BuildTest {
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             Collections.emptyList(),
-            Collections.emptyList(),
-            new HashSet<>());
+            Collections.emptyList());
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
 
@@ -852,9 +846,6 @@ public class BuildTest {
             }
         });
 
-        buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
-        buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
-        buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
         buildInfosJson = objectWriter.writeValueAsString(buildInfos);
 
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -919,8 +910,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
         // test that only non stashed modifications have been made on variant VARIANT_ID
@@ -945,8 +935,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            Set.of());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
             try {
@@ -984,8 +973,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)),
-            Set.of());
+            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)));
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsString(buildInfos)))
