@@ -62,7 +62,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
