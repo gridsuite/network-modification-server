@@ -316,15 +316,6 @@ public class NetworkModificationRepository {
         return getModificationInfos(optionalModificationEntity.get());
     }
 
-    @Transactional(readOnly = true)
-    public ModificationInfos getMetadata(UUID modificationUuid) {
-        Optional<ModificationEntity> optionalModificationEntity = modificationRepository.findById(modificationUuid);
-        if (!optionalModificationEntity.isPresent()) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
-        }
-        return ModificationInfos.fromEntity(optionalModificationEntity.get());
-    }
-
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
         try {
@@ -398,18 +389,27 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @param onlyMetadata if true, only returns the basic data common to all the modificaions
+     * @param onlyMetadata if true, only returns the basic data common to all the modifications
      * @return the data from all the network modification contained in the composite modification sent as parameters
      */
     @Transactional(readOnly = true)
     public List<ModificationInfos> getCompositeModificationsContentInfos(@NonNull List<UUID> uuids, boolean onlyMetadata) {
         List<ModificationInfos> entities = new ArrayList<>();
         uuids.forEach(uuid -> {
-            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-            List<ModificationInfos> orderedModifications = foundEntities
-                    .stream()
-                    .map(onlyMetadata ? this::getMetadata : this::getModificationInfo)
-                    .toList();
+            List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+            List<ModificationInfos> orderedModifications;
+            if (onlyMetadata) {
+                List<ModificationEntity> networkModifications = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
+                orderedModifications = networkModifications
+                        .stream()
+                        .map(this::getModificationInfos)
+                        .toList();
+            } else {
+                orderedModifications = networkModificationsUuids
+                        .stream()
+                        .map(this::getModificationInfo)
+                        .toList();
+            }
             entities.addAll(orderedModifications);
         }
         );
