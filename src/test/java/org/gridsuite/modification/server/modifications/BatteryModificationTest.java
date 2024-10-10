@@ -13,11 +13,10 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ReactiveCapabilityCurve;
 import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.CollectionUtils;
@@ -29,11 +28,12 @@ import java.util.stream.IntStream;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class BatteryModificationTest extends AbstractInjectionModificationTest {
+class BatteryModificationTest extends AbstractInjectionModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -90,7 +90,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
         assertEquals(0., modifiedBattery.getMinP());
         assertEquals(100., modifiedBattery.getMaxP());
         assertEquals(0.1f, modifiedBattery.getExtension(ActivePowerControl.class).getDroop());
-        assertEquals(true, modifiedBattery.getExtension(ActivePowerControl.class).isParticipate());
+        assertTrue(modifiedBattery.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedBattery.getReactiveLimits().getKind());
         Collection<ReactiveCapabilityCurve.Point> points = modifiedBattery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
@@ -120,7 +120,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
     }
 
     @Test
-    public void testMinMaxReactiveLimitsAttributesModification() throws Exception {
+    void testMinMaxReactiveLimitsAttributesModification() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
 
         //setting ReactiveCapabilityCurve to false with null min and max reactive limits
@@ -202,7 +202,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
     }
 
     @Test
-    public void testDroopUnchanged() throws Exception {
+    void testDroopUnchanged() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
 
         batteryModificationInfos.getDroop().setValue(18f);
@@ -228,14 +228,14 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
     }
 
     @Test
-    public void testImpactsAfterActivePowerControlModifications() throws Exception {
+    void testImpactsAfterActivePowerControlModifications() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         Battery battery = getNetwork().getBattery("v3Battery");
         assertEquals(0.1f, battery.getExtension(ActivePowerControl.class).getDroop());
-        assertEquals(true, battery.getExtension(ActivePowerControl.class).isParticipate());
+        assertTrue(battery.getExtension(ActivePowerControl.class).isParticipate());
         //modify only droop
         batteryModificationInfos.setDroop(new AttributeModification<>(0.5f, OperationType.SET));
         modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
@@ -262,7 +262,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
     }
 
     @Test
-    public void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
+    void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         Battery battery = getNetwork().getBattery("v3Battery");
         battery.setTargetP(80.)
@@ -283,7 +283,7 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
     }
 
     @Test
-    public void testMinQGreaterThanMaxQ() throws Exception {
+    void testMinQGreaterThanMaxQ() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         Battery battery = getNetwork().getBattery("v3Battery");
         battery.newReactiveCapabilityCurve()
@@ -328,28 +328,26 @@ public class BatteryModificationTest extends AbstractInjectionModificationTest {
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v3Battery", updatedValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("BATTERY_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBatteryEdited", updatedValues.get("equipmentId"));
     }
 
     @Test
-    public void testDisconnection() throws Exception {
+    void testDisconnection() throws Exception {
         assertChangeConnectionState(getNetwork().getBattery("v3Battery"), false);
     }
 
     @Test
-    public void testConnection() throws Exception {
+    void testConnection() throws Exception {
         assertChangeConnectionState(getNetwork().getBattery("v3Battery"), true);
     }
 }

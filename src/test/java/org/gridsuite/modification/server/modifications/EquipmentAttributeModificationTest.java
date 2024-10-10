@@ -9,13 +9,12 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -28,17 +27,16 @@ import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElem
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest {
+class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest {
 
     @Test
-    public void testEquipmentAttributeModificationInfos() throws Exception {
+    void testEquipmentAttributeModificationInfos() throws Exception {
         MvcResult mvcResult;
         UUID modificationUuid = UUID.randomUUID();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
@@ -76,7 +74,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Test
-    public void testSwitch() throws Exception {
+    void testSwitch() throws Exception {
         // switches modifications on initial variant
         switchModifications("", "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 5);
 
@@ -130,7 +128,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Test
-    public void testWithErrors() throws Exception {
+    void testWithErrors() throws Exception {
         // bad equipment attribute name
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .stashed(false)
@@ -194,8 +192,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("open", createdValues.get("equipmentAttributeName"));
@@ -204,8 +201,7 @@ public class EquipmentAttributeModificationTest extends AbstractNetworkModificat
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("open", createdValues.get("equipmentAttributeName"));

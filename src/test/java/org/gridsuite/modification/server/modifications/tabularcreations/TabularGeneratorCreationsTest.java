@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -20,9 +19,8 @@ import org.gridsuite.modification.server.dto.TabularCreationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -32,11 +30,9 @@ import java.util.UUID;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -46,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
+class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -175,7 +171,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testCheckSqlRequestsCount() throws Exception {
+    void testCheckSqlRequestsCount() throws Exception {
         UUID modificationUuid = saveModification(buildModification());
         reset();
 
@@ -220,7 +216,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testAllModificationsHaveSucceeded() throws Exception {
+    void testAllModificationsHaveSucceeded() throws Exception {
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
                 .equipmentId("id1").equipmentName("name1").voltageLevelId("v1").busOrBusbarSectionId("1.1")
@@ -258,7 +254,7 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testAllModificationsHaveFailed() throws Exception {
+    void testAllModificationsHaveFailed() throws Exception {
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
                 .equipmentId("id1").equipmentName("name1").voltageLevelId("unknown_vl").busOrBusbarSectionId("1.1")
@@ -307,18 +303,16 @@ public class TabularGeneratorCreationsTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(ModificationType.GENERATOR_CREATION.name(), createdValues.get("tabularCreationType"));
+        assertEquals(ModificationType.GENERATOR_CREATION.name(), createdValues.get("tabularCreationType"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(ModificationType.GENERATOR_CREATION.name(), updatedValues.get("tabularCreationType"));
+        assertEquals(ModificationType.GENERATOR_CREATION.name(), updatedValues.get("tabularCreationType"));
     }
 }

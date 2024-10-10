@@ -9,15 +9,14 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.LineCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Collections;
@@ -26,22 +25,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
 
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
         lineCreationInfos.setBusOrBusbarSectionId2("notFoundBus");
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
@@ -52,7 +49,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateLineOptionalParameters() throws Exception {
+    void testCreateLineOptionalParameters() throws Exception {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .stashed(false)
@@ -76,7 +73,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateLineOptionalParameters2() throws Exception {
+    void testCreateLineOptionalParameters2() throws Exception {
         // create new line without shunt conductance or reactance
         LineCreationInfos lineCreationInfosNoShunt = LineCreationInfos.builder()
                 .stashed(false)
@@ -105,7 +102,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateLineOptionalParameters3() throws Exception {
+    void testCreateLineOptionalParameters3() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId("idLine2")
@@ -130,7 +127,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateLineOptionalParameters4() throws Exception {
+    void testCreateLineOptionalParameters4() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitOK = LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId("idLine2")
@@ -157,7 +154,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateLineOptionalParameters5() throws Exception {
+    void testCreateLineOptionalParameters5() throws Exception {
         LineCreationInfos lineCreationInfosPermanentLimitNOK = LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId("idLine2")
@@ -177,7 +174,7 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateLineOptionalParameters6() throws Exception {
+    void testCreateLineOptionalParameters6() throws Exception {
         LineCreationInfos lineCreationInfosOK = LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId("idLine3")
@@ -257,16 +254,14 @@ public class LineCreationInBusBreakerTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idLine1", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idLineEdited1", updatedValues.get("equipmentId"));

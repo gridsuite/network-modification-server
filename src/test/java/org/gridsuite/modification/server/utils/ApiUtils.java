@@ -26,9 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 public final class ApiUtils {
-
     private ApiUtils() {
-        // Should not be instantiated
+        throw new IllegalCallerException("Utility class");
     }
 
     public static List<ModificationInfos> getGroupModifications(MockMvc mockMvc, UUID groupUuid) throws Exception {

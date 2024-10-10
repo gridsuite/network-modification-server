@@ -7,10 +7,6 @@
 
 package org.gridsuite.modification.server.utils;
 
-import javax.sql.DataSource;
-
-import java.lang.reflect.Method;
-
 import net.ttddyy.dsproxy.listener.ChainListener;
 import net.ttddyy.dsproxy.listener.DataSourceQueryCountListener;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
@@ -22,6 +18,9 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
+
+import javax.sql.DataSource;
+import java.lang.reflect.Method;
 
 @Component
 /**

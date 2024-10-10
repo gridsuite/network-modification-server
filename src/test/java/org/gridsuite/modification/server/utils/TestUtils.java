@@ -16,10 +16,9 @@ import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.server.service.ReportService;
-import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -43,6 +42,7 @@ public final class TestUtils {
     private static final long TIMEOUT = 100;
 
     private TestUtils() {
+        throw new IllegalCallerException("Utility class");
     }
 
     public static Set<String> getRequestsDone(int n, MockWebServer server) throws UncheckedInterruptedException {
@@ -67,9 +67,13 @@ public final class TestUtils {
 
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) {
         try {
-            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(TIMEOUT, destination)));
-        } catch (NullPointerException e) {
-            // Ignoring
+            for (String destination : destinations) {
+                try {
+                    assertNull(output.receive(TIMEOUT, destination), "Should not be any messages in queue " + destination + " :");
+                } catch (NullPointerException e) {
+                    // Ignoring
+                }
+            }
         } finally {
             output.clear(); // purge in order to not fail the other tests
         }
@@ -77,7 +81,6 @@ public final class TestUtils {
 
     public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException, IOException {
         Set<String> httpRequest = null;
-
         try {
             httpRequest = getRequestsDone(1, server);
         } catch (NullPointerException e) {
@@ -85,8 +88,7 @@ public final class TestUtils {
         } finally {
             server.shutdown();
         }
-
-        assertNull("Should not be any http requests : ", httpRequest);
+        assertNull(httpRequest, "Should not be any http requests :");
     }
 
     public static void assertRequestsCount(long select, long insert, long update, long delete) {
@@ -116,7 +118,7 @@ public final class TestUtils {
     public static String resourceToString(String resource) throws IOException {
         InputStream inputStream = Objects.requireNonNull(TestUtils.class.getResourceAsStream(resource));
         String content = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
-        return StringUtils.replaceWhitespaceCharacters(content, "");
+        return content.replaceAll("\\s", "");
     }
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {

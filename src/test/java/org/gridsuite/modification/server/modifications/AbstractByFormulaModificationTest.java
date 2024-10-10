@@ -25,30 +25,25 @@ import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 @Tag("IntegrationTest")
 public abstract class AbstractByFormulaModificationTest extends AbstractNetworkModificationTest {
     protected static final UUID FILTER_ID_1 = UUID.randomUUID();
@@ -67,14 +62,14 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     protected final FilterInfos filter6 = new FilterInfos(FILTER_ID_6, "filter6");
     protected final FilterInfos filterWithOneWrongId = new FilterInfos(FILTER_WITH_ONE_WRONG_ID, "filterWithOneWrongId");
 
-    public static final String PATH = "/v1/filters/metadata";
+    protected static final String PATH = "/v1/filters/metadata";
 
     @Override
     protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
         assertThat(impacts).containsExactly(createCollectionElementImpact(getIdentifiableType()));
     }
 
-    @Before
+    @BeforeEach
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
 
@@ -83,7 +78,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     }
 
     @Test
-    public void testByModificationError() throws Exception {
+    void testByModificationError() throws Exception {
         //Test with modification = null
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
@@ -151,7 +146,7 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
     }
 
     @Test
-    public void testModificationWithAllWrongEquipmentIds() throws Exception {
+    void testModificationWithAllWrongEquipmentIds() throws Exception {
         AbstractFilter filter = getFilterEquipments(FILTER_WITH_ALL_WRONG_IDS, List.of());
 
         List<FormulaInfos> formulaInfos = getFormulaInfos().stream()
@@ -260,11 +255,11 @@ public abstract class AbstractByFormulaModificationTest extends AbstractNetworkM
                 .build();
     }
 
-    Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
+    protected Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
         return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    String getPath(boolean isRegexPhat) {
+    protected String getPath(boolean isRegexPhat) {
         if (isRegexPhat) {
             return "/v1/filters/metadata\\?ids=";
         }

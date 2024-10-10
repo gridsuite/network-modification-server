@@ -22,13 +22,12 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
-public class LoadByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class LoadByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String LOAD_ID_1 = "load1";
     private static final String LOAD_ID_2 = "load2";
     private static final String LOAD_ID_3 = "load3";

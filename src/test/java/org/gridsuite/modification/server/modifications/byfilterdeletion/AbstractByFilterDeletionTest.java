@@ -4,14 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
-import lombok.SneakyThrows;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ByFilterDeletionInfos;
+import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Date;
@@ -25,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationTest {
+abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationTest {
     protected static final UUID FILTER_ID_1 = UUID.randomUUID();
     protected static final UUID FILTER_ID_2 = UUID.randomUUID();
     protected static final String EQUIPMENT_WRONG_ID_1 = "wrongId1";
@@ -38,7 +39,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
 
     protected abstract List<AbstractFilter> getTestFilters();
 
-    public static final String PATH = "/v1/filters/metadata";
+    protected static final String PATH = "/v1/filters/metadata";
 
     @Test
     @Override
@@ -55,7 +56,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         var filter1 = FilterInfos.builder()
                 .id(FILTER_ID_1)
                 .name("filter1")
@@ -100,7 +101,7 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     }
 
     @Test
-    public void testCreateAllFiltersWrong() throws Exception {
+    void testCreateAllFiltersWrong() throws Exception {
         var filter1 = FilterInfos.builder()
                 .id(FILTER_ID_1)
                 .name("filter1")
@@ -169,16 +170,14 @@ public abstract class AbstractByFilterDeletionTest extends AbstractNetworkModifi
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("BY_FILTER_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(getIdentifiableType().name(), createdValues.get("equipmentType"));

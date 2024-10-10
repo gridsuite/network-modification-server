@@ -26,15 +26,12 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.modifications.ByFormulaModification.EQUIPMENT_MODIFIED_REPORT_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
-public class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String VOLTAGE_LEVEL_ID_1 = "v1";
     private static final String VOLTAGE_LEVEL_ID_2 = "v2";
     private static final String VOLTAGE_LEVEL_ID_3 = "v3";

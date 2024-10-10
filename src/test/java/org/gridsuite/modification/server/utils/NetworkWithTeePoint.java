@@ -20,8 +20,8 @@ import static org.gridsuite.modification.server.utils.NetworkUtil.*;
  * @author Geoffroy Jamgotchian <geoffroy.jamgotchian at rte-france.com>
  */
 public final class NetworkWithTeePoint {
-
     private NetworkWithTeePoint() {
+        throw new IllegalCallerException("Utility class");
     }
 
     public static Network create(UUID uuid) {

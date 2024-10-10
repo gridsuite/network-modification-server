@@ -18,20 +18,19 @@ import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.BatteryField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
-public class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class BatteryByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String BATTERY_ID_1 = "v3Battery";
     private static final String BATTERY_ID_2 = "battery2";
     private static final String BATTERY_ID_3 = "battery3";
@@ -40,7 +39,7 @@ public class BatteryByFormulaModificationTest extends AbstractByFormulaModificat
     private static final String BATTERY_ID_6 = "battery6";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 

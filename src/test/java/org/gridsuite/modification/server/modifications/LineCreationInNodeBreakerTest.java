@@ -10,12 +10,11 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,18 +22,17 @@ import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
     @Test
-    public void testCreateWithBadVariant() throws Exception {
+    void testCreateWithBadVariant() throws Exception {
         // Test create line on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the line cannot be created
         LineCreationInfos modificationToCreate = (LineCreationInfos) buildModification();
@@ -51,7 +49,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
         lineCreationInfos.setEquipmentId("");
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
@@ -100,7 +98,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testCreateLineWithOnlyPermanentCurrentLimits() throws Exception {
+    void testCreateLineWithOnlyPermanentCurrentLimits() throws Exception {
         LineCreationInfos lineCreation = LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
@@ -138,7 +136,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testCreateLineWithOnlyTemporaryCurrentLimits() throws Exception {
+    void testCreateLineWithOnlyTemporaryCurrentLimits() throws Exception {
         LineCreationInfos lineCreation = LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
@@ -182,7 +180,7 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Test
-    public void testCreateLineWithBothCurrentLimits() throws Exception {
+    void testCreateLineWithBothCurrentLimits() throws Exception {
         LineCreationInfos lineCreation = LineCreationInfos.builder()
                 .equipmentId("idLineEdited")
                 .equipmentName("nameLineEdited")
@@ -302,16 +300,14 @@ public class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTe
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idLine", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idLineEdited", updatedValues.get("equipmentId"));

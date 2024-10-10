@@ -21,18 +21,19 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpac
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 public final class TestImpactUtils {
     private TestImpactUtils() {
+        throw new IllegalCallerException("Utility class");
     }
 
-    public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) throws JsonProcessingException {
+    public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         testEmptyImpacts(networkModificationResult.get());
@@ -59,7 +60,7 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult).recursivelyEquals(resultExpected);
     }
 
-    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, int nbImpacts, Set<IdentifiableType> elementTypes, Set<String> substationIds) throws JsonProcessingException {
+    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, int nbImpacts, Set<IdentifiableType> elementTypes, Set<String> substationIds) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
 
@@ -69,7 +70,7 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get().getNetworkImpacts()).containsAll(elementTypes.stream().map(TestImpactUtils::createCollectionElementImpact).toList());
     }
 
-    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<AbstractBaseImpact> elementImpactsExpected) throws JsonProcessingException {
+    public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<AbstractBaseImpact> elementImpactsExpected) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
@@ -80,15 +81,11 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
 
-    public static void testElementCreationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
-        testElementImpact(SimpleImpactType.CREATION, mapper, resultAsString, elementType, elementId, substationIds);
-    }
-
-    public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
+    public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws Exception {
         testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
     }
 
-    public static void testElementImpact(SimpleImpactType type, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
+    public static void testElementImpact(SimpleImpactType type, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
@@ -128,7 +125,7 @@ public final class TestImpactUtils {
         testBranchImpacts(mapper, SimpleImpactType.CREATION, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
     }
 
-    public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws JsonProcessingException {
+    public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws Exception {
         List<AbstractBaseImpact> substationsImpacts = createSubstationImpacts(substationIds);
         testElementImpacts(mapper, resultAsString, substationsImpacts);
     }

@@ -12,11 +12,10 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 
@@ -26,13 +25,12 @@ import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class GeneratorModificationTest extends AbstractInjectionModificationTest {
+class GeneratorModificationTest extends AbstractInjectionModificationTest {
     private static String PROPERTY_NAME = "property-name";
     private static String PROPERTY_VALUE = "property-value";
 
@@ -113,7 +111,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         assertEquals(80.0, modifiedGenerator.getTargetP());
         assertEquals(40.0, modifiedGenerator.getTargetQ());
         assertEquals(48.0, modifiedGenerator.getTargetV());
-        assertEquals(false, modifiedGenerator.isVoltageRegulatorOn());
+        assertFalse(modifiedGenerator.isVoltageRegulatorOn());
         assertEquals(0., modifiedGenerator.getMinP());
         assertEquals(100., modifiedGenerator.getMaxP());
         assertEquals(220., modifiedGenerator.getRatedS());
@@ -122,7 +120,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         assertEquals(0.30, modifiedGenerator.getExtension(GeneratorStartup.class).getPlannedOutageRate());
         assertEquals(0.40, modifiedGenerator.getExtension(GeneratorStartup.class).getForcedOutageRate());
         assertEquals(0.1f, modifiedGenerator.getExtension(ActivePowerControl.class).getDroop());
-        assertEquals(true, modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
+        assertTrue(modifiedGenerator.getExtension(ActivePowerControl.class).isParticipate());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getDirectTransX());
         assertEquals(0.1, modifiedGenerator.getExtension(GeneratorShortCircuit.class).getStepUpTransformerX());
         assertEquals(ReactiveLimitsKind.CURVE, modifiedGenerator.getReactiveLimits().getKind());
@@ -137,7 +135,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
         assertEquals(42.1, generator.getTargetP());
         assertEquals(1.0, generator.getTargetQ());
         assertEquals(Double.NaN, generator.getTargetV());
-        assertEquals(false, generator.isVoltageRegulatorOn());
+        assertFalse(generator.isVoltageRegulatorOn());
         assertEquals(-1.1, generator.getMinP());
         assertEquals(1000.0, generator.getMaxP());
         assertEquals(Double.NaN, generator.getRatedS());
@@ -146,7 +144,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testMinMaxReactiveLimitsAttributesModification() throws Exception {
+    void testMinMaxReactiveLimitsAttributesModification() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         //setting ReactiveCapabilityCurve to false with null min and max reactive limits
@@ -230,7 +228,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testGeneratorShortCircuitAttributesModification() throws Exception {
+    void testGeneratorShortCircuitAttributesModification() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // setting transient reactance to null, modifying only step up transformer reactance
@@ -260,7 +258,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testGeneratorVoltageRegulatorAttributesModification() throws Exception {
+    void testGeneratorVoltageRegulatorAttributesModification() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // setting voltageRegulatorOn to true, applying qPercent and regulatingTerminal
@@ -316,7 +314,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
         // Unset an attribute that should not be null
         generatorModificationInfos.setEnergySource(new AttributeModification<>(null, OperationType.UNSET));
@@ -330,7 +328,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testDroopUnchanged() throws Exception {
+    void testDroopUnchanged() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         generatorModificationInfos.getDroop().setValue(18f);
@@ -356,7 +354,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testMinQGreaterThanMaxQ() throws Exception {
+    void testMinQGreaterThanMaxQ() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
         Generator generator = getNetwork().getGenerator("idGenerator");
         generator.newReactiveCapabilityCurve()
@@ -401,7 +399,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
+    void testActivePowerZeroOrBetweenMinAndMaxActivePower() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
         Generator generator = getNetwork().getGenerator("idGenerator");
         generator.setTargetP(80.)
@@ -423,7 +421,7 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Test
-    public void testUnsetAttributes() throws Exception {
+    void testUnsetAttributes() throws Exception {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         // Unset TargetV
@@ -446,28 +444,26 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idGenerator", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("GENERATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idGeneratorEdited", createdValues.get("equipmentId"));
     }
 
     @Test
-    public void testDisconnection() throws Exception {
+    void testDisconnection() throws Exception {
         assertChangeConnectionState(getNetwork().getGenerator("idGenerator"), false);
     }
 
     @Test
-    public void testConnection() throws Exception {
+    void testConnection() throws Exception {
         assertChangeConnectionState(getNetwork().getGenerator("idGenerator"), true);
     }
 }

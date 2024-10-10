@@ -14,8 +14,8 @@ import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 
 public final class NetworkUtil {
-
     private NetworkUtil() {
+        throw new IllegalStateException("Utility class");
     }
 
     @SuppressWarnings("SameParameterValue")

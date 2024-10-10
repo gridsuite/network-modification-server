@@ -18,18 +18,17 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -49,21 +47,21 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/*
-Class to extend if you want to test a network modification.
-Each modification should have its own class and implements the abstract methods.
-It will automatically run the tests present in this class with the implemented methods.
-If you want to add a test that can be applied to every modification, add it here.
-If you want to add a test specific to a modification, add it in its own class.
+/**
+ * Class to extend if you want to test a network modification.<ul>
+ * <li>Each modification should have its own class and implements the abstract methods.</li>
+ * <li>It will automatically run the tests present in this class with the implemented methods.</li>
+ * <li>If you want to add a test that can be applied to every modification, add it here.</li>
+ * <li>If you want to add a test specific to a modification, add it in its own class.</li>
+ * </ul>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @DisableElasticsearch
 @AutoConfigureMockMvc
@@ -101,7 +99,7 @@ public abstract class AbstractNetworkModificationTest {
 
     private Network network;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         network = createNetwork(TEST_NETWORK_ID);
 
@@ -115,7 +113,7 @@ public abstract class AbstractNetworkModificationTest {
         wireMockServer.start();
     }
 
-    @After
+    @AfterEach
     public void tearOff() {
         modificationRepository.deleteAll();
 
@@ -194,15 +192,12 @@ public abstract class AbstractNetworkModificationTest {
         assertTrue(networkModificationResult.isPresent());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
         String resultAsString = mvcResult.getResponse().getContentAsString();
-        ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
-
+        ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(receivedModification).recursivelyEquals(modificationToRead);
     }
 
     @Test
     public void testUpdate() throws Exception {
-
         ModificationInfos modificationToUpdate = buildModification();
 
         UUID modificationUuid = saveModification(modificationToUpdate);
@@ -228,7 +223,6 @@ public abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testDelete() throws Exception {
-
         ModificationInfos modificationToDelete = buildModification();
 
         UUID modificationUuid = saveModification(modificationToDelete);
@@ -246,7 +240,6 @@ public abstract class AbstractNetworkModificationTest {
 
     @Test
     public void testCopy() throws Exception {
-
         ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
@@ -320,11 +313,11 @@ public abstract class AbstractNetworkModificationTest {
 
     protected abstract void assertAfterNetworkModificationDeletion();
 
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
     }
 
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
     }
 }

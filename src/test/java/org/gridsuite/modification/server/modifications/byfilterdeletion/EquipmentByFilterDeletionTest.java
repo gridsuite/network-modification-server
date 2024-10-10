@@ -16,28 +16,25 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Tag("IntegrationTest")
-public class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
+class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
     private static final String LOAD_ID_1 = "load1";
-
     private static final String LOAD_ID_2 = "load2";
-
     private static final String LOAD_ID_3 = "load3";
-
     private static final String LOAD_ID_4 = "load4";
 
-    @Before
-    public void specificSetUp() {
+    @BeforeEach
+    void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
     }

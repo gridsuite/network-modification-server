@@ -6,16 +6,16 @@
  */
 package org.gridsuite.modification.server;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
  */
-public class ModificationTypeTest {
+class ModificationTypeTest {
     @Test
-    public void testMaxStrategyNoneVsNone() {
+    void testMaxStrategyNoneVsNone() {
         ModificationType noneStrategy1 = ModificationType.LOAD_CREATION;
         ModificationType noneStrategy2 = ModificationType.LOAD_MODIFICATION;
         assertEquals(noneStrategy1, noneStrategy1.maxStrategy(noneStrategy2));
@@ -23,7 +23,7 @@ public class ModificationTypeTest {
     }
 
     @Test
-    public void testMaxStrategyNoneVsCollection() {
+    void testMaxStrategyNoneVsCollection() {
         ModificationType noneStrategy = ModificationType.LOAD_CREATION;
         ModificationType collectionStrategy = ModificationType.TABULAR_MODIFICATION;
         assertEquals(collectionStrategy, noneStrategy.maxStrategy(collectionStrategy));
@@ -31,7 +31,7 @@ public class ModificationTypeTest {
     }
 
     @Test
-    public void testMaxStrategyNoneVsAllCollectionsNeededForBusView() {
+    void testMaxStrategyNoneVsAllCollectionsNeededForBusView() {
         ModificationType noneStrategy = ModificationType.LOAD_CREATION;
         ModificationType allCollectionsNeededForBusViewStrategy = ModificationType.VOLTAGE_INIT_MODIFICATION;
         assertEquals(allCollectionsNeededForBusViewStrategy, noneStrategy.maxStrategy(allCollectionsNeededForBusViewStrategy));
@@ -39,7 +39,7 @@ public class ModificationTypeTest {
     }
 
     @Test
-    public void testMaxStrategyCollectionVsCollection() {
+    void testMaxStrategyCollectionVsCollection() {
         ModificationType collectionStrategy1 = ModificationType.TABULAR_MODIFICATION;
         ModificationType collectionStrategy2 = ModificationType.TABULAR_CREATION;
         assertEquals(collectionStrategy1, collectionStrategy1.maxStrategy(collectionStrategy2));
@@ -47,7 +47,7 @@ public class ModificationTypeTest {
     }
 
     @Test
-    public void testMaxStrategyCollectionVsAllCollectionsNeededForBusView() {
+    void testMaxStrategyCollectionVsAllCollectionsNeededForBusView() {
         ModificationType collectionStrategy = ModificationType.TABULAR_MODIFICATION;
         ModificationType allCollectionsNeededForBusViewStrategy = ModificationType.VOLTAGE_INIT_MODIFICATION;
         assertEquals(allCollectionsNeededForBusViewStrategy, collectionStrategy.maxStrategy(allCollectionsNeededForBusViewStrategy));

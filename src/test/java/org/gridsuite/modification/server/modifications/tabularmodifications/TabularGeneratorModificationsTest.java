@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
@@ -17,9 +16,8 @@ import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
@@ -35,7 +33,7 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Etienne Homer <etienne.homer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest {
+class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -94,7 +92,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnGetModification() throws Exception {
+    void testSqlRequestsCountOnGetModification() throws Exception {
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
@@ -109,7 +107,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnGetGroupModifications() throws Exception {
+    void testSqlRequestsCountOnGetGroupModifications() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
 
         reset();
@@ -150,7 +148,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
-    public void testSqlRequestsCountOnPostGroups() throws Exception {
+    void testSqlRequestsCountOnPostGroups() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         UUID targetGroupUuid = UUID.randomUUID();
 
@@ -161,7 +159,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnPostGroups2() throws Exception {
+    void testSqlRequestsCountOnPostGroups2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         UUID targetGroupUuid = UUID.randomUUID();
 
@@ -203,7 +201,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
-    public void testSqlRequestsCountOnPutGroupsDuplications() throws Exception {
+    void testSqlRequestsCountOnPutGroupsDuplications() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         UUID targetGroupUuid = UUID.randomUUID();
 
@@ -214,7 +212,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnPutGroupsDuplications2() throws Exception {
+    void testSqlRequestsCountOnPutGroupsDuplications2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         UUID targetGroupUuid = UUID.randomUUID();
 
@@ -255,7 +253,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
-    public void testSqlRequestsCountOnPutGroupsWithCopy() throws Exception {
+    void testSqlRequestsCountOnPutGroupsWithCopy() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         UUID targetGroupUuid = UUID.randomUUID();
 
@@ -266,7 +264,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnPutGroupsWithCopy2() throws Exception {
+    void testSqlRequestsCountOnPutGroupsWithCopy2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         UUID targetGroupUuid = UUID.randomUUID();
 
@@ -305,7 +303,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     response time, it is a better optimization to start multiplying requests instead of entries in one request.
      */
     @Test
-    public void testSqlRequestsCountOnPostNetworkModificationsDuplicate() throws Exception {
+    void testSqlRequestsCountOnPostNetworkModificationsDuplicate() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
 
         reset();
@@ -315,7 +313,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnPostNetworkModificationsDuplicate2() throws Exception {
+    void testSqlRequestsCountOnPostNetworkModificationsDuplicate2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
 
         reset();
@@ -344,7 +342,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     - 1 delete of the group
      */
     @Test
-    public void testSqlRequestsCountOnDeleteGroup() throws Exception {
+    void testSqlRequestsCountOnDeleteGroup() throws Exception {
         createFewTabularModifications();
 
         reset();
@@ -354,7 +352,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnDeleteGroup2() throws Exception {
+    void testSqlRequestsCountOnDeleteGroup2() throws Exception {
         createMoreTabularModifications();
 
         reset();
@@ -381,7 +379,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         - delete modification for tabular modifications
      */
     @Test
-    public void testSqlRequestsCountOnDeleteStashedInGroup() throws Exception {
+    void testSqlRequestsCountOnDeleteStashedInGroup() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
@@ -392,7 +390,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnDeleteStashedInGroup2() throws Exception {
+    void testSqlRequestsCountOnDeleteStashedInGroup2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         ApiUtils.stashNetworkModifications(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
@@ -420,7 +418,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         - delete modification for tabular modifications
      */
     @Test
-    public void testSqlRequestsCountOnDeleteNetworkModificationsInGroup() throws Exception {
+    void testSqlRequestsCountOnDeleteNetworkModificationsInGroup() throws Exception {
         createFewTabularModifications();
 
         reset();
@@ -430,7 +428,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnDeleteNetworkModificationsInGroup2() throws Exception {
+    void testSqlRequestsCountOnDeleteNetworkModificationsInGroup2() throws Exception {
         createMoreTabularModifications();
 
         reset();
@@ -458,7 +456,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         - delete modification for tabular modifications
      */
     @Test
-    public void testSqlRequestsCountOnDeleteNetworkModificationsByIdsInGroup() throws Exception {
+    void testSqlRequestsCountOnDeleteNetworkModificationsByIdsInGroup() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
 
         reset();
@@ -468,7 +466,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnDeleteNetworkModificationsByIdsInGroup2() throws Exception {
+    void testSqlRequestsCountOnDeleteNetworkModificationsByIdsInGroup2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
 
         reset();
@@ -495,7 +493,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
      */
 
     @Test
-    public void testSqlRequestsCountOnDeleteNetworkModificationsByIds() throws Exception {
+    void testSqlRequestsCountOnDeleteNetworkModificationsByIds() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
@@ -506,7 +504,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testSqlRequestsCountOnDeleteNetworkModificationsByIds2() throws Exception {
+    void testSqlRequestsCountOnDeleteNetworkModificationsByIds2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
@@ -517,7 +515,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Test
-    public void testAllModificationsHaveFailed() throws Exception {
+    void testAllModificationsHaveFailed() throws Exception {
         List<ModificationInfos> modifications = List.of(
                 GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
                 GeneratorModificationInfos.builder().equipmentId("v5generator").maxP(new AttributeModification<>(-300., OperationType.SET)).build(),
@@ -536,19 +534,17 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), createdValues.get("tabularModificationType"));
+        assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
+        assertEquals(ModificationType.GENERATOR_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
     }
 
     private List<Pair<UUID, ModificationInfos>> createFewTabularModifications() {
@@ -577,7 +573,7 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         return Pair.of(uuid, tabularModification);
     }
 
-    private List<ModificationInfos> createGeneratorModificationList(int qty) {
+    private static List<ModificationInfos> createGeneratorModificationList(int qty) {
         return IntStream.range(0, qty)
             .mapToObj(i ->
                 (ModificationInfos) GeneratorModificationInfos.builder()
@@ -621,14 +617,14 @@ public class TabularGeneratorModificationsTest extends AbstractNetworkModificati
         assertTabularModificationsEquals(sourceModifications, targetModifications);
     }
 
-    private void assertTabularModificationsEquals(List<ModificationInfos> expectedModifications, List<ModificationInfos> modificationInfos) {
+    private static void assertTabularModificationsEquals(List<ModificationInfos> expectedModifications, List<ModificationInfos> modificationInfos) {
         assertThat(expectedModifications)
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")
             .isEqualTo(modificationInfos);
     }
 
-    private void assertTabularModificationsEquals(ModificationInfos expectedModificationInfos, ModificationInfos modificationInfos) {
+    private static void assertTabularModificationsEquals(ModificationInfos expectedModificationInfos, ModificationInfos modificationInfos) {
         assertThat(expectedModificationInfos)
             .usingRecursiveComparison()
             .ignoringFields("uuid", "date", "modifications.uuid", "modifications.date")

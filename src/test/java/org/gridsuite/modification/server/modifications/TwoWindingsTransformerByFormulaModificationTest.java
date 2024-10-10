@@ -1,13 +1,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.PhaseTapChangerAdder;
-import com.powsybl.iidm.network.RatioTapChanger;
-import com.powsybl.iidm.network.RatioTapChangerAdder;
-import com.powsybl.iidm.network.Substation;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
@@ -19,18 +13,16 @@ import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.TwoWindingsTransformerField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String TWT_ID_1 = "twt1";
     private static final String TWT_ID_2 = "twt2";
     private static final String TWT_ID_3 = "twt3";
@@ -39,7 +31,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     private static final String TWT_ID_6 = "twt6";
 
     @Test
-    public void testModifyTwtWithError() throws Exception {
+    void testModifyTwtWithError() throws Exception {
         // Test modifying ratio tab changer field when ratio tab changer is null
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
@@ -76,7 +68,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     }
 
     @Test
-    public void testDivisionByZero() throws Exception {
+    void testDivisionByZero() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
         AbstractFilter filter = getFilterEquipments(FILTER_ID_4, List.of(identifiableAttributes1, identifiableAttributes2));
@@ -102,7 +94,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
     }
 
     @Test
-    public void testModifyTwtWithWarning() throws Exception {
+    void testModifyTwtWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_2, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_4, 1.);
@@ -504,7 +496,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
         assertEquals(75, twt6.getG(), 0);
     }
 
-    private void addRatioTapChangerSteps(RatioTapChangerAdder ratioTapChangerAdder) {
+    private static void addRatioTapChangerSteps(RatioTapChangerAdder ratioTapChangerAdder) {
         ratioTapChangerAdder.beginStep()
                 .setR(39.78473)
                 .setX(39.784725)
@@ -550,7 +542,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 .add();
     }
 
-    private void addPhaseTapChangerSteps(PhaseTapChangerAdder phaseTapChangerAdder) {
+    private static void addPhaseTapChangerSteps(PhaseTapChangerAdder phaseTapChangerAdder) {
         phaseTapChangerAdder.beginStep()
                 .setR(39.78473)
                 .setX(39.784725)

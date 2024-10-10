@@ -19,15 +19,15 @@ import org.gridsuite.modification.server.dto.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.formula.Operator;
 import org.gridsuite.modification.server.dto.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.dto.formula.equipmentfield.ShuntCompensatorField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String SHUNT_COMPENSATOR_ID_1 = "v1shunt";
     private static final String SHUNT_COMPENSATOR_ID_2 = "v2shunt";
     private static final String SHUNT_COMPENSATOR_ID_3 = "v3shunt";
@@ -36,7 +36,7 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     private static final String SHUNT_COMPENSATOR_ID_6 = "v6shunt";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 

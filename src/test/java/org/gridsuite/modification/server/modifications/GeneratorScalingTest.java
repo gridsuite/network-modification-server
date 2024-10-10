@@ -12,38 +12,36 @@ import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import lombok.SneakyThrows;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.VariationMode;
 import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ScalingVariationInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class GeneratorScalingTest extends AbstractNetworkModificationTest {
+class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private static final UUID GENERATOR_SCALING_ID = UUID.randomUUID();
     private static final UUID FILTER_ID_1 = UUID.randomUUID();
     private static final UUID FILTER_ID_2 = UUID.randomUUID();
@@ -72,17 +70,14 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     private static final String GENERATOR_ID_8 = "gen8";
     private static final String GENERATOR_ID_9 = "gen9";
     private static final String GENERATOR_ID_10 = "gen10";
-    public static final String GENERATOR_WRONG_ID_1 = "wrongId1";
-    public static final String PATH = "/v1/filters/metadata";
+    private static final String GENERATOR_WRONG_ID_1 = "wrongId1";
+    private static final String PATH = "/v1/filters/metadata";
 
-    @Before
-    public void specificSetUp() {
+    @BeforeEach
+    void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
 
-        createGenerators();
-    }
-
-    private void createGenerators() {
+        //createGenerators
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
         getNetwork().getGenerator(GENERATOR_ID_1).setTargetP(100).setMaxP(500);
         getNetwork().getGenerator(GENERATOR_ID_2).setTargetP(200).setMaxP(2000);
@@ -96,7 +91,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         getNetwork().getGenerator(GENERATOR_ID_10).setTargetP(100).setMaxP(500);
     }
 
-    private List<AbstractFilter> getTestFilters() {
+    private static List<AbstractFilter> getTestFilters() {
         IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_1, 1.0),
                 new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_2, 2.0)))
@@ -161,7 +156,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testVentilationModeWithoutDistributionKey() throws Exception {
+    void testVentilationModeWithoutDistributionKey() throws Exception {
         IdentifierListFilter noDistributionKeyFilter = IdentifierListFilter.builder().id(FILTER_NO_DK).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_2, null),
                     new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_3, null)))
@@ -203,7 +198,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testFilterWithWrongIds() throws Exception {
+    void testFilterWithWrongIds() throws Exception {
         IdentifierListFilter wrongIdFilter1 = IdentifierListFilter.builder().id(FILTER_WRONG_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(List.of())
             .build();
@@ -236,7 +231,7 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testScalingCreationWithWarning() throws Exception {
+    void testScalingCreationWithWarning() throws Exception {
         IdentifierListFilter filter5 = IdentifierListFilter.builder().id(FILTER_ID_5).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_9, 0.0),
                 new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_10, 9.0)))
@@ -408,15 +403,15 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
         assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0);
     }
 
-    private Map<String, StringValuePattern> handleQueryParams(UUID filterId) {
+    private static Map<String, StringValuePattern> handleQueryParams(UUID filterId) {
         return Map.of("ids", WireMock.equalTo(String.valueOf(filterId)));
     }
 
-    private Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
+    private static Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
         return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    private String getPath(boolean isRegexPhat) {
+    private static String getPath(boolean isRegexPhat) {
         if (isRegexPhat) {
             return "/v1/filters/metadata\\?ids=";
         }
@@ -424,24 +419,23 @@ public class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testRegularDistributionAllConnected() {
+    void testRegularDistributionAllConnected() throws Exception {
         testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of());
     }
 
     @Test
-    public void testRegularDistributionOnlyGTH2Connected() {
+    void testRegularDistributionOnlyGTH2Connected() throws Exception {
         testVariationWithSomeDisconnections(VariationMode.REGULAR_DISTRIBUTION, List.of("GH1", "GH2", "GH3", "GTH1", "GTH3"));
     }
 
     @Test
-    public void testAllModesGH1Disconnected() {
+    void testAllModesGH1Disconnected() throws Exception {
         for (VariationMode mode : VariationMode.values()) {
             testVariationWithSomeDisconnections(mode, List.of("GH1"));
         }
     }
 
-    @SneakyThrows
-    private void testVariationWithSomeDisconnections(VariationMode variationMode, List<String> generatorsToDisconnect) {
+    private void testVariationWithSomeDisconnections(VariationMode variationMode, List<String> generatorsToDisconnect) throws Exception {
         // use a dedicated network where we can easily disconnect generators
         setNetwork(Network.read(Paths.get(Objects.requireNonNull(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm")).toURI())));
 

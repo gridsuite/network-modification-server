@@ -21,6 +21,7 @@ public final class NetworkCreation {
     public static final String VARIANT_ID = "variant_1";
 
     private NetworkCreation() {
+        throw new IllegalCallerException("Utility class");
     }
 
     public static Network create(UUID uuid, boolean createHvdcLine) {

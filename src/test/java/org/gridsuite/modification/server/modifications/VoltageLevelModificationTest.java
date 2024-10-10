@@ -12,12 +12,11 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -26,8 +25,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
+class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -100,7 +98,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testModifyShortCircuitExtension() throws Exception {
+    void testModifyShortCircuitExtension() throws Exception {
         VoltageLevelModificationInfos infos = (VoltageLevelModificationInfos) buildModification();
         applyModification(infos);
 
@@ -156,37 +154,37 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testIpMinGreaterThanIpMax() throws Exception {
+    void testIpMinGreaterThanIpMax() throws Exception {
         // check only modification inputs
         testIpMinIpMaxNotChanged(30.0, 29.0, "IpMin cannot be greater than IpMax");
     }
 
     @Test
-    public void testIpMinNegative() throws Exception {
+    void testIpMinNegative() throws Exception {
         // check only modification inputs
         testIpMinIpMaxNotChanged(-30.0, 0.0, "IpMin must be positive");
     }
 
     @Test
-    public void testIpMaxNegative() throws Exception {
+    void testIpMaxNegative() throws Exception {
         // check only modification inputs
         testIpMinIpMaxNotChanged(0.0, -12.0, "IpMax must be positive");
     }
 
     @Test
-    public void testIpMinGreaterThanEquipmentIpMax() throws Exception {
+    void testIpMinGreaterThanEquipmentIpMax() throws Exception {
         // check ipMin modification input against equipement ipMax real value (25.0)
         testIpMinIpMaxNotChanged(30.0, null, "IpMin cannot be greater than IpMax");
     }
 
     @Test
-    public void testEquipmentIpMinGreaterThanIpMax() throws Exception {
+    void testEquipmentIpMinGreaterThanIpMax() throws Exception {
         // check ipMax modification input against equipement ipMin real value (15.0)
         testIpMinIpMaxNotChanged(null, 14.9, "IpMin cannot be greater than IpMax");
     }
 
     @Test
-    public void testIpMinEqualsIpMax() throws Exception {
+    void testIpMinEqualsIpMax() throws Exception {
         final String vlWithBothIcc = "v3";
         final double iccValue = 29.0;
         VoltageLevelModificationInfos vli = (VoltageLevelModificationInfos) buildModification();
@@ -205,7 +203,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testSetIpMinOnEquipmentWithoutExtension() throws Exception {
+    void testSetIpMinOnEquipmentWithoutExtension() throws Exception {
         final String vlWithNoIcc = "v2";
         VoltageLevelModificationInfos vli = VoltageLevelModificationInfos.builder()
                 .stashed(false)
@@ -221,7 +219,7 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testSetIpMaxOnEquipmentWitOnlyIpMaxExtension() throws Exception {
+    void testSetIpMaxOnEquipmentWitOnlyIpMaxExtension() throws Exception {
         final String vlName = "v2"; // has no ICC
         getNetwork().getVoltageLevel(vlName)
                 .newExtension(IdentifiableShortCircuitAdder.class).withIpMax(30.0).add();
@@ -250,16 +248,14 @@ public class VoltageLevelModificationTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v1", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_LEVEL_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v1Edited", updatedValues.get("equipmentId"));
