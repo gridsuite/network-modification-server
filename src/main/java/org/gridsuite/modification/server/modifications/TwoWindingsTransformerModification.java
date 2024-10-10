@@ -265,8 +265,6 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             if (regulationReports != null && regulationValueReportNode != null) {
                 regulationReports.add(regulationValueReportNode);
             }
-            processRegulating(isModification, phaseTapChanger, phaseTapChangerAdder,
-                regulationMode != PhaseTapChanger.RegulationMode.FIXED_TAP, regulationReports);
         }
 
         ReportNode targetDeadbandReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
@@ -277,6 +275,10 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
 
         if (regulationReports != null && targetDeadbandReportNode != null) {
             regulationReports.add(targetDeadbandReportNode);
+        }
+        if (regulationMode != null) {
+            processRegulating(isModification, phaseTapChanger, phaseTapChangerAdder,
+                regulationMode != PhaseTapChanger.RegulationMode.FIXED_TAP, regulationReports);
         }
     }
 
