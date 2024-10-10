@@ -266,7 +266,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                 regulationReports.add(regulationValueReportNode);
             }
             setRegulating(isModification, phaseTapChanger, phaseTapChangerAdder,
-                !regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER));
+                regulationMode != PhaseTapChanger.RegulationMode.CURRENT_LIMITER, regulationReports);
         }
 
         ReportNode targetDeadbandReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
@@ -280,11 +280,16 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private static void setRegulating(boolean isModification, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder, boolean value) {
-        if (isModification) {
-            phaseTapChanger.setRegulating(value);
-        } else {
-            phaseTapChangerAdder.setRegulating(value);
+    private static void setRegulating(boolean isModification, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder,
+                                      boolean regulating, List<ReportNode> regulationReports) {
+        ReportNode regulatingReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
+            isModification ? phaseTapChanger::setRegulating
+                : phaseTapChangerAdder::setRegulating,
+            isModification ? phaseTapChanger::isRegulating : () -> null,
+            AttributeModification.toAttributeModification(regulating, OperationType.SET),
+            regulating ? "Voltage regulation" : "phase tap regulating", 1);
+        if (regulationReports != null && regulatingReportNode != null) {
+            regulationReports.add(regulatingReportNode);
         }
     }
 
