@@ -254,7 +254,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                                                  List<ReportNode> regulationReports) {
 
         if (regulationMode != null) {
-            String fieldName = (regulationMode.equals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)) ? "Value" : "Flow set point";
+            String fieldName = (regulationMode == PhaseTapChanger.RegulationMode.CURRENT_LIMITER) ? "Value" : "Flow set point";
             ReportNode regulationValueReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
                     isModification ? phaseTapChanger::setRegulationValue
                             : phaseTapChangerAdder::setRegulationValue,
@@ -265,8 +265,8 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
             if (regulationReports != null && regulationValueReportNode != null) {
                 regulationReports.add(regulationValueReportNode);
             }
-            setRegulating(isModification, phaseTapChanger, phaseTapChangerAdder,
-                regulationMode != PhaseTapChanger.RegulationMode.CURRENT_LIMITER, regulationReports);
+            processRegulating(isModification, phaseTapChanger, phaseTapChangerAdder,
+                regulationMode != PhaseTapChanger.RegulationMode.FIXED_TAP, regulationReports);
         }
 
         ReportNode targetDeadbandReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
@@ -280,14 +280,14 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
     }
 
-    private static void setRegulating(boolean isModification, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder,
-                                      boolean regulating, List<ReportNode> regulationReports) {
+    private static void processRegulating(boolean isModification, PhaseTapChanger phaseTapChanger, PhaseTapChangerAdder phaseTapChangerAdder,
+                                          boolean regulating, List<ReportNode> regulationReports) {
         ReportNode regulatingReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
             isModification ? phaseTapChanger::setRegulating
                 : phaseTapChangerAdder::setRegulating,
             isModification ? phaseTapChanger::isRegulating : () -> null,
             AttributeModification.toAttributeModification(regulating, OperationType.SET),
-            regulating ? "Voltage regulation" : "phase tap regulating", 1);
+            regulating ? "Voltage regulation" : "Phase tap regulating", 1);
         if (regulationReports != null && regulatingReportNode != null) {
             regulationReports.add(regulatingReportNode);
         }
