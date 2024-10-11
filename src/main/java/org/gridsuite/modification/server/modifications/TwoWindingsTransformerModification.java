@@ -209,9 +209,9 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         List<ReportNode> regulationReports = new ArrayList<>();
-        PhaseTapChanger.RegulationMode regulationMode = isModification &&
-            phaseTapChangerInfos.getRegulationMode() != null ? phaseTapChangerInfos.getRegulationMode().getValue() : null;
-        if (phaseTapChangerInfos.getRegulationMode() != null && phaseTapChangerInfos.getRegulationMode().getValue() != null) {
+        PhaseTapChanger.RegulationMode regulationMode = isModification ? phaseTapChanger.getRegulationMode() : null;
+        if (phaseTapChangerInfos.getRegulationMode() != null
+            && phaseTapChangerInfos.getRegulationMode().getValue() != null) {
             regulationMode = phaseTapChangerInfos.getRegulationMode().getValue();
         }
 
