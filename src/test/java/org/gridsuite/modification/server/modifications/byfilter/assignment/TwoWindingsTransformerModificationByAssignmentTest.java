@@ -159,7 +159,13 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 "trf1", 38, ConnectablePosition.Direction.TOP,
                 "trf1", 49, ConnectablePosition.Direction.BOTTOM);
         twt6.setRatedS(20);
-        addPhaseTapChangerSteps(twt6.newPhaseTapChanger().setRegulationValue(47).setLowTapPosition(1).setTapPosition(1).setTargetDeadband(36));
+        addPhaseTapChangerSteps(twt6.newPhaseTapChanger()
+                .setRegulationMode(PhaseTapChanger.RegulationMode.FIXED_TAP)
+                .setRegulationValue(47)
+                .setTargetDeadband(36)
+                .setLowTapPosition(1)
+                .setTapPosition(1)
+        );
     }
 
     @Override
@@ -387,7 +393,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
 
         TwoWindingsTransformer twt5 = getNetwork().getTwoWindingsTransformer(TWT_ID_5);
         PhaseTapChanger phaseTapChanger5 = twt5.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
+        assertNotNull(phaseTapChanger5);
         assertEquals(2, phaseTapChanger5.getLowTapPosition());
         assertEquals(2, phaseTapChanger5.getTapPosition());
         assertEquals(2, twt5.getR(), 0);
@@ -396,9 +402,9 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
 
         TwoWindingsTransformer twt6 = getNetwork().getTwoWindingsTransformer(TWT_ID_6);
         PhaseTapChanger phaseTapChanger6 = twt6.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(2, phaseTapChanger6.getRegulationValue(), 0);
-        assertEquals(10, phaseTapChanger6.getTargetDeadband(), 0);
+        assertNotNull(phaseTapChanger6);
+        assertEquals(47, phaseTapChanger6.getRegulationValue(), 0);
+        assertEquals(36, phaseTapChanger6.getTargetDeadband(), 0);
         assertEquals(20, twt6.getX(), 0);
         assertEquals(25, twt6.getG(), 0);
     }

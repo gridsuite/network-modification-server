@@ -1,13 +1,7 @@
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.PhaseTapChangerAdder;
-import com.powsybl.iidm.network.RatioTapChanger;
-import com.powsybl.iidm.network.RatioTapChangerAdder;
-import com.powsybl.iidm.network.Substation;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
@@ -15,10 +9,10 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.junit.Test;
 
 import java.util.Date;
@@ -26,9 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String TWT_ID_1 = "twt1";
@@ -173,7 +165,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 "trf1", 30, ConnectablePosition.Direction.TOP,
                 "trf1", 40, ConnectablePosition.Direction.BOTTOM);
         twt4.setRatedS(15);
-        addPhaseTapChangerSteps(twt4.newPhaseTapChanger().setRegulationValue(45).setLowTapPosition(1).setTapPosition(2).setTargetDeadband(34));
+        addPhaseTapChangerSteps(twt4.newPhaseTapChanger().setRegulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER).setRegulationValue(45).setLowTapPosition(1).setTapPosition(2).setTargetDeadband(34));
 
         TwoWindingsTransformer twt5 = createTwoWindingsTransformer(s3, TWT_ID_5, TWT_ID_5, 50, 60, 70,
             80, 30, 40, 101, 101,
@@ -189,7 +181,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
                 "trf1", 38, ConnectablePosition.Direction.TOP,
                 "trf1", 49, ConnectablePosition.Direction.BOTTOM);
         twt6.setRatedS(20);
-        addPhaseTapChangerSteps(twt6.newPhaseTapChanger().setRegulationValue(47).setLowTapPosition(1).setTapPosition(1).setTargetDeadband(36));
+        addPhaseTapChangerSteps(twt6.newPhaseTapChanger().setRegulationMode(PhaseTapChanger.RegulationMode.FIXED_TAP).setRegulationValue(47).setLowTapPosition(1).setTapPosition(1).setTargetDeadband(36));
     }
 
     @Override
@@ -415,7 +407,7 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
         TwoWindingsTransformer twt5 = getNetwork().getTwoWindingsTransformer(TWT_ID_5);
         PhaseTapChanger phaseTapChanger5 = twt5.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
+        assertNotNull(phaseTapChanger5);
         assertEquals(4, phaseTapChanger5.getLowTapPosition());
         assertEquals(4, phaseTapChanger5.getTapPosition());
         assertEquals(100, twt5.getR(), 0);
@@ -424,9 +416,9 @@ public class TwoWindingsTransformerByFormulaModificationTest extends AbstractByF
 
         TwoWindingsTransformer twt6 = getNetwork().getTwoWindingsTransformer(TWT_ID_6);
         PhaseTapChanger phaseTapChanger6 = twt6.getPhaseTapChanger();
-        assertNotNull(phaseTapChanger4);
-        assertEquals(94, phaseTapChanger6.getRegulationValue(), 0);
-        assertEquals(26, phaseTapChanger6.getTargetDeadband(), 0);
+        assertNotNull(phaseTapChanger6);
+        assertEquals(47, phaseTapChanger6.getRegulationValue(), 0);
+        assertEquals(36, phaseTapChanger6.getTargetDeadband(), 0);
         assertEquals(85, twt6.getX(), 0);
         assertEquals(100, twt6.getG(), 0);
     }
