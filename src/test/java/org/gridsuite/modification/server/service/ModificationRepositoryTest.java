@@ -35,9 +35,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.dto.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
@@ -101,6 +103,10 @@ public class ModificationRepositoryTest {
 
     public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID modificationUuid) {
         return (ShuntCompensatorCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
+    }
+
+    private StaticVarCompensatorCreationInfos getStaticVarCompensatorCreationModification(UUID modificationUuid) {
+        return (StaticVarCompensatorCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
     private LineSplitWithVoltageLevelInfos getLineSplitWithVoltageLevelModification(UUID modificationUuid) {
@@ -1271,5 +1277,72 @@ public class ModificationRepositoryTest {
         movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity2.getId()), null);
         assertEquals(1, movedEntities.size());
         assertEquals(0, movedEntities.get(0).getModificationsOrder());
+    }
+
+    @Test
+    public void testStaticVarCompensatorCreation() {
+        var createStaticVarCompensator1 = StaticVarCompensatorCreationInfos.builder()
+                .equipmentId("idStaticVarCompensator1").equipmentName("nameStaticVarCompensator1")
+                .voltageLevelId("vlId1")
+                .busOrBusbarSectionId("busId1")
+                .minSusceptance(200.0)
+                .maxSusceptance(224.0)
+                .regulationMode(VOLTAGE)
+                .voltageSetpoint(200.0)
+                .voltageRegulationType(DISTANT)
+                .regulatingTerminalId("testTerminalId1")
+                .regulatingTerminalType("STATIC_VAR_COMPENSATOR").regulatingTerminalVlId("idVlTest1")
+                .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
+                .connectionPosition(1).build().toEntity();
+        var createStaticVarCompensator2 = StaticVarCompensatorCreationInfos.builder()
+                .equipmentId("idStaticVarCompensator2").equipmentName("nameStaticVarCompensator2")
+                .voltageLevelId("vlId2")
+                .busOrBusbarSectionId("busId2")
+                .regulatingTerminalId(null)
+                .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
+                .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
+                .connectionPosition(2).build().toEntity();
+        var createStaticVarCompensator3 = StaticVarCompensatorCreationInfos.builder()
+                .equipmentId("idStaticVarCompensator3").equipmentName("nameStaticVarCompensator3")
+                .voltageLevelId("vlId2")
+                .busOrBusbarSectionId("busId2")
+                .regulatingTerminalId(null)
+                .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
+                .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
+                .connectionPosition(2)
+                .regulationMode(VOLTAGE)
+                .standbyAutomatonOn(true)
+                .standby(true)
+                .build().toEntity();
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator1, createStaticVarCompensator2, createStaticVarCompensator3));
+        assertRequestsCount(1, 3, 1, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(3, modificationInfos.size());
+
+        assertThat(getStaticVarCompensatorCreationModification(modificationInfos.get(0).getUuid()))
+                .recursivelyEquals(createStaticVarCompensator1.toModificationInfos());
+        assertThat(getStaticVarCompensatorCreationModification(modificationInfos.get(1).getUuid()))
+                .recursivelyEquals(createStaticVarCompensator2.toModificationInfos());
+
+        assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator2.getId(), createStaticVarCompensator3.getId()));
+        assertRequestsCount(4, 0, 1, 2);
+
+        SQLStatementCountValidator.reset();
+        assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+        assertRequestsCount(2, 0, 0, 0);
+
+        SQLStatementCountValidator.reset();
+        networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
+        assertRequestsCount(3, 0, 0, 3);
+
+        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
+                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
+        );
     }
 }

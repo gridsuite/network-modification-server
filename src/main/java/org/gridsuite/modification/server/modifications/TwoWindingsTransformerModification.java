@@ -209,11 +209,16 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
         }
 
         List<ReportNode> regulationReports = new ArrayList<>();
-        PhaseTapChanger.RegulationMode regulationMode = isModification &&
-            phaseTapChangerInfos.getRegulationMode() != null ? phaseTapChangerInfos.getRegulationMode().getValue() : null;
+        PhaseTapChanger.RegulationMode regulationMode = isModification ? phaseTapChanger.getRegulationMode() : null;
+        if (phaseTapChangerInfos.getRegulationMode() != null
+                && phaseTapChangerInfos.getRegulationMode().getValue() != null) {
+            regulationMode = phaseTapChangerInfos.getRegulationMode().getValue();
+        }
 
-        processPhaseTapRegulation(phaseTapChanger, phaseTapChangerAdder, regulationMode, isModification,
-            phaseTapChangerInfos.getRegulationValue(), phaseTapChangerInfos.getTargetDeadband(), regulationReports);
+        if (!PhaseTapChanger.RegulationMode.FIXED_TAP.equals(regulationMode)) {
+            processPhaseTapRegulation(phaseTapChanger, phaseTapChangerAdder, regulationMode, isModification,
+                phaseTapChangerInfos.getRegulationValue(), phaseTapChangerInfos.getTargetDeadband(), regulationReports);
+        }
 
         processRegulatingTerminal(phaseTapChangerInfos, phaseTapChanger, phaseTapChangerAdder, regulationReports,
                 network,
