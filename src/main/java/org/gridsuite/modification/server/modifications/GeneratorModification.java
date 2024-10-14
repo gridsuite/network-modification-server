@@ -56,6 +56,7 @@ public class GeneratorModification extends AbstractModification {
                     modificationInfos.getRegulatingTerminalVlId().getValue());
         }
         checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(modificationInfos, generator, MODIFY_GENERATOR_ERROR, errorMessage);
+        checkActivePowerRegulation(modificationInfos, generator, MODIFY_GENERATOR_ERROR, errorMessage);
     }
 
     private void checkActivePowerZeroOrBetweenMinAndMaxActivePowerGenerator(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
@@ -69,6 +70,15 @@ public class GeneratorModification extends AbstractModification {
                 exceptionType,
                 errorMessage
         );
+    }
+
+    private void checkActivePowerRegulation(GeneratorModificationInfos modificationInfos, Generator generator, NetworkModificationException.Type exceptionType, String errorMessage) {
+//        ModificationUtils.getInstance().checkActivePowerControl(
+//            modificationInfos.getParticipate() != null ? modificationInfos.getParticipate().getValue() : null,
+//            modificationInfos.getDroop() != null ? modificationInfos.getDroop().getValue() : null,
+//            exceptionType,
+//            errorMessage
+//        );
     }
 
     @Override
@@ -210,7 +220,9 @@ public class GeneratorModification extends AbstractModification {
                                                                  Generator generator, ReportNode subReportNode, ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
-        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder,
+            modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints,
+            MODIFY_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : ");
     }
 
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,

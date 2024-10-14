@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_BATTERY_ERROR;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
@@ -38,6 +39,7 @@ public class BatteryCreation extends AbstractModification {
         if (network.getBattery(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(BATTERY_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
+        String errorMessage = "Battery '" + modificationInfos.getEquipmentId() + "' : ";
 
         // check connectivity
         ModificationUtils.getInstance()
@@ -49,6 +51,8 @@ public class BatteryCreation extends AbstractModification {
                 modificationInfos.getErrorType(),
                 modificationInfos.getEquipmentId(),
                 "Battery");
+
+        ModificationUtils.getInstance().checkActivePowerControl(modificationInfos.getParticipate(), modificationInfos.getDroop(), CREATE_BATTERY_ERROR, errorMessage);
     }
 
     @Override

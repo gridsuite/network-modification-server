@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModification
 import java.util.Collection;
 import java.util.List;
 
+import static org.gridsuite.modification.server.NetworkModificationException.Type.CREATE_BATTERY_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
@@ -171,7 +172,8 @@ public class BatteryModification extends AbstractModification {
                                                                        ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
-        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, participate, droop, subReportNode, subReportNodeSetpoints);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder,
+            participate, droop, subReportNode, subReportNodeSetpoints, CREATE_BATTERY_ERROR, "Battery '" + battery.getId() + "' : ");
     }
 
     private ReportNode modifyBatteryConnectivityAttributes(BatteryModificationInfos modificationInfos,
