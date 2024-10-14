@@ -8,13 +8,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateFeederBay;
-import com.powsybl.iidm.modification.topology.CreateFeederBayBuilder;
 import com.powsybl.iidm.network.*;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.LoadCreationInfos;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.LOAD_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ModificationUtils.createInjectionInNodeBreaker;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -42,16 +41,7 @@ public class LoadCreation extends AbstractModification {
         VoltageLevel voltageLevel = ModificationUtils.getInstance().getVoltageLevel(network, modificationInfos.getVoltageLevelId());
         if (voltageLevel.getTopologyKind() == TopologyKind.NODE_BREAKER) {
             LoadAdder loadAdder = createLoadAdderInNodeBreaker(voltageLevel, modificationInfos);
-            var position = ModificationUtils.getInstance().getPosition(modificationInfos.getConnectionPosition(),
-                modificationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
-            CreateFeederBay algo = new CreateFeederBayBuilder()
-                .withBbsId(modificationInfos.getBusOrBusbarSectionId())
-                .withInjectionDirection(modificationInfos.getConnectionDirection())
-                .withInjectionFeederName(modificationInfos.getConnectionName() != null ? modificationInfos.getConnectionName() : modificationInfos.getEquipmentId())
-                .withInjectionPositionOrder(position)
-                .withInjectionAdder(loadAdder)
-                .build();
-            algo.apply(network, true, subReporter);
+            createInjectionInNodeBreaker(voltageLevel, modificationInfos, network, loadAdder, subReporter);
         } else {
             createLoadInBusBreaker(voltageLevel, modificationInfos);
             subReporter.newReportNode()
