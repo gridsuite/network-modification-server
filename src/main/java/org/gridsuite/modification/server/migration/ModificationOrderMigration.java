@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+/**
+ * @author Etienne Lesot <etienne.lesot at rte-france.com>
+ */
 public class ModificationOrderMigration implements CustomTaskChange {
 
     @Override
