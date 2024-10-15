@@ -105,7 +105,7 @@ public class ByFormulaModification extends AbstractModificationByAssignment {
             case SUBTRACTION -> value1 - value2;
             case MULTIPLICATION -> value1 * value2;
             case DIVISION -> value1 / value2;
-            case PERCENTAGE -> value1 * (value2 / 100);
+            case PERCENTAGE -> (value1 / 100) * value2;
         };
     }
 }
