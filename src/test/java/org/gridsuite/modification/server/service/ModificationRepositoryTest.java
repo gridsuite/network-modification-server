@@ -1316,7 +1316,7 @@ public class ModificationRepositoryTest {
                 .build().toEntity();
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator1, createStaticVarCompensator2, createStaticVarCompensator3));
-        assertRequestsCount(1, 3, 1, 0);
+        assertRequestsCount(2, 3, 0, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(3, modificationInfos.size());
@@ -1331,7 +1331,7 @@ public class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator2.getId(), createStaticVarCompensator3.getId()));
-        assertRequestsCount(4, 0, 1, 2);
+        assertRequestsCount(4, 0, 0, 2);
 
         SQLStatementCountValidator.reset();
         assertEquals(1, networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).size());

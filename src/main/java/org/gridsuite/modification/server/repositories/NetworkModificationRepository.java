@@ -89,9 +89,6 @@ public class NetworkModificationRepository {
         for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m);
             m.setModificationsOrder(order);
-            // We need here to call the save() method on the modification entity cause the ids of the ModificationEntity's are used in further treatments in the same transaction.
-            // As we generate the id in Java with @GeneratedValue(strategy = GenerationType.AUTO), saving the entity in the JPA world is enough to generate the id (no need to flush it).
-            // Without the saving, the id generation would be done only at the flush() and wouldn't be available for the further treatments.
             order++;
         }
         modificationRepository.saveAll(modifications);
@@ -420,36 +417,37 @@ public class NetworkModificationRepository {
     @Transactional
     public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
         int stashModificationOrder = -stashedModificationCount - 1;
+        List<ModificationEntity> modificationEntities = new ArrayList<>();
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
             modificationEntity.setModificationsOrder(stashModificationOrder);
-            this.modificationRepository.save(modificationEntity);
+            modificationEntities.add(modificationEntity);
             stashModificationOrder--;
         }
+        this.modificationRepository.saveAll(modificationEntities);
     }
 
     @Transactional
     public void reorderNetworkModifications(UUID groupId, Boolean stashed) {
-        List<ModificationEntity> entities = this.modificationRepository.findAllStashedByGroupId(groupId, stashed);
-        if (entities.isEmpty()) {
-            return;
-        }
-        if (Boolean.TRUE.equals(stashed)) {
-            IntStream.range(1, entities.size() + 1)
-                .forEach(i -> entities.get(i - 1).setModificationsOrder(-i));
-        } else {
-            IntStream.range(0, entities.size())
-                .forEach(i -> entities.get(i).setModificationsOrder(i));
+        List<ModificationEntity> entities = this.modificationRepository.findAllByGroupId(groupId, stashed);
+        if (!entities.isEmpty()) {
+            if (Boolean.TRUE.equals(stashed)) {
+                IntStream.range(1, entities.size() + 1)
+                    .forEach(i -> entities.get(i - 1).setModificationsOrder(-i));
+            } else {
+                IntStream.range(0, entities.size())
+                    .forEach(i -> entities.get(i).setModificationsOrder(i));
+            }
         }
         this.modificationRepository.saveAll(entities);
     }
 
     @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unStashedSize) {
-        int modificationOrder = unStashedSize;
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unstashedSize) {
+        int modificationOrder = unstashedSize;
         List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
             throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
