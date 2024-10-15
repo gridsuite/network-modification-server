@@ -719,6 +719,9 @@ public final class ModificationUtils {
         AttributeModification<String> connectionName = getConnectionName(modificationInfos, feederNumber);
         AttributeModification<ConnectablePosition.Direction> connectionDirection = getConnectionDirection(modificationInfos, feederNumber);
         AttributeModification<Integer> connectionPosition = getConnectionPosition(modificationInfos, feederNumber);
+        if (Objects.isNull(connectionName) && Objects.isNull(connectionDirection) && Objects.isNull(connectionPosition)) {
+            return;
+        }
         AttributeModification<String> equipmentId = getEquipmentId(modificationInfos);
         AttributeModification<String> voltageLevelId = getVoltageLevelId(modificationInfos, feederNumber);
         AttributeModification<String> busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederNumber);
@@ -867,10 +870,12 @@ public final class ModificationUtils {
         String equipmentValue = equipmentId.getValue();
         Terminal selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Injection<?> injection ? injection.getTerminal() :
                 getTerminalsFromIdentifiable(network.getIdentifiable(equipmentValue)).get(feederNumber - 1);
-        String voltageLevel = (voltageLevelId != null) ? voltageLevelId.getValue() :
-                selectedTerminal.getVoltageLevel().getId();
-        String busOrBusbarSection = (busOrBusbarSectionId != null) ? busOrBusbarSectionId.getValue() :
-                getBusOrBusbarSection(selectedTerminal);
+        String voltageLevel = (voltageLevelId != null && voltageLevelId.getValue() != null)
+                ? voltageLevelId.getValue()
+                : Optional.ofNullable(selectedTerminal).map(terminal -> terminal.getVoltageLevel().getId()).orElse(null);
+        String busOrBusbarSection = (busOrBusbarSectionId != null && busOrBusbarSectionId.getValue() != null)
+                ? busOrBusbarSectionId.getValue()
+                : Optional.ofNullable(selectedTerminal).map(this::getBusOrBusbarSection).orElse(null);
         Integer connectionPositionValue = (connectionPosition != null) ? connectionPosition.getValue() : null;
         return getPosition(connectionPositionValue, busOrBusbarSection, network, getVoltageLevel(network, voltageLevel));
     }
