@@ -51,7 +51,6 @@
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
         <powsybl-network-store.version>1.18.1</powsybl-network-store.version>
-        <sonar.coverage.exclusions>org/gridsuite/modification/server/migration/*.java</sonar.coverage.exclusions>
     </properties>
 
     <build>
@@ -64,6 +63,9 @@
                         <classpathDependencyExcludes>
                             <classpathDependencyExclude>com.powsybl:powsybl-config-classic</classpathDependencyExclude>
                         </classpathDependencyExcludes>
+                        <excludes>
+                            <exclude>**/migration/*.java</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
             </plugins>
