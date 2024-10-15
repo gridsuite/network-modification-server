@@ -420,4 +420,25 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         assertThat(existingEquipment.getTerminal1().isConnected()).isEqualTo(expectedState);
         assertThat(existingEquipment.getTerminal2().isConnected()).isEqualTo(expectedState);
     }
+
+    @Test
+    void changeLineConnectablePosition() throws Exception {
+        LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line3")
+                .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
+                .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
+                .voltageLevelId2(new AttributeModification<>("v3", OperationType.SET))
+                .busOrBusbarSectionId1(new AttributeModification<>("1B", OperationType.SET))
+                .busOrBusbarSectionId2(new AttributeModification<>("2B", OperationType.SET))
+                .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
+                .connectionPosition2(new AttributeModification<>(1, OperationType.SET))
+                .build();
+        String modificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(1, createdModification.getConnectionPosition1().getValue());
+        assertEquals(1, createdModification.getConnectionPosition2().getValue());
+    }
 }

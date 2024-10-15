@@ -1621,10 +1621,10 @@ class ModificationControllerTest {
         assertNotNull(sw);
         assertFalse(sw.isOpen());  // switch is closed
 
-        // apply the modification on the network
+        // apply the modification on the network with a reporterId
         mvcResult = mockMvc.perform(
                 put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
-                    + "?variantId=" + NetworkCreation.VARIANT_ID + "&reporterId=" + UUID.randomUUID().toString())
+                    + "?variantId=" + NetworkCreation.VARIANT_ID + "&reporterId=" + UUID.randomUUID())
                     .content(objectWriter.writeValueAsString(modificationUuidList))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -1638,5 +1638,14 @@ class ModificationControllerTest {
         assertEquals(modificationUuidList, newModificationUuidList);
 
         assertTrue(sw.isOpen());  // switch is opened
+
+        // apply the modification on the network without reporterId
+        mvcResult = mockMvc.perform(
+                put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
+                    + "?variantId=" + NetworkCreation.VARIANT_ID)
+                    .content(objectWriter.writeValueAsString(modificationUuidList))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
     }
 }

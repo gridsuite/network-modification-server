@@ -21,9 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author David Braquart <david.braquart at rte-france.com>
  */
-
 @Tag("IntegrationTest")
-public abstract class AbstractInjectionModificationTest extends AbstractNetworkModificationTest {
+abstract class AbstractInjectionModificationTest extends AbstractNetworkModificationTest {
     protected void assertChangeConnectionState(Injection<?> existingEquipment, boolean expectedState) throws Exception {
         assertChangeConnectionState(existingEquipment, (InjectionModificationInfos) buildModification(), expectedState);
     }

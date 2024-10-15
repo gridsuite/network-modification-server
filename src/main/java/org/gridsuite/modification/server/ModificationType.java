@@ -31,6 +31,7 @@ public enum ModificationType {
     SUBSTATION_MODIFICATION(PreloadingStrategy.NONE),
     SHUNT_COMPENSATOR_CREATION(PreloadingStrategy.NONE),
     SHUNT_COMPENSATOR_MODIFICATION(PreloadingStrategy.NONE),
+    STATIC_VAR_COMPENSATOR_CREATION(PreloadingStrategy.NONE),
     VOLTAGE_LEVEL_CREATION(PreloadingStrategy.NONE),
     VOLTAGE_LEVEL_MODIFICATION(PreloadingStrategy.NONE),
     LINE_SPLIT_WITH_VOLTAGE_LEVEL(PreloadingStrategy.NONE),
@@ -50,6 +51,7 @@ public enum ModificationType {
     TABULAR_MODIFICATION(PreloadingStrategy.COLLECTION),
     TABULAR_CREATION(PreloadingStrategy.COLLECTION),
     BY_FORMULA_MODIFICATION(PreloadingStrategy.COLLECTION),
+    MODIFICATION_BY_ASSIGNMENT(PreloadingStrategy.COLLECTION),
     COMPOSITE_MODIFICATION(PreloadingStrategy.COLLECTION);
 
     private final PreloadingStrategy strategy;

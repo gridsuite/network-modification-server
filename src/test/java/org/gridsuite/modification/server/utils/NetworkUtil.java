@@ -106,6 +106,24 @@ public final class NetworkUtil {
                 .add();
     }
 
+    public static void createLineWithoutConnectivity(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
+                                  double r, double x, double g1, double g2, double b1, double b2) {
+        network.newLine()
+                .setId(id)
+                .setName(name)
+                .setR(r)
+                .setX(x)
+                .setG1(g1)
+                .setG2(g2)
+                .setB1(b1)
+                .setB2(b2)
+                .setVoltageLevel1(voltageLevel1)
+                .setVoltageLevel2(voltageLevel2)
+                .setNode1(node1)
+                .setNode2(node2)
+                .add();
+    }
+
     @SuppressWarnings("SameParameterValue")
     public static void createLoad(VoltageLevel vl, String id, String name,
                                    int node, double p0, double q0, String feederName, int feederOrder, ConnectablePosition.Direction direction) {
@@ -160,7 +178,7 @@ public final class NetworkUtil {
     }
 
     public static void createGeneratorOnBus(VoltageLevel vl, String id, String busId, double targetP, double targetQ) {
-        var g = vl.newGenerator()
+        vl.newGenerator()
             .setId(id)
             .setName(id)
             .setTargetP(targetP)
