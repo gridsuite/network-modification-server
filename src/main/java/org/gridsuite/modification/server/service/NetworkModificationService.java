@@ -128,7 +128,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, UUID groupUuid) {
+    public void restoreNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         networkModificationRepository.restoreNetworkModifications(modificationUuids,
             networkModificationRepository.getModificationsCount(groupUuid, false));
     }
