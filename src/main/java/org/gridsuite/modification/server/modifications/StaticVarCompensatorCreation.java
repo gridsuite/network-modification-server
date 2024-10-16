@@ -125,7 +125,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         }
 
         reportInjectionCreationConnectivity(staticVarCompensatorCreationInfos, subReportNode);
-        createStaticVarCompensatorVoltageRegulation(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
+        createStaticVarCompensatorLimitsAndSetpoints(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
         reportStaticVarCompensatorStandbyAutomaton(staticVarCompensatorCreationInfos, staticVarCompensator, subReportNode);
     }
 
@@ -195,13 +195,18 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         addExtensionsToStaticVarCompensator(staticVarCompensatorCreationInfos, staticVarCompensator, voltageLevel, subReportNode);
     }
 
-    private void createStaticVarCompensatorVoltageRegulation(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
-                                                             StaticVarCompensator staticVarCompensator, VoltageLevel voltageLevel, ReportNode subReportNode) {
+    private void createStaticVarCompensatorLimitsAndSetpoints(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
+                                                              StaticVarCompensator staticVarCompensator, VoltageLevel voltageLevel, ReportNode subReportNode) {
         List<ReportNode> voltageReports = new ArrayList<>();
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getMinSusceptance(), "Susceptance min"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getMaxSusceptance(), "Susceptance max"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getMinQAtNominalV(), "Q min at nominal voltage"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getMaxQAtNominalV(), "Q max at nominal voltage"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getVoltageSetpoint(), "Voltage set point"));
+        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getReactivePowerSetpoint(), "Reactive power set point"));
         voltageReports.add(ModificationUtils.getInstance()
                 .createEnabledDisabledReport("VoltageRegulationOn", modificationInfos.getVoltageRegulationType() == VoltageRegulationType.DISTANT &&
                         modificationInfos.getRegulationMode() == StaticVarCompensator.RegulationMode.VOLTAGE));
-        voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getVoltageSetpoint(), "Voltage set point"));
         if (staticVarCompensatorCreationInfos.getRegulatingTerminalVlId() != null && staticVarCompensatorCreationInfos.getRegulatingTerminalId() != null &&
                 staticVarCompensatorCreationInfos.getRegulatingTerminalType() != null) {
             Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
@@ -212,7 +217,7 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                 updateCompensatorRegulatingTerminal(staticVarCompensatorCreationInfos, staticVarCompensator, terminal, voltageReports);
             }
         }
-        ModificationUtils.getInstance().reportModifications(subReportNode, voltageReports, "VoltageRegulationCreated", "Voltage regulation");
+        ModificationUtils.getInstance().reportModifications(subReportNode, voltageReports, "LimitsAndSetpointsCreated", "Limits and Setpoints");
     }
 
     private void updateCompensatorRegulatingTerminal(StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos, StaticVarCompensator staticVarCompensator,
