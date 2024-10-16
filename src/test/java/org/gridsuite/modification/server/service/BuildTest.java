@@ -62,7 +62,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
@@ -280,8 +279,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(buildInfos)))
@@ -297,8 +295,7 @@ public class BuildTest {
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             List.of(),
-            List.of(),
-            new HashSet<>());
+            List.of());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(newBuildInfos)))
@@ -322,8 +319,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
                 .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
                 .build());
@@ -425,8 +421,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
 
         // Build variant
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
@@ -704,8 +699,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
             .andExpect(status().isOk());
@@ -803,8 +797,7 @@ public class BuildTest {
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             Collections.emptyList(),
-            Collections.emptyList(),
-            new HashSet<>());
+            Collections.emptyList());
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
 
@@ -828,80 +821,6 @@ public class BuildTest {
         assertEquals(1, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
 
-        // deactivate some modifications and rebuild VARIANT_ID
-        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);
-
-        AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
-        AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
-        AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
-        List<ModificationInfos> modificationsInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, true);
-        modificationsInfos.addAll(networkModificationService.getNetworkModifications(TEST_GROUP_ID_2, false, true));
-        modificationsInfos.forEach(modificationInfos -> {
-            if (modificationInfos.getClass().equals(EquipmentAttributeModificationInfos.class)) {
-                if (((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId().equals("line1")) {
-                    lineModificationEntityUuid.set(modificationInfos.getUuid());
-                }
-            } else if (modificationInfos.getClass().equals(LoadCreationInfos.class)) {
-                if (((LoadCreationInfos) modificationInfos).getEquipmentId().equals("newLoad1")) {
-                    loadCreationEntityUuid.set(modificationInfos.getUuid());
-                }
-            } else if (modificationInfos.getClass().equals(EquipmentDeletionInfos.class)) {
-                if (((EquipmentDeletionInfos) modificationInfos).getEquipmentId().equals("v2shunt")) {
-                    equipmentDeletionEntityUuid.set(modificationInfos.getUuid());
-                }
-            }
-        });
-
-        buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
-        buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
-        buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
-        buildInfosJson = objectWriter.writeValueAsString(buildInfos);
-
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-        resultMessage = output.receive(TIMEOUT, buildResultDestination);
-        assertNotNull(resultMessage);
-        assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        // 1 : SWITCH equipments are reduced to collection impact
-        // + 2 substation modifications
-        // = 3
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 3, Set.of(IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
-        buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
-        assertNotNull(buildMessage);
-        assertEquals("me", buildMessage.getHeaders().get("receiver"));
-
-        // test that only active modifications have been made on variant VARIANT_ID
-        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
-        assertTrue(network.getSwitch("v1d1").isOpen());
-        assertNull(network.getLine("line1").getExtension(OperatingStatus.class));
-        assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
-        assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
-        assertNotNull(network.getLoad("newLoad"));
-        assertNull(network.getLoad("newLoad1"));
-        assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
-        assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
-        assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
-        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
-        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
-        assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
-        assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
-        assertEquals(4., network.getLine("newLine").getB1(), 0.1);
-        assertEquals("v1", network.getTwoWindingsTransformer("new2wt").getTerminal1().getVoltageLevel().getId());
-        assertEquals("v2", network.getTwoWindingsTransformer("new2wt").getTerminal2().getVoltageLevel().getId());
-        assertEquals(2., network.getTwoWindingsTransformer("new2wt").getX(), 0.1);
-        assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
-        assertEquals(1, network.getTwoWindingsTransformer("new2wt").getRatedS(), 0.1);
-        assertEquals(4, network.getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
-        assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
-        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
-        assertNotNull(network.getShuntCompensator("v2shunt"));
-        assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
-        assertNotNull(network.getVoltageLevel("vl9"));
-        assertNotNull(network.getShuntCompensator("shunt9"));
-
         TestUtils.purgeRequests(server);
     }
 
@@ -919,8 +838,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
         // test that only non stashed modifications have been made on variant VARIANT_ID
@@ -945,8 +863,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            Set.of());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
             try {
@@ -984,8 +901,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)),
-            Set.of());
+            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)));
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsString(buildInfos)))
