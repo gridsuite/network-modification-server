@@ -14,6 +14,7 @@ import com.powsybl.math.graph.TraverseResult;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+// FIXME : to remove when this class is available in network-store
 public class BusbarSectionFinderTraverser implements Terminal.TopologyTraverser {
 
     private final boolean onlyConnectedBbs;
