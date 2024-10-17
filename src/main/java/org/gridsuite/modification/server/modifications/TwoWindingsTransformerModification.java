@@ -231,116 +231,124 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
     public static void processPhaseTapRegulation(PhaseTapChanger phaseTapChanger,
                                                  PhaseTapChangerAdder phaseTapChangerAdder,
                                                  boolean isModification,
-                                                 AttributeModification<PhaseTapChanger.RegulationMode> regulationModeValue,
-                                                 AttributeModification<Double> modifyRegulationValue,
-                                                 AttributeModification<Double> modifyTargetDeadband,
+                                                 AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification,
+                                                 AttributeModification<Double> regulationValueModification,
+                                                 AttributeModification<Double> targetDeadbandModification,
                                                  List<ReportNode> regulationReports) throws NetworkModificationException {
-        AttributeModification<PhaseTapChanger.RegulationMode> finalRegulationMode = regulationModeValue;
-        AttributeModification<Double> finalTargetDeadband = modifyTargetDeadband;
-        AttributeModification<Boolean> finalRegulating = null;
+        AttributeModification<PhaseTapChanger.RegulationMode> finalRegulationModeModification = regulationModeModification;
+        AttributeModification<Double> finalTargetDeadbandModification = targetDeadbandModification;
+        AttributeModification<Boolean> finalRegulatingModification = null;
 
-        // Regulation Mode is linked to regulating
-        if (isModification) {
-            // modification
-            if (regulationModeValue != null) {
-                Double regulationValue = modifyRegulationValue == null ? null : modifyRegulationValue.getValue();
+        // ---  Regulation Mode impacts on regulating => pre-processing regulating --- //
+        if (isModification) { // modifying an existing extension
+            // modification check
+            if (regulationModeModification != null) {
                 PhaseTapChanger.RegulationMode oldRegulationMode = phaseTapChanger.getRegulationMode();
-                PhaseTapChanger.RegulationMode newRegulationMode = regulationModeValue.getValue();
-                double targetDeadBand = phaseTapChanger.getTargetDeadband();
-                // if previous regulation mode was FIXED_TAP there is a check that there are all the attributes needed to regulate
+                PhaseTapChanger.RegulationMode newRegulationMode = regulationModeModification.getValue();
+                double oldTargetDeadBand = phaseTapChanger.getTargetDeadband();
+
                 if (oldRegulationMode == PhaseTapChanger.RegulationMode.FIXED_TAP) {
-                    if (regulationValue == null) {
-                        throw new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value can not be null if phase tap changer is now regulating");
+                    // if new regulation mode is FIXED_TAP set regulating to false
+                    if (newRegulationMode == PhaseTapChanger.RegulationMode.FIXED_TAP) {
+                        finalRegulatingModification = AttributeModification.toAttributeModification(false, OperationType.SET);
+                    } else { // new regulation mode is CURRENT_LIMITER or ACTIVE_POWER_CONTROL
+                        // check required field
+                        if (regulationValueModification == null) {
+                            throw new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value is missing while phase tap changer is now regulating");
+                        }
+
+                        // set regulating to true
+                        finalRegulatingModification = AttributeModification.toAttributeModification(true, OperationType.SET);
+
+                        // set default value for deadband
+                        if (Double.isNaN(oldTargetDeadBand) && targetDeadbandModification == null) {
+                            finalTargetDeadbandModification = AttributeModification.toAttributeModification(0.0, OperationType.SET);
+                        }
                     }
-                    finalRegulating = AttributeModification.toAttributeModification(true, OperationType.SET);
-                    finalRegulationMode = AttributeModification.toAttributeModification(newRegulationMode, OperationType.SET);
-                    if (Double.isNaN(targetDeadBand) && modifyTargetDeadband == null) {
-                        finalTargetDeadband = AttributeModification.toAttributeModification(0.0, OperationType.SET);
-                    }
-                } else {
+                } else { // previous regulation mode is CURRENT_LIMITER or ACTIVE_POWER_CONTROL
                     // if new regulation mode is FIXED_TAP we keep the old regulation mode and set regulating to false
                     if (newRegulationMode == PhaseTapChanger.RegulationMode.FIXED_TAP) {
-                        finalRegulating = AttributeModification.toAttributeModification(false, OperationType.SET);
-                        finalRegulationMode = AttributeModification.toAttributeModification(oldRegulationMode, OperationType.SET);
-                    } else {
-                        if (Double.isNaN(targetDeadBand) && modifyTargetDeadband == null) {
-                            finalTargetDeadband = AttributeModification.toAttributeModification(0.0, OperationType.SET);
+                        finalRegulatingModification = AttributeModification.toAttributeModification(false, OperationType.SET);
+                        finalRegulationModeModification = AttributeModification.toAttributeModification(oldRegulationMode, OperationType.SET);
+                    } else { // new regulation mode is CURRENT_LIMITER or ACTIVE_POWER_CONTROL
+                        // set regulating to true
+                        finalRegulatingModification = AttributeModification.toAttributeModification(true, OperationType.SET);
+                        // set default value for deadband
+                        if (Double.isNaN(oldTargetDeadBand) && targetDeadbandModification == null) {
+                            finalTargetDeadbandModification = AttributeModification.toAttributeModification(0.0, OperationType.SET);
                         }
-                        finalRegulating = AttributeModification.toAttributeModification(true, OperationType.SET);
-                        finalRegulationMode = AttributeModification.toAttributeModification(newRegulationMode, OperationType.SET);
                     }
                 }
             }
         } else {
             // creation check
-            if (regulationModeValue == null) {
-                throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation mode can not be null when creating tap phase changer");
+            if (regulationModeModification == null) {
+                throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation mode is missing when creating tap phase changer");
             }
-            PhaseTapChanger.RegulationMode regulationMode = regulationModeValue.getValue();
+
+            PhaseTapChanger.RegulationMode regulationMode = regulationModeModification.getValue();
             if (regulationMode != PhaseTapChanger.RegulationMode.FIXED_TAP) {
-                finalRegulating = AttributeModification.toAttributeModification(true, OperationType.SET);
-                if (modifyRegulationValue == null) {
+                finalRegulatingModification = AttributeModification.toAttributeModification(true, OperationType.SET);
+                if (regulationValueModification == null) {
                     throw new NetworkModificationException(CREATE_TWO_WINDINGS_TRANSFORMER_ERROR,
-                        "Regulation value can not be null when creating tap phase changer with regulation enabled (different from FIXED_TAP)");
+                        "Regulation value is missing when creating tap phase changer with regulation enabled (different from FIXED_TAP)");
                 }
-                if (finalTargetDeadband == null) {
-                    finalTargetDeadband = AttributeModification.toAttributeModification(0.0, OperationType.SET);
+                if (finalTargetDeadbandModification == null) {
+                    finalTargetDeadbandModification = AttributeModification.toAttributeModification(0.0, OperationType.SET);
                 }
             } else {
-                finalRegulating = AttributeModification.toAttributeModification(false, OperationType.SET);
+                finalRegulatingModification = AttributeModification.toAttributeModification(false, OperationType.SET);
             }
         }
+
+        //c--- apply changes after pre-processing of regulating --- //
         setPhaseTapChangerRegulationAttributes(phaseTapChanger, phaseTapChangerAdder, isModification,
-            finalRegulationMode, modifyRegulationValue, finalTargetDeadband, finalRegulating, regulationReports);
+            finalRegulationModeModification, regulationValueModification, finalTargetDeadbandModification, finalRegulatingModification, regulationReports);
 
     }
 
     private static void setPhaseTapChangerRegulationAttributes(PhaseTapChanger phaseTapChanger,
                                                         PhaseTapChangerAdder phaseTapChangerAdder,
                                                         boolean isModification,
-                                                        AttributeModification<PhaseTapChanger.RegulationMode> regulationModeValue,
-                                                        AttributeModification<Double> modifyRegulationValue,
-                                                        AttributeModification<Double> modifyTargetDeadband,
-                                                        AttributeModification<Boolean> regulating,
+                                                        AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification,
+                                                        AttributeModification<Double> regulationValueModification,
+                                                        AttributeModification<Double> targetDeadbandModification,
+                                                        AttributeModification<Boolean> regulatingModification,
                                                         List<ReportNode> regulationReports) {
         // the order is important if regulation mode is set and regulation value or target dead band is null it will crash
-        PhaseTapChanger.RegulationMode regulationMode = regulationModeValue == null ? null : regulationModeValue.getValue();
+        PhaseTapChanger.RegulationMode regulationMode = regulationModeModification == null ? null : regulationModeModification.getValue();
         String fieldName = (regulationMode == PhaseTapChanger.RegulationMode.CURRENT_LIMITER) ? "Value" : "Flow set point";
         // Regulation value
         ReportNode regulationValueReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
             isModification ? phaseTapChanger::setRegulationValue : phaseTapChangerAdder::setRegulationValue,
             isModification ? phaseTapChanger::getRegulationValue : () -> null,
-            modifyRegulationValue, fieldName, 1);
+            regulationValueModification, fieldName, 1);
         if (regulationReports != null && regulationValueReportNode != null) {
             regulationReports.add(regulationValueReportNode);
         }
         // targetDeadBand
         ReportNode targetDeadbandReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
-            isModification ? phaseTapChanger::setTargetDeadband
-                : phaseTapChangerAdder::setTargetDeadband,
+            isModification ? phaseTapChanger::setTargetDeadband : phaseTapChangerAdder::setTargetDeadband,
             isModification ? phaseTapChanger::getTargetDeadband : () -> null,
-            modifyTargetDeadband, "Target deadband", 1);
+            targetDeadbandModification, "Target deadband", 1);
         if (regulationReports != null && targetDeadbandReportNode != null) {
             regulationReports.add(targetDeadbandReportNode);
         }
 
         // RegulationMode
         ReportNode regulationReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
-            isModification ? phaseTapChanger::setRegulationMode
-                : phaseTapChangerAdder::setRegulationMode,
+            isModification ? phaseTapChanger::setRegulationMode : phaseTapChangerAdder::setRegulationMode,
             isModification ? phaseTapChanger::getRegulationMode : () -> null,
-            AttributeModification.toAttributeModification(regulationMode, OperationType.SET),
-            "Regulation mode", 1);
+            regulationModeModification, "Regulation mode", 1);
         if (regulationReports != null && regulationReportNode != null) {
             regulationReports.add(regulationReportNode);
         }
 
         // Regulating
         ReportNode regulatingReportNode = ModificationUtils.getInstance().applyElementaryModificationsAndReturnReport(
-            isModification ? phaseTapChanger::setRegulating
-                : phaseTapChangerAdder::setRegulating,
+            isModification ? phaseTapChanger::setRegulating : phaseTapChangerAdder::setRegulating,
             isModification ? phaseTapChanger::isRegulating : () -> null,
-            regulating, "Phase tap regulating", 1);
+            regulatingModification, "Phase tap regulating", 1);
         if (regulationReports != null && regulatingReportNode != null) {
             regulationReports.add(regulatingReportNode);
         }
