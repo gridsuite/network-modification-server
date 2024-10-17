@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createSubstationImpacts;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.createSubstationImpacts;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

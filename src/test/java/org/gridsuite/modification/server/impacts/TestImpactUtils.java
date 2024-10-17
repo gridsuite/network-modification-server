@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.Impacts;
+package org.gridsuite.modification.server.impacts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -13,9 +13,6 @@ import com.powsybl.iidm.network.IdentifiableType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.impacts.CollectionElementImpact;
-import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;

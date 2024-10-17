@@ -48,7 +48,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+,){1}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
 
@@ -76,7 +76,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+){1}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -93,7 +93,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCopy();
 
@@ -119,7 +119,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath() + "(.+){1}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

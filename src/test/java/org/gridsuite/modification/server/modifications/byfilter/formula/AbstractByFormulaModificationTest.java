@@ -35,7 +35,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -108,7 +108,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
                 .formulaInfosList(formulaInfos)
@@ -129,7 +129,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + filterIds))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filterEquipments))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
                 .formulaInfosList(formulaInfos)
@@ -155,7 +155,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         ByFormulaModificationInfos byFormulaModificationInfos = ByFormulaModificationInfos.builder()
                 .formulaInfosList(formulaInfos)
@@ -174,7 +174,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
 
@@ -188,7 +188,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCopy();
 

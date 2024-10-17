@@ -36,7 +36,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -106,7 +106,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ONE_WRONG_ID))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         checkCreationApplicationStatus(assignments, NetworkModificationResult.ApplicationStatus.WITH_WARNINGS);
 
@@ -122,7 +122,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + filterIds))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filterEquipments))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         checkCreationApplicationStatus(assignments, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
@@ -143,7 +143,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_WITH_ALL_WRONG_IDS))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         checkCreationApplicationStatus(assignmentsWithWrongFilter, NetworkModificationResult.ApplicationStatus.WITH_ERRORS);
 
@@ -157,7 +157,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
 
@@ -171,7 +171,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCopy();
 

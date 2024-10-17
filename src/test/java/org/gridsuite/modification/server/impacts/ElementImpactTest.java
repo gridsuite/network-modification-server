@@ -4,15 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.Impacts;
+package org.gridsuite.modification.server.impacts;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.impacts.CollectionElementImpact;
-import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -21,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

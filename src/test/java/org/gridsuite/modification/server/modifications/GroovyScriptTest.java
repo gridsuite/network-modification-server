@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -21,8 +20,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

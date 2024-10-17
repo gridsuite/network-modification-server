@@ -4,7 +4,6 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,8 +25,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

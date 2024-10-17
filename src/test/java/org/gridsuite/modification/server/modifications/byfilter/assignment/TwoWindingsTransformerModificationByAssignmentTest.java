@@ -83,7 +83,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter1, filter4))

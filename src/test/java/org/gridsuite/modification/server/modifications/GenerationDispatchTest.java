@@ -4,7 +4,6 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -272,7 +271,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){2}.*"))
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filters))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -331,14 +330,14 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filtersForPmaxReduction))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         List<AbstractFilter> filtersForFixedSupply = List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH1_ID), getIdentifiableAttributes(GROUP1_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))),
             getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(TEST1_ID), getIdentifiableAttributes(GROUP2_ID))));
         UUID stubIdForFixedSupply = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_4)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filtersForFixedSupply))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -426,16 +425,16 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsWithoutOutageFilters123()))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         UUID stubIdForFrequencyReserve1 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_4 + "," + FILTER_ID_5)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilters45()))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         UUID stubIdForFrequencyReserve2 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_6)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -585,15 +584,15 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsWithoutOutageFilters123()))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         UUID stubIdForFrequencyReserve1 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_4 + "," + FILTER_ID_5)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilters45()))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         UUID stubIdForFrequencyReserve2 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_6)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))

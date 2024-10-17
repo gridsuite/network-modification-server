@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createCollectionElementImpact;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -128,7 +127,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCreate();
 
@@ -148,7 +147,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){4}.*"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         super.testCopy();
 
@@ -165,7 +164,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         UUID subNoDk = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_NO_DK)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(noDistributionKeyFilter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         var filter = FilterInfos.builder()
                 .id(FILTER_NO_DK)
@@ -206,7 +205,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         UUID subWrongId = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_WRONG_ID_1)
                 .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         var filter = FilterInfos.builder()
                 .name("filter")
@@ -246,7 +245,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         UUID subFilter = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + params + "," + params))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         var filter = FilterInfos.builder()
                 .name("filter")
                 .id(FILTER_WRONG_ID_2)
@@ -404,7 +403,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
     }
 
     private static Map<String, StringValuePattern> handleQueryParams(UUID filterId) {
-        return Map.of("ids", WireMock.equalTo(String.valueOf(filterId)));
+        return Map.of("ids", WireMock.equalTo(filterId.toString()));
     }
 
     private static Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
@@ -457,7 +456,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         UUID subFilter = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_ALL_GEN)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter1)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         var filter = FilterInfos.builder()
                 .name("filter")

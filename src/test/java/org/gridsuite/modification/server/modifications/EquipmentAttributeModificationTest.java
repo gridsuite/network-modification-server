@@ -23,9 +23,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

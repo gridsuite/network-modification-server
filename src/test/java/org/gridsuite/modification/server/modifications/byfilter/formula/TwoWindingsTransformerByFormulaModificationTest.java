@@ -76,7 +76,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching("/v1/filters/metadata\\?ids=" + FILTER_ID_4))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filter)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         // Test division by 0
         FormulaInfos formulaInfos2 = FormulaInfos.builder()
@@ -105,7 +105,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         FormulaInfos formulaInfos = FormulaInfos.builder()
                 .filters(List.of(filter1, filter4))
