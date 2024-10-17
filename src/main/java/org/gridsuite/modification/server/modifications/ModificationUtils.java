@@ -669,7 +669,6 @@ public final class ModificationUtils {
             addConnectablePosition(adder, modificationInfos, network, reports, 1);
             addConnectablePosition(adder, modificationInfos, network, reports, 2);
         } else {
-            ConnectablePositionAdder.FeederAdder<?> feederAdder = adder.newFeeder();
             addConnectablePosition(adder, modificationInfos, network, reports, 0);
         }
     }
