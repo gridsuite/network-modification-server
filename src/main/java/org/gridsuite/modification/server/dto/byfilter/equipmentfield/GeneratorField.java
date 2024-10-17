@@ -98,7 +98,8 @@ public enum GeneratorField {
                 ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
                 ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
                 ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, null,
-                        new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null);
+                        new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null,
+                    MODIFY_GENERATOR_ERROR, "Generator '" + generator.getId() + "' : ");
             }
             case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(
                     new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),

@@ -64,7 +64,8 @@ public enum BatteryField {
                 ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
                 ModificationUtils.getInstance().modifyActivePowerControlAttributes(
                         activePowerControl, activePowerControlAdder, null,
-                        new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null);
+                        new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null,
+                    null, MODIFY_BATTERY_ERROR, "Battery '" + battery.getId() + "' : ");
             }
         }
     }

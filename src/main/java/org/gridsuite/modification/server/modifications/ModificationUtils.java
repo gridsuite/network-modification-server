@@ -1160,18 +1160,29 @@ public final class ModificationUtils {
     private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
                                              AttributeModification<Boolean> participateInfo,
                                              AttributeModification<Float> droopInfo,
-                                             List<ReportNode> reports) {
-        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
-        adder.withParticipate(participate);
-        if (participateInfo != null && reports != null) {
-            reports.add(buildModificationReport(null, participate, "Participate"));
+                                             List<ReportNode> reports,
+                                             NetworkModificationException.Type exceptionType,
+                                             String errorMessage) {
+        Boolean participate = participateInfo == null ? null : participateInfo.getValue();
+        Float droop = droopInfo == null ? null : droopInfo.getValue();
+        checkActivePowerControl(participate, droop, exceptionType, errorMessage);
+        if (participate != null && droop != null) {
+            adder.withParticipate(participate);
+            if (reports != null) {
+                reports.add(buildModificationReport(null, participate, "Participate"));
+            }
+            adder.withDroop(droop);
+            if (reports != null) {
+                reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+            }
+            adder.add();
         }
-        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
-        adder.withDroop(droop);
-        if (droopInfo != null && reports != null) {
-            reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+    }
+
+    public void checkActivePowerControl(Boolean participate, Float droop, NetworkModificationException.Type exceptionType, String errorMessage) {
+        if (Boolean.TRUE.equals(participate) && droop == null) {
+            throw new NetworkModificationException(exceptionType, errorMessage + "for creation if participate is true, droop can not be null");
         }
-        adder.add();
     }
 
     public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
@@ -1179,12 +1190,14 @@ public final class ModificationUtils {
                                                          AttributeModification<Boolean> participateInfo,
                                                          AttributeModification<Float> droopInfo,
                                                          ReportNode subReportNode,
-                                                         ReportNode subReporterSetpoints) {
+                                                         ReportNode subReporterSetpoints,
+                                                         NetworkModificationException.Type exceptionType,
+                                                         String errorMessage) {
         List<ReportNode> reports = new ArrayList<>();
         if (activePowerControl != null) {
             modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
-            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
+            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports, exceptionType, errorMessage);
         }
         if (subReportNode != null) {
             ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
