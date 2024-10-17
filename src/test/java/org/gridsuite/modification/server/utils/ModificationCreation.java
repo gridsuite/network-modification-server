@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.EnergySource;
@@ -12,6 +11,7 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.*;
+
 import java.util.Arrays;
 
 /**
@@ -22,6 +22,7 @@ public final class ModificationCreation {
     private static final String PROPERTY_VALUE = "property-value";
 
     private ModificationCreation() {
+        throw new IllegalStateException("Utility class");
     }
 
     public static VoltageLevelCreationInfos getCreationVoltageLevel(String substationId, String voltageLevelId, String voltageLevelName) {

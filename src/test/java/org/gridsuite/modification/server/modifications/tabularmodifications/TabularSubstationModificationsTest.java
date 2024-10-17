@@ -4,31 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author AJELLAL Ali <ali.ajellal@rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TabularSubstationModificationsTest extends AbstractNetworkModificationTest {
+class TabularSubstationModificationsTest extends AbstractNetworkModificationTest {
     public static final ModificationType MOFIFICATION_TYPE = ModificationType.SUBSTATION_MODIFICATION;
 
     @Override
@@ -80,18 +77,16 @@ public class TabularSubstationModificationsTest extends AbstractNetworkModificat
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(MOFIFICATION_TYPE.name(), createdValues.get("tabularModificationType"));
+        assertEquals(MOFIFICATION_TYPE.name(), createdValues.get("tabularModificationType"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals(MOFIFICATION_TYPE.name(), updatedValues.get("tabularModificationType"));
+        assertEquals(MOFIFICATION_TYPE.name(), updatedValues.get("tabularModificationType"));
     }
 }

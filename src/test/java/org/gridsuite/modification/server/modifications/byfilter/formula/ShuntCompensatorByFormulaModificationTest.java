@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -15,19 +14,19 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String SHUNT_COMPENSATOR_ID_1 = "v1shunt";
     private static final String SHUNT_COMPENSATOR_ID_2 = "v2shunt";
     private static final String SHUNT_COMPENSATOR_ID_3 = "v3shunt";
@@ -36,7 +35,7 @@ public class ShuntCompensatorByFormulaModificationTest extends AbstractByFormula
     private static final String SHUNT_COMPENSATOR_ID_6 = "v6shunt";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 

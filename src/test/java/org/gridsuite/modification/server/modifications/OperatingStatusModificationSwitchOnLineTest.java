@@ -10,22 +10,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
-import lombok.SneakyThrows;
-import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("IntegrationTest")
-public class OperatingStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
-
+class OperatingStatusModificationSwitchOnLineTest extends AbstractNetworkModificationTest {
     private static final String TARGET_LINE_ID = "line2";
 
     @Override
@@ -73,8 +69,7 @@ public class OperatingStatusModificationSwitchOnLineTest extends AbstractNetwork
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
@@ -83,8 +78,7 @@ public class OperatingStatusModificationSwitchOnLineTest extends AbstractNetwork
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelIdEdited", updatedValues.get("energizedVoltageLevelId"));

@@ -4,45 +4,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.formula;
 
 import com.powsybl.iidm.network.Generator;
 import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.extensions.ActivePowerControl;
-import com.powsybl.iidm.network.extensions.ActivePowerControlAdder;
-import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import com.powsybl.iidm.network.extensions.CoordinatedReactiveControl;
-import com.powsybl.iidm.network.extensions.CoordinatedReactiveControlAdder;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
-import com.powsybl.iidm.network.extensions.GeneratorShortCircuitAdder;
-import com.powsybl.iidm.network.extensions.GeneratorStartup;
-import com.powsybl.iidm.network.extensions.GeneratorStartupAdder;
+import com.powsybl.iidm.network.extensions.*;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.FilterInfos;
+import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
 import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
 @Tag("IntegrationTest")
-public class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTest {
+class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTest {
     private static final String GENERATOR_ID_1 = "idGenerator";
     private static final String GENERATOR_ID_2 = "v5generator";
     private static final String GENERATOR_ID_3 = "v6generator";
@@ -55,7 +45,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     private static final String GENERATOR_ID_10 = "gen10";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
@@ -72,7 +62,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
     }
 
     @Test
-    public void testWithNullReferenceFieldOrValue() throws Exception {
+    void testWithNullReferenceFieldOrValue() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         AbstractFilter filterEquipments = getFilterEquipments(FILTER_ID_1, List.of(identifiableAttributes));
 
@@ -151,6 +141,7 @@ public class GeneratorByFormulaModificationTest extends AbstractByFormulaModific
         getNetwork().getGenerator(GENERATOR_ID_10).setRatedS(30.);
     }
 
+    @Override
     protected List<AbstractFilter> getTestFilters() {
         IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_1, 1.0),

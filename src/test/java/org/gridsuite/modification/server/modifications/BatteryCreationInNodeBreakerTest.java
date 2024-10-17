@@ -4,18 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -23,13 +21,12 @@ import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -104,7 +101,7 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         // invalid Battery id
         BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setEquipmentId("");
@@ -206,16 +203,14 @@ public class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificatio
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBattery1", updatedValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
