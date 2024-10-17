@@ -24,7 +24,6 @@ import java.util.stream.IntStream;
  */
 public class ModificationOrderMigration implements CustomSqlChange {
 
-
     @Override
     public SqlStatement[] generateStatements(Database database) throws CustomChangeException {
         JdbcConnection connection = (JdbcConnection) database.getConnection();
@@ -67,11 +66,9 @@ public class ModificationOrderMigration implements CustomSqlChange {
     }
 
     private void saveAll(List<Pair<UUID, Integer>> entities, List<SqlStatement> statements, Database database) {
-        entities.forEach(pair -> {
-                statements.add(new UpdateStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "modification")
-                    .addNewColumnValue("modifications_order", pair.getValue())
-                    .setWhereClause(String.format("id='%s'", pair.getKey())));
-        });
+        entities.forEach(pair -> statements.add(new UpdateStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "modification")
+            .addNewColumnValue("modifications_order", pair.getValue())
+            .setWhereClause(String.format("id='%s'", pair.getKey()))));
     }
 
     @Override
