@@ -63,8 +63,6 @@ public enum TwoWindingsTransformerField {
         TwoWindingsTransformerField field = TwoWindingsTransformerField.valueOf(twoWindingsTransformerField);
         final PhaseTapChanger phaseTapChanger = transformer.getPhaseTapChanger();
         final RatioTapChanger ratioTapChanger = transformer.getRatioTapChanger();
-        final AttributeModification<PhaseTapChanger.RegulationMode> regulationMode = phaseTapChanger != null ?
-            AttributeModification.toAttributeModification(phaseTapChanger.getRegulationMode(), OperationType.SET) : null;
         final AttributeModification<Double> attributeModification = new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET);
 
         switch (field) {
@@ -81,7 +79,8 @@ public enum TwoWindingsTransformerField {
             case RATIO_TAP_POSITION -> processTapChangerPositionsAndSteps(ratioTapChanger, null, true,
                     null, new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null);
             case RATIO_TARGET_DEADBAND -> modifyTargets(ratioTapChanger, null, true, null, attributeModification, null);
-            case REGULATION_VALUE -> processPhaseTapRegulation(phaseTapChanger, null, true, regulationMode, attributeModification, null, null);
+            case REGULATION_VALUE -> processPhaseTapRegulation(
+                    phaseTapChanger, null, true, null, attributeModification, null, null);
             case PHASE_LOW_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
                     new AttributeModification<>((int) Double.parseDouble(newValue), OperationType.SET), null, null, null);
             case PHASE_TAP_POSITION -> processTapChangerPositionsAndSteps(phaseTapChanger, null, true,
