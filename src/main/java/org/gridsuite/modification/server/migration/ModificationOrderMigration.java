@@ -1,6 +1,6 @@
 package org.gridsuite.modification.server.migration;
 
-import liquibase.change.custom.CustomTaskChange;
+import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.CustomChangeException;
@@ -8,11 +8,12 @@ import liquibase.exception.DatabaseException;
 import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
+import liquibase.statement.SqlStatement;
+import liquibase.statement.core.UpdateStatement;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,24 +22,27 @@ import java.util.stream.IntStream;
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
  */
-public class ModificationOrderMigration implements CustomTaskChange {
+public class ModificationOrderMigration implements CustomSqlChange {
+
 
     @Override
-    public void execute(Database database) throws CustomChangeException {
+    public SqlStatement[] generateStatements(Database database) throws CustomChangeException {
         JdbcConnection connection = (JdbcConnection) database.getConnection();
+        List<SqlStatement> statements = new ArrayList<>();
         try {
-            ResultSet groupIds = connection.createStatement().executeQuery("select distinct group_id from modification");
+            ResultSet groupIds = connection.createStatement().executeQuery("select distinct group_id from modification where group_id is not null");
             while (groupIds.next()) {
                 UUID groupId = UUID.fromString(groupIds.getString(1));
-                reorderNetworkModifications(groupId, true, connection);
-                reorderNetworkModifications(groupId, false, connection);
+                reorderNetworkModifications(groupId, true, connection, statements, database);
+                reorderNetworkModifications(groupId, false, connection, statements, database);
             }
         } catch (SQLException | DatabaseException e) {
             throw new CustomChangeException(e);
         }
+        return statements.toArray(new SqlStatement[0]);
     }
 
-    private void reorderNetworkModifications(UUID groupId, boolean stashed, JdbcConnection connection) throws SQLException, DatabaseException {
+    private void reorderNetworkModifications(UUID groupId, boolean stashed, JdbcConnection connection, List<SqlStatement> statements, Database database) throws SQLException, DatabaseException {
         List<UUID> entities = findAllByGroupId(groupId, stashed, connection);
         List<Pair<UUID, Integer>> entitiesToUpdate = new ArrayList<>();
         if (!entities.isEmpty()) {
@@ -50,7 +54,7 @@ public class ModificationOrderMigration implements CustomTaskChange {
                     .forEach(i -> entitiesToUpdate.add(Pair.of(entities.get(i), i)));
             }
         }
-        saveAll(entitiesToUpdate, connection);
+        saveAll(entitiesToUpdate, statements, database);
     }
 
     private List<UUID> findAllByGroupId(UUID groupId, boolean stashed, JdbcConnection connection) throws DatabaseException, SQLException {
@@ -62,17 +66,12 @@ public class ModificationOrderMigration implements CustomTaskChange {
         return entities;
     }
 
-    private void saveAll(List<Pair<UUID, Integer>> entities, JdbcConnection connection) throws DatabaseException, SQLException {
-        Statement statement = connection.createStatement();
+    private void saveAll(List<Pair<UUID, Integer>> entities, List<SqlStatement> statements, Database database) {
         entities.forEach(pair -> {
-            try {
-                statement.addBatch(String.format("UPDATE modification SET modifications_order=%d WHERE id = '%s'", pair.getValue(), pair.getKey()));
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-
+                statements.add(new UpdateStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "modification")
+                    .addNewColumnValue("modifications_order", pair.getValue())
+                    .setWhereClause(String.format("id='%s'", pair.getKey())));
         });
-        statement.executeBatch();
     }
 
     @Override
@@ -94,4 +93,5 @@ public class ModificationOrderMigration implements CustomTaskChange {
     public ValidationErrors validate(Database database) {
         return null;
     }
+
 }
