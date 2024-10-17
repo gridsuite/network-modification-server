@@ -12,6 +12,7 @@ import liquibase.statement.SqlStatement;
 import liquibase.statement.core.UpdateStatement;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,8 +29,8 @@ public class ModificationOrderMigration implements CustomSqlChange {
     public SqlStatement[] generateStatements(Database database) throws CustomChangeException {
         JdbcConnection connection = (JdbcConnection) database.getConnection();
         List<SqlStatement> statements = new ArrayList<>();
-        try {
-            ResultSet groupIds = connection.createStatement().executeQuery("select distinct group_id from modification where group_id is not null");
+        try (PreparedStatement stmt = connection.prepareStatement("select distinct group_id from modification where group_id is not null")) {
+            ResultSet groupIds = stmt.executeQuery();
             while (groupIds.next()) {
                 UUID groupId = UUID.fromString(groupIds.getString(1));
                 reorderNetworkModifications(groupId, true, connection, statements, database);
@@ -41,7 +42,7 @@ public class ModificationOrderMigration implements CustomSqlChange {
         return statements.toArray(new SqlStatement[0]);
     }
 
-    private void reorderNetworkModifications(UUID groupId, boolean stashed, JdbcConnection connection, List<SqlStatement> statements, Database database) throws SQLException, DatabaseException {
+    private void reorderNetworkModifications(UUID groupId, boolean stashed, JdbcConnection connection, List<SqlStatement> statements, Database database) throws CustomChangeException {
         List<UUID> entities = findAllByGroupId(groupId, stashed, connection);
         List<Pair<UUID, Integer>> entitiesToUpdate = new ArrayList<>();
         if (!entities.isEmpty()) {
@@ -56,13 +57,19 @@ public class ModificationOrderMigration implements CustomSqlChange {
         createMigrationRequests(entitiesToUpdate, statements, database);
     }
 
-    private List<UUID> findAllByGroupId(UUID groupId, boolean stashed, JdbcConnection connection) throws DatabaseException, SQLException {
-        ResultSet resultSet = connection.createStatement().executeQuery(String.format("SELECT id FROM modification m WHERE m.group_id = '%s' AND m.stashed = %b order by modifications_order", groupId, stashed));
-        List<UUID> entities = new ArrayList<>();
-        while (resultSet.next()) {
-            entities.add(UUID.fromString(resultSet.getString(1)));
+    private List<UUID> findAllByGroupId(UUID groupId, boolean stashed, JdbcConnection connection) throws CustomChangeException {
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM modification m WHERE m.group_id = '?' AND m.stashed = ? order by modifications_order")) {
+            stmt.setString(1, groupId.toString());
+            stmt.setBoolean(2, stashed);
+            ResultSet resultSet = stmt.executeQuery();
+            List<UUID> entities = new ArrayList<>();
+            while (resultSet.next()) {
+                entities.add(UUID.fromString(resultSet.getString(1)));
+            }
+            return entities;
+        } catch (SQLException | DatabaseException e) {
+            throw new CustomChangeException(e);
         }
-        return entities;
     }
 
     private void createMigrationRequests(List<Pair<UUID, Integer>> entities, List<SqlStatement> statements, Database database) {
@@ -73,7 +80,7 @@ public class ModificationOrderMigration implements CustomSqlChange {
 
     @Override
     public String getConfirmationMessage() {
-        return "";
+        return "modification order were successfully updated";
     }
 
     @Override
@@ -88,7 +95,6 @@ public class ModificationOrderMigration implements CustomSqlChange {
 
     @Override
     public ValidationErrors validate(Database database) {
-        return null;
+        return new ValidationErrors();
     }
-
 }
