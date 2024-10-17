@@ -666,13 +666,11 @@ public final class ModificationUtils {
                                                List<ReportNode> reports,
                                                boolean isBranch) {
         if (isBranch) {
-            ConnectablePositionAdder.FeederAdder<?> feederAdder1 = adder.newFeeder1();
-            ConnectablePositionAdder.FeederAdder<?> feederAdder2 = adder.newFeeder2();
-            addConnectablePosition(adder, feederAdder1, modificationInfos, network, reports, 1);
-            addConnectablePosition(adder, feederAdder2, modificationInfos, network, reports, 2);
+            addConnectablePosition(adder, modificationInfos, network, reports, 1);
+            addConnectablePosition(adder, modificationInfos, network, reports, 2);
         } else {
             ConnectablePositionAdder.FeederAdder<?> feederAdder = adder.newFeeder();
-            addConnectablePosition(adder, feederAdder, modificationInfos, network, reports, 0);
+            addConnectablePosition(adder, modificationInfos, network, reports, 0);
         }
     }
 
@@ -711,7 +709,6 @@ public final class ModificationUtils {
     }
 
     private void addConnectablePosition(ConnectablePositionAdder<?> adder,
-                                        ConnectablePositionAdder.FeederAdder<?> feeder,
                                         BasicEquipmentModificationInfos modificationInfos,
                                         Network network,
                                         List<ReportNode> reports,
@@ -726,7 +723,15 @@ public final class ModificationUtils {
         AttributeModification<String> voltageLevelId = getVoltageLevelId(modificationInfos, feederNumber);
         AttributeModification<String> busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederNumber);
         int position = getPosition(connectionPosition, busOrBusbarSectionId, voltageLevelId, equipmentId, feederNumber, network);
-
+        ConnectablePositionAdder.FeederAdder<?> feeder;
+        switch (feederNumber) {
+            case 0 -> feeder = adder.newFeeder();
+            case 1 -> feeder = adder.newFeeder1();
+            case 2 -> feeder = adder.newFeeder2();
+            default -> {
+                return;
+            }
+        }
         ReportNode connectionNameReport = applyConnectablePositionAttribute(
                 feeder::withName, connectionName, equipmentId, reports,
                 getConnectionNameField(feederNumber), connectionDirection, connectionPosition
