@@ -24,6 +24,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
+import static org.gridsuite.modification.server.utils.NetworkUtil.*;
+import static org.gridsuite.modification.server.utils.NetworkUtil.createGeneratorOnBus;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
@@ -443,6 +445,24 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
 
+    }
+
+    @Test
+    public void changeGeneratorOnBusBreakerWithoutBusBarSection() throws Exception {
+        VoltageLevel v1 = createVoltageLevel(getNetwork().getSubstation("s1"), "v11", "v32", TopologyKind.BUS_BREAKER, 380.0);
+        createBusBarSection(getNetwork().getVoltageLevel("v1"), "1.7", "1.7", 0);
+        createBus(v1, "bus111", "bus111");
+        createGeneratorOnBus(v1, "idGenerator1", "bus111", 42.1, 1.0);
+        GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("idGenerator1")
+                .connectionPosition(new AttributeModification<>(1, OperationType.SET))
+                .build();
+        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        generatorModificationInfos = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(1, generatorModificationInfos.getConnectionPosition().getValue());
     }
 
     @Override
