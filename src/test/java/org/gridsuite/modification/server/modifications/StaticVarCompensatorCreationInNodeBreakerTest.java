@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 

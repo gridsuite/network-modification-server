@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.dto.FilterInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.util.Date;

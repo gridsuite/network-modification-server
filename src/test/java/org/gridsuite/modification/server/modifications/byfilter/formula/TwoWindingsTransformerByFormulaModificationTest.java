@@ -14,6 +14,8 @@ import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.util.Date;
 import java.util.List;

@@ -27,6 +27,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 import java.nio.file.Paths;

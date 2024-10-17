@@ -19,6 +19,8 @@ import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmen
 import org.gridsuite.modification.server.dto.byfilter.assignment.IntegerAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.util.Date;
 import java.util.List;
