@@ -53,7 +53,7 @@ public class ModificationOrderMigration implements CustomSqlChange {
                     .forEach(i -> entitiesToUpdate.add(Pair.of(entities.get(i), i)));
             }
         }
-        saveAll(entitiesToUpdate, statements, database);
+        createMigrationRequests(entitiesToUpdate, statements, database);
     }
 
     private List<UUID> findAllByGroupId(UUID groupId, boolean stashed, JdbcConnection connection) throws DatabaseException, SQLException {
@@ -65,7 +65,7 @@ public class ModificationOrderMigration implements CustomSqlChange {
         return entities;
     }
 
-    private void saveAll(List<Pair<UUID, Integer>> entities, List<SqlStatement> statements, Database database) {
+    private void createMigrationRequests(List<Pair<UUID, Integer>> entities, List<SqlStatement> statements, Database database) {
         entities.forEach(pair -> statements.add(new UpdateStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "modification")
             .addNewColumnValue("modifications_order", pair.getValue())
             .setWhereClause(String.format("id='%s'", pair.getKey()))));
