@@ -10,6 +10,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import lombok.SneakyThrows;
@@ -52,6 +53,9 @@ public class GeneratorModificationTest extends AbstractInjectionModificationTest
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
                 .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                 .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
+                .connectionName(new AttributeModification<>("idGenerator", OperationType.SET))
+                .connectionPosition(new AttributeModification<>(1, OperationType.SET))
+                .connectionDirection(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .targetV(new AttributeModification<>(48.0, OperationType.SET))

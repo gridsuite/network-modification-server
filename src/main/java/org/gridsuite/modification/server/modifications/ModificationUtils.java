@@ -58,6 +58,12 @@ public final class ModificationUtils {
     public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
     public static final String NOT_EXIST_IN_NETWORK = " does not exist in network";
 
+    public enum FeederAdderType {
+        INJECTION,
+        BRANCH_SIDE_ONE,
+        BRANCH_SIDE_TWO
+    }
+
     private ModificationUtils() {
     }
 
@@ -647,12 +653,6 @@ public final class ModificationUtils {
         }
     }
 
-    public enum FeederAdderType {
-        INJECTION,
-        BRANCH_SIDE_ONE,
-        BRANCH_SIDE_TWO
-    }
-
     private void modifyExistingConnectivityPosition(ConnectablePosition<?> connectablePosition,
                                                     BasicEquipmentModificationInfos modificationInfos,
                                                     List<ReportNode> reports) {
@@ -787,9 +787,9 @@ public final class ModificationUtils {
                                       Function<InjectionModificationInfos, T> injectionFunc) {
         if (modificationInfos instanceof BranchModificationInfos branchInfo) {
             if (Objects.requireNonNull(feederAdderType) == FeederAdderType.BRANCH_SIDE_ONE) {
-                branchFunc1.apply(branchInfo);
+                return branchFunc1.apply(branchInfo);
             } else if (feederAdderType == FeederAdderType.BRANCH_SIDE_TWO) {
-                branchFunc2.apply(branchInfo);
+                return branchFunc2.apply(branchInfo);
             }
         } else if (modificationInfos instanceof InjectionModificationInfos injectionInfo) {
             return injectionFunc.apply(injectionInfo);
