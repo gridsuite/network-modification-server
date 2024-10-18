@@ -82,16 +82,16 @@ public class NetworkModificationRepository {
     }
 
     private void saveModificationsNonTransactional(UUID groupUuid, List<? extends ModificationEntity> modifications) {
+        int order = modificationRepository.countByGroupIdAndStashed(groupUuid, false);
         var modificationGroupEntity = this.modificationGroupRepository
             .findById(groupUuid)
             .orElseGet(() -> modificationGroupRepository.save(new ModificationGroupEntity(groupUuid)));
-        modifications.forEach(m -> {
+        for (ModificationEntity m : modifications) {
             modificationGroupEntity.addModification(m);
-            // We need here to call the save() method on the modification entity cause the ids of the ModificationEntity's are used in further treatments in the same transaction.
-            // As we generate the id in Java with @GeneratedValue(strategy = GenerationType.AUTO), saving the entity in the JPA world is enough to generate the id (no need to flush it).
-            // Without the saving, the id generation would be done only at the flush() and wouldn't be available for the further treatments.
-            modificationRepository.save(m);
-        });
+            m.setModificationsOrder(order);
+            order++;
+        }
+        modificationRepository.saveAll(modifications);
     }
 
     @Transactional
@@ -99,8 +99,10 @@ public class NetworkModificationRepository {
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         // read origin group and modifications
         ModificationGroupEntity originModificationGroupEntity = getModificationGroup(originGroupUuid);
-        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications();
-
+        List<ModificationEntity> originModificationEntities = originModificationGroupEntity.getModifications()
+            .stream()
+            .filter(modificationEntity -> !modificationEntity.getStashed())
+            .collect(Collectors.toList());
         // To remove null entities when @orderColumn is not a contiguous sequence starting from 0 (to be fixed?)
         // (there are several places in this file where we filter non-null modification entities)
         originModificationEntities.removeIf(Objects::isNull);
@@ -139,6 +141,9 @@ public class NetworkModificationRepository {
                         .findFirst()
                         .orElseThrow(() -> new NetworkModificationException(MOVE_MODIFICATION_ERROR));
         modificationsList.addAll(insertionIndex, modificationsToAdd);
+        for (int order = 0; order < modificationsList.size(); order++) {
+            modificationsList.get(order).setModificationsOrder(order);
+        }
     }
 
     private List<ModificationEntity> removeModifications(List<ModificationEntity> modificationsList, List<UUID> orderedIdsToRemove) {
@@ -207,17 +212,19 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
-        Stream<ModificationEntity> modificationEntityStream = modificationRepository
-                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
-                .stream();
         if (onlyStashed) {
-            return modificationEntityStream.filter(m -> m.getStashed())
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
+            return modificationRepository
+                .findAllBaseByGroupIdReverse(getModificationGroup(groupUuid).getId())
+                .stream()
+                .filter(ModificationEntity::getStashed)
+                .map(this::getModificationInfos)
+                .collect(Collectors.toList());
         } else {
-            return modificationEntityStream
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
+            return modificationRepository
+                .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
+                .stream()
+                .map(this::getModificationInfos)
+                .collect(Collectors.toList());
         }
     }
 
@@ -408,25 +415,48 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids) {
+    public void stashNetworkModifications(@NonNull List<UUID> modificationUuids, int stashedModificationCount) {
+        int stashModificationOrder = -stashedModificationCount - 1;
+        List<ModificationEntity> modificationEntities = new ArrayList<>();
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
                     .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
-            this.modificationRepository.save(modificationEntity);
+            modificationEntity.setModificationsOrder(stashModificationOrder);
+            modificationEntities.add(modificationEntity);
+            stashModificationOrder--;
         }
+        this.modificationRepository.saveAll(modificationEntities);
     }
 
     @Transactional
-    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids) {
-        for (UUID modificationUuid : modificationUuids) {
-            ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
-            modificationEntity.setStashed(false);
-            this.modificationRepository.save(modificationEntity);
+    public void reorderNetworkModifications(UUID groupId, Boolean stashed) {
+        List<ModificationEntity> entities = this.modificationRepository.findAllByGroupId(groupId, stashed);
+        if (!entities.isEmpty()) {
+            if (Boolean.TRUE.equals(stashed)) {
+                IntStream.range(1, entities.size() + 1)
+                    .forEach(i -> entities.get(i - 1).setModificationsOrder(-i));
+            } else {
+                IntStream.range(0, entities.size())
+                    .forEach(i -> entities.get(i).setModificationsOrder(i));
+            }
         }
+        this.modificationRepository.saveAll(entities);
+    }
+
+    @Transactional
+    public void restoreNetworkModifications(@NonNull List<UUID> modificationUuids, int unstashedSize) {
+        int modificationOrder = unstashedSize;
+        List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
+        if (modifications.size() != modificationUuids.size()) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+        }
+        for (ModificationEntity modification : modifications) {
+            modification.setStashed(false);
+            modification.setModificationsOrder(modificationOrder++);
+        }
+        this.modificationRepository.saveAll(modifications);
     }
 
     @Transactional
