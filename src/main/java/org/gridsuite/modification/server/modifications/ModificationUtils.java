@@ -58,7 +58,7 @@ public final class ModificationUtils {
     public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
     public static final String NOT_EXIST_IN_NETWORK = " does not exist in network";
 
-    public enum FeederAdderType {
+    public enum FeederSide {
         INJECTION,
         BRANCH_SIDE_ONE,
         BRANCH_SIDE_TWO
@@ -657,10 +657,10 @@ public final class ModificationUtils {
                                                     BasicEquipmentModificationInfos modificationInfos,
                                                     List<ReportNode> reports) {
         if (modificationInfos instanceof BranchModificationInfos) {
-            modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, FeederAdderType.BRANCH_SIDE_ONE);
-            modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, FeederAdderType.BRANCH_SIDE_TWO);
+            modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, FeederSide.BRANCH_SIDE_ONE);
+            modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, FeederSide.BRANCH_SIDE_TWO);
         } else if (modificationInfos instanceof InjectionModificationInfos) {
-            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, FeederAdderType.INJECTION);
+            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, FeederSide.INJECTION);
         }
     }
 
@@ -669,42 +669,42 @@ public final class ModificationUtils {
                                                Network network,
                                                List<ReportNode> reports) {
         if (modificationInfos instanceof BranchModificationInfos) {
-            addConnectablePosition(adder, modificationInfos, network, reports, FeederAdderType.BRANCH_SIDE_ONE);
-            addConnectablePosition(adder, modificationInfos, network, reports, FeederAdderType.BRANCH_SIDE_TWO);
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.BRANCH_SIDE_ONE);
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.BRANCH_SIDE_TWO);
         } else if (modificationInfos instanceof InjectionModificationInfos) {
-            addConnectablePosition(adder, modificationInfos, network, reports, FeederAdderType.INJECTION);
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.INJECTION);
         }
     }
 
     private void modifyConnectablePosition(ConnectablePosition.Feeder feeder,
                                         BasicEquipmentModificationInfos modificationInfos,
                                         List<ReportNode> reports,
-                                        FeederAdderType feederAdderType) {
-        applyModifications(feeder, modificationInfos, reports, feederAdderType);
+                                        FeederSide feederSide) {
+        applyModifications(feeder, modificationInfos, reports, feederSide);
     }
 
     private void applyModifications(ConnectablePosition.Feeder feeder,
                                     BasicEquipmentModificationInfos modificationInfos,
                                     List<ReportNode> reports,
-                                    FeederAdderType feederAdderType) {
+                                    FeederSide feederSide) {
         ReportNode connectionNameReport = applyElementaryModificationsAndReturnReport(feeder::setName,
                 feeder.getName()::get,
-                getConnectionName(modificationInfos, feederAdderType),
-                getConnectionNameField(feederAdderType));
+                getConnectionName(modificationInfos, feederSide),
+                getConnectionNameField(feederSide));
         if (connectionNameReport != null) {
             reports.add(connectionNameReport);
         }
         ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(feeder::setDirection,
                 feeder::getDirection,
-                getConnectionDirection(modificationInfos, feederAdderType),
-                getConnectionDirectionField(feederAdderType));
+                getConnectionDirection(modificationInfos, feederSide),
+                getConnectionDirectionField(feederSide));
         if (connectionDirectionReport != null) {
             reports.add(connectionDirectionReport);
         }
         ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(feeder::setOrder,
                 feeder.getOrder()::get,
-                getConnectionPosition(modificationInfos, feederAdderType),
-                getConnectionPositionField(feederAdderType));
+                getConnectionPosition(modificationInfos, feederSide),
+                getConnectionPositionField(feederSide));
         if (connectionPositionReport != null) {
             reports.add(connectionPositionReport);
         }
@@ -714,19 +714,19 @@ public final class ModificationUtils {
                                         BasicEquipmentModificationInfos modificationInfos,
                                         Network network,
                                         List<ReportNode> reports,
-                                        FeederAdderType feederAdderType) {
-        AttributeModification<String> connectionName = getConnectionName(modificationInfos, feederAdderType);
-        AttributeModification<ConnectablePosition.Direction> connectionDirection = getConnectionDirection(modificationInfos, feederAdderType);
-        AttributeModification<Integer> connectionPosition = getConnectionPosition(modificationInfos, feederAdderType);
+                                        FeederSide feederSide) {
+        AttributeModification<String> connectionName = getConnectionName(modificationInfos, feederSide);
+        AttributeModification<ConnectablePosition.Direction> connectionDirection = getConnectionDirection(modificationInfos, feederSide);
+        AttributeModification<Integer> connectionPosition = getConnectionPosition(modificationInfos, feederSide);
         if (Objects.isNull(connectionName) && Objects.isNull(connectionDirection) && Objects.isNull(connectionPosition)) {
             return;
         }
         AttributeModification<String> equipmentId = getEquipmentId(modificationInfos);
-        AttributeModification<String> voltageLevelId = getVoltageLevelId(modificationInfos, feederAdderType);
-        AttributeModification<String> busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederAdderType);
-        int position = getPosition(connectionPosition, busOrBusbarSectionId, voltageLevelId, equipmentId, feederAdderType, network);
+        AttributeModification<String> voltageLevelId = getVoltageLevelId(modificationInfos, feederSide);
+        AttributeModification<String> busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederSide);
+        int position = getPosition(connectionPosition, busOrBusbarSectionId, voltageLevelId, equipmentId, feederSide, network);
         ConnectablePositionAdder.FeederAdder<?> feeder;
-        switch (feederAdderType) {
+        switch (feederSide) {
             case INJECTION -> feeder = adder.newFeeder();
             case BRANCH_SIDE_ONE -> feeder = adder.newFeeder1();
             case BRANCH_SIDE_TWO -> feeder = adder.newFeeder2();
@@ -736,20 +736,20 @@ public final class ModificationUtils {
         }
         ReportNode connectionNameReport = applyConnectablePositionAttribute(
                 feeder::withName, connectionName, equipmentId, reports,
-                getConnectionNameField(feederAdderType), connectionDirection, connectionPosition
+                getConnectionNameField(feederSide), connectionDirection, connectionPosition
         );
 
         ReportNode connectionDirectionReport = applyConnectablePositionAttribute(
                 feeder::withDirection, connectionDirection,
                 new AttributeModification<>(ConnectablePosition.Direction.UNDEFINED, OperationType.SET),
-                reports, getConnectionDirectionField(feederAdderType),
+                reports, getConnectionDirectionField(feederSide),
                 connectionName, connectionPosition
         );
 
         ReportNode connectionPositionReport = applyConnectablePositionAttribute(
                 feeder::withOrder, connectionPosition,
                 new AttributeModification<>(position, OperationType.SET),
-                reports, getConnectionPositionField(feederAdderType),
+                reports, getConnectionPositionField(feederSide),
                 connectionName, connectionDirection
         );
 
@@ -781,14 +781,14 @@ public final class ModificationUtils {
         return Arrays.stream(attributes).anyMatch(Objects::nonNull);
     }
 
-    private <T> T getConnectionDetail(BasicEquipmentModificationInfos modificationInfos, FeederAdderType feederAdderType,
+    private <T> T getConnectionDetail(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide,
                                       Function<BranchModificationInfos, T> branchFunc1,
                                       Function<BranchModificationInfos, T> branchFunc2,
                                       Function<InjectionModificationInfos, T> injectionFunc) {
         if (modificationInfos instanceof BranchModificationInfos branchInfo) {
-            if (Objects.requireNonNull(feederAdderType) == FeederAdderType.BRANCH_SIDE_ONE) {
+            if (Objects.requireNonNull(feederSide) == FeederSide.BRANCH_SIDE_ONE) {
                 return branchFunc1.apply(branchInfo);
-            } else if (feederAdderType == FeederAdderType.BRANCH_SIDE_TWO) {
+            } else if (feederSide == FeederSide.BRANCH_SIDE_TWO) {
                 return branchFunc2.apply(branchInfo);
             }
         } else if (modificationInfos instanceof InjectionModificationInfos injectionInfo) {
@@ -797,22 +797,22 @@ public final class ModificationUtils {
         return null;
     }
 
-    private String getConnectionFieldName(FeederAdderType feederAdderType, String baseFieldName) {
-        return switch (feederAdderType) {
+    private String getConnectionFieldName(FeederSide feederSide, String baseFieldName) {
+        return switch (feederSide) {
             case INJECTION -> baseFieldName;
             case BRANCH_SIDE_ONE -> baseFieldName + " 1";
             case BRANCH_SIDE_TWO -> baseFieldName + " 2";
         };
     }
 
-    private AttributeModification<String> getVoltageLevelId(BasicEquipmentModificationInfos modificationInfos, FeederAdderType feederAdderType) {
-        return getConnectionDetail(modificationInfos, feederAdderType,
+    private AttributeModification<String> getVoltageLevelId(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getVoltageLevelId1, BranchModificationInfos::getVoltageLevelId2,
                 InjectionModificationInfos::getVoltageLevelId);
     }
 
-    private AttributeModification<String> getBusOrBusbarSectionId(BasicEquipmentModificationInfos modificationInfos, FeederAdderType feederAdderType) {
-        return getConnectionDetail(modificationInfos, feederAdderType,
+    private AttributeModification<String> getBusOrBusbarSectionId(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getBusOrBusbarSectionId1, BranchModificationInfos::getBusOrBusbarSectionId2,
                 InjectionModificationInfos::getBusOrBusbarSectionId);
     }
@@ -821,32 +821,32 @@ public final class ModificationUtils {
         return AttributeModification.toAttributeModification(modificationInfos.getEquipmentId(), OperationType.SET);
     }
 
-    private AttributeModification<String> getConnectionName(BasicEquipmentModificationInfos modificationInfos, FeederAdderType feederAdderType) {
-        return getConnectionDetail(modificationInfos, feederAdderType,
+    private AttributeModification<String> getConnectionName(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getConnectionName1, BranchModificationInfos::getConnectionName2,
                 InjectionModificationInfos::getConnectionName);
     }
 
-    private String getConnectionNameField(FeederAdderType feederAdderType) {
-        return getConnectionFieldName(feederAdderType, CONNECTION_NAME_FIELD_NAME);
+    private String getConnectionNameField(FeederSide feederSide) {
+        return getConnectionFieldName(feederSide, CONNECTION_NAME_FIELD_NAME);
     }
 
-    private String getConnectionDirectionField(FeederAdderType feederAdderType) {
-        return getConnectionFieldName(feederAdderType, CONNECTION_DIRECTION_FIELD_NAME);
+    private String getConnectionDirectionField(FeederSide feederSide) {
+        return getConnectionFieldName(feederSide, CONNECTION_DIRECTION_FIELD_NAME);
     }
 
-    private String getConnectionPositionField(FeederAdderType feederAdderType) {
-        return getConnectionFieldName(feederAdderType, CONNECTION_POSITION_FIELD_NAME);
+    private String getConnectionPositionField(FeederSide feederSide) {
+        return getConnectionFieldName(feederSide, CONNECTION_POSITION_FIELD_NAME);
     }
 
-    private AttributeModification<ConnectablePosition.Direction> getConnectionDirection(BasicEquipmentModificationInfos modificationInfos, FeederAdderType feederAdderType) {
-        return getConnectionDetail(modificationInfos, feederAdderType,
+    private AttributeModification<ConnectablePosition.Direction> getConnectionDirection(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getConnectionDirection1, BranchModificationInfos::getConnectionDirection2,
                 InjectionModificationInfos::getConnectionDirection);
     }
 
-    private AttributeModification<Integer> getConnectionPosition(BasicEquipmentModificationInfos modificationInfos, FeederAdderType feederAdderType) {
-        return getConnectionDetail(modificationInfos, feederAdderType,
+    private AttributeModification<Integer> getConnectionPosition(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getConnectionPosition1, BranchModificationInfos::getConnectionPosition2,
                 InjectionModificationInfos::getConnectionPosition);
     }
@@ -875,11 +875,11 @@ public final class ModificationUtils {
                             AttributeModification<String> busOrBusbarSectionId,
                             AttributeModification<String> voltageLevelId,
                             AttributeModification<String> equipmentId,
-                            FeederAdderType feederAdderType,
+                            FeederSide feederSide,
                             Network network) {
         String equipmentValue = equipmentId.getValue();
         Terminal selectedTerminal = null;
-        switch (feederAdderType) {
+        switch (feederSide) {
             case INJECTION -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Injection<?> injection ? injection.getTerminal() : null;
             case BRANCH_SIDE_ONE -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Branch<?> branch ? branch.getTerminal1() : null;
             case BRANCH_SIDE_TWO -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Branch<?> branch ? branch.getTerminal2() : null;
