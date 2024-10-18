@@ -10,9 +10,7 @@ import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.CreateCouplingDeviceBuilder;
-import com.powsybl.iidm.modification.topology.CreateVoltageLevelTopologyBuilder;
-import com.powsybl.iidm.modification.topology.TopologyModificationUtils;
+import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
@@ -44,6 +42,9 @@ public final class ModificationUtils {
     public static final String DISCONNECTOR = "disconnector_";
     public static final String BREAKER = "breaker_";
     public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
+
+    public static final String DOES_NOT_EXIST_IN_NETWORK = " does not exist in network";
+    public static final String EQUIPMENT_DISCONNECTED = "equipmentDisconnected";
     public static final String NO_VALUE = "No value";
     public static final String LIMITS = "Limits";
     public static final String REACTIVE_LIMITS = "Reactive limits";
@@ -118,6 +119,14 @@ public final class ModificationUtils {
             throw new NetworkModificationException(HVDC_LINE_NOT_FOUND, "Hvdc line  " + hvdcLineId + NOT_EXIST_IN_NETWORK);
         }
         return hvdcLine;
+    }
+
+    StaticVarCompensator getStaticVarCompensator(Network network, String staticVarCompensatorId) {
+        StaticVarCompensator staticVarCompensator = network.getStaticVarCompensator(staticVarCompensatorId);
+        if (staticVarCompensator == null) {
+            throw new NetworkModificationException(STATIC_VAR_COMPENSATOR_NOT_FOUND, "Static var compensator " + staticVarCompensatorId + DOES_NOT_EXIST_IN_NETWORK);
+        }
+        return staticVarCompensator;
     }
 
     public void controlConnectivity(Network network, String voltageLevelId, String busOrBusbarSectionId, Integer connectionPosition) {
@@ -280,7 +289,7 @@ public final class ModificationUtils {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required");
         }
         if (Objects.nonNull(voltageLevelCreationInfos.getIpMin()) && Objects.nonNull(voltageLevelCreationInfos.getIpMax())
-            && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
+                && voltageLevelCreationInfos.getIpMin() > voltageLevelCreationInfos.getIpMax()) {
             throw new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMin cannot be greater than IpMax");
         }
     }
@@ -593,7 +602,7 @@ public final class ModificationUtils {
         if (!modificationInfos.isTerminalConnected()) {
             injection.getTerminal().disconnect();
             subReportNode.newReportNode()
-                    .withMessageTemplate("equipmentDisconnected", "Equipment with id=${id} disconnected")
+                    .withMessageTemplate(EQUIPMENT_DISCONNECTED, "Equipment with id=${id} disconnected")
                     .withUntypedValue("id", modificationInfos.getEquipmentId())
                     .withSeverity(TypedValue.INFO_SEVERITY)
                     .add();
@@ -1218,10 +1227,10 @@ public final class ModificationUtils {
     }
 
     public void checkMaxReactivePowerGreaterThanMinReactivePower(MinMaxReactiveLimits minMaxReactiveLimits, AttributeModification<Double> minimumReactivePowerInfo, AttributeModification<Double> maximumReactivePowerInfo, NetworkModificationException.Type exceptionType, String errorMessage) {
-        Double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
-        Double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
-        Double minReactivePower = minimumReactivePowerInfo != null ? minimumReactivePowerInfo.getValue() : previousMinimumReactivePower;
-        Double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
+        double previousMinimumReactivePower = minMaxReactiveLimits.getMinQ();
+        double previousMaximumReactivePower = minMaxReactiveLimits.getMaxQ();
+        double minReactivePower = minimumReactivePowerInfo != null ? minimumReactivePowerInfo.getValue() : previousMinimumReactivePower;
+        double maxReactivePower = maximumReactivePowerInfo != null ? maximumReactivePowerInfo.getValue() : previousMaximumReactivePower;
         if (minReactivePower > maxReactivePower) {
             throw new NetworkModificationException(exceptionType, errorMessage + "maximum reactive power " + maxReactivePower + " is expected to be greater than or equal to minimum reactive power " + minReactivePower);
         }
@@ -1289,6 +1298,43 @@ public final class ModificationUtils {
                             throw makeEquipmentException(errorType, equipmentId, equipmentName, "max Q is not set in a reactive capability curve limits point");
                         }
                     });
+        }
+    }
+
+    public void checkReactivePowerLimitsAndSetPointsCreation(StaticVarCompensatorCreationInfos creationInfos) {
+        String equipmentName = "StaticVarCompensator";
+        // check min max reactive limits
+        if (Objects.isNull(creationInfos.getMinSusceptance()) && Objects.isNull(creationInfos.getMinQAtNominalV())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "minimum susceptance is not set");
+        }
+        if (Objects.isNull(creationInfos.getMaxSusceptance()) && Objects.isNull(creationInfos.getMaxQAtNominalV())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is not set");
+        }
+        if (Objects.nonNull(creationInfos.getMaxSusceptance()) && Objects.nonNull(creationInfos.getMinSusceptance()) && creationInfos.getMaxSusceptance() < creationInfos.getMinSusceptance() ||
+                Objects.nonNull(creationInfos.getMaxQAtNominalV()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && creationInfos.getMaxQAtNominalV() < creationInfos.getMinQAtNominalV()) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
+        }
+
+        // check set points
+        if (Objects.requireNonNull(creationInfos.getRegulationMode()) == StaticVarCompensator.RegulationMode.VOLTAGE && creationInfos.getVoltageSetpoint() == null) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Voltage setpoint is not set");
+        }
+        if (creationInfos.getRegulationMode() == StaticVarCompensator.RegulationMode.REACTIVE_POWER && creationInfos.getReactivePowerSetpoint() == null) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Reactive power setpoint is not set");
+        }
+    }
+
+    public void checkStandbyAutomatonCreation(StaticVarCompensatorCreationInfos creationInfos) {
+        String equipmentName = "StaticVarCompensator";
+        if (Boolean.TRUE.equals(creationInfos.isStandby()) && creationInfos.getRegulationMode() != StaticVarCompensator.RegulationMode.VOLTAGE) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Standby is only supported in Voltage Regulation mode");
+        }
+        if (Objects.nonNull(creationInfos.getB0()) && Objects.nonNull(creationInfos.getMinSusceptance()) && Objects.nonNull(creationInfos.getMaxSusceptance()) &&
+                (creationInfos.getB0() < creationInfos.getMinSusceptance() || creationInfos.getB0() > creationInfos.getMaxSusceptance())
+            || Objects.nonNull(creationInfos.getQ0()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && Objects.nonNull(creationInfos.getMaxQAtNominalV()) &&
+                (creationInfos.getQ0() < creationInfos.getMinQAtNominalV() || creationInfos.getQ0() > creationInfos.getMaxQAtNominalV())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName,
+                     "b0 must be within the range of minimun susceptance and maximum susceptance");
         }
     }
 
@@ -1436,6 +1482,54 @@ public final class ModificationUtils {
         ReportNode insertedChild = adder.add();
         if (child.getChildren() != null) {
             child.getChildren().forEach(grandChild -> insertReportNode(insertedChild, grandChild));
+        }
+    }
+
+    public static void createInjectionInNodeBreaker(VoltageLevel voltageLevel, InjectionCreationInfos injectionCreationInfos,
+                                                         Network network, InjectionAdder<?, ?> injectionAdder, ReportNode subReportNode) {
+        int position = ModificationUtils.getInstance().getPosition(injectionCreationInfos.getConnectionPosition(),
+                injectionCreationInfos.getBusOrBusbarSectionId(), network, voltageLevel);
+        CreateFeederBay algo = new CreateFeederBayBuilder()
+                .withBusOrBusbarSectionId(injectionCreationInfos.getBusOrBusbarSectionId())
+                .withInjectionDirection(injectionCreationInfos.getConnectionDirection())
+                .withInjectionFeederName(injectionCreationInfos.getConnectionName() != null
+                        ? injectionCreationInfos.getConnectionName()
+                        : injectionCreationInfos.getEquipmentId())
+                .withInjectionPositionOrder(position)
+                .withInjectionAdder(injectionAdder)
+                .build();
+        algo.apply(network, true, subReportNode);
+    }
+
+    public static void reportInjectionCreationConnectivity(InjectionCreationInfos injectionCreationInfos, ReportNode subReporter) {
+        if (Objects.isNull(injectionCreationInfos.getVoltageLevelId()) || Objects.isNull(injectionCreationInfos.getBusOrBusbarSectionId())) {
+            return;
+        }
+
+        if (injectionCreationInfos.getConnectionName() != null ||
+                injectionCreationInfos.getConnectionDirection() != null ||
+                injectionCreationInfos.getConnectionPosition() != null) {
+            List<ReportNode> connectivityReports = new ArrayList<>();
+            if (injectionCreationInfos.getConnectionName() != null) {
+                connectivityReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(injectionCreationInfos.getConnectionName(), CONNECTION_NAME_FIELD_NAME));
+            }
+            if (injectionCreationInfos.getConnectionDirection() != null) {
+                connectivityReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(injectionCreationInfos.getConnectionDirection(), CONNECTION_DIRECTION_FIELD_NAME));
+            }
+            if (injectionCreationInfos.getConnectionPosition() != null) {
+                connectivityReports.add(ModificationUtils.getInstance()
+                        .buildCreationReport(injectionCreationInfos.getConnectionPosition(), CONNECTION_POSITION_FIELD_NAME));
+            }
+            if (!injectionCreationInfos.isTerminalConnected()) {
+                connectivityReports.add(ReportNode.newRootReportNode()
+                        .withMessageTemplate(EQUIPMENT_DISCONNECTED, "    Equipment with id=${id} disconnected")
+                        .withUntypedValue("id", injectionCreationInfos.getEquipmentId())
+                        .withSeverity(TypedValue.INFO_SEVERITY)
+                        .build());
+            }
+            ModificationUtils.getInstance().reportModifications(subReporter, connectivityReports, "ConnectivityCreated", CONNECTIVITY);
         }
     }
 }
