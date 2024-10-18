@@ -59,7 +59,7 @@ public final class ModificationUtils {
     public static final String NOT_EXIST_IN_NETWORK = " does not exist in network";
 
     public enum FeederSide {
-        INJECTION,
+        INJECTION_SINGLE_SIDE,
         BRANCH_SIDE_ONE,
         BRANCH_SIDE_TWO
     }
@@ -660,7 +660,7 @@ public final class ModificationUtils {
             modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, FeederSide.BRANCH_SIDE_ONE);
             modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, FeederSide.BRANCH_SIDE_TWO);
         } else if (modificationInfos instanceof InjectionModificationInfos) {
-            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, FeederSide.INJECTION);
+            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, FeederSide.INJECTION_SINGLE_SIDE);
         }
     }
 
@@ -672,7 +672,7 @@ public final class ModificationUtils {
             addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.BRANCH_SIDE_ONE);
             addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.BRANCH_SIDE_TWO);
         } else if (modificationInfos instanceof InjectionModificationInfos) {
-            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.INJECTION);
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.INJECTION_SINGLE_SIDE);
         }
     }
 
@@ -727,7 +727,7 @@ public final class ModificationUtils {
         int position = getPosition(connectionPosition, busOrBusbarSectionId, voltageLevelId, equipmentId, feederSide, network);
         ConnectablePositionAdder.FeederAdder<?> feeder;
         switch (feederSide) {
-            case INJECTION -> feeder = adder.newFeeder();
+            case INJECTION_SINGLE_SIDE -> feeder = adder.newFeeder();
             case BRANCH_SIDE_ONE -> feeder = adder.newFeeder1();
             case BRANCH_SIDE_TWO -> feeder = adder.newFeeder2();
             default -> {
@@ -799,7 +799,7 @@ public final class ModificationUtils {
 
     private String getConnectionFieldName(FeederSide feederSide, String baseFieldName) {
         return switch (feederSide) {
-            case INJECTION -> baseFieldName;
+            case INJECTION_SINGLE_SIDE -> baseFieldName;
             case BRANCH_SIDE_ONE -> baseFieldName + " 1";
             case BRANCH_SIDE_TWO -> baseFieldName + " 2";
         };
@@ -880,7 +880,7 @@ public final class ModificationUtils {
         String equipmentValue = equipmentId.getValue();
         Terminal selectedTerminal = null;
         switch (feederSide) {
-            case INJECTION -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Injection<?> injection ? injection.getTerminal() : null;
+            case INJECTION_SINGLE_SIDE -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Injection<?> injection ? injection.getTerminal() : null;
             case BRANCH_SIDE_ONE -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Branch<?> branch ? branch.getTerminal1() : null;
             case BRANCH_SIDE_TWO -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Branch<?> branch ? branch.getTerminal2() : null;
         }
