@@ -183,9 +183,7 @@ public class NetworkModificationService {
                 }
                 modificationInfos.add(
                     Pair.of(reporterId,
-                        modificationsByGroup.stream()
-                            .filter(e -> !buildInfos.getModificationsToExclude().contains(e.getUuid()))
-                            .collect(Collectors.toList()))
+                        modificationsByGroup)
                 );
 
             }
