@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -13,23 +12,23 @@ import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class GroovyScriptTest extends AbstractNetworkModificationTest {
+class GroovyScriptTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -63,7 +62,7 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGroovy() throws Exception {
+    void testGroovy() throws Exception {
         MvcResult mvcResult;
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
@@ -116,7 +115,7 @@ public class GroovyScriptTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         GroovyScriptInfos groovyScriptInfos = (GroovyScriptInfos) buildModification();
         groovyScriptInfos.setScript("");
         // apply empty groovy script

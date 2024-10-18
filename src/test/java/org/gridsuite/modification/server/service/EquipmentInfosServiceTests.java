@@ -20,28 +20,25 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Tag("IntegrationTest")
-public class EquipmentInfosServiceTests {
+class EquipmentInfosServiceTests {
 
     private static final UUID NETWORK_UUID = UUID.randomUUID();
 
@@ -63,7 +60,7 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
-    public void testAddDeleteEquipmentInfos() {
+    void testAddDeleteEquipmentInfos() {
         EquipmentInfos equipmentInfos = EquipmentInfos.builder()
                 .networkUuid(NETWORK_UUID)
                 .id("id1")
@@ -186,7 +183,7 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
-    public void testCloneVariant() {
+    void testCloneVariant() {
         equipmentInfosService.addAllEquipmentInfos(List.of(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).variantId(VARIANT_NAME_1).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build())).build()));
         assertEquals(1, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1).size());
 
@@ -199,7 +196,7 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
-    public void testDeleteVariants() {
+    void testDeleteVariants() {
         equipmentInfosService.addAllEquipmentInfos(List.of(EquipmentInfos.builder().networkUuid(NETWORK_UUID).id("id1").name("name1").type(IdentifiableType.LOAD.name()).variantId(VARIANT_NAME_1).voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build())).substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build())).build()));
         assertEquals(1, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, VARIANT_NAME_1).size());
 
@@ -221,7 +218,7 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
-    public void testVoltageLevels() {
+    void testVoltageLevels() {
         Network network = NetworkCreation.create(NETWORK_UUID, true);
         assertEquals(Set.of(VoltageLevelInfos.builder().id("v1").name("v1").build(), VoltageLevelInfos.builder().id("v2").name("v2").build(), VoltageLevelInfos.builder().id("v4").name("v4").build()), EquipmentInfos.getVoltageLevelsInfos(network.getSubstation("s1")));
         assertEquals(Set.of(VoltageLevelInfos.builder().id("v1").name("v1").build()), EquipmentInfos.getVoltageLevelsInfos(network.getVoltageLevel("v1")));
@@ -240,7 +237,7 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
-    public void testSubstations() {
+    void testSubstations() {
         Network network = NetworkCreation.create(NETWORK_UUID, true);
         assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstationsInfos(network.getSubstation("s1")));
         assertEquals(Set.of(SubstationInfos.builder().id("s1").name("s1").build()), EquipmentInfos.getSubstationsInfos(network.getVoltageLevel("v1")));
@@ -259,7 +256,7 @@ public class EquipmentInfosServiceTests {
     }
 
     @Test
-    public void testBadType() {
+    void testBadType() {
         Identifiable<Network> network = new NetworkFactoryImpl().createNetwork("test", "test");
 
         String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getVoltageLevelsInfos(network)).getMessage();
@@ -272,7 +269,7 @@ public class EquipmentInfosServiceTests {
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of(VARIANT_NAME_1, VARIANT_NAME_2, VARIANT_NAME_3));
     }

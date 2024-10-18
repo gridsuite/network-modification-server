@@ -14,34 +14,33 @@ import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosR
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @Tag("IntegrationTest")
-public class ModificationElasticsearchTest {
-    private static UUID NETWORK_UUID = UUID.randomUUID();
+class ModificationElasticsearchTest {
+    private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
@@ -52,22 +51,22 @@ public class ModificationElasticsearchTest {
     private static final String NEW_VARIANT_2 = "NewVariant2";
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper mapper;
 
     @Autowired
-    EquipmentInfosService equipmentInfosService;
+    private EquipmentInfosService equipmentInfosService;
 
     @Autowired
-    ModificationRepository modificationRepository;
+    private ModificationRepository modificationRepository;
 
     @MockBean
-    NetworkStoreService networkStoreService;
+    private NetworkStoreService networkStoreService;
 
     @MockBean
-    ReportService reportService;
+    private ReportService reportService;
 
     @Autowired
     private EquipmentInfosRepository equipmentInfosRepository;
@@ -75,9 +74,9 @@ public class ModificationElasticsearchTest {
     @Autowired
     private TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository;
 
-    Network network;
+    private Network network;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         network = NetworkCreation.create(NETWORK_UUID, true);
         when(networkStoreService.getNetwork(eq(NETWORK_UUID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
@@ -88,7 +87,7 @@ public class ModificationElasticsearchTest {
     }
 
     @Test
-    public void testModificationsToImpactElasticsearch() throws Exception {
+    void testModificationsToImpactElasticsearch() throws Exception {
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
         network.getVariantManager().setWorkingVariant(NEW_VARIANT);
 
@@ -107,7 +106,7 @@ public class ModificationElasticsearchTest {
     }
 
     @Test
-    public void testModifyGenThenDeleteVl() throws Exception {
+    void testModifyGenThenDeleteVl() throws Exception {
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
         network.getVariantManager().setWorkingVariant(NEW_VARIANT);
 
@@ -131,7 +130,7 @@ public class ModificationElasticsearchTest {
     }
 
     @Test
-    public void testVLModificationsToImpactElasticsearch() throws Exception {
+    void testVLModificationsToImpactElasticsearch() throws Exception {
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
         network.getVariantManager().setWorkingVariant(NEW_VARIANT);
 

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -24,14 +23,14 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.createSubstationImpacts;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.createSubstationImpacts;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLoad;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class LoadModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
+class LoadModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String LOAD_ID_1 = "load1";
     private static final String LOAD_ID_2 = "load2";
     private static final String LOAD_ID_3 = "load3";
@@ -130,5 +129,4 @@ public class LoadModificationByAssignmentTest extends AbstractModificationByAssi
         // since the test network has only 4 loads which is less than the collectionThreshold 5
         assertThat(impacts).containsAll(createSubstationImpacts(Set.of("s1", "s2")));
     }
-
 }

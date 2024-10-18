@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -19,19 +18,21 @@ import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.IntegerAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.TwoWindingsTransformerField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
+class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String TWT_ID_1 = "twt1";
     private static final String TWT_ID_2 = "twt2";
     private static final String TWT_ID_3 = "twt3";
@@ -40,7 +41,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
     private static final String TWT_ID_6 = "twt6";
 
     @Test
-    public void testModifyTwtWithError() throws Exception {
+    void testModifyTwtWithError() throws Exception {
         // Test modifying ratio tab changer field when ratio tab changer is null
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_4, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_6, 1.);
@@ -73,7 +74,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
     }
 
     @Test
-    public void testModifyTwtWithWarning() throws Exception {
+    void testModifyTwtWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes1 = getIdentifiableAttributes(TWT_ID_1, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes2 = getIdentifiableAttributes(TWT_ID_2, 1.);
         IdentifierListFilterEquipmentAttributes identifiableAttributes3 = getIdentifiableAttributes(TWT_ID_4, 1.);
@@ -84,7 +85,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + ".{2,}"))
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(filterTwt1, filterTwt2)))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         IntegerAssignmentInfos assignmentInfos = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter1, filter4))
@@ -476,7 +477,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
         assertEquals(75, twt6.getG(), 0);
     }
 
-    private void addRatioTapChangerSteps(RatioTapChangerAdder ratioTapChangerAdder) {
+    private static void addRatioTapChangerSteps(RatioTapChangerAdder ratioTapChangerAdder) {
         ratioTapChangerAdder.beginStep()
                 .setR(39.78473)
                 .setX(39.784725)
@@ -522,7 +523,7 @@ public class TwoWindingsTransformerModificationByAssignmentTest extends Abstract
                 .add();
     }
 
-    private void addPhaseTapChangerSteps(PhaseTapChangerAdder phaseTapChangerAdder) {
+    private static void addPhaseTapChangerSteps(PhaseTapChangerAdder phaseTapChangerAdder) {
         phaseTapChangerAdder.beginStep()
                 .setR(39.78473)
                 .setX(39.784725)

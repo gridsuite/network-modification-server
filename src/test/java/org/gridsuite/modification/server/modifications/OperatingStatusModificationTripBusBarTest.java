@@ -7,14 +7,13 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.BusbarSection;
+import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
-import org.junit.Assert;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Map;
@@ -25,8 +24,7 @@ import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.IN_OPER
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("IntegrationTest")
-public class OperatingStatusModificationTripBusBarTest extends AbstractNetworkModificationTest {
-
+class OperatingStatusModificationTripBusBarTest extends AbstractNetworkModificationTest {
     private static final String TARGET_BUSBAR_ID = "1.A";
     private static final OperatingStatus.Status TARGET_BUSBAR_STATUS = FORCED_OUTAGE;
     private static final OperatingStatus.Status INITIAL_BUSBAR_STATUS = IN_OPERATION;
@@ -69,16 +67,14 @@ public class OperatingStatusModificationTripBusBarTest extends AbstractNetworkMo
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("TRIP", createdValues.get("action"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("SWITCH_ON", updatedValues.get("action"));
@@ -86,6 +82,6 @@ public class OperatingStatusModificationTripBusBarTest extends AbstractNetworkMo
 
     private void assertTerminalsStatusAfterNetworkModification(boolean shouldBeConnected) {
         BusbarSection busbarSection = getNetwork().getBusbarSection(TARGET_BUSBAR_ID);
-        Assert.assertEquals(busbarSection.getTerminal().isConnected(), shouldBeConnected);
+        assertEquals(busbarSection.getTerminal().isConnected(), shouldBeConnected);
     }
 }

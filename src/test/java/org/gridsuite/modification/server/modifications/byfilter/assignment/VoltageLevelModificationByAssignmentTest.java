@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -22,13 +21,13 @@ import org.gridsuite.modification.server.dto.byfilter.equipmentfield.VoltageLeve
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
+class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String VOLTAGE_LEVEL_ID_1 = "v1";
     private static final String VOLTAGE_LEVEL_ID_2 = "v2";
     private static final String VOLTAGE_LEVEL_ID_3 = "v3";
@@ -221,5 +220,4 @@ public class VoltageLevelModificationByAssignmentTest extends AbstractModificati
         assertEquals(100, identifiableShortCircuit6.getIpMin(), 0);
         assertEquals(200, identifiableShortCircuit6.getIpMax(), 0);
     }
-
 }

@@ -8,13 +8,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -24,9 +23,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
+class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -82,7 +79,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void createWithInvalidLineIdTest() throws Exception {
+    void createWithInvalidLineIdTest() throws Exception {
         // test create with incorrect line id
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = DeleteVoltageLevelOnLineInfos.builder()
                 .stashed(false)
@@ -99,7 +96,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void createNewLineWithExistingIdTest() throws Exception {
+    void createNewLineWithExistingIdTest() throws Exception {
         // try to create an already existing line
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = (DeleteVoltageLevelOnLineInfos) buildModification();
         deleteVoltageLevelOnLineInfos.setReplacingLine1Id("l2");
@@ -111,8 +108,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("DELETE_VOLTAGE_LEVEL_ON_LINE", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("l1", createdValues.get("lineToAttachTo1Id"));
@@ -120,8 +116,7 @@ public class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("DELETE_VOLTAGE_LEVEL_ON_LINE", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line00", updatedValues.get("lineToAttachTo1Id"));

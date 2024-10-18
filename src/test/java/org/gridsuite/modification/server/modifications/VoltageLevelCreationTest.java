@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.server.dto.FreePropertyInfos;
@@ -17,8 +16,8 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
@@ -27,10 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author walid Sahnoun <walid.sahnoun at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
+class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -97,7 +94,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setSubstationId("absent_station");
 
@@ -144,7 +141,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithBbsNotExist() throws Exception {
+    void testCreateWithBbsNotExist() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_1");
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
@@ -164,7 +161,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testIpMinEqualsIpMax() throws Exception {
+    void testIpMinEqualsIpMax() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_ok");
         vli.setIpMin(25.0);
@@ -177,7 +174,7 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithIpMinNull() throws Exception {
+    void testCreateWithIpMinNull() throws Exception {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("vl_ok");
         vli.setIpMin(null);
@@ -203,56 +200,29 @@ public class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testIpMinGreaterThanIpMax() throws Exception {
+    void testIpMinGreaterThanIpMax() throws Exception {
         testIccWithError(15.1, 15.0, "IpMin cannot be greater than IpMax");
     }
 
     @Test
-    public void testIpMinNegative() throws Exception {
+    void testIpMinNegative() throws Exception {
         testIccWithError(-25.0, 15.0, "IpMin must be positive");
     }
 
     @Test
-    public void testIpMaxNegative() throws Exception {
+    void testIpMaxNegative() throws Exception {
         testIccWithError(25.0, -15.0, "IpMax must be positive");
     }
 
-    public void testCreateWithShortCircuitExtension() throws Exception {
-        VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
-        vli.setIpMin(null);
-
-        String vliJson = mapper.writeValueAsString(vli);
-        mockMvc
-                .perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        VoltageLevelCreationInfos createdModification = (VoltageLevelCreationInfos) modificationRepository
-                .getModifications(getGroupId(), false, true).get(0);
-        assertThat(createdModification).recursivelyEquals(vli);
-
-        vli.setIpMin(0.0);
-        vli.setIpMax(null);
-        vli.setEquipmentId("vlId2");
-
-        vliJson = mapper.writeValueAsString(vli);
-        mockMvc
-                .perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
-        createdModification = (VoltageLevelCreationInfos) modificationRepository
-                .getModifications(getGroupId(), false, true).get(1);
-        assertThat(createdModification).recursivelyEquals(vli);
-    }
-
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_LEVEL_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("vlId", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_LEVEL_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("VoltageLevelIdEdited", updatedValues.get("equipmentId"));

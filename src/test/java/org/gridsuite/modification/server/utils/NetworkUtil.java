@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
@@ -14,8 +13,8 @@ import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
 
 public final class NetworkUtil {
-
     private NetworkUtil() {
+        throw new IllegalStateException("Utility class");
     }
 
     @SuppressWarnings("SameParameterValue")

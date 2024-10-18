@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -26,9 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 public final class ApiUtils {
-
     private ApiUtils() {
-        // Should not be instantiated
+        throw new IllegalCallerException("Utility class");
     }
 
     public static List<ModificationInfos> getGroupModifications(MockMvc mockMvc, UUID groupUuid) throws Exception {

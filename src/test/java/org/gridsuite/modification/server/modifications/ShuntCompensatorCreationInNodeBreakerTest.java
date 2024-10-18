@@ -4,21 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.time.Instant;
@@ -28,16 +26,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
+class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -94,7 +90,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Test
-    public void testCreateWithError() throws Exception {
+    void testCreateWithError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
         // try to create an existing equipment
         modificationToCreate.setEquipmentId("v5shunt");
@@ -107,7 +103,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Test
-    public void testCreateWithMaximumSectionCountError() throws Exception {
+    void testCreateWithMaximumSectionCountError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
         modificationToCreate.setMaximumSectionCount(0);
 
@@ -119,7 +115,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Test
-    public void testCreateWithSectionError() throws Exception {
+    void testCreateWithSectionError() throws Exception {
         ShuntCompensatorCreationInfos modificationToCreate = (ShuntCompensatorCreationInfos) buildModification();
         modificationToCreate.setMaximumSectionCount(2);
         modificationToCreate.setSectionCount(3);
@@ -132,7 +128,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Test
-    public void testCreateWithExistingConnectionPosition() throws Exception {
+    void testCreateWithExistingConnectionPosition() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setConnectionPosition(2);
         String modificationToCreateJson = mapper.writeValueAsString(dto);
@@ -143,7 +139,7 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Test
-    public void testCreateWithQAtNominalV() throws Exception {
+    void testCreateWithQAtNominalV() throws Exception {
         ShuntCompensatorCreationInfos dto = (ShuntCompensatorCreationInfos) buildModification();
         dto.setMaxSusceptance(null);
         dto.setMaxQAtNominalV(80.0);
@@ -166,16 +162,14 @@ public class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkMo
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("shuntOneId", updatedValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("shuntOneIdEdited", updatedValues.get("equipmentId"));
