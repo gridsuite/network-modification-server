@@ -254,7 +254,7 @@ public class TwoWindingsTransformerModification extends AbstractBranchModificati
                     } else { // new regulation mode is CURRENT_LIMITER or ACTIVE_POWER_CONTROL
                         // check required field
                         if (regulationValueModification == null) {
-                            throw new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value is missing while phase tap changer is now regulating");
+                            throw new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value is missing, phase tap changer can not regulate");
                         }
 
                         // set regulating to true
