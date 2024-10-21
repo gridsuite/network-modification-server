@@ -1204,7 +1204,7 @@ public final class ModificationUtils {
             if (subReporterSetpoints == null && !reports.isEmpty()) {
                 subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
             }
-            reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
+            reportModifications(subReportNodeSetpoints2, reports, "activePowerControlModified", "Active power control");
             return subReportNodeSetpoints2;
         }
         return null;
