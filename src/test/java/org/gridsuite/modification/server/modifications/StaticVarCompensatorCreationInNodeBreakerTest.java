@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.OFF;
+import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -73,8 +74,13 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
                 .stashed(false)
                 .equipmentId("idStaticVarCompensator1Edited")
                 .equipmentName("staticVarCompensatorNameEdited")
+                .maxSusceptance(null)
+                .minSusceptance(null)
+                .maxQAtNominalV(224.0)
+                .minQAtNominalV(200.0)
                 .standbyAutomatonOn(true)
                 .standby(true)
+                .b0(null)
                 .q0(221.0)
                 .lowVoltageSetpoint(200.0)
                 .highVoltageSetpoint(400.0)
@@ -217,6 +223,16 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
                         "StaticVarCompensator 'idStaticVarCompensator1' : Standby is only supported in Voltage Regulation mode",
                 compensatorCreationInfos.getErrorType().name(), reportService);
+        compensatorCreationInfos.setRegulationMode(VOLTAGE);
+        compensatorCreationInfos.setB0(null);
+        compensatorCreationInfos.setQ0(200.0);
+        compensatorCreationInfos.setLowVoltageSetpoint(200.0);
+        compensatorCreationInfos.setHighVoltageSetpoint(400.0);
+        compensatorCreationInfos.setLowVoltageThreshold(250.0);
+        compensatorCreationInfos.setHighVoltageThreshold(300.0);
+        compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
     }
 
