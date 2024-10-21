@@ -623,7 +623,7 @@ public final class ModificationUtils {
                                                             ReportNode connectivityReports) {
         List<ReportNode> reports = new ArrayList<>();
         processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, injection.getNetwork(), reports);
-        modifyConnection(modificationInfos.getTerminalConnected(), injection, injection.getTerminal(), reports);
+        modifyConnection(modificationInfos.getTerminalConnected(), FeederSide.INJECTION_SINGLE_SIDE, injection, injection.getTerminal(), reports);
 
         return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
@@ -635,8 +635,8 @@ public final class ModificationUtils {
                                                          ReportNode connectivityReports) {
         List<ReportNode> reports = new ArrayList<>();
         processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, branch.getNetwork(), reports);
-        modifyConnection(modificationInfos.getTerminal1Connected(), branch, branch.getTerminal1(), reports);
-        modifyConnection(modificationInfos.getTerminal2Connected(), branch, branch.getTerminal2(), reports);
+        modifyConnection(modificationInfos.getTerminal1Connected(), FeederSide.BRANCH_SIDE_ONE, branch, branch.getTerminal1(), reports);
+        modifyConnection(modificationInfos.getTerminal2Connected(), FeederSide.BRANCH_SIDE_TWO, branch, branch.getTerminal2(), reports);
 
         return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
@@ -894,7 +894,7 @@ public final class ModificationUtils {
         return getPosition(connectionPositionValue, busOrBusbarSection, network, getVoltageLevel(network, voltageLevel));
     }
 
-    private void modifyConnection(AttributeModification<Boolean> terminalConnected, Identifiable<?> equipment, Terminal terminal, List<ReportNode> reports) {
+    private void modifyConnection(AttributeModification<Boolean> terminalConnected, FeederSide feederSide, Identifiable<?> equipment, Terminal terminal, List<ReportNode> reports) {
         if (terminalConnected == null || equipment == null) {
             return;
         }
@@ -902,17 +902,22 @@ public final class ModificationUtils {
         boolean isConnected = terminal.isConnected();
         if (isConnected && Boolean.FALSE.equals(terminalConnected.getValue())) {
             terminal.disconnect();
-            validateConnectionChange(!terminal.isConnected(), equipment, "disconnect", reports);
+            validateConnectionChange(!terminal.isConnected(), equipment, feederSide, "disconnect", reports);
         } else if (!isConnected && Boolean.TRUE.equals(terminalConnected.getValue())) {
             terminal.connect();
-            validateConnectionChange(terminal.isConnected(), equipment, "connect", reports);
+            validateConnectionChange(terminal.isConnected(), equipment, feederSide, "connect", reports);
         }
     }
 
-    private void validateConnectionChange(boolean success, Identifiable<?> equipment, String action, List<ReportNode> reports) {
+    private void validateConnectionChange(boolean success, Identifiable<?> equipment, FeederSide feederSide, String action, List<ReportNode> reports) {
         if (!success) {
-            throw new NetworkModificationException(equipment instanceof Branch<?> ? BRANCH_MODIFICATION_ERROR : INJECTION_MODIFICATION_ERROR,
-                    String.format("Could not %s equipment '%s'", action, equipment.getId()));
+            if (equipment instanceof Branch<?>) {
+                throw new NetworkModificationException(BRANCH_MODIFICATION_ERROR, String.format("Could not %s equipment '%s' on side %s",
+                        action, equipment.getId(), feederSide == FeederSide.BRANCH_SIDE_ONE ? TwoSides.ONE : TwoSides.TWO));
+            } else if (equipment instanceof Injection<?>) {
+                throw new NetworkModificationException(INJECTION_MODIFICATION_ERROR, String.format("Could not %s equipment '%s'", action, equipment.getId()));
+            }
+
         }
         reports.add(ReportNode.newRootReportNode()
                 .withMessageTemplate("equipment" + capitalize(action), String.format("Equipment with id=${id} %sed", action))
