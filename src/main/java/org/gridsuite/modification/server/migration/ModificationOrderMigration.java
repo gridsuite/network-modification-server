@@ -11,6 +11,8 @@ import liquibase.resource.ResourceAccessor;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.UpdateStatement;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,6 +26,8 @@ import java.util.stream.IntStream;
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
  */
 public class ModificationOrderMigration implements CustomSqlChange {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModificationOrderMigration.class);
 
     @Override
     public SqlStatement[] generateStatements(Database database) throws CustomChangeException {
@@ -58,8 +62,8 @@ public class ModificationOrderMigration implements CustomSqlChange {
     }
 
     private List<UUID> findAllByGroupId(UUID groupId, boolean stashed, JdbcConnection connection) throws CustomChangeException {
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM modification m WHERE m.group_id = '?' AND m.stashed = ? order by modifications_order")) {
-            stmt.setString(1, groupId.toString());
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM modification m WHERE m.group_id = ? AND m.stashed = ? order by modifications_order")) {
+            stmt.setObject(1, groupId);
             stmt.setBoolean(2, stashed);
             ResultSet resultSet = stmt.executeQuery();
             List<UUID> entities = new ArrayList<>();
@@ -85,12 +89,12 @@ public class ModificationOrderMigration implements CustomSqlChange {
 
     @Override
     public void setUp() throws SetupException {
-
+        LOGGER.info("Set up migration for modification order");
     }
 
     @Override
     public void setFileOpener(ResourceAccessor resourceAccessor) {
-
+        LOGGER.info("Set file opener for modification order");
     }
 
     @Override
