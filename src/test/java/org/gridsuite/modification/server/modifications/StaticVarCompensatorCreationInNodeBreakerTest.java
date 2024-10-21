@@ -75,7 +75,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
                 .equipmentName("staticVarCompensatorNameEdited")
                 .standbyAutomatonOn(true)
                 .standby(true)
-                .b0(221.0)
+                .q0(221.0)
                 .lowVoltageSetpoint(200.0)
                 .highVoltageSetpoint(400.0)
                 .lowVoltageThreshold(250.0)
