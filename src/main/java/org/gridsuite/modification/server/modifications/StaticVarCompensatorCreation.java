@@ -88,14 +88,15 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                 staticVarCompensatorCreationInfos.getRegulatingTerminalId(),
                 staticVarCompensatorCreationInfos.getRegulatingTerminalType(),
                 staticVarCompensatorCreationInfos.getRegulatingTerminalVlId());
-
+        double bMax = Objects.isNull(staticVarCompensatorCreationInfos.getMaxSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMaxQAtNominalV()) ?
+                (staticVarCompensatorCreationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : nanIfNull(staticVarCompensatorCreationInfos.getMaxSusceptance());
+        double bMin = Objects.isNull(staticVarCompensatorCreationInfos.getMinSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMinQAtNominalV()) ?
+                (staticVarCompensatorCreationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : nanIfNull(staticVarCompensatorCreationInfos.getMinSusceptance());
         StaticVarCompensatorAdder staticVarCompensatorAdder = voltageLevel.newStaticVarCompensator()
                 .setId(staticVarCompensatorCreationInfos.getEquipmentId())
                 .setName(staticVarCompensatorCreationInfos.getEquipmentName())
-                .setBmax(Objects.isNull(staticVarCompensatorCreationInfos.getMaxSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMaxQAtNominalV()) ?
-                        (staticVarCompensatorCreationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : nanIfNull(staticVarCompensatorCreationInfos.getMaxSusceptance()))
-                .setBmin(Objects.isNull(staticVarCompensatorCreationInfos.getMinSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMinQAtNominalV()) ?
-                        (staticVarCompensatorCreationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : nanIfNull(staticVarCompensatorCreationInfos.getMinSusceptance()))
+                .setBmax(bMax)
+                .setBmin(bMin)
                 .setVoltageSetpoint(nanIfNull(staticVarCompensatorCreationInfos.getVoltageSetpoint()))
                 .setReactivePowerSetpoint(nanIfNull(staticVarCompensatorCreationInfos.getReactivePowerSetpoint()))
                 .setRegulationMode(staticVarCompensatorCreationInfos.getRegulationMode());
@@ -124,11 +125,12 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                                                             StaticVarCompensator staticVarCompensator, VoltageLevel voltageLevel, ReportNode subReportNode) {
         if (Boolean.TRUE.equals(staticVarCompensatorCreationInfos.isStandbyAutomatonOn())) {
             List<ReportNode> standbyAutomatonReports = new ArrayList<>();
+            double b0 = Objects.isNull(staticVarCompensatorCreationInfos.getB0()) && Objects.nonNull(staticVarCompensatorCreationInfos.getQ0()) ?
+                    (staticVarCompensatorCreationInfos.getQ0()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getB0();
             try {
                 staticVarCompensator.newExtension(StandbyAutomatonAdder.class)
                         .withStandbyStatus(staticVarCompensatorCreationInfos.isStandby())
-                        .withB0(Objects.isNull(staticVarCompensatorCreationInfos.getB0()) && Objects.nonNull(staticVarCompensatorCreationInfos.getQ0()) ?
-                                (staticVarCompensatorCreationInfos.getQ0()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getB0())
+                        .withB0(b0)
                         .withLowVoltageSetpoint(staticVarCompensatorCreationInfos.getLowVoltageSetpoint())
                         .withHighVoltageSetpoint(staticVarCompensatorCreationInfos.getHighVoltageSetpoint())
                         .withLowVoltageThreshold(staticVarCompensatorCreationInfos.getLowVoltageThreshold())
@@ -176,16 +178,18 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                ReportNode subReportNode) {
 
         Bus bus = ModificationUtils.getInstance().getBusBreakerBus(voltageLevel, staticVarCompensatorCreationInfos.getBusOrBusbarSectionId());
+        double bMax = Objects.isNull(staticVarCompensatorCreationInfos.getMaxSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMaxQAtNominalV()) ?
+                (staticVarCompensatorCreationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getMaxSusceptance();
+        double bMin = Objects.isNull(staticVarCompensatorCreationInfos.getMinSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMinQAtNominalV()) ?
+                (staticVarCompensatorCreationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getMinSusceptance();
         /* creating the static var compensator */
         StaticVarCompensator staticVarCompensator = voltageLevel.newStaticVarCompensator()
                 .setId(staticVarCompensatorCreationInfos.getEquipmentId())
                 .setName(staticVarCompensatorCreationInfos.getEquipmentName())
                 .setBus(bus.getId())
                 .setConnectableBus(bus.getId())
-                .setBmax(Objects.isNull(staticVarCompensatorCreationInfos.getMaxSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMaxQAtNominalV()) ?
-                        (staticVarCompensatorCreationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getMaxSusceptance())
-                .setBmin(Objects.isNull(staticVarCompensatorCreationInfos.getMinSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMinQAtNominalV()) ?
-                        (staticVarCompensatorCreationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getMinSusceptance())
+                .setBmax(bMax)
+                .setBmin(bMin)
                 .setVoltageSetpoint(staticVarCompensatorCreationInfos.getVoltageSetpoint())
                 .setReactivePowerSetpoint(staticVarCompensatorCreationInfos.getReactivePowerSetpoint())
                 .setRegulationMode(staticVarCompensatorCreationInfos.getRegulationMode())
