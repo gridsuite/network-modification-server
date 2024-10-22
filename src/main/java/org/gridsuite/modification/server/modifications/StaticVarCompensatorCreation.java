@@ -89,9 +89,9 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                 staticVarCompensatorCreationInfos.getRegulatingTerminalType(),
                 staticVarCompensatorCreationInfos.getRegulatingTerminalVlId());
         double bMax = Objects.isNull(staticVarCompensatorCreationInfos.getMaxSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMaxQAtNominalV()) ?
-                (staticVarCompensatorCreationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : nanIfNull(staticVarCompensatorCreationInfos.getMaxSusceptance());
+                (staticVarCompensatorCreationInfos.getMaxQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getMaxSusceptance();
         double bMin = Objects.isNull(staticVarCompensatorCreationInfos.getMinSusceptance()) && Objects.nonNull(staticVarCompensatorCreationInfos.getMinQAtNominalV()) ?
-                (staticVarCompensatorCreationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : nanIfNull(staticVarCompensatorCreationInfos.getMinSusceptance());
+                (staticVarCompensatorCreationInfos.getMinQAtNominalV()) / Math.pow(voltageLevel.getNominalV(), 2) : staticVarCompensatorCreationInfos.getMinSusceptance();
         StaticVarCompensatorAdder staticVarCompensatorAdder = voltageLevel.newStaticVarCompensator()
                 .setId(staticVarCompensatorCreationInfos.getEquipmentId())
                 .setName(staticVarCompensatorCreationInfos.getEquipmentName())
