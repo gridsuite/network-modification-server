@@ -739,7 +739,7 @@ public class ModificationControllerTest {
         assertApplicationStatusOK(mvcResult);
 
         List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
-        assertEquals(modificationsNumber*2, newModificationList.size());
+        assertEquals(modificationsNumber * 2, newModificationList.size());
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
         assertEquals(modificationUuids.get(0), newModificationUuidList.get(0));
         assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(modificationsNumber));
