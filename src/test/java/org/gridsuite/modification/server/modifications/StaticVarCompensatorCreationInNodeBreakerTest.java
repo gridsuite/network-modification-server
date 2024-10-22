@@ -184,6 +184,14 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         compensatorCreationInfos.setMaxSusceptance(null);
         compensatorCreationInfos.setMinSusceptance(null);
         compensatorCreationInfos.setMaxQAtNominalV(200.0);
+        compensatorCreationInfos.setMinQAtNominalV(300.0);
+        compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
+                        "StaticVarCompensator 'idStaticVarCompensator2' : maximum Q at nominal voltage is expected to be greater than or equal to minimum Q",
+                compensatorCreationInfos.getErrorType().name(), reportService);
+        compensatorCreationInfos.setMaxQAtNominalV(200.0);
         compensatorCreationInfos.setMinQAtNominalV(100.0);
         compensatorCreationInfos.setRegulationMode(StaticVarCompensator.RegulationMode.REACTIVE_POWER);
         compensatorCreationInfos.setReactivePowerSetpoint(null);
@@ -213,7 +221,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         });
         assertTrue(networkModificationResult.isEmpty());
         assertNull(getNetwork().getStaticVarCompensator("idStaticVarCompensator3"));
-        testNetworkModificationsCount(getGroupId(), 10);
+        testNetworkModificationsCount(getGroupId(), 11);
     }
 
     @Test
@@ -234,11 +242,20 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
-                        "StaticVarCompensator 'idStaticVarCompensator1' : q0 must be within the range of minimun Q and maximum Q",
+                        "StaticVarCompensator 'idStaticVarCompensator1' : q0 must be within the range of minimum Q and maximum Q",
                 compensatorCreationInfos.getErrorType().name(), reportService);
-
-        compensatorCreationInfos.setB0(200.0);
+        compensatorCreationInfos.setMinQAtNominalV(null);
+        compensatorCreationInfos.setMaxQAtNominalV(null);
+        compensatorCreationInfos.setMaxSusceptance(300.0);
+        compensatorCreationInfos.setMinSusceptance(200.0);
+        compensatorCreationInfos.setB0(400.0);
         compensatorCreationInfos.setQ0(null);
+        compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
+                        "StaticVarCompensator 'idStaticVarCompensator1' : b0 must be within the range of minimum susceptance and maximum susceptance",
+                compensatorCreationInfos.getErrorType().name(), reportService);
         compensatorCreationInfos.setRegulationMode(OFF);
         compensatorCreationInfos.setStandby(true);
 

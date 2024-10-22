@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.StandbyAutomatonAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.StaticVarCompensatorCreationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -212,15 +211,18 @@ public class StaticVarCompensatorCreation extends AbstractModification {
         if (Objects.nonNull(staticVarCompensatorCreationInfos.getMaxQAtNominalV())) {
             voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getMaxQAtNominalV(), "Q max at nominal voltage"));
         }
+        if (Objects.nonNull(staticVarCompensatorCreationInfos.getRegulationMode())) {
+            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getRegulationMode(), "regulation mode"));
+        }
         if (Objects.nonNull(staticVarCompensatorCreationInfos.getVoltageSetpoint())) {
             voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getVoltageSetpoint(), "Voltage set point"));
         }
         if (Objects.nonNull(staticVarCompensatorCreationInfos.getReactivePowerSetpoint())) {
             voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getReactivePowerSetpoint(), "Reactive power set point"));
         }
-        voltageReports.add(ModificationUtils.getInstance()
-                .createEnabledDisabledReport("VoltageRegulationOn", modificationInfos.getVoltageRegulationType() == VoltageRegulationType.DISTANT &&
-                        modificationInfos.getRegulationMode() == StaticVarCompensator.RegulationMode.VOLTAGE));
+        if (Objects.nonNull(staticVarCompensatorCreationInfos.getVoltageRegulationType())) {
+            voltageReports.add(ModificationUtils.getInstance().buildCreationReport(staticVarCompensatorCreationInfos.getVoltageRegulationType(), "Voltage Regulation type"));
+        }
         if (staticVarCompensatorCreationInfos.getRegulatingTerminalVlId() != null && staticVarCompensatorCreationInfos.getRegulatingTerminalId() != null &&
                 staticVarCompensatorCreationInfos.getRegulatingTerminalType() != null) {
             Terminal terminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(voltageLevel.getNetwork(),
