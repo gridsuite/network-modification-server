@@ -162,12 +162,10 @@ public class StaticVarCompensatorCreation extends AbstractModification {
             } catch (PowsyblException e) {
                 standbyAutomatonReports.add(ReportNode.newRootReportNode()
                         .withMessageTemplate("StandbyAutomatonExtensionAddError",
-                                "Cannot add standby automaton extension on static var compensator with id=${id} : ${message}")
-                        .withUntypedValue("id", staticVarCompensatorCreationInfos.getEquipmentId())
+                                "Cannot add standby automaton extension on ${message}")
                         .withUntypedValue("message", e.getMessage())
                         .withSeverity(TypedValue.ERROR_SEVERITY)
                         .build());
-
             }
             ModificationUtils.getInstance().reportModifications(subReportNode, standbyAutomatonReports,
                     "StandbyAutomatonCreated", "Standby automaton");

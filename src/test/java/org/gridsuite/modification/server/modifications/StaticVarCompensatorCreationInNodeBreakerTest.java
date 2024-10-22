@@ -227,22 +227,35 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
     @Test
     public void testCreateWithStandbyAutomatonErrors() throws Exception {
         StaticVarCompensatorCreationInfos compensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
+        compensatorCreationInfos.setStandbyAutomatonOn(true);
+        compensatorCreationInfos.setLowVoltageSetpoint(200.0);
+        compensatorCreationInfos.setHighVoltageSetpoint(400.0);
+        compensatorCreationInfos.setLowVoltageThreshold(250.0);
+        compensatorCreationInfos.setHighVoltageThreshold(300.0);
+        compensatorCreationInfos.setQ0(Double.NaN);
+        String compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("Cannot add standby automaton extension on Static var compensator 'idStaticVarCompensator1': b0 is invalid",
+                "StandbyAutomatonExtensionAddError", reportService);
+        compensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
+        compensatorCreationInfos.setEquipmentId("idStaticVarCompensator2");
+        compensatorCreationInfos.setStandbyAutomatonOn(true);
         compensatorCreationInfos.setMaxSusceptance(null);
         compensatorCreationInfos.setMinSusceptance(null);
         compensatorCreationInfos.setMinQAtNominalV(200.0);
         compensatorCreationInfos.setMaxQAtNominalV(300.0);
-        compensatorCreationInfos.setStandbyAutomatonOn(true);
         compensatorCreationInfos.setLowVoltageSetpoint(200.0);
         compensatorCreationInfos.setHighVoltageSetpoint(400.0);
         compensatorCreationInfos.setLowVoltageThreshold(250.0);
         compensatorCreationInfos.setHighVoltageThreshold(300.0);
         compensatorCreationInfos.setQ0(400.0);
 
-        String compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
+        compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
-                        "StaticVarCompensator 'idStaticVarCompensator1' : q0 must be within the range of minimum Q and maximum Q",
+                        "StaticVarCompensator 'idStaticVarCompensator2' : q0 must be within the range of minimum Q and maximum Q",
                 compensatorCreationInfos.getErrorType().name(), reportService);
         compensatorCreationInfos.setMinQAtNominalV(null);
         compensatorCreationInfos.setMaxQAtNominalV(null);
@@ -254,7 +267,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
-                        "StaticVarCompensator 'idStaticVarCompensator1' : b0 must be within the range of minimum susceptance and maximum susceptance",
+                        "StaticVarCompensator 'idStaticVarCompensator2' : b0 must be within the range of minimum susceptance and maximum susceptance",
                 compensatorCreationInfos.getErrorType().name(), reportService);
         compensatorCreationInfos.setRegulationMode(OFF);
         compensatorCreationInfos.setStandby(true);
@@ -263,7 +276,7 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("CREATE_STATIC_VAR_COMPENSATOR_ERROR : " +
-                        "StaticVarCompensator 'idStaticVarCompensator1' : Standby is only supported in Voltage Regulation mode",
+                        "StaticVarCompensator 'idStaticVarCompensator2' : Standby is only supported in Voltage Regulation mode",
                 compensatorCreationInfos.getErrorType().name(), reportService);
         compensatorCreationInfos.setRegulationMode(VOLTAGE);
         compensatorCreationInfos.setB0(null);
