@@ -91,9 +91,6 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
                 .regulatingTerminalType("GENERATOR")
                 .regulatingTerminalVlId("v1")
                 .voltageRegulationType(VoltageRegulationType.DISTANT)
-                .regulatingTerminalId("idStaticVarCompensator1")
-                .regulatingTerminalType("STATIC_VAR_COMPENSATOR")
-                .regulatingTerminalVlId("v2")
                 .build();
     }
 
@@ -221,13 +218,36 @@ public class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetwo
         });
         assertTrue(networkModificationResult.isEmpty());
         assertNull(getNetwork().getStaticVarCompensator("idStaticVarCompensator3"));
-        testNetworkModificationsCount(getGroupId(), 11);
+        compensatorCreationInfos = StaticVarCompensatorCreationInfos.builder()
+                .stashed(false)
+                .equipmentId("idStaticVarCompensator3")
+                .equipmentName("nameStaticVarCompensator3")
+                .voltageLevelId("v2")
+                .busOrBusbarSectionId("1B")
+                .maxQAtNominalV(224.0)
+                .minQAtNominalV(200.0)
+                .lowVoltageSetpoint(200.0)
+                .highVoltageSetpoint(400.0)
+                .lowVoltageThreshold(250.0)
+                .highVoltageThreshold(300.0)
+                .q0(210.0)
+                .standbyAutomatonOn(true)
+                .build();
+        compensatorCreationInfos.setEquipmentId("idStaticVarCompensator3");
+        compensatorCreationInfosJson = mapper.writeValueAsString(compensatorCreationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(compensatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        testNetworkModificationsCount(getGroupId(), 12);
     }
 
     @Test
     public void testCreateWithStandbyAutomatonErrors() throws Exception {
         StaticVarCompensatorCreationInfos compensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         compensatorCreationInfos.setStandbyAutomatonOn(true);
+        compensatorCreationInfos.setMaxSusceptance(null);
+        compensatorCreationInfos.setMinSusceptance(null);
+        compensatorCreationInfos.setMinQAtNominalV(200.0);
+        compensatorCreationInfos.setMaxQAtNominalV(300.0);
         compensatorCreationInfos.setLowVoltageSetpoint(200.0);
         compensatorCreationInfos.setHighVoltageSetpoint(400.0);
         compensatorCreationInfos.setLowVoltageThreshold(250.0);
