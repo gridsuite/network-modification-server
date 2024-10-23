@@ -76,6 +76,7 @@ class LoadCreationInBusBreakerTest extends AbstractNetworkModificationTest {
         assertNull(getNetwork().getLoad("idLoad1"));
     }
 
+    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LOAD_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
