@@ -84,7 +84,7 @@ public class ModificationOrderMigration implements CustomSqlChange {
 
     @Override
     public String getConfirmationMessage() {
-        return "modification order were successfully updated";
+        return "modification order was successfully updated";
     }
 
     @Override
