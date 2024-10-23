@@ -235,9 +235,11 @@ public class NetworkModificationController {
             @Parameter(description = "Group UUID") @RequestParam("groupUuid") UUID groupUuid,
             @Parameter(description = "stash or unstash network modifications") @RequestParam(name = "stashed", defaultValue = "true") Boolean stashed) {
         if (Boolean.TRUE.equals(stashed)) {
-            networkModificationService.stashNetworkModifications(networkModificationUuids);
+            networkModificationService.stashNetworkModifications(groupUuid, networkModificationUuids);
+            networkModificationService.reorderNetworkModifications(groupUuid, Boolean.FALSE);
         } else {
-            networkModificationService.restoreNetworkModifications(networkModificationUuids);
+            networkModificationService.restoreNetworkModifications(groupUuid, networkModificationUuids);
+            networkModificationService.reorderNetworkModifications(groupUuid, Boolean.TRUE);
         }
         return ResponseEntity.ok().build();
     }
