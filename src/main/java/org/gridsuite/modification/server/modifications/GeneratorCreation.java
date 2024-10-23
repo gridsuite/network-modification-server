@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.ERROR_MESSAGE;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
@@ -41,7 +42,6 @@ public class GeneratorCreation extends AbstractModification {
         if (network.getGenerator(modificationInfos.getEquipmentId()) != null) {
             throw new NetworkModificationException(GENERATOR_ALREADY_EXISTS, modificationInfos.getEquipmentId());
         }
-        String errorMessage = "Generator '" + modificationInfos.getEquipmentId() + "' : ";
 
         // check connectivity
         ModificationUtils.getInstance().controlConnectivity(network, modificationInfos.getVoltageLevelId(),
@@ -61,7 +61,7 @@ public class GeneratorCreation extends AbstractModification {
             modificationInfos.getRegulatingTerminalVlId());
 
         ModificationUtils.getInstance().checkActivePowerControl(modificationInfos.getParticipate(),
-            modificationInfos.getDroop(), CREATE_GENERATOR_ERROR, errorMessage);
+            modificationInfos.getDroop(), CREATE_GENERATOR_ERROR, String.format(ERROR_MESSAGE, modificationInfos.getEquipmentId()));
     }
 
     @Override
