@@ -98,6 +98,7 @@ class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificati
         assertNull(getNetwork().getShuntCompensator("shuntOneId"));
     }
 
+    @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("SHUNT_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });

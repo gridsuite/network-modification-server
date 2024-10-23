@@ -78,11 +78,11 @@ public final class TestImpactUtils {
         assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
     }
 
-    public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws Exception {
-        testElementImpact(SimpleImpactType.MODIFICATION, mapper, resultAsString, elementType, elementId, substationIds);
+    public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, Set<String> substationIds) throws Exception {
+        testElementImpact(mapper, resultAsString, substationIds);
     }
 
-    public static void testElementImpact(SimpleImpactType type, ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws Exception {
+    public static void testElementImpact(ObjectMapper mapper, String resultAsString, Set<String> substationIds) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
@@ -122,7 +122,7 @@ public final class TestImpactUtils {
         testBranchImpacts(mapper, SimpleImpactType.CREATION, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
     }
 
-    public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, IdentifiableType elementType, String elementId, Set<String> substationIds) throws Exception {
+    public static void testBranchCreationImpacts(ObjectMapper mapper, String resultAsString, Set<String> substationIds) throws Exception {
         List<AbstractBaseImpact> substationsImpacts = createSubstationImpacts(substationIds);
         testElementImpacts(mapper, resultAsString, substationsImpacts);
     }

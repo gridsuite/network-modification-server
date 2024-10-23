@@ -312,10 +312,12 @@ public abstract class AbstractNetworkModificationTest {
 
     protected abstract void assertAfterNetworkModificationDeletion();
 
+    @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
     }
 
+    @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
     }

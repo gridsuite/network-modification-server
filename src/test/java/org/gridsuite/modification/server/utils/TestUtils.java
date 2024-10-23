@@ -18,6 +18,7 @@ import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.server.service.ReportService;
+import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 
@@ -66,13 +67,9 @@ public final class TestUtils {
 
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) {
         try {
-            for (String destination : destinations) {
-                try {
-                    assertNull(output.receive(TIMEOUT, destination), "Should not be any messages in queue " + destination + " :");
-                } catch (NullPointerException e) {
-                    // Ignoring
-                }
-            }
+            destinations.forEach(destination -> assertNull(output.receive(TIMEOUT, destination), "Should not be any messages in queue " + destination));
+        } catch (NullPointerException e) {
+            // Ignoring
         } finally {
             output.clear(); // purge in order to not fail the other tests
         }
@@ -117,7 +114,7 @@ public final class TestUtils {
     public static String resourceToString(String resource) throws IOException {
         InputStream inputStream = Objects.requireNonNull(TestUtils.class.getResourceAsStream(resource));
         String content = new String(ByteStreams.toByteArray(inputStream), StandardCharsets.UTF_8);
-        return content.replaceAll("\\s", "");
+        return StringUtils.replaceWhitespaceCharacters(content, "");
     }
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {

@@ -63,14 +63,14 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // switch opening
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // switch in variant VARIANT_ID opening
         switchStatusModificationInfos.setEquipmentId("break1Variant");
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + "&variantId=" + NetworkCreation.VARIANT_ID).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "break1Variant", Set.of("s1Variant"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1Variant"));
     }
 
     @Test
@@ -108,21 +108,21 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, switchId1, substationsIds);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch closing
         switchStatusModificationInfos.setEquipmentId(switchId2);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, switchId2, substationsIds);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch opening on another substation
         switchStatusModificationInfos.setEquipmentId(switchId3);
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, switchId3, otherSubstationsIds);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), otherSubstationsIds);
 
         testNetworkModificationsCount(getGroupId(), modificationsCount);
     }

@@ -101,7 +101,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         // invalid Generator id
         StaticVarCompensatorCreationInfos compensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         compensatorCreationInfos.setEquipmentId("");
@@ -193,7 +193,7 @@ class StaticVarCompensatorCreationInNodeBreakerTest extends AbstractNetworkModif
     }
 
     @Test
-    public void testCreateWithStandbyAutomatonErrors() throws Exception {
+    void testCreateWithStandbyAutomatonErrors() throws Exception {
         StaticVarCompensatorCreationInfos compensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         compensatorCreationInfos.setStandbyAutomatonOn(true);
         compensatorCreationInfos.setB0(300.0);

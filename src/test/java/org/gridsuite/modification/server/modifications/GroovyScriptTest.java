@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.modifications;
 
-import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.GroovyScriptInfos;
@@ -74,42 +73,42 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
         // apply groovy script with generator target P modification
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.GENERATOR, "idGenerator", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with load type modification
         groovyScriptInfos.setScript("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n");
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.LOAD, "v1load", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with lcc converter station power factor modification
         groovyScriptInfos.setScript("network.getLccConverterStation('v1lcc').powerFactor=1\n");
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.HVDC_CONVERTER_STATION, "v1lcc", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with line R modification
         groovyScriptInfos.setScript("network.getLine('line1').r=2\n");
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.LINE, "line1", Set.of("s1", "s2"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1", "s2"));
 
         // apply groovy script with two windings transformer ratio tap modification
         groovyScriptInfos.setScript("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n");
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, "trf1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with three windings transformer phase tap modification
         groovyScriptInfos.setScript("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n");
         groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.THREE_WINDINGS_TRANSFORMER, "trf6", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         testNetworkModificationsCount(getGroupId(), 6);
     }

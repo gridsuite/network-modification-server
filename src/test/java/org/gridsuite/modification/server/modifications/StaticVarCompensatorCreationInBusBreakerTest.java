@@ -103,7 +103,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
     }
 
     @Test
-    public void testCreateWithBusBarSectionErrors() throws Exception {
+    void testCreateWithBusBarSectionErrors() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(staticVarCompensatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
@@ -113,7 +113,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
     }
 
     @Test
-    public void testCreateWithRegulatedTerminalError() throws Exception {
+    void testCreateWithRegulatedTerminalError() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setVoltageRegulationType(VoltageRegulationType.DISTANT);
         staticVarCompensatorCreationInfos.setRegulatingTerminalVlId("v1");

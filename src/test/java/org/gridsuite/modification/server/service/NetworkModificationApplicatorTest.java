@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
 package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.report.ReportConstants;
@@ -76,34 +77,100 @@ class NetworkModificationApplicatorTest {
         assertThrows(IllegalArgumentException.class, () -> NetworkModificationApplicator.getApplicationStatus(rootReportNode));
     }
 
-    @SuppressWarnings("checkstyle:SingleSpaceSeparator")
     private static Stream<Arguments> provideArgumentsForComputeHigherSeverity() {
-        final ReportNode infoReport = ReportNode.newRootReportNode()
-                .withMessageTemplate("info", "Info severity message")
-                .withSeverity(TypedValue.INFO_SEVERITY)
-                .build();
-        final ReportNode warningReport = ReportNode.newRootReportNode()
-                .withMessageTemplate("warning", "Warning severity message")
-                .withSeverity(TypedValue.WARN_SEVERITY)
-                .build();
-        final ReportNode errorReport = ReportNode.newRootReportNode()
-                .withMessageTemplate("error", "Error severity message")
-                .withSeverity(TypedValue.ERROR_SEVERITY)
-                .build();
-        final ReportNode notSeverityReport = ReportNode.newRootReportNode()
-                .withMessageTemplate("notSeverity", "Not a severity message")
-                .withUntypedValue("rand", "random value")
-                .build();
         return Stream.of(
-            Arguments.of(List.of(infoReport,        infoReport,        infoReport,        infoReport,        warningReport,     errorReport),       ApplicationStatus.WITH_ERRORS),
-            Arguments.of(List.of(infoReport,        infoReport,        infoReport,        infoReport,        warningReport,     infoReport),        ApplicationStatus.WITH_WARNINGS),
-            Arguments.of(List.of(infoReport,        infoReport,        infoReport,        infoReport,        infoReport,        infoReport),        ApplicationStatus.ALL_OK),
-            Arguments.of(List.of(errorReport,       warningReport,     infoReport,        infoReport,        infoReport,        infoReport),        ApplicationStatus.WITH_ERRORS),
-            Arguments.of(List.of(infoReport,        errorReport,       warningReport,     infoReport,        infoReport,        infoReport),        ApplicationStatus.WITH_ERRORS),
-            Arguments.of(List.of(infoReport,        infoReport,        errorReport,       warningReport,     infoReport,        infoReport),        ApplicationStatus.WITH_ERRORS),
-            Arguments.of(List.of(infoReport,        infoReport,        infoReport,        errorReport,       warningReport,     infoReport),        ApplicationStatus.WITH_ERRORS),
-            Arguments.of(List.of(notSeverityReport, notSeverityReport, notSeverityReport, warningReport,     notSeverityReport, notSeverityReport), ApplicationStatus.WITH_WARNINGS),
-            Arguments.of(List.of(notSeverityReport, notSeverityReport, notSeverityReport, notSeverityReport, notSeverityReport, notSeverityReport), ApplicationStatus.ALL_OK)
+                Arguments.of(List.of(
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                warningReport,
+                                errorReport),
+                        ApplicationStatus.WITH_ERRORS),
+                Arguments.of(List.of(
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                warningReport,
+                                infoReport),
+                        ApplicationStatus.WITH_WARNINGS),
+                Arguments.of(List.of(
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                infoReport),
+                        ApplicationStatus.ALL_OK),
+                Arguments.of(List.of(
+                                errorReport,
+                                warningReport,
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                infoReport),
+                        ApplicationStatus.WITH_ERRORS),
+                Arguments.of(List.of(
+                                infoReport,
+                                errorReport,
+                                warningReport,
+                                infoReport,
+                                infoReport,
+                                infoReport),
+                        ApplicationStatus.WITH_ERRORS),
+                Arguments.of(List.of(
+                                infoReport,
+                                infoReport,
+                                errorReport,
+                                warningReport,
+                                infoReport,
+                                infoReport),
+                        ApplicationStatus.WITH_ERRORS),
+                Arguments.of(List.of(
+                                infoReport,
+                                infoReport,
+                                infoReport,
+                                errorReport,
+                                warningReport,
+                                infoReport),
+                        ApplicationStatus.WITH_ERRORS),
+                Arguments.of(List.of(
+                                notSeverityReport,
+                                notSeverityReport,
+                                notSeverityReport,
+                                warningReport,
+                                notSeverityReport,
+                                notSeverityReport),
+                        ApplicationStatus.WITH_WARNINGS),
+                Arguments.of(List.of(
+                                notSeverityReport,
+                                notSeverityReport,
+                                notSeverityReport,
+                                notSeverityReport,
+                                notSeverityReport,
+                                notSeverityReport),
+                        ApplicationStatus.ALL_OK)
         );
     }
+
+    private static ReportNode infoReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("info", "Info severity message")
+            .withSeverity(TypedValue.INFO_SEVERITY)
+            .build();
+
+    private static ReportNode warningReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("warning", "Warning severity message")
+            .withSeverity(TypedValue.WARN_SEVERITY)
+            .build();
+
+    private static ReportNode errorReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("error", "Error severity message")
+            .withSeverity(TypedValue.ERROR_SEVERITY)
+            .build();
+
+    private static ReportNode notSeverityReport = ReportNode.newRootReportNode()
+            .withMessageTemplate("notSeverity", "Not a severity message")
+            .withUntypedValue("rand", "random value")
+            .build();
 }
