@@ -440,4 +440,22 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals(1, createdModification.getConnectionPosition1().getValue());
         assertEquals(1, createdModification.getConnectionPosition2().getValue());
     }
+
+    @Test
+    void changeLineConnectablePositionWithoutBusBarSection() throws Exception {
+        LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line3")
+                .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
+                .connectionName1(new AttributeModification<>("line3", OperationType.SET))
+                .connectionName2(new AttributeModification<>("line3", OperationType.SET))
+                .build();
+        String modificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals("line3", createdModification.getConnectionName1().getValue());
+        assertEquals("line3", createdModification.getConnectionName2().getValue());
+
+    }
 }

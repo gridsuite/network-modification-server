@@ -13,6 +13,7 @@ import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.*;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
+import com.powsybl.math.graph.TraversalType;
 import com.powsybl.network.store.iidm.impl.MinMaxReactiveLimitsImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
@@ -56,6 +57,12 @@ public final class ModificationUtils {
     public static final String CONNECTION_DIRECTION_FIELD_NAME = "Connection direction";
     public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
     public static final String NOT_EXIST_IN_NETWORK = " does not exist in network";
+
+    public enum FeederSide {
+        INJECTION_SINGLE_SIDE,
+        BRANCH_SIDE_ONE,
+        BRANCH_SIDE_TWO
+    }
 
     private ModificationUtils() {
     }
@@ -615,10 +622,7 @@ public final class ModificationUtils {
                                                             InjectionModificationInfos modificationInfos,
                                                             ReportNode connectivityReports) {
         List<ReportNode> reports = new ArrayList<>();
-        if (isVoltageOrBusbarIdMissing(modificationInfos.getVoltageLevelId(), modificationInfos.getBusOrBusbarSectionId(), modificationInfos.getEquipmentId(), reports)) {
-            return reports.get(0);
-        }
-        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, injection.getNetwork(), reports, false);
+        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, injection.getNetwork(), reports);
         modifyConnection(modificationInfos.getTerminalConnected(), injection, injection.getTerminal(), reports);
 
         return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
@@ -630,136 +634,122 @@ public final class ModificationUtils {
                                                          BranchModificationInfos modificationInfos,
                                                          ReportNode connectivityReports) {
         List<ReportNode> reports = new ArrayList<>();
-        if (isVoltageOrBusbarIdMissing(modificationInfos.getVoltageLevelId1(), modificationInfos.getBusOrBusbarSectionId1(), modificationInfos.getEquipmentId(), reports) ||
-            isVoltageOrBusbarIdMissing(modificationInfos.getVoltageLevelId2(), modificationInfos.getBusOrBusbarSectionId2(), modificationInfos.getEquipmentId(), reports)) {
-            return reports.get(0);
-        }
-
-        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, branch.getNetwork(), reports, true);
+        processConnectivityPosition(connectablePosition, connectablePositionAdder, modificationInfos, branch.getNetwork(), reports);
         modifyConnection(modificationInfos.getTerminal1Connected(), branch, branch.getTerminal1(), reports);
         modifyConnection(modificationInfos.getTerminal2Connected(), branch, branch.getTerminal2(), reports);
 
         return reportModifications(connectivityReports, reports, "ConnectivityModified", CONNECTIVITY);
     }
 
-    private boolean isVoltageOrBusbarIdMissing(AttributeModification<String> voltageLevelId, AttributeModification<String> busbarSectionId, String equipmentId, List<ReportNode> reports) {
-        if (voltageLevelId == null || busbarSectionId == null) {
-            reports.add(ReportNode.newRootReportNode()
-                    .withMessageTemplate("VoltageLevelOrBusbarSectionNotFound",
-                            "Voltage level id or Bus bar section id of equipment id=${id} not found")
-                    .withUntypedValue("id", equipmentId)
-                    .withSeverity(TypedValue.WARN_SEVERITY)
-                    .build());
-            return true;
-        }
-        return false;
-    }
-
     private void processConnectivityPosition(ConnectablePosition<?> connectablePosition,
                                              ConnectablePositionAdder<?> connectablePositionAdder,
                                              BasicEquipmentModificationInfos modificationInfos,
                                              Network network,
-                                             List<ReportNode> reports,
-                                             boolean isBranch) {
+                                             List<ReportNode> reports) {
         if (connectablePosition != null) {
-            modifyExistingConnectivityPosition(connectablePosition, modificationInfos, reports, isBranch);
+            modifyExistingConnectivityPosition(connectablePosition, modificationInfos, reports);
         } else {
-            createNewConnectivityPosition(connectablePositionAdder, modificationInfos, network, reports, isBranch);
+            createNewConnectivityPosition(connectablePositionAdder, modificationInfos, network, reports);
         }
     }
 
     private void modifyExistingConnectivityPosition(ConnectablePosition<?> connectablePosition,
                                                     BasicEquipmentModificationInfos modificationInfos,
-                                                    List<ReportNode> reports,
-                                                    boolean isBranch) {
-        if (isBranch) {
-            modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, 1);
-            modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, 2);
-        } else {
-            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, 0);
+                                                    List<ReportNode> reports) {
+        if (modificationInfos instanceof BranchModificationInfos) {
+            modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, FeederSide.BRANCH_SIDE_ONE);
+            modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, FeederSide.BRANCH_SIDE_TWO);
+        } else if (modificationInfos instanceof InjectionModificationInfos) {
+            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, FeederSide.INJECTION_SINGLE_SIDE);
         }
     }
 
     private void createNewConnectivityPosition(ConnectablePositionAdder<?> adder,
                                                BasicEquipmentModificationInfos modificationInfos,
                                                Network network,
-                                               List<ReportNode> reports,
-                                               boolean isBranch) {
-        if (isBranch) {
-            ConnectablePositionAdder.FeederAdder<?> feederAdder1 = adder.newFeeder1();
-            ConnectablePositionAdder.FeederAdder<?> feederAdder2 = adder.newFeeder2();
-            addConnectablePosition(adder, feederAdder1, modificationInfos, network, reports, 1);
-            addConnectablePosition(adder, feederAdder2, modificationInfos, network, reports, 2);
-        } else {
-            ConnectablePositionAdder.FeederAdder<?> feederAdder = adder.newFeeder();
-            addConnectablePosition(adder, feederAdder, modificationInfos, network, reports, 0);
+                                               List<ReportNode> reports) {
+        if (modificationInfos instanceof BranchModificationInfos) {
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.BRANCH_SIDE_ONE);
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.BRANCH_SIDE_TWO);
+        } else if (modificationInfos instanceof InjectionModificationInfos) {
+            addConnectablePosition(adder, modificationInfos, network, reports, FeederSide.INJECTION_SINGLE_SIDE);
         }
     }
 
     private void modifyConnectablePosition(ConnectablePosition.Feeder feeder,
                                         BasicEquipmentModificationInfos modificationInfos,
                                         List<ReportNode> reports,
-                                        int feederNumber) {
-        applyModifications(feeder, modificationInfos, reports, feederNumber);
+                                        FeederSide feederSide) {
+        applyModifications(feeder, modificationInfos, reports, feederSide);
     }
 
     private void applyModifications(ConnectablePosition.Feeder feeder,
                                     BasicEquipmentModificationInfos modificationInfos,
                                     List<ReportNode> reports,
-                                    int feederNumber) {
+                                    FeederSide feederSide) {
         ReportNode connectionNameReport = applyElementaryModificationsAndReturnReport(feeder::setName,
                 feeder.getName()::get,
-                getConnectionName(modificationInfos, feederNumber),
-                getConnectionNameField(feederNumber));
+                getConnectionName(modificationInfos, feederSide),
+                getConnectionNameField(feederSide));
         if (connectionNameReport != null) {
             reports.add(connectionNameReport);
         }
         ReportNode connectionDirectionReport = applyElementaryModificationsAndReturnReport(feeder::setDirection,
                 feeder::getDirection,
-                getConnectionDirection(modificationInfos, feederNumber),
-                getConnectionDirectionField(feederNumber));
+                getConnectionDirection(modificationInfos, feederSide),
+                getConnectionDirectionField(feederSide));
         if (connectionDirectionReport != null) {
             reports.add(connectionDirectionReport);
         }
         ReportNode connectionPositionReport = applyElementaryModificationsAndReturnReport(feeder::setOrder,
                 feeder.getOrder()::get,
-                getConnectionPosition(modificationInfos, feederNumber),
-                getConnectionPositionField(feederNumber));
+                getConnectionPosition(modificationInfos, feederSide),
+                getConnectionPositionField(feederSide));
         if (connectionPositionReport != null) {
             reports.add(connectionPositionReport);
         }
     }
 
     private void addConnectablePosition(ConnectablePositionAdder<?> adder,
-                                        ConnectablePositionAdder.FeederAdder<?> feeder,
                                         BasicEquipmentModificationInfos modificationInfos,
                                         Network network,
                                         List<ReportNode> reports,
-                                        int feederNumber) {
-        AttributeModification<String> connectionName = getConnectionName(modificationInfos, feederNumber);
-        AttributeModification<ConnectablePosition.Direction> connectionDirection = getConnectionDirection(modificationInfos, feederNumber);
-        AttributeModification<Integer> connectionPosition = getConnectionPosition(modificationInfos, feederNumber);
+                                        FeederSide feederSide) {
+        AttributeModification<String> connectionName = getConnectionName(modificationInfos, feederSide);
+        AttributeModification<ConnectablePosition.Direction> connectionDirection = getConnectionDirection(modificationInfos, feederSide);
+        AttributeModification<Integer> connectionPosition = getConnectionPosition(modificationInfos, feederSide);
+        if (Objects.isNull(connectionName) && Objects.isNull(connectionDirection) && Objects.isNull(connectionPosition)) {
+            return;
+        }
         AttributeModification<String> equipmentId = getEquipmentId(modificationInfos);
-        AttributeModification<String> voltageLevelId = getVoltageLevelId(modificationInfos, feederNumber);
-        AttributeModification<String> busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederNumber);
-        int position = getPosition(connectionPosition, busOrBusbarSectionId, network, voltageLevelId);
-
+        AttributeModification<String> voltageLevelId = getVoltageLevelId(modificationInfos, feederSide);
+        AttributeModification<String> busOrBusbarSectionId = getBusOrBusbarSectionId(modificationInfos, feederSide);
+        int position = getPosition(connectionPosition, busOrBusbarSectionId, voltageLevelId, equipmentId, feederSide, network);
+        ConnectablePositionAdder.FeederAdder<?> feeder;
+        switch (feederSide) {
+            case INJECTION_SINGLE_SIDE -> feeder = adder.newFeeder();
+            case BRANCH_SIDE_ONE -> feeder = adder.newFeeder1();
+            case BRANCH_SIDE_TWO -> feeder = adder.newFeeder2();
+            default -> {
+                return;
+            }
+        }
         ReportNode connectionNameReport = applyConnectablePositionAttribute(
                 feeder::withName, connectionName, equipmentId, reports,
-                getConnectionNameField(feederNumber), connectionDirection, connectionPosition
+                getConnectionNameField(feederSide), connectionDirection, connectionPosition
         );
 
         ReportNode connectionDirectionReport = applyConnectablePositionAttribute(
                 feeder::withDirection, connectionDirection,
                 new AttributeModification<>(ConnectablePosition.Direction.UNDEFINED, OperationType.SET),
-                reports, getConnectionDirectionField(feederNumber),
+                reports, getConnectionDirectionField(feederSide),
                 connectionName, connectionPosition
         );
 
         ReportNode connectionPositionReport = applyConnectablePositionAttribute(
                 feeder::withOrder, connectionPosition,
                 new AttributeModification<>(position, OperationType.SET),
-                reports, getConnectionPositionField(feederNumber),
+                reports, getConnectionPositionField(feederSide),
                 connectionName, connectionDirection
         );
 
@@ -791,35 +781,38 @@ public final class ModificationUtils {
         return Arrays.stream(attributes).anyMatch(Objects::nonNull);
     }
 
-    private <T> T getConnectionDetail(BasicEquipmentModificationInfos modificationInfos, int feederNumber,
+    private <T> T getConnectionDetail(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide,
                                       Function<BranchModificationInfos, T> branchFunc1,
                                       Function<BranchModificationInfos, T> branchFunc2,
                                       Function<InjectionModificationInfos, T> injectionFunc) {
         if (modificationInfos instanceof BranchModificationInfos branchInfo) {
-            return feederNumber == 1 ? branchFunc1.apply(branchInfo) : branchFunc2.apply(branchInfo);
+            if (Objects.requireNonNull(feederSide) == FeederSide.BRANCH_SIDE_ONE) {
+                return branchFunc1.apply(branchInfo);
+            } else if (feederSide == FeederSide.BRANCH_SIDE_TWO) {
+                return branchFunc2.apply(branchInfo);
+            }
         } else if (modificationInfos instanceof InjectionModificationInfos injectionInfo) {
             return injectionFunc.apply(injectionInfo);
         }
         return null;
     }
 
-    private String getConnectionFieldName(int feederNumber, String baseFieldName) {
-        return switch (feederNumber) {
-            case 0 -> baseFieldName;
-            case 1 -> baseFieldName + " 1";
-            case 2 -> baseFieldName + " 2";
-            default -> "";
+    private String getConnectionFieldName(FeederSide feederSide, String baseFieldName) {
+        return switch (feederSide) {
+            case INJECTION_SINGLE_SIDE -> baseFieldName;
+            case BRANCH_SIDE_ONE -> baseFieldName + " 1";
+            case BRANCH_SIDE_TWO -> baseFieldName + " 2";
         };
     }
 
-    private AttributeModification<String> getVoltageLevelId(BasicEquipmentModificationInfos modificationInfos, int feederNumber) {
-        return getConnectionDetail(modificationInfos, feederNumber,
+    private AttributeModification<String> getVoltageLevelId(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getVoltageLevelId1, BranchModificationInfos::getVoltageLevelId2,
                 InjectionModificationInfos::getVoltageLevelId);
     }
 
-    private AttributeModification<String> getBusOrBusbarSectionId(BasicEquipmentModificationInfos modificationInfos, int feederNumber) {
-        return getConnectionDetail(modificationInfos, feederNumber,
+    private AttributeModification<String> getBusOrBusbarSectionId(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getBusOrBusbarSectionId1, BranchModificationInfos::getBusOrBusbarSectionId2,
                 InjectionModificationInfos::getBusOrBusbarSectionId);
     }
@@ -828,46 +821,77 @@ public final class ModificationUtils {
         return AttributeModification.toAttributeModification(modificationInfos.getEquipmentId(), OperationType.SET);
     }
 
-    private AttributeModification<String> getConnectionName(BasicEquipmentModificationInfos modificationInfos, int feederNumber) {
-        return getConnectionDetail(modificationInfos, feederNumber,
+    private AttributeModification<String> getConnectionName(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getConnectionName1, BranchModificationInfos::getConnectionName2,
                 InjectionModificationInfos::getConnectionName);
     }
 
-    private String getConnectionNameField(int feederNumber) {
-        return getConnectionFieldName(feederNumber, CONNECTION_NAME_FIELD_NAME);
+    private String getConnectionNameField(FeederSide feederSide) {
+        return getConnectionFieldName(feederSide, CONNECTION_NAME_FIELD_NAME);
     }
 
-    private String getConnectionDirectionField(int feederNumber) {
-        return getConnectionFieldName(feederNumber, CONNECTION_DIRECTION_FIELD_NAME);
+    private String getConnectionDirectionField(FeederSide feederSide) {
+        return getConnectionFieldName(feederSide, CONNECTION_DIRECTION_FIELD_NAME);
     }
 
-    private String getConnectionPositionField(int feederNumber) {
-        return getConnectionFieldName(feederNumber, CONNECTION_POSITION_FIELD_NAME);
+    private String getConnectionPositionField(FeederSide feederSide) {
+        return getConnectionFieldName(feederSide, CONNECTION_POSITION_FIELD_NAME);
     }
 
-    private AttributeModification<ConnectablePosition.Direction> getConnectionDirection(BasicEquipmentModificationInfos modificationInfos, int feederNumber) {
-        return getConnectionDetail(modificationInfos, feederNumber,
+    private AttributeModification<ConnectablePosition.Direction> getConnectionDirection(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getConnectionDirection1, BranchModificationInfos::getConnectionDirection2,
                 InjectionModificationInfos::getConnectionDirection);
     }
 
-    private AttributeModification<Integer> getConnectionPosition(BasicEquipmentModificationInfos modificationInfos, int feederNumber) {
-        return getConnectionDetail(modificationInfos, feederNumber,
+    private AttributeModification<Integer> getConnectionPosition(BasicEquipmentModificationInfos modificationInfos, FeederSide feederSide) {
+        return getConnectionDetail(modificationInfos, feederSide,
                 BranchModificationInfos::getConnectionPosition1, BranchModificationInfos::getConnectionPosition2,
                 InjectionModificationInfos::getConnectionPosition);
     }
 
+    private String getBusOrBusbarSection(Terminal terminal) {
+        String busOrBusbarSectionId;
+        if (terminal.getVoltageLevel().getTopologyKind().equals(TopologyKind.BUS_BREAKER)) {
+            if (terminal.isConnected()) {
+                busOrBusbarSectionId = terminal.getBusBreakerView().getBus().getId();
+            } else {
+                busOrBusbarSectionId = terminal.getBusBreakerView().getConnectableBus().getId();
+            }
+        } else {
+            busOrBusbarSectionId = getBusbarSectionId(terminal);
+        }
+        return busOrBusbarSectionId;
+    }
+
+    private String getBusbarSectionId(Terminal terminal) {
+        BusbarSectionFinderTraverser connectedBusbarSectionFinder = new BusbarSectionFinderTraverser(terminal.isConnected());
+        terminal.traverse(connectedBusbarSectionFinder, TraversalType.BREADTH_FIRST);
+        return connectedBusbarSectionFinder.getFirstTraversedBbsId();
+    }
+
     private int getPosition(AttributeModification<Integer> connectionPosition,
                             AttributeModification<String> busOrBusbarSectionId,
-                            Network network,
-                            AttributeModification<String> voltageLevelId) {
-        return getPosition(
-                connectionPosition == null ? null : connectionPosition.getValue(),
-                busOrBusbarSectionId == null ? null : busOrBusbarSectionId.getValue(),
-                network,
-                getVoltageLevel(network, voltageLevelId == null ? null : voltageLevelId.getValue())
-        );
+                            AttributeModification<String> voltageLevelId,
+                            AttributeModification<String> equipmentId,
+                            FeederSide feederSide,
+                            Network network) {
+        String equipmentValue = equipmentId.getValue();
+        Terminal selectedTerminal = null;
+        switch (feederSide) {
+            case INJECTION_SINGLE_SIDE -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Injection<?> injection ? injection.getTerminal() : null;
+            case BRANCH_SIDE_ONE -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Branch<?> branch ? branch.getTerminal1() : null;
+            case BRANCH_SIDE_TWO -> selectedTerminal = network.getIdentifiable(equipmentValue) instanceof Branch<?> branch ? branch.getTerminal2() : null;
+        }
+        String voltageLevel = (voltageLevelId != null && voltageLevelId.getValue() != null)
+                ? voltageLevelId.getValue()
+                : Optional.ofNullable(selectedTerminal).map(terminal -> terminal.getVoltageLevel().getId()).orElse(null);
+        String busOrBusbarSection = (busOrBusbarSectionId != null && busOrBusbarSectionId.getValue() != null)
+                ? busOrBusbarSectionId.getValue()
+                : Optional.ofNullable(selectedTerminal).map(this::getBusOrBusbarSection).orElse(null);
+        Integer connectionPositionValue = (connectionPosition != null) ? connectionPosition.getValue() : null;
+        return getPosition(connectionPositionValue, busOrBusbarSection, network, getVoltageLevel(network, voltageLevel));
     }
 
     private void modifyConnection(AttributeModification<Boolean> terminalConnected, Identifiable<?> equipment, Terminal terminal, List<ReportNode> reports) {
@@ -1310,9 +1334,11 @@ public final class ModificationUtils {
         if (Objects.isNull(creationInfos.getMaxSusceptance()) && Objects.isNull(creationInfos.getMaxQAtNominalV())) {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is not set");
         }
-        if (Objects.nonNull(creationInfos.getMaxSusceptance()) && Objects.nonNull(creationInfos.getMinSusceptance()) && creationInfos.getMaxSusceptance() < creationInfos.getMinSusceptance() ||
-                Objects.nonNull(creationInfos.getMaxQAtNominalV()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && creationInfos.getMaxQAtNominalV() < creationInfos.getMinQAtNominalV()) {
+        if (Objects.nonNull(creationInfos.getMaxSusceptance()) && Objects.nonNull(creationInfos.getMinSusceptance()) && creationInfos.getMaxSusceptance() < creationInfos.getMinSusceptance()) {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
+        }
+        if (Objects.nonNull(creationInfos.getMaxQAtNominalV()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && creationInfos.getMaxQAtNominalV() < creationInfos.getMinQAtNominalV()) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum Q at nominal voltage is expected to be greater than or equal to minimum Q");
         }
 
         // check set points
@@ -1330,11 +1356,14 @@ public final class ModificationUtils {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Standby is only supported in Voltage Regulation mode");
         }
         if (Objects.nonNull(creationInfos.getB0()) && Objects.nonNull(creationInfos.getMinSusceptance()) && Objects.nonNull(creationInfos.getMaxSusceptance()) &&
-                (creationInfos.getB0() < creationInfos.getMinSusceptance() || creationInfos.getB0() > creationInfos.getMaxSusceptance())
-            || Objects.nonNull(creationInfos.getQ0()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && Objects.nonNull(creationInfos.getMaxQAtNominalV()) &&
+                (creationInfos.getB0() < creationInfos.getMinSusceptance() || creationInfos.getB0() > creationInfos.getMaxSusceptance())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName,
+                     "b0 must be within the range of minimum susceptance and maximum susceptance");
+        }
+        if (Objects.nonNull(creationInfos.getQ0()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && Objects.nonNull(creationInfos.getMaxQAtNominalV()) &&
                 (creationInfos.getQ0() < creationInfos.getMinQAtNominalV() || creationInfos.getQ0() > creationInfos.getMaxQAtNominalV())) {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName,
-                     "b0 must be within the range of minimun susceptance and maximum susceptance");
+                    "q0 must be within the range of minimum Q and maximum Q");
         }
     }
 

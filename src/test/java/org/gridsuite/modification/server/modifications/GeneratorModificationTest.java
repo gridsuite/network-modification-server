@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.GeneratorShortCircuit;
 import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import org.gridsuite.modification.server.dto.*;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
+import static org.gridsuite.modification.server.utils.NetworkUtil.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,6 +49,9 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .equipmentName(new AttributeModification<>("newV1Generator", OperationType.SET))
                 .voltageLevelId(new AttributeModification<>("v2", OperationType.SET))
                 .busOrBusbarSectionId(new AttributeModification<>("1B", OperationType.SET))
+                .connectionName(new AttributeModification<>("idGenerator", OperationType.SET))
+                .connectionPosition(new AttributeModification<>(1, OperationType.SET))
+                .connectionDirection(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .targetV(new AttributeModification<>(48.0, OperationType.SET))
@@ -440,6 +445,24 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
 
+    }
+
+    @Test
+    void changeGeneratorOnBusBreakerWithoutBusBarSection() throws Exception {
+        VoltageLevel v1 = createVoltageLevel(getNetwork().getSubstation("s1"), "v11", "v32", TopologyKind.BUS_BREAKER, 380.0);
+        createBusBarSection(getNetwork().getVoltageLevel("v1"), "1.7", "1.7", 0);
+        createBus(v1, "bus111", "bus111");
+        createGeneratorOnBus(v1, "idGenerator1", "bus111", 42.1, 1.0);
+        GeneratorModificationInfos generatorModificationInfos = GeneratorModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("idGenerator1")
+                .connectionPosition(new AttributeModification<>(1, OperationType.SET))
+                .build();
+        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        generatorModificationInfos = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals(1, generatorModificationInfos.getConnectionPosition().getValue());
     }
 
     @Override
