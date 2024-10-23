@@ -24,35 +24,30 @@ import org.gridsuite.modification.server.repositories.ModificationGroupRepositor
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_GROUP_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_NOT_FOUND;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MOVE_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.dto.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.Assert.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @DisableElasticsearch
 @Tag("IntegrationTest")
-public class ModificationRepositoryTest {
+class ModificationRepositoryTest {
     private static final UUID TEST_GROUP_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID_2 = UUID.fromString("5809dabf-60f8-46e5-9e58-57b03d6b1818");
     private static final UUID TEST_GROUP_ID_3 = UUID.fromString("de67bab1-f47b-4199-80a7-10bd77285675");
@@ -66,14 +61,14 @@ public class ModificationRepositoryTest {
     @Autowired
     private ModificationRepository modificationRepository;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         modificationRepository.deleteAll();
         modificationGroupRepository.deleteAll();
         SQLStatementCountValidator.reset();
     }
 
-    public EquipmentAttributeModificationInfos getEquipmentAttributeModification(UUID modificationUuid) {
+    private EquipmentAttributeModificationInfos getEquipmentAttributeModification(UUID modificationUuid) {
         return (EquipmentAttributeModificationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
@@ -97,11 +92,11 @@ public class ModificationRepositoryTest {
         return (VoltageLevelCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
-    public GroovyScriptInfos getGroovyScript(UUID modificationUuid) {
+    private GroovyScriptInfos getGroovyScript(UUID modificationUuid) {
         return (GroovyScriptInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
-    public ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID modificationUuid) {
+    private ShuntCompensatorCreationInfos getShuntCompensatorCreationModification(UUID modificationUuid) {
         return (ShuntCompensatorCreationInfos) networkModificationRepository.getModificationInfo(modificationUuid);
     }
 
@@ -130,11 +125,10 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void test() {
+    void test() {
         assertEquals(List.of(), this.networkModificationRepository.getModificationGroupsUuids());
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
 
         var nullModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id0").equipmentAttributeName("attribute").equipmentAttributeValue(null).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
@@ -175,13 +169,12 @@ public class ModificationRepositoryTest {
 
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertEquals(0, modificationRepository.findAll().size());
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testCreateModificationGroupQueryCount() {
+    void testCreateModificationGroupQueryCount() {
         modificationGroupRepository.save(new ModificationGroupEntity(TEST_GROUP_ID));
 
         // No select
@@ -189,7 +182,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testCreateModificationQueryCount() {
+    void testCreateModificationQueryCount() {
         var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
@@ -198,7 +191,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testGetModificationQueryCount() {
+    void testGetModificationQueryCount() {
         var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         var modifEntity3 = EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
@@ -217,13 +210,12 @@ public class ModificationRepositoryTest {
         assertRequestsCount(1, 0, 0, 0);
 
         // Non-existent modification uuid
-        assertThrows(new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID)
-        );
+        assertThrows(NetworkModificationException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID),
+                new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testDeleteModificationQueryCount() {
+    void testDeleteModificationQueryCount() {
         var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
@@ -237,13 +229,12 @@ public class ModificationRepositoryTest {
         assertRequestsCount(3, 0, 0, 3);
 
         // Non-existent group modification uuid
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testLoadCreation() {
+    void testLoadCreation() {
         var createLoadEntity1 = LoadCreationInfos.builder().equipmentId("idLoad1").equipmentName("nameLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("vlId1").busOrBusbarSectionId("busId1").p0(100.).q0(20.).connectionName("top1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(11).build().toEntity();
         var createLoadEntity2 = LoadCreationInfos.builder().equipmentId("idLoad2").equipmentName("nameLoad2").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId2").busOrBusbarSectionId("busId2").p0(80.).q0(30.).connectionName("bottom1").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(11).build().toEntity();
         var createLoadEntity3 = LoadCreationInfos.builder().equipmentId("idLoad3").equipmentName("nameLoad3").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId3").busOrBusbarSectionId("busId3").p0(50.).q0(90.).connectionName("top2").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(12).build().toEntity();
@@ -276,13 +267,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(3, 0, 0, 3);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testGeneratorCreation() {
+    void testGeneratorCreation() {
         var createGeneratorEntity1 = GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator1").equipmentName("nameGenerator1")
                 .energySource(EnergySource.HYDRO).voltageLevelId("vlId1")
@@ -358,13 +348,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(3, 0, 0, 4);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testShuntCompensatorCreation() {
+    void testShuntCompensatorCreation() {
         var shunt1 = ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt1").equipmentName("nameOne")
             .maximumSectionCount(2)
@@ -409,13 +398,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(3, 0, 0, 3);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testLineCreation() {
+    void testLineCreation() {
         var createLineEntity1 = LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").r(1.0).x(1.1).g1(10.0).b1(11.0).g2(100.0).b2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
         var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").r(2.0).x(2.2).g1(20.0).b1(22.0).g2(200.0).b2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
         var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").r(3.0).x(3.3).g1(30.0).b1(33.0).g2(300.0).b2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
@@ -451,13 +439,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(6, 0, 0, 5);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testMoveModificationInSameGroup() {
+    void testMoveModificationInSameGroup() {
         // use a group Tabular modification
         List<ModificationInfos> groupModifications = List.of(
                 GeneratorModificationInfos.builder().equipmentId("idGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
@@ -508,7 +495,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testMoveModificationsBetweenTwoGroups() {
+    void testMoveModificationsBetweenTwoGroups() {
         var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
         var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
         var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
@@ -560,7 +547,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testMoveModificationsBetweenTwoGroupsWithReferenceNode() {
+    void testMoveModificationsBetweenTwoGroupsWithReferenceNode() {
         var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
         var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
         var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
@@ -596,7 +583,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testMoveModificationsBetweenMoreThanTwoGroups() {
+    void testMoveModificationsBetweenMoreThanTwoGroups() {
         var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
         var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
         var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
@@ -638,9 +625,8 @@ public class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptEntity2.getId());
         UUID referenceNodeUuid = groovyScriptEntity2.getId();
-        assertThrows(new NetworkModificationException(MOVE_MODIFICATION_ERROR).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid),
+                new NetworkModificationException(MOVE_MODIFICATION_ERROR).getMessage());
         assertRequestsCount(4, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -655,12 +641,12 @@ public class ModificationRepositoryTest {
         assertEquals(getIds(modification3), getIds(expected3));
     }
 
-    private List<UUID> getIds(List<ModificationInfos> expected) {
+    private static List<UUID> getIds(List<ModificationInfos> expected) {
         return expected.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
     }
 
     @Test
-    public void testGroovyScript() {
+    void testGroovyScript() {
         var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
         var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
         var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
@@ -693,13 +679,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 3);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testSubstationCreation() {
+    void testSubstationCreation() {
         var createSubstationEntity1 = SubstationCreationInfos.builder()
                 .equipmentId("idSubstation1")
                 .equipmentName("nameSubstation1")
@@ -747,13 +732,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(3, 0, 1, 4);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testVoltageLevelCreation() {
+    void testVoltageLevelCreation() {
         VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
                 .equipmentId("idVL1")
                 .equipmentName("VLName")
@@ -784,14 +768,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-            NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
-    private VoltageLevelCreationInfos makeAVoltageLevelInfos() {
-
-        VoltageLevelCreationInfos createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
+    private static VoltageLevelCreationInfos makeAVoltageLevelInfos() {
+        return VoltageLevelCreationInfos.builder()
                 .substationId("s1").nominalV(379.0).equipmentId("idVL1").equipmentName("VLName")
                 .lowVoltageLimit(0.0)
                 .highVoltageLimit(10.0)
@@ -802,12 +784,10 @@ public class ModificationRepositoryTest {
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build();
-
-        return createVoltLvlEntity1;
     }
 
     @Test
-    public void testStatusLineModification() {
+    void testStatusLineModification() {
         List<OperatingStatusModificationEntity> entities = List.of(
             OperatingStatusModificationInfos.builder().equipmentId("idLine1").action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
             OperatingStatusModificationInfos.builder().equipmentId("idLine2").action(OperatingStatusModificationInfos.ActionType.TRIP).build().toEntity(),
@@ -843,7 +823,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testLineSplitWithVoltageLevel() {
+    void testLineSplitWithVoltageLevel() {
         LineSplitWithVoltageLevelEntity lineSplitEntity1 = LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("lineId0")
             .percent(30.0)
@@ -892,13 +872,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testLineAttachToVoltageLevel() {
+    void testLineAttachToVoltageLevel() {
         LineCreationInfos attachmentLine = LineCreationInfos.builder()
                 .equipmentId("attachmentLineId")
                 .r(50.6)
@@ -955,13 +934,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testLinesAttachToSplitLines() {
+    void testLinesAttachToSplitLines() {
         LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
@@ -1006,13 +984,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testDeleteStashedModificationList() {
+    void testDeleteStashedModificationList() {
         //create a modification and add it to the repository
         var groovyScriptEntity1 = GroovyScriptInfos.builder().stashed(true).script("script1").build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
@@ -1028,7 +1005,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testDeleteNonStashedModificationList() {
+    void testDeleteNonStashedModificationList() {
         //create a modification and add it to the repository
         var groovyScriptEntity1 = GroovyScriptInfos.builder().stashed(false).script("script1").build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
@@ -1044,7 +1021,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testDeleteAttachingLine() {
+    void testDeleteAttachingLine() {
         DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
@@ -1075,13 +1052,12 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
     @Test
-    public void testDeleteVoltageLevelOnLine() {
+    void testDeleteVoltageLevelOnLine() {
         DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
@@ -1118,25 +1094,24 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 
-    private <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
+    private static <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
         assertEquals(val, modification.getValue());
         assertEquals(OperationType.SET, modification.getOpType());
     }
 
     @Test
-    public void testEmbeddedModificationTypes() {
+    void testEmbeddedModificationTypes() {
         testModificationEmbedded(new DoubleModificationEmbedded(new AttributeModification<>(10., OperationType.SET)), 10.);
         testModificationEmbedded(new EnumModificationEmbedded<>(new AttributeModification<>(OperationType.SET, OperationType.SET)), OperationType.SET);
         testModificationEmbedded(new BooleanModificationEmbedded(new AttributeModification<>(true, OperationType.SET)), true);
     }
 
     @Test
-    public void testVoltageInitModification() {
+    void testVoltageInitModification() {
         var voltageInitModificationEntity = VoltageInitModificationInfos.builder()
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
@@ -1230,7 +1205,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testVscModification() {
+    void testVscModification() {
         var vscModificationEntity = VscModificationInfos.builder()
             .equipmentId("VSC1")
                 .converterStation1(ConverterStationModificationInfos.builder().equipmentId("C1").build())
@@ -1245,7 +1220,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testGetModificationCount() {
+    void testGetModificationCount() {
         var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
@@ -1261,7 +1236,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testModificationOrder() {
+    void testModificationOrder() {
         // add 1 modification in a group
         var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1));
@@ -1280,7 +1255,7 @@ public class ModificationRepositoryTest {
     }
 
     @Test
-    public void testStaticVarCompensatorCreation() {
+    void testStaticVarCompensatorCreation() {
         var createStaticVarCompensator1 = StaticVarCompensatorCreationInfos.builder()
                 .equipmentId("idStaticVarCompensator1").equipmentName("nameStaticVarCompensator1")
                 .voltageLevelId("vlId1")
@@ -1341,8 +1316,7 @@ public class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(3, 0, 0, 3);
 
-        assertThrows(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage(),
-                NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true)
-        );
+        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
+                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
 }

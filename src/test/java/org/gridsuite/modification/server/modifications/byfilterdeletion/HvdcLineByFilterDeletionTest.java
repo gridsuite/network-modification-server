@@ -14,22 +14,22 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @Tag("IntegrationTest")
-public class HvdcLineByFilterDeletionTest extends AbstractByFilterDeletionTest {
+class HvdcLineByFilterDeletionTest extends AbstractByFilterDeletionTest {
     private static final String HVDC_LINE_ID_1 = "hvdcLine";
 
-    @Before
-    public void specificSetUp() {
+    @BeforeEach
+    void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
         getNetwork().getVariantManager().setWorkingVariant("variant_1");
     }

@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,7 +13,6 @@ import com.powsybl.iidm.modification.topology.RemoveSubstation;
 import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
@@ -22,8 +20,10 @@ import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -34,14 +34,12 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
+class EquipmentDeletionTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -77,7 +75,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testOkWhenRemovingIsolatedEquipment() throws Exception {
+    void testOkWhenRemovingIsolatedEquipment() throws Exception {
 
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
@@ -96,7 +94,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");
@@ -106,8 +104,7 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 equipmentDeletionInfos.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
-    private void deleteHvdcLineWithShuntCompensator(String shuntNameToBeRemoved, boolean selected, int side, boolean warningCase) {
+    private void deleteHvdcLineWithShuntCompensator(String shuntNameToBeRemoved, boolean selected, int side, boolean warningCase) throws Exception {
         final String hvdcLineName = "hvdcLine"; // this line uses LCC converter stations
         assertNotNull(getNetwork().getHvdcLine(hvdcLineName));
         assertEquals(warningCase, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
@@ -139,34 +136,20 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
     }
 
-    @Test
-    public void testDeleteHvdcWithLCCWithShuntCompensatorSelectedSide1() {
-        deleteHvdcLineWithShuntCompensator("v2shunt", true, 1, false);
+    @CsvSource({"true,  1", "true,  2", "false, 1", "false, 2"})
+    @ParameterizedTest(name = ParameterizedTest.ARGUMENTS_WITH_NAMES_PLACEHOLDER)
+    void testDeleteHvdcWithLCCWithShuntCompensator(final boolean selected, final int side) throws Exception {
+        deleteHvdcLineWithShuntCompensator("v2shunt", selected, side, false);
     }
 
     @Test
-    public void testDeleteHvdcWithLCCWithShuntCompensatorSelectedSide2() {
-        deleteHvdcLineWithShuntCompensator("v2shunt", true, 2, false);
-    }
-
-    @Test
-    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelectedSide1() {
-        deleteHvdcLineWithShuntCompensator("v2shunt", false, 1, false);
-    }
-
-    @Test
-    public void testDeleteHvdcWithLCCWithShuntCompensatorNotSelectedSide2() {
-        deleteHvdcLineWithShuntCompensator("v2shunt", false, 2, false);
-    }
-
-    @Test
-    public void testDeleteHvdcWithLCCWithAlreadyDeletedShuntCompensator() {
-        // we select an unexisting shunt: will produce a warning
+    void testDeleteHvdcWithLCCWithAlreadyDeletedShuntCompensator() throws Exception {
+        // we select a nonexistent shunt: will produce a warning
         deleteHvdcLineWithShuntCompensator("deletedOrMissingShuntId", true, 1, true);
     }
 
     @Test
-    public void testRemoveUnknownSubstation() {
+    void testRemoveUnknownSubstation() {
         Network network = Network.create("empty", "test");
         RemoveSubstation removeSubstation = new RemoveSubstationBuilder().withSubstationId("unknownSubstation").build();
         PowsyblException e = assertThrows(PowsyblException.class, () -> removeSubstation.apply(network, true, ReportNode.NO_OP));
@@ -174,16 +157,14 @@ public class EquipmentDeletionTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v1load", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_DELETION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idGenerator", createdValues.get("equipmentId"));

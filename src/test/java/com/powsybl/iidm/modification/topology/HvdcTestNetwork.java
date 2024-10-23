@@ -5,12 +5,13 @@ import com.powsybl.iidm.network.*;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
-public final class HvdcTestNetwork {
+final class HvdcTestNetwork {
 
     private static final String DISCONNECTOR_NAME = "Disconnector";
     private static final String BREAKER_NAME = "Breaker";
 
     private HvdcTestNetwork() {
+        throw new IllegalStateException("Utility class");
     }
 
     private static Network createBase(NetworkFactory networkFactory) {

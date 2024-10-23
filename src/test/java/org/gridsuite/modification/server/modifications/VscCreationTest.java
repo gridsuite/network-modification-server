@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,12 +11,10 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -28,16 +25,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.modifications.VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
-
-public class VscCreationTest extends AbstractNetworkModificationTest {
-
+class VscCreationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -69,7 +64,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    private ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
+    private static ConverterStationCreationInfos buildConverterStationWithMinMaxReactiveLimits() {
         return ConverterStationCreationInfos.builder()
                 .equipmentId("stationId2")
                 .equipmentName("station2")
@@ -89,7 +84,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
-    private ConverterStationCreationInfos buildConverterStationWithReactiveCapabilityCurve() {
+    private static ConverterStationCreationInfos buildConverterStationWithReactiveCapabilityCurve() {
         var point1 = ReactiveCapabilityCurveCreationInfos.builder()
                 .p(0.4)
                 .maxQ(3.)
@@ -191,19 +186,17 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VSC_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("vsc1", createdValues.get("equipmentId"));
+        assertEquals("vsc1", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VSC_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        Assertions.assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
+        assertEquals("vsc1Edited", updatedValues.get("equipmentId"));
     }
 
     @Override
@@ -218,7 +211,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setEquipmentId("");
         String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
@@ -302,7 +295,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
+    void testCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setAngleDroopActivePowerControl(false);
         String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
@@ -318,7 +311,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testNotCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
+    void testNotCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setAngleDroopActivePowerControl(false);
         vscCreationInfos.setDroop(null);
@@ -333,7 +326,7 @@ public class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testAngleDroopPowerControlWithAbsentInfos() throws Exception {
+    void testAngleDroopPowerControlWithAbsentInfos() throws Exception {
         boolean[][] droopInfosIsPresentData = {
             {true, false, false},
             {true, true, false},
