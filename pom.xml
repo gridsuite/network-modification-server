@@ -51,6 +51,7 @@
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
         <powsybl-network-store.version>1.19.0</powsybl-network-store.version>
+        <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
     </properties>
 
     <build>
@@ -210,7 +211,6 @@
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
