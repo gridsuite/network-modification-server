@@ -20,7 +20,8 @@ import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.modifications.GeneratorModification.ERROR_MESSAGE;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
@@ -58,6 +59,9 @@ public class GeneratorCreation extends AbstractModification {
             modificationInfos.getRegulatingTerminalId(),
             modificationInfos.getRegulatingTerminalType(),
             modificationInfos.getRegulatingTerminalVlId());
+
+        ModificationUtils.getInstance().checkActivePowerControl(modificationInfos.getParticipate(),
+            modificationInfos.getDroop(), CREATE_GENERATOR_ERROR, String.format(ERROR_MESSAGE, modificationInfos.getEquipmentId()));
     }
 
     @Override
