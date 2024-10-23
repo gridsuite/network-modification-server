@@ -34,42 +34,14 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.dto.byfilter.equipmentfield.FieldUtils.getFieldValue;
 import static org.gridsuite.modification.server.dto.byfilter.equipmentfield.FieldUtils.setFieldValue;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.NO_VALUE;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 public abstract class AbstractModificationByAssignment extends AbstractModification {
-    public static final String VALUE_KEY_FILTER_NAME = "filterName";
-    public static final String VALUE_KEY_FIELD_NAME = "fieldName";
-    public static final String VALUE_KEY_EQUIPMENT_NAME = "equipmentName";
-    public static final String VALUE_KEY_EQUIPMENT_TYPE = "equipmentType";
-    public static final String VALUE_KEY_EQUIPMENT_COUNT = "equipmentCount";
-    public static final String VALUE_KEY_EQUIPMENT_IDS = "equipmentIds";
-    public static final String VALUE_KEY_NB_CHANGED = "nbChanged";
-    public static final String VALUE_KEY_NB_UNCHANGED = "nbUnchanged";
-    public static final String VALUE_KEY_OLD_VALUE = "oldValue";
-    public static final String VALUE_KEY_NEW_VALUE = "newValue";
-    public static final String VALUE_KEY_MODIFICATION_TYPE_LABEL = "modificationTypeLabel";
-    public static final String VALUE_KEY_FILTERS_EACH_ASSIGNMENT = "filtersEachAssignment";
-    public static final String VALUE_KEY_ERROR_MESSAGE = "errorMessage";
-    public static final String REPORT_KEY_RATIO_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR = "ratioTapChangerEquipmentModifiedError";
-    public static final String REPORT_KEY_PHASE_TAP_CHANGER_EQUIPMENT_MODIFIED_ERROR = "phaseTapChangerEquipmentModifiedError";
-    public static final String REPORT_KEY_EQUIPMENT_MODIFIED_ERROR = "equipmentModifiedError";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION_SOME = "byFilterModificationSome";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION_FAILED = "byFilterModificationFailed";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION_SUCCESS = "byFilterModificationSuccess";
-    public static final String REPORT_KEY_NUMBER_OF_VALID_EQUIPMENT = "numberOfValidEquipment";
-    public static final String REPORT_KEY_NOT_EDITED_EQUIPMENTS_FILTER = "notEditedEquipmentsFilter";
-    public static final String REPORT_KEY_EDITED_FIELD_FILTER = "editedFieldFilter";
-    public static final String REPORT_KEY_FILTER_EQUIPMENTS_NOT_FOUND = "filterEquipmentsNotFound";
-    public static final String REPORT_KEY_EQUIPMENT_MODIFIED_REPORT = "equipmentModifiedReport";
-    public static final String REPORT_KEY_EQUIPMENT_MODIFIED_REPORT_EXCEPTION = "equipmentModifiedReportException";
-    public static final String REPORT_KEY_APPLIED_BY_FILTER_MODIFICATIONS = "appliedByFilterModifications";
-    public static final String REPORT_KEY_APPLIED_ASSIGNMENT = "appliedAssignment";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION_ALL = "byFilterModificationAll";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION_NONE = "byFilterModificationNone";
-    public static final String REPORT_KEY_BY_FILTER_MODIFICATION_NOT_FOUND = "byFilterModificationNotFound";
 
     protected FilterService filterService;
     protected int equipmentNotModifiedCount;

@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TABULAR_CREATION_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.TABULAR_MODIFICATION_REPORT_KEY_PREFIX;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -23,8 +24,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class TabularCreation extends AbstractModification {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TabularCreation.class);
-
-    private static final String TABULAR_CREATION_REPORT_KEY_PREFIX = "tabular";
 
     private final TabularCreationInfos creationInfos;
 
@@ -64,13 +63,13 @@ public class TabularCreation extends AbstractModification {
 
         if (creationInfos.getCreations().size() == applicationFailuresCount) {
             subReportNode.newReportNode()
-                    .withMessageTemplate(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Error", "Tabular creation: No ${defaultMessage}")
+                    .withMessageTemplate(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Error", "Tabular creation: No ${defaultMessage}")
                     .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.ERROR_SEVERITY)
                     .add();
         } else if (applicationFailuresCount > 0) {
             subReportNode.newReportNode()
-                    .withMessageTemplate(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Warning", "Tabular creation: ${creationsCount} ${defaultMessage} and ${failuresCount} have not been created")
+                    .withMessageTemplate(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name() + "Warning", "Tabular creation: ${creationsCount} ${defaultMessage} and ${failuresCount} have not been created")
                     .withUntypedValue("creationsCount", creationInfos.getCreations().size() - applicationFailuresCount)
                     .withUntypedValue("failuresCount", applicationFailuresCount)
                     .withUntypedValue("defaultMessage", defaultMessage)
@@ -78,7 +77,7 @@ public class TabularCreation extends AbstractModification {
                     .add();
         } else {
             subReportNode.newReportNode()
-                    .withMessageTemplate(TABULAR_CREATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name(), "Tabular creation: ${creationsCount} ${defaultMessage}")
+                    .withMessageTemplate(TABULAR_MODIFICATION_REPORT_KEY_PREFIX + creationInfos.getCreationType().name(), "Tabular creation: ${creationsCount} ${defaultMessage}")
                     .withUntypedValue("creationsCount", creationInfos.getCreations().size())
                     .withUntypedValue("defaultMessage", defaultMessage)
                     .withSeverity(TypedValue.INFO_SEVERITY)

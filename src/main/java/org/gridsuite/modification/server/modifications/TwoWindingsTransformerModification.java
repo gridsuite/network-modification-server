@@ -17,16 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 public class TwoWindingsTransformerModification extends AbstractBranchModification {
-
-    private static final String RATIO_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE = "Ratio tap changer";
-    private static final String PHASE_TAP_CHANGER_SUBREPORTER_DEFAULT_MESSAGE = "Phase tap changer";
-    public static final String MAGNETIZING_CONDUCTANCE_FIELD_NAME = "Magnetizing conductance";
 
     public TwoWindingsTransformerModification(TwoWindingsTransformerModificationInfos modificationInfos) {
         super(modificationInfos);

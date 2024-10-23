@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.dto.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
@@ -26,26 +27,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 @AllArgsConstructor
 public class VoltageInitModification extends AbstractModification {
     private final VoltageInitModificationInfos voltageInitModificationInfos;
-
-    private static final String GENERATORS_KEY = "GeneratorsModifications";
-    private static final String GENERATORS_NAME = "Generators";
-    private static final String TWO_WINDINGS_TRANSFORMERS_KEY = "2WindingsTransformersModifications";
-    private static final String TWO_WINDINGS_TRANSFORMERS_NAME = "2 windings transformers";
-    private static final String THREE_WINDINGS_TRANSFORMERS_KEY = "3WindingsTransformersModifications";
-    private static final String THREE_WINDINGS_TRANSFORMERS_NAME = "3 windings transformers";
-    private static final String STATIC_VAR_COMPENSATORS_KEY = "StaticVarCompensatorsModifications";
-    private static final String STATIC_VAR_COMPENSATORS_NAME = "Static var compensators";
-    private static final String VSC_CONVERTER_STATIONS_KEY = "VscConverterStationsModifications";
-    private static final String VSC_CONVERTER_STATIONS_NAME = "Vsc converter stations";
-    private static final String SHUNT_COMPENSATORS_KEY = "ShuntCompensatorsModifications";
-    private static final String SHUNT_COMPENSATORS_NAME = "Shunt compensators";
-
-    private static final String VOLTAGE_SET_POINT = "Voltage set point";
-    private static final String VOLTAGE_MAGNITUDE = "Voltage magnitude";
-    private static final String VOLTAGE_ANGLE = "Voltage angle";
-    private static final String REACTIVE_POWER_SET_POINT = "Reactive power set point";
-    private static final String SECTION_COUNT = "Section count";
-    private static final String COUNT = "count";
 
     @Override
     public void check(Network network) throws NetworkModificationException {

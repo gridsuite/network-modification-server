@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATOR_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.ACTIVE_LIMITS;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.LIMITS;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
@@ -29,8 +31,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 public class GeneratorCreation extends AbstractModification {
 
     private final GeneratorCreationInfos modificationInfos;
-    private static final String LIMITS = "Limits";
-    private static final String ACTIVE_LIMITS = "Active limits";
 
     public GeneratorCreation(GeneratorCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;

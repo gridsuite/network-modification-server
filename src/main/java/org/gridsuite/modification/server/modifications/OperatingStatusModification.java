@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.OPERATING_STATUS_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.APPLIED;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.distinctByKey;
 
 /**
@@ -37,8 +38,6 @@ public class OperatingStatusModification extends AbstractModification {
 
     private final OperatingStatusModificationInfos modificationInfos;
     private static final Logger LOGGER = LoggerFactory.getLogger(OperatingStatusModification.class);
-
-    private static final String APPLIED = "Applied";
 
     public OperatingStatusModification(OperatingStatusModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;

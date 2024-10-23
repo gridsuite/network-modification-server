@@ -33,24 +33,14 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.GENERATION_DISPATCH_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public class GenerationDispatch extends AbstractModification {
-    private static final String SYNCHRONOUS_COMPONENT = "SC";
-    private static final String POWER_TO_DISPATCH = "PowerToDispatch";
-    private static final String STACKING = "Stacking";
-    private static final String RESULT = "Result";
-    private static final String GENERATOR = "generator";
-    private static final String SUBSTATION = "substation";
-    private static final String REGION_CVG = "regionCvg";
-    private static final String IS_PLURAL = "isPlural";
-    private static final double EPSILON = 0.001;
-    private static final String GENERATORS_WITH_FIXED_SUPPLY = "generatorsWithFixedSupply";
-    private static final String GENERATORS_WITHOUT_OUTAGE = "generatorsWithoutOutage";
-    private static final String GENERATORS_FREQUENCY_RESERVE = "generatorsFrequencyReserve";
 
+    public static final double EPSILON = 0.001;
     private final GenerationDispatchInfos generationDispatchInfos;
 
     protected FilterService filterService;

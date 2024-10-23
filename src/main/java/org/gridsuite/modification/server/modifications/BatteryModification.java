@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_BATTERY_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
@@ -34,10 +35,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 public class BatteryModification extends AbstractModification {
 
     private final BatteryModificationInfos modificationInfos;
-
-    private static final String LIMITS = "Limits";
-    private static final String ACTIVE_LIMITS = "Active limits";
-    private static final String SETPOINTS = "Setpoints";
 
     public BatteryModification(BatteryModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;

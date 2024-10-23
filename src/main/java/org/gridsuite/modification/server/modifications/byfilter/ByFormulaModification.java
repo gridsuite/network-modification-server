@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BY_FORMULA_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.REPORT_KEY_EQUIPMENT_MODIFIED_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.VALUE_KEY_EQUIPMENT_NAME;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TABULAR_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.TABULAR_MODIFICATION_REPORT_KEY_PREFIX;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -25,8 +26,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 public class TabularModification extends AbstractModification {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TabularModification.class);
-
-    private static final String TABULAR_MODIFICATION_REPORT_KEY_PREFIX = "tabular";
 
     private final TabularModificationInfos modificationInfos;
 

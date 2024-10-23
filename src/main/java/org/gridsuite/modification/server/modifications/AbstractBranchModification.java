@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BRANCH_MODIFICATION_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.DURATION;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.NAME;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
@@ -31,8 +33,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
  */
 public abstract class AbstractBranchModification extends AbstractModification {
 
-    private static final String DURATION = "duration";
-    private static final String NAME = "name";
     protected final BranchModificationInfos modificationInfos;
 
     protected AbstractBranchModification(BranchModificationInfos modificationInfos) {

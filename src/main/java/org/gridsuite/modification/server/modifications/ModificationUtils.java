@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -39,24 +40,6 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 // TODO transfer to powsybl-core (com.powsybl.iidm.modification)
 // TODO remove public qualifier for all methods
 public final class ModificationUtils {
-
-    public static final String DISCONNECTOR = "disconnector_";
-    public static final String BREAKER = "breaker_";
-    public static final String BUS_BAR_SECTION_ID = "busbarSectionId";
-
-    public static final String DOES_NOT_EXIST_IN_NETWORK = " does not exist in network";
-    public static final String EQUIPMENT_DISCONNECTED = "equipmentDisconnected";
-    public static final String NO_VALUE = "No value";
-    public static final String LIMITS = "Limits";
-    public static final String REACTIVE_LIMITS = "Reactive limits";
-    private static final String SETPOINTS = "Setpoints";
-    private static final String MIN_REACTIVE_POWER_FIELDNAME = "Minimum reactive power";
-    private static final String MAX_REACTIVE_POWER_FIELDNAME = "Maximum reactive power";
-    private static final String CONNECTIVITY = "Connectivity";
-    public static final String CONNECTION_NAME_FIELD_NAME = "Connection name";
-    public static final String CONNECTION_DIRECTION_FIELD_NAME = "Connection direction";
-    public static final String CONNECTION_POSITION_FIELD_NAME = "Connection position";
-    public static final String NOT_EXIST_IN_NETWORK = " does not exist in network";
 
     public enum FeederSide {
         INJECTION_SINGLE_SIDE,

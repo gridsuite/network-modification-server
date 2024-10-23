@@ -7,8 +7,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static org.gridsuite.modification.server.modifications.ConstantUtil.PROPERTIES;
+
 public final class PropertiesUtils {
-    public static final String PROPERTIES = "Properties";
 
     private PropertiesUtils() {
         // Should not be instantiated

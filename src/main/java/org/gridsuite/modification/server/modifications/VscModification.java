@@ -23,19 +23,13 @@ import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_VSC_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
-import static org.gridsuite.modification.server.modifications.VscCreation.VSC_CHARACTERISTICS;
-import static org.gridsuite.modification.server.modifications.VscCreation.VSC_SETPOINTS;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
 
 public class VscModification extends AbstractModification {
-    public static final String NO_VALUE = "No value";
-    public static final String ANGLE_DROOP_ACTIVE_POWER_CONTROL_FIELD = "AngleDroopActivePowerControl";
-    public static final String DROOP_FIELD = "Droop";
-    public static final String P0_FIELD = "P0";
-    public static final String ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG = "Angle droop active power control, Droop and P0 must be all provided or none";
 
     private final VscModificationInfos modificationInfos;
 

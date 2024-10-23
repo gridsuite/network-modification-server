@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.BATTERY_ALREADY_EXISTS;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.ACTIVE_LIMITS;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.LIMITS;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.*;
 
 /**
@@ -26,8 +28,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
 public class BatteryCreation extends AbstractModification {
 
     private final BatteryCreationInfos modificationInfos;
-    private static final String LIMITS = "Limits";
-    private static final String ACTIVE_LIMITS = "Active limits";
 
     public BatteryCreation(BatteryCreationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;

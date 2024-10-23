@@ -20,17 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.createInjectionInNodeBreaker;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.reportInjectionCreationConnectivity;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
  */
-
 public class VscCreation extends AbstractModification {
-
-    public static final String VSC_SETPOINTS = "vscSetPoints";
-    public static final String VSC_CHARACTERISTICS = "vscCharacteristics";
 
     private final VscCreationInfos modificationInfos;
 
@@ -63,7 +60,7 @@ public class VscCreation extends AbstractModification {
         }
         // at least one field is provided but not for the others => NOT OK
         if (isPresentAngleDroopActivePowerControl || isPresentDroop || isPresentP0) {
-            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+            throw new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL, ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
         }
         // otherwise, i.e. none of the fields is not provided => OK extension will not be created
     }

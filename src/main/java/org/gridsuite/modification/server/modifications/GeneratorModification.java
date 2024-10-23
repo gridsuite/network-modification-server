@@ -19,16 +19,13 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.*;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
  * @author Ayoub Labidi <ayoub.labidi at rte-france.com>
  */
 public class GeneratorModification extends AbstractModification {
-
-    private static final String LIMITS = "Limits";
-    private static final String ACTIVE_LIMITS = "Active limits";
-    private static final String SETPOINTS = "Setpoints";
 
     private final GeneratorModificationInfos modificationInfos;
 

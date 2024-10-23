@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
+import static org.gridsuite.modification.server.modifications.ConstantUtil.SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE;
 import static org.gridsuite.modification.server.modifications.ModificationUtils.insertReportNode;
 
 /**
@@ -29,7 +30,6 @@ import static org.gridsuite.modification.server.modifications.ModificationUtils.
  */
 
 public class ShuntCompensatorModification extends AbstractModification {
-    private static final String SWITCHED_ON_Q_AT_NOMINALV_LOG_MESSAGE = "Switched-on Q at nominal voltage";
 
     private final ShuntCompensatorModificationInfos modificationInfos;
 
