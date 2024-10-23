@@ -1184,18 +1184,27 @@ public final class ModificationUtils {
     private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
                                              AttributeModification<Boolean> participateInfo,
                                              AttributeModification<Float> droopInfo,
-                                             List<ReportNode> reports) {
-        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
-        adder.withParticipate(participate);
-        if (participateInfo != null && reports != null) {
-            reports.add(buildModificationReport(null, participate, "Participate"));
+                                             List<ReportNode> reports,
+                                             NetworkModificationException.Type exceptionType,
+                                             String errorMessage) {
+        Boolean participate = Optional.ofNullable(participateInfo).map(AttributeModification::getValue).orElse(null);
+        Float droop = Optional.ofNullable(droopInfo).map(AttributeModification::getValue).orElse(null);
+        checkActivePowerControl(participate, droop, exceptionType, errorMessage);
+        if (participate != null && droop != null) {
+            adder.withParticipate(participate)
+                .withDroop(droop)
+                .add();
+            if (reports != null) {
+                reports.add(buildModificationReport(null, participate, "Participate"));
+                reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+            }
         }
-        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
-        adder.withDroop(droop);
-        if (droopInfo != null && reports != null) {
-            reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+    }
+
+    public void checkActivePowerControl(Boolean participate, Float droop, NetworkModificationException.Type exceptionType, String errorMessage) {
+        if (Boolean.TRUE.equals(participate) && droop == null) {
+            throw new NetworkModificationException(exceptionType, String.format("%s Active power regulation on : missing required droop value", errorMessage));
         }
-        adder.add();
     }
 
     public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
@@ -1203,19 +1212,21 @@ public final class ModificationUtils {
                                                          AttributeModification<Boolean> participateInfo,
                                                          AttributeModification<Float> droopInfo,
                                                          ReportNode subReportNode,
-                                                         ReportNode subReporterSetpoints) {
+                                                         ReportNode subReporterSetpoints,
+                                                         NetworkModificationException.Type exceptionType,
+                                                         String errorMessage) {
         List<ReportNode> reports = new ArrayList<>();
         if (activePowerControl != null) {
             modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
-            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
+            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports, exceptionType, errorMessage);
         }
         if (subReportNode != null) {
             ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
             if (subReporterSetpoints == null && !reports.isEmpty()) {
                 subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
             }
-            reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
+            reportModifications(subReportNodeSetpoints2, reports, "activePowerControlModified", "Active power control");
             return subReportNodeSetpoints2;
         }
         return null;
