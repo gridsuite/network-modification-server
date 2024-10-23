@@ -29,6 +29,7 @@ public class GeneratorModification extends AbstractModification {
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
     private static final String SETPOINTS = "Setpoints";
+    public static final String ERROR_MESSAGE = "Generator '%s' : ";
 
     private final GeneratorModificationInfos modificationInfos;
 
@@ -210,9 +211,10 @@ public class GeneratorModification extends AbstractModification {
                                                                  Generator generator, ReportNode subReportNode, ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Generator> activePowerControl = generator.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
+
         return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder,
             modificationInfos.getParticipate(), modificationInfos.getDroop(), subReportNode, subReportNodeSetpoints,
-            MODIFY_GENERATOR_ERROR, "Generator '" + modificationInfos.getEquipmentId() + "' : ");
+            MODIFY_GENERATOR_ERROR, String.format(ERROR_MESSAGE, modificationInfos.getEquipmentId()));
     }
 
     private void modifyGeneratorStartUpAttributes(GeneratorModificationInfos modificationInfos, Generator generator,

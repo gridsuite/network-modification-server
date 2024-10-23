@@ -1187,25 +1187,23 @@ public final class ModificationUtils {
                                              List<ReportNode> reports,
                                              NetworkModificationException.Type exceptionType,
                                              String errorMessage) {
-        Boolean participate = participateInfo == null ? null : participateInfo.getValue();
-        Float droop = droopInfo == null ? null : droopInfo.getValue();
+        Boolean participate = Optional.ofNullable(participateInfo).map(AttributeModification::getValue).orElse(null);
+        Float droop = Optional.ofNullable(droopInfo).map(AttributeModification::getValue).orElse(null);
         checkActivePowerControl(participate, droop, exceptionType, errorMessage);
         if (participate != null && droop != null) {
-            adder.withParticipate(participate);
+            adder.withParticipate(participate)
+                .withDroop(droop)
+                .add();
             if (reports != null) {
                 reports.add(buildModificationReport(null, participate, "Participate"));
-            }
-            adder.withDroop(droop);
-            if (reports != null) {
                 reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
             }
-            adder.add();
         }
     }
 
     public void checkActivePowerControl(Boolean participate, Float droop, NetworkModificationException.Type exceptionType, String errorMessage) {
         if (Boolean.TRUE.equals(participate) && droop == null) {
-            throw new NetworkModificationException(exceptionType, errorMessage + "for creation if participate is true, droop can not be null");
+            throw new NetworkModificationException(exceptionType, String.format("%s Active power regulation on : missing required droop value", errorMessage));
         }
     }
 

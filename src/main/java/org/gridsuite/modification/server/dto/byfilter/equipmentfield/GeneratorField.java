@@ -65,6 +65,7 @@ public enum GeneratorField {
 
     public static void setNewValue(Generator generator, String generatorField, @NotNull String newValue) {
         GeneratorField field = GeneratorField.valueOf(generatorField);
+        String errorMessage = String.format(ERROR_MESSAGE, generator.getId());
         switch (field) {
             case MAXIMUM_ACTIVE_POWER -> modifyGeneratorActiveLimitsAttributes(
                     new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
@@ -75,7 +76,7 @@ public enum GeneratorField {
                 ModificationUtils.getInstance().checkActivePowerZeroOrBetweenMinAndMaxActivePower(
                     new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
                     null, null, generator.getMinP(), generator.getMaxP(), generator.getTargetP(),
-                    MODIFY_GENERATOR_ERROR, "Generator '" + generator.getId() + "' : "
+                    MODIFY_GENERATOR_ERROR, errorMessage
                 );
                 generator.setTargetP(Double.parseDouble(newValue));
             }
@@ -99,7 +100,7 @@ public enum GeneratorField {
                 ActivePowerControlAdder<Generator> activePowerControlAdder = generator.newExtension(ActivePowerControlAdder.class);
                 ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, null,
                         new AttributeModification<>(Float.parseFloat(newValue), OperationType.SET), null, null,
-                    MODIFY_GENERATOR_ERROR, "Generator '" + generator.getId() + "' : ");
+                    MODIFY_GENERATOR_ERROR, errorMessage);
             }
             case TRANSIENT_REACTANCE -> modifyGeneratorShortCircuitAttributes(
                     new AttributeModification<>(Double.parseDouble(newValue), OperationType.SET),
