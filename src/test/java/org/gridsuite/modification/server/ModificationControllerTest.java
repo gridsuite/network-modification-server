@@ -695,7 +695,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    public void testNetworkCompositeModification() throws Exception {
+    void testNetworkCompositeModification() throws Exception {
         // Insert some switch modifications in the group
         int modificationsNumber = 2;
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
