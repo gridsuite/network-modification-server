@@ -38,6 +38,7 @@ public class BatteryModification extends AbstractModification {
     private static final String LIMITS = "Limits";
     private static final String ACTIVE_LIMITS = "Active limits";
     private static final String SETPOINTS = "Setpoints";
+    public static final String ERROR_MESSAGE = "Battery '%s' : ";
 
     public BatteryModification(BatteryModificationInfos modificationInfos) {
         this.modificationInfos = modificationInfos;
@@ -171,7 +172,8 @@ public class BatteryModification extends AbstractModification {
                                                                        ReportNode subReportNodeSetpoints) {
         ActivePowerControl<Battery> activePowerControl = battery.getExtension(ActivePowerControl.class);
         ActivePowerControlAdder<Battery> activePowerControlAdder = battery.newExtension(ActivePowerControlAdder.class);
-        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder, participate, droop, subReportNode, subReportNodeSetpoints);
+        return ModificationUtils.getInstance().modifyActivePowerControlAttributes(activePowerControl, activePowerControlAdder,
+            participate, droop, subReportNode, subReportNodeSetpoints, MODIFY_BATTERY_ERROR, String.format(ERROR_MESSAGE, battery.getId()));
     }
 
     private ReportNode modifyBatteryConnectivityAttributes(BatteryModificationInfos modificationInfos,

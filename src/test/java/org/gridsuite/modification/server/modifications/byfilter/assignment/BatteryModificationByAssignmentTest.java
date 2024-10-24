@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -17,19 +16,19 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.BatteryField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createBattery;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class BatteryModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
+class BatteryModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String BATTERY_ID_1 = "v3Battery";
     private static final String BATTERY_ID_2 = "battery2";
     private static final String BATTERY_ID_3 = "battery3";
@@ -38,7 +37,7 @@ public class BatteryModificationByAssignmentTest extends AbstractModificationByA
     private static final String BATTERY_ID_6 = "battery6";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(BATTERY_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
@@ -210,5 +209,4 @@ public class BatteryModificationByAssignmentTest extends AbstractModificationByA
     protected EquipmentType getEquipmentType() {
         return EquipmentType.BATTERY;
     }
-
 }

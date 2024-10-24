@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
@@ -19,18 +18,18 @@ import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.IntegerAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
-public class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
+class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String SHUNT_COMPENSATOR_ID_1 = "v1shunt";
     private static final String SHUNT_COMPENSATOR_ID_2 = "v2shunt";
     private static final String SHUNT_COMPENSATOR_ID_3 = "v3shunt";
@@ -38,7 +37,7 @@ public class ShuntCompensatorModificationByAssignmentTest extends AbstractModifi
     private static final String SHUNT_COMPENSATOR_ID_5 = "v5shunt";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(SHUNT_COMPENSATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
@@ -180,5 +179,4 @@ public class ShuntCompensatorModificationByAssignmentTest extends AbstractModifi
     protected EquipmentType getEquipmentType() {
         return EquipmentType.SHUNT_COMPENSATOR;
     }
-
 }

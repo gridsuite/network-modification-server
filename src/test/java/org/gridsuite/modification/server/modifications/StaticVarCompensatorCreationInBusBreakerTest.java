@@ -10,26 +10,24 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.FreePropertyInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.StaticVarCompensatorCreationInfos;
 import org.gridsuite.modification.server.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
+class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -56,8 +54,10 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
                 .busOrBusbarSectionId("bus1")
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
-                .maxSusceptance(224.0)
-                .minSusceptance(200.0)
+                .maxSusceptance(null)
+                .minSusceptance(null)
+                .maxQAtNominalV(224.0)
+                .minQAtNominalV(200.0)
                 .regulationMode(StaticVarCompensator.RegulationMode.VOLTAGE)
                 .voltageSetpoint(120.0)
                 .reactivePowerSetpoint(300.0)
@@ -105,7 +105,7 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
     }
 
     @Test
-    public void testCreateWithBusBarSectionErrors() throws Exception {
+    void testCreateWithBusBarSectionErrors() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(staticVarCompensatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
@@ -115,7 +115,7 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
     }
 
     @Test
-    public void testCreateWithRegulatedTerminalError() throws Exception {
+    void testCreateWithRegulatedTerminalError() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setVoltageRegulationType(VoltageRegulationType.DISTANT);
         staticVarCompensatorCreationInfos.setRegulatingTerminalVlId("v1");
@@ -130,16 +130,14 @@ public class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetwor
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("STATIC_VAR_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idStaticVarCompensator2", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("STATIC_VAR_COMPENSATOR_CREATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idStaticVarCompensator2Edited", createdValues.get("equipmentId"));

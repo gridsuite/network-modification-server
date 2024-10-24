@@ -8,13 +8,12 @@ package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -24,9 +23,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
+class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -80,7 +77,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void createWithInvalidLineIdTest() throws Exception {
+    void createWithInvalidLineIdTest() throws Exception {
         // test create with incorrect line id
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
                 .stashed(false)
@@ -98,7 +95,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void createWithNoAttachmentPointTest() throws Exception {
+    void createWithNoAttachmentPointTest() throws Exception {
         DeleteAttachingLineInfos deleteAttachingLineInfos = DeleteAttachingLineInfos.builder()
                 .stashed(false)
                 .lineToAttachTo1Id("l1")
@@ -115,7 +112,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void createNewLineWithExistingIdTest() throws Exception {
+    void createNewLineWithExistingIdTest() throws Exception {
         // try to create an already existing line
         DeleteAttachingLineInfos deleteAttachingLineInfos = (DeleteAttachingLineInfos) buildModification();
         deleteAttachingLineInfos.setReplacingLine1Id("l2");
@@ -127,8 +124,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("DELETE_ATTACHING_LINE", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("l3", createdValues.get("attachedLineId"));
@@ -137,8 +133,7 @@ public class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("DELETE_ATTACHING_LINE", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("l3", updatedValues.get("attachedLineId"));

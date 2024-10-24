@@ -4,15 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -21,7 +20,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class VoltageInitModificationTest extends AbstractNetworkModificationTest {
+class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
@@ -290,25 +289,25 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     }
 
     @Test
-    public void testVoltageInitConnectedSectionCountNull() throws Exception {
+    void testVoltageInitConnectedSectionCountNull() throws Exception {
         testVoltageInitShunt("v2shunt", 0, null, false);
         assertLogMessage("Section count value is undefined", "shuntCompensatorSectionCountUndefined", reportService);
     }
 
     @Test
-    public void testVoltageInitConnectedCurrentSection0Section0() throws Exception {
+    void testVoltageInitConnectedCurrentSection0Section0() throws Exception {
         testVoltageInitShunt("v2shunt", 0, 0, false);
         assertLogMessage("Shunt compensator disconnected", "shuntCompensatorDisconnected", reportService);
     }
 
     @Test
-    public void testVoltageInitDisconnectedConnectNull() throws Exception {
+    void testVoltageInitDisconnectedConnectNull() throws Exception {
         testVoltageInitShunt("v5shunt", 0, 0, null);
         assertLogMessage("Connect value is undefined", "shuntCompensatorConnectUndefined", reportService);
     }
 
     @Test
-    public void testVoltageInitDisconnectedCurrentSection0Section2() throws Exception {
+    void testVoltageInitDisconnectedCurrentSection0Section2() throws Exception {
         testVoltageInitShunt("v5shunt", 0, 2, true);
         assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
         assertLogMessage("Section count : 0 → 2", "modification-indent1", reportService);
@@ -316,7 +315,7 @@ public class VoltageInitModificationTest extends AbstractNetworkModificationTest
     }
 
     @Test
-    public void testVoltageInitDisconnectedCurrentSection1Section1() throws Exception {
+    void testVoltageInitDisconnectedCurrentSection1Section1() throws Exception {
         testVoltageInitShunt("v5shunt", 1, 1, true);
         assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
         assertEquals(1, getNetwork().getShuntCompensator("v5shunt").getSectionCount());

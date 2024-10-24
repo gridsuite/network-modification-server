@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.Generator;
@@ -18,22 +17,22 @@ import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos
 import org.gridsuite.modification.server.dto.byfilter.assignment.BooleanAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.server.dto.byfilter.equipmentfield.GeneratorField;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Thang PHAM <quyet-thang.pham at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class GeneratorModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
+class GeneratorModificationByAssignmentTest extends AbstractModificationByAssignmentTest {
     private static final String GENERATOR_ID_1 = "idGenerator";
     private static final String GENERATOR_ID_2 = "v5generator";
     private static final String GENERATOR_ID_3 = "v6generator";
@@ -46,7 +45,7 @@ public class GeneratorModificationByAssignmentTest extends AbstractModificationB
     private static final String GENERATOR_ID_10 = "gen10";
 
     @Test
-    public void testCreateWithWarning() throws Exception {
+    void testCreateWithWarning() throws Exception {
         IdentifierListFilterEquipmentAttributes identifiableAttributes = getIdentifiableAttributes(GENERATOR_ID_1, 1.0);
         IdentifierListFilterEquipmentAttributes wrongIdAttributes = getIdentifiableAttributes("wrongId", 1.0);
 
@@ -60,6 +59,7 @@ public class GeneratorModificationByAssignmentTest extends AbstractModificationB
         assertEquals(55, getNetwork().getGenerator(GENERATOR_ID_1).getTargetP(), 0);
     }
 
+    @Override
     protected void createEquipments() {
         getNetwork().getGenerator(GENERATOR_ID_1)
                 .setTargetP(100)
@@ -128,6 +128,7 @@ public class GeneratorModificationByAssignmentTest extends AbstractModificationB
         getNetwork().getGenerator(GENERATOR_ID_10).setRatedS(30.);
     }
 
+    @Override
     protected List<AbstractFilter> getTestFilters() {
         IdentifierListFilter filter1 = IdentifierListFilter.builder().id(FILTER_ID_1).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(GENERATOR_ID_1, 1.0),

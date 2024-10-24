@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.utils;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -16,7 +15,7 @@ import com.powsybl.iidm.network.Identifiable;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -43,6 +42,7 @@ public final class TestUtils {
     private static final long TIMEOUT = 100;
 
     private TestUtils() {
+        throw new IllegalCallerException("Utility class");
     }
 
     public static Set<String> getRequestsDone(int n, MockWebServer server) throws UncheckedInterruptedException {
@@ -67,7 +67,7 @@ public final class TestUtils {
 
     public static void assertQueuesEmptyThenClear(List<String> destinations, OutputDestination output) {
         try {
-            destinations.forEach(destination -> assertNull("Should not be any messages in queue " + destination + " : ", output.receive(TIMEOUT, destination)));
+            destinations.forEach(destination -> assertNull(output.receive(TIMEOUT, destination), "Should not be any messages in queue " + destination));
         } catch (NullPointerException e) {
             // Ignoring
         } finally {
@@ -77,7 +77,6 @@ public final class TestUtils {
 
     public static void assertServerRequestsEmptyThenShutdown(MockWebServer server) throws UncheckedInterruptedException, IOException {
         Set<String> httpRequest = null;
-
         try {
             httpRequest = getRequestsDone(1, server);
         } catch (NullPointerException e) {
@@ -85,8 +84,7 @@ public final class TestUtils {
         } finally {
             server.shutdown();
         }
-
-        assertNull("Should not be any http requests : ", httpRequest);
+        assertNull(httpRequest, "Should not be any http requests :");
     }
 
     public static void assertRequestsCount(long select, long insert, long update, long delete) {

@@ -4,36 +4,24 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.LoadingLimits;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.PhaseTapChanger;
-import com.powsybl.iidm.network.Terminal;
-import com.powsybl.iidm.network.TwoSides;
-import com.powsybl.iidm.network.TwoWindingsTransformer;
-
+import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Florent MILLOT <florent.millot at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class TwoWindingsTransformerModificationTest extends AbstractNetworkModificationTest {
+class TwoWindingsTransformerModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -296,7 +284,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) buildModification();
         twoWindingsTransformerModificationInfos.setEquipmentId("2wt_not_existing");
         String modificationInfosJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
@@ -309,7 +297,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Test
-    public void testRatioTapChangerModification() throws Exception {
+    void testRatioTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("trf1")
@@ -431,7 +419,7 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Test
-    public void testPhaseTapChangerModification() throws Exception {
+    void testPhaseTapChangerModification() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = TwoWindingsTransformerModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("trf2")
@@ -577,24 +565,21 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("trf1", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("TWO_WINDINGS_TRANSFORMER_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("trf1Edited", updatedValues.get("equipmentId"));
     }
 
     @Test
-    @SneakyThrows
-    public void testChangeConnectionStatus() {
+    void testChangeConnectionStatus() throws Exception {
         changeConnectionState(getNetwork().getTwoWindingsTransformer("trf1"), TwoSides.ONE, true, true, null);
         changeConnectionState(getNetwork().getTwoWindingsTransformer("trf1"), TwoSides.ONE, true, false, null);
         changeConnectionState(getNetwork().getTwoWindingsTransformer("trf1"), TwoSides.TWO, true, true, null);
@@ -602,11 +587,10 @@ public class TwoWindingsTransformerModificationTest extends AbstractNetworkModif
         changeConnectionState(getNetwork().getTwoWindingsTransformer("trf2"), TwoSides.ONE, true, true, null);
         changeConnectionState(getNetwork().getTwoWindingsTransformer("trf2"), TwoSides.ONE, true, false, null);
         changeConnectionState(getNetwork().getTwoWindingsTransformer("trf2"), TwoSides.TWO, true, true, null);
-        changeConnectionState(getNetwork().getTwoWindingsTransformer("trf2"), TwoSides.TWO, true, false, "Could not disconnect equipment 'trf2' on side TWO");
+        changeConnectionState(getNetwork().getTwoWindingsTransformer("trf2"), TwoSides.TWO, true, false, "Could not disconnect equipment 'trf2'");
     }
 
-    @SneakyThrows
-    private void changeConnectionState(TwoWindingsTransformer existingEquipment, TwoSides side, boolean actualState, boolean expectedState, String errorMessage) {
+    private void changeConnectionState(TwoWindingsTransformer existingEquipment, TwoSides side, boolean actualState, boolean expectedState, String errorMessage) throws Exception {
         Terminal terminal = existingEquipment.getTerminal(side);
         assertThat(terminal.isConnected()).isEqualTo(actualState);
 
