@@ -220,6 +220,18 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids));
     }
 
+    @GetMapping(value = "/network-composite-modification/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the content of a composite modification via its id")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Content of the composite modification"),
+        @ApiResponse(responseCode = "404", description = "This composite modification does not exist")}
+    )
+    public ResponseEntity<List<ModificationInfos>> getCompositeModificationContent(@PathVariable("id") UUID compositeModificationId) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.getCompositeModificationContentMetadata(compositeModificationId)
+        );
+    }
+
     @PostMapping(value = "/network-modifications", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Duplicate some modifications without group ownership")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The duplicated modifications uuids mapped with their source uuid")})

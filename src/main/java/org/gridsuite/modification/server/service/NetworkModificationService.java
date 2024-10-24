@@ -77,6 +77,12 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    // Need a transaction for collections lazy loading
+    public List<ModificationInfos> getCompositeModificationContentMetadata(UUID compositeModificationUuid) {
+        return networkModificationRepository.getCompositeModificationsContentInfos(List.of(compositeModificationUuid), true);
+    }
+
+    @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }
@@ -289,7 +295,7 @@ public class NetworkModificationService {
     public Optional<NetworkModificationResult> insertCompositeModifications(UUID targetGroupUuid,
                                                                             UUID networkUuid, String variantId,
                                                                             ReportInfos reportInfos, List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsContentInfos(modificationsUuids, false);
         networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
@@ -332,7 +338,7 @@ public class NetworkModificationService {
                                                                            String variantId,
                                                                            ReportInfos reportInfos,
                                                                            List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsContentInfos(modificationsUuids, false);
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 }
