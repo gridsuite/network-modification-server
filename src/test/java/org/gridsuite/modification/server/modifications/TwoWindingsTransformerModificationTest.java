@@ -614,7 +614,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
     }
 
     @Test
-    public void testPhaseTapChangerRegulationModification() throws Exception {
+    void testPhaseTapChangerRegulationModification() throws Exception {
         TwoWindingsTransformer twt3 = createPhaseTapChanger();
         String twtId = "trf3";
         // modification 1 : FIXED_TAP -> CURRENT_LIMITER
@@ -709,7 +709,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
     }
 
     @Test
-    public void testPhaseTapChangerRegulationModification2() throws Exception {
+    void testPhaseTapChangerRegulationModification2() throws Exception {
         TwoWindingsTransformer twt3 = createPhaseTapChanger();
         String twtId = "trf3";
 
@@ -956,6 +956,109 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             .setRho(1.0)
             .setAlpha(1.1)
             .endStep();
+    }
+
+    @Test
+    void testPhaseTapChangerRegulationCreation() throws Exception {
+        // test with non pre-existent phase tap changer
+        String twtId = "trf3";
+        TwoWindingsTransformer twt3 = createTwoWindingsTransformer(getNetwork().getSubstation("s1"), "trf3", "trf3", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
+            41, 151, getNetwork().getVoltageLevel("v1").getId(), getNetwork().getVoltageLevel("v2").getId(),
+            "trf3", 1, ConnectablePosition.Direction.TOP,
+            "trf3", 2, ConnectablePosition.Direction.TOP);
+        // creation 1 : CURRENT_LIMITER
+        TwoWindingsTransformerModificationInfos phaseTapChangerCreation = TwoWindingsTransformerModificationInfos.builder()
+            .stashed(false)
+            .equipmentId(twtId)
+            .ratioTapChanger(RatioTapChangerModificationInfos.builder()
+                .build())
+            .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+                .enabled(new AttributeModification<>(true, OperationType.SET))
+                .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
+                .regulationValue(new AttributeModification<>(10.0, OperationType.SET))
+                .lowTapPosition(new AttributeModification<>(0, OperationType.SET))
+                .tapPosition(new AttributeModification<>(1, OperationType.SET))
+                .regulatingTerminalId(new AttributeModification<>("v3load", OperationType.SET))
+                .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
+                .regulatingTerminalVlId(new AttributeModification<>("V3", OperationType.SET))
+                .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .index(0)
+                        .r(0)
+                        .g(0)
+                        .b(0)
+                        .x(0)
+                        .rho(1)
+                        .build(),
+                    TapChangerStepCreationInfos.builder()
+                        .index(1)
+                        .r(0)
+                        .g(0)
+                        .b(0)
+                        .x(0)
+                        .rho(1)
+                        .build()
+                ))
+                .build())
+            .build();
+
+        String modificationToModifyJson = mapper.writeValueAsString(phaseTapChangerCreation);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        PhaseTapChanger phaseTapChanger = twt3.getPhaseTapChanger();
+
+        // creation 1 assert
+        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());
+        assertTrue(phaseTapChanger.isRegulating());
+        assertEquals(0.0, phaseTapChanger.getTargetDeadband());
+        assertEquals(10.0, phaseTapChanger.getRegulationValue());
+
+        // creation 2 : FIXED_TAP
+        twt3.getPhaseTapChanger().remove();
+        phaseTapChangerCreation = TwoWindingsTransformerModificationInfos.builder()
+            .stashed(false)
+            .equipmentId(twtId)
+            .ratioTapChanger(RatioTapChangerModificationInfos.builder()
+                .build())
+            .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
+                .enabled(new AttributeModification<>(true, OperationType.SET))
+                .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET))
+                .lowTapPosition(new AttributeModification<>(0, OperationType.SET))
+                .tapPosition(new AttributeModification<>(1, OperationType.SET))
+                .regulatingTerminalId(new AttributeModification<>("v3load", OperationType.SET))
+                .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
+                .regulatingTerminalVlId(new AttributeModification<>("V3", OperationType.SET))
+                .steps(List.of(TapChangerStepCreationInfos.builder()
+                        .index(0)
+                        .r(0)
+                        .g(0)
+                        .b(0)
+                        .x(0)
+                        .rho(1)
+                        .build(),
+                    TapChangerStepCreationInfos.builder()
+                        .index(1)
+                        .r(0)
+                        .g(0)
+                        .b(0)
+                        .x(0)
+                        .rho(1)
+                        .build()
+                ))
+                .build())
+            .build();
+
+        modificationToModifyJson = mapper.writeValueAsString(phaseTapChangerCreation);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        phaseTapChanger = twt3.getPhaseTapChanger();
+
+        // creation 2 assert
+        assertEquals(PhaseTapChanger.RegulationMode.FIXED_TAP, phaseTapChanger.getRegulationMode());
+        assertFalse(phaseTapChanger.isRegulating());
+        assertTrue(Double.isNaN(phaseTapChanger.getTargetDeadband()));
+        assertTrue(Double.isNaN(phaseTapChanger.getRegulationValue()));
     }
 }
 
