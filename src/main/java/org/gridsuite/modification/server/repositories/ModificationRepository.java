@@ -31,9 +31,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);
 
     /**
-     * @return base data of the network modifications (those from the main table, not those specific to each modification)
+     * @return base data of the network modifications (the data from the main common table, not those specific to each modification)
      */
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.id IN (?1)")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
     List<ModificationEntity> findBaseDataByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")

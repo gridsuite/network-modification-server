@@ -724,7 +724,7 @@ public class ModificationControllerTest {
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(modificationUuids.size(), compositeModificationContent.size());
+        assertEquals(modificationsNumber, compositeModificationContent.size());
 
         // Insert the composite modification in the group
         mvcResult = mockMvc.perform(

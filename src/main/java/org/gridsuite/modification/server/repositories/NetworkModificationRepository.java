@@ -194,7 +194,6 @@ public class NetworkModificationRepository {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
-    // TODO : regarder cette récup de métadata plutôt que la mienne
     @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
@@ -389,16 +388,16 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @param onlyMetadata if true, only returns the basic data common to all the modifications
+     * @param onlyCommonData if true, only returns the basic data common to all the modifications. If false, returns complete modifications
      * @return the data from all the network modification contained in the composite modification sent as parameters
      */
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getCompositeModificationsContentInfos(@NonNull List<UUID> uuids, boolean onlyMetadata) {
+    public List<ModificationInfos> getCompositeModificationsContentInfos(@NonNull List<UUID> uuids, boolean onlyCommonData) {
         List<ModificationInfos> entities = new ArrayList<>();
         uuids.forEach(uuid -> {
             List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
             List<ModificationInfos> orderedModifications;
-            if (onlyMetadata) {
+            if (onlyCommonData) {
                 List<ModificationEntity> networkModifications = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
                 orderedModifications = networkModifications
                         .stream()

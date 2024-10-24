@@ -77,7 +77,7 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    // Need a transaction for collections lazy loading ==> TODO : this is copy pasted, is this true here ?
+    // Need a transaction for collections lazy loading
     public List<ModificationInfos> getCompositeModificationContentMetadata(UUID compositeModificationUuid) {
         return networkModificationRepository.getCompositeModificationsContentInfos(List.of(compositeModificationUuid), true);
     }
