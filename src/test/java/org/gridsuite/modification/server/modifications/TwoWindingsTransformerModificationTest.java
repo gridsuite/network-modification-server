@@ -845,7 +845,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
     }
 
     @Test
-    public void testProcessPhaseTapChangerModification() {
+    void testProcessPhaseTapChangerModification() {
         TwoWindingsTransformer twt = createPhaseTapChanger();
         PhaseTapChanger phaseTapChanger = twt.getPhaseTapChanger();
         List<ReportNode> regulationReports = new ArrayList<>();
@@ -893,7 +893,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
     }
 
     @Test
-    public void testProcessPhaseTapChangerCreation() {
+    void testProcessPhaseTapChangerCreation() {
         TwoWindingsTransformer twt = createTwoWindingsTransformer(getNetwork().getSubstation("s1"), "trf3", "trf3", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
             41, 151, getNetwork().getVoltageLevel("v1").getId(), getNetwork().getVoltageLevel("v2").getId(),
             "trf3", 1, ConnectablePosition.Direction.TOP,
@@ -905,9 +905,10 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             null, null, null, regulationReports)).getMessage();
         assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation mode is missing when creating tap phase changer", message);
 
-        message = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
-            new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET), null, null, regulationReports)).getMessage();
-        assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation value is missing when creating tap phase changer with regulation enabled (different from FIXED_TAP)", message);
+        AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET);
+        String message2 = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
+            regulationModeModification, null, null, regulationReports)).getMessage();
+        assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation value is missing when creating tap phase changer with regulation enabled (different from FIXED_TAP)", message2);
 
         processPhaseTapRegulation(null, adder, false,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET),
