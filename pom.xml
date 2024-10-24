@@ -51,6 +51,9 @@
         <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
         <powsybl-network-store.version>1.19.0</powsybl-network-store.version>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
+        <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section.
+       The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
+        <filter.version>1.0.14</filter.version>
     </properties>
 
     <build>
@@ -135,6 +138,7 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
+            <version>${filter.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
