@@ -9,12 +9,11 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
@@ -23,9 +22,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,9 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author David Braquart <david.braquart at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
-
-    private LineCreationInfos getAttachmentLine(String lineName) {
+class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
+    private static LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId(lineName)
@@ -45,7 +41,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
                 .build();
     }
 
-    private VoltageLevelCreationInfos getNewVoltageLevel() {
+    private static VoltageLevelCreationInfos getNewVoltageLevel() {
         return VoltageLevelCreationInfos.builder()
                 .stashed(false)
                 .equipmentId("newVoltageLevel")
@@ -135,7 +131,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         LineAttachToVoltageLevelInfos lineAttachToAbsentLine = (LineAttachToVoltageLevelInfos) buildModification();
         lineAttachToAbsentLine.setLineToAttachToId("absent_line_id");
         String lineAttachToAbsentLineJson = mapper.writeValueAsString(lineAttachToAbsentLine);
@@ -157,7 +153,7 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @Test
-    public void testCreateWithExistingEquipments() throws Exception {
+    void testCreateWithExistingEquipments() throws Exception {
         // try to create an already existing line
         LineAttachToVoltageLevelInfos tryWithNewLine1Id = (LineAttachToVoltageLevelInfos) buildModification();
         tryWithNewLine1Id.setNewLine1Id("line1");
@@ -181,16 +177,14 @@ public class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTes
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line3", createdValues.get("lineToAttachToId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_ATTACH_TO_VOLTAGE_LEVEL", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line2", updatedValues.get("lineToAttachToId"));

@@ -19,10 +19,8 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import lombok.SneakyThrows;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.server.Impacts.TestImpactUtils;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
@@ -31,6 +29,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
+import org.gridsuite.modification.server.impacts.TestImpactUtils;
 import org.gridsuite.modification.server.modifications.ModificationUtils;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -39,31 +38,28 @@ import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.gridsuite.modification.server.utils.TestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -75,11 +71,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @Tag("IntegrationTest")
-public class ModificationControllerTest {
+class ModificationControllerTest {
 
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_ID_2 = UUID.fromString("7928181e-7977-4592-ba19-88027e4254e4");
@@ -90,7 +85,7 @@ public class ModificationControllerTest {
     private static final UUID TEST_GROUP2_ID = UUID.randomUUID();
     private static final UUID TEST_NETWORK_BUS_BREAKER_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_MIXED_TOPOLOGY_ID = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
-    public static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
+    private static final String VARIANT_NOT_EXISTING_ID = "variant_not_existing";
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
@@ -142,8 +137,8 @@ public class ModificationControllerTest {
     private Network networkWithTeePoint;
     private Network networkBusBreaker;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         network = NetworkCreation.create(TEST_NETWORK_ID, true);
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
@@ -168,8 +163,8 @@ public class ModificationControllerTest {
         equipmentInfosService.deleteAll();
     }
 
-    @After
-    public void tearOff() {
+    @AfterEach
+    void tearOff() {
         // clean DB
         modificationRepository.deleteAll();
         equipmentInfosService.deleteAll();
@@ -179,22 +174,21 @@ public class ModificationControllerTest {
         return tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantId).stream().anyMatch(t -> t.getId().equals(equipmentId));
     }
 
-    @SneakyThrows
-    private void assertApplicationStatusOK(MvcResult mvcResult) {
+    private void assertApplicationStatusOK(MvcResult mvcResult) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
     }
 
     @Test
-    public void testModificationException() {
+    void testModificationException() {
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
         assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() + " : Error message");
     }
 
     @Test
-    public void testEquipmentIdNonNull() {
+    void testEquipmentIdNonNull() {
         String errorMessage = "equipmentId is marked non-null but is null";
         LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder::build).getMessage());
@@ -205,7 +199,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testNetworkNotFound() throws Exception {
+    void testNetworkNotFound() throws Exception {
         mockMvc.perform(post(URI_NETWORK_MODIF_BAD_NETWORK)
             .content(objectWriter.writeValueAsString(LoadCreationInfos.builder().equipmentId("id").build()))
             .contentType(MediaType.APPLICATION_JSON))
@@ -216,7 +210,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void assertThrowsUpdateModificationNotFound() {
+    void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
         String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
@@ -225,7 +219,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testModificationGroups() throws Exception {
+    void testModificationGroups() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
 
@@ -244,7 +238,7 @@ public class ModificationControllerTest {
         assertEquals(bsicListResult, List.of());
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
          // switch opening to create the default group
         mvcResult = mockMvc.perform(get("/v1/groups")).andExpectAll(
@@ -285,7 +279,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testRestoreNetworkModifications() throws Exception {
+    void testRestoreNetworkModifications() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)
@@ -298,7 +292,7 @@ public class ModificationControllerTest {
 
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, modifications.size());
@@ -313,7 +307,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testStashNetworkModifications() throws Exception {
+    void testStashNetworkModifications() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)
@@ -326,7 +320,7 @@ public class ModificationControllerTest {
 
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modifications.size());
@@ -340,7 +334,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDisableNetworkModifications() throws Exception {
+    void testDisableNetworkModifications() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
             .equipmentType(IdentifiableType.SWITCH)
@@ -354,7 +348,7 @@ public class ModificationControllerTest {
 
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modifications.size());
@@ -370,7 +364,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDeleteModification() throws Exception {
+    void testDeleteModification() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)
@@ -382,7 +376,7 @@ public class ModificationControllerTest {
 
         mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), IdentifiableType.SWITCH, "v1b1", Set.of("s1"));
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modifications.size());
@@ -411,7 +405,7 @@ public class ModificationControllerTest {
 
     //test delete all modifications
     @Test
-    public void testDeleteAllModification() throws Exception {
+    void testDeleteAllModification() throws Exception {
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
 
         assertEquals(3, modificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
@@ -422,15 +416,15 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDeleteModificationMissingParamError() throws Exception {
+    void testDeleteModificationMissingParamError() throws Exception {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
                 .andExpect(status().isInternalServerError())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof NetworkModificationException))
+                .andExpect(result -> assertInstanceOf(NetworkModificationException.class, result.getResolvedException()))
                 .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
     @Test
-    public void testNetworkModificationsWithErrorOnNetworkFlush() throws Exception {
+    void testNetworkModificationsWithErrorOnNetworkFlush() throws Exception {
         String uriString = URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_WITH_FLUSH_ERROR_ID + URI_NETWORK_MODIF_PARAMS;
 
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
@@ -444,7 +438,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMultipleModificationsWithError() throws Exception {
+    void testMultipleModificationsWithError() throws Exception {
         GroovyScriptInfos groovyScriptInfos = GroovyScriptInfos.builder()
                 .script("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .build();
@@ -506,7 +500,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCopyModification() throws Exception {
+    void testCopyModification() throws Exception {
         // create 3 modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -596,7 +590,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testCopyModificationWithUnexistingId() throws Exception {
+    void testCopyModificationWithUnexistingId() throws Exception {
         // create 1 modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -620,7 +614,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void createGeneratorWithStartup() throws Exception {
+    void createGeneratorWithStartup() throws Exception {
 
         // create and build generator without startup
         GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
@@ -676,7 +670,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMoveModificationInSameGroup() throws Exception {
+    void testMoveModificationInSameGroup() throws Exception {
         // create 2 modifications in a single group
         List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -746,7 +740,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMoveModificationBetweenTwoGroups() throws Exception {
+    void testMoveModificationBetweenTwoGroups() throws Exception {
         String substationS3 = network.getLoad("v5load").getTerminal().getVoltageLevel().getSubstation().get().getId();
         String substationS1 = network.getLoad("v1load").getTerminal().getVoltageLevel().getSubstation().get().getId();
         assertEquals("s3", substationS3);
@@ -802,7 +796,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testMoveModificationWithUnexistingId() throws Exception {
+    void testMoveModificationWithUnexistingId() throws Exception {
         // create 2 modifications
         List<UUID> modificationUuidList = createSomeSwitchModifications(TEST_GROUP_ID, 2).
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -828,7 +822,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDuplicateModificationGroup() throws Exception {
+    void testDuplicateModificationGroup() throws Exception {
         MvcResult mvcResult;
         VoltageLevelCreationInfos vl1 = ModificationCreation.getCreationVoltageLevel("s1", "vl1Id", "vl1Name");
         mockMvc.perform(
@@ -870,7 +864,7 @@ public class ModificationControllerTest {
             .andReturn();
         assertApplicationStatusOK(mvcResult);
         String resultAsString = mvcResult.getResponse().getContentAsString();
-        testBranchCreationImpacts(mapper, resultAsString, IdentifiableType.LINE, "idLine1", Set.of("s1", "s2"));
+        testBranchCreationImpacts(mapper, resultAsString, Set.of("s1", "s2"));
 
         testNetworkModificationsCount(TEST_GROUP_ID, 2);
 
@@ -943,7 +937,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception {
+    void replaceTeePointByVoltageLevelOnLineDuplicateModificationGroupTest() throws Exception {
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = new LinesAttachToSplitLinesInfos("l1", "l2", "l3", "v4", "bbs4", "nl1", "NewLine1", "nl2", "NewLine2");
 
         MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_WITH_TEE_POINT_MODIF)
@@ -964,7 +958,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testGroupDuplication() throws Exception {
+    void testGroupDuplication() throws Exception {
         // create new load in voltage level with node/breaker topology (in voltage level "v2" and busbar section "1B")
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
                 .equipmentId("idLoad1")
@@ -993,7 +987,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testTombstonedEquipmentInfos() throws Exception {
+    void testTombstonedEquipmentInfos() throws Exception {
         MvcResult mvcResult;
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).isEmpty());
@@ -1263,7 +1257,7 @@ public class ModificationControllerTest {
         assertFalse(existTombstonedEquipmentInfos(disconnectorId3, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
     }
 
-    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws JsonProcessingException {
+    private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws Exception {
         for (AbstractBaseImpact impact : expectedImpacts) {
             if (impact instanceof SimpleElementImpact simpleImpact) {
                 // Equipment has been removed from network
@@ -1293,7 +1287,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void shouldGetPosition() {
+    void shouldGetPosition() {
         var network = networkStoreService.getNetwork(TEST_NETWORK_ID, null);
         var network2 = networkStoreService.getNetwork(TEST_NETWORK_MIXED_TOPOLOGY_ID, null);
         var vl = network.getVoltageLevel("v2");
@@ -1314,7 +1308,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testGetPositionAfterAndBefore() {
+    void testGetPositionAfterAndBefore() {
         Network testNetwork = new NetworkFactoryImpl().createNetwork("testNetwork", "test");
         Substation s1 = testNetwork.newSubstation().setId("s1").setName("s1").setCountry(Country.FR).add();
         VoltageLevel v1 = s1.newVoltageLevel().setId("v1").setName("v1").setTopologyKind(TopologyKind.NODE_BREAKER).setNominalV(380.).add();
@@ -1334,7 +1328,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testGetLineTypesCatalog() throws Exception {
+    void testGetLineTypesCatalog() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
 
@@ -1344,8 +1338,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+        List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(0, emptyLineTypes.size());
 
         // Create the catalog with some line types
@@ -1360,8 +1353,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(8, lineTypes.size());
 
         // Check if catalog is completely updated
@@ -1375,8 +1367,7 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        List<LineTypeInfos> lineTypes2 = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+        List<LineTypeInfos> lineTypes2 = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(2, lineTypes2.size());
 
         mockMvc.perform(delete(URI_LINE_CATALOG))
@@ -1388,13 +1379,12 @@ public class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() {
-        });
+        emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(0, emptyLineTypes.size());
     }
 
     @Test
-    public void testCreateVoltageInitModification() throws Exception {
+    void testCreateVoltageInitModification() throws Exception {
         // Create the modification
         VoltageInitModificationInfos modificationsInfos1 = VoltageInitModificationInfos.builder()
             .stashed(false)
@@ -1487,7 +1477,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testDeleteStashedNetworkModifications() throws Exception {
+    void testDeleteStashedNetworkModifications() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos loadModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.LOAD)
@@ -1516,7 +1506,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testGetModificationsCount() throws Exception {
+    void testGetModificationsCount() throws Exception {
         MvcResult mvcResult;
         createSomeSwitchModifications(TEST_GROUP_ID, 3);
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications-count", TEST_GROUP_ID)
@@ -1536,8 +1526,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testDuplicate() {
+    void testDuplicate() throws Exception {
         // create 1 modification
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -1581,8 +1570,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testMetadata() {
+    void testMetadata() throws Exception {
         // create a single switch attribute modification in a group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID switchModificationId = modificationList.get(0).getUuid();
@@ -1597,8 +1585,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testStandaloneDeletionError() {
+    void testStandaloneDeletionError() throws Exception {
         // create a single switch attribute modification in a group
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
         UUID switchModificationId = modificationList.get(0).getUuid();
@@ -1614,7 +1601,7 @@ public class ModificationControllerTest {
     }
 
     @Test
-    public void testApplyModificationsFromUuids() throws Exception {
+    void testApplyModificationsFromUuids() throws Exception {
         // create a modification (opening a closed switch) in the database
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
                 .equipmentType(IdentifiableType.SWITCH)

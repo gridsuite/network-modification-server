@@ -14,11 +14,12 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import mockwebserver3.Dispatcher;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
+import mockwebserver3.junit5.internal.MockWebServerExtension;
 import okhttp3.HttpUrl;
-import okhttp3.mockwebserver.Dispatcher;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.TapChangerType;
@@ -38,11 +39,11 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.assertions.Assertions;
 import org.jetbrains.annotations.NotNull;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,22 +57,19 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
-import static org.gridsuite.modification.server.Impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -82,12 +80,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(MockWebServerExtension.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 @ContextConfigurationWithTestChannel
 @Tag("IntegrationTest")
-public class BuildTest {
+class BuildTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildTest.class);
 
     @Autowired
@@ -133,7 +131,7 @@ public class BuildTest {
     private NetworkStoreService networkStoreService;
 
     @Autowired
-    ModificationGroupRepository modificationGroupRepository;
+    private ModificationGroupRepository modificationGroupRepository;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
@@ -162,10 +160,8 @@ public class BuildTest {
 
     private Network network;
 
-    private MockWebServer server;
-
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    public void setUp(final MockWebServer mockWebServer) {
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
         // create a new network for each invocation (answer)
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> {
@@ -184,20 +180,16 @@ public class BuildTest {
             return network;
         });
 
-        cleanDB();
-
-        initMockWebServer();
+        initMockWebServer(mockWebServer);
     }
 
-    private void cleanDB() {
+    @AfterEach
+    void cleanDB() {
         modificationRepository.deleteAll();
         equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 
-    private void initMockWebServer() throws IOException {
-        server = new MockWebServer();
-        server.start();
-
+    private void initMockWebServer(final MockWebServer server) {
         // Ask the server for its URL. You'll need this to make HTTP requests.
         HttpUrl baseHttpUrl = server.url("");
         String baseUrl = baseHttpUrl.toString().substring(0, baseHttpUrl.toString().length() - 1);
@@ -211,21 +203,20 @@ public class BuildTest {
                 if (path.matches("/v1/reports/.*") && Objects.equals(request.getMethod(), HttpMethod.PUT.name())) {
                     String reportUuid = Objects.requireNonNull(request.getRequestUrl()).pathSegments().get(2);
                     if (TEST_ERROR_REPORT_ID.toString().equals(reportUuid)) {
-                        return new MockResponse().setResponseCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                        return new MockResponse(HttpStatus.INTERNAL_SERVER_ERROR.value());
                     }
-                    return new MockResponse().setResponseCode(HttpStatus.OK.value());
+                    return new MockResponse(HttpStatus.OK.value());
                 } else {
                     LOGGER.error("Unhandled method+path: " + request.getMethod() + " " + request.getPath());
-                    return new MockResponse().setResponseCode(HttpStatus.I_AM_A_TEAPOT.value()).setBody("Unhandled method+path: " + request.getMethod() + " " + request.getPath());
+                    return new MockResponse.Builder().code(HttpStatus.I_AM_A_TEAPOT.value()).body("Unhandled method+path: " + request.getMethod() + " " + request.getPath()).build();
                 }
             }
         };
-
         server.setDispatcher(dispatcher);
     }
 
     @Test
-    public void runBuildForLineSplits() throws Exception {
+    void runBuildForLineSplits(final MockWebServer server) throws Exception {
         List<ModificationEntity> entities1 = List.of(
                 LineCreationInfos.builder()
                         .equipmentId("newLine")
@@ -280,8 +271,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(buildInfos)))
@@ -297,8 +287,7 @@ public class BuildTest {
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             List.of(),
-            List.of(),
-            new HashSet<>());
+            List.of());
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(newBuildInfos)))
@@ -317,13 +306,12 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildWithEmptyGroupTest() throws Exception {
+    void runBuildWithEmptyGroupTest(final MockWebServer server) throws Exception {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
                 .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
                 .build());
@@ -348,7 +336,7 @@ public class BuildTest {
     }
 
     @Test
-    public void testIndexationAfterBuild() throws Exception {
+    void testIndexationAfterBuild(final MockWebServer server) {
         List<ModificationEntity> equipmentsToAdd = new ArrayList<>();
         // add new voltage level
         equipmentsToAdd.add(VoltageLevelCreationInfos.builder()
@@ -425,8 +413,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
 
         // Build variant
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
@@ -499,7 +486,7 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildTest() throws Exception {
+    void runBuildTest(final MockWebServer server) throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -704,8 +691,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
             .andExpect(status().isOk());
@@ -803,8 +789,7 @@ public class BuildTest {
         BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
             VARIANT_ID_2,
             Collections.emptyList(),
-            Collections.emptyList(),
-            new HashSet<>());
+            Collections.emptyList());
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
 
@@ -828,85 +813,11 @@ public class BuildTest {
         assertEquals(1, tbseqVariant1.size());
         assertEquals(tbseqVariant1.size(), tbseqVariant2.size());
 
-        // deactivate some modifications and rebuild VARIANT_ID
-        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, true);
-
-        AtomicReference<UUID> lineModificationEntityUuid = new AtomicReference<>();
-        AtomicReference<UUID> loadCreationEntityUuid = new AtomicReference<>();
-        AtomicReference<UUID> equipmentDeletionEntityUuid = new AtomicReference<>();
-        List<ModificationInfos> modificationsInfos = networkModificationService.getNetworkModifications(TEST_GROUP_ID, false, true);
-        modificationsInfos.addAll(networkModificationService.getNetworkModifications(TEST_GROUP_ID_2, false, true));
-        modificationsInfos.forEach(modificationInfos -> {
-            if (modificationInfos.getClass().equals(EquipmentAttributeModificationInfos.class)) {
-                if (((EquipmentAttributeModificationInfos) modificationInfos).getEquipmentId().equals("line1")) {
-                    lineModificationEntityUuid.set(modificationInfos.getUuid());
-                }
-            } else if (modificationInfos.getClass().equals(LoadCreationInfos.class)) {
-                if (((LoadCreationInfos) modificationInfos).getEquipmentId().equals("newLoad1")) {
-                    loadCreationEntityUuid.set(modificationInfos.getUuid());
-                }
-            } else if (modificationInfos.getClass().equals(EquipmentDeletionInfos.class)) {
-                if (((EquipmentDeletionInfos) modificationInfos).getEquipmentId().equals("v2shunt")) {
-                    equipmentDeletionEntityUuid.set(modificationInfos.getUuid());
-                }
-            }
-        });
-
-        buildInfos.addModificationToExclude(lineModificationEntityUuid.get());
-        buildInfos.addModificationToExclude(loadCreationEntityUuid.get());
-        buildInfos.addModificationToExclude(equipmentDeletionEntityUuid.get());
-        buildInfosJson = objectWriter.writeValueAsString(buildInfos);
-
-        mockMvc.perform(post(uriString, TEST_NETWORK_ID).content(buildInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-        resultMessage = output.receive(TIMEOUT, buildResultDestination);
-        assertNotNull(resultMessage);
-        assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        // 1 : SWITCH equipments are reduced to collection impact
-        // + 2 substation modifications
-        // = 3
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 3, Set.of(IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
-        buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
-        assertNotNull(buildMessage);
-        assertEquals("me", buildMessage.getHeaders().get("receiver"));
-
-        // test that only active modifications have been made on variant VARIANT_ID
-        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
-        assertTrue(network.getSwitch("v1d1").isOpen());
-        assertNull(network.getLine("line1").getExtension(OperatingStatus.class));
-        assertEquals(55., network.getGenerator("idGenerator").getTargetP(), 0.1);
-        assertEquals(2, network.getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());
-        assertEquals(0, network.getThreeWindingsTransformer("trf6").getLeg1().getPhaseTapChanger().getTapPosition());
-        assertNotNull(network.getLoad("newLoad"));
-        assertNull(network.getLoad("newLoad1"));
-        assertEquals(EnergySource.HYDRO, network.getGenerator(NEW_GENERATOR_ID).getEnergySource());
-        assertEquals("v2", network.getGenerator(NEW_GENERATOR_ID).getTerminal().getVoltageLevel().getId());
-        assertEquals(500., network.getGenerator(NEW_GENERATOR_ID).getMaxP(), 0.1);
-        assertEquals(100., network.getGenerator(NEW_GENERATOR_ID).getTargetP(), 0.1);
-        assertTrue(network.getGenerator(NEW_GENERATOR_ID).isVoltageRegulatorOn());
-        assertEquals(225., network.getGenerator(NEW_GENERATOR_ID).getTargetV(), 0.1);
-        assertEquals("v1", network.getLine("newLine").getTerminal1().getVoltageLevel().getId());
-        assertEquals("v2", network.getLine("newLine").getTerminal2().getVoltageLevel().getId());
-        assertEquals(4., network.getLine("newLine").getB1(), 0.1);
-        assertEquals("v1", network.getTwoWindingsTransformer("new2wt").getTerminal1().getVoltageLevel().getId());
-        assertEquals("v2", network.getTwoWindingsTransformer("new2wt").getTerminal2().getVoltageLevel().getId());
-        assertEquals(2., network.getTwoWindingsTransformer("new2wt").getX(), 0.1);
-        assertEquals(5., network.getTwoWindingsTransformer("new2wt").getRatedU1(), 0.1);
-        assertEquals(1, network.getTwoWindingsTransformer("new2wt").getRatedS(), 0.1);
-        assertEquals(4, network.getTwoWindingsTransformer("new2wt").getRatioTapChanger().getStepCount());
-        assertEquals(3, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getStepCount());
-        assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, network.getTwoWindingsTransformer("new2wt").getPhaseTapChanger().getRegulationMode());
-        assertNotNull(network.getShuntCompensator("v2shunt"));
-        assertEquals(Country.FR, network.getSubstation("newSubstation").getCountry().orElse(Country.AF));
-        assertNotNull(network.getVoltageLevel("vl9"));
-        assertNotNull(network.getShuntCompensator("shunt9"));
-
         TestUtils.purgeRequests(server);
     }
 
     @Test
-    public void runBuildWithStashedModificationsTest() throws Exception {
+    void runBuildWithStashedModificationsTest(final MockWebServer server) {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
         entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
@@ -919,8 +830,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            new HashSet<>());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
         // test that only non stashed modifications have been made on variant VARIANT_ID
@@ -931,7 +841,7 @@ public class BuildTest {
     }
 
     @Test
-    public void stopBuildTest() throws Exception {
+    void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
             EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity(),
             EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity()
@@ -945,8 +855,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)),
-            Set.of());
+            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
             try {
@@ -955,7 +864,7 @@ public class BuildTest {
                         .content(buildInfosJson))
                     .andExpect(status().isOk());
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.error("mock mvc perform error", e);
             }
         }, executorService);
 
@@ -976,7 +885,7 @@ public class BuildTest {
     }
 
     @Test
-    public void runBuildWithReportErrorTest() throws Exception {
+    void runBuildWithReportErrorTest(final MockWebServer server) throws Exception {
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity()));
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
@@ -984,8 +893,7 @@ public class BuildTest {
         BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
             NetworkCreation.VARIANT_ID,
             List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)),
-            Set.of());
+            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)));
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsString(buildInfos)))
@@ -1003,7 +911,7 @@ public class BuildTest {
     }
 
     @Test
-    public void testApplyModificationWithErrors() {
+    void testApplyModificationWithErrors(final MockWebServer server) {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID groupUuid = UUID.randomUUID();
@@ -1030,7 +938,7 @@ public class BuildTest {
     }
 
     @Test
-    public void testLastGroupModificationStatus() {
+    void testLastGroupModificationStatus(final MockWebServer server) {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
         UUID reportUuid = UUID.randomUUID();
@@ -1052,8 +960,8 @@ public class BuildTest {
         assertEquals(actualSize, modificationRepository.getModifications(groupUuid, true, true).size());
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown(final MockWebServer server) {
         List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
         TestUtils.assertQueuesEmptyThenClear(destinations, output);
         try {

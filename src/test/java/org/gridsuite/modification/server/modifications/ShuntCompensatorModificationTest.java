@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,12 +11,10 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -28,16 +25,15 @@ import static org.gridsuite.modification.server.NetworkModificationException.Typ
 import static org.gridsuite.modification.server.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
  */
-
-public class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest {
+class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
 
@@ -46,9 +42,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         return NetworkCreation.create(networkUuid, true);
     }
 
-    @SneakyThrows
     @Test
-    public void testEquipmentWithWrongId() {
+    void testEquipmentWithWrongId() throws Exception {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("wrong id")
@@ -61,9 +56,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testWrongMaximumSectionCount() {
+    void testWrongMaximumSectionCount() throws Exception {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v5shunt")
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
@@ -77,9 +71,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testWrongSectionCount() {
+    void testWrongSectionCount() throws Exception {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .equipmentId("v5shunt")
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
@@ -93,9 +86,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testWrongSectionCountChangeSectionCount() {
+    void testWrongSectionCountChangeSectionCount() throws Exception {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
         createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
@@ -115,9 +107,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 shuntCompensatorModifications.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testWrongSectionCountChangeMaximumSectionCount() {
+    void testWrongSectionCountChangeMaximumSectionCount() throws Exception {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
         createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
@@ -133,13 +124,12 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(shuntCompensatorModifications)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 0 and Maximum section count (1), actual : -1")).getMessage(),
+                         "Section count should be between 0 and Maximum section count (1), actual : -1").getMessage(),
                 shuntCompensatorModifications.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testNegativeQmaxAtNominalV() {
+    void testNegativeQmaxAtNominalV() throws Exception {
         var shuntCompensator = ShuntCompensatorModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("v5shunt")
@@ -153,9 +143,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
                 shuntCompensator.getErrorType().name(), reportService);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateModificationWithShuntCompensatorType() {
+    void testCreateModificationWithShuntCompensatorType() throws Exception {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
         createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
@@ -176,9 +165,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertEquals(-1.0, model.getBPerSection(), 0);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateModificationWithSusceptancePerSection() {
+    void testCreateModificationWithSusceptancePerSection() throws Exception {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
         createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
 
@@ -199,9 +187,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertEquals(3.0, model.getBPerSection(), 0);
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateModificationWithSections() {
+    void testCreateModificationWithSections() throws Exception {
         var shuntCompensatorToModify = getNetwork().getShuntCompensator("v5shunt");
         var model = shuntCompensatorToModify.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);
@@ -219,9 +206,8 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         assertEquals(2, shuntCompensatorToModify.getSectionCount());
     }
 
-    @SneakyThrows
     @Test
-    public void testCreateModificationWithQAtNominalV() {
+    void testCreateModificationWithQAtNominalV() throws Exception {
         VoltageLevel v5 = getNetwork().getVoltageLevel("v5");
         createShuntCompensator(v5, "v7shunt", "v7shunt", 25, 225., 10, true, 1, 1, 2, 1, "feeder_v7shunt", 40, ConnectablePosition.Direction.BOTTOM);
         VoltageLevel v6 = getNetwork().getVoltageLevel("v6");
@@ -290,7 +276,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
         var model = shuntCompensator.getModel(ShuntCompensatorLinearModel.class);
         assertNotNull(model);
         assertEquals(2.9629E-4, model.getBPerSection(), 0.0001);
-        Assertions.assertEquals(PROPERTY_VALUE, getNetwork().getShuntCompensator("v7shunt").getProperty(PROPERTY_NAME));
+        assertEquals(PROPERTY_VALUE, getNetwork().getShuntCompensator("v7shunt").getProperty(PROPERTY_NAME));
     }
 
     @Override
@@ -302,23 +288,21 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v7shunt", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        Assertions.assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("SHUNT_COMPENSATOR_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("v2shunt", updatedValues.get("equipmentId"));
     }
 
     @Test
-    public void testDisconnection() throws Exception {
+    void testDisconnection() throws Exception {
         ShuntCompensatorModificationInfos shuntModificationInfos =
                 ShuntCompensatorModificationInfos.builder()
                         .stashed(false)
@@ -330,7 +314,7 @@ public class ShuntCompensatorModificationTest extends AbstractInjectionModificat
     }
 
     @Test
-    public void testConnection() throws Exception {
+    void testConnection() throws Exception {
         ShuntCompensatorModificationInfos shuntModificationInfos =
                 ShuntCompensatorModificationInfos.builder()
                         .stashed(false)

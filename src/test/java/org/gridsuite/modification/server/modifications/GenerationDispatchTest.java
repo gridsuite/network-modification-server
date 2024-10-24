@@ -4,7 +4,6 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,11 +17,10 @@ import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.service.FilterService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -33,10 +31,7 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMessage;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class GenerationDispatchTest extends AbstractNetworkModificationTest {
+class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final String GH1_ID = "GH1";
     private static final String GH2_ID = "GH2";
     private static final String GH3_ID = "GH3";
@@ -68,21 +63,18 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_4 = UUID.randomUUID();
     private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final UUID FILTER_ID_6 = UUID.randomUUID();
-    public static final String PATH = "/v1/filters/metadata";
+    private static final String PATH = "/v1/filters/metadata";
 
-    @Autowired
-    ApplicationContext context;
-
-    @Before
+    @BeforeEach
     public void specificSetUp() {
         FilterService.setFilterServerBaseUri(wireMockServer.baseUrl());
     }
 
-    private IdentifierListFilterEquipmentAttributes getIdentifiableAttributes(String id) {
+    private static IdentifierListFilterEquipmentAttributes getIdentifiableAttributes(String id) {
         return new IdentifierListFilterEquipmentAttributes(id, null);
     }
 
-    private AbstractFilter getFilter(UUID filterID, List<IdentifierListFilterEquipmentAttributes> identifierListFilterEquipmentAttributes) {
+    private static AbstractFilter getFilter(UUID filterID, List<IdentifierListFilterEquipmentAttributes> identifierListFilterEquipmentAttributes) {
         return IdentifierListFilter.builder().id(filterID).modificationDate(new Date()).equipmentType(EquipmentType.GENERATOR)
             .filterEquipmentsAttributes(identifierListFilterEquipmentAttributes)
             .build();
@@ -112,7 +104,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatch() throws Exception {
+    void testGenerationDispatch() throws Exception {
         ModificationInfos modification = buildModification();
 
         // network with 2 synchronous components, no battery, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
@@ -128,7 +120,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithBattery() throws Exception {
+    void testGenerationDispatchWithBattery() throws Exception {
         ModificationInfos modification = buildModification();
 
         // same than testGenerationDispatch, with 3 Batteries (in 2nd SC)
@@ -147,7 +139,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithBatteryConnection() throws Exception {
+    void testGenerationDispatchWithBatteryConnection() throws Exception {
         ModificationInfos modification = buildModification();
 
         // network with 3 Batteries (in 2nd SC)
@@ -168,7 +160,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithMultipleEnergySource() throws Exception {
+    void testGenerationDispatchWithMultipleEnergySource() throws Exception {
         ModificationInfos modification = buildModification();
 
         setNetwork(Network.read("testGenerationDispatchWithMultipleEnergySource.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithMultipleEnergySource.xiidm")));
@@ -188,7 +180,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithHigherLossCoefficient() throws Exception {
+    void testGenerationDispatchWithHigherLossCoefficient() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(90.);
 
@@ -229,7 +221,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithInternalHvdc() throws Exception {
+    void testGenerationDispatchWithInternalHvdc() throws Exception {
         ModificationInfos modification = buildModification();
 
         // network with unique synchronous component, 2 internal hvdc lines and no forcedOutageRate and plannedOutageRate for the generators
@@ -262,7 +254,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithMaxPReduction() throws Exception {
+    void testGenerationDispatchWithMaxPReduction() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
         ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
@@ -280,7 +272,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubId = wireMockServer.stubFor(WireMock.get(WireMock.urlMatching(getPath(true) + "(.+,){2}.*"))
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filters))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -319,7 +311,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchGeneratorsWithFixedSupply() throws Exception {
+    void testGenerationDispatchGeneratorsWithFixedSupply() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
         ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(
@@ -339,14 +331,14 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filtersForPmaxReduction))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         List<AbstractFilter> filtersForFixedSupply = List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH1_ID), getIdentifiableAttributes(GROUP1_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))),
             getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(TEST1_ID), getIdentifiableAttributes(GROUP2_ID))));
         UUID stubIdForFixedSupply = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_4)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filtersForFixedSupply))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -391,13 +383,13 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubIdForFixedSupply, PATH, handleQueryParams(filtersForFixedSupply.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
-    private List<GeneratorsFilterInfos> getGeneratorsFiltersInfosWithFilters123() {
+    private static List<GeneratorsFilterInfos> getGeneratorsFiltersInfosWithFilters123() {
         return List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_1).name("filter1").build(),
                 GeneratorsFilterInfos.builder().id(FILTER_ID_2).name("filter2").build(),
                 GeneratorsFilterInfos.builder().id(FILTER_ID_3).name("filter3").build());
     }
 
-    private List<GeneratorsFrequencyReserveInfos> getGeneratorsFrequencyReserveInfosWithFilters456() {
+    private static List<GeneratorsFrequencyReserveInfos> getGeneratorsFrequencyReserveInfosWithFilters456() {
         return List.of(GeneratorsFrequencyReserveInfos.builder().frequencyReserve(3.)
                         .generatorsFilters(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_4).name("filter4").build(),
                                 GeneratorsFilterInfos.builder().id(FILTER_ID_5).name("filter5").build())).build(),
@@ -405,23 +397,23 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
                         .generatorsFilters(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_6).name("filter6").build())).build());
     }
 
-    private List<AbstractFilter> getGeneratorsWithoutOutageFilters123() {
+    private static List<AbstractFilter> getGeneratorsWithoutOutageFilters123() {
         return List.of(getFilter(FILTER_ID_1, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GROUP1_ID))),
                 getFilter(FILTER_ID_2, List.of(getIdentifiableAttributes(ABC_ID), getIdentifiableAttributes(GH3_ID))),
                 getFilter(FILTER_ID_3, List.of(getIdentifiableAttributes(GEN1_NOT_FOUND_ID), getIdentifiableAttributes(GEN2_NOT_FOUND_ID))));
     }
 
-    private List<AbstractFilter> getGeneratorsFrequencyReserveFilters45() {
+    private static List<AbstractFilter> getGeneratorsFrequencyReserveFilters45() {
         return List.of(getFilter(FILTER_ID_4, List.of(getIdentifiableAttributes(GTH1_ID))),
                 getFilter(FILTER_ID_5, List.of(getIdentifiableAttributes(GTH2_ID), getIdentifiableAttributes(GH3_ID), getIdentifiableAttributes(GEN1_NOT_FOUND_ID))));
     }
 
-    private List<AbstractFilter> getGeneratorsFrequencyReserveFilter6() {
+    private static List<AbstractFilter> getGeneratorsFrequencyReserveFilter6() {
         return List.of(getFilter(FILTER_ID_6, List.of(getIdentifiableAttributes(TEST1_ID))));
     }
 
     @Test
-    public void testGenerationDispatchWithFrequencyReserve() throws Exception {
+    void testGenerationDispatchWithFrequencyReserve() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(15.);
         ((GenerationDispatchInfos) modification).setGeneratorsWithoutOutage(getGeneratorsFiltersInfosWithFilters123());
@@ -434,16 +426,16 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsWithoutOutageFilters123()))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         UUID stubIdForFrequencyReserve1 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_4 + "," + FILTER_ID_5)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilters45()))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         UUID stubIdForFrequencyReserve2 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_6)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
-                .withHeader("Content-Type", "application/json"))).getId();
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -485,7 +477,7 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchWithSubstationsHierarchy() throws Exception {
+    void testGenerationDispatchWithSubstationsHierarchy() throws Exception {
         ModificationInfos modification = buildModification();
         ((GenerationDispatchInfos) modification).setLossCoefficient(10.);
         ((GenerationDispatchInfos) modification).setDefaultOutageRate(20.);
@@ -564,19 +556,21 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testGenerationDispatchErrorCheck() {
+    void testGenerationDispatchErrorCheck() {
+        final Network network = Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm"));
+        setNetwork(network);
+
         GenerationDispatchInfos modification = GenerationDispatchInfos.builder().lossCoefficient(150.).defaultOutageRate(0.).build();
-        setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
         final GenerationDispatch generationDispatch1 = new GenerationDispatch(modification);
-        assertThrows("GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch1.check(getNetwork()));
+        assertThrows(NetworkModificationException.class, () -> generationDispatch1.check(network), "GENERATION_DISPATCH_ERROR : The loss coefficient must be between 0 and 100");
 
         modification = GenerationDispatchInfos.builder().lossCoefficient(20.).defaultOutageRate(140.).build();
         final GenerationDispatch generationDispatch2 = new GenerationDispatch(modification);
-        assertThrows("GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100", NetworkModificationException.class, () -> generationDispatch2.check(getNetwork()));
+        assertThrows(NetworkModificationException.class, () -> generationDispatch2.check(network), "GENERATION_DISPATCH_ERROR : The default outage rate must be between 0 and 100");
     }
 
     @Test
-    public void testGenerationDispatchWithMaxValueLessThanMinP() throws Exception {
+    void testGenerationDispatchWithMaxValueLessThanMinP() throws Exception {
         ModificationInfos modification = GenerationDispatchInfos.builder()
                 .lossCoefficient(20.)
                 .defaultOutageRate(15.)
@@ -593,15 +587,15 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForPmaxReduction = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsWithoutOutageFilters123()))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         UUID stubIdForFrequencyReserve1 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_4 + "," + FILTER_ID_5)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilters45()))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         UUID stubIdForFrequencyReserve2 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_6)
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
-                        .withHeader("Content-Type", "application/json"))).getId();
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = mapper.writeValueAsString(modification);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -708,11 +702,11 @@ public class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);
     }
 
-    private Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
+    private static Map<String, StringValuePattern> handleQueryParams(List<UUID> filterIds) {
         return Map.of("ids", WireMock.matching(filterIds.stream().map(uuid -> ".+").collect(Collectors.joining(","))));
     }
 
-    private String getPath(boolean isRegexPhat) {
+    private static String getPath(boolean isRegexPhat) {
         if (isRegexPhat) {
             return "/v1/filters/metadata\\?ids=";
         }

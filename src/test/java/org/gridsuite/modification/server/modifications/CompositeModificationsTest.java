@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.ModificationType;
 import org.gridsuite.modification.server.dto.CompositeModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
@@ -18,9 +16,9 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -29,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -40,13 +38,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class CompositeModificationsTest extends AbstractNetworkModificationTest {
+class CompositeModificationsTest extends AbstractNetworkModificationTest {
 
     @MockBean
     private NetworkModificationApplicator networkModificationApplicator;
 
-    @Before
-    public void specificSetUp() {
+    @BeforeEach
+    void specificSetUp() {
         // Currently we never apply composite modifications (apply mocked)
         NetworkModificationResult networkModificationResultMock = NetworkModificationResult.builder()
                 .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
@@ -91,19 +89,17 @@ public class CompositeModificationsTest extends AbstractNetworkModificationTest 
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertNotNull(ModificationType.COMPOSITE_MODIFICATION.name(), modificationInfos.getMessageType());
     }
 
     @Test
-    public void testCheckSqlRequestsCount() throws Exception {
+    void testCheckSqlRequestsCount() throws Exception {
         UUID modificationUuid = saveModification(buildModification());
         SQLStatementCountValidator.reset();
 

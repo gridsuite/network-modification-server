@@ -21,7 +21,7 @@
 
     <groupId>org.gridsuite</groupId>
     <artifactId>gridsuite-network-modification-server</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>Network modification server</name>
@@ -46,11 +46,14 @@
     <properties>
         <gridsuite-dependencies.version>34</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
-        <log4j2-mock-version>0.0.2</log4j2-mock-version>
-        <testcontainers.version>1.16.2</testcontainers.version>
+        <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
         <powsybl-network-store.version>1.19.0</powsybl-network-store.version>
+        <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
+        <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section.
+       The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
+        <filter.version>1.0.14</filter.version>
     </properties>
 
     <build>
@@ -86,6 +89,13 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+            <dependency><!-- To remove when integrate in next release of gridsuite-dependencies or powsybl-ws-dependencies -->
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-bom</artifactId>
+                <version>${mockwebserver3.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-network-store-client</artifactId>
@@ -116,26 +126,19 @@
 
             <!-- project specific dependencies -->
             <dependency>
-                <groupId>de.dentrassi.elasticsearch</groupId>
-                <artifactId>log4j2-mock</artifactId>
-                <version>${log4j2-mock-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>elasticsearch</artifactId>
-                <version>${testcontainers.version}</version>
-                <scope>test</scope>
+                <groupId>com.vladmihalcea</groupId>
+                <artifactId>db-util</artifactId>
+                <version>${db-util.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-
         <!-- Compilation dependencies -->
-
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
+            <version>${filter.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -210,7 +213,6 @@
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -219,21 +221,14 @@
         </dependency>
 
         <!-- Test dependencies -->
-
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-test</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -241,49 +236,31 @@
             <artifactId>assertj-guava</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>com.vladmihalcea</groupId>
             <artifactId>db-util</artifactId>
-            <version>${db-util.version}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>elasticsearch</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>de.dentrassi.elasticsearch</groupId>
-            <artifactId>log4j2-mock</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
+            <artifactId>mockwebserver3-junit5</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>mockwebserver</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-stream-test-binder</artifactId>

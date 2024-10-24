@@ -13,14 +13,13 @@ import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Map;
@@ -31,16 +30,13 @@ import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED
 import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
-public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
-
+class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModificationTest {
     private static final String TARGET_LINE_ID = "line2";
     private static final String UPDATE_BRANCH_ID = "line1";
     private static final OperatingStatus.Status TARGET_BRANCH_STATUS = PLANNED_OUTAGE;
@@ -117,21 +113,21 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     }
 
     @Test
-    public void testLockoutLinesWithLoadBreakerSwitches() throws Exception {
+    void testLockoutLinesWithLoadBreakerSwitches() throws Exception {
         //Lockout line with switches of kind LOAD_BREAK_SWITCH
         createLineAndSwitches(SwitchKind.LOAD_BREAK_SWITCH, false);
         testLockoutLine("line1");
     }
 
     @Test
-    public void testLockoutLinesWithDisconnectorSwitches() throws Exception {
+    void testLockoutLinesWithDisconnectorSwitches() throws Exception {
         //Lockout line with switches of kind DISCONNECTOR
         createLineAndSwitches(SwitchKind.DISCONNECTOR, false);
         testLockoutLine("line1");
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         // line not existing
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("notFound");
@@ -173,8 +169,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
@@ -183,8 +178,7 @@ public class OperatingStatusModificationLockoutLineTest extends AbstractNetworkM
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));

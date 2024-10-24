@@ -1184,18 +1184,27 @@ public final class ModificationUtils {
     private void createNewActivePowerControl(ActivePowerControlAdder<?> adder,
                                              AttributeModification<Boolean> participateInfo,
                                              AttributeModification<Float> droopInfo,
-                                             List<ReportNode> reports) {
-        boolean participate = participateInfo != null ? participateInfo.getValue() : false;
-        adder.withParticipate(participate);
-        if (participateInfo != null && reports != null) {
-            reports.add(buildModificationReport(null, participate, "Participate"));
+                                             List<ReportNode> reports,
+                                             NetworkModificationException.Type exceptionType,
+                                             String errorMessage) {
+        Boolean participate = Optional.ofNullable(participateInfo).map(AttributeModification::getValue).orElse(null);
+        Float droop = Optional.ofNullable(droopInfo).map(AttributeModification::getValue).orElse(null);
+        checkActivePowerControl(participate, droop, exceptionType, errorMessage);
+        if (participate != null && droop != null) {
+            adder.withParticipate(participate)
+                .withDroop(droop)
+                .add();
+            if (reports != null) {
+                reports.add(buildModificationReport(null, participate, "Participate"));
+                reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+            }
         }
-        double droop = droopInfo != null ? droopInfo.getValue() : Double.NaN;
-        adder.withDroop(droop);
-        if (droopInfo != null && reports != null) {
-            reports.add(buildModificationReport(Double.NaN, droop, "Droop"));
+    }
+
+    public void checkActivePowerControl(Boolean participate, Float droop, NetworkModificationException.Type exceptionType, String errorMessage) {
+        if (Boolean.TRUE.equals(participate) && droop == null) {
+            throw new NetworkModificationException(exceptionType, String.format("%s Active power regulation on : missing required droop value", errorMessage));
         }
-        adder.add();
     }
 
     public ReportNode modifyActivePowerControlAttributes(ActivePowerControl<?> activePowerControl,
@@ -1203,19 +1212,21 @@ public final class ModificationUtils {
                                                          AttributeModification<Boolean> participateInfo,
                                                          AttributeModification<Float> droopInfo,
                                                          ReportNode subReportNode,
-                                                         ReportNode subReporterSetpoints) {
+                                                         ReportNode subReporterSetpoints,
+                                                         NetworkModificationException.Type exceptionType,
+                                                         String errorMessage) {
         List<ReportNode> reports = new ArrayList<>();
         if (activePowerControl != null) {
             modifyExistingActivePowerControl(activePowerControl, participateInfo, droopInfo, reports);
         } else {
-            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports);
+            createNewActivePowerControl(activePowerControlAdder, participateInfo, droopInfo, reports, exceptionType, errorMessage);
         }
         if (subReportNode != null) {
             ReportNode subReportNodeSetpoints2 = subReporterSetpoints;
             if (subReporterSetpoints == null && !reports.isEmpty()) {
                 subReportNodeSetpoints2 = subReportNode.newReportNode().withMessageTemplate(SETPOINTS, SETPOINTS).add();
             }
-            reportModifications(subReportNodeSetpoints2, reports, "activePowerRegulationModified", "Active power regulation");
+            reportModifications(subReportNodeSetpoints2, reports, "activePowerControlModified", "Active power control");
             return subReportNodeSetpoints2;
         }
         return null;
@@ -1334,9 +1345,11 @@ public final class ModificationUtils {
         if (Objects.isNull(creationInfos.getMaxSusceptance()) && Objects.isNull(creationInfos.getMaxQAtNominalV())) {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is not set");
         }
-        if (Objects.nonNull(creationInfos.getMaxSusceptance()) && Objects.nonNull(creationInfos.getMinSusceptance()) && creationInfos.getMaxSusceptance() < creationInfos.getMinSusceptance() ||
-                Objects.nonNull(creationInfos.getMaxQAtNominalV()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && creationInfos.getMaxQAtNominalV() < creationInfos.getMinQAtNominalV()) {
+        if (Objects.nonNull(creationInfos.getMaxSusceptance()) && Objects.nonNull(creationInfos.getMinSusceptance()) && creationInfos.getMaxSusceptance() < creationInfos.getMinSusceptance()) {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum susceptance is expected to be greater than or equal to minimum susceptance");
+        }
+        if (Objects.nonNull(creationInfos.getMaxQAtNominalV()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && creationInfos.getMaxQAtNominalV() < creationInfos.getMinQAtNominalV()) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "maximum Q at nominal voltage is expected to be greater than or equal to minimum Q");
         }
 
         // check set points
@@ -1354,11 +1367,14 @@ public final class ModificationUtils {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName, "Standby is only supported in Voltage Regulation mode");
         }
         if (Objects.nonNull(creationInfos.getB0()) && Objects.nonNull(creationInfos.getMinSusceptance()) && Objects.nonNull(creationInfos.getMaxSusceptance()) &&
-                (creationInfos.getB0() < creationInfos.getMinSusceptance() || creationInfos.getB0() > creationInfos.getMaxSusceptance())
-            || Objects.nonNull(creationInfos.getQ0()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && Objects.nonNull(creationInfos.getMaxQAtNominalV()) &&
+                (creationInfos.getB0() < creationInfos.getMinSusceptance() || creationInfos.getB0() > creationInfos.getMaxSusceptance())) {
+            throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName,
+                     "b0 must be within the range of minimum susceptance and maximum susceptance");
+        }
+        if (Objects.nonNull(creationInfos.getQ0()) && Objects.nonNull(creationInfos.getMinQAtNominalV()) && Objects.nonNull(creationInfos.getMaxQAtNominalV()) &&
                 (creationInfos.getQ0() < creationInfos.getMinQAtNominalV() || creationInfos.getQ0() > creationInfos.getMaxQAtNominalV())) {
             throw makeEquipmentException(creationInfos.getErrorType(), creationInfos.getEquipmentId(), equipmentName,
-                     "b0 must be within the range of minimun susceptance and maximum susceptance");
+                    "q0 must be within the range of minimum Q and maximum Q");
         }
     }
 

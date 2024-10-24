@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,12 +11,11 @@ import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import lombok.SneakyThrows;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.Test;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -25,10 +23,10 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_NOT_FOUND;
-import static org.gridsuite.modification.server.utils.assertions.Assertions.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.junit.Assert.assertNull;
+import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class LineModificationTest extends AbstractNetworkModificationTest {
+class LineModificationTest extends AbstractNetworkModificationTest {
 
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
@@ -154,7 +152,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCreateWithErrors() throws Exception {
+    void testCreateWithErrors() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
         lineModificationInfos.setEquipmentId("lineNotFound");
         String lineModificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
@@ -167,7 +165,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testPermanentLimitUnchanged() throws Exception {
+    void testPermanentLimitUnchanged() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
         lineModificationInfos.getCurrentLimits1().setPermanentLimit(null);
@@ -183,7 +181,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testCharacteristicsModification() throws Exception {
+    void testCharacteristicsModification() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
         // Modify Series Reactance
@@ -289,7 +287,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void testTemporaryLimitsModification() throws Exception {
+    void testTemporaryLimitsModification() throws Exception {
         Line line = getNetwork().getLine("line1");
         line.newCurrentLimits1()
                 .setPermanentLimit(10.0)
@@ -362,28 +360,26 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
-    @SneakyThrows
-    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line1", createdValues.get("equipmentId"));
     }
 
     @Override
-    @SneakyThrows
-    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("LINE_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("line1", updatedValues.get("equipmentId"));
     }
 
     @Test
-    public void testDisconnection() throws Exception {
+    void testDisconnection() throws Exception {
         changeLineConnectionState(getNetwork().getLine("line1"), false);
     }
 
     @Test
-    public void testConnection() throws Exception {
+    void testConnection() throws Exception {
         changeLineConnectionState(getNetwork().getLine("line1"), true);
     }
 
@@ -425,7 +421,7 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    public void changeLineConnectablePosition() throws Exception {
+    void changeLineConnectablePosition() throws Exception {
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("line3")
@@ -443,11 +439,10 @@ public class LineModificationTest extends AbstractNetworkModificationTest {
         LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(1, createdModification.getConnectionPosition1().getValue());
         assertEquals(1, createdModification.getConnectionPosition2().getValue());
-
     }
 
     @Test
-    public void changeLineConnectablePositionWithoutBusBarSection() throws Exception {
+    void changeLineConnectablePositionWithoutBusBarSection() throws Exception {
         LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("line3")
