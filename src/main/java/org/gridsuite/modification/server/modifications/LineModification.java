@@ -42,6 +42,11 @@ public class LineModification extends AbstractBranchModification {
         modifyLine(line, modificationInfos, subReportNode);
     }
 
+    @Override
+    public String getName() {
+        return "LineModification";
+    }
+
     private void modifyLine(Line line, BranchModificationInfos lineModificationInfos, ReportNode subReportNode) {
         modifyBranch(line, lineModificationInfos, subReportNode, "lineModification", "Line with id=${id} modified :");
         PropertiesUtils.applyProperties(line, subReportNode, modificationInfos.getProperties(), "LineProperties");

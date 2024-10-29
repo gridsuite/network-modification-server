@@ -587,6 +587,11 @@ public class GenerationDispatch extends AbstractModification {
         }
     }
 
+    @Override
+    public String getName() {
+        return "GenerationDispatch";
+    }
+
     private Map<String, List<Generator>> getGeneratorsByRegion(Network network, Component component) {
         // get all connected generators  that are inside the synchronous component and the substationIds associated.
         List<Generator> connectedGenerators = network.getGeneratorStream()

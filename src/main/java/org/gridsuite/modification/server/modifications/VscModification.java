@@ -97,6 +97,11 @@ public class VscModification extends AbstractModification {
         modifyVsc(network, hvdcLine, modificationInfos, subReportNode);
     }
 
+    @Override
+    public String getName() {
+        return "VscModification";
+    }
+
     private void modifyVsc(@Nonnull Network network, @Nonnull HvdcLine hvdcLine, VscModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
                 .withMessageTemplate("VscModification", "Vsc with id=${id} modified :")

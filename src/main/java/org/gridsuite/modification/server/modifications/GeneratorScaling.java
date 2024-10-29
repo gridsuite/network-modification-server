@@ -191,4 +191,9 @@ public class GeneratorScaling extends AbstractScaling {
     protected Scalable getScalable(String id) {
         return Scalable.onGenerator(id);
     }
+
+    @Override
+    public String getName() {
+        return "GeneratorScaling";
+    }
 }

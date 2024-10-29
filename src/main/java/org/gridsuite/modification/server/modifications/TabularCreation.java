@@ -85,4 +85,9 @@ public class TabularCreation extends AbstractModification {
                     .add();
         }
     }
+
+    @Override
+    public String getName() {
+        return "TabularCreation";
+    }
 }

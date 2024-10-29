@@ -79,6 +79,11 @@ public class GeneratorModification extends AbstractModification {
         modifyGenerator(generator, modificationInfos, subReportNode);
     }
 
+    @Override
+    public String getName() {
+        return "GeneratorModification";
+    }
+
     private void modifyGenerator(Generator generator, GeneratorModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
                 .withMessageTemplate("generatorModification", "Generator with id=${id} modified :")

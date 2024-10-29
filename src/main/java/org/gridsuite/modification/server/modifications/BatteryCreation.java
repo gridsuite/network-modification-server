@@ -73,6 +73,11 @@ public class BatteryCreation extends AbstractModification {
         PropertiesUtils.applyProperties(battery, subReportNode, modificationInfos.getProperties(), "BatteryProperties");
     }
 
+    @Override
+    public String getName() {
+        return "BatteryCreation";
+    }
+
     private void createBatteryInNodeBreaker(VoltageLevel voltageLevel, BatteryCreationInfos batteryCreationInfos, Network network, ReportNode subReportNode) {
         BatteryAdder batteryAdder = createBatteryAdderInNodeBreaker(voltageLevel, batteryCreationInfos);
         createInjectionInNodeBreaker(voltageLevel, batteryCreationInfos, network, batteryAdder, subReportNode);

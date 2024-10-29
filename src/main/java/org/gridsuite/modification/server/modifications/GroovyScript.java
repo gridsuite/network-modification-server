@@ -50,4 +50,9 @@ public class GroovyScript extends AbstractModification {
             .withSeverity(TypedValue.INFO_SEVERITY)
             .add();
     }
+
+    @Override
+    public String getName() {
+        return "GroovyScript";
+    }
 }

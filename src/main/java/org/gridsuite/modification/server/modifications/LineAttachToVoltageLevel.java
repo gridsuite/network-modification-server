@@ -88,4 +88,9 @@ public class LineAttachToVoltageLevel extends AbstractModification {
 
         algo.apply(network, true, subReportNode);
     }
+
+    @Override
+    public String getName() {
+        return "LineAttachToVoltageLevel";
+    }
 }

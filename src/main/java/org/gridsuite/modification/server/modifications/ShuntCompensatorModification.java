@@ -82,6 +82,11 @@ public class ShuntCompensatorModification extends AbstractModification {
         PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties(), "ShuntCompensatorProperties");
     }
 
+    @Override
+    public String getName() {
+        return "ShuntCompensatorModification";
+    }
+
     public static void modifyMaximumSectionCount(AttributeModification<Integer> maximumSectionCountModif,
                                                  AttributeModification<Double> maxSusceptance,
                                                  AttributeModification<Double> maxQAtNominalV,

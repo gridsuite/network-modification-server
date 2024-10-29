@@ -75,6 +75,11 @@ public class VoltageInitModification extends AbstractModification {
         applyBusModification(network, subReportNode);
     }
 
+    @Override
+    public String getName() {
+        return "VoltageInitModification";
+    }
+
     private void applyBusModification(Network network, ReportNode subReportNode) {
         int modificationsCount = 0;
         List<ReportNode> reports = new ArrayList<>();

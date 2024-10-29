@@ -148,4 +148,9 @@ public class LoadScaling extends AbstractScaling {
                 .withSeverity(TypedValue.INFO_SEVERITY)
                 .add();
     }
+
+    @Override
+    public String getName() {
+        return "LoadScaling";
+    }
 }

@@ -58,6 +58,11 @@ public class LoadCreation extends AbstractModification {
         PropertiesUtils.applyProperties(load, subReporter, modificationInfos.getProperties(), "LoadProperties");
     }
 
+    @Override
+    public String getName() {
+        return "LoadCreation";
+    }
+
     private void reportElementaryCreations(ReportNode subReportNode) {
         if (modificationInfos.getEquipmentName() != null) {
             ModificationUtils.getInstance()
