@@ -222,9 +222,7 @@ public class NetworkModificationController {
 
     @GetMapping(value = "/network-composite-modification/{uuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the list of the network modifications inside a composite modification")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of the modifications inside the composite modification"),
-        @ApiResponse(responseCode = "404", description = "Composite modification not found")}
-    )
+    @ApiResponse(responseCode = "200", description = "List of the modifications inside the composite modification")
     public ResponseEntity<List<ModificationInfos>> getNetworkModificationsFromComposite(@PathVariable("uuid") UUID compositeModificationUuid) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
