@@ -220,15 +220,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createNetworkCompositeModification(modificationUuids));
     }
 
-    @GetMapping(value = "/network-composite-modification/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get the content of a composite modification via its id")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Content of the composite modification"),
-        @ApiResponse(responseCode = "404", description = "This composite modification does not exist")}
+    @GetMapping(value = "/network-composite-modification/{uuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the list of the network modifications inside a composite modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of the modifications inside the composite modification"),
+        @ApiResponse(responseCode = "404", description = "Composite modification not found")}
     )
-    public ResponseEntity<List<ModificationInfos>> getCompositeModificationContent(@PathVariable("id") UUID compositeModificationId) {
+    public ResponseEntity<List<ModificationInfos>> getNetworkModificationsFromComposite(@PathVariable("uuid") UUID compositeModificationUuid) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.getCompositeModificationContentMetadata(compositeModificationId)
+                .body(networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuid)
         );
     }
 

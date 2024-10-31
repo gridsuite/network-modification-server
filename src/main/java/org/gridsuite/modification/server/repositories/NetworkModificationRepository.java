@@ -395,27 +395,31 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * @param onlyCommonData if true, only returns the basic data common to all the modifications. If false, returns complete modifications
-     * @return the data from all the network modification contained in the composite modification sent as parameters
+     * returns the data from all the network modifications contained in the composite modification sent as parameter
+     * but only returns the basic data common to all the modifications form the ModificationInfos, not from the extended classes
      */
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getCompositeModificationsContentInfos(@NonNull List<UUID> uuids, boolean onlyCommonData) {
+    public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull UUID uuid) {
+
+        List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+
+        List<ModificationEntity> networkModificationsEntities = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
+
+        return networkModificationsEntities
+                .stream()
+                .map(this::getModificationInfos)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
         List<ModificationInfos> entities = new ArrayList<>();
         uuids.forEach(uuid -> {
-            List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-            List<ModificationInfos> orderedModifications;
-            if (onlyCommonData) {
-                List<ModificationEntity> networkModifications = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
-                orderedModifications = networkModifications
-                        .stream()
-                        .map(this::getModificationInfos)
-                        .toList();
-            } else {
-                orderedModifications = networkModificationsUuids
-                        .stream()
-                        .map(this::getModificationInfo)
-                        .toList();
-            }
+            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+            List<ModificationInfos> orderedModifications = foundEntities
+                    .stream()
+                    .map(this::getModificationInfo)
+                    .toList();
             entities.addAll(orderedModifications);
         }
         );

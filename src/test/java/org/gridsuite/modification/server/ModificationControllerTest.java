@@ -715,7 +715,7 @@ class ModificationControllerTest {
         assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // get the composite modification metadata
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications"))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(modificationsNumber, compositeModificationContent.size());
