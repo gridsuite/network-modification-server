@@ -127,6 +127,27 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
     }
 
     @Test
+    void testLockoutLinesWithFictitiousLoadBreakerSwitches() throws Exception {
+        //Lockout line with fictitious switches of kind LOAD_BREAK_SWITCH
+        createLineAndSwitches(SwitchKind.LOAD_BREAK_SWITCH, true);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    void testLockoutLinesWithFictitiousDisconnectorSwitches() throws Exception {
+        //Lockout line with fictitious switches of kind DISCONNECTOR
+        createLineAndSwitches(SwitchKind.DISCONNECTOR, true);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    void testLockoutLinesWithFictitiousBreakerSwitches() throws Exception {
+        //Lockout line with fictitious switches of kind BREAKER
+        createLineAndSwitches(SwitchKind.BREAKER, true);
+        testLockoutLine("line1");
+    }
+
+    @Test
     void testCreateWithErrors() throws Exception {
         // line not existing
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
@@ -153,19 +174,6 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
                         status().is4xxClientError());
-
-        // Add a line that can't be disconnected : with fictitious switches
-        Line line1 = createLineAndSwitches(SwitchKind.BREAKER, true);
-        assertNotNull(line1);
-        modificationInfos.setEquipmentId("line1");
-        modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
-        modificationJson = mapper.writeValueAsString(modificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertNull(getNetwork().getLine("line1").getExtension(OperatingStatus.class));
-        assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to disconnect all equipment ends").getMessage(),
-                modificationInfos.getErrorType().name(), reportService);
-
     }
 
     @Override
