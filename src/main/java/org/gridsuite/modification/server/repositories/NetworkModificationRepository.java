@@ -400,11 +400,8 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull UUID uuid) {
-
         List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-
         List<ModificationEntity> networkModificationsEntities = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
-
         return networkModificationsEntities
                 .stream()
                 .map(this::getModificationInfos)
