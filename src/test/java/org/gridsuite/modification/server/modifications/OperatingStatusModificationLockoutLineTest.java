@@ -127,7 +127,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
 
     @Test
     void testWithBreaker() throws Exception {
-        //Lockout line with fictitious switches of kind BREAKER
+        //Lockout line with switches of kind BREAKER
         createLineAndSwitches(SwitchKind.BREAKER, false);
         testLockoutLine("line1");
     }
