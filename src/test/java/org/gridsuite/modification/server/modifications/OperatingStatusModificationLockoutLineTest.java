@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import com.powsybl.iidm.network.VoltageLevel;
+
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.server.NetworkModificationException;
@@ -51,9 +51,8 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
     }
 
     private Line createLineAndSwitches(SwitchKind switchKind, boolean isFictitious) {
-        VoltageLevel vl2 = getNetwork().getVoltageLevel("vl2");
-        createSwitch(vl2, "br12", "br12", switchKind, false, false, isFictitious, 0, 3);
-        createSwitch(vl2, "br22", "br22", switchKind, false, false, isFictitious, 0, 3);
+        createSwitch(getNetwork().getVoltageLevel("vl1"), "br12", "br12", switchKind, false, false, isFictitious, 0, 3);
+        createSwitch(getNetwork().getVoltageLevel("vl2"), "br22", "br22", switchKind, false, false, isFictitious, 0, 3);
 
         return getNetwork().newLine()
                 .setId("line1")
@@ -113,16 +112,44 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
     }
 
     @Test
-    void testLockoutLinesWithLoadBreakerSwitches() throws Exception {
+    void testWithLoadBreaker() throws Exception {
         //Lockout line with switches of kind LOAD_BREAK_SWITCH
         createLineAndSwitches(SwitchKind.LOAD_BREAK_SWITCH, false);
         testLockoutLine("line1");
     }
 
     @Test
-    void testLockoutLinesWithDisconnectorSwitches() throws Exception {
+    void testWithFictitiousLoadBreaker() throws Exception {
+        //Lockout line with fictitious switches of kind LOAD_BREAK_SWITCH
+        createLineAndSwitches(SwitchKind.LOAD_BREAK_SWITCH, true);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    void testWithBreaker() throws Exception {
+        //Lockout line with switches of kind BREAKER
+        createLineAndSwitches(SwitchKind.BREAKER, false);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    void testWithFictitiousBreaker() throws Exception {
+        //Lockout line with fictitious switches of kind BREAKER
+        createLineAndSwitches(SwitchKind.BREAKER, true);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    void testWithDisconnector() throws Exception {
         //Lockout line with switches of kind DISCONNECTOR
         createLineAndSwitches(SwitchKind.DISCONNECTOR, false);
+        testLockoutLine("line1");
+    }
+
+    @Test
+    void testWithFictitiousDisconnector() throws Exception {
+        //Lockout line with fictitious switches of kind DISCONNECTOR
+        createLineAndSwitches(SwitchKind.DISCONNECTOR, true);
         testLockoutLine("line1");
     }
 
@@ -153,19 +180,6 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
                         status().is4xxClientError());
-
-        // Add a line that can't be disconnected : with fictitious switches
-        Line line1 = createLineAndSwitches(SwitchKind.BREAKER, true);
-        assertNotNull(line1);
-        modificationInfos.setEquipmentId("line1");
-        modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
-        modificationJson = mapper.writeValueAsString(modificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertNull(getNetwork().getLine("line1").getExtension(OperatingStatus.class));
-        assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to disconnect all equipment ends").getMessage(),
-                modificationInfos.getErrorType().name(), reportService);
-
     }
 
     @Override
