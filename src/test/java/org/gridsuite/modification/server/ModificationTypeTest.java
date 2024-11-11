@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.gridsuite.modification.ModificationType;
+
 /**
  * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
  */

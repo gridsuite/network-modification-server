@@ -5,7 +5,7 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package org.gridsuite.modification.server.entities.equipment.deletion;
-import org.gridsuite.modification.server.dto.AbstractEquipmentDeletionInfos;
+
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -21,5 +21,4 @@ public abstract class AbstractEquipmentDeletionEntity {
     @Column(name = "id")
     private UUID id;
 
-    public abstract AbstractEquipmentDeletionInfos toModificationInfos();
 }

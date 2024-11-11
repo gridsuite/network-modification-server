@@ -10,9 +10,9 @@ import com.powsybl.iidm.network.StaticVarCompensator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.StaticVarCompensatorCreationInfos;
-import org.gridsuite.modification.server.dto.VoltageRegulationType;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.StaticVarCompensatorCreationInfos;
+import org.gridsuite.modification.dto.VoltageRegulationType;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 

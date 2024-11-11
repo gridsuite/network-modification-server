@@ -10,10 +10,10 @@ import com.powsybl.iidm.network.LoadType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.LoadModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.LoadModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.OperationType;
 
 import jakarta.persistence.*;
 import org.springframework.util.CollectionUtils;

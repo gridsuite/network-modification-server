@@ -11,7 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.util.CollectionUtils;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.dto.*;
 
 import jakarta.persistence.*;
 

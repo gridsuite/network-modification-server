@@ -7,8 +7,8 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification.attribute;
 
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.OperationType;
 
 /**
  * @author Jacques Borsenberger <jacques.borsenberger at rte-france.com>

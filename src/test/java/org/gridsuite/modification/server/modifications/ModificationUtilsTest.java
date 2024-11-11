@@ -7,15 +7,16 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchRuntimeException;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_GENERATOR_ERROR;
 
 /**
  * @author David SARTORI <david.sartori_externe at rte-france.com>

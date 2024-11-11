@@ -11,7 +11,7 @@ import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfosToDelete;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
@@ -24,7 +24,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpac
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFICATION_ERROR;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

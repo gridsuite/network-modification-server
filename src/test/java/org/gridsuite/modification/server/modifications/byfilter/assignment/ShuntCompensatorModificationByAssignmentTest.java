@@ -14,10 +14,10 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.server.dto.byfilter.assignment.IntegerAssignmentInfos;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.ShuntCompensatorField;
+import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.assignment.IntegerAssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.equipmentfield.ShuntCompensatorField;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;

@@ -10,8 +10,8 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.ConverterStationCreationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;

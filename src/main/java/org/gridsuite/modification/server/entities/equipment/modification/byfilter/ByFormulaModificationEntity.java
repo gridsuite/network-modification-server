@@ -3,11 +3,11 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.server.dto.ByFormulaModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.dto.ByFormulaModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
+import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,13 +42,15 @@ public class ByFormulaModificationEntity extends ModificationEntity {
         if (formulaEntities == null) {
             formulaEntities = byFormulaModificationInfos.getFormulaInfosList()
                     .stream()
-                    .map(FormulaInfos::toEntity)
+                    .map(MappingUtil::mapToEntity)
+                    .map(FormulaEntity.class::cast)
                     .toList();
         } else {
             formulaEntities.clear();
             formulaEntities.addAll(byFormulaModificationInfos.getFormulaInfosList()
                     .stream()
-                    .map(FormulaInfos::toEntity)
+                    .map(MappingUtil::mapToEntity)
+                    .map(FormulaEntity.class::cast)
                     .toList());
         }
     }

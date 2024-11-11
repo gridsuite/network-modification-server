@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.InjectionCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.InjectionCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

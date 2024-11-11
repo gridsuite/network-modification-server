@@ -54,6 +54,7 @@
         <!-- FIXME: gridsuite-filter modules' version is overloaded in the dependencies section.
        The overloads and this property below have to be removed at next gridsuite-dependencies.version upgrade -->
         <filter.version>1.0.14</filter.version>
+        <network-modification.version>1.1.0-SNAPSHOT</network-modification.version>
     </properties>
 
     <build>
@@ -139,6 +140,17 @@
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-filter</artifactId>
             <version>${filter.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-network-modification</artifactId>
+            <version>${network-modification.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>gridsuite-filter</artifactId>
+                    <groupId>org.gridsuite</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

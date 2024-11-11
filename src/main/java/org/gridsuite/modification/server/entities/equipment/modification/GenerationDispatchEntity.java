@@ -10,11 +10,11 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.GenerationDispatchInfos;
-import org.gridsuite.modification.server.dto.GeneratorsFilterInfos;
-import org.gridsuite.modification.server.dto.GeneratorsFrequencyReserveInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.SubstationsGeneratorsOrderingInfos;
+import org.gridsuite.modification.dto.GenerationDispatchInfos;
+import org.gridsuite.modification.dto.GeneratorsFilterInfos;
+import org.gridsuite.modification.dto.GeneratorsFrequencyReserveInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.SubstationsGeneratorsOrderingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.CascadeType;

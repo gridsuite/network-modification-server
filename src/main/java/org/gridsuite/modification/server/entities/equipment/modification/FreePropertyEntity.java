@@ -12,9 +12,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.dto.FreePropertyInfos;
 
 import java.util.UUID;
+import org.gridsuite.modification.dto.FreePropertyInfos;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>

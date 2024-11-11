@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.dto.elasticsearch;
 import com.powsybl.iidm.network.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.SubstationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.springframework.data.annotation.TypeAlias;

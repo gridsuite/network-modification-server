@@ -12,14 +12,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
+import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -92,7 +94,16 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
-        return ModificationInfos.fromEntity(this);
+        ModificationInfos modificationInfos = ModificationInfos.builder()
+            .uuid(this.id)
+            .date(this.date)
+            .stashed(this.stashed)
+            .activated(this.activated)
+            .messageType(this.messageType)
+            .messageValues(this.messageValues)
+            .build();
+        modificationInfos.setType(ModificationType.valueOf(this.type));
+        return modificationInfos;
     }
 
     public void update(ModificationInfos modificationInfos) {

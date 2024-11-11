@@ -10,9 +10,10 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.BranchModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.BranchModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
+import org.gridsuite.modification.server.mapper.MappingUtil;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -151,16 +152,8 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
-        if (branchModificationInfos.getCurrentLimits1() == null) {
-            currentLimits1 = null;
-        } else {
-            currentLimits1 = branchModificationInfos.getCurrentLimits1().toEntity();
-        }
-        if (branchModificationInfos.getCurrentLimits2() == null) {
-            currentLimits2 = null;
-        } else {
-            currentLimits2 = branchModificationInfos.getCurrentLimits2().toEntity();
-        }
+        currentLimits1 = MappingUtil.mapToEntity(branchModificationInfos.getCurrentLimits1());
+        currentLimits2 = MappingUtil.mapToEntity(branchModificationInfos.getCurrentLimits2());
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;

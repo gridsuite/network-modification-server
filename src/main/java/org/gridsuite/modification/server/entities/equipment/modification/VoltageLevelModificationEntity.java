@@ -10,9 +10,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -24,7 +25,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import org.springframework.util.CollectionUtils;
 
-import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -103,11 +104,11 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
                 .stashed(getStashed())
                 .activated(getActivated())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .nominalV(toAttributeModification(getNominalV()))
-                .lowVoltageLimit(toAttributeModification(getLowVoltageLimit()))
-                .highVoltageLimit(toAttributeModification(getHighVoltageLimit()))
-                .ipMin(toAttributeModification(this.getIpMin()))
-                .ipMax(toAttributeModification(this.getIpMax()))
+                .nominalV(IAttributeModificationEmbeddable.toAttributeModification(getNominalV()))
+                .lowVoltageLimit(IAttributeModificationEmbeddable.toAttributeModification(getLowVoltageLimit()))
+                .highVoltageLimit(IAttributeModificationEmbeddable.toAttributeModification(getHighVoltageLimit()))
+                .ipMin(IAttributeModificationEmbeddable.toAttributeModification(this.getIpMin()))
+                .ipMax(IAttributeModificationEmbeddable.toAttributeModification(this.getIpMax()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

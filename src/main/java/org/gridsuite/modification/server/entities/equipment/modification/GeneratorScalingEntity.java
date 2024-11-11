@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.GeneratorScalingInfos;
+import org.gridsuite.modification.dto.GeneratorScalingInfos;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

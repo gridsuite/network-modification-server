@@ -7,10 +7,8 @@
 package org.gridsuite.modification.server.entities.equipment.deletion;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.modification.server.dto.AbstractEquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -21,6 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Getter
 @Table(name = "hvdcLccDeletion")
 public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
     @ElementCollection
@@ -35,9 +34,4 @@ public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
         foreignKey = @ForeignKey(name = "HvdcLccDeletionEntity_shuntCompensatorsSide2_fk1"))
     private List<ShuntCompensatorSelectionEmbeddable> shuntCompensatorsSide2;
 
-    @Override
-    public AbstractEquipmentDeletionInfos toModificationInfos() {
-        return CollectionUtils.isNotEmpty(shuntCompensatorsSide1) || CollectionUtils.isNotEmpty(shuntCompensatorsSide2) ?
-            new HvdcLccDeletionInfos(shuntCompensatorsSide1, shuntCompensatorsSide2) : null;
-    }
 }

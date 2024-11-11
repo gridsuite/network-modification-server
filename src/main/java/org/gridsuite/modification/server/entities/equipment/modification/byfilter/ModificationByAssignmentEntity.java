@@ -11,11 +11,11 @@ import com.powsybl.iidm.network.IdentifiableType;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ModificationByAssignmentInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.assignment.AssignmentEntity;
+import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 
@@ -52,13 +52,15 @@ public class ModificationByAssignmentEntity extends ModificationEntity {
         if (assignmentEntities == null) {
             assignmentEntities = modificationByAssignmentInfos.getAssignmentInfosList()
                     .stream()
-                    .map(AssignmentInfos::toEntity)
+                    .map(MappingUtil::mapToEntity)
+                    .map(entity -> (AssignmentEntity) entity)
                     .toList();
         } else {
             assignmentEntities.clear();
             assignmentEntities.addAll(modificationByAssignmentInfos.getAssignmentInfosList()
                     .stream()
-                    .map(AssignmentInfos::toEntity)
+                    .map(MappingUtil::mapToEntity)
+                    .map(entity -> (AssignmentEntity) entity)
                     .toList());
         }
     }

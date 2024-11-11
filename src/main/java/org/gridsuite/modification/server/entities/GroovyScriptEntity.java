@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.entities;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.GroovyScriptInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.GroovyScriptInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.*;
 

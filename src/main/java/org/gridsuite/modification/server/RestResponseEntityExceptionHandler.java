@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import org.gridsuite.modification.NetworkModificationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class RestResponseEntityExceptionHandler {
             LOGGER.error(exception.getMessage());
         }
         return ResponseEntity
-                .status(exception.getType().getStatus())
+                .status(exception.getType().status)
                 .body(exception.getMessage());
     }
 }

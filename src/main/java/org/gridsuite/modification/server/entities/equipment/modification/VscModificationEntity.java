@@ -11,15 +11,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VscModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VscModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
+import org.gridsuite.modification.server.mapper.MappingUtil;
 import org.springframework.util.CollectionUtils;
 
-import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
  */
@@ -138,8 +140,8 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
         this.angleDroopActivePowerControl = new BooleanModificationEmbedded(vscModificationInfos.getAngleDroopActivePowerControl());
         this.p0 = new FloatModificationEmbedded(vscModificationInfos.getP0());
         this.droop = new FloatModificationEmbedded(vscModificationInfos.getDroop());
-        this.converterStation1 = vscModificationInfos.getConverterStation1().toEntity();
-        this.converterStation2 = vscModificationInfos.getConverterStation2().toEntity();
+        this.converterStation1 = MappingUtil.mapToEntity(vscModificationInfos.getConverterStation1());
+        this.converterStation2 = MappingUtil.mapToEntity(vscModificationInfos.getConverterStation2());
     }
 
     private VscModificationInfos.VscModificationInfosBuilder<?, ?> toVscModificationInfosBuilder() {
@@ -150,16 +152,16 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
                 .activated(getActivated())
                 .equipmentId(getEquipmentId())
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
-                .nominalV(toAttributeModification(getNominalV()))
-                .r(toAttributeModification(getR()))
-                .maxP(toAttributeModification(getMaxP()))
-                .operatorActivePowerLimitFromSide1ToSide2(toAttributeModification(getOperatorActivePowerLimitSide1()))
-                .operatorActivePowerLimitFromSide2ToSide1(toAttributeModification(getOperatorActivePowerLimitSide2()))
-                .convertersMode(toAttributeModification(getConvertersMode()))
-                .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
-                .angleDroopActivePowerControl(toAttributeModification(getAngleDroopActivePowerControl()))
-                .p0(toAttributeModification(getP0()))
-                .droop(toAttributeModification(getDroop()))
+                .nominalV(IAttributeModificationEmbeddable.toAttributeModification(getNominalV()))
+                .r(IAttributeModificationEmbeddable.toAttributeModification(getR()))
+                .maxP(IAttributeModificationEmbeddable.toAttributeModification(getMaxP()))
+                .operatorActivePowerLimitFromSide1ToSide2(IAttributeModificationEmbeddable.toAttributeModification(getOperatorActivePowerLimitSide1()))
+                .operatorActivePowerLimitFromSide2ToSide1(IAttributeModificationEmbeddable.toAttributeModification(getOperatorActivePowerLimitSide2()))
+                .convertersMode(IAttributeModificationEmbeddable.toAttributeModification(getConvertersMode()))
+                .activePowerSetpoint(IAttributeModificationEmbeddable.toAttributeModification(getActivePowerSetpoint()))
+                .angleDroopActivePowerControl(IAttributeModificationEmbeddable.toAttributeModification(getAngleDroopActivePowerControl()))
+                .p0(IAttributeModificationEmbeddable.toAttributeModification(getP0()))
+                .droop(IAttributeModificationEmbeddable.toAttributeModification(getDroop()))
                 .converterStation1(getConverterStation1() == null ? null : getConverterStation1().toModificationInfos())
                 .converterStation2(getConverterStation2() == null ? null : getConverterStation2().toModificationInfos())
                 // properties

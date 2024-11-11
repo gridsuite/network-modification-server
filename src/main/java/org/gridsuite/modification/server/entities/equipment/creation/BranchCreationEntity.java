@@ -9,8 +9,9 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.BranchCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.BranchCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import jakarta.persistence.*;
 
@@ -99,16 +100,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        if (branchCreationInfos.getCurrentLimits1() == null) {
-            currentLimits1 = null;
-        } else {
-            currentLimits1 = branchCreationInfos.getCurrentLimits1().toEntity();
-        }
-        if (branchCreationInfos.getCurrentLimits2() == null) {
-            currentLimits2 = null;
-        } else {
-            currentLimits2 = branchCreationInfos.getCurrentLimits2().toEntity();
-        }
+        currentLimits1 = MappingUtil.mapToEntity(branchCreationInfos.getCurrentLimits1());
+        currentLimits2 = MappingUtil.mapToEntity(branchCreationInfos.getCurrentLimits2());
         connectionDirection1 = branchCreationInfos.getConnectionDirection1();
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();

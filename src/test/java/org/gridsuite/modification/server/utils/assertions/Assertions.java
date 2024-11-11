@@ -7,7 +7,7 @@
 package org.gridsuite.modification.server.utils.assertions;
 
 import org.assertj.core.util.CheckReturnValue;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 
 /**

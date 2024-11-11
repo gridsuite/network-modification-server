@@ -12,10 +12,10 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
-import org.gridsuite.modification.server.dto.byfilter.assignment.AssignmentInfos;
-import org.gridsuite.modification.server.dto.byfilter.assignment.DoubleAssignmentInfos;
-import org.gridsuite.modification.server.dto.byfilter.assignment.EnumAssignmentInfos;
-import org.gridsuite.modification.server.dto.byfilter.equipmentfield.LoadField;
+import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.assignment.EnumAssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.equipmentfield.LoadField;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 
 import java.util.Date;

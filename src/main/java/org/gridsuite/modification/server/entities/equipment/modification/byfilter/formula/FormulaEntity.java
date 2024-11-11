@@ -9,12 +9,13 @@ package org.gridsuite.modification.server.entities.equipment.modification.byfilt
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.formula.FormulaInfos;
-import org.gridsuite.modification.server.dto.byfilter.formula.Operator;
-import org.gridsuite.modification.server.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.dto.FilterInfos;
+import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
+import org.gridsuite.modification.dto.byfilter.formula.Operator;
+import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
+import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 
@@ -53,7 +54,10 @@ public class FormulaEntity extends AbstractAssignmentEntity {
         this.value1 = formulaInfos.getFieldOrValue1().getValue();
         this.value2 = formulaInfos.getFieldOrValue2().getValue();
         this.operator = formulaInfos.getOperator();
-        this.filters = formulaInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
+        this.filters = formulaInfos.getFilters().stream()
+                .map(MappingUtil::mapToEntity)
+                .map(entity -> (VariationFilterEntity) entity)
+                .toList();
     }
 
     public FormulaInfos toFormulaInfos() {
