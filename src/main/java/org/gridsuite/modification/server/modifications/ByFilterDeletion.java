@@ -92,6 +92,11 @@ public class ByFilterDeletion extends AbstractModification {
         }
     }
 
+    @Override
+    public String getName() {
+        return "ByFilterDeletion";
+    }
+
     private void applyFilterDeletion(Network network, ReportNode subReportNode, List<IdentifiableAttributes> identifiableAttributes) {
         IdentifiableType identifiableType = modificationInfos.getEquipmentType();
         if (CONNECTABLE_TYPES.contains(identifiableType)) {

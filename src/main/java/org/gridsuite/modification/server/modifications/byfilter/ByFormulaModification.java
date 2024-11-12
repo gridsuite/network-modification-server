@@ -108,4 +108,9 @@ public class ByFormulaModification extends AbstractModificationByAssignment {
             case PERCENTAGE -> (value1 / 100) * value2;
         };
     }
+
+    @Override
+    public String getName() {
+        return "ByFormulaModification";
+    }
 }

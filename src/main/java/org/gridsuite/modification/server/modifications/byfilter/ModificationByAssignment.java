@@ -104,4 +104,9 @@ public class ModificationByAssignment extends AbstractModificationByAssignment {
             return super.applyValue(equipment, abstractAssignmentInfos);
         }
     }
+
+    @Override
+    public String getName() {
+        return "ModificationByAssignment";
+    }
 }

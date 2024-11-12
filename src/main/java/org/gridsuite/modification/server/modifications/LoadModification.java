@@ -45,6 +45,11 @@ public class LoadModification extends AbstractModification {
         modifyLoad(load, subReportNode);
     }
 
+    @Override
+    public String getName() {
+        return "LoadModification";
+    }
+
     private void modifyLoad(Load load, ReportNode subReportNode) {
         subReportNode.newReportNode()
             .withMessageTemplate("loadModification", "Load with id=${id} modified :")

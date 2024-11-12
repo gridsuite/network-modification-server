@@ -137,6 +137,11 @@ public class VscCreation extends AbstractModification {
         PropertiesUtils.applyProperties(hvdcLine, subReportNode, modificationInfos.getProperties(), "VscProperties");
     }
 
+    @Override
+    public String getName() {
+        return "VscCreation";
+    }
+
     private boolean shouldCreateDroopActivePowerControlExtension() {
         return VscModification.shouldCreateDroopActivePowerControlExtension(
             modificationInfos.getAngleDroopActivePowerControl() != null, modificationInfos.getDroop() != null, modificationInfos.getP0() != null);

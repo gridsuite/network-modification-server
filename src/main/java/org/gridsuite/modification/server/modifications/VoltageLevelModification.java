@@ -94,6 +94,11 @@ public class VoltageLevelModification extends AbstractModification {
         PropertiesUtils.applyProperties(voltageLevel, subReportNode, modificationInfos.getProperties(), "VlProperties");
     }
 
+    @Override
+    public String getName() {
+        return "VoltageLevelModification";
+    }
+
     public static void modifyHighVoltageLimit(VoltageLevel voltageLevel, AttributeModification<Double> highVoltageLimit, ReportNode subReportNode) {
         ModificationUtils.getInstance().applyElementaryModifications(voltageLevel::setHighVoltageLimit, voltageLevel::getHighVoltageLimit, highVoltageLimit, subReportNode, "High voltage limit");
     }

@@ -75,6 +75,11 @@ public class OperatingStatusModification extends AbstractModification {
         }
     }
 
+    @Override
+    public String getName() {
+        return "OperatingStatusModification";
+    }
+
     private void applyLockoutEquipment(ReportNode subReportNode, Identifiable<?> equipment, String equipmentType) {
         if (disconnectAllTerminals(equipment)) {
             equipment.newExtension(OperatingStatusAdder.class).withStatus(OperatingStatus.Status.PLANNED_OUTAGE).add();

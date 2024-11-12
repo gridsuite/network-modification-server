@@ -22,4 +22,9 @@ public class CompositeModification extends AbstractModification {
     public void apply(Network network, ReportNode subReportNode) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public String getName() {
+        return "CompositeModification";
+    }
 }

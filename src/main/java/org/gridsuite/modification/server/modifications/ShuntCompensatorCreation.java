@@ -75,6 +75,11 @@ public class ShuntCompensatorCreation extends AbstractModification {
         PropertiesUtils.applyProperties(shuntCompensator, subReportNode, modificationInfos.getProperties(), "ShuntCompensatorProperties");
     }
 
+    @Override
+    public String getName() {
+        return "ShuntCompensatorCreation";
+    }
+
     private ShuntCompensatorAdder createShuntAdderInNodeBreaker(VoltageLevel voltageLevel, ShuntCompensatorCreationInfos shuntCompensatorInfos) {
         // creating the shunt compensator
         ShuntCompensatorAdder shuntAdder = voltageLevel.newShuntCompensator()

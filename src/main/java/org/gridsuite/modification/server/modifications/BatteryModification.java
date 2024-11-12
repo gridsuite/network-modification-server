@@ -76,6 +76,11 @@ public class BatteryModification extends AbstractModification {
         modifyBattery(battery, modificationInfos, subReportNode);
     }
 
+    @Override
+    public String getName() {
+        return "BatteryModification";
+    }
+
     private void modifyBattery(Battery battery, BatteryModificationInfos modificationInfos, ReportNode subReportNode) {
         subReportNode.newReportNode()
                 .withMessageTemplate("batteryModification", "Battery with id=${id} modified :")
