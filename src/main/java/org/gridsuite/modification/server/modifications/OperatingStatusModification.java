@@ -166,7 +166,7 @@ public class OperatingStatusModification extends AbstractModification {
     }
 
     private boolean disconnectAllTerminals(Identifiable<?> equipment) {
-        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(terminal -> disconnectOneTerminal(terminal, SwitchPredicates.IS_NONFICTIONAL));
+        return ModificationUtils.getInstance().getTerminalsFromIdentifiable(equipment).stream().allMatch(terminal -> disconnectOneTerminal(terminal, SwitchPredicates.IS_NON_NULL));
     }
 
     private boolean disconnectOneTerminal(Terminal terminal, Predicate<Switch> switchPredicates) {

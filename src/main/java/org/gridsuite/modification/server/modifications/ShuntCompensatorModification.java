@@ -96,7 +96,7 @@ public class ShuntCompensatorModification extends AbstractModification {
         if (maximumSectionCountModif != null) {
             var maximumSectionCount = maximumSectionCountModif.getValue();
             if (maxSusceptance == null && maxQAtNominalV == null) {
-                model.setBPerSection(model.getBPerSection() * shuntCompensator.getMaximumSectionCount() / maximumSectionCount);
+                model.setBPerSection((model.getBPerSection() * shuntCompensator.getMaximumSectionCount()) / maximumSectionCount);
             }
             if (reports != null) {
                 reports.add(ModificationUtils.getInstance().buildModificationReport(shuntCompensator.getMaximumSectionCount(), maximumSectionCount, "Maximum section count"));
