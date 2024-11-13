@@ -78,6 +78,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    public List<ModificationInfos> getNetworkModificationsFromComposite(UUID compositeModificationUuid) {
+        return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuid);
+    }
+
+    @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
         return networkModificationRepository.getModificationInfo(networkModificationUuid);
     }

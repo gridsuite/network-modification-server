@@ -400,6 +400,20 @@ public class NetworkModificationRepository {
         return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
     }
 
+    /**
+     * returns the data from all the network modifications contained in the composite modification sent as parameter
+     * but only returns the basic data common to all the modifications form the ModificationInfos, not from the extended classes
+     */
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull UUID uuid) {
+        List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+        List<ModificationEntity> networkModificationsEntities = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
+        return networkModificationsEntities
+                .stream()
+                .map(this::getModificationInfos)
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public List<ModificationInfos> getCompositeModificationsInfos(@NonNull List<UUID> uuids) {
         List<ModificationInfos> entities = new ArrayList<>();
