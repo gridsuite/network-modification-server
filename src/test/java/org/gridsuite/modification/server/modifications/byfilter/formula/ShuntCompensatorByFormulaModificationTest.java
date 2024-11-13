@@ -133,15 +133,15 @@ class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModific
     protected void assertAfterNetworkModificationCreation() {
         ShuntCompensator shuntCompensator1 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_1);
         assertEquals(8, shuntCompensator1.getMaximumSectionCount());
-        assertEquals(2.625, shuntCompensator1.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
+        assertEquals(1.625, shuntCompensator1.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
 
         ShuntCompensator shuntCompensator2 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_2);
         assertEquals(6, shuntCompensator2.getMaximumSectionCount());
-        assertEquals(0.5, shuntCompensator2.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
+        assertEquals(0.25, shuntCompensator2.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
 
         ShuntCompensator shuntCompensator3 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_3);
         assertEquals(12, shuntCompensator3.getMaximumSectionCount());
-        assertEquals(3, shuntCompensator3.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
+        assertEquals(0.75, shuntCompensator3.getModel(ShuntCompensatorLinearModel.class).getBPerSection(), 0);
 
         ShuntCompensator shuntCompensator4 = getNetwork().getShuntCompensator(SHUNT_COMPENSATOR_ID_4);
         assertEquals(13, shuntCompensator4.getSectionCount());
