@@ -63,6 +63,11 @@ public class TwoWindingsTransformerCreation extends AbstractModification {
         PropertiesUtils.applyProperties(twoWindingsTransformer, subReportNode, modificationInfos.getProperties(), "TwoWindingsTransformerProperties");
     }
 
+    @Override
+    public String getName() {
+        return "TwoWindingsTransformerCreation";
+    }
+
     private TwoWindingsTransformer create2WTInNodeBreaker(Network network, VoltageLevel voltageLevel1, VoltageLevel voltageLevel2, ReportNode subReportNode) {
         var twoWindingsTransformerAdder = createTwoWindingsTransformerAdder(voltageLevel1, voltageLevel2, modificationInfos, false, false);
 

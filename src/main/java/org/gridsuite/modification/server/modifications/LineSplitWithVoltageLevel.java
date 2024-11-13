@@ -63,4 +63,9 @@ public class LineSplitWithVoltageLevel extends AbstractModification {
 
         algo.apply(network, true, subReportNode);
     }
+
+    @Override
+    public String getName() {
+        return "LineSplitWithVoltageLevel";
+    }
 }

@@ -60,6 +60,11 @@ public class EquipmentDeletion extends AbstractModification {
                 .add();
     }
 
+    @Override
+    public String getName() {
+        return "EquipmentDeletion";
+    }
+
     private void removeHvdcLine(Network network, ReportNode subReportNode) {
         HvdcLccDeletionInfos specificInfos = (HvdcLccDeletionInfos) modificationInfos.getEquipmentInfos();
         List<String> shuntCompensatorIds = List.of();

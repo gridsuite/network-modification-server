@@ -61,6 +61,11 @@ public class EquipmentAttributeModification extends AbstractModification {
         }
     }
 
+    @Override
+    public String getName() {
+        return "EquipmentAttributeModification";
+    }
+
     private void changeSwitchAttribute(Switch aSwitch, String attributeName, Object attributeValue, ReportNode reportNode) {
         if (attributeName.equals("open")) {
             if (Boolean.TRUE.equals(aSwitch.isOpen() != (Boolean) attributeValue)) {

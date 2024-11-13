@@ -75,6 +75,11 @@ public class StaticVarCompensatorCreation extends AbstractModification {
                 .add();
     }
 
+    @Override
+    public String getName() {
+        return "StaticVarCompensatorCreation";
+    }
+
     private void createStaticVarCompensatorInNodeBreaker(VoltageLevel voltageLevel, StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos,
             Network network, ReportNode subReportNode) {
         StaticVarCompensatorAdder staticVarCompensatorAdder = createStaticVarCompensatorAdderInNodeBreaker(voltageLevel, staticVarCompensatorCreationInfos);

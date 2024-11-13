@@ -31,11 +31,12 @@ public enum ShuntCompensatorField {
     public static String getReferenceValue(ShuntCompensator shuntCompensator, String shuntCompensatorField) {
         VoltageLevel voltageLevel = shuntCompensator.getTerminal().getVoltageLevel();
         ShuntCompensatorField field = ShuntCompensatorField.valueOf(shuntCompensatorField);
+        double bPerSection = shuntCompensator.getB() / shuntCompensator.getSectionCount();
         return switch (field) {
             case MAXIMUM_SECTION_COUNT -> String.valueOf(shuntCompensator.getMaximumSectionCount());
             case SECTION_COUNT -> String.valueOf(shuntCompensator.getSectionCount());
-            case MAXIMUM_SUSCEPTANCE -> String.valueOf(shuntCompensator.getB() * shuntCompensator.getMaximumSectionCount());
-            case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> String.valueOf(Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * shuntCompensator.getB()) * shuntCompensator.getMaximumSectionCount());
+            case MAXIMUM_SUSCEPTANCE -> String.valueOf(bPerSection * shuntCompensator.getMaximumSectionCount());
+            case MAXIMUM_Q_AT_NOMINAL_VOLTAGE -> String.valueOf(Math.abs(Math.pow(voltageLevel.getNominalV(), 2) * bPerSection) * shuntCompensator.getMaximumSectionCount());
         };
     }
 

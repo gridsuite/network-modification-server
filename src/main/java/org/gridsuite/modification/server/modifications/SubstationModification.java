@@ -51,4 +51,9 @@ public class SubstationModification extends AbstractModification {
         // properties
         PropertiesUtils.applyProperties(station, subReportNode, modificationInfos.getProperties(), "SubstationProperties");
     }
+
+    @Override
+    public String getName() {
+        return "SubstationModification";
+    }
 }

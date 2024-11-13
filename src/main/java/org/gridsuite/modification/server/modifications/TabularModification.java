@@ -98,6 +98,11 @@ public class TabularModification extends AbstractModification {
         }
     }
 
+    @Override
+    public String getName() {
+        return "TabularModification";
+    }
+
     public void checkShuntCompensatorModification(
             Network network,
             ShuntCompensatorModificationInfos shuntCompensatorModificationInfos,
