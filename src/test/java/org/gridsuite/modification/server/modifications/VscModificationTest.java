@@ -75,8 +75,8 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                 .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurveModificationInfos(0.4, 3., 11., 13., 0.7, 0.9),
-                        new ReactiveCapabilityCurveModificationInfos(0.6, 2., 12., 14., 0.8, 0.11)))
+                        new ReactiveCapabilityCurveModificationInfos(1, 0.4, 3., 11., 13., 0.7, 0.9),
+                        new ReactiveCapabilityCurveModificationInfos(2, 0.6, 2., 12., 14., 0.8, 0.11)))
                 .build();
     }
 

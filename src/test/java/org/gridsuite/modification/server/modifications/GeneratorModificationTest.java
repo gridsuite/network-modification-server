@@ -68,8 +68,8 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .minQ(new AttributeModification<>(-100., OperationType.SET))
                 .maxQ(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.1),
-                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 200., 150.)))
+                        new ReactiveCapabilityCurveModificationInfos(1, 0., 0., 100., 100., 0., 0.1),
+                        new ReactiveCapabilityCurveModificationInfos(2, 0., 0., 100., 100., 200., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
                 .directTransX(new AttributeModification<>(0.1, OperationType.SET))
