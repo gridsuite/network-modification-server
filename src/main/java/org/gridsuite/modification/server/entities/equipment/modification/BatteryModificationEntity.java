@@ -106,7 +106,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
             List<ReactiveCapabilityCurveModificationInfos> points) {
         return points == null ? null
                 : points.stream()
-                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getPosition(), point.getMinQ(), point.getOldMinQ(),
+                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getPointPosition(), point.getMinQ(), point.getOldMinQ(),
                         point.getMaxQ(), point.getOldMaxQ(), point.getP(),
                         point.getOldP()))
                 .toList();

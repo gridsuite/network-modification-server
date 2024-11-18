@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class ReactiveCapabilityCurveModificationEmbeddable {
     @Column
-    private Integer position;
+    private Integer pointPosition;
 
     @Column
     private Double minQ;
