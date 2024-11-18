@@ -61,8 +61,9 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     })
     private DoubleModificationEmbedded voltageSetpoint;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "converter_station_modification_rcc_points")
+    @OrderColumn(name = "pos_point")
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Embedded

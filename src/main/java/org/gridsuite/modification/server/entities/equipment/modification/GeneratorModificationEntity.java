@@ -198,8 +198,9 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     })
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable
+    @OrderColumn(name = "pos_point")
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
@@ -257,13 +258,6 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     }
 
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
-        List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
-                .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
-                        value.getMaxQ(), value.getOldMaxQ(),
-                        value.getP(), value.getOldP()))
-                .collect(Collectors.toList()) : null;
         return GeneratorModificationInfos
                 .builder()
                 .uuid(getId())
@@ -302,7 +296,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(points)
+                .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveModificationInfos(getReactiveCapabilityCurvePoints()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

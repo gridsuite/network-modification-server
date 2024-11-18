@@ -7,9 +7,10 @@
 package org.gridsuite.modification.server.dto;
 
 import org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable;
-import org.springframework.util.CollectionUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
@@ -19,11 +20,15 @@ public final class DTOUtils {
     }
 
     public static List<ReactiveCapabilityCurveModificationInfos> convertToReactiveCapabilityCurveModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
-        return CollectionUtils.isEmpty(rCCpoints) ? null : rCCpoints
-                .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
-                        value.getMaxQ(), value.getOldMaxQ(),
-                        value.getP(), value.getOldP()))
-                .toList();
+        return Optional.ofNullable(rCCpoints)
+                .orElse(Collections.emptyList()).stream().map(value -> value == null
+                        ? new ReactiveCapabilityCurveModificationInfos(null, null, null, null, null, null)
+                        : new ReactiveCapabilityCurveModificationInfos(
+                        value.getMinQ(),
+                        value.getOldMinQ(),
+                        value.getMaxQ(),
+                        value.getOldMaxQ(),
+                        value.getP(),
+                        value.getOldP())).toList();
     }
 }

@@ -7,12 +7,12 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveModificationInfos;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -40,4 +40,15 @@ public class ReactiveCapabilityCurveModificationEmbeddable {
 
     @Column
     private Double oldP;
+
+    public ReactiveCapabilityCurveModificationInfos toInfos() {
+        return ReactiveCapabilityCurveModificationInfos.builder()
+                .p(p)
+                .oldP(oldP)
+                .minQ(minQ)
+                .oldMinQ(oldMinQ)
+                .maxQ(maxQ)
+                .oldMaxQ(oldMaxQ)
+                .build();
+    }
 }
