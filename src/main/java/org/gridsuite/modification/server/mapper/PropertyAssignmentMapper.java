@@ -22,7 +22,7 @@ public class PropertyAssignmentMapper implements EntityMapper<PropertyAssignment
 
     @Override
     public PropertyAssignmentInfos toDto(AssignmentEntity entity) {
-        // TODO Auto-generated method stub
+        // TODO this method will replace the toModificationInfos method in entity classes
         throw new UnsupportedOperationException("Unimplemented method 'toDto'");
     }
 }

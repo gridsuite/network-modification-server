@@ -26,7 +26,7 @@ public class FreePropertyMapper implements EntityMapper<FreePropertyInfos, FreeP
 
     @Override
     public FreePropertyInfos toDto(FreePropertyEntity entity) {
-        // TODO Auto-generated method stub
+        // TODO this method will replace the toModificationInfos method in entity classes
         throw new UnsupportedOperationException("Unimplemented method 'toDto'");
     }
 }

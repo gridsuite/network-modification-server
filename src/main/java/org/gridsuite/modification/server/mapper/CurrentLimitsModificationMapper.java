@@ -25,7 +25,7 @@ public class CurrentLimitsModificationMapper implements EntityMapper<CurrentLimi
 
     @Override
     public CurrentLimitsModificationInfos toDto(CurrentLimitsModificationEntity entity) {
-        // TODO Auto-generated method stub
+        // TODO this method will replace the toModificationInfos method in entity classes
         throw new UnsupportedOperationException("Unimplemented method 'toDto'");
     }
 }

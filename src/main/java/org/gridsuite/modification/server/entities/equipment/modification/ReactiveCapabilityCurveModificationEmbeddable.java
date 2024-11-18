@@ -17,7 +17,6 @@ import jakarta.persistence.Embeddable;
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
  */
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

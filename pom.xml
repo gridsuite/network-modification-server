@@ -115,29 +115,8 @@
         <!-- Compilation dependencies -->
         <dependency>
             <groupId>org.gridsuite</groupId>
-            <artifactId>gridsuite-filter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
             <version>${network-modification.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>gridsuite-filter</artifactId>
-                    <groupId>org.gridsuite</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.gridsuite</groupId>
-            <artifactId>gridsuite-network-modification</artifactId>
-            <version>${network-modification.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>gridsuite-filter</artifactId>
-                    <groupId>org.gridsuite</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
