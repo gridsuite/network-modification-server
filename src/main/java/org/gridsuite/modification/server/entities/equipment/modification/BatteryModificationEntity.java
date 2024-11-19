@@ -74,7 +74,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     })
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
     @CollectionTable
     @OrderColumn(name = "pos_point")
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
