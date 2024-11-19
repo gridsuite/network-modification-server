@@ -657,10 +657,19 @@ public final class ModificationUtils {
                                                     BasicEquipmentModificationInfos modificationInfos,
                                                     List<ReportNode> reports) {
         if (modificationInfos instanceof BranchModificationInfos) {
-            modifyConnectablePosition(connectablePosition.getFeeder1(), modificationInfos, reports, FeederSide.BRANCH_SIDE_ONE);
-            modifyConnectablePosition(connectablePosition.getFeeder2(), modificationInfos, reports, FeederSide.BRANCH_SIDE_TWO);
+            processFeeder(connectablePosition.getFeeder1(), modificationInfos, reports, FeederSide.BRANCH_SIDE_ONE);
+            processFeeder(connectablePosition.getFeeder2(), modificationInfos, reports, FeederSide.BRANCH_SIDE_TWO);
         } else if (modificationInfos instanceof InjectionModificationInfos) {
-            modifyConnectablePosition(connectablePosition.getFeeder(), modificationInfos, reports, FeederSide.INJECTION_SINGLE_SIDE);
+            processFeeder(connectablePosition.getFeeder(), modificationInfos, reports, FeederSide.INJECTION_SINGLE_SIDE);
+        }
+    }
+
+    private void processFeeder(ConnectablePosition.Feeder feeder,
+                               BasicEquipmentModificationInfos modificationInfos,
+                               List<ReportNode> reports,
+                               FeederSide feederSide) {
+        if (feeder != null) {
+            modifyConnectablePosition(feeder, modificationInfos, reports, feederSide);
         }
     }
 
