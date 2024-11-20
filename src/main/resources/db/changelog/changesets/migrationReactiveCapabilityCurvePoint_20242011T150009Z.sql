@@ -1,45 +1,45 @@
-WITH position_value_generator AS (
-    SELECT
+with position_value_generator as (
+    select
         generator_modification_entity_id,
         old_maxq,
         old_minq,
         oldp,
-        (row_number() OVER (PARTITION BY generator_modification_entity_id) - 1) AS pos_point_new
+        (row_number() over (partition by generator_modification_entity_id) - 1) AS pos_point_new
     FROM generator_modification_entity_reactive_capability_curve_points
 )
 
-UPDATE generator_modification_entity_reactive_capability_curve_points g
-SET pos_point = c.pos_point_new
-FROM position_value_generator c
-WHERE g.generator_modification_entity_id = c.generator_modification_entity_id
-  AND g.old_maxq = c.old_maxq AND g.old_minq = c.old_minq AND g.oldp = c.oldp;
+update generator_modification_entity_reactive_capability_curve_points g
+set pos_point = c.pos_point_new
+from position_value_generator c
+where g.generator_modification_entity_id = c.generator_modification_entity_id
+  and g.old_maxq = c.old_maxq and g.old_minq = c.old_minq and g.oldp = c.oldp;
 
-WITH position_value_battery AS (
-    SELECT
+with position_value_battery as (
+    select
         battery_modification_entity_id,
         old_maxq,
         old_minq,
         oldp,
-        (row_number() OVER (PARTITION BY battery_modification_entity_id) - 1) AS pos_point_new
-    FROM battery_modification_entity_reactive_capability_curve_points
+        (row_number() OVER (partition by battery_modification_entity_id) - 1) AS pos_point_new
+    from battery_modification_entity_reactive_capability_curve_points
 )
-UPDATE battery_modification_entity_reactive_capability_curve_points g
-SET pos_point = c.pos_point_new
-FROM position_value_battery c
-WHERE g.battery_modification_entity_id = c.battery_modification_entity_id
-  AND g.old_maxq = c.old_maxq AND g.old_minq = c.old_minq AND g.oldp = c.oldp;
+update battery_modification_entity_reactive_capability_curve_points g
+set pos_point = c.pos_point_new
+from position_value_battery c
+where g.battery_modification_entity_id = c.battery_modification_entity_id
+  and g.old_maxq = c.old_maxq and g.old_minq = c.old_minq and g.oldp = c.oldp;
 
-WITH position_value_converter_station AS (
-    SELECT
+with position_value_converter_station as (
+    select
         converter_station_modification_entity_id,
         old_maxq,
         old_minq,
         oldp,
-        (row_number() OVER (PARTITION BY converter_station_modification_entity_id) - 1) AS pos_point_new
-    FROM converter_station_modification_rcc_points
+        (row_number() over (partition by converter_station_modification_entity_id) - 1) as pos_point_new
+    from converter_station_modification_rcc_points
 )
-UPDATE converter_station_modification_rcc_points g
-SET pos_point = c.pos_point_new
-FROM position_value_converter_station c
-WHERE g.converter_station_modification_entity_id = c.converter_station_modification_entity_id
-  AND g.old_maxq = c.old_maxq AND g.old_minq = c.old_minq AND g.oldp = c.oldp;
+update converter_station_modification_rcc_points g
+set pos_point = c.pos_point_new
+from position_value_converter_station c
+where g.converter_station_modification_entity_id = c.converter_station_modification_entity_id
+  and g.old_maxq = c.old_maxq and g.old_minq = c.old_minq and g.oldp = c.oldp;
