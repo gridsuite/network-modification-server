@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.ConnectablePositionAdder;
 import org.gridsuite.modification.server.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -457,5 +458,45 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         assertEquals("line3", createdModification.getConnectionName1().getValue());
         assertEquals("line3", createdModification.getConnectionName2().getValue());
 
+    }
+
+    @Test
+    void changeLineWithConnectablePositionOneSide() throws Exception {
+        var l = getNetwork().newLine()
+                .setId("line10")
+                .setName("line10")
+                .setR(1.0)
+                .setX(1.0)
+                .setB1(1.0)
+                .setB2(1.0)
+                .setVoltageLevel1("v3")
+                .setVoltageLevel2("v4")
+                .setNode1(7)
+                .setNode2(3)
+                .add();
+        l.newExtension(ConnectablePositionAdder.class)
+                .newFeeder1()
+                .withName("line10")
+                .withOrder(0)
+                .withDirection(ConnectablePosition.Direction.UNDEFINED).add()
+                .add();
+        LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+                .stashed(false)
+                .equipmentId("line10")
+                .connectionName1(new AttributeModification<>("cnLine10", OperationType.SET))
+                .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
+                .connectionPosition1(new AttributeModification<>(2, OperationType.SET))
+                .build();
+
+        String modificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        assertEquals("cnLine10", createdModification.getConnectionName1().getValue());
+        assertEquals(2, createdModification.getConnectionPosition1().getValue());
+        assertEquals(ConnectablePosition.Direction.TOP, createdModification.getConnectionDirection1().getValue());
+        assertNull(createdModification.getConnectionName2());
+        assertNull(createdModification.getConnectionDirection2());
+        assertNull(createdModification.getConnectionPosition2());
     }
 }
