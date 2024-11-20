@@ -7,7 +7,6 @@ import org.gridsuite.modification.dto.ByFormulaModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.formula.FormulaEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,15 +41,13 @@ public class ByFormulaModificationEntity extends ModificationEntity {
         if (formulaEntities == null) {
             formulaEntities = byFormulaModificationInfos.getFormulaInfosList()
                     .stream()
-                    .map(MappingUtil::mapToEntity)
-                    .map(FormulaEntity.class::cast)
+                    .map(FormulaEntity::new)
                     .toList();
         } else {
             formulaEntities.clear();
             formulaEntities.addAll(byFormulaModificationInfos.getFormulaInfosList()
                     .stream()
-                    .map(MappingUtil::mapToEntity)
-                    .map(FormulaEntity.class::cast)
+                    .map(FormulaEntity::new)
                     .toList());
         }
     }

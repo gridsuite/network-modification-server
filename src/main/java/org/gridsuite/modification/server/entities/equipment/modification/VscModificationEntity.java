@@ -18,7 +18,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 import org.springframework.util.CollectionUtils;
 
 import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
@@ -140,8 +139,8 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
         this.angleDroopActivePowerControl = new BooleanModificationEmbedded(vscModificationInfos.getAngleDroopActivePowerControl());
         this.p0 = new FloatModificationEmbedded(vscModificationInfos.getP0());
         this.droop = new FloatModificationEmbedded(vscModificationInfos.getDroop());
-        this.converterStation1 = MappingUtil.mapToEntity(vscModificationInfos.getConverterStation1());
-        this.converterStation2 = MappingUtil.mapToEntity(vscModificationInfos.getConverterStation2());
+        this.converterStation1 = new ConverterStationModificationEntity(vscModificationInfos.getConverterStation1());
+        this.converterStation2 = new ConverterStationModificationEntity(vscModificationInfos.getConverterStation2());
     }
 
     private VscModificationInfos.VscModificationInfosBuilder<?, ?> toVscModificationInfosBuilder() {

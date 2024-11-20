@@ -16,7 +16,6 @@ import org.gridsuite.modification.dto.byfilter.DataType;
 import org.gridsuite.modification.dto.byfilter.assignment.*;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 import java.util.List;
 
 /**
@@ -48,8 +47,11 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
         this.dataType = assignmentInfos.getDataType();
         this.value = assignmentInfos.getValue().toString();
         this.filters = assignmentInfos.getFilters().stream()
-            .map(MappingUtil::mapToEntity)
-            .map(entity -> (VariationFilterEntity) entity).toList();
+            .map(VariationFilterEntity::new)
+            .toList();
+        if (assignmentInfos instanceof PropertyAssignmentInfos propertyAssignmentInfos) {
+            this.propertyName = propertyAssignmentInfos.getPropertyName();
+        }
     }
 
     public AssignmentInfos<?> toAssignmentInfos() {

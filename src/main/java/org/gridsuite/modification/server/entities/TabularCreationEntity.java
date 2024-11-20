@@ -21,7 +21,6 @@ import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,14 +71,12 @@ public class TabularCreationEntity extends ModificationEntity {
         creationType = tabularCreationInfos.getCreationType();
         if (creations == null) {
             creations = tabularCreationInfos.getCreations().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ModificationEntity) entity)
+                .map(ModificationEntity::fromDTO)
                 .toList();
         } else {
             creations.clear();
             creations.addAll(tabularCreationInfos.getCreations().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ModificationEntity) entity)
+                .map(ModificationEntity::fromDTO)
                 .toList());
         }
     }

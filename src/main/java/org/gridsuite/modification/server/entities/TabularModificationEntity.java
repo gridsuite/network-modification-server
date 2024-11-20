@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -65,14 +64,12 @@ public class TabularModificationEntity extends ModificationEntity {
         modificationType = tabularModificationInfos.getModificationType();
         if (modifications == null) {
             modifications = tabularModificationInfos.getModifications().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ModificationEntity) entity)
+                .map(ModificationEntity::fromDTO)
                 .collect(Collectors.toList());
         } else {
             modifications.clear();
             modifications.addAll(tabularModificationInfos.getModifications().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ModificationEntity) entity)
+                .map(ModificationEntity::fromDTO)
                 .toList());
         }
     }

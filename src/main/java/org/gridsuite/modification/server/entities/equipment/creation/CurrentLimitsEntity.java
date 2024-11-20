@@ -50,4 +50,8 @@ public class CurrentLimitsEntity {
                 .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
                 .build();
     }
+
+    public CurrentLimitsEntity(CurrentLimitsInfos currentLimitsInfos) {
+        this(null, currentLimitsInfos.getPermanentLimit(), CurrentTemporaryLimitCreationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsInfos.getTemporaryLimits()));
+    }
 }

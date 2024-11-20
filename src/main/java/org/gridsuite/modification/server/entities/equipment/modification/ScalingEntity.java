@@ -14,7 +14,6 @@ import org.gridsuite.modification.VariationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ScalingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,14 +50,12 @@ public class ScalingEntity extends ModificationEntity {
         variationType = scalingInfos.getVariationType();
         if (variations == null) {
             variations = scalingInfos.getVariations().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ScalingVariationEntity) entity)
+                .map(ScalingVariationEntity::new)
                 .collect(Collectors.toList());
         } else {
             variations.clear();
             variations.addAll(scalingInfos.getVariations().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ScalingVariationEntity) entity)
+                .map(ScalingVariationEntity::new)
                 .collect(Collectors.toList()));
         }
     }

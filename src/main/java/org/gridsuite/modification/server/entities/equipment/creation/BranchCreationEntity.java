@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import jakarta.persistence.*;
 
@@ -100,8 +99,16 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        currentLimits1 = MappingUtil.mapToEntity(branchCreationInfos.getCurrentLimits1());
-        currentLimits2 = MappingUtil.mapToEntity(branchCreationInfos.getCurrentLimits2());
+        if (branchCreationInfos.getCurrentLimits1() != null) {
+            currentLimits1 = new CurrentLimitsEntity(branchCreationInfos.getCurrentLimits1());
+        } else {
+            currentLimits1 = null;
+        }
+        if (branchCreationInfos.getCurrentLimits2() != null) {
+            currentLimits2 = new CurrentLimitsEntity(branchCreationInfos.getCurrentLimits2());
+        } else {
+            currentLimits2 = null;
+        }
         connectionDirection1 = branchCreationInfos.getConnectionDirection1();
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();

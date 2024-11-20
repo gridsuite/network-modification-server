@@ -16,7 +16,6 @@ import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,12 +55,12 @@ public class ByFilterDeletionEntity extends ModificationEntity {
         this.equipmentType = byFilterDeletionInfos.getEquipmentType();
         if (filters == null) {
             this.filters = byFilterDeletionInfos.getFilters().stream()
-                .map(filter -> MappingUtil.<FilterInfos, VariationFilterEntity>mapToEntity(filter))
+                .map(VariationFilterEntity::new)
                 .collect(Collectors.toList());
         } else {
             filters.clear();
             filters.addAll(byFilterDeletionInfos.getFilters().stream()
-                .map(filter -> MappingUtil.<FilterInfos, VariationFilterEntity>mapToEntity(filter))
+                .map(VariationFilterEntity::new)
                 .collect(Collectors.toList()));
         }
     }

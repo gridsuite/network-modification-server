@@ -15,8 +15,11 @@ import lombok.SneakyThrows;
 
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 
+import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -119,5 +122,23 @@ public class ModificationEntity {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+    }
+
+    public static ModificationEntity fromDTO(ModificationInfos dto) {
+        if (dto instanceof EquipmentAttributeModificationInfos) {
+            return EquipmentAttributeModificationEntity.createAttributeEntity((EquipmentAttributeModificationInfos) dto);
+        }
+
+        Class<? extends ModificationEntity> entityClass = EntityRegistry.getEntityClass(dto.getClass());
+        if (entityClass != null) {
+            try {
+                Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
+                return constructor.newInstance(dto);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to map DTO to Entity", e);
+            }
+        } else {
+            throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
+        }
     }
 }

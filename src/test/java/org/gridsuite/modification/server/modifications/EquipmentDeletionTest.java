@@ -20,7 +20,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -119,7 +118,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         HvdcLccDeletionEntity hvdcLccDeletionEntity = side == 1 ?
                 new HvdcLccDeletionEntity(shuntData, null) :
                 new HvdcLccDeletionEntity(null, shuntData);
-        HvdcLccDeletionInfos hvdcLccDeletionInfos = MappingUtil.mapToDto(hvdcLccDeletionEntity, HvdcLccDeletionInfos.class);
+        HvdcLccDeletionInfos hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType(IdentifiableType.HVDC_LINE)

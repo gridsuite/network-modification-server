@@ -19,7 +19,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -270,7 +269,7 @@ public abstract class AbstractNetworkModificationTest {
 
     /** Save a network modification into the repository and return its UUID. */
     protected UUID saveModification(ModificationInfos modificationInfos) {
-        ModificationEntity entity = MappingUtil.mapToEntity(modificationInfos);
+        ModificationEntity entity = ModificationEntity.fromDTO(modificationInfos);
         modificationRepository.saveModifications(TEST_GROUP_ID, List.of(entity));
         return entity.getId();
     }

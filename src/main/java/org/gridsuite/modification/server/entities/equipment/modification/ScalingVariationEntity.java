@@ -13,7 +13,6 @@ import org.gridsuite.modification.ReactiveVariationMode;
 import org.gridsuite.modification.VariationMode;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ScalingVariationInfos;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import jakarta.persistence.*;
 import java.util.List;
@@ -58,14 +57,12 @@ public class ScalingVariationEntity {
     private void assignAttributes(ScalingVariationInfos variationInfos) {
         if (filters == null) {
             this.filters = variationInfos.getFilters().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (VariationFilterEntity) entity)
+                .map(VariationFilterEntity::new)
                 .collect(Collectors.toList());
         } else {
             filters.clear();
             filters.addAll(variationInfos.getFilters().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (VariationFilterEntity) entity)
+                .map(VariationFilterEntity::new)
                 .collect(Collectors.toList()));
         }
         this.variationMode = variationInfos.getVariationMode();

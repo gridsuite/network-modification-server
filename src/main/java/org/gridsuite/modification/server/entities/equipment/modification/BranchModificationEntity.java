@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -152,8 +151,16 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
-        currentLimits1 = MappingUtil.mapToEntity(branchModificationInfos.getCurrentLimits1());
-        currentLimits2 = MappingUtil.mapToEntity(branchModificationInfos.getCurrentLimits2());
+        if (branchModificationInfos.getCurrentLimits1() != null) {
+            currentLimits1 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits1());
+        } else {
+            currentLimits1 = null;
+        }
+        if (branchModificationInfos.getCurrentLimits2() != null) {
+            currentLimits2 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits2());
+        } else {
+            currentLimits2 = null;
+        }
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;

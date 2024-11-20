@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.assignment.AssignmentEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 
@@ -52,15 +51,13 @@ public class ModificationByAssignmentEntity extends ModificationEntity {
         if (assignmentEntities == null) {
             assignmentEntities = modificationByAssignmentInfos.getAssignmentInfosList()
                     .stream()
-                    .map(MappingUtil::mapToEntity)
-                    .map(entity -> (AssignmentEntity) entity)
+                    .map(AssignmentEntity::new)
                     .toList();
         } else {
             assignmentEntities.clear();
             assignmentEntities.addAll(modificationByAssignmentInfos.getAssignmentInfosList()
                     .stream()
-                    .map(MappingUtil::mapToEntity)
-                    .map(entity -> (AssignmentEntity) entity)
+                    .map(AssignmentEntity::new)
                     .toList());
         }
     }

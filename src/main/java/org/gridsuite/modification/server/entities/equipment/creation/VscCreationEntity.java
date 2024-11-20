@@ -16,7 +16,6 @@ import org.gridsuite.modification.dto.ConverterStationCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VscCreationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 import org.springframework.util.CollectionUtils;
 
 /**
@@ -96,8 +95,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
         this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitFromSide2ToSide1();
         this.maxP = vscCreationInfos.getMaxP();
         this.p0 = vscCreationInfos.getP0();
-        this.converterStation1 = MappingUtil.mapToEntity(vscCreationInfos.getConverterStation1());
-        this.converterStation2 = MappingUtil.mapToEntity(vscCreationInfos.getConverterStation2());
+        this.converterStation1 = new ConverterStationCreationEntity(vscCreationInfos.getConverterStation1());
+        this.converterStation2 = new ConverterStationCreationEntity(vscCreationInfos.getConverterStation2());
     }
 
     @Override

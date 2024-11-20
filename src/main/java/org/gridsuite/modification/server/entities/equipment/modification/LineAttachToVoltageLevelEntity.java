@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import jakarta.persistence.*;
 
@@ -84,7 +83,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
         mayVoltageLevelCreation = null; // Needed for the update
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
-            mayVoltageLevelCreation = (VoltageLevelCreationEntity) MappingUtil.mapToEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
+            mayVoltageLevelCreation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
         }
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();

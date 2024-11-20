@@ -15,7 +15,6 @@ import org.gridsuite.modification.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.List;
 
@@ -55,8 +54,7 @@ public class FormulaEntity extends AbstractAssignmentEntity {
         this.value2 = formulaInfos.getFieldOrValue2().getValue();
         this.operator = formulaInfos.getOperator();
         this.filters = formulaInfos.getFilters().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (VariationFilterEntity) entity)
+                .map(VariationFilterEntity::new)
                 .toList();
     }
 

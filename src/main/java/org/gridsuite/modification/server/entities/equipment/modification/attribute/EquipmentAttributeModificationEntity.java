@@ -9,8 +9,12 @@ package org.gridsuite.modification.server.entities.equipment.modification.attrib
 import com.powsybl.iidm.network.IdentifiableType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.lang.reflect.Constructor;
+
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.EntityRegistry;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 
 import jakarta.persistence.Column;
@@ -75,5 +79,25 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
             .equipmentAttributeName(getAttributeName())
             .equipmentAttributeValue(getAttributeValue())
             .equipmentType(getEquipmentType());
+    }
+
+    public static EquipmentAttributeModificationEntity<?> createAttributeEntity(EquipmentAttributeModificationInfos dto) {
+        Object equipmentAttributeValue = dto.getEquipmentAttributeValue();
+        Class<?> attributeValueClass = String.class;
+        if (equipmentAttributeValue != null && !equipmentAttributeValue.getClass().isEnum()) {
+            attributeValueClass = equipmentAttributeValue.getClass();
+        }
+        Class<? extends EquipmentAttributeModificationEntity<?>> entityClass = EntityRegistry.getAttributeEntityClass(attributeValueClass);
+
+        if (entityClass != null) {
+            try {
+                Constructor<? extends EquipmentAttributeModificationEntity<?>> constructor = entityClass.getConstructor(EquipmentAttributeModificationInfos.class);
+                return constructor.newInstance(dto);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to map DTO to Entity", e);
+            }
+        } else {
+            throw new IllegalArgumentException("No entity class registered for attribute value class: " + attributeValueClass);
+        }
     }
 }

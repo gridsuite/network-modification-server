@@ -8,7 +8,7 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import jakarta.persistence.*;
-
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -21,6 +21,7 @@ import org.gridsuite.modification.dto.FreePropertyInfos;
  */
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 @SuperBuilder
 @Entity
 @Table(name = "free_property", indexes = @Index(name = "modification_idx", columnList = "equipment_modification_id"))
@@ -53,5 +54,9 @@ public class FreePropertyEntity {
             .added(added)
             .previousValue(previousValue)
             .build();
+    }
+
+    public FreePropertyEntity(FreePropertyInfos freePropertyInfos) {
+        this(null, freePropertyInfos.getName(), freePropertyInfos.getValue(), freePropertyInfos.isDeletionMark(), freePropertyInfos.isAdded(), freePropertyInfos.getPreviousValue());
     }
 }

@@ -13,7 +13,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +57,7 @@ public class CompositeModificationEntity extends ModificationEntity {
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         modifications.clear();
         modifications = compositeModificationInfos.getModifications().stream()
-                .map(MappingUtil::mapToEntity)
-                .map(entity -> (ModificationEntity) entity)
+                .map(ModificationEntity::fromDTO)
                 .toList();
     }
 }

@@ -11,11 +11,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.AbstractEquipmentDeletionInfos;
 import org.gridsuite.modification.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.mapper.MappingUtil;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -52,7 +50,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
     private void assignAttributes(EquipmentDeletionInfos equipmentDeletionInfos) {
         this.equipmentType = equipmentDeletionInfos.getEquipmentType();
         equipmentInfos = equipmentDeletionInfos.getEquipmentInfos() != null ?
-            MappingUtil.mapToEntity(equipmentDeletionInfos.getEquipmentInfos()) : null;
+            new HvdcLccDeletionEntity(equipmentDeletionInfos.getEquipmentInfos()) : null;
     }
 
     @Override
@@ -66,7 +64,7 @@ public class EquipmentDeletionEntity extends EquipmentModificationEntity {
                 .equipmentId(getEquipmentId())
                 .equipmentType(getEquipmentType());
         if (equipmentInfos != null) {
-            builder.equipmentInfos(MappingUtil.mapToDto(equipmentInfos, AbstractEquipmentDeletionInfos.class));
+            builder.equipmentInfos(equipmentInfos.toDto());
         }
         return builder.build();
     }
