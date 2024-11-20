@@ -27,7 +27,7 @@ public final class DTOUtils {
 
     private static ReactiveCapabilityCurveModificationInfos mapToReactiveCapabilityCurveModificationInfos(ReactiveCapabilityCurveModificationEmbeddable value) {
         if (value == null) {
-            return new ReactiveCapabilityCurveModificationInfos(null, null, null, null, null, null);
+            return new ReactiveCapabilityCurveModificationInfos();
         } else {
             return new ReactiveCapabilityCurveModificationInfos(
                     value.getMinQ(),
