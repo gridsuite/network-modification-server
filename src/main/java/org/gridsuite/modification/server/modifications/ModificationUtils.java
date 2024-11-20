@@ -680,7 +680,9 @@ public final class ModificationUtils {
                                         BasicEquipmentModificationInfos modificationInfos,
                                         List<ReportNode> reports,
                                         FeederSide feederSide) {
-        applyModifications(feeder, modificationInfos, reports, feederSide);
+        if (feeder != null) {
+            applyModifications(feeder, modificationInfos, reports, feederSide);
+        }
     }
 
     private void applyModifications(ConnectablePosition.Feeder feeder,
