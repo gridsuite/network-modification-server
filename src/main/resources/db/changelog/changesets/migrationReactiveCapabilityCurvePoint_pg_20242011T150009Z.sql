@@ -1,12 +1,12 @@
-alter table generator_modification_entity_reactive_capability_curve_points add column id UUID default random_uuid();
-alter table battery_modification_entity_reactive_capability_curve_points add column id UUID default random_uuid();
-alter table converter_station_modification_rcc_points add column id UUID default random_uuid();
+alter table generator_modification_entity_reactive_capability_curve_points add column id UUID default gen_random_uuid();
+alter table battery_modification_entity_reactive_capability_curve_points add column id UUID default gen_random_uuid();
+alter table converter_station_modification_rcc_points add column id UUID default gen_random_uuid();
 
 with position_value_generator as (
     select
         id,
         generator_modification_entity_id,
-        (row_number() over (partition by generator_modification_entity_id) - 1) as pos_point_new
+        (row_number() over (partition by generator_modification_entity_id) - 1) AS pos_point_new
     from generator_modification_entity_reactive_capability_curve_points
 )
 update generator_modification_entity_reactive_capability_curve_points
@@ -24,7 +24,7 @@ with position_value_battery as (
     select
         id,
         battery_modification_entity_id,
-        (row_number() over (partition by battery_modification_entity_id) - 1) as pos_point_new
+        (row_number() over (partition by battery_modification_entity_id) - 1) AS pos_point_new
     from battery_modification_entity_reactive_capability_curve_points
 )
 update battery_modification_entity_reactive_capability_curve_points
@@ -42,7 +42,7 @@ with position_value_converter_station as (
     select
         id,
         converter_station_modification_entity_id,
-        (row_number() over (partition by converter_station_modification_entity_id) - 1) as pos_point_new
+        (row_number() over (partition by converter_station_modification_entity_id) - 1) AS pos_point_new
     from converter_station_modification_rcc_points
 )
 update converter_station_modification_rcc_points
