@@ -31,4 +31,16 @@
                 splitStatements="true"
                 stripComments="true"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1731962383078-35">
+        <addNotNullConstraint tableName="battery_modification_entity_reactive_capability_curve_points" columnName="pos_point"/>
+        <addPrimaryKey columnNames="battery_modification_entity_id, pos_point" constraintName="battery_modification_entity_reactive_capability_curve_pointsPK" tableName="battery_modification_entity_reactive_capability_curve_points"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1731962383078-36">
+        <addNotNullConstraint tableName="converter_station_modification_rcc_points" columnName="pos_point"/>
+        <addPrimaryKey columnNames="converter_station_modification_entity_id, pos_point" constraintName="converter_station_modification_rcc_pointsPK" tableName="converter_station_modification_rcc_points"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1731962383078-37">
+        <addNotNullConstraint tableName="generator_modification_entity_reactive_capability_curve_points" columnName="pos_point"/>
+        <addPrimaryKey columnNames="generator_modification_entity_id, pos_point" constraintName="generator_modification_entity_reactive_capability_c_4905C1D9_PK" tableName="generator_modification_entity_reactive_capability_curve_points"/>
+    </changeSet>
 </databaseChangeLog>
