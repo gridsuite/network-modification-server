@@ -9,16 +9,16 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.LineAttachToVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.LineAttachToVoltageLevelInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.LineCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
 import jakarta.persistence.*;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
+import static org.gridsuite.modification.NetworkModificationException.Type.LINE_ATTACH_DESCRIPTION_ERROR;
 
 /**
  * @author Nicolas NOIR <nicolas.noir at rte-france.com>
@@ -83,7 +83,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
         mayVoltageLevelCreation = null; // Needed for the update
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
-            mayVoltageLevelCreation = lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos().toEntity();
+            mayVoltageLevelCreation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
         }
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();

@@ -9,9 +9,9 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.BatteryCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.BatteryCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
 
 import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;

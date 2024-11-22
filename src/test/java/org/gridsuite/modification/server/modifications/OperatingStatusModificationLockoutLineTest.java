@@ -13,9 +13,9 @@ import com.powsybl.iidm.network.SwitchKind;
 
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;

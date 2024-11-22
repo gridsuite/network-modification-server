@@ -9,13 +9,12 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.ModificationGroupEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
@@ -34,8 +33,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.dto.VoltageRegulationType.DISTANT;
+import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -131,13 +130,13 @@ class ModificationRepositoryTest {
                 new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
 
-        var nullModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id0").equipmentAttributeName("attribute").equipmentAttributeValue(null).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var stringModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var boolModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue(true).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var intModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue(1).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var floatModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id4").equipmentAttributeName("attribute").equipmentAttributeValue(2F).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var doubleModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id5").equipmentAttributeName("attribute").equipmentAttributeValue(3D).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var enumModifEntity = EquipmentAttributeModificationInfos.builder().equipmentId("id6").equipmentAttributeName("attribute").equipmentAttributeValue(SwitchKind.BREAKER).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var nullModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id0").equipmentAttributeName("attribute").equipmentAttributeValue(null).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var stringModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var boolModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue(true).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var intModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue(1).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var floatModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id4").equipmentAttributeName("attribute").equipmentAttributeValue(2F).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var doubleModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id5").equipmentAttributeName("attribute").equipmentAttributeValue(3D).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var enumModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id6").equipmentAttributeName("attribute").equipmentAttributeValue(SwitchKind.BREAKER).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(nullModifEntity, stringModifEntity, boolModifEntity, intModifEntity, floatModifEntity, doubleModifEntity, enumModifEntity));
 
@@ -183,8 +182,8 @@ class ModificationRepositoryTest {
 
     @Test
     void testCreateModificationQueryCount() {
-        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         assertRequestsCount(2, 3, 0, 0);
@@ -192,9 +191,9 @@ class ModificationRepositoryTest {
 
     @Test
     void testGetModificationQueryCount() {
-        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var modifEntity3 = EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity3 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id3").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2, modifEntity3));
 
         SQLStatementCountValidator.reset();
@@ -216,8 +215,8 @@ class ModificationRepositoryTest {
 
     @Test
     void testDeleteModificationQueryCount() {
-        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
 
         SQLStatementCountValidator.reset();
@@ -235,9 +234,9 @@ class ModificationRepositoryTest {
 
     @Test
     void testLoadCreation() {
-        var createLoadEntity1 = LoadCreationInfos.builder().equipmentId("idLoad1").equipmentName("nameLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("vlId1").busOrBusbarSectionId("busId1").p0(100.).q0(20.).connectionName("top1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(11).build().toEntity();
-        var createLoadEntity2 = LoadCreationInfos.builder().equipmentId("idLoad2").equipmentName("nameLoad2").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId2").busOrBusbarSectionId("busId2").p0(80.).q0(30.).connectionName("bottom1").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(11).build().toEntity();
-        var createLoadEntity3 = LoadCreationInfos.builder().equipmentId("idLoad3").equipmentName("nameLoad3").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId3").busOrBusbarSectionId("busId3").p0(50.).q0(90.).connectionName("top2").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(12).build().toEntity();
+        var createLoadEntity1 = ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("idLoad1").equipmentName("nameLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("vlId1").busOrBusbarSectionId("busId1").p0(100.).q0(20.).connectionName("top1").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(11).build());
+        var createLoadEntity2 = ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("idLoad2").equipmentName("nameLoad2").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId2").busOrBusbarSectionId("busId2").p0(80.).q0(30.).connectionName("bottom1").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(11).build());
+        var createLoadEntity3 = ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("idLoad3").equipmentName("nameLoad3").loadType(LoadType.FICTITIOUS).voltageLevelId("vlId3").busOrBusbarSectionId("busId3").p0(50.).q0(90.).connectionName("top2").connectionDirection(ConnectablePosition.Direction.TOP).connectionPosition(12).build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLoadEntity1, createLoadEntity2, createLoadEntity3));
         assertRequestsCount(2, 3, 0, 0);
@@ -273,7 +272,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testGeneratorCreation() {
-        var createGeneratorEntity1 = GeneratorCreationInfos.builder()
+        var createGeneratorEntity1 = ModificationEntity.fromDTO(GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator1").equipmentName("nameGenerator1")
                 .energySource(EnergySource.HYDRO).voltageLevelId("vlId1")
                 .busOrBusbarSectionId("busId1").minP(100.0)
@@ -289,8 +288,8 @@ class ModificationRepositoryTest {
                 .regulatingTerminalType("LINE").regulatingTerminalVlId("idVlTest1")
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
-                .connectionPosition(1).build().toEntity();
-        var createGeneratorEntity2 = GeneratorCreationInfos.builder()
+                .connectionPosition(1).build());
+        var createGeneratorEntity2 = ModificationEntity.fromDTO(GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator2").equipmentName("nameGenerator2")
                 .energySource(EnergySource.SOLAR).voltageLevelId("vlId2")
                 .busOrBusbarSectionId("busId2").minP(0.0)
@@ -305,9 +304,9 @@ class ModificationRepositoryTest {
                 .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
                 .qPercent(25.).reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
                 .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
-                .connectionPosition(2).build().toEntity();
+                .connectionPosition(2).build());
 
-        var createGeneratorEntity3 = GeneratorCreationInfos.builder()
+        var createGeneratorEntity3 = ModificationEntity.fromDTO(GeneratorCreationInfos.builder()
                 .equipmentId("idGenerator3").equipmentName("nameGenerator3")
                 .energySource(EnergySource.OTHER).voltageLevelId("vlId3")
                 .busOrBusbarSectionId("busId3").minP(10.0)
@@ -318,7 +317,7 @@ class ModificationRepositoryTest {
                 .regulatingTerminalType("BATTERY").regulatingTerminalVlId("idVlTest2")
                 .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurveCreationInfos(33., 44., 55.)))
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
-                .connectionPosition(3).build().toEntity();
+                .connectionPosition(3).build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createGeneratorEntity1, createGeneratorEntity2, createGeneratorEntity3));
         assertRequestsCount(2, 4, 0, 0);
@@ -369,8 +368,8 @@ class ModificationRepositoryTest {
             .voltageLevelId("vlId1").busOrBusbarSectionId("busId1")
             .build();
 
-        var createShuntCompensatorEntity1 = shunt1.toEntity();
-        var createShuntCompensatorEntity2 = shunt2.toEntity();
+        var createShuntCompensatorEntity1 = ModificationEntity.fromDTO(shunt1);
+        var createShuntCompensatorEntity2 = ModificationEntity.fromDTO(shunt2);
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createShuntCompensatorEntity1, createShuntCompensatorEntity2));
         assertRequestsCount(2, 3, 0, 0);
@@ -404,10 +403,10 @@ class ModificationRepositoryTest {
 
     @Test
     void testLineCreation() {
-        var createLineEntity1 = LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").r(1.0).x(1.1).g1(10.0).b1(11.0).g2(100.0).b2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build().toEntity();
-        var createLineEntity2 = LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").r(2.0).x(2.2).g1(20.0).b1(22.0).g2(200.0).b2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
-        var createLineEntity3 = LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").r(3.0).x(3.3).g1(30.0).b1(33.0).g2(300.0).b2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
-        var createLineEntity4 = LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").r(3.0).x(3.3).g1(null).b1(null).g2(null).b2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build()).build().toEntity();
+        var createLineEntity1 = ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("idLine1").equipmentName("nameLine1").r(1.0).x(1.1).g1(10.0).b1(11.0).g2(100.0).b2(100.1).voltageLevelId1("vlId11").busOrBusbarSectionId1("busId11").voltageLevelId2("vlId12").busOrBusbarSectionId2("busId12").connectionName1("cn11").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn22").connectionDirection2(ConnectablePosition.Direction.TOP).build());
+        var createLineEntity2 = ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("idLine2").equipmentName("nameLine2").r(2.0).x(2.2).g1(20.0).b1(22.0).g2(200.0).b2(200.2).voltageLevelId1("vlId21").busOrBusbarSectionId1("busId21").voltageLevelId2("vlId22").busOrBusbarSectionId2("busId22").connectionName1("cn33").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn44").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build());
+        var createLineEntity3 = ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("idLine3").equipmentName("nameLine3").r(3.0).x(3.3).g1(30.0).b1(33.0).g2(300.0).b2(300.3).voltageLevelId1("vlId31").busOrBusbarSectionId1("busId31").voltageLevelId2("vlId32").busOrBusbarSectionId2("busId32").connectionName1("cn55").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn66").connectionDirection2(ConnectablePosition.Direction.TOP).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).build());
+        var createLineEntity4 = ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("idLine4").equipmentName("nameLine4").r(3.0).x(3.3).g1(null).b1(null).g2(null).b2(null).voltageLevelId1("vlId41").busOrBusbarSectionId1("busId41").voltageLevelId2("vlId42").busOrBusbarSectionId2("busId42").connectionName1("cn77").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn88").connectionDirection2(ConnectablePosition.Direction.BOTTOM).currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()).currentLimits2(CurrentLimitsInfos.builder().permanentLimit(4.0).temporaryLimits(Collections.emptyList()).build()).build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createLineEntity1, createLineEntity2, createLineEntity3, createLineEntity4));
         assertRequestsCount(2, 4, 0, 0);
@@ -452,18 +451,17 @@ class ModificationRepositoryTest {
                 GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
                 GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build()
         );
-        ModificationEntity tabularModificationEntity = TabularModificationInfos.builder()
+        ModificationEntity tabularModificationEntity = ModificationEntity.fromDTO(TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(groupModifications)
                 .stashed(false)
-                .build()
-                .toEntity();
+                .build());
         // and 5 script modifications
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
-        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
-        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
-        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
-        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script1").build());
+        var groovyScriptEntity2 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script2").build());
+        var groovyScriptEntity3 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script3").build());
+        var groovyScriptEntity4 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script4").build());
+        var groovyScriptEntity5 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script5").build());
 
         List<ModificationEntity> modificationEntities = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, modificationEntities);
@@ -496,12 +494,12 @@ class ModificationRepositoryTest {
 
     @Test
     void testMoveModificationsBetweenTwoGroups() {
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
-        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
-        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
-        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
-        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
-        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("script6").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script1").build());
+        var groovyScriptEntity2 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script2").build());
+        var groovyScriptEntity3 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script3").build());
+        var groovyScriptEntity4 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script4").build());
+        var groovyScriptEntity5 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script5").build());
+        var groovyScriptEntity6 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script6").build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2,
                 groovyScriptEntity3, groovyScriptEntity4));
@@ -548,12 +546,12 @@ class ModificationRepositoryTest {
 
     @Test
     void testMoveModificationsBetweenTwoGroupsWithReferenceNode() {
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
-        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
-        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
-        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
-        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
-        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("script6").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script1").build());
+        var groovyScriptEntity2 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script2").build());
+        var groovyScriptEntity3 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script3").build());
+        var groovyScriptEntity4 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script4").build());
+        var groovyScriptEntity5 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script5").build());
+        var groovyScriptEntity6 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script6").build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2,
                 groovyScriptEntity3, groovyScriptEntity4));
@@ -584,12 +582,12 @@ class ModificationRepositoryTest {
 
     @Test
     void testMoveModificationsBetweenMoreThanTwoGroups() {
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
-        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
-        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
-        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build().toEntity();
-        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build().toEntity();
-        var groovyScriptEntity6 = GroovyScriptInfos.builder().script("script6").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script1").build());
+        var groovyScriptEntity2 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script2").build());
+        var groovyScriptEntity3 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script3").build());
+        var groovyScriptEntity4 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script4").build());
+        var groovyScriptEntity5 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script5").build());
+        var groovyScriptEntity6 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script6").build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2));
         assertRequestsCount(2, 3, 0, 0);
@@ -647,9 +645,9 @@ class ModificationRepositoryTest {
 
     @Test
     void testGroovyScript() {
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build().toEntity();
-        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build().toEntity();
-        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script1").build());
+        var groovyScriptEntity2 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script2").build());
+        var groovyScriptEntity3 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script3").build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3));
         assertRequestsCount(2, 3, 0, 0);
@@ -685,24 +683,24 @@ class ModificationRepositoryTest {
 
     @Test
     void testSubstationCreation() {
-        var createSubstationEntity1 = SubstationCreationInfos.builder()
+        var createSubstationEntity1 = ModificationEntity.fromDTO(SubstationCreationInfos.builder()
                 .equipmentId("idSubstation1")
                 .equipmentName("nameSubstation1")
                 .country(Country.FR)
                 .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoU").build()))
-                .build().toEntity();
-        var createSubstationEntity2 = SubstationCreationInfos.builder()
+                .build());
+        var createSubstationEntity2 = ModificationEntity.fromDTO(SubstationCreationInfos.builder()
                 .equipmentId("idSubstation2")
                 .equipmentName("nameSubstation2")
                 .country(Country.TD)
                 .properties(null)
-                .build().toEntity();
-        var createSubstationEntity3 = SubstationCreationInfos.builder()
+                .build());
+        var createSubstationEntity3 = ModificationEntity.fromDTO(SubstationCreationInfos.builder()
                 .equipmentId("idSubstation3")
                 .equipmentName("nameSubstation3")
                 .country(Country.KG)
                 .properties(null)
-                .build().toEntity();
+                .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createSubstationEntity1, createSubstationEntity2, createSubstationEntity3));
         assertRequestsCount(2, 4, 1, 0);
@@ -711,11 +709,11 @@ class ModificationRepositoryTest {
         assertEquals(3, modificationInfos.size());
 
         assertThat(getSubstationCreationModification(modificationInfos.get(0).getUuid()))
-            .recursivelyEquals(createSubstationEntity1.toSubstationCreationInfos());
+            .recursivelyEquals(createSubstationEntity1.toModificationInfos());
         assertThat(getSubstationCreationModification(modificationInfos.get(1).getUuid()))
-            .recursivelyEquals(createSubstationEntity2.toSubstationCreationInfos());
+            .recursivelyEquals(createSubstationEntity2.toModificationInfos());
         assertThat(getSubstationCreationModification(modificationInfos.get(2).getUuid()))
-            .recursivelyEquals(createSubstationEntity3.toSubstationCreationInfos());
+            .recursivelyEquals(createSubstationEntity3.toModificationInfos());
 
         assertEquals(3, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
         assertEquals(List.of(TEST_GROUP_ID), this.networkModificationRepository.getModificationGroupsUuids());
@@ -738,7 +736,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testVoltageLevelCreation() {
-        VoltageLevelCreationEntity createVoltLvlEntity1 = VoltageLevelCreationInfos.builder()
+        var createVoltLvlEntity1 = ModificationEntity.fromDTO(VoltageLevelCreationInfos.builder()
                 .equipmentId("idVL1")
                 .equipmentName("VLName")
                 .substationId("s1")
@@ -751,14 +749,14 @@ class ModificationRepositoryTest {
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
-                .build().toEntity();
+                .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1));
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modificationInfos.size());
 
         assertThat(getVoltageLevelCreationModification(modificationInfos.get(0).getUuid()))
-            .recursivelyEquals(createVoltLvlEntity1.toVoltageLevelCreationInfos());
+            .recursivelyEquals(createVoltLvlEntity1.toModificationInfos());
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createVoltLvlEntity1.getId()));
@@ -788,12 +786,12 @@ class ModificationRepositoryTest {
 
     @Test
     void testStatusLineModification() {
-        List<OperatingStatusModificationEntity> entities = List.of(
-            OperatingStatusModificationInfos.builder().equipmentId("idLine1").action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build().toEntity(),
-            OperatingStatusModificationInfos.builder().equipmentId("idLine2").action(OperatingStatusModificationInfos.ActionType.TRIP).build().toEntity(),
-            OperatingStatusModificationInfos.builder().equipmentId("idLine3").action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build().toEntity(),
-            OperatingStatusModificationInfos.builder().equipmentId("idLine4").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_ONE).build().toEntity(),
-            OperatingStatusModificationInfos.builder().equipmentId("idLine5").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_TWO).build().toEntity()
+        var entities = List.of(
+            ModificationEntity.fromDTO(OperatingStatusModificationInfos.builder().equipmentId("idLine1").action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build()),
+            ModificationEntity.fromDTO(OperatingStatusModificationInfos.builder().equipmentId("idLine2").action(OperatingStatusModificationInfos.ActionType.TRIP).build()),
+            ModificationEntity.fromDTO(OperatingStatusModificationInfos.builder().equipmentId("idLine3").action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build()),
+            ModificationEntity.fromDTO(OperatingStatusModificationInfos.builder().equipmentId("idLine4").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_ONE).build()),
+            ModificationEntity.fromDTO(OperatingStatusModificationInfos.builder().equipmentId("idLine5").action(OperatingStatusModificationInfos.ActionType.ENERGISE_END_TWO).build())
         );
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, entities);
@@ -824,7 +822,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testLineSplitWithVoltageLevel() {
-        LineSplitWithVoltageLevelEntity lineSplitEntity1 = LineSplitWithVoltageLevelInfos.builder()
+        var lineSplitEntity1 = ModificationEntity.fromDTO(LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("lineId0")
             .percent(30.0)
             .mayNewVoltageLevelInfos(null)
@@ -834,9 +832,9 @@ class ModificationRepositoryTest {
             .newLine1Name("line1Name")
             .newLine2Id("line2Id")
             .newLine2Name("line2Name")
-            .build().toEntity();
+            .build());
         VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos();
-        LineSplitWithVoltageLevelEntity lineSplitEntity2 = LineSplitWithVoltageLevelInfos.builder()
+        var lineSplitEntity2 = ModificationEntity.fromDTO(LineSplitWithVoltageLevelInfos.builder()
             .lineToSplitId("lineId1")
             .percent(30.0)
             .mayNewVoltageLevelInfos(voltageLevelCreationInfos)
@@ -846,7 +844,7 @@ class ModificationRepositoryTest {
             .newLine1Name("line1Name")
             .newLine2Id("line2Id")
             .newLine2Name("line2Name")
-            .build().toEntity();
+            .build());
         VoltageLevelCreationEntity voltageLevelCreationEntity = new VoltageLevelCreationEntity(voltageLevelCreationInfos);
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineSplitEntity1, voltageLevelCreationEntity, lineSplitEntity2));
 
@@ -883,7 +881,7 @@ class ModificationRepositoryTest {
                 .r(50.6)
                 .x(25.3)
                 .build();
-        LineAttachToVoltageLevelEntity lineAttachToEntity1 = LineAttachToVoltageLevelInfos.builder()
+        var lineAttachToEntity1 = ModificationEntity.fromDTO(LineAttachToVoltageLevelInfos.builder()
                 .lineToAttachToId("lineId0")
                 .percent(40.0)
                 .attachmentPointId("AttachmentPointId")
@@ -896,9 +894,9 @@ class ModificationRepositoryTest {
                 .newLine1Name("line1Name")
                 .newLine2Id("line2Id")
                 .newLine2Name("line2Name")
-                .build().toEntity();
+                .build());
         VoltageLevelCreationInfos voltageLevelCreationInfos = makeAVoltageLevelInfos();
-        LineAttachToVoltageLevelEntity lineAttachToEntity2 = LineAttachToVoltageLevelInfos.builder()
+        var lineAttachToEntity2 = ModificationEntity.fromDTO(LineAttachToVoltageLevelInfos.builder()
                 .lineToAttachToId("lineId1")
                 .percent(40.0)
                 .attachmentPointId("AttachmentPointId")
@@ -911,7 +909,7 @@ class ModificationRepositoryTest {
                 .newLine1Name("line1Name")
                 .newLine2Id("line2Id")
                 .newLine2Name("line2Name")
-                .build().toEntity();
+                .build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lineAttachToEntity1, lineAttachToEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -940,7 +938,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testLinesAttachToSplitLines() {
-        LinesAttachToSplitLinesEntity linesAttachToEntity1 = LinesAttachToSplitLinesInfos.builder()
+        var linesAttachToEntity1 = ModificationEntity.fromDTO(LinesAttachToSplitLinesInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
                 .attachedLineId("lineId3")
@@ -950,8 +948,8 @@ class ModificationRepositoryTest {
                 .replacingLine1Name("line1Name")
                 .replacingLine2Id("line2Id")
                 .replacingLine2Name("line2Name")
-                .build().toEntity();
-        LinesAttachToSplitLinesEntity linesAttachToEntity2 = LinesAttachToSplitLinesInfos.builder()
+                .build());
+        var linesAttachToEntity2 = ModificationEntity.fromDTO(LinesAttachToSplitLinesInfos.builder()
                 .lineToAttachTo1Id("lineId4")
                 .lineToAttachTo2Id("lineId5")
                 .attachedLineId("lineId6")
@@ -961,7 +959,7 @@ class ModificationRepositoryTest {
                 .replacingLine1Name("line3Name")
                 .replacingLine2Id("line4Id")
                 .replacingLine2Name("line4Name")
-                .build().toEntity();
+                .build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(linesAttachToEntity1, linesAttachToEntity2));
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -991,7 +989,7 @@ class ModificationRepositoryTest {
     @Test
     void testDeleteStashedModificationList() {
         //create a modification and add it to the repository
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().stashed(true).script("script1").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().stashed(true).script("script1").build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
         //check the modification is in the repository
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -1007,7 +1005,7 @@ class ModificationRepositoryTest {
     @Test
     void testDeleteNonStashedModificationList() {
         //create a modification and add it to the repository
-        var groovyScriptEntity1 = GroovyScriptInfos.builder().stashed(false).script("script1").build().toEntity();
+        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().stashed(false).script("script1").build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(groovyScriptEntity1));
         //check the modification is in the repository
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
@@ -1022,21 +1020,21 @@ class ModificationRepositoryTest {
 
     @Test
     void testDeleteAttachingLine() {
-        DeleteAttachingLineEntity deleteAttachingLineEntity = DeleteAttachingLineInfos.builder()
+        var deleteAttachingLineEntity = ModificationEntity.fromDTO(DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
                 .attachedLineId("lineId3")
                 .replacingLine1Id("vl1")
                 .replacingLine1Name("line1Name")
-                .build().toEntity();
+                .build());
 
-        DeleteAttachingLineEntity deleteAttachingLineEntity2 = DeleteAttachingLineInfos.builder()
+        var deleteAttachingLineEntity2 = ModificationEntity.fromDTO(DeleteAttachingLineInfos.builder()
                 .lineToAttachTo1Id("lineId4")
                 .lineToAttachTo2Id("lineId5")
                 .attachedLineId("lineId6")
                 .replacingLine1Id("line3Id")
                 .replacingLine1Name("line3Name")
-                .build().toEntity();
+                .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteAttachingLineEntity, deleteAttachingLineEntity2));
 
@@ -1058,19 +1056,19 @@ class ModificationRepositoryTest {
 
     @Test
     void testDeleteVoltageLevelOnLine() {
-        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity1 = DeleteVoltageLevelOnLineInfos.builder()
+        var deleteVoltageLevelOnLineToEntity1 = ModificationEntity.fromDTO(DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("lineId0")
                 .lineToAttachTo2Id("lineId1")
                 .replacingLine1Id("line1Id")
                 .replacingLine1Name("line1Name")
-                .build().toEntity();
+                .build());
 
-        DeleteVoltageLevelOnLineEntity deleteVoltageLevelOnLineToEntity2 = DeleteVoltageLevelOnLineInfos.builder()
+        var deleteVoltageLevelOnLineToEntity2 = ModificationEntity.fromDTO(DeleteVoltageLevelOnLineInfos.builder()
                 .lineToAttachTo1Id("lineId4")
                 .lineToAttachTo2Id("lineId5")
                 .replacingLine1Id("line3Id")
                 .replacingLine1Name("line3Name")
-                .build().toEntity();
+                .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(deleteVoltageLevelOnLineToEntity1, deleteVoltageLevelOnLineToEntity2));
 
@@ -1112,7 +1110,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testVoltageInitModification() {
-        var voltageInitModificationEntity = VoltageInitModificationInfos.builder()
+        var voltageInitModificationEntity = ModificationEntity.fromDTO(VoltageInitModificationInfos.builder()
             .generators(List.of(
                 VoltageInitGeneratorModificationInfos.builder()
                     .generatorId("G1")
@@ -1182,7 +1180,7 @@ class ModificationRepositoryTest {
                     .v(380.)
                     .angle(0.3)
                     .build()))
-            .build().toEntity();
+            .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageInitModificationEntity));
         assertRequestsCount(2, 9, 0, 0);
@@ -1206,11 +1204,11 @@ class ModificationRepositoryTest {
 
     @Test
     void testVscModification() {
-        var vscModificationEntity = VscModificationInfos.builder()
+        var vscModificationEntity = ModificationEntity.fromDTO(VscModificationInfos.builder()
             .equipmentId("VSC1")
                 .converterStation1(ConverterStationModificationInfos.builder().equipmentId("C1").build())
                 .converterStation2(ConverterStationModificationInfos.builder().equipmentId("C2").build())
-            .build().toEntity();
+            .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(vscModificationEntity));
         assertRequestsCount(2, 5, 0, 0);
@@ -1221,8 +1219,8 @@ class ModificationRepositoryTest {
 
     @Test
     void testGetModificationCount() {
-        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
-        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1, modifEntity2));
         SQLStatementCountValidator.reset();
         assertEquals(2, networkModificationRepository.getModificationsCount(TEST_GROUP_ID, false).intValue());
@@ -1238,7 +1236,7 @@ class ModificationRepositoryTest {
     @Test
     void testModificationOrder() {
         // add 1 modification in a group
-        var modifEntity1 = EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1));
         // move it in another group
         List<ModificationEntity> movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity1.getId()), null);
@@ -1246,7 +1244,7 @@ class ModificationRepositoryTest {
         assertEquals(0, movedEntities.get(0).getModificationsOrder());
 
         // put another modification in empty origin group: its order must restart to 0 as well
-        var modifEntity2 = EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build().toEntity();
+        var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity2));
         // trick: move it too, to see the order in the entity
         movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity2.getId()), null);
@@ -1256,7 +1254,7 @@ class ModificationRepositoryTest {
 
     @Test
     void testStaticVarCompensatorCreation() {
-        var createStaticVarCompensator1 = StaticVarCompensatorCreationInfos.builder()
+        var createStaticVarCompensator1 = ModificationEntity.fromDTO(StaticVarCompensatorCreationInfos.builder()
                 .equipmentId("idStaticVarCompensator1").equipmentName("nameStaticVarCompensator1")
                 .voltageLevelId("vlId1")
                 .busOrBusbarSectionId("busId1")
@@ -1268,16 +1266,16 @@ class ModificationRepositoryTest {
                 .regulatingTerminalId("testTerminalId1")
                 .regulatingTerminalType("STATIC_VAR_COMPENSATOR").regulatingTerminalVlId("idVlTest1")
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
-                .connectionPosition(1).build().toEntity();
-        var createStaticVarCompensator2 = StaticVarCompensatorCreationInfos.builder()
+                .connectionPosition(1).build());
+        var createStaticVarCompensator2 = ModificationEntity.fromDTO(StaticVarCompensatorCreationInfos.builder()
                 .equipmentId("idStaticVarCompensator2").equipmentName("nameStaticVarCompensator2")
                 .voltageLevelId("vlId2")
                 .busOrBusbarSectionId("busId2")
                 .regulatingTerminalId(null)
                 .regulatingTerminalType(null).regulatingTerminalVlId("idVlTest2")
                 .connectionName("Bot").connectionDirection(ConnectablePosition.Direction.BOTTOM)
-                .connectionPosition(2).build().toEntity();
-        var createStaticVarCompensator3 = StaticVarCompensatorCreationInfos.builder()
+                .connectionPosition(2).build());
+        var createStaticVarCompensator3 = ModificationEntity.fromDTO(StaticVarCompensatorCreationInfos.builder()
                 .equipmentId("idStaticVarCompensator3").equipmentName("nameStaticVarCompensator3")
                 .voltageLevelId("vlId2")
                 .busOrBusbarSectionId("busId2")
@@ -1288,7 +1286,7 @@ class ModificationRepositoryTest {
                 .regulationMode(VOLTAGE)
                 .standbyAutomatonOn(true)
                 .standby(true)
-                .build().toEntity();
+                .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(createStaticVarCompensator1, createStaticVarCompensator2, createStaticVarCompensator3));
         assertRequestsCount(2, 3, 0, 0);

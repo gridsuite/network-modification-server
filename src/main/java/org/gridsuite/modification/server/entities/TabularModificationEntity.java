@@ -15,8 +15,8 @@ import lombok.Setter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.*;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -63,10 +63,14 @@ public class TabularModificationEntity extends ModificationEntity {
     private void assignAttributes(TabularModificationInfos tabularModificationInfos) {
         modificationType = tabularModificationInfos.getModificationType();
         if (modifications == null) {
-            modifications = tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
+            modifications = tabularModificationInfos.getModifications().stream()
+                .map(ModificationEntity::fromDTO)
+                .collect(Collectors.toList());
         } else {
             modifications.clear();
-            modifications.addAll(tabularModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList());
+            modifications.addAll(tabularModificationInfos.getModifications().stream()
+                .map(ModificationEntity::fromDTO)
+                .toList());
         }
     }
 }

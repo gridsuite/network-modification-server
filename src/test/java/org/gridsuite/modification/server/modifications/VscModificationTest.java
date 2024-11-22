@@ -14,8 +14,9 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.modifications.VscModification;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,8 +26,8 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
-import static org.gridsuite.modification.server.modifications.VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
+import static org.gridsuite.modification.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
+import static org.gridsuite.modification.modifications.VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
 import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>

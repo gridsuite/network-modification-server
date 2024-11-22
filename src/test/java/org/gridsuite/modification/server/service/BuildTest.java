@@ -22,8 +22,14 @@ import mockwebserver3.junit5.internal.MockWebServerExtension;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
-import org.gridsuite.modification.server.TapChangerType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.TapChangerType;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.BuildInfos;
+import org.gridsuite.modification.server.dto.NetworkInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.dto.SubstationInfos;
+import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
@@ -218,7 +224,7 @@ class BuildTest {
     @Test
     void runBuildForLineSplits(final MockWebServer server) throws Exception {
         List<ModificationEntity> entities1 = List.of(
-                LineCreationInfos.builder()
+                ModificationEntity.fromDTO(LineCreationInfos.builder()
                         .equipmentId("newLine")
                         .equipmentName("newLine")
                         .r(1.0)
@@ -235,8 +241,8 @@ class BuildTest {
                         .connectionDirection1(ConnectablePosition.Direction.TOP)
                         .connectionName2("cn22")
                         .connectionDirection2(ConnectablePosition.Direction.TOP)
-                        .build().toEntity(),
-                LineSplitWithVoltageLevelInfos.builder()
+                        .build()),
+                ModificationEntity.fromDTO(LineSplitWithVoltageLevelInfos.builder()
                         .lineToSplitId("line3")
                         .percent(0.32)
                         .mayNewVoltageLevelInfos(null)
@@ -246,12 +252,12 @@ class BuildTest {
                         .newLine1Name("One")
                         .newLine2Id("deux")
                         .newLine2Name("Two")
-                        .build().toEntity()
+                        .build())
         );
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(VoltageLevelCreationInfos.builder()
+        entities2.add(ModificationEntity.fromDTO(VoltageLevelCreationInfos.builder()
                 .equipmentId("vl9")
                 .equipmentName("vl9")
                 .nominalV(225)
@@ -264,7 +270,7 @@ class BuildTest {
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
-                .build().toEntity());
+                .build()));
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
@@ -339,7 +345,7 @@ class BuildTest {
     void testIndexationAfterBuild(final MockWebServer server) {
         List<ModificationEntity> equipmentsToAdd = new ArrayList<>();
         // add new voltage level
-        equipmentsToAdd.add(VoltageLevelCreationInfos.builder()
+        equipmentsToAdd.add(ModificationEntity.fromDTO(VoltageLevelCreationInfos.builder()
                 .equipmentId("vl1")
                 .equipmentName("vl1")
                 .nominalV(225)
@@ -352,9 +358,9 @@ class BuildTest {
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
-                .build().toEntity());
+                .build()));
         // add new Load
-        equipmentsToAdd.add(LoadCreationInfos.builder()
+        equipmentsToAdd.add(ModificationEntity.fromDTO(LoadCreationInfos.builder()
                 .equipmentId("newLoad")
                 .equipmentName("newLoad")
                 .loadType(LoadType.AUXILIARY)
@@ -364,10 +370,10 @@ class BuildTest {
                 .q0(20.)
                 .connectionName("vn")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
-                .build().toEntity());
+                .build()));
 
         //add new Line
-        equipmentsToAdd.add(LineCreationInfos.builder()
+        equipmentsToAdd.add(ModificationEntity.fromDTO(LineCreationInfos.builder()
                 .equipmentId("newLine")
                 .equipmentName("newLine")
                 .r(1.0)
@@ -384,10 +390,10 @@ class BuildTest {
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn22")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .build().toEntity());
+                .build()));
 
         //add new Line with same voltage level
-        equipmentsToAdd.add(LineCreationInfos.builder()
+        equipmentsToAdd.add(ModificationEntity.fromDTO(LineCreationInfos.builder()
                 .equipmentId("newLine2")
                 .equipmentName("newLine2")
                 .r(1.0)
@@ -404,7 +410,7 @@ class BuildTest {
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn11")
                 .connectionDirection2(ConnectablePosition.Direction.TOP)
-                .build().toEntity());
+                .build()));
 
         // save modifications
         modificationRepository.saveModifications(TEST_GROUP_ID, equipmentsToAdd);
@@ -489,27 +495,27 @@ class BuildTest {
     void runBuildTest(final MockWebServer server) throws Exception {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("idGenerator").equipmentAttributeName("targetP").equipmentAttributeValue(50.).equipmentType(IdentifiableType.GENERATOR).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2).equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build().toEntity());
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0).equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build().toEntity());
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("idGenerator").equipmentAttributeName("targetP").equipmentAttributeValue(50.).equipmentType(IdentifiableType.GENERATOR).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("trf1").equipmentAttributeName("ratioTapChanger.tapPosition").equipmentAttributeValue(2).equipmentType(IdentifiableType.TWO_WINDINGS_TRANSFORMER).build()));
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("trf6").equipmentAttributeName("phaseTapChanger1.tapPosition").equipmentAttributeValue(0).equipmentType(IdentifiableType.THREE_WINDINGS_TRANSFORMER).build()));
 
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).terminalConnected(true).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build().toEntity());
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad").equipmentName("newLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad1").equipmentName("newLoad1").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn1").connectionDirection(ConnectablePosition.Direction.BOTTOM).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad2").equipmentName("newLoad2").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("cn2").connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("newLoad3").equipmentName("newLoad3").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName(null).connectionDirection(ConnectablePosition.Direction.UNDEFINED).terminalConnected(true).build()));
 
         List<FreePropertyInfos> properties = List.of(FreePropertyInfos.builder().name("DEMO").value("Demo1").build());
-        entities1.add(SubstationCreationInfos.builder()
+        entities1.add(ModificationEntity.fromDTO(SubstationCreationInfos.builder()
                 .equipmentId("newSubstation")
                 .equipmentName("newSubstation")
                 .country(Country.FR)
                 .properties(properties)
-                .build().toEntity());
+                .build()));
 
         List<ModificationEntity> entities2 = new ArrayList<>();
-        entities2.add(GeneratorCreationInfos.builder()
+        entities2.add(ModificationEntity.fromDTO(GeneratorCreationInfos.builder()
                 .equipmentId(NEW_GENERATOR_ID).equipmentName(NEW_GENERATOR_ID)
                 .energySource(EnergySource.HYDRO).voltageLevelId("v2")
                 .busOrBusbarSectionId("1A").minP(0)
@@ -527,8 +533,8 @@ class BuildTest {
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
                 .connectionPosition(0)
                 .terminalConnected(true)
-                .build().toEntity());
-        entities2.add(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build().toEntity());
+                .build()));
+        entities2.add(ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -539,10 +545,10 @@ class BuildTest {
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 7, 1, 0, 0, 0, 0, null));
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.RATIO, 8, 1, 0, 0, 0, 0, null));
 
-        entities2.add(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType(IdentifiableType.SHUNT_COMPENSATOR).build().toEntity());
-        entities2.add(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build().toEntity());
-        entities2.add(OperatingStatusModificationInfos.builder().equipmentId("line2").action(OperatingStatusModificationInfos.ActionType.TRIP).build().toEntity());
-        entities2.add(VoltageLevelCreationInfos.builder()
+        entities2.add(ModificationEntity.fromDTO(EquipmentDeletionInfos.builder().equipmentId("v2shunt").equipmentType(IdentifiableType.SHUNT_COMPENSATOR).build()));
+        entities2.add(ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("network.getGenerator('idGenerator').targetP=55\n").build()));
+        entities2.add(ModificationEntity.fromDTO(OperatingStatusModificationInfos.builder().equipmentId("line2").action(OperatingStatusModificationInfos.ActionType.TRIP).build()));
+        entities2.add(ModificationEntity.fromDTO(VoltageLevelCreationInfos.builder()
                 .equipmentId("vl9")
                 .equipmentName("vl9")
                 .nominalV(225)
@@ -555,8 +561,8 @@ class BuildTest {
                 .sectionCount(2)
                 .switchKinds(Arrays.asList(SwitchKind.BREAKER))
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
-                .build().toEntity());
-        entities2.add(ShuntCompensatorCreationInfos.builder()
+                .build()));
+        entities2.add(ModificationEntity.fromDTO(ShuntCompensatorCreationInfos.builder()
             .equipmentId("shunt9")
             .equipmentName("shunt9")
             .voltageLevelId("v2")
@@ -567,8 +573,8 @@ class BuildTest {
             .connectionDirection(ConnectablePosition.Direction.UNDEFINED)
             .connectionName("shunt9")
             .terminalConnected(true)
-            .build().toEntity());
-        entities2.add(TwoWindingsTransformerCreationInfos.builder()
+            .build()));
+        entities2.add(ModificationEntity.fromDTO(TwoWindingsTransformerCreationInfos.builder()
                 .equipmentId("new2wt")
                 .equipmentName("new2wt")
                 .r(1.)
@@ -670,15 +676,15 @@ class BuildTest {
                                         .build()
                         ))
                         .build())
-                .build().toEntity()
+                .build())
         );
-        entities2.add(LoadModificationInfos.builder().equipmentId("newLoad")
-            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).p0(null).build().toEntity());
-        entities2.add(GeneratorModificationInfos.builder()
+        entities2.add(ModificationEntity.fromDTO(LoadModificationInfos.builder().equipmentId("newLoad")
+            .equipmentName(new AttributeModification<>("newLoadName", OperationType.SET)).p0(null).build()));
+        entities2.add(ModificationEntity.fromDTO(GeneratorModificationInfos.builder()
                 .equipmentId("newGenerator")
                 .equipmentName(new AttributeModification<>("newGeneratorName", OperationType.SET))
                 .voltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET))
-                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build().toEntity());
+                .reactiveCapabilityCurve(new AttributeModification<>(false, OperationType.SET)).build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
@@ -820,8 +826,8 @@ class BuildTest {
     void runBuildWithStashedModificationsTest(final MockWebServer server) {
         // create modification entities in the database
         List<ModificationEntity> entities1 = new ArrayList<>();
-        entities1.add(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity());
-        entities1.add(LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).stashed(true).build().toEntity());
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("willBeStashedLoad").equipmentName("willBeStashedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).stashed(true).build()));
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
@@ -843,8 +849,8 @@ class BuildTest {
     @Test
     void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
-            EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity(),
-            EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build().toEntity()
+            ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()),
+            ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("line1").equipmentAttributeName("operatingStatus").equipmentAttributeValue(OperatingStatus.Status.PLANNED_OUTAGE).equipmentType(IdentifiableType.LINE).build())
         );
 
         modificationRepository.saveModifications(TEST_GROUP_ID, entities);  // save all modification entities in group TEST_GROUP_ID
@@ -886,7 +892,9 @@ class BuildTest {
 
     @Test
     void runBuildWithReportErrorTest(final MockWebServer server) throws Exception {
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build().toEntity()));
+        List<ModificationEntity> entities = new ArrayList<>();
+        entities.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        modificationRepository.saveModifications(TEST_GROUP_ID, entities);
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";

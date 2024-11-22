@@ -3,7 +3,7 @@ package org.gridsuite.modification.server.service;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
+import org.gridsuite.modification.ModificationType;
 import org.springframework.stereotype.Service;
 
 @Service

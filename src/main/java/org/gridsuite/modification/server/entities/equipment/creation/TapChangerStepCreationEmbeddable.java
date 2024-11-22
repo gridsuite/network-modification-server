@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.TapChangerType;
-import org.gridsuite.modification.server.dto.TapChangerStepCreationInfos;
+import org.gridsuite.modification.TapChangerType;
+import org.gridsuite.modification.dto.TapChangerStepCreationInfos;
 
 import jakarta.persistence.*;
 import java.util.List;

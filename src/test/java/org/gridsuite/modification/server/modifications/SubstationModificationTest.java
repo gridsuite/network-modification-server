@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Substation;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

@@ -19,9 +19,10 @@ import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
@@ -189,7 +190,7 @@ public class NetworkModificationApplicator {
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this);
+        modification.initApplicationContext(this.filterService);
 
         // apply all changes on the network
         modification.apply(network, subReportNode);

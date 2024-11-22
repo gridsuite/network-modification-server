@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.DeleteAttachingLineInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.DeleteAttachingLineInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.Column;

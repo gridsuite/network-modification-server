@@ -10,8 +10,8 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.BranchModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.BranchModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
 /**
@@ -151,15 +151,15 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
-        if (branchModificationInfos.getCurrentLimits1() == null) {
+        if (branchModificationInfos.getCurrentLimits1() != null) {
+            currentLimits1 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits1());
+        } else {
             currentLimits1 = null;
-        } else {
-            currentLimits1 = branchModificationInfos.getCurrentLimits1().toEntity();
         }
-        if (branchModificationInfos.getCurrentLimits2() == null) {
-            currentLimits2 = null;
+        if (branchModificationInfos.getCurrentLimits2() != null) {
+            currentLimits2 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits2());
         } else {
-            currentLimits2 = branchModificationInfos.getCurrentLimits2().toEntity();
+            currentLimits2 = null;
         }
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;

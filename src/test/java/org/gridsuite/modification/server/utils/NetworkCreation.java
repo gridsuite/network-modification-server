@@ -10,9 +10,10 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.server.modifications.ModificationUtils;
 
 import java.util.UUID;
+
+import org.gridsuite.modification.utils.ModificationUtils;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.*;
 

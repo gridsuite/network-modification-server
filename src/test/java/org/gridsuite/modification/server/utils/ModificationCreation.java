@@ -10,7 +10,7 @@ import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.dto.*;
 
 import java.util.Arrays;
 

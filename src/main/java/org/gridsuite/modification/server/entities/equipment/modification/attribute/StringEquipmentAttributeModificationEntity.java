@@ -8,7 +8,7 @@ package org.gridsuite.modification.server.entities.equipment.modification.attrib
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;

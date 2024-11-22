@@ -11,9 +11,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.GeneratorCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.GeneratorCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 

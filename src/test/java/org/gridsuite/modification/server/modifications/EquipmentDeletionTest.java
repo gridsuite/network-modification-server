@@ -13,11 +13,12 @@ import com.powsybl.iidm.modification.topology.RemoveSubstation;
 import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.EquipmentDeletionInfos;
-import org.gridsuite.modification.server.dto.HvdcLccDeletionInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.EquipmentDeletionInfos;
+import org.gridsuite.modification.dto.HvdcLccDeletionInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -114,9 +115,10 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 NetworkModificationResult.ApplicationStatus.ALL_OK;
 
         List<ShuntCompensatorSelectionEmbeddable> shuntData = List.of(new ShuntCompensatorSelectionEmbeddable(shuntNameToBeRemoved, selected));
-        HvdcLccDeletionInfos hvdcLccDeletionInfos = side == 1 ?
-                new HvdcLccDeletionInfos(shuntData, null) :
-                new HvdcLccDeletionInfos(null, shuntData);
+        HvdcLccDeletionEntity hvdcLccDeletionEntity = side == 1 ?
+                new HvdcLccDeletionEntity(shuntData, null) :
+                new HvdcLccDeletionEntity(null, shuntData);
+        HvdcLccDeletionInfos hvdcLccDeletionInfos = hvdcLccDeletionEntity.toDto();
         EquipmentDeletionInfos equipmentDeletionInfos = EquipmentDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType(IdentifiableType.HVDC_LINE)

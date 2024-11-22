@@ -9,10 +9,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.server.ReactiveVariationMode;
-import org.gridsuite.modification.server.VariationMode;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
+import org.gridsuite.modification.ReactiveVariationMode;
+import org.gridsuite.modification.VariationMode;
+import org.gridsuite.modification.dto.FilterInfos;
+import org.gridsuite.modification.dto.ScalingVariationInfos;
 
 import jakarta.persistence.*;
 import java.util.List;
@@ -56,10 +56,14 @@ public class ScalingVariationEntity {
 
     private void assignAttributes(ScalingVariationInfos variationInfos) {
         if (filters == null) {
-            this.filters = variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
+            this.filters = variationInfos.getFilters().stream()
+                .map(VariationFilterEntity::new)
+                .collect(Collectors.toList());
         } else {
             filters.clear();
-            filters.addAll(variationInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
+            filters.addAll(variationInfos.getFilters().stream()
+                .map(VariationFilterEntity::new)
+                .collect(Collectors.toList()));
         }
         this.variationMode = variationInfos.getVariationMode();
         this.reactiveVariationMode = variationInfos.getReactiveVariationMode();

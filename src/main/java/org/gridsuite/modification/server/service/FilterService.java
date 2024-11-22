@@ -12,9 +12,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.utils.FilterServiceUtils;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.FilterEquipments;
-import org.gridsuite.modification.server.dto.IdentifiableAttributes;
+import org.gridsuite.modification.IFilterService;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.FilterEquipments;
+import org.gridsuite.modification.dto.IdentifiableAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,13 +34,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.FILTERS_NOT_FOUND;
+import static org.gridsuite.modification.NetworkModificationException.Type.FILTERS_NOT_FOUND;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Service
-public class FilterService {
+public class FilterService implements IFilterService {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterService.class);
 
     private static final String FILTER_SERVER_API_VERSION = "v1";

@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
+import org.gridsuite.modification.dto.ReactiveCapabilityCurveModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
 

@@ -11,12 +11,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.byfilter.DataType;
-import org.gridsuite.modification.server.dto.byfilter.assignment.*;
+import org.gridsuite.modification.dto.FilterInfos;
+import org.gridsuite.modification.dto.byfilter.DataType;
+import org.gridsuite.modification.dto.byfilter.assignment.*;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
-
 import java.util.List;
 
 /**
@@ -47,7 +46,12 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
         super(assignmentInfos);
         this.dataType = assignmentInfos.getDataType();
         this.value = assignmentInfos.getValue().toString();
-        this.filters = assignmentInfos.getFilters().stream().map(FilterInfos::toEntity).toList();
+        this.filters = assignmentInfos.getFilters().stream()
+            .map(VariationFilterEntity::new)
+            .toList();
+        if (assignmentInfos instanceof PropertyAssignmentInfos propertyAssignmentInfos) {
+            this.propertyName = propertyAssignmentInfos.getPropertyName();
+        }
     }
 
     public AssignmentInfos<?> toAssignmentInfos() {

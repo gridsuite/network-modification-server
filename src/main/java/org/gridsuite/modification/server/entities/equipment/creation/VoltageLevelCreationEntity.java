@@ -9,9 +9,9 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.CouplingDeviceInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelCreationInfos;
+import org.gridsuite.modification.dto.CouplingDeviceInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
 
 import com.powsybl.iidm.network.SwitchKind;
 

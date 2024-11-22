@@ -7,9 +7,9 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.GroovyScriptInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.GroovyScriptInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
+import static org.gridsuite.modification.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;

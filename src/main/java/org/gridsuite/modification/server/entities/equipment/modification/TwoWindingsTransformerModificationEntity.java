@@ -10,8 +10,8 @@ import com.powsybl.iidm.network.PhaseTapChanger;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import org.gridsuite.modification.server.TapChangerType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.TapChangerType;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.entities.equipment.creation.TapChangerStepCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
@@ -367,13 +367,13 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .connectionPosition2(toAttributeModification(getConnectionPosition2()))
                 .terminal1Connected(toAttributeModification(getTerminal1Connected()))
                 .terminal2Connected(toAttributeModification(getTerminal2Connected()))
-                .r(AttributeModification.toAttributeModification(getR()))
-                .x(AttributeModification.toAttributeModification(getX()))
-                .g(AttributeModification.toAttributeModification(getG()))
-                .b(AttributeModification.toAttributeModification(getB()))
-                .ratedU1(AttributeModification.toAttributeModification(getRatedU1()))
-                .ratedU2(AttributeModification.toAttributeModification(getRatedU2()))
-                .ratedS(AttributeModification.toAttributeModification(getRatedS()))
+                .r(IAttributeModificationEmbeddable.toAttributeModification(getR()))
+                .x(IAttributeModificationEmbeddable.toAttributeModification(getX()))
+                .g(IAttributeModificationEmbeddable.toAttributeModification(getG()))
+                .b(IAttributeModificationEmbeddable.toAttributeModification(getB()))
+                .ratedU1(IAttributeModificationEmbeddable.toAttributeModification(getRatedU1()))
+                .ratedU2(IAttributeModificationEmbeddable.toAttributeModification(getRatedU2()))
+                .ratedS(IAttributeModificationEmbeddable.toAttributeModification(getRatedS()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
@@ -392,18 +392,18 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             ratioTapChangerStepCreationInfos = ratioTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
         }
         builder.ratioTapChanger(RatioTapChangerModificationInfos.builder()
-                .enabled(AttributeModification.toAttributeModification(getRatioTapChangerEnabled()))
-                .regulationType(AttributeModification.toAttributeModification(getRatioTapChangerRegulationType()))
-                .regulationSide(AttributeModification.toAttributeModification(getRatioTapChangerRegulationSide()))
-                .lowTapPosition(AttributeModification.toAttributeModification(getRatioTapChangerLowTapPosition()))
-                .tapPosition(AttributeModification.toAttributeModification(getRatioTapChangerTapPosition()))
-                .targetDeadband(AttributeModification.toAttributeModification(getRatioTapChangerTargetDeadband()))
-                .regulating(AttributeModification.toAttributeModification(getRatioTapChangerRegulating()))
-                .loadTapChangingCapabilities(AttributeModification.toAttributeModification(getRatioTapChangerLoadTapChangingCapabilities()))
-                .targetV(AttributeModification.toAttributeModification(getRatioTapChangerTargetV()))
-                .regulatingTerminalId(AttributeModification.toAttributeModification(getRatioTapChangerTerminalRefConnectableId()))
-                .regulatingTerminalVlId(AttributeModification.toAttributeModification(getRatioTapChangerTerminalRefVoltageLevelId()))
-                .regulatingTerminalType(AttributeModification.toAttributeModification(getRatioTapChangerTerminalRefType()))
+                .enabled(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerEnabled()))
+                .regulationType(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulationType()))
+                .regulationSide(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulationSide()))
+                .lowTapPosition(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerLowTapPosition()))
+                .tapPosition(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTapPosition()))
+                .targetDeadband(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTargetDeadband()))
+                .regulating(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulating()))
+                .loadTapChangingCapabilities(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerLoadTapChangingCapabilities()))
+                .targetV(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTargetV()))
+                .regulatingTerminalId(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefConnectableId()))
+                .regulatingTerminalVlId(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefVoltageLevelId()))
+                .regulatingTerminalType(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefType()))
                 .steps(ratioTapChangerStepCreationInfos)
                 .build());
 
@@ -412,17 +412,17 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             phaseTapChangerStepCreationInfos = phaseTapChangerStepsEmbeddable.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).toList();
         }
         builder.phaseTapChanger(PhaseTapChangerModificationInfos.builder()
-            .enabled(AttributeModification.toAttributeModification(getPhaseTapChangerEnabled()))
-            .regulationType(AttributeModification.toAttributeModification(getPhaseTapChangerRegulationType()))
-            .regulationSide(AttributeModification.toAttributeModification(getPhaseTapChangerRegulationSide()))
-            .lowTapPosition(AttributeModification.toAttributeModification(getPhaseTapChangerLowTapPosition()))
-            .tapPosition(AttributeModification.toAttributeModification(getPhaseTapChangerTapPosition()))
-            .targetDeadband(AttributeModification.toAttributeModification(getPhaseTapChangerTargetDeadband()))
-            .regulationMode(AttributeModification.toAttributeModification(getPhaseTapChangerRegulationMode()))
-            .regulationValue(AttributeModification.toAttributeModification(getPhaseTapChangerRegulationValue()))
-            .regulatingTerminalId(AttributeModification.toAttributeModification(getPhaseTapChangerTerminalRefConnectableId()))
-            .regulatingTerminalVlId(AttributeModification.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
-            .regulatingTerminalType(AttributeModification.toAttributeModification(getPhaseTapChangerTerminalRefType()))
+            .enabled(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerEnabled()))
+            .regulationType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationType()))
+            .regulationSide(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationSide()))
+            .lowTapPosition(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerLowTapPosition()))
+            .tapPosition(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTapPosition()))
+            .targetDeadband(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTargetDeadband()))
+            .regulationMode(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationMode()))
+            .regulationValue(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationValue()))
+            .regulatingTerminalId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefConnectableId()))
+            .regulatingTerminalVlId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
+            .regulatingTerminalType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefType()))
             .steps(phaseTapChangerStepCreationInfos)
             .build());
 

@@ -10,10 +10,10 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ShuntCompensatorModificationInfos;
-import org.gridsuite.modification.server.dto.ShuntCompensatorType;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ShuntCompensatorModificationInfos;
+import org.gridsuite.modification.dto.ShuntCompensatorType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
@@ -27,7 +27,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import org.springframework.util.CollectionUtils;
 
-import static org.gridsuite.modification.server.dto.AttributeModification.toAttributeModification;
+import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 
 /**
  * @author Seddik Yengui <Seddik.yengui at rte-france.com>
@@ -109,15 +109,15 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
                 .equipmentName(toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
                 .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
                 .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
-                .connectionName(toAttributeModification(getConnectionName()))
-                .connectionDirection(toAttributeModification(getConnectionDirection()))
-                .connectionPosition(toAttributeModification(getConnectionPosition()))
+                .connectionName(IAttributeModificationEmbeddable.toAttributeModification(getConnectionName()))
+                .connectionDirection(IAttributeModificationEmbeddable.toAttributeModification(getConnectionDirection()))
+                .connectionPosition(IAttributeModificationEmbeddable.toAttributeModification(getConnectionPosition()))
                 .terminalConnected(IAttributeModificationEmbeddable.toAttributeModification(getTerminalConnected()))
-                .shuntCompensatorType(toAttributeModification(getShuntCompensatorType()))
-                .maxQAtNominalV(toAttributeModification(getMaxQAtNominalV()))
-                .maxSusceptance(toAttributeModification(getMaxSusceptance()))
-                .maximumSectionCount(toAttributeModification(getMaximumSectionCount()))
-                .sectionCount(toAttributeModification(getSectionCount()))
+                .shuntCompensatorType(IAttributeModificationEmbeddable.toAttributeModification(getShuntCompensatorType()))
+                .maxQAtNominalV(IAttributeModificationEmbeddable.toAttributeModification(getMaxQAtNominalV()))
+                .maxSusceptance(IAttributeModificationEmbeddable.toAttributeModification(getMaxSusceptance()))
+                .maximumSectionCount(IAttributeModificationEmbeddable.toAttributeModification(getMaximumSectionCount()))
+                .sectionCount(IAttributeModificationEmbeddable.toAttributeModification(getSectionCount()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

@@ -12,14 +12,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.ModificationInfos;
 
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+
+import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
+import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -92,7 +97,16 @@ public class ModificationEntity {
     }
 
     public ModificationInfos toModificationInfos() {
-        return ModificationInfos.fromEntity(this);
+        ModificationInfos modificationInfos = ModificationInfos.builder()
+            .uuid(this.id)
+            .date(this.date)
+            .stashed(this.stashed)
+            .activated(this.activated)
+            .messageType(this.messageType)
+            .messageValues(this.messageValues)
+            .build();
+        modificationInfos.setType(ModificationType.valueOf(this.type));
+        return modificationInfos;
     }
 
     public void update(ModificationInfos modificationInfos) {
@@ -108,5 +122,23 @@ public class ModificationEntity {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
+    }
+
+    public static ModificationEntity fromDTO(ModificationInfos dto) {
+        if (dto instanceof EquipmentAttributeModificationInfos infos) {
+            return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
+        }
+
+        Class<? extends ModificationEntity> entityClass = EntityRegistry.getEntityClass(dto.getClass());
+        if (entityClass != null) {
+            try {
+                Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
+                return constructor.newInstance(dto);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to map DTO to Entity", e);
+            }
+        } else {
+            throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
+        }
     }
 }

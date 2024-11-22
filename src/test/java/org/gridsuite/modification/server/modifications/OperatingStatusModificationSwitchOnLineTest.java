@@ -10,8 +10,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Terminal;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperatingStatusModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 

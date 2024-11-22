@@ -7,7 +7,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;

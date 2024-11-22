@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.CurrentTemporaryLimitModificationInfos;
-import org.gridsuite.modification.server.dto.TemporaryLimitModificationType;
+import org.gridsuite.modification.dto.CurrentTemporaryLimitModificationInfos;
+import org.gridsuite.modification.dto.TemporaryLimitModificationType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

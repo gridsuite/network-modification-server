@@ -9,8 +9,8 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.DeleteVoltageLevelOnLineInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.DeleteVoltageLevelOnLineInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import jakarta.persistence.Column;

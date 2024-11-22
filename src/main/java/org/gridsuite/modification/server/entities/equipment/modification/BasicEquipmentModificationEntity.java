@@ -8,9 +8,9 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.BasicEquipmentModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.OperationType;
+import org.gridsuite.modification.dto.BasicEquipmentModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.OperationType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;

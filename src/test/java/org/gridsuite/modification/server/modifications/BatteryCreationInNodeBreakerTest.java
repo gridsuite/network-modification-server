@@ -9,8 +9,9 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

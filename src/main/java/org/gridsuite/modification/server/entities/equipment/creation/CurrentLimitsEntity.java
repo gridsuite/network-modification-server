@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.CurrentLimitsInfos;
+import org.gridsuite.modification.dto.CurrentLimitsInfos;
 
 import java.util.List;
 import java.util.UUID;
@@ -49,5 +49,9 @@ public class CurrentLimitsEntity {
                 .permanentLimit(getPermanentLimit())
                 .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
                 .build();
+    }
+
+    public CurrentLimitsEntity(CurrentLimitsInfos currentLimitsInfos) {
+        this(null, currentLimitsInfos.getPermanentLimit(), CurrentTemporaryLimitCreationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsInfos.getTemporaryLimits()));
     }
 }

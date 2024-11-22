@@ -7,9 +7,10 @@
 package org.gridsuite.modification.server.repositories;
 
 import lombok.NonNull;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.NetworkModificationException.Type.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -68,14 +69,17 @@ public class NetworkModificationRepository {
     @Transactional // To have all create in the same transaction (atomic)
     // TODO Remove transaction when errors will no longer be sent to the front
     public void saveModificationInfos(UUID groupUuid, List<? extends ModificationInfos> modifications) {
-        saveModificationsNonTransactional(groupUuid, modifications.stream().map(ModificationInfos::toEntity).toList());
+        List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
+
+        saveModificationsNonTransactional(groupUuid, entities);
     }
 
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) CompositeModificationInfos.builder().modifications(List.of()).build().toEntity();
+        CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
+        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .map(this::getModificationInfos)
-                .map(ModificationInfos::toEntity)
+                .map(ModificationEntity::fromDTO)
                 .toList();
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
@@ -180,7 +184,7 @@ public class NetworkModificationRepository {
         // sourceEntities, copyEntities, newEntities have the same order.
         List<ModificationEntity> copyEntities = sourceEntities.stream()
                 .map(this::getModificationInfos)
-                .map(ModificationInfos::toEntity)
+                .map(ModificationEntity::fromDTO)
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 

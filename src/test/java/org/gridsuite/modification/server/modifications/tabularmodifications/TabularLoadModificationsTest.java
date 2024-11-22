@@ -8,8 +8,8 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;

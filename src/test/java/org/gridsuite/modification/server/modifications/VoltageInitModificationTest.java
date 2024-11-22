@@ -8,7 +8,7 @@ package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

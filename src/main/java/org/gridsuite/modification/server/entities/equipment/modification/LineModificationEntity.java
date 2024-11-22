@@ -9,9 +9,9 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import org.gridsuite.modification.server.dto.AttributeModification;
-import org.gridsuite.modification.server.dto.LineModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.LineModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 import jakarta.persistence.*;

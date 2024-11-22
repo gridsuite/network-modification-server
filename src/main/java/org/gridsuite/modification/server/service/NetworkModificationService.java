@@ -16,8 +16,9 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.server.ModificationType;
-import org.gridsuite.modification.server.NetworkModificationException;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -29,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.NetworkModificationException.Type.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>

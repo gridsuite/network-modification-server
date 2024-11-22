@@ -11,9 +11,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ByFilterDeletionInfos;
-import org.gridsuite.modification.server.dto.FilterInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ByFilterDeletionInfos;
+import org.gridsuite.modification.dto.FilterInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 
@@ -54,10 +54,14 @@ public class ByFilterDeletionEntity extends ModificationEntity {
     private void assignAttributes(ByFilterDeletionInfos byFilterDeletionInfos) {
         this.equipmentType = byFilterDeletionInfos.getEquipmentType();
         if (filters == null) {
-            this.filters = byFilterDeletionInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList());
+            this.filters = byFilterDeletionInfos.getFilters().stream()
+                .map(VariationFilterEntity::new)
+                .collect(Collectors.toList());
         } else {
             filters.clear();
-            filters.addAll(byFilterDeletionInfos.getFilters().stream().map(FilterInfos::toEntity).collect(Collectors.toList()));
+            filters.addAll(byFilterDeletionInfos.getFilters().stream()
+                .map(VariationFilterEntity::new)
+                .collect(Collectors.toList()));
         }
     }
 

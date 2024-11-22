@@ -10,12 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.VariationType;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ScalingInfos;
-import org.gridsuite.modification.server.dto.ScalingVariationInfos;
+import org.gridsuite.modification.VariationType;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ScalingInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-
 import jakarta.persistence.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,10 +49,14 @@ public class ScalingEntity extends ModificationEntity {
     private void assignAttributes(ScalingInfos scalingInfos) {
         variationType = scalingInfos.getVariationType();
         if (variations == null) {
-            variations = scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList());
+            variations = scalingInfos.getVariations().stream()
+                .map(ScalingVariationEntity::new)
+                .collect(Collectors.toList());
         } else {
             variations.clear();
-            variations.addAll(scalingInfos.getVariations().stream().map(ScalingVariationInfos::toEntity).collect(Collectors.toList()));
+            variations.addAll(scalingInfos.getVariations().stream()
+                .map(ScalingVariationEntity::new)
+                .collect(Collectors.toList()));
         }
     }
 }

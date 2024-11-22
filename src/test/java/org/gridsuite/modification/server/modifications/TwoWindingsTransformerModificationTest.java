@@ -17,9 +17,11 @@ import com.powsybl.iidm.network.TwoWindingsTransformer;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.server.NetworkModificationException;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -27,9 +29,9 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 
-import static org.gridsuite.modification.server.NetworkModificationException.Type.MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR;
-import static org.gridsuite.modification.server.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
-import static org.gridsuite.modification.server.modifications.TwoWindingsTransformerModification.processPhaseTapRegulation;
+import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR;
+import static org.gridsuite.modification.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
+import static org.gridsuite.modification.modifications.TwoWindingsTransformerModification.processPhaseTapRegulation;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;

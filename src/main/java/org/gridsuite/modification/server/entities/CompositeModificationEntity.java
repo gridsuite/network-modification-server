@@ -11,8 +11,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.gridsuite.modification.server.dto.CompositeModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +56,8 @@ public class CompositeModificationEntity extends ModificationEntity {
     // @OrderColumn to 1 instead of 0
     private void assignAttributes(CompositeModificationInfos compositeModificationInfos) {
         modifications.clear();
-        modifications = compositeModificationInfos.getModifications().stream().map(ModificationInfos::toEntity).toList();
+        modifications = compositeModificationInfos.getModifications().stream()
+                .map(ModificationEntity::fromDTO)
+                .toList();
     }
 }

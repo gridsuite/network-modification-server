@@ -10,8 +10,8 @@ package org.gridsuite.modification.server.entities.equipment.modification;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.LineSplitWithVoltageLevelInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
+import org.gridsuite.modification.dto.LineSplitWithVoltageLevelInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.VoltageLevelCreationEntity;
 
@@ -69,7 +69,7 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
         percent = splitWithVoltageLevelInfos.getPercent();
         mayVoltageLevelCreation = null; // Need for the update
         if (splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
-            mayVoltageLevelCreation = splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos().toEntity();
+            mayVoltageLevelCreation = new VoltageLevelCreationEntity(splitWithVoltageLevelInfos.getMayNewVoltageLevelInfos());
         }
         existingVoltageLevelId = splitWithVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = splitWithVoltageLevelInfos.getBbsOrBusId();

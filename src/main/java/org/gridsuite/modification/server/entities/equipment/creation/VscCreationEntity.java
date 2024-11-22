@@ -12,9 +12,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.server.dto.ConverterStationCreationInfos;
-import org.gridsuite.modification.server.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.VscCreationInfos;
+import org.gridsuite.modification.dto.ConverterStationCreationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VscCreationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -95,8 +95,8 @@ public class VscCreationEntity extends EquipmentCreationEntity {
         this.operatorActivePowerLimitSide2 = vscCreationInfos.getOperatorActivePowerLimitFromSide2ToSide1();
         this.maxP = vscCreationInfos.getMaxP();
         this.p0 = vscCreationInfos.getP0();
-        this.converterStation1 = vscCreationInfos.getConverterStation1().toEntity();
-        this.converterStation2 = vscCreationInfos.getConverterStation2().toEntity();
+        this.converterStation1 = new ConverterStationCreationEntity(vscCreationInfos.getConverterStation1());
+        this.converterStation2 = new ConverterStationCreationEntity(vscCreationInfos.getConverterStation2());
     }
 
     @Override
