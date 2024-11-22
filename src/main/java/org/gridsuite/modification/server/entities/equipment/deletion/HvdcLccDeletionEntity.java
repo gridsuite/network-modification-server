@@ -42,12 +42,12 @@ public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
 
     @Override
     public HvdcLccDeletionInfos toDto() {
-        var shuntCompensatorsSide1 = this.getShuntCompensatorsSide1();
-        var shuntCompensatorsSide2 = this.getShuntCompensatorsSide2();
-        if (CollectionUtils.isNotEmpty(shuntCompensatorsSide1) || CollectionUtils.isNotEmpty(shuntCompensatorsSide2)) {
+        var shuntSide1 = this.getShuntCompensatorsSide1();
+        var shuntSide2 = this.getShuntCompensatorsSide2();
+        if (CollectionUtils.isNotEmpty(shuntSide1) || CollectionUtils.isNotEmpty(shuntSide2)) {
             var hvdcLccDeletionInfos = new HvdcLccDeletionInfos();
-            hvdcLccDeletionInfos.setMcsOnSide1(toShuntCompensators(shuntCompensatorsSide1));
-            hvdcLccDeletionInfos.setMcsOnSide2(toShuntCompensators(shuntCompensatorsSide2));
+            hvdcLccDeletionInfos.setMcsOnSide1(toShuntCompensators(shuntSide1));
+            hvdcLccDeletionInfos.setMcsOnSide2(toShuntCompensators(shuntSide2));
             return hvdcLccDeletionInfos;
         }
         return null;

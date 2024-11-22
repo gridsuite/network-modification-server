@@ -125,8 +125,8 @@ public class ModificationEntity {
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {
-        if (dto instanceof EquipmentAttributeModificationInfos) {
-            return EquipmentAttributeModificationEntity.createAttributeEntity((EquipmentAttributeModificationInfos) dto);
+        if (dto instanceof EquipmentAttributeModificationInfos infos) {
+            return EquipmentAttributeModificationEntity.createAttributeEntity(infos);
         }
 
         Class<? extends ModificationEntity> entityClass = EntityRegistry.getEntityClass(dto.getClass());
