@@ -717,11 +717,26 @@ class ModificationControllerTest {
         assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
         assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
-        // get the composite modification metadata
+        // get the composite modification metadata only
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications"))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(modificationsNumber, compositeModificationContent.size());
+        assertNotNull(compositeModificationContent.get(0).getMessageType());
+        assertNotNull(compositeModificationContent.get(0).getMessageValues());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeValue());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
+
+        // get the composite modification complete data
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications?completeData=true"))
+            .andExpect(status().isOk()).andReturn();
+        compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
+        assertEquals(Boolean.TRUE, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeValue());
+        assertEquals(IdentifiableType.SWITCH, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
+        assertEquals("v1b1", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
 
         // Insert the composite modification in the group
         mvcResult = mockMvc.perform(
