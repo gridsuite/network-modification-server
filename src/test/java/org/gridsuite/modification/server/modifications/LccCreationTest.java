@@ -106,12 +106,10 @@ class LccCreationTest extends AbstractNetworkModificationTest {
         assertEquals(39, hvdcLine.getNominalV(), 0);
         assertEquals(4, hvdcLine.getR(), 0);
         assertEquals(PROPERTY_VALUE, hvdcLine.getProperty(PROPERTY_NAME));
-        
         LccConverterStation lccConverterStation1 = (LccConverterStation) hvdcLine.getConverterStation1();
         assertNotNull(lccConverterStation1);
         assertEquals(40, lccConverterStation1.getLossFactor(), 0);
         assertEquals("v1", lccConverterStation1.getTerminal().getVoltageLevel().getId());
-
         LccConverterStation lccConverterStation2 = (LccConverterStation) hvdcLine.getConverterStation2();
         assertNotNull(lccConverterStation2);
         assertEquals(40, lccConverterStation2.getLossFactor(), 0);
