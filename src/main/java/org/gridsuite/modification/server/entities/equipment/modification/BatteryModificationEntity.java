@@ -81,6 +81,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
 
     @ElementCollection
     @CollectionTable
+    @OrderColumn(name = "pos_point")
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     public BatteryModificationEntity(@NonNull BatteryModificationInfos batteryModificationInfos) {

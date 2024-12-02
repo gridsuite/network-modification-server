@@ -22,9 +22,21 @@ public final class DTOUtils {
     public static List<ReactiveCapabilityCurveModificationInfos> convertToReactiveCapabilityCurveModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
         return CollectionUtils.isEmpty(rCCpoints) ? null : rCCpoints
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
-                        value.getMaxQ(), value.getOldMaxQ(),
-                        value.getP(), value.getOldP()))
+                .map(DTOUtils::mapToReactiveCapabilityCurveModificationInfos)
                 .toList();
+    }
+
+    private static ReactiveCapabilityCurveModificationInfos mapToReactiveCapabilityCurveModificationInfos(ReactiveCapabilityCurveModificationEmbeddable value) {
+        if (value == null) {
+            return new ReactiveCapabilityCurveModificationInfos();
+        } else {
+            return new ReactiveCapabilityCurveModificationInfos(
+                    value.getMinQ(),
+                    value.getOldMinQ(),
+                    value.getMaxQ(),
+                    value.getOldMaxQ(),
+                    value.getP(),
+                    value.getOldP());
+        }
     }
 }

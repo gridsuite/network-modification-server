@@ -64,6 +64,7 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
 
     @ElementCollection
     @CollectionTable(name = "converter_station_modification_rcc_points")
+    @OrderColumn(name = "pos_point")
     private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
 
     @Embedded
