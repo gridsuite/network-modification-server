@@ -8,7 +8,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
 import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Test;
 
@@ -26,13 +26,13 @@ class ModificationUtilsTest {
 
     @Test
     void testCheckMaxQGreaterThanMinQ() {
-        var point1 = ReactiveCapabilityCurveModificationInfos.builder().oldMinQ(2.0).oldMaxQ(1.0).minQ(10.0).maxQ(20.0).build();
+        var point1 = ReactiveCapabilityCurveCreationInfos.builder().minQ(10.0).maxQ(20.0).build();
         ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point1),
                 MODIFY_GENERATOR_ERROR,
                 "old KO, new OK: No exception should be thrown");
 
-        var point2 = ReactiveCapabilityCurveModificationInfos.builder().oldMinQ(1.0).oldMaxQ(2.0).minQ(20.0).maxQ(10.0).build();
+        var point2 = ReactiveCapabilityCurveCreationInfos.builder().minQ(20.0).maxQ(10.0).build();
         var exception = (NetworkModificationException) catchRuntimeException(() -> ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point2),
                 MODIFY_GENERATOR_ERROR,
@@ -42,7 +42,7 @@ class ModificationUtilsTest {
         assertThat(exception)
                 .hasMessageEndingWith("old OK, new KO: maximum reactive power 10.0 is expected to be greater than or equal to minimum reactive power 20.0");
 
-        var point3 = ReactiveCapabilityCurveModificationInfos.builder().minQ(20.0).maxQ(10.0).build();
+        var point3 = ReactiveCapabilityCurveCreationInfos.builder().minQ(20.0).maxQ(10.0).build();
         exception = (NetworkModificationException) catchRuntimeException(() -> ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point3),
                 MODIFY_GENERATOR_ERROR,
@@ -52,19 +52,19 @@ class ModificationUtilsTest {
         assertThat(exception)
                 .hasMessageEndingWith("old null, new KO: maximum reactive power 10.0 is expected to be greater than or equal to minimum reactive power 20.0");
 
-        var point4 = ReactiveCapabilityCurveModificationInfos.builder().minQ(10.0).maxQ(20.0).build();
+        var point4 = ReactiveCapabilityCurveCreationInfos.builder().minQ(10.0).maxQ(20.0).build();
         ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point4),
                 MODIFY_GENERATOR_ERROR,
                 "old null, new OK: No exception should be thrown");
 
-        var point5 = ReactiveCapabilityCurveModificationInfos.builder().oldMinQ(10.0).oldMaxQ(20.0).build();
+        var point5 = ReactiveCapabilityCurveCreationInfos.builder().minQ(10.0).maxQ(20.0).build();
         ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point5),
                 MODIFY_GENERATOR_ERROR,
                 "old OK, new null: No exception should be thrown");
 
-        var point6 = ReactiveCapabilityCurveModificationInfos.builder().oldMinQ(20.0).oldMaxQ(10.0).build();
+        var point6 = ReactiveCapabilityCurveCreationInfos.builder().minQ(20.0).maxQ(10.0).build();
         exception = (NetworkModificationException) catchRuntimeException(() -> ModificationUtils.getInstance().checkMaxQGreaterThanMinQ(
                 Collections.singletonList(point6),
                 MODIFY_GENERATOR_ERROR,
