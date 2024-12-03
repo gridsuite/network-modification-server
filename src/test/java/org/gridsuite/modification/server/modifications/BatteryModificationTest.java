@@ -57,8 +57,8 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .minQ(new AttributeModification<>(-100., OperationType.SET))
                 .maxP(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.1),
-                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 200., 150.)))
+                        new ReactiveCapabilityCurveCreationInfos(100., 100., 0.1),
+                        new ReactiveCapabilityCurveCreationInfos(100., 100., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
@@ -94,7 +94,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         assertEquals(ReactiveLimitsKind.CURVE, modifiedBattery.getReactiveLimits().getKind());
         Collection<ReactiveCapabilityCurve.Point> points = modifiedBattery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurveCreationInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
         if (!CollectionUtils.isEmpty(points)) {
             IntStream.range(0, batteryPoints.size())
                     .forEach(i -> {
@@ -300,14 +300,14 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .add();
         Collection<ReactiveCapabilityCurve.Point> points = battery.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
         List<ReactiveCapabilityCurve.Point> batteryPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurveCreationInfos> modificationPoints = batteryModificationInfos.getReactiveCapabilityCurvePoints();
         AtomicReference<Double> maxQ = new AtomicReference<>(Double.NaN);
         AtomicReference<Double> minQ = new AtomicReference<>(Double.NaN);
         if (!CollectionUtils.isEmpty(points)) {
             IntStream.range(0, modificationPoints.size())
                     .forEach(i -> {
                         ReactiveCapabilityCurve.Point oldPoint = batteryPoints.get(i);
-                        ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                        ReactiveCapabilityCurveCreationInfos newPoint = modificationPoints.get(i);
                         Double oldMaxQ = Double.NaN;
                         Double oldMinQ = Double.NaN;
                         if (oldPoint != null) {
@@ -315,7 +315,6 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                             oldMinQ = oldPoint.getMinQ();
                         }
                         newPoint.setMinQ(300.0);
-                        newPoint.setOldMaxQ(250.0);
                         maxQ.set(newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ);
                         minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });

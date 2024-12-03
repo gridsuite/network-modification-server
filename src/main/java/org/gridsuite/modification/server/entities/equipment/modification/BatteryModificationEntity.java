@@ -10,12 +10,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.BatteryModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveModificationInfos;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
@@ -23,6 +21,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddableReactiveCapabilityCurve;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toReactiveCapabilityCurveCreationInfos;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 /**
@@ -81,7 +81,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
 
     @ElementCollection
     @CollectionTable
-    private List<ReactiveCapabilityCurveModificationEmbeddable> reactiveCapabilityCurvePoints;
+    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
 
     public BatteryModificationEntity(@NonNull BatteryModificationInfos batteryModificationInfos) {
         super(batteryModificationInfos);
@@ -104,17 +104,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
         this.participate = batteryModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getParticipate()) : null;
         this.droop = batteryModificationInfos.getDroop() != null ? new FloatModificationEmbedded(batteryModificationInfos.getDroop()) : null;
         this.reactiveCapabilityCurve = batteryModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getReactiveCapabilityCurve()) : null;
-        this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryModificationInfos.getReactiveCapabilityCurvePoints());
-    }
-
-    public static List<ReactiveCapabilityCurveModificationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveModificationInfos> points) {
-        return points == null ? null
-                : points.stream()
-                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
-                        point.getMaxQ(), point.getOldMaxQ(), point.getP(),
-                        point.getOldP()))
-                .toList();
+        this.reactiveCapabilityCurvePoints = toEmbeddableReactiveCapabilityCurve(batteryModificationInfos.getReactiveCapabilityCurvePoints());
     }
 
     @Override
@@ -146,7 +136,7 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .participate(toAttributeModification(getParticipate()))
                 .droop(toAttributeModification(getDroop()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveModificationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(toReactiveCapabilityCurveCreationInfos(getReactiveCapabilityCurvePoints()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
