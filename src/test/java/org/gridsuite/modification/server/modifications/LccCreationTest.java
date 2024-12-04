@@ -66,7 +66,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
                 .equipmentName(equipmentName)
                 .lossFactor(40F)
                 .powerFactor(1F)
-                .mcsOnSide(List.of())
+                .shuntCompensatorsOnSide(List.of())
                 .voltageLevelId(voltageLevel)
                 .busOrBusbarSectionId("1.1")
                 .connectionName("top")

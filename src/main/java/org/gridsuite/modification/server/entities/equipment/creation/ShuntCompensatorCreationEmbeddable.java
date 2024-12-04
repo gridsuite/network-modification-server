@@ -40,8 +40,8 @@ public class ShuntCompensatorCreationEmbeddable {
     public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccConverterStationCreationInfos.ShuntCompensatorInfos> compensatorCreationInfos) {
         return compensatorCreationInfos == null ? null :
                 compensatorCreationInfos.stream()
-                        .map(compensatorCreationInfo -> new ShuntCompensatorCreationEmbeddable(compensatorCreationInfo.getShuntCompensatorId(),
-                                compensatorCreationInfo.getShuntCompensatorName(),
+                        .map(compensatorCreationInfo -> new ShuntCompensatorCreationEmbeddable(compensatorCreationInfo.getId(),
+                                compensatorCreationInfo.getName(),
                                 compensatorCreationInfo.getMaxQAtNominalV(),
                                 compensatorCreationInfo.getConnectedToHvdc()))
                         .toList();

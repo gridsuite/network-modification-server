@@ -41,8 +41,8 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
     private Float powerFactor;
 
     @ElementCollection
-    @CollectionTable(name = "mcs_on_side")
-    private List<ShuntCompensatorCreationEmbeddable> mcsOnSide;
+    @CollectionTable(name = "shunt_compensator_on_side")
+    private List<ShuntCompensatorCreationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationCreationEntity(LccConverterStationCreationInfos converterStationCreationInfos) {
         super(converterStationCreationInfos);
@@ -52,7 +52,7 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
     private void assignAttributes(LccConverterStationCreationInfos converterStationCreationInfos) {
         this.lossFactor = converterStationCreationInfos.getLossFactor();
         this.powerFactor = converterStationCreationInfos.getPowerFactor();
-        this.mcsOnSide = toEmbeddableShuntCompensatorCreation(converterStationCreationInfos.getMcsOnSide());
+        this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorCreation(converterStationCreationInfos.getShuntCompensatorsOnSide());
     }
 
     public LccConverterStationCreationInfos toLccConverterStationInfos() {
@@ -69,7 +69,7 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
                 // ConverterStation
                 .lossFactor(getLossFactor())
                 .powerFactor(getPowerFactor())
-                .mcsOnSide(fromEmbeddableShuntCompensatorCreation(getMcsOnSide()))
+                .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorCreation(getShuntCompensatorsOnSide()))
                 .build();
     }
 }

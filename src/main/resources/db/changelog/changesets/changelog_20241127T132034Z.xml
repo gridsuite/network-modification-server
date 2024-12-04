@@ -22,7 +22,7 @@
             <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="equipment_name" type="VARCHAR(255)"/>
             <column name="active_power_setpoint" type="FLOAT(53)"/>
-            <column name="converters_mode" type="SMALLINT"/>
+            <column name="converters_mode" type="VARCHAR(255)"/>
             <column name="maxp" type="FLOAT(53)"/>
             <column name="nominalv" type="FLOAT(53)"/>
             <column name="r" type="FLOAT(53)"/>
@@ -34,7 +34,7 @@
         </createTable>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-33">
-        <createTable tableName="mcs_on_side">
+        <createTable tableName="shunt_compensator_on_side">
             <column name="lcc_converter_station_creation_entity_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
@@ -54,7 +54,7 @@
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_creation" constraintName="FK6j09vvtih5vh3rpry375r9wlq" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-52">
-        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_creation_entity_id" baseTableName="mcs_on_side" constraintName="FKg30dxx307p77iivgrahfsjlev" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_creation_entity_id" baseTableName="shunt_compensator_on_side" constraintName="FKg30dxx307p77iivgrahfsjlev" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-53">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_converter_station_creation" constraintName="FKnb7c1dbujmk6d41fqx3fk9in0" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
