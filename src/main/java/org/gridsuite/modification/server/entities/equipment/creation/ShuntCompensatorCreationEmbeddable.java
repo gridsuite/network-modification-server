@@ -25,11 +25,11 @@ import java.util.List;
 @Getter
 @Embeddable
 public class ShuntCompensatorCreationEmbeddable {
-    @Column
-    private String shuntCompensatorId;
+    @Column(name = "shuntCompensatorId")
+    private String id;
 
-    @Column
-    private String shuntCompensatorName;
+    @Column(name = "shuntCompensatorName")
+    private String name;
 
     @Column
     private Double maxQAtNominalV;
@@ -50,8 +50,8 @@ public class ShuntCompensatorCreationEmbeddable {
     public static List<LccConverterStationCreationInfos.ShuntCompensatorInfos> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
         return compensatorCreationEmbeddables == null ? null :
                 compensatorCreationEmbeddables.stream()
-                        .map(compensatorCreationEmbeddable -> new LccConverterStationCreationInfos.ShuntCompensatorInfos(compensatorCreationEmbeddable.getShuntCompensatorId(),
-                                compensatorCreationEmbeddable.getShuntCompensatorName(),
+                        .map(compensatorCreationEmbeddable -> new LccConverterStationCreationInfos.ShuntCompensatorInfos(compensatorCreationEmbeddable.getId(),
+                                compensatorCreationEmbeddable.getName(),
                                 compensatorCreationEmbeddable.getMaxQAtNominalV(),
                                 compensatorCreationEmbeddable.getConnectedToHvdc()))
                         .toList();
