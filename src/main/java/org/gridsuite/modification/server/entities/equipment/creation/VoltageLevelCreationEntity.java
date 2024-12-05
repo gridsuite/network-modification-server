@@ -65,6 +65,15 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     @CollectionTable
     private List<CouplingDeviceCreationEmbeddable> couplingDevices;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "substation_creation_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "voltageLevel_substationCreation_fk"
+            ))
+    private SubstationCreationEntity substationCreation;
+
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
@@ -109,6 +118,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .sectionCount(getSectionCount())
                 .switchKinds(getSwitchKinds())
                 .couplingDevices(couplingDeviceInfos)
+                .substationCreation(getSubstationCreation() != null ? getSubstationCreation().toSubstationCreationInfos() : null)
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
@@ -133,6 +143,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.sectionCount = voltageLevelCreationInfos.getSectionCount();
         this.switchKinds = new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
         this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
+        this.substationCreation = new SubstationCreationEntity(voltageLevelCreationInfos.getSubstationCreation());
     }
 }
 
