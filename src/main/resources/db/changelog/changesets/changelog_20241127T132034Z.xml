@@ -45,19 +45,19 @@
         </createTable>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-35">
-        <addUniqueConstraint columnNames="lcc_converter_station_1_id" constraintName="UC_LCC_CREATIONLCC_CONVERTER_STATION_1_ID_COL" tableName="lcc_creation"/>
+        <addUniqueConstraint columnNames="lcc_converter_station_1_id" constraintName="lcc_converter_station_1_id_fk" tableName="lcc_creation"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-36">
-        <addUniqueConstraint columnNames="lcc_converter_station_2_id" constraintName="UC_LCC_CREATIONLCC_CONVERTER_STATION_2_ID_COL" tableName="lcc_creation"/>
+        <addUniqueConstraint columnNames="lcc_converter_station_2_id" constraintName="lcc_converter_station_2_id_fk" tableName="lcc_creation"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-51">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_creation" constraintName="FK6j09vvtih5vh3rpry375r9wlq" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_creation" constraintName="lcc_creation_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-52">
-        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_creation_entity_id" baseTableName="shunt_compensator_on_side" constraintName="FKg30dxx307p77iivgrahfsjlev" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_creation_entity_id" baseTableName="shunt_compensator_on_side" constraintName="lcc_converter_station_creation_entity_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-53">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_converter_station_creation" constraintName="FKnb7c1dbujmk6d41fqx3fk9in0" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_converter_station_creation" constraintName="lcc_converter_station_creation_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1732713649731-59">
         <addForeignKeyConstraint baseColumnNames="lcc_converter_station_1_id" baseTableName="lcc_creation" constraintName="lcc_converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
