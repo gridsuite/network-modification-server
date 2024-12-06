@@ -28,6 +28,7 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Shun
 @Getter
 @Entity
 @Table(name = "lccConverterStationCreation")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "lcc_converter_station_creation_id_fk_constraint"))
 public class LccConverterStationCreationEntity extends InjectionCreationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -41,7 +42,8 @@ public class LccConverterStationCreationEntity extends InjectionCreationEntity {
     private Float powerFactor;
 
     @ElementCollection
-    @CollectionTable(name = "shunt_compensator_on_side")
+    @CollectionTable(name = "shunt_compensator_on_side",
+            foreignKey = @ForeignKey(name = "lcc_converter_station_creation_shunt_compensators_on_side_fk"))
     private List<ShuntCompensatorCreationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationCreationEntity(LccConverterStationCreationInfos converterStationCreationInfos) {
