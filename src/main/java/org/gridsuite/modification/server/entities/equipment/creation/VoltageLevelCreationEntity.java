@@ -6,16 +6,14 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.SwitchKind;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
-
-import com.powsybl.iidm.network.SwitchKind;
-
-import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -143,7 +141,8 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.sectionCount = voltageLevelCreationInfos.getSectionCount();
         this.switchKinds = new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
         this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
-        this.substationCreation = new SubstationCreationEntity(voltageLevelCreationInfos.getSubstationCreation());
+        this.substationCreation = voltageLevelCreationInfos.isWithSubstationCreation() ?
+                new SubstationCreationEntity(voltageLevelCreationInfos.getSubstationCreation()) : null;
     }
 }
 
