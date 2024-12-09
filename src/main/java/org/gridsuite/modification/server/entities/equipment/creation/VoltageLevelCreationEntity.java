@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -95,6 +96,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     private VoltageLevelCreationInfos.VoltageLevelCreationInfosBuilder<?, ?> toVoltageLevelCreationInfosBuilder() {
+        SubstationCreationEntity substationCreationEntity = getSubstationCreation();
         List<CouplingDeviceInfos> couplingDeviceInfos = couplingDevices.stream()
                 .map(cde -> new CouplingDeviceInfos(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
                 .collect(Collectors.toList());
@@ -116,7 +118,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .sectionCount(getSectionCount())
                 .switchKinds(getSwitchKinds())
                 .couplingDevices(couplingDeviceInfos)
-                .substationCreation(getSubstationCreation() != null ? getSubstationCreation().toSubstationCreationInfos() : null)
+                .substationCreation(substationCreationEntity != null ? substationCreationEntity.toSubstationCreationInfos() : null)
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
@@ -141,8 +143,9 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.sectionCount = voltageLevelCreationInfos.getSectionCount();
         this.switchKinds = new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
         this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
-        this.substationCreation = voltageLevelCreationInfos.isWithSubstationCreation() ?
-                new SubstationCreationEntity(voltageLevelCreationInfos.getSubstationCreation()) : null;
+        this.substationCreation = Optional.ofNullable(voltageLevelCreationInfos.getSubstationCreation())
+                .map(SubstationCreationEntity::new)
+                .orElse(null);
     }
 }
 
