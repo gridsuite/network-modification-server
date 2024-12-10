@@ -1,0 +1,68 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1733488784779-31">
+        <createTable tableName="lcc_converter_station_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id" type="VARCHAR(255)"/>
+            <column name="connection_direction" type="SMALLINT"/>
+            <column name="connection_name" type="VARCHAR(255)"/>
+            <column name="connection_position" type="INT"/>
+            <column defaultValueBoolean="true" name="connected" type="BOOLEAN"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="loss_factor" type="FLOAT4"/>
+            <column name="power_factor" type="FLOAT4"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="lcc_converter_station_creationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-32">
+        <createTable tableName="lcc_creation">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name" type="VARCHAR(255)"/>
+            <column name="active_power_setpoint" type="FLOAT(53)"/>
+            <column name="converters_mode" type="VARCHAR(255)"/>
+            <column name="maxp" type="FLOAT(53)"/>
+            <column name="nominalv" type="FLOAT(53)"/>
+            <column name="r" type="FLOAT(53)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="lcc_creationPK"/>
+            </column>
+            <column name="lcc_converter_station_1_id" type="UUID"/>
+            <column name="lcc_converter_station_2_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-33">
+        <createTable tableName="shunt_compensator_on_side">
+            <column name="lcc_converter_station_creation_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connected_to_hvdc" type="BOOLEAN"/>
+            <column name="shunt_compensator_id" type="VARCHAR(255)"/>
+            <column name="maxqat_nominalv" type="FLOAT(53)"/>
+            <column name="shunt_compensator_name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-35">
+        <addUniqueConstraint columnNames="lcc_converter_station_1_id" constraintName="uc_lcc_converter_station_1_id_col" tableName="lcc_creation"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-36">
+        <addUniqueConstraint columnNames="lcc_converter_station_2_id" constraintName="uc_lcc_converter_station_2_id_col" tableName="lcc_creation"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-56">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_1_id" baseTableName="lcc_creation" constraintName="lcc_converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-57">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_2_id" baseTableName="lcc_creation" constraintName="lcc_converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-58">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_converter_station_creation" constraintName="lcc_converter_station_creation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-59">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_creation_entity_id" baseTableName="shunt_compensator_on_side" constraintName="lcc_converter_station_creation_shunt_compensators_on_side_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1733488784779-60">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_creation" constraintName="lcc_creation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
