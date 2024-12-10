@@ -14,6 +14,8 @@ import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
@@ -66,19 +68,39 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "current_limits_id1",
-        referencedColumnName = "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_id1_fk"
-        ), nullable = true)
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "current_limits_id1_fk"
+            ), nullable = true)
     private CurrentLimitsEntity currentLimits1;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "current_limits_id2",
-        referencedColumnName = "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_id2_fk"
-        ), nullable = true)
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "current_limits_id2_fk"
+            ), nullable = true)
     private CurrentLimitsEntity currentLimits2;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "currentLimits1",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "current_limits1_fk_constraint"))
+    )
+    private List<CurrentLimitsEntity> allCurrentLimits1; //  TODO : passerà currentLimits1
+
+    @ElementCollection
+    @CollectionTable(
+            name = "currentLimits2",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "current_limits2_fk_constraint"))
+    )
+    private List<CurrentLimitsEntity> allCurrentLimits2; //  TODO : passerà currentLimits2
+
+    @Column(name = "selectedOperationalLimitsGroupId1")
+    private String selectedOperationalLimitsGroupId1;
+
+    @Column(name = "selectedOperationalLimitsGroupId2")
+    private String selectedOperationalLimitsGroupId2;
 
     protected BranchCreationEntity(BranchCreationInfos branchCreationInfos) {
         super(branchCreationInfos);
@@ -100,12 +122,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
         if (branchCreationInfos.getCurrentLimits1() != null) {
-            currentLimits1 = new CurrentLimitsEntity(branchCreationInfos.getCurrentLimits1());
+            allCurrentLimits1 = CurrentLimitsEntity.toEmbeddableCurrentLimits(branchCreationInfos.getCurrentLimits1());
         } else {
             currentLimits1 = null;
         }
         if (branchCreationInfos.getCurrentLimits2() != null) {
-            currentLimits2 = new CurrentLimitsEntity(branchCreationInfos.getCurrentLimits2());
+            allCurrentLimits2 = CurrentLimitsEntity.toEmbeddableCurrentLimits(branchCreationInfos.getCurrentLimits2());
         } else {
             currentLimits2 = null;
         }
@@ -113,6 +135,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();
         connectionName2 = branchCreationInfos.getConnectionName2();
+        selectedOperationalLimitsGroupId1 = branchCreationInfos.getSelectedOperationalLimitsGroupId1();
+        selectedOperationalLimitsGroupId2 = branchCreationInfos.getSelectedOperationalLimitsGroupId2();
         connectionPosition1 = branchCreationInfos.getConnectionPosition1();
         connectionPosition2 = branchCreationInfos.getConnectionPosition2();
         connected1 = branchCreationInfos.isConnected1();
