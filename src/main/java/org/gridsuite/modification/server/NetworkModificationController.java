@@ -225,10 +225,11 @@ public class NetworkModificationController {
     @GetMapping(value = "/network-composite-modification/{uuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the list of the network modifications inside a composite modification")
     @ApiResponse(responseCode = "200", description = "List of the modifications inside the composite modification")
-    public ResponseEntity<List<ModificationInfos>> getNetworkModificationsFromComposite(@PathVariable("uuid") UUID compositeModificationUuid) {
+    public ResponseEntity<List<ModificationInfos>> getNetworkModificationsFromComposite(@PathVariable("uuid") UUID compositeModificationUuid,
+                                                                                        @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "true") Boolean onlyMetadata) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuid)
+                .body(networkModificationService.getNetworkModificationsFromComposite(compositeModificationUuid, onlyMetadata)
         );
     }
 
