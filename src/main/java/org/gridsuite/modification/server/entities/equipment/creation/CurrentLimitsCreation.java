@@ -26,9 +26,8 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Embeddable
 @Table(name = "currentLimitsCreation")
-public class CurrentLimitsEntity {
+public class CurrentLimitsCreation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -44,11 +43,11 @@ public class CurrentLimitsEntity {
     @ElementCollection
     @CollectionTable(
             name = "currentTemporaryLimits",
-            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_fk_constraint"))
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_constraint_fk"))
     )
     private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
 
-    public static List<CurrentLimitsInfos> fromEmbeddableCurrentLimits(List<CurrentLimitsEntity> limits) {
+    public static List<CurrentLimitsInfos> fromCurrentLimitsCreation(List<CurrentLimitsCreation> limits) {
         return limits == null ? null :
                 limits.stream()
                         .map(limitEntity ->
@@ -61,11 +60,11 @@ public class CurrentLimitsEntity {
                         .collect(Collectors.toList());
     }
 
-    public static List<CurrentLimitsEntity> toEmbeddableCurrentLimits(List<CurrentLimitsInfos> limits) {
+    public static List<CurrentLimitsCreation> toCurrentLimitsCreation(List<CurrentLimitsInfos> limits) {
         return limits == null ? null :
                 limits.stream()
                         .map(currentLimit ->
-                                new CurrentLimitsEntity(
+                                new CurrentLimitsCreation(
                                         null,
                                         currentLimit.getPermanentLimit(),
                                         currentLimit.getOperationalLimitGroupId(),

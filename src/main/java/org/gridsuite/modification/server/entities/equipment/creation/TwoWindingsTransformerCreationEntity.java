@@ -213,10 +213,10 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                                 .toList());
 
         if (getCurrentLimits1() != null) {
-            builder.currentLimits1(CurrentLimitsEntity.fromEmbeddableCurrentLimits(getAllCurrentLimits1()));
+            builder.currentLimits1(CurrentLimitsCreation.fromCurrentLimitsCreation(getCurrentLimits1()));
         }
         if (getCurrentLimits2() != null) {
-            builder.currentLimits2(CurrentLimitsEntity.fromEmbeddableCurrentLimits(getAllCurrentLimits2()));
+            builder.currentLimits2(CurrentLimitsCreation.fromCurrentLimitsCreation(getCurrentLimits2()));
         }
 
         if (!ratioTapChangerSteps.isEmpty()) {

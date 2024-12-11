@@ -66,35 +66,13 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @Column(name = "connected2", columnDefinition = "boolean default true")
     private boolean connected2;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_id1",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(
-                    name = "current_limits_id1_fk"
-            ), nullable = true)
-    private CurrentLimitsEntity currentLimits1;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn
+    private List<CurrentLimitsCreation> currentLimits1;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_id2",
-            referencedColumnName = "id",
-            foreignKey = @ForeignKey(
-                    name = "current_limits_id2_fk"
-            ), nullable = true)
-    private CurrentLimitsEntity currentLimits2;
-
-    @ElementCollection
-    @CollectionTable(
-            name = "currentLimits1",
-            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "current_limits1_fk_constraint"))
-    )
-    private List<CurrentLimitsEntity> allCurrentLimits1; //  TODO : passerà currentLimits1
-
-    @ElementCollection
-    @CollectionTable(
-            name = "currentLimits2",
-            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "current_limits2_fk_constraint"))
-    )
-    private List<CurrentLimitsEntity> allCurrentLimits2; //  TODO : passerà currentLimits2
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn
+    private List<CurrentLimitsCreation> currentLimits2;
 
     @Column(name = "selectedOperationalLimitsGroupId1")
     private String selectedOperationalLimitsGroupId1;
@@ -122,12 +100,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
         if (branchCreationInfos.getCurrentLimits1() != null) {
-            allCurrentLimits1 = CurrentLimitsEntity.toEmbeddableCurrentLimits(branchCreationInfos.getCurrentLimits1());
+            currentLimits1 = CurrentLimitsCreation.toCurrentLimitsCreation(branchCreationInfos.getCurrentLimits1());
         } else {
             currentLimits1 = null;
         }
         if (branchCreationInfos.getCurrentLimits2() != null) {
-            allCurrentLimits2 = CurrentLimitsEntity.toEmbeddableCurrentLimits(branchCreationInfos.getCurrentLimits2());
+            currentLimits2 = CurrentLimitsCreation.toCurrentLimitsCreation(branchCreationInfos.getCurrentLimits2());
         } else {
             currentLimits2 = null;
         }

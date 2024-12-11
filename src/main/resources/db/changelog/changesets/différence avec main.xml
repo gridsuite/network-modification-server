@@ -1,0 +1,160 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+// référence pour savoir ce qui est "déchet" et doit être retiré du changeset standard TODO : supprimer ce fichier
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="deharbemat (generated)" id="1733842965366-31">
+        <addUniqueConstraint columnNames="additional_equipment_deletion_entity_id" constraintName="UC_EQUIPMENT_DELETIONADDITIONAL_EQUIPMENT_DELETION_ENTITY_ID_COL" tableName="equipment_deletion"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-32">
+        <addUniqueConstraint columnNames="line_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELLINE_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-33">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-34">
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID1_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-35">
+        <addUniqueConstraint columnNames="current_limits_id2" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID2_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-36">
+        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID1_COL" tableName="line_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-37">
+        <addUniqueConstraint columnNames="current_limits_modification_id2" constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID2_COL" tableName="line_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-38">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-39">
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID1_COL" tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-40">
+        <addUniqueConstraint columnNames="current_limits_id2" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID2_COL" tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-41">
+        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="UC_TWO_WINDINGS_TRANSFORMER_MODIFICATIONCURRENT_LIMITS_MODIFICA" tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-42">
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-43">
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-44">
+        <createIndex indexName="IX_tabular_modification_modificationsPK" tableName="tabular_modification_modifications" unique="true">
+            <column name="tabular_modification_entity_id"/>
+            <column name="modifications_order"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-45">
+        <addForeignKeyConstraint baseColumnNames="equipment_modification_id" baseTableName="free_property" constraintName="FK3wbc92cp7wlvba202qx7ldy6n" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="string_equipment_attribute_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-46">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_creation" constraintName="batteryCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-47">
+        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_modification" constraintName="converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-48">
+        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_modification" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-49">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-50">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-51">
+        <dropForeignKeyConstraint baseTableName="FREE_PROPERTY" constraintName="FK3WBC92CP7WLVBA202QX7LDY6N"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-1">
+        <dropDefaultValue columnDataType="boolean" columnName="activated" tableName="modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-2">
+        <dropDefaultValue columnDataType="boolean" columnName="activated" tableName="modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-3">
+        <dropDefaultValue columnDataType="int" columnName="pos_generators_frequency" tableName="generation_dispatch_generators_frequency_reserve"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-4">
+        <dropDefaultValue columnDataType="int" columnName="pos_generators_frequency" tableName="generation_dispatch_generators_frequency_reserve"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-5">
+        <dropPrimaryKey tableName="tabular_modification_modifications"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-6">
+        <addPrimaryKey columnNames="tabular_modification_entity_id, modifications_order" constraintName="tabular_modification_modificationsPK" tableName="tabular_modification_modifications"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-7">
+        <dropUniqueConstraint constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-8">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-9">
+        <dropUniqueConstraint constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELLINE_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-10">
+        <addUniqueConstraint columnNames="line_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELLINE_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-11">
+        <dropUniqueConstraint constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID2_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-12">
+        <addUniqueConstraint columnNames="current_limits_id2" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID2_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-13">
+        <dropUniqueConstraint constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID1_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-14">
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_LINE_CREATIONCURRENT_LIMITS_ID1_COL" tableName="line_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-15">
+        <dropUniqueConstraint constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID2_COL" tableName="line_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-16">
+        <addUniqueConstraint columnNames="current_limits_modification_id2" constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID2_COL" tableName="line_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-17">
+        <dropUniqueConstraint constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID1_COL" tableName="line_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-18">
+        <addUniqueConstraint columnNames="current_limits_modification_id1" constraintName="UC_LINE_MODIFICATIONCURRENT_LIMITS_MODIFICATION_ID1_COL" tableName="line_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-19">
+        <dropUniqueConstraint constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-20">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-21">
+        <dropUniqueConstraint constraintName="UC_TABULAR_MODIFICATION_MODIFICATIONSMODIFICATIONS_ID_COL" tableName="tabular_modification_modifications"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-22">
+        <addUniqueConstraint columnNames="modifications_id" constraintName="UC_TABULAR_MODIFICATION_MODIFICATIONSMODIFICATIONS_ID_COL" tableName="tabular_modification_modifications"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-23">
+        <dropUniqueConstraint constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID2_COL" tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-24">
+        <addUniqueConstraint columnNames="current_limits_id2" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID2_COL" tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-25">
+        <dropUniqueConstraint constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID1_COL" tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-26">
+        <addUniqueConstraint columnNames="current_limits_id1" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATIONCURRENT_LIMITS_ID1_COL" tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-27">
+        <dropUniqueConstraint constraintName="UC_VSC_CREATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-28">
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_2_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-29">
+        <dropUniqueConstraint constraintName="UC_VSC_CREATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1733842965366-30">
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="UC_VSC_CREATIONCONVERTER_STATION_1_ID_COL" tableName="vsc_creation"/>
+    </changeSet>
+</databaseChangeLog>
