@@ -50,6 +50,10 @@
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <network-modification.version>0.2.0</network-modification.version>
+
+        <!-- FIXME : Remove when gridsuite-dependencies.version are updated to include gridsuite-filter
+            version 1.0.16 or later -->
+        <filter.version>1.0.16</filter.version>
     </properties>
 
     <build>
@@ -91,6 +95,13 @@
                 <version>${mockwebserver3.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!-- FIXME : Remove this dependency when gridsuite-dependencies.version are updated to include gridsuite-filter
+             version ${filter.version} below or later -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-filter</artifactId>
+                <version>${filter.version}</version>
             </dependency>
 
             <!-- imports -->
