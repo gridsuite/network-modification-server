@@ -96,14 +96,10 @@ public class LineCreationEntity extends BranchCreationEntity {
              .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList())
+            .currentLimits1(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits1()))
+            .currentLimits2(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits2()));
 
-        if (getCurrentLimits1() != null) {
-            builder.currentLimits1(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits1()));
-        }
-        if (getCurrentLimits2() != null) {
-            builder.currentLimits2(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits2()));
-        }
         return builder;
     }
 

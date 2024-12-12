@@ -99,16 +99,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        if (branchCreationInfos.getCurrentLimits1() != null) {
-            currentLimits1 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits1());
-        } else {
-            currentLimits1 = null;
-        }
-        if (branchCreationInfos.getCurrentLimits2() != null) {
-            currentLimits2 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits2());
-        } else {
-            currentLimits2 = null;
-        }
+        currentLimits1 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits1());
+        currentLimits2 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits2());
         connectionDirection1 = branchCreationInfos.getConnectionDirection1();
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();

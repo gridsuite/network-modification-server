@@ -210,14 +210,9 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
-
-        if (getCurrentLimits1() != null) {
-            builder.currentLimits1(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits1()));
-        }
-        if (getCurrentLimits2() != null) {
-            builder.currentLimits2(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits2()));
-        }
+                                .toList())
+                .currentLimits1(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits1()))
+                .currentLimits2(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits2()));
 
         if (!ratioTapChangerSteps.isEmpty()) {
             List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());

@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 @Embeddable
 public class CurrentTemporaryLimitCreationEmbeddable {
 
+    // TODO : pas besoin d'id ici ??
+
     @Column(name = "name")
     private String name;
 

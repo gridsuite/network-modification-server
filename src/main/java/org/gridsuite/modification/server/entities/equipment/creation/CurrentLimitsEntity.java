@@ -43,7 +43,7 @@ public class CurrentLimitsEntity {
     @ElementCollection
     @CollectionTable(
             name = "currentTemporaryLimits",
-            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_constraint_fk"))
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_constraint_fk")) // TODO : réssayer l'ancienne ?
     )
     private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
 
