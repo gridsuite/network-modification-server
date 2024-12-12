@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import org.gridsuite.modification.server.BuildException;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.slf4j.Logger;
@@ -46,8 +47,6 @@ public class BuildWorkerService {
 
     private final BuildStoppedPublisherService stoppedPublisherService;
 
-    private final BuildFailedPublisherService failedPublisherService;
-
     private final Map<String, CompletableFuture<NetworkModificationResult>> futures = new ConcurrentHashMap<>();
 
     private final Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
@@ -61,12 +60,10 @@ public class BuildWorkerService {
 
     public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
                               @NonNull ObjectMapper objectMapper,
-                              @NonNull BuildStoppedPublisherService stoppedPublisherService,
-                              @NonNull BuildFailedPublisherService failedPublisherService) {
+                              @NonNull BuildStoppedPublisherService stoppedPublisherService) {
         this.networkModificationService = networkModificationService;
         this.objectMapper = objectMapper;
         this.stoppedPublisherService = stoppedPublisherService;
-        this.failedPublisherService = failedPublisherService;
     }
 
     private CompletableFuture<NetworkModificationResult> execBuildVariant(BuildExecContext execContext, BuildInfos buildInfos) {
@@ -98,11 +95,11 @@ public class BuildWorkerService {
     @Bean
     public Consumer<Message<String>> consumeBuild() {
         return message -> {
-            BuildExecContext execContext = null;
+            BuildExecContext execContext;
             try {
                 execContext = BuildExecContext.fromMessage(message, objectMapper);
             } catch (Exception e) {
-                LOGGER.error("Error retrieving message in consumeBuild", e);
+                throw new BuildException("Failed to read build message", e);
             }
             startBuild(Objects.requireNonNull(execContext));
         };
@@ -124,12 +121,9 @@ public class BuildWorkerService {
         } catch (CancellationException e) {
             stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE);
         } catch (InterruptedException e) {
-            LOGGER.error(FAIL_MESSAGE, e);
-            failedPublisherService.publishFail(execContext.getReceiver(), FAIL_MESSAGE + " : " + e.getMessage());
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            LOGGER.error(FAIL_MESSAGE, e);
-            failedPublisherService.publishFail(execContext.getReceiver(), FAIL_MESSAGE + " : " + e.getMessage());
+            throw new BuildException("Node build failed", e);
         } finally {
             futures.remove(execContext.getReceiver());
             cancelBuildRequests.remove(execContext.getReceiver());
