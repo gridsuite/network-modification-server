@@ -68,11 +68,11 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
-    private List<CurrentLimitsCreation> currentLimits1;
+    private List<CurrentLimitsEntity> currentLimits1;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
-    private List<CurrentLimitsCreation> currentLimits2;
+    private List<CurrentLimitsEntity> currentLimits2;
 
     @Column(name = "selectedOperationalLimitsGroupId1")
     private String selectedOperationalLimitsGroupId1;
@@ -100,12 +100,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
         if (branchCreationInfos.getCurrentLimits1() != null) {
-            currentLimits1 = CurrentLimitsCreation.toCurrentLimitsCreation(branchCreationInfos.getCurrentLimits1());
+            currentLimits1 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits1());
         } else {
             currentLimits1 = null;
         }
         if (branchCreationInfos.getCurrentLimits2() != null) {
-            currentLimits2 = CurrentLimitsCreation.toCurrentLimitsCreation(branchCreationInfos.getCurrentLimits2());
+            currentLimits2 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits2());
         } else {
             currentLimits2 = null;
         }

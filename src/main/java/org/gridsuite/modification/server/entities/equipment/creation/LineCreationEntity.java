@@ -99,10 +99,10 @@ public class LineCreationEntity extends BranchCreationEntity {
                                 .toList());
 
         if (getCurrentLimits1() != null) {
-            builder.currentLimits1(CurrentLimitsCreation.fromCurrentLimitsCreation(getCurrentLimits1()));
+            builder.currentLimits1(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits1()));
         }
         if (getCurrentLimits2() != null) {
-            builder.currentLimits2(CurrentLimitsCreation.fromCurrentLimitsCreation(getCurrentLimits2()));
+            builder.currentLimits2(CurrentLimitsEntity.fromCurrentLimitsEntities(getCurrentLimits2()));
         }
         return builder;
     }
