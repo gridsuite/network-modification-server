@@ -135,6 +135,7 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
             <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
