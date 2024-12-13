@@ -110,7 +110,7 @@ public class BuildWorkerService {
             BuildInfos buildInfos = execContext.getBuildInfos();
             CompletableFuture<NetworkModificationResult> future = execBuildVariant(execContext, buildInfos);
             NetworkModificationResult result;
-            if (future != null && (result = future.get()) != null) {  // result available
+            if (future != null && (result = future.join()) != null) {  // result available
                 notificationService.emitBuildResultMessage(result, execContext.getReceiver());
                 LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
             } else {  // result not available : stop build request
@@ -120,8 +120,6 @@ public class BuildWorkerService {
             }
         } catch (CancellationException e) {
             stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             throw new BuildException("Node build failed", e);
         } finally {

@@ -39,8 +39,8 @@ spring:
             consumer:
               auto-bind-dlq: true
               dead-letter-exchange: ${powsybl-ws.rabbitmq.destination.prefix:}build.run.dlx
-              dead-letter-routing-key: "#"
-              dead-letter-queue-name: ${powsybl-ws.rabbitmq.destination.prefix:}build.run.dlq
+              dead-letter-queue-name: ${powsybl-ws.rabbitmq.destination.prefix:}build.run.dlx.dlq
+              dead-letter-exchange-type: topic
               quorum:
                 enabled: true
                 delivery-limit: 2
