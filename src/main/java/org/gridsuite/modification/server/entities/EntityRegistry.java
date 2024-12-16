@@ -46,6 +46,8 @@ public final class EntityRegistry {
         register(StaticVarCompensatorCreationInfos.class, StaticCompensatorCreationEntity.class);
         register(VscCreationInfos.class, VscCreationEntity.class);
         register(ConverterStationCreationInfos.class, ConverterStationCreationEntity.class);
+        register(LccCreationInfos.class, LccCreationEntity.class);
+        register(LccConverterStationCreationInfos.class, LccConverterStationCreationEntity.class);
         register(TabularCreationInfos.class, TabularCreationEntity.class);
 
         // // modification
