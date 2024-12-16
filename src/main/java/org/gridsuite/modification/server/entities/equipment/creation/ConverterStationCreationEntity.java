@@ -7,20 +7,13 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ConverterStationCreationInfos;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -59,8 +52,9 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
     private Double voltageSetpoint;
 
     @ElementCollection
-    @CollectionTable(name = "converter_station_creation_rcc_points")
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    @CollectionTable(name = "converter_station_rcc_points",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "reactiveCapabilityCurvePoints_fk_constraint")))
+    private List<ReactiveCapabilityCurveEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column
     private Boolean reactiveCapabilityCurve;
@@ -106,22 +100,22 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .build();
     }
 
-    private static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveCreationInfos> points) {
+    private static List<ReactiveCapabilityCurveEmbeddable> toEmbeddablePoints(
+            List<ReactiveCapabilityCurvePointsInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                .map(point -> new ReactiveCapabilityCurveEmbeddable(point.getMinQ(),
                         point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
     }
 
-    private static List<ReactiveCapabilityCurveCreationInfos> toReactiveCapabilityCurveInfos(List<ReactiveCapabilityCurveCreationEmbeddable> pointsEmbeddable) {
+    private static List<ReactiveCapabilityCurvePointsInfos> toReactiveCapabilityCurveInfos(List<ReactiveCapabilityCurveEmbeddable> pointsEmbeddable) {
         if (pointsEmbeddable == null) {
             return null;
         }
 
         return pointsEmbeddable.stream()
-                .map(pointEmbeddable -> ReactiveCapabilityCurveCreationInfos.builder()
+                .map(pointEmbeddable -> ReactiveCapabilityCurvePointsInfos.builder()
                         .p(pointEmbeddable.getP())
                         .maxQ(pointEmbeddable.getMaxQ())
                         .minQ(pointEmbeddable.getMinQ())

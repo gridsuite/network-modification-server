@@ -13,7 +13,7 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.BatteryModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
@@ -21,8 +21,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
-import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddableReactiveCapabilityCurve;
-import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toReactiveCapabilityCurveCreationInfos;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable.toEmbeddableReactiveCapabilityCurve;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable.toReactiveCapabilityCurveCreationInfos;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 /**
@@ -80,8 +80,9 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
     @ElementCollection
-    @CollectionTable
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    @CollectionTable(name = "battery_rcc_points",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "reactiveCapabilityCurvePoints_fk_constraint")))
+    private List<ReactiveCapabilityCurveEmbeddable> reactiveCapabilityCurvePoints;
 
     public BatteryModificationEntity(@NonNull BatteryModificationInfos batteryModificationInfos) {
         super(batteryModificationInfos);

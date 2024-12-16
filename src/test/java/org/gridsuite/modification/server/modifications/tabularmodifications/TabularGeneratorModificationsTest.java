@@ -582,9 +582,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                         ModificationCreation.getFreeProperty(),
                         ModificationCreation.getFreeProperty("test", "value")))
                     .reactiveCapabilityCurvePoints(List.of(
-                        ReactiveCapabilityCurveCreationInfos.builder().p(15.).build(),
-                            ReactiveCapabilityCurveCreationInfos.builder().maxQ(17.).build(),
-                        ReactiveCapabilityCurveCreationInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
+                        ReactiveCapabilityCurvePointsInfos.builder().p(15.).build(),
+                            ReactiveCapabilityCurvePointsInfos.builder().maxQ(17.).build(),
+                        ReactiveCapabilityCurvePointsInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
                     .build())
             .toList();
     }

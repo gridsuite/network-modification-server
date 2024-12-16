@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.BatteryCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
 
 import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
@@ -46,8 +46,9 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     private Double maxQ;
 
     @ElementCollection
-    @CollectionTable
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    @CollectionTable(name = "battery_rcc_points",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "reactiveCapabilityCurvePoints_fk_constraint")))
+    private List<ReactiveCapabilityCurveEmbeddable> reactiveCapabilityCurvePoints;
 
     @Column(name = "targetP")
     private double targetP;
@@ -85,10 +86,10 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.droop = batteryCreationInfos.getDroop();
     }
 
-    public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveCreationInfos> points) {
+    public static List<ReactiveCapabilityCurveEmbeddable> toEmbeddablePoints(
+            List<ReactiveCapabilityCurvePointsInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                .map(point -> new ReactiveCapabilityCurveEmbeddable(point.getMinQ(),
                         point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
@@ -100,9 +101,9 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     }
 
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurvePointsInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
+                .map(value -> new ReactiveCapabilityCurvePointsInfos(value.getMinQ(),
                         value.getMaxQ(),
                         value.getP()))
                 .collect(Collectors.toList()) : null;
