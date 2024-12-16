@@ -112,8 +112,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("1A")
                 .voltageLevelId2("v1")
                 .busOrBusbarSectionId2("1.1")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(6.).build())
+                .currentLimits1(List.of(CurrentLimitsInfos.builder().permanentLimit(5.).build()))
+                .currentLimits2(List.of(CurrentLimitsInfos.builder().permanentLimit(6.).build()))
                 .connectionName1("cn1LineEdited")
                 .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
                 .connectionName2("cn2LineEdited")
@@ -127,10 +127,10 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(5., createdModification.getCurrentLimits1().getPermanentLimit(), 0.);
-        assertEquals(6., createdModification.getCurrentLimits2().getPermanentLimit(), 0.);
-        assertTrue(createdModification.getCurrentLimits1().getTemporaryLimits().isEmpty());
-        assertTrue(createdModification.getCurrentLimits2().getTemporaryLimits().isEmpty());
+        assertEquals(5., createdModification.getCurrentLimits1().get(0).getPermanentLimit(), 0.);
+        assertEquals(6., createdModification.getCurrentLimits2().get(0).getPermanentLimit(), 0.);
+        assertTrue(createdModification.getCurrentLimits1().get(0).getTemporaryLimits().isEmpty());
+        assertTrue(createdModification.getCurrentLimits2().get(0).getTemporaryLimits().isEmpty());
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -150,14 +150,18 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("1A")
                 .voltageLevelId2("v1")
                 .busOrBusbarSectionId2("1.1")
-                .currentLimits1(CurrentLimitsInfos.builder()
-                    .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
-                    .build())
-                .currentLimits2(CurrentLimitsInfos.builder()
-                    .temporaryLimits(List.of(
-                        CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build(),
-                        CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(100.0).acceptableDuration(1200).build()))
-                    .build())
+                .currentLimits1(List.of(
+                        CurrentLimitsInfos.builder()
+                            .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
+                            .build()
+                ))
+                .currentLimits2(List.of(
+                        CurrentLimitsInfos.builder()
+                        .temporaryLimits(List.of(
+                            CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build(),
+                            CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(100.0).acceptableDuration(1200).build()))
+                        .build()
+                ))
                 .connectionName1("cn1LineEdited")
                 .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
                 .connectionName2("cn2LineEdited")
@@ -171,10 +175,10 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertNull(createdModification.getCurrentLimits1().getPermanentLimit());
-        assertNull(createdModification.getCurrentLimits2().getPermanentLimit());
-        assertEquals(1, createdModification.getCurrentLimits1().getTemporaryLimits().size());
-        assertEquals(2, createdModification.getCurrentLimits2().getTemporaryLimits().size());
+        assertNull(createdModification.getCurrentLimits1().get(0).getPermanentLimit());
+        assertNull(createdModification.getCurrentLimits2().get(0).getPermanentLimit());
+        assertEquals(1, createdModification.getCurrentLimits1().get(0).getTemporaryLimits().size());
+        assertEquals(2, createdModification.getCurrentLimits2().get(0).getTemporaryLimits().size());
 
         testNetworkModificationsCount(getGroupId(), 1);
     }
@@ -194,14 +198,16 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("1A")
                 .voltageLevelId2("v1")
                 .busOrBusbarSectionId2("1.1")
-                .currentLimits1(CurrentLimitsInfos.builder()
-                    .permanentLimit(200.)
-                    .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
-                    .build())
-                .currentLimits2(CurrentLimitsInfos.builder()
-                    .permanentLimit(100.)
-                    .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(600.0).acceptableDuration(1200).build()))
-                    .build())
+                .currentLimits1(List.of(
+                        CurrentLimitsInfos.builder()
+                        .permanentLimit(200.)
+                        .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").value(200.0).acceptableDuration(600).build()))
+                        .build()))
+                .currentLimits2(List.of(
+                        CurrentLimitsInfos.builder()
+                        .permanentLimit(100.)
+                        .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT20").value(600.0).acceptableDuration(1200).build()))
+                        .build()))
                 .connectionName1("cn1LineEdited")
                 .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
                 .connectionName2("cn2LineEdited")
@@ -217,15 +223,15 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk()).andReturn();
 
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
-        assertEquals(200., createdModification.getCurrentLimits1().getPermanentLimit(), 0.);
-        assertEquals(100., createdModification.getCurrentLimits2().getPermanentLimit(), 0.);
-        assertEquals(1, createdModification.getCurrentLimits1().getTemporaryLimits().size());
-        assertEquals(1, createdModification.getCurrentLimits2().getTemporaryLimits().size());
+        assertEquals(200., createdModification.getCurrentLimits1().get(0).getPermanentLimit(), 0.);
+        assertEquals(100., createdModification.getCurrentLimits2().get(0).getPermanentLimit(), 0.);
+        assertEquals(1, createdModification.getCurrentLimits1().get(0).getTemporaryLimits().size());
+        assertEquals(1, createdModification.getCurrentLimits2().get(0).getTemporaryLimits().size());
 
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=true), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), currentLimits2=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=true), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, currentLimits1=[CurrentLimitsInfos(operationalLimitGroupId=null, permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)])], currentLimits2=[CurrentLimitsInfos(operationalLimitGroupId=null, permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)])], selectedOperationalLimitsGroupId1=null, selectedOperationalLimitsGroupId2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
             lineCreation.toString()
         );
     }
@@ -277,8 +283,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("1A")
                 .voltageLevelId2("v1")
                 .busOrBusbarSectionId2("1.1")
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+                .currentLimits1(List.of(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()))
+                .currentLimits2(List.of(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()))
                 .connectionName1("cn1LineEdited")
                 .connectionDirection1(ConnectablePosition.Direction.BOTTOM)
                 .connectionName2("cn2LineEdited")

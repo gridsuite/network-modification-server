@@ -6,10 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.gridsuite.modification.dto.CurrentLimitsInfos;
 
 import java.util.List;
@@ -17,6 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -47,9 +45,9 @@ public class CurrentLimitsEntity {
     )
     private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
 
-    public static List<CurrentLimitsInfos> fromCurrentLimitsEntities(List<CurrentLimitsEntity> limits) {
-        return limits == null ? null :
-                limits.stream()
+    public static List<CurrentLimitsInfos> fromCurrentLimitsEntities(List<CurrentLimitsEntity> limitsEntities) {
+        return CollectionUtils.isEmpty(limitsEntities) ? null :
+                limitsEntities.stream()
                         .map(limitEntity ->
                                 CurrentLimitsInfos.builder()
                                         .operationalLimitGroupId(limitEntity.getOperationalLimitGroupId())
@@ -61,7 +59,7 @@ public class CurrentLimitsEntity {
     }
 
     public static List<CurrentLimitsEntity> toCurrentLimitsEntities(List<CurrentLimitsInfos> limits) {
-        return limits == null ? null :
+        return CollectionUtils.isEmpty(limits) ? null :
                 limits.stream()
                         .map(currentLimit ->
                                 new CurrentLimitsEntity(

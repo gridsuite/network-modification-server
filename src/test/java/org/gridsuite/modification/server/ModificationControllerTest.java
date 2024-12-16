@@ -870,8 +870,8 @@ class ModificationControllerTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits1(c1)
-                .currentLimits2(c2)
+                .currentLimits1(List.of(c1))
+                .currentLimits2(List.of(c2))
                 .build();
 
         mvcResult = mockMvc.perform(
