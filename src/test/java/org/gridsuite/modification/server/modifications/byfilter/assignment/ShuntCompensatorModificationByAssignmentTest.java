@@ -100,7 +100,7 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
                 .build();
 
         DoubleAssignmentInfos assignmentInfos4 = DoubleAssignmentInfos.builder()
-                .editedField(ShuntCompensatorField.MAXIMUM_Q_AT_NOMINAL_VOLTAGE.name())
+                .editedField(ShuntCompensatorField.MAX_Q_AT_NOMINAL_V.name())
                 .value(10.)
                 .filters(List.of(filter5))
                 .build();
