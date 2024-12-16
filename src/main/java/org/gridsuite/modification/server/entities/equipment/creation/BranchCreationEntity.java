@@ -10,10 +10,12 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchCreationInfos;
+import org.gridsuite.modification.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -99,8 +101,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        currentLimits1 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits1());
-        currentLimits2 = CurrentLimitsEntity.toCurrentLimitsEntities(branchCreationInfos.getCurrentLimits2());
+        currentLimits1 = assignCurrentLimits(branchCreationInfos.getCurrentLimits1(), currentLimits1);
+        currentLimits2 = assignCurrentLimits(branchCreationInfos.getCurrentLimits2(), currentLimits2);
         connectionDirection1 = branchCreationInfos.getConnectionDirection1();
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();
@@ -111,5 +113,22 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         connectionPosition2 = branchCreationInfos.getConnectionPosition2();
         connected1 = branchCreationInfos.isConnected1();
         connected2 = branchCreationInfos.isConnected2();
+    }
+
+    /**
+     * the point of this function is to never dereference previousCurrentLimits if it already exists,
+     * in order for Hibernate not to lose this reference when doing some cascade cleaning or whatever
+     */
+    private List<CurrentLimitsEntity> assignCurrentLimits(List<CurrentLimitsInfos> currentLimitsInfos, List<CurrentLimitsEntity> previousCurrentLimits) {
+        List<CurrentLimitsEntity> updatedCurrentLimits = previousCurrentLimits;
+        if (previousCurrentLimits == null) {
+            updatedCurrentLimits = new ArrayList<>();
+        } else {
+            updatedCurrentLimits.clear();
+        }
+        if (currentLimitsInfos != null) {
+            updatedCurrentLimits.addAll(CurrentLimitsEntity.toCurrentLimitsEntities(currentLimitsInfos));
+        }
+        return updatedCurrentLimits;
     }
 }

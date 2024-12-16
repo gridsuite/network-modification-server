@@ -58,9 +58,8 @@ public class CurrentLimitsEntity {
                         .collect(Collectors.toList());
     }
 
-    public static List<CurrentLimitsEntity> toCurrentLimitsEntities(List<CurrentLimitsInfos> limits) {
-        return CollectionUtils.isEmpty(limits) ? null :
-                limits.stream()
+    public static List<CurrentLimitsEntity> toCurrentLimitsEntities(@NonNull List<CurrentLimitsInfos> limits) {
+        return limits.stream()
                         .map(currentLimit ->
                                 new CurrentLimitsEntity(
                                         null,
