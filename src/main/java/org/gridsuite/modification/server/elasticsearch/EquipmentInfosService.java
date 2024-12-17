@@ -59,7 +59,9 @@ public class EquipmentInfosService {
     }
 
     public void deleteEquipmentInfosList(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId) {
-        equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
+        Lists.partition(equipmentIds, partitionSize)
+                .parallelStream()
+                .forEach(equipmentIdsSubList -> equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(equipmentIdsSubList, networkUuid, variantId));
     }
 
     public void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds) {
@@ -88,8 +90,8 @@ public class EquipmentInfosService {
         );
     }
 
-    public List<EquipmentInfos> findEquipmentInfosList(List<String> equipmentIds, UUID networkUuid, String variantId) {
-        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
+    public List<EquipmentInfos> findEquipmentInfosList(UUID networkUuid, String variantId) {
+        return equipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantId);
     }
 
     public void deleteAll() {
