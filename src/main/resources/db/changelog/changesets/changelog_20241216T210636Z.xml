@@ -40,22 +40,22 @@
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="generator_rcc_points" constraintName="reactiveCapabilityCurvePoints_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generator_modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-58">
-        <dropForeignKeyConstraint baseTableName="BATTERY_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8DXG53BH5KR2LBCGLU7HP6TGR"/>
+        <dropForeignKeyConstraint baseTableName="BATTERY_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8dxg53bh5kr2lbcglu7hp6tgr"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-59">
-        <dropForeignKeyConstraint baseTableName="GENERATOR_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8DXG53BH5KR2LBCGLU7HP6TRR"/>
+        <dropForeignKeyConstraint baseTableName="GENERATOR_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8dxg53bh5kr2lbcglu7hp6trr"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-60">
-        <dropForeignKeyConstraint baseTableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8OAVB06BHO2KT3MJQCUFSJD50"/>
+        <dropForeignKeyConstraint baseTableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8oavb06bho2kt3mjqcufsjd50"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-61">
-        <dropForeignKeyConstraint baseTableName="CONVERTER_STATION_CREATION_RCC_POINTS" constraintName="FK9JYI7J3HGERYVN6KMPAM4PSO3"/>
+        <dropForeignKeyConstraint baseTableName="CONVERTER_STATION_CREATION_RCC_POINTS" constraintName="FK9jyi7j3hgeryvn6kmpam4pso3"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-62">
-        <dropForeignKeyConstraint baseTableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS" constraintName="FKA1D66RWNQIHUM8E7BURNWEYR"/>
+        <dropForeignKeyConstraint baseTableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS" constraintName="FKa1d66rwnqihum8e7burnweyr"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-63">
-        <dropForeignKeyConstraint baseTableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FKI6V363GW4OY1MEFVYMCBDUX56"/>
+        <dropForeignKeyConstraint baseTableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FKi6v363gw4oy1mefvymcbdux56"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1734383210595-64">
         <dropTable tableName="BATTERY_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
