@@ -61,7 +61,7 @@ public class EquipmentInfosService {
     public void deleteEquipmentInfosList(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId) {
         Lists.partition(equipmentIds, partitionSize)
                 .parallelStream()
-                .forEach(equipmentIdsSubList -> equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(equipmentIdsSubList, networkUuid, variantId));
+                .forEach(ids -> equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(ids, networkUuid, variantId));
     }
 
     public void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds) {
