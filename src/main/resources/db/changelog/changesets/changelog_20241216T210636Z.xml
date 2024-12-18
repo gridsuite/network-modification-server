@@ -1,0 +1,78 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1734383210595-31">
+        <createTable tableName="battery_rcc_points">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maxq" type="FLOAT(53)"/>
+            <column name="minq" type="FLOAT(53)"/>
+            <column name="p" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-32">
+        <createTable tableName="converter_station_rcc_points">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maxq" type="FLOAT(53)"/>
+            <column name="minq" type="FLOAT(53)"/>
+            <column name="p" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-33">
+        <createTable tableName="generator_rcc_points">
+            <column name="id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="maxq" type="FLOAT(53)"/>
+            <column name="minq" type="FLOAT(53)"/>
+            <column name="p" type="FLOAT(53)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-54">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_rcc_points" constraintName="reactiveCapabilityCurvePoints_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="battery_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-55">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="converter_station_rcc_points" constraintName="reactiveCapabilityCurvePoints_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-56">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="generator_rcc_points" constraintName="reactiveCapabilityCurvePoints_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="generator_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-58">
+        <dropForeignKeyConstraint baseTableName="BATTERY_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8dxg53bh5kr2lbcglu7hp6tgr"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-59">
+        <dropForeignKeyConstraint baseTableName="GENERATOR_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8dxg53bh5kr2lbcglu7hp6trr"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-60">
+        <dropForeignKeyConstraint baseTableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FK8oavb06bho2kt3mjqcufsjd50"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-61">
+        <dropForeignKeyConstraint baseTableName="CONVERTER_STATION_CREATION_RCC_POINTS" constraintName="FK9jyi7j3hgeryvn6kmpam4pso3"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-62">
+        <dropForeignKeyConstraint baseTableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS" constraintName="FKa1d66rwnqihum8e7burnweyr"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-63">
+        <dropForeignKeyConstraint baseTableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS" constraintName="FKi6v363gw4oy1mefvymcbdux56"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-64">
+        <dropTable tableName="BATTERY_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-65">
+        <dropTable tableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-66">
+        <dropTable tableName="CONVERTER_STATION_CREATION_RCC_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-67">
+        <dropTable tableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-68">
+        <dropTable tableName="GENERATOR_CREATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734383210595-69">
+        <dropTable tableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+</databaseChangeLog>

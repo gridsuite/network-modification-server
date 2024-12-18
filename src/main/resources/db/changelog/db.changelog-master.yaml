@@ -321,3 +321,6 @@ databaseChangeLog:
   - include:
       relativeToChangelogFile: true
       file: changesets/changelog_20241206T123930Z.xml
+  - include:
+      relativeToChangelogFile: true
+      file: changesets/changelog_20241216T210636Z.xml
