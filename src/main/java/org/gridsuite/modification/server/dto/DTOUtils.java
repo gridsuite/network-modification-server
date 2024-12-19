@@ -6,11 +6,13 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
+import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author jamal kheyyad <jamal.kheyyad at rte-france.com>
@@ -19,12 +21,19 @@ public final class DTOUtils {
     private DTOUtils() {
     }
 
-    public static List<ReactiveCapabilityCurveModificationInfos> convertToReactiveCapabilityCurveModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
-        return CollectionUtils.isEmpty(rCCpoints) ? null : rCCpoints
-                .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
-                        value.getMaxQ(), value.getOldMaxQ(),
-                        value.getP(), value.getOldP()))
+    public static List<ReactiveCapabilityCurvePointsInfos> toReactiveCapabilityCurvePointsCreationInfos(List<ReactiveCapabilityCurveCreationEmbeddable> rCCpoints) {
+        return Objects.isNull(rCCpoints) || CollectionUtils.isEmpty(rCCpoints) ? null
+                : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsInfos(point.getMinQ(),
+                        point.getMaxQ(),
+                        point.getP()))
+                .toList();
+    }
+
+    public static List<ReactiveCapabilityCurvePointsInfos> toReactiveCapabilityCurvePointsModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
+        return Objects.isNull(rCCpoints) || CollectionUtils.isEmpty(rCCpoints) ? null
+                : rCCpoints.stream().map(point -> new ReactiveCapabilityCurvePointsInfos(point.getMinQ(),
+                        point.getMaxQ(),
+                        point.getP()))
                 .toList();
     }
 }

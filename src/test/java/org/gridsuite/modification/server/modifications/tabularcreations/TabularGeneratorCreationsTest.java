@@ -59,7 +59,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
                 .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
@@ -69,14 +69,14 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .plannedActivePowerSetPoint(200D).forcedOutageRate(3D)
                 .minQ(7D).participate(false)
                 .stepUpTransformerX(45D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id3").voltageLevelId("v3").busOrBusbarSectionId("3A")
                 .connectionName("feederId3").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id4").equipmentName("name4").voltageLevelId("v4").busOrBusbarSectionId("1.A")
@@ -87,21 +87,21 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .participate(false)
                 .directTransX(5D)
                 .regulatingTerminalId("v5load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v5").qPercent(75D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id5").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("name5").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("v5generator").voltageLevelId("v5").busOrBusbarSectionId("1A1")
                 .connectionName("v5generator").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build()
         );
         return TabularCreationInfos.builder()
@@ -123,7 +123,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .minQ(13D).maxQ(11D).participate(false)
                 .directTransX(8D).stepUpTransformerX(44D)
                 .regulatingTerminalId("v5load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v5").qPercent(37D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id4").equipmentName("name44").voltageLevelId("v4").busOrBusbarSectionId("1.A")
@@ -134,7 +134,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .participate(true).droop(5F)
                 .directTransX(3D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(75D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build()
         );
         return TabularCreationInfos.builder()
@@ -226,7 +226,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .minQ(7D).maxQ(13D).participate(true).droop(0.5F)
                 .directTransX(5D).stepUpTransformerX(45D)
                 .regulatingTerminalId("v2load").regulatingTerminalType("LOAD").regulatingTerminalVlId("v2").qPercent(35D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build(),
             GeneratorCreationInfos.builder()
                 .equipmentId("id2").equipmentName("name2").voltageLevelId("v2").busOrBusbarSectionId("1A")
@@ -236,7 +236,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .plannedActivePowerSetPoint(200D).forcedOutageRate(3D)
                 .minQ(7D).participate(false)
                 .stepUpTransformerX(45D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build()
         );
 

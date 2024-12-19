@@ -315,7 +315,7 @@ class ModificationRepositoryTest {
                 .participate(false).droop(null).directTransX(null)
                 .stepUpTransformerX(null).regulatingTerminalId("testTerminalId2")
                 .regulatingTerminalType("BATTERY").regulatingTerminalVlId("idVlTest2")
-                .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurveCreationInfos(33., 44., 55.)))
+                .qPercent(25.).reactiveCapabilityCurve(true).reactiveCapabilityCurvePoints(List.of(new ReactiveCapabilityCurvePointsInfos(33., 44., 55.)))
                 .connectionName("Top").connectionDirection(ConnectablePosition.Direction.TOP)
                 .connectionPosition(3).build());
 

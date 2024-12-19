@@ -7,12 +7,16 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
+import org.springframework.util.CollectionUtils;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Seddik Yengui <seddik.yengui at rte-france.com>
@@ -31,4 +35,13 @@ public class ReactiveCapabilityCurveCreationEmbeddable {
 
     @Column
     private Double p;
+
+    public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
+            List<ReactiveCapabilityCurvePointsInfos> points) {
+        return Objects.isNull(points) || CollectionUtils.isEmpty(points) ? null
+                : points.stream()
+                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                        point.getMaxQ(), point.getP()))
+                .toList();
+    }
 }

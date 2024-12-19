@@ -11,7 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.ConverterStationModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -19,6 +21,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 
 import java.util.List;
 
+import static org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable.toEmbeddablePoints;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 /**
@@ -94,16 +97,6 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
 
     }
 
-    public static List<ReactiveCapabilityCurveModificationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveModificationInfos> points) {
-        return points == null ? null
-                : points.stream()
-                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
-                        point.getMaxQ(), point.getOldMaxQ(), point.getP(),
-                        point.getOldP()))
-                .toList();
-    }
-
     @Override
     public ConverterStationModificationInfos toModificationInfos() {
         return toConverterStationModificationInfoBuilder().build();
@@ -125,6 +118,6 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .voltageRegulationOn(toAttributeModification(getVoltageRegulationOn()))
             .voltageSetpoint(toAttributeModification(getVoltageSetpoint()))
             .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-            .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveModificationInfos(getReactiveCapabilityCurvePoints()));
+            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()));
     }
 }
