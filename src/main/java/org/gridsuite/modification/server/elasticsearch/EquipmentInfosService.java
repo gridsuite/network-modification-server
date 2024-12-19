@@ -90,8 +90,8 @@ public class EquipmentInfosService {
         );
     }
 
-    public List<EquipmentInfos> findEquipmentInfosList(UUID networkUuid, String variantId) {
-        return equipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantId);
+    public List<EquipmentInfos> findEquipmentInfosList(List<String> equipmentIds, UUID networkUuid, String variantId) {
+        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
     }
 
     public void deleteAll() {
