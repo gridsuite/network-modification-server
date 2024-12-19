@@ -59,12 +59,20 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
                 .connected2(true)
-                .currentLimits1(List.of(
-                        CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                ))
-                .currentLimits2(List.of(
-                        CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                ))
+                .operationalLimitsGroups1(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                        ).build()
+                    )
+                )
+                .operationalLimitsGroups2(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                                CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                        ).build()
+                    )
+                )
                 .connectionName1("cn201")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn202")
@@ -170,12 +178,20 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus3")
-                .currentLimits1(List.of(
-                        CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                ))
-                .currentLimits2(List.of(
-                        CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                ))
+                .operationalLimitsGroups1(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                        ).build()
+                    )
+                )
+                .operationalLimitsGroups2(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                        ).build()
+                    )
+                )
                 .connectionName1("cn2012")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn2022")

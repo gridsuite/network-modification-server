@@ -9,10 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.CurrentLimitsInfos;
-import org.gridsuite.modification.dto.FreePropertyInfos;
-import org.gridsuite.modification.dto.LineCreationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -112,7 +109,16 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits2(List.of(CurrentLimitsInfos.builder().operationalLimitGroupId("limitSet1").permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()))
+                .operationalLimitsGroups2(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder()
+                            .currentLimits(
+                                CurrentLimitsInfos.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()
+                            )
+                            .id("limitSet1")
+                            .build()
+                    )
+                )
                 .build();
 
         String lineCreationInfosPermanentLimitOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitOK);
@@ -137,15 +143,21 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits1(List.of(CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()))
-                .currentLimits2(null)
+                .operationalLimitsGroups1(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
+                        ).build()
+                    )
+                )
+                .operationalLimitsGroups2(null)
                 .build();
 
         String lineCreationInfosPermanentLimitOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitOK);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        lineCreationInfosPermanentLimitOK.setCurrentLimits2(null); // if permanentLimit is null then no currentLimit created
+        lineCreationInfosPermanentLimitOK.setOperationalLimitsGroups2(null); // if permanentLimit is null then no currentLimit created
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertThat(createdModification).recursivelyEquals(lineCreationInfosPermanentLimitOK);
 
@@ -164,7 +176,14 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits1(List.of(CurrentLimitsInfos.builder().permanentLimit(-1.0).build()))
+                .operationalLimitsGroups1(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder()
+                            .currentLimits(
+                                CurrentLimitsInfos.builder().permanentLimit(-1.0).build())
+                            .build()
+                    )
+                )
                 .build();
         String lineCreationInfosPermanentLimitNOKJson = mapper.writeValueAsString(lineCreationInfosPermanentLimitNOK);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
@@ -184,7 +203,13 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits2(List.of(CurrentLimitsInfos.builder().permanentLimit(1.0).build()))
+                .operationalLimitsGroups2(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(1.0).build())
+                            .build()
+                    )
+                )
                 .build();
 
         String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfosOK);
@@ -214,8 +239,20 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
             .b2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("bus1")
-            .currentLimits1(List.of(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()))
-            .currentLimits2(List.of(CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()))
+            .operationalLimitsGroups1(
+                List.of(
+                    OperationalLimitsGroupInfos.builder().currentLimits(
+                        CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+                        .build()
+                )
+            )
+            .operationalLimitsGroups2(
+                List.of(
+                    OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
+                        .build()
+                )
+            )
             .voltageLevelId2("v2")
             .busOrBusbarSectionId2("bus2")
             .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))

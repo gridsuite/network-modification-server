@@ -10,10 +10,10 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchCreationInfos;
-import org.gridsuite.modification.dto.CurrentLimitsInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 
 import jakarta.persistence.*;
+import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,12 +69,12 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     private boolean connected2;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderColumn
-    private List<CurrentLimitsEntity> currentLimits1;
+    @OrderColumn(name = "pos_operationalLimitsGroups1")
+    private List<OperationalLimitsGroupEntity> operationalLimitsGroups1;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderColumn
-    private List<CurrentLimitsEntity> currentLimits2;
+    @OrderColumn(name = "pos_operationalLimitsGroups2")
+    private List<OperationalLimitsGroupEntity> operationalLimitsGroups2;
 
     @Column(name = "selectedOperationalLimitsGroupId1")
     private String selectedOperationalLimitsGroupId1;
@@ -101,8 +101,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        currentLimits1 = assignCurrentLimits(branchCreationInfos.getCurrentLimits1(), currentLimits1);
-        currentLimits2 = assignCurrentLimits(branchCreationInfos.getCurrentLimits2(), currentLimits2);
+        operationalLimitsGroups1 = assignOperationalLimitsGroups(branchCreationInfos.getOperationalLimitsGroups1(), operationalLimitsGroups1);
+        operationalLimitsGroups2 = assignOperationalLimitsGroups(branchCreationInfos.getOperationalLimitsGroups2(), operationalLimitsGroups2);
         connectionDirection1 = branchCreationInfos.getConnectionDirection1();
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();
@@ -116,19 +116,22 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     }
 
     /**
-     * the point of this function is to never dereference previousCurrentLimits if it already exists,
+     * the point of this function is to never dereference operationalLimitsGroups if it already exists,
      * in order for Hibernate not to lose this reference when doing some cascade cleaning or whatever
      */
-    private List<CurrentLimitsEntity> assignCurrentLimits(List<CurrentLimitsInfos> currentLimitsInfos, List<CurrentLimitsEntity> previousCurrentLimits) {
-        List<CurrentLimitsEntity> updatedCurrentLimits = previousCurrentLimits;
-        if (previousCurrentLimits == null) {
-            updatedCurrentLimits = new ArrayList<>();
+    private List<OperationalLimitsGroupEntity> assignOperationalLimitsGroups(
+            List<OperationalLimitsGroupInfos> operationalLimitsGroupInfos,
+            List<OperationalLimitsGroupEntity> operationalLimitsGroups
+    ) {
+        List<OperationalLimitsGroupEntity> updatedLimitsGroups = operationalLimitsGroups;
+        if (operationalLimitsGroups == null) {
+            updatedLimitsGroups = new ArrayList<>();
         } else {
-            updatedCurrentLimits.clear();
+            updatedLimitsGroups.clear();
         }
-        if (currentLimitsInfos != null) {
-            updatedCurrentLimits.addAll(CurrentLimitsEntity.toCurrentLimitsEntities(currentLimitsInfos));
+        if (operationalLimitsGroupInfos != null) {
+            updatedLimitsGroups.addAll(OperationalLimitsGroupEntity.toOperationalLimitsGroupsEntities(operationalLimitsGroupInfos));
         }
-        return updatedCurrentLimits;
+        return updatedLimitsGroups;
     }
 }

@@ -11,10 +11,8 @@ import org.gridsuite.modification.dto.CurrentLimitsInfos;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.persistence.*;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -35,39 +33,22 @@ public class CurrentLimitsEntity {
     @Column(name = "permanentLimit")
     private Double permanentLimit;
 
-    @Column(name = "operationalLimitGroupId")
-    private String operationalLimitGroupId;
-
     @ElementCollection
     @CollectionTable(
             name = "currentTemporaryLimits",
-            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_constraint_fk")) // TODO : réssayer l'ancienne ?
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_fk_constraint"))
     )
     private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
 
-    public static List<CurrentLimitsInfos> fromCurrentLimitsEntities(List<CurrentLimitsEntity> limitsEntities) {
-        return CollectionUtils.isEmpty(limitsEntities) ? null :
-                limitsEntities.stream()
-                        .map(limitEntity ->
-                                CurrentLimitsInfos.builder()
-                                        .operationalLimitGroupId(limitEntity.getOperationalLimitGroupId())
-                                        .permanentLimit(limitEntity.getPermanentLimit())
-                                        .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(limitEntity.getTemporaryLimits()))
-                                        .build()
-                        )
-                        .collect(Collectors.toList());
+    public CurrentLimitsInfos toCurrentLimitsInfos() {
+        return CurrentLimitsInfos
+                .builder()
+                .permanentLimit(getPermanentLimit())
+                .temporaryLimits(CurrentTemporaryLimitCreationEmbeddable.fromEmbeddableCurrentTemporaryLimits(getTemporaryLimits()))
+                .build();
     }
 
-    public static List<CurrentLimitsEntity> toCurrentLimitsEntities(@NonNull List<CurrentLimitsInfos> limits) {
-        return limits.stream()
-                        .map(currentLimit ->
-                                new CurrentLimitsEntity(
-                                        null,
-                                        currentLimit.getPermanentLimit(),
-                                        currentLimit.getOperationalLimitGroupId(),
-                                        CurrentTemporaryLimitCreationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimit.getTemporaryLimits())
-                                )
-                        )
-                        .collect(Collectors.toList());
+    public CurrentLimitsEntity(CurrentLimitsInfos currentLimitsInfos) {
+        this(null, currentLimitsInfos.getPermanentLimit(), CurrentTemporaryLimitCreationEmbeddable.toEmbeddableCurrentTemporaryLimits(currentLimitsInfos.getTemporaryLimits()));
     }
 }
