@@ -245,8 +245,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(
-                deletedEquipments.stream().map(EquipmentInfosToDelete::id).toList(),
+        Set<String> existingEquipmentIds = equipmentInfosService.findEquipmentInfosList(
                 networkUuid,
                 variantId
         ).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
@@ -254,7 +253,7 @@ public class NetworkStoreListener implements NetworkListener {
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
         deletedEquipments.forEach(deletedEquipment -> {
-            if (presentEquipmentDeletionsIds.contains(deletedEquipment.id())) {
+            if (existingEquipmentIds.contains(deletedEquipment.id())) {
                 equipmentDeletionsIds.add(deletedEquipment.id());
             }
             // add only allowed equipments types to be indexed to tombstonedEquipmentInfos
