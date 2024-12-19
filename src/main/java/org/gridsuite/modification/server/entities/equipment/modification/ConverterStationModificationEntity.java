@@ -11,7 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.ConverterStationModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
@@ -19,6 +21,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 
 import java.util.List;
 
+import static org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable.toEmbeddablePoints;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 /**
@@ -92,16 +95,6 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
         this.reactiveCapabilityCurve = converterStationModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(converterStationModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(converterStationModificationInfos.getReactiveCapabilityCurvePoints());
 
-    }
-
-    public static List<ReactiveCapabilityCurveModificationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveModificationInfos> points) {
-        return points == null ? null
-                : points.stream()
-                .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
-                        point.getMaxQ(), point.getOldMaxQ(), point.getP(),
-                        point.getOldP()))
-                .toList();
     }
 
     @Override

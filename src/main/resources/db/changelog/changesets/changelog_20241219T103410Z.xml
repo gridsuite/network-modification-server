@@ -1,0 +1,30 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1734604466931-52">
+        <dropColumn columnName="OLDP" tableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-53">
+        <dropColumn columnName="OLDP" tableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-54">
+        <dropColumn columnName="OLDP" tableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-55">
+        <dropColumn columnName="OLD_MAXQ" tableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-56">
+        <dropColumn columnName="OLD_MAXQ" tableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-57">
+        <dropColumn columnName="OLD_MAXQ" tableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-58">
+        <dropColumn columnName="OLD_MINQ" tableName="BATTERY_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-59">
+        <dropColumn columnName="OLD_MINQ" tableName="CONVERTER_STATION_MODIFICATION_RCC_POINTS"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1734604466931-60">
+        <dropColumn columnName="OLD_MINQ" tableName="GENERATOR_MODIFICATION_ENTITY_REACTIVE_CAPABILITY_CURVE_POINTS"/>
+    </changeSet>
+</databaseChangeLog>

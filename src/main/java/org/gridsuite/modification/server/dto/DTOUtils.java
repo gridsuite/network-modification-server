@@ -6,7 +6,8 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveModificationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
+import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
 
@@ -19,12 +20,21 @@ public final class DTOUtils {
     private DTOUtils() {
     }
 
-    public static List<ReactiveCapabilityCurveModificationInfos> convertToReactiveCapabilityCurveModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
+    public static List<ReactiveCapabilityCurvePointsInfos> convertToReactiveCapabilityCurveCreationInfos(List<ReactiveCapabilityCurveCreationEmbeddable> rCCpoints) {
         return CollectionUtils.isEmpty(rCCpoints) ? null : rCCpoints
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
-                        value.getMaxQ(), value.getOldMaxQ(),
-                        value.getP(), value.getOldP()))
+                .map(value -> new ReactiveCapabilityCurvePointsInfos(value.getMinQ(),
+                        value.getMaxQ(),
+                        value.getP()))
+                .toList();
+    }
+
+    public static List<ReactiveCapabilityCurvePointsInfos> convertToReactiveCapabilityCurveModificationInfos(List<ReactiveCapabilityCurveModificationEmbeddable> rCCpoints) {
+        return CollectionUtils.isEmpty(rCCpoints) ? null : rCCpoints
+                .stream()
+                .map(value -> new ReactiveCapabilityCurvePointsInfos(value.getMinQ(),
+                        value.getMaxQ(),
+                        value.getP()))
                 .toList();
     }
 }

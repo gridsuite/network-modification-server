@@ -49,7 +49,7 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
-        <network-modification.version>0.2.0</network-modification.version>
+        <network-modification.version>0.3.0-SNAPSHOT</network-modification.version>
         <!-- FIXME : Remove when gridsuite-dependencies.version are updated to include gridsuite-filter
             version 1.0.16 or later -->
         <filter.version>1.0.16</filter.version>

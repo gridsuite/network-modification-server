@@ -6,19 +6,19 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.BatteryCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
-
-import jakarta.persistence.*;
+import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddablePoints;
 
 /**
  * @author Ghazwa Rehili <ghazwa.rehili at rte-france.com>
@@ -85,28 +85,12 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.droop = batteryCreationInfos.getDroop();
     }
 
-    public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveCreationInfos> points) {
-        return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
-                        point.getMaxQ(),
-                        point.getP()))
-                .collect(Collectors.toList());
-    }
-
     @Override
     public BatteryCreationInfos toModificationInfos() {
         return toBatteryCreationInfosBuilder().build();
     }
 
     private BatteryCreationInfos.BatteryCreationInfosBuilder<?, ?> toBatteryCreationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
-                .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
-                        value.getMaxQ(),
-                        value.getP()))
-                .collect(Collectors.toList()) : null;
-
         return BatteryCreationInfos
                 .builder()
                 .uuid(getId())
@@ -128,7 +112,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
                 .minQ(this.getMinQ())
                 .maxQ(this.getMaxQ())
-                .reactiveCapabilityCurvePoints(points)
+                .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveCreationInfos(getReactiveCapabilityCurvePoints()))
                 .targetP(getTargetP())
                 .targetQ(getTargetQ())
                 .participate(getParticipate())
