@@ -79,7 +79,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId("1.1")
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
-                .reactiveCapabilityCurvePoints(List.of())
+                .reactiveCapabilityCurvePoints(null)
                 .reactiveCapabilityCurve(false)
                 .build();
     }

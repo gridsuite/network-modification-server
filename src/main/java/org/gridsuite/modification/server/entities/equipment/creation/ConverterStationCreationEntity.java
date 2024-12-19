@@ -95,7 +95,7 @@ public class ConverterStationCreationEntity extends InjectionCreationEntity {
                 .reactivePowerSetpoint(getReactivePowerSetpoint())
                 .voltageRegulationOn(getVoltageRegulationOn())
                 .voltageSetpoint(getVoltageSetpoint())
-                .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveCreationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
                 .reactiveCapabilityCurve(getReactiveCapabilityCurve())
                 .build();
     }

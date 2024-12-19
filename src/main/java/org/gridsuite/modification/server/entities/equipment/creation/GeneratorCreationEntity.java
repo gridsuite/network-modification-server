@@ -179,7 +179,7 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
             .participate(getParticipate())
             .droop(getDroop())
             .maxQ(this.getMaxQ())
-            .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveCreationInfos(getReactiveCapabilityCurvePoints()))
+            .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
             .regulatingTerminalId(getRegulatingTerminalId())
             .regulatingTerminalType(getRegulatingTerminalType())
             .regulatingTerminalVlId(getRegulatingTerminalVlId())

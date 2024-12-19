@@ -112,7 +112,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .reactiveCapabilityCurve(this.getReactiveCapabilityCurve())
                 .minQ(this.getMinQ())
                 .maxQ(this.getMaxQ())
-                .reactiveCapabilityCurvePoints(DTOUtils.convertToReactiveCapabilityCurveCreationInfos(getReactiveCapabilityCurvePoints()))
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsCreationInfos(getReactiveCapabilityCurvePoints()))
                 .targetP(getTargetP())
                 .targetQ(getTargetQ())
                 .participate(getParticipate())
