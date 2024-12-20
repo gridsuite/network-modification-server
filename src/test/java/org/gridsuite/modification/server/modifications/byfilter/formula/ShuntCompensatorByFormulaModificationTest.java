@@ -98,10 +98,10 @@ class ShuntCompensatorByFormulaModificationTest extends AbstractByFormulaModific
                 ReferenceFieldOrValue.builder().equipmentField(ShuntCompensatorField.MAXIMUM_SECTION_COUNT.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.).build());
 
-        FormulaInfos formulaInfos3 = getFormulaInfo(ShuntCompensatorField.MAXIMUM_SUSCEPTANCE.name(),
+        FormulaInfos formulaInfos3 = getFormulaInfo(ShuntCompensatorField.MAX_SUSCEPTANCE.name(),
                 List.of(filter4),
                 Operator.ADDITION,
-                eferenceFieldOrValue.builder().equipmentField(ShuntCompensatorField.MAXIMUM_SUSCEPTANCE.name()).build(),
+                ReferenceFieldOrValue.builder().equipmentField(ShuntCompensatorField.MAX_SUSCEPTANCE.name()).build(),
                 ReferenceFieldOrValue.builder().value(5.).build());
 
         FormulaInfos formulaInfos4 = getFormulaInfo(ShuntCompensatorField.MAX_Q_AT_NOMINAL_V.name(),
