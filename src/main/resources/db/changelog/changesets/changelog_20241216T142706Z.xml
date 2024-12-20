@@ -5,10 +5,6 @@
             <column name="edited_field" value="MAX_Q_AT_NOMINAL_V"/>
             <where>edited_field='MAXIMUM_Q_AT_NOMINAL_VOLTAGE'</where>
         </update>
-        <update tableName="assignment">
-            <column name="edited_field" value="MAX_SUSCEPTANCE"/>
-            <where>edited_field='MAXIMUM_SUSCEPTANCE'</where>
-        </update>
     </changeSet>
     <changeSet author="phamquy (generated)" id="1734359257002-2">
         <update tableName="formula">
@@ -22,18 +18,6 @@
         <update tableName="formula">
             <column name="equipment_field2" value="MAX_Q_AT_NOMINAL_V"/>
             <where>equipment_field2='MAXIMUM_Q_AT_NOMINAL_VOLTAGE'</where>
-        </update>
-        <update tableName="formula">
-            <column name="edited_field" value="MAX_SUSCEPTANCE"/>
-            <where>edited_field='MAXIMUM_SUSCEPTANCE'</where>
-        </update>
-        <update tableName="formula">
-            <column name="equipment_field1" value="MAX_SUSCEPTANCE"/>
-            <where>equipment_field1='MAXIMUM_SUSCEPTANCE'</where>
-        </update>
-        <update tableName="formula">
-            <column name="equipment_field2" value="MAX_SUSCEPTANCE"/>
-            <where>equipment_field2='MAXIMUM_SUSCEPTANCE'</where>
         </update>
     </changeSet>
 </databaseChangeLog>

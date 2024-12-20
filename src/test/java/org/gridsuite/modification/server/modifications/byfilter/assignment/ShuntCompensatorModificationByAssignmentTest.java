@@ -94,7 +94,7 @@ class ShuntCompensatorModificationByAssignmentTest extends AbstractModificationB
                 .build();
 
         DoubleAssignmentInfos assignmentInfos3 = DoubleAssignmentInfos.builder()
-                .editedField(ShuntCompensatorField.MAX_SUSCEPTANCE.name())
+                .editedField(ShuntCompensatorField.MAXIMUM_SUSCEPTANCE.name())
                 .value(5.)
                 .filters(List.of(filter4))
                 .build();
