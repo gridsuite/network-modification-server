@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
@@ -99,8 +99,9 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     private Boolean reactiveCapabilityCurve;
 
     @ElementCollection
-    @CollectionTable
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    @CollectionTable(name = "generator_rcc_points",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "reactiveCapabilityCurvePoints_fk_constraint")))
+    private List<ReactiveCapabilityCurveEmbeddable> reactiveCapabilityCurvePoints;
 
     public GeneratorCreationEntity(@NonNull GeneratorCreationInfos generatorCreationInfos) {
         super(generatorCreationInfos);
@@ -140,10 +141,10 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
         this.reactiveCapabilityCurve = generatorCreationInfos.getReactiveCapabilityCurve();
     }
 
-    public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveCreationInfos> points) {
+    public static List<ReactiveCapabilityCurveEmbeddable> toEmbeddablePoints(
+            List<ReactiveCapabilityCurvePointsInfos> points) {
         return points == null ? null : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(),
+                .map(point -> new ReactiveCapabilityCurveEmbeddable(point.getMinQ(),
                         point.getMaxQ(),
                         point.getP()))
                 .collect(Collectors.toList());
@@ -155,9 +156,9 @@ public class GeneratorCreationEntity extends InjectionCreationEntity {
     }
 
     private GeneratorCreationInfos.GeneratorCreationInfosBuilder<?, ?> toGeneratorCreationInfosBuilder() {
-        List<ReactiveCapabilityCurveCreationInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
+        List<ReactiveCapabilityCurvePointsInfos> points = getReactiveCapabilityCurvePoints() != null ? getReactiveCapabilityCurvePoints()
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(),
+                .map(value -> new ReactiveCapabilityCurvePointsInfos(value.getMinQ(),
                         value.getMaxQ(),
                         value.getP()))
                 .collect(Collectors.toList()) : null;

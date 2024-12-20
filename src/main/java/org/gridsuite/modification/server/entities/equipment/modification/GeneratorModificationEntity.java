@@ -15,14 +15,14 @@ import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.GeneratorModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageRegulationType;
-import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
-import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddableReactiveCapabilityCurve;
-import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toReactiveCapabilityCurveCreationInfos;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable.toEmbeddableReactiveCapabilityCurve;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable.toReactiveCapabilityCurveCreationInfos;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 
@@ -204,8 +204,9 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
     private BooleanModificationEmbedded reactiveCapabilityCurve;
 
     @ElementCollection
-    @CollectionTable
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    @CollectionTable(name = "generator_rcc_points",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "reactiveCapabilityCurvePoints_fk_constraint")))
+    private List<ReactiveCapabilityCurveEmbeddable> reactiveCapabilityCurvePoints;
 
     public GeneratorModificationEntity(@NonNull GeneratorModificationInfos generatorModificationInfos) {
         super(generatorModificationInfos);

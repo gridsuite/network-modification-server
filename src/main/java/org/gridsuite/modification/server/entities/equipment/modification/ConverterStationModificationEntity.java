@@ -14,15 +14,15 @@ import lombok.NonNull;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.ConverterStationModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
 
-import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toEmbeddableReactiveCapabilityCurve;
-import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable.toReactiveCapabilityCurveCreationInfos;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable.toEmbeddableReactiveCapabilityCurve;
+import static org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveEmbeddable.toReactiveCapabilityCurveCreationInfos;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 /**
@@ -67,8 +67,9 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
     private DoubleModificationEmbedded voltageSetpoint;
 
     @ElementCollection
-    @CollectionTable(name = "converter_station_modification_rcc_points")
-    private List<ReactiveCapabilityCurveCreationEmbeddable> reactiveCapabilityCurvePoints;
+    @CollectionTable(name = "converter_station_rcc_points",
+            joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "reactiveCapabilityCurvePoints_fk_constraint")))
+    private List<ReactiveCapabilityCurveEmbeddable> reactiveCapabilityCurvePoints;
 
     @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "reactiveCapabilityCurve")), @AttributeOverride(name = "opType", column = @Column(name = "reactiveCapabilityCurveOp"))

@@ -12,7 +12,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ReactiveCapabilityCurveCreationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Embeddable
-public class ReactiveCapabilityCurveCreationEmbeddable {
+public class ReactiveCapabilityCurveEmbeddable {
     @Column
     private Double minQ;
 
@@ -35,17 +35,17 @@ public class ReactiveCapabilityCurveCreationEmbeddable {
     @Column
     private Double p;
 
-    public static List<ReactiveCapabilityCurveCreationEmbeddable> toEmbeddableReactiveCapabilityCurve(List<ReactiveCapabilityCurveCreationInfos> points) {
+    public static List<ReactiveCapabilityCurveEmbeddable> toEmbeddableReactiveCapabilityCurve(List<ReactiveCapabilityCurvePointsInfos> points) {
         return points == null ? null
                 : points.stream()
-                .map(point -> new ReactiveCapabilityCurveCreationEmbeddable(point.getMinQ(), point.getMaxQ(), point.getP()))
+                .map(point -> new ReactiveCapabilityCurveEmbeddable(point.getMinQ(), point.getMaxQ(), point.getP()))
                 .toList();
     }
 
-    public static List<ReactiveCapabilityCurveCreationInfos> toReactiveCapabilityCurveCreationInfos(List<ReactiveCapabilityCurveCreationEmbeddable> points) {
+    public static List<ReactiveCapabilityCurvePointsInfos> toReactiveCapabilityCurveCreationInfos(List<ReactiveCapabilityCurveEmbeddable> points) {
         return CollectionUtils.isEmpty(points) ? null : points
                 .stream()
-                .map(value -> new ReactiveCapabilityCurveCreationInfos(value.getMinQ(), value.getMaxQ(), value.getP()))
+                .map(value -> new ReactiveCapabilityCurvePointsInfos(value.getMinQ(), value.getMaxQ(), value.getP()))
                 .toList();
     }
 }

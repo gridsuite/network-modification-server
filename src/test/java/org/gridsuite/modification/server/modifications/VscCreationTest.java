@@ -85,12 +85,12 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     private static ConverterStationCreationInfos buildConverterStationWithReactiveCapabilityCurve() {
-        var point1 = ReactiveCapabilityCurveCreationInfos.builder()
+        var point1 = ReactiveCapabilityCurvePointsInfos.builder()
                 .p(0.4)
                 .maxQ(3.)
                 .minQ(0.)
                 .build();
-        var point2 = ReactiveCapabilityCurveCreationInfos.builder()
+        var point2 = ReactiveCapabilityCurvePointsInfos.builder()
                 .p(0.6)
                 .maxQ(2.)
                 .minQ(1.1)
