@@ -139,6 +139,34 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, new ReportInfos(reportUuid, UUID.fromString(reporterId)), modificationInfos));
     }
 
+    /**
+     * Temporary endpoint linked to root network implementation
+     * This endpoint creates a modification without applying it, and returning its UUID in order to apply it later
+     */
+    @PostMapping(value = "/network-modifications", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a network modification")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The network modification was created"),
+        @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
+    public ResponseEntity<Optional<UUID>> createNetworkModificationWithoutApplying(
+        @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
+        @RequestBody ModificationInfos modificationInfos) {
+        modificationInfos.check();
+        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(groupUuid, modificationInfos));
+    }
+
+    /**
+     * Temporary endpoint linked to root network implementation
+     * This endpoint applied a list of modifications to multiple network variants, then return ordered impacts on those networks variants
+     */
+    @PostMapping(value = "/network-modifications/apply", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Apply a list of modifications to a list of network contexts")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})
+    public ResponseEntity<List<Optional<NetworkModificationResult>>> applyNetworkModification(
+        @RequestBody MultipleNetworkModificationsInfos multipleNetworkModificationsInfos) {
+        return ResponseEntity.ok().body(networkModificationService.applyNetworkModifications(multipleNetworkModificationsInfos));
+    }
+
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})

@@ -158,6 +158,27 @@ public class NetworkModificationService {
             Optional.empty();
     }
 
+    /**
+     * Temporary method linked to root network implementation
+     */
+    public Optional<UUID> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfos) {
+        return networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfos)).stream().map(ModificationEntity::getId).findFirst();
+    }
+
+    /**
+     * Temporary method linked to root network implementation
+     */
+    public List<Optional<NetworkModificationResult>> applyNetworkModifications(MultipleNetworkModificationsInfos multipleNetworkModificationsInfos) {
+        List<ModificationInfos> modificationsToApply = networkModificationRepository.getModificationsInfos(multipleNetworkModificationsInfos.modificationsUuid());
+        return multipleNetworkModificationsInfos.networkModificationContextInfos().stream().map(networkModificationContextInfos ->
+            applyModifications(networkModificationContextInfos.networkUuid(),
+                networkModificationContextInfos.variantId(),
+                new ReportInfos(networkModificationContextInfos.reportUuid(),
+                    networkModificationContextInfos.nodeUuid()),
+                modificationsToApply)
+        ).toList();
+    }
+
     public Network cloneNetworkVariant(UUID networkUuid,
                                        String originVariantId,
                                        String destinationVariantId,
