@@ -14,8 +14,6 @@ import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-
-import jakarta.annotation.PreDestroy;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,6 +28,7 @@ import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.NetworkModificationExecutionService;
 import org.gridsuite.modification.server.service.NetworkModificationObserver;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
@@ -39,9 +38,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -58,7 +54,7 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    private final ExecutorService applicationExecutor;
+    private final NetworkModificationExecutionService modificationExecutionService;
 
     private final NetworkModificationObserver networkModificationObserver;
 
@@ -68,18 +64,18 @@ public class NetworkModificationApplicator {
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService,
-                                         @Value("${max-large-concurrent-applications}") int maxConcurrentApplications,
-                                         NetworkModificationObserver networkModificationObserver) {
+                                         NetworkModificationObserver networkModificationObserver,
+                                         NetworkModificationExecutionService modificationExecutionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
-        this.applicationExecutor = Executors.newFixedThreadPool(maxConcurrentApplications);
         this.networkModificationObserver = networkModificationObserver;
+        this.modificationExecutionService = modificationExecutionService;
 
     }
 
-    /* This method is used when creating, inserting, moving or duplicating modifications
+    /* This method is used for incremental modifications
      * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is large
      * (for example for VOLTAGE_INIT_MODIFICATION),
      * we limit the number of concurrent applications of these modifications to avoid out of memory issues.
@@ -97,15 +93,16 @@ public class NetworkModificationApplicator {
             .map(ModificationType::getStrategy)
             .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosList, networkInfos, reportInfos), applicationExecutor);
-            return future.join();
+            return modificationExecutionService
+                .supplyAsync(() -> apply(modificationInfosList, networkInfos, reportInfos))
+                .join();
         } else {
-            return processApplication(modificationInfosList, networkInfos, reportInfos);
+            return apply(modificationInfosList, networkInfos, reportInfos);
         }
     }
 
-    // used for creating, inserting, moving or duplicating modifications
-    private NetworkModificationResult processApplication(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
+    // This method is used for incremental modifications
+    private NetworkModificationResult apply(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos);
         List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
@@ -134,15 +131,16 @@ public class NetworkModificationApplicator {
                 .map(ModificationType::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> processApplication(modificationInfosGroups, networkInfos), applicationExecutor);
-            return future.join();
+            return modificationExecutionService
+                .supplyAsync(() -> apply(modificationInfosGroups, networkInfos))
+                .join();
         } else {
-            return processApplication(modificationInfosGroups, networkInfos);
+            return apply(modificationInfosGroups, networkInfos);
         }
     }
 
-    // used for building a variant
-    private NetworkModificationResult processApplication(List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos) {
+    // This method is used when building a variant
+    private NetworkModificationResult apply(List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, collectionThreshold);
         List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
@@ -232,10 +230,5 @@ public class NetworkModificationApplicator {
         } else {
             throw new IllegalArgumentException(String.format("Report severity '%s' unknown !", severity.getValue()));
         }
-    }
-
-    @PreDestroy
-    public void shutdown() {
-        applicationExecutor.shutdown();
     }
 }
