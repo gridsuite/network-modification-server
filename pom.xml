@@ -49,7 +49,13 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
-        <network-modification.version>0.2.0</network-modification.version>
+        <network-modification.version>0.4.0</network-modification.version>
+        <!-- FIXME : Remove when gridsuite-dependencies.version are updated to include gridsuite-filter
+            version 1.0.16 or later -->
+        <filter.version>1.0.16</filter.version>
+
+        <!-- FIXME: powsybl-ws-commons module's version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-commons.version upgrade -->
+        <powsybl-ws-commons.version>1.18.0</powsybl-ws-commons.version>
     </properties>
 
     <build>
@@ -92,6 +98,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- FIXME : Remove this dependency when gridsuite-dependencies.version are updated to include gridsuite-filter
+             version ${filter.version} below or later -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-filter</artifactId>
+                <version>${filter.version}</version>
+            </dependency>
 
             <!-- imports -->
             <dependency>
@@ -133,6 +146,8 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
