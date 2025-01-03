@@ -168,6 +168,36 @@ public class NetworkModificationService {
     /**
      * Temporary method linked to root network implementation
      */
+    @Transactional
+    public List<UUID> duplicateModifications(UUID targetGroupUuid,
+                                                List<UUID> modificationsUuids) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
+        return networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::getId).toList();
+    }
+
+    /**
+     * Temporary method linked to root network implementation
+     */
+    @Transactional
+    public List<UUID> insertCompositeModifications(UUID targetGroupUuid,
+                                                    List<UUID> modificationsUuids) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
+        return networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::getId).toList();
+    }
+
+    /**
+     * Temporary method linked to root network implementation
+     */
+    @Transactional
+    public List<UUID> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid,
+                                                                 UUID beforeModificationUuid, List<UUID> modificationsToMove) {
+        // update origin/destinations groups to cut and paste all modificationsToMove
+        return networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid).stream().map(ModificationEntity::getId).toList();
+    }
+
+    /**
+     * Temporary method linked to root network implementation
+     */
     public List<Optional<NetworkModificationResult>> applyNetworkModifications(MultipleNetworkModificationsInfos multipleNetworkModificationsInfos) {
         List<ModificationInfos> modificationsToApply = networkModificationRepository.getModificationsInfos(multipleNetworkModificationsInfos.modificationsUuid());
         return multipleNetworkModificationsInfos.networkModificationContextInfos().stream().map(networkModificationContextInfos ->
