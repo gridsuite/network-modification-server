@@ -175,8 +175,8 @@
             <artifactId>spring-cloud-stream</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <!-- elasticsearch -->
@@ -190,11 +190,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-classic</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>

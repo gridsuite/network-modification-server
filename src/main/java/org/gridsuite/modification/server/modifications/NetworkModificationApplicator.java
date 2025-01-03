@@ -28,7 +28,7 @@ import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
-import org.gridsuite.modification.server.service.NetworkModificationExecutionService;
+import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
 import org.gridsuite.modification.server.service.NetworkModificationObserver;
 import org.gridsuite.modification.server.service.ReportService;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    private final NetworkModificationExecutionService modificationExecutionService;
+    private final LargeNetworkModificationExecutionService modificationExecutionService;
 
     private final NetworkModificationObserver networkModificationObserver;
 
@@ -65,7 +65,7 @@ public class NetworkModificationApplicator {
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService,
                                          NetworkModificationObserver networkModificationObserver,
-                                         NetworkModificationExecutionService modificationExecutionService) {
+                                         LargeNetworkModificationExecutionService modificationExecutionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;

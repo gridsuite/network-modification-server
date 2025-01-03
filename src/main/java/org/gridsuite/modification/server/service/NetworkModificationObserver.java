@@ -1,15 +1,13 @@
 package org.gridsuite.modification.server.service;
 
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.MultiGauge;
-import io.micrometer.core.instrument.Tags;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
 import org.gridsuite.modification.ModificationType;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
@@ -20,7 +18,7 @@ public class NetworkModificationObserver {
     private static final String TASK_TYPE_TAG_NAME = "type";
     private static final String TASK_TYPE_TAG_VALUE_CURRENT = "current";
     private static final String TASK_TYPE_TAG_VALUE_PENDING = "pending";
-    private static final String TASK_POOL_METER_NAME = OBSERVATION_PREFIX + "tasks.pool";
+    private static final String TASK_POOL_METER_NAME_PREFIX = OBSERVATION_PREFIX + "tasks.pool.";
 
     private final ObservationRegistry observationRegistry;
     private final MeterRegistry meterRegistry;
@@ -40,10 +38,13 @@ public class NetworkModificationObserver {
     }
 
     public void createThreadPoolMetric(ThreadPoolExecutor threadPoolExecutor) {
-        MultiGauge multiGauge = MultiGauge.builder(TASK_POOL_METER_NAME).description("The number of large network modifications (tasks) in the thread pool").register(meterRegistry);
-        multiGauge.register(List.of(
-            MultiGauge.Row.of(Tags.of(TASK_TYPE_TAG_NAME, TASK_TYPE_TAG_VALUE_CURRENT), threadPoolExecutor::getActiveCount),
-            MultiGauge.Row.of(Tags.of(TASK_TYPE_TAG_NAME, TASK_TYPE_TAG_VALUE_PENDING), () -> threadPoolExecutor.getQueue().size())
-        ));
+        Gauge.builder(TASK_POOL_METER_NAME_PREFIX + TASK_TYPE_TAG_VALUE_CURRENT, threadPoolExecutor, ThreadPoolExecutor::getActiveCount)
+            .description("The number of active diagram generation tasks in the thread pool")
+            .tag(TASK_TYPE_TAG_NAME, TASK_TYPE_TAG_VALUE_CURRENT)
+            .register(meterRegistry);
+        Gauge.builder(TASK_POOL_METER_NAME_PREFIX + TASK_TYPE_TAG_VALUE_PENDING, threadPoolExecutor, executor -> executor.getQueue().size())
+            .description("The number of pending diagram generation tasks in the thread pool")
+            .tag(TASK_TYPE_TAG_NAME, TASK_TYPE_TAG_VALUE_PENDING)
+            .register(meterRegistry);
     }
 }

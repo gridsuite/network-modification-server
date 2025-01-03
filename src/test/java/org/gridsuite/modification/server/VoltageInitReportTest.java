@@ -29,7 +29,7 @@ import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
-import org.gridsuite.modification.server.service.NetworkModificationExecutionService;
+import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
 import org.gridsuite.modification.server.service.NetworkModificationObserver;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.jupiter.api.DisplayName;
@@ -70,7 +70,7 @@ class VoltageInitReportTest {
             (restClient_, preloadingStrategy, executorService) -> new CachedNetworkStoreClient(new OfflineNetworkStoreClient()));
         final EquipmentInfosService equipmentInfosService = Mockito.mock(EquipmentInfosService.class);
         final NetworkModificationObserver networkModificationObserver = new NetworkModificationObserver(ObservationRegistry.NOOP, new SimpleMeterRegistry());
-        final NetworkModificationExecutionService modificationExecutionService = new NetworkModificationExecutionService(2, networkModificationObserver);
+        final LargeNetworkModificationExecutionService modificationExecutionService = new LargeNetworkModificationExecutionService(2, networkModificationObserver);
         final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
         networkModificationApplicator.setCollectionThreshold(5);
 

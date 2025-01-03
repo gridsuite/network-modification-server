@@ -21,12 +21,12 @@ import java.util.function.Supplier;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @Service
-public class NetworkModificationExecutionService {
+public class LargeNetworkModificationExecutionService {
 
     private ThreadPoolExecutor executorService;
 
-    public NetworkModificationExecutionService(@Value("${max-large-concurrent-applications}") int maxConcurrentLargeModifications,
-                                               @NonNull NetworkModificationObserver networkModificationObserver) {
+    public LargeNetworkModificationExecutionService(@Value("${max-large-concurrent-applications}") int maxConcurrentLargeModifications,
+                                                    @NonNull NetworkModificationObserver networkModificationObserver) {
         executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxConcurrentLargeModifications);
         networkModificationObserver.createThreadPoolMetric(executorService);
     }
