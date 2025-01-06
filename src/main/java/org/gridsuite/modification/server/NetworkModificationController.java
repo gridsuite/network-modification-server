@@ -143,13 +143,13 @@ public class NetworkModificationController {
      * Temporary endpoint linked to root network implementation
      * This endpoint creates a modification without applying it, and returning its UUID in order to apply it later
      */
-    @PostMapping(value = "/network-modifications", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/network-modifications", params = "groupUuid", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a network modification")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
     public ResponseEntity<Optional<UUID>> createNetworkModificationWithoutApplying(
-        @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid", required = false) UUID groupUuid,
+        @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
         @RequestBody ModificationInfos modificationInfos) {
         modificationInfos.check();
         return ResponseEntity.ok().body(networkModificationService.createNetworkModification(groupUuid, modificationInfos));
@@ -165,18 +165,18 @@ public class NetworkModificationController {
     public ResponseEntity<List<UUID>> handleNetworkModificationsWithoutApplying(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
                                                                                           @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                                                           @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
-                                                                                          @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,                                                                                 @RequestBody List<UUID> modificationsUuidList) {
-        switch (action) {
-            case COPY:
-                return ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, modificationsUuidList));
-            case INSERT:
-                return ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationsUuidList));
-            case MOVE:
+                                                                                          @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+                                                                                          @RequestBody List<UUID> modificationsUuidList) {
+        return switch (action) {
+            case COPY ->
+                ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, modificationsUuidList));
+            case INSERT ->
+                ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationsUuidList));
+            case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
-                return ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationsUuidList));
-            default:
-                throw new NetworkModificationException(TYPE_MISMATCH);
-        }
+                yield ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationsUuidList));
+            }
+        };
     }
 
     /**
