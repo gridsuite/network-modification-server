@@ -54,8 +54,8 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .droop(5f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
-                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(2.0, 3.0, 3.1),
-                        new ReactiveCapabilityCurveCreationInfos(5.6, 9.8, 10.8)))
+                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(2.0, 3.0, 3.1),
+                        new ReactiveCapabilityCurvePointsInfos(5.6, 9.8, 10.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
@@ -79,8 +79,8 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .droop(6f)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
-                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurveCreationInfos(1.0, 2.0, 2.1),
-                        new ReactiveCapabilityCurveCreationInfos(6.6, 8.8, 11.8)))
+                .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(1.0, 2.0, 2.1),
+                        new ReactiveCapabilityCurvePointsInfos(6.6, 8.8, 11.8)))
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .build();

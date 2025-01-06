@@ -68,8 +68,8 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .minQ(new AttributeModification<>(-100., OperationType.SET))
                 .maxQ(new AttributeModification<>(100., OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 0., 0.1),
-                        new ReactiveCapabilityCurveModificationInfos(0., 0., 100., 100., 200., 150.)))
+                        new ReactiveCapabilityCurvePointsInfos(100., 100., 0.1),
+                        new ReactiveCapabilityCurvePointsInfos(100., 100., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
                 .directTransX(new AttributeModification<>(0.1, OperationType.SET))
@@ -375,14 +375,14 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .add();
         Collection<ReactiveCapabilityCurve.Point> points = generator.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
         List<ReactiveCapabilityCurve.Point> generatorPoints = new ArrayList<>(points);
-        List<ReactiveCapabilityCurveModificationInfos> modificationPoints = generatorModificationInfos.getReactiveCapabilityCurvePoints();
+        List<ReactiveCapabilityCurvePointsInfos> modificationPoints = generatorModificationInfos.getReactiveCapabilityCurvePoints();
         AtomicReference<Double> maxQ = new AtomicReference<>(Double.NaN);
         AtomicReference<Double> minQ = new AtomicReference<>(Double.NaN);
         if (!CollectionUtils.isEmpty(points)) {
             IntStream.range(0, modificationPoints.size())
                     .forEach(i -> {
                         ReactiveCapabilityCurve.Point oldPoint = generatorPoints.get(i);
-                        ReactiveCapabilityCurveModificationInfos newPoint = modificationPoints.get(i);
+                        ReactiveCapabilityCurvePointsInfos newPoint = modificationPoints.get(i);
                         Double oldMaxQ = Double.NaN;
                         Double oldMinQ = Double.NaN;
                         if (oldPoint != null) {
@@ -390,7 +390,6 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                             oldMinQ = oldPoint.getMinQ();
                         }
                         newPoint.setMinQ(300.0);
-                        newPoint.setOldMaxQ(250.0);
                         maxQ.set(newPoint.getMaxQ() != null ? newPoint.getMaxQ() : oldMaxQ);
                         minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
