@@ -107,8 +107,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();
         connectionName2 = branchCreationInfos.getConnectionName2();
-        selectedOperationalLimitsGroupId1 = branchCreationInfos.getSelectedOperationalLimitsGroupId1();
-        selectedOperationalLimitsGroupId2 = branchCreationInfos.getSelectedOperationalLimitsGroupId2();
+        selectedOperationalLimitsGroupId1 = branchCreationInfos.getSelectedOperationalLimitsGroup1();
+        selectedOperationalLimitsGroupId2 = branchCreationInfos.getSelectedOperationalLimitsGroup2();
         connectionPosition1 = branchCreationInfos.getConnectionPosition1();
         connectionPosition2 = branchCreationInfos.getConnectionPosition2();
         connected1 = branchCreationInfos.isConnected1();

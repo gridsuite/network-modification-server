@@ -13,6 +13,7 @@ import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "operationalLimitsGroup")
+@Table(name = "operational_limits_group")
 public class OperationalLimitsGroupEntity {
 
     @Id
@@ -32,7 +33,7 @@ public class OperationalLimitsGroupEntity {
     @Column(name = "uuid")
     private UUID uuid;
 
-    @Schema(description = "Operational limit group id")
+    @Column(name=  "id")
     private String id;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -45,6 +46,7 @@ public class OperationalLimitsGroupEntity {
 
     public static List<OperationalLimitsGroupEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupInfos> limitsGroups) {
         return limitsGroups.stream()
+                .filter(Objects::nonNull)
                 .map(limitsGroup ->
                         new OperationalLimitsGroupEntity(
                                 null,
