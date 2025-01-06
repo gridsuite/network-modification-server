@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @DisableElasticsearch
-public class ModificationControllerUnitTest {
+class ModificationControllerUnitTest {
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_GROUP_MODIF_BASE = "/v1/groups";
 
@@ -95,7 +95,7 @@ public class ModificationControllerUnitTest {
         assertEquals("v1b1", modificationEntity.getEquipmentId());
         assertEquals(result, modificationEntity.getId());
 
-        // since we're not applying the applying the modification, no network should have been loaded
+        // since we're not applying the modification, no network should have been loaded
         Mockito.verify(networkStoreService, never()).getNetwork(any(), any());
     }
 
@@ -166,7 +166,7 @@ public class ModificationControllerUnitTest {
         // check origin group modifications are still here
         assertEquals(3, modificationRepository.findAllByGroupId(originGroupUuid, false).size());
 
-        // since we're not applying the applying the modification, no network should have been loaded
+        // since we're not applying the modification, no network should have been loaded
         Mockito.verify(networkStoreService, never()).getNetwork(any(), any());
     }
 
@@ -196,7 +196,7 @@ public class ModificationControllerUnitTest {
         // check origin group modifications are not here anymore
         assertEquals(0, modificationRepository.findAllByGroupId(originGroupUuid, false).size());
 
-        // since we're not applying the applying the modification, no network should have been loaded
+        // since we're not applying the modification, no network should have been loaded
         Mockito.verify(networkStoreService, never()).getNetwork(any(), any());
     }
 
@@ -225,7 +225,7 @@ public class ModificationControllerUnitTest {
         assertThat(result).usingRecursiveComparison().isEqualTo(expectedResult);
         assertEquals(1, expectedResult.size());
 
-        // since we're not applying the applying the modification, no network should have been loaded
+        // since we're not the modification, no network should have been loaded
         Mockito.verify(networkStoreService, never()).getNetwork(any(), any());
     }
 
