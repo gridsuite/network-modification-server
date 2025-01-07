@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
  * @author Mathieu Deharbe <mathieu.deharbe_externe at rte-france.com>
  */
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -33,7 +31,7 @@ public class OperationalLimitsGroupEntity {
     @Column(name = "uuid")
     private UUID uuid;
 
-    @Column(name=  "id")
+    @Column(name = "id")
     private String id;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -41,7 +39,7 @@ public class OperationalLimitsGroupEntity {
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
                     name = "current_limits_id_fk"
-            ), nullable = true)
+            ))
     private CurrentLimitsEntity currentLimits;
 
     public static List<OperationalLimitsGroupEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupInfos> limitsGroups) {
@@ -54,7 +52,7 @@ public class OperationalLimitsGroupEntity {
                                 new CurrentLimitsEntity(limitsGroup.getCurrentLimits())
                         )
                 )
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static List<OperationalLimitsGroupInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupEntity> limitsGroupsEntities) {

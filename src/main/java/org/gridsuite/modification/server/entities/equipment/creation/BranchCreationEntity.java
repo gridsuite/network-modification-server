@@ -116,8 +116,8 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     }
 
     /**
-     * the point of this function is to never dereference operationalLimitsGroups if it already exists,
-     * in order for Hibernate not to lose this reference when doing some cascade cleaning or whatever
+     * the point of this function is to avoid dereferencing operationalLimitsGroups if it already exists,
+     * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
     private List<OperationalLimitsGroupEntity> assignOperationalLimitsGroups(
             List<OperationalLimitsGroupInfos> operationalLimitsGroupInfos,
