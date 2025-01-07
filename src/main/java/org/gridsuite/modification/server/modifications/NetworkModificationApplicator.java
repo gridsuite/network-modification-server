@@ -54,7 +54,7 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
-    private final LargeNetworkModificationExecutionService modificationExecutionService;
+    private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     private final NetworkModificationObserver networkModificationObserver;
 
@@ -65,13 +65,13 @@ public class NetworkModificationApplicator {
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ReportService reportService, FilterService filterService,
                                          NetworkModificationObserver networkModificationObserver,
-                                         LargeNetworkModificationExecutionService modificationExecutionService) {
+                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
         this.networkModificationObserver = networkModificationObserver;
-        this.modificationExecutionService = modificationExecutionService;
+        this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
 
     }
 
@@ -93,7 +93,7 @@ public class NetworkModificationApplicator {
             .map(ModificationType::getStrategy)
             .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            return modificationExecutionService
+            return largeNetworkModificationExecutionService
                 .supplyAsync(() -> apply(modificationInfosList, networkInfos, reportInfos))
                 .join();
         } else {
@@ -131,7 +131,7 @@ public class NetworkModificationApplicator {
                 .map(ModificationType::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            return modificationExecutionService
+            return largeNetworkModificationExecutionService
                 .supplyAsync(() -> apply(modificationInfosGroups, networkInfos))
                 .join();
         } else {

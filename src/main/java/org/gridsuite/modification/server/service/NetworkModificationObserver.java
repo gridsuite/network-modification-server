@@ -39,11 +39,11 @@ public class NetworkModificationObserver {
 
     public void createThreadPoolMetric(ThreadPoolExecutor threadPoolExecutor) {
         Gauge.builder(TASK_POOL_METER_NAME_PREFIX + TASK_TYPE_TAG_VALUE_CURRENT, threadPoolExecutor, ThreadPoolExecutor::getActiveCount)
-            .description("The number of active diagram generation tasks in the thread pool")
+            .description("The number of active large network modification tasks in the thread pool")
             .tag(TASK_TYPE_TAG_NAME, TASK_TYPE_TAG_VALUE_CURRENT)
             .register(meterRegistry);
         Gauge.builder(TASK_POOL_METER_NAME_PREFIX + TASK_TYPE_TAG_VALUE_PENDING, threadPoolExecutor, executor -> executor.getQueue().size())
-            .description("The number of pending diagram generation tasks in the thread pool")
+            .description("The number of pending large network modification tasks in the thread pool")
             .tag(TASK_TYPE_TAG_NAME, TASK_TYPE_TAG_VALUE_PENDING)
             .register(meterRegistry);
     }
