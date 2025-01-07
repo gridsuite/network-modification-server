@@ -318,8 +318,7 @@ public class NetworkModificationService {
         }
     }
 
-    @VisibleForTesting
-    public Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId,
+    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId,
                                                                    ReportInfos reportInfos, List<ModificationInfos> modificationInfos) {
         if (!modificationInfos.isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationInfos.stream()

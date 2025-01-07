@@ -4,21 +4,25 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.VariantManager;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.MultipleNetworkModificationsInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationContextInfos;
-import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
-import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,15 +33,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,11 +64,23 @@ class ModificationControllerUnitTest {
     @SpyBean
     private NetworkModificationRepository networkModificationRepository;
 
-    @SpyBean
-    private NetworkModificationService networkModificationService;
-
     @Captor
     ArgumentCaptor<List<ModificationInfos>> modificationInfosCaptor;
+
+    @Captor
+    ArgumentCaptor<NetworkInfos> networkInfoCaptor;
+
+    @Captor
+    ArgumentCaptor<ReportInfos> reportInfosCaptor;
+
+    @SpyBean
+    private NetworkModificationApplicator networkModificationApplicator;
+
+    @Mock
+    private Network network;
+
+    @Mock
+    private VariantManager variantManager;
 
     @Test
     void testCreateModificationWithoutApplying() throws Exception {
@@ -115,29 +128,36 @@ class ModificationControllerUnitTest {
             List.of(networkContext1, networkContext2)
         );
 
-        Mockito.doReturn(Optional.empty()).when(networkModificationService).applyModifications(any(),
-            any(),
-            any(),
-            any()
-        );
+        Mockito.doReturn(NetworkModificationResult.builder().applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK).build())
+            .when(networkModificationApplicator).applyModifications(any(), any(), any());
+
+        when(networkStoreService.getNetwork(any(UUID.class), any(PreloadingStrategy.class))).thenReturn(network);
+        when(network.getVariantManager()).thenReturn(variantManager);
+        when(variantManager.getVariantIds()).thenReturn(List.of(networkContext1.variantId(), networkContext2.variantId()));
 
         mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "/apply")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(multipleNetworkModificationsInfos)))
             .andExpect(status().isOk());
 
-        // check switchStatusModificationInfos and loadCreationInfos has been apply on both of those network contexts
-        ArgumentCaptor<ReportInfos> reportInfosArgumentCaptor = ArgumentCaptor.forClass(ReportInfos.class);
+        //  there should be as many "applyModifications" calls as the number of network contexts
+        Mockito.verify(networkModificationApplicator, times(multipleNetworkModificationsInfos.networkModificationContextInfos().size()))
+            .applyModifications(modificationInfosCaptor.capture(), networkInfoCaptor.capture(), reportInfosCaptor.capture());
+
+        // for each network context
         multipleNetworkModificationsInfos.networkModificationContextInfos().forEach(networkContext -> {
-                Mockito.verify(networkModificationService, times(1))
-                    .applyModifications(eq(networkContext.networkUuid()), eq(networkContext.variantId()), reportInfosArgumentCaptor.capture(), modificationInfosCaptor.capture());
+            // check "applyModifications" report infos match networkContext one
+            assertTrue(reportInfosCaptor.getAllValues().stream().anyMatch(reportInfos ->
+                reportInfos.getReportUuid().equals(networkContext.reportUuid()) && reportInfos.getNodeUuid().equals(networkContext.nodeUuid())
+            ));
 
-                assertEquals(networkContext.reportUuid(), reportInfosArgumentCaptor.getValue().getReportUuid());
-                assertEquals(networkContext.nodeUuid(), reportInfosArgumentCaptor.getValue().getNodeUuid());
+            // check "applyModifications" network infos match networkContext one
+            assertTrue(networkInfoCaptor.getAllValues().stream().anyMatch(networkInfo -> networkInfo.getNetworkUuuid().equals(networkContext.networkUuid())));
+        });
 
-                assertEquals(modificationEntities.get(0).getId(), modificationInfosCaptor.getValue().get(0).getUuid());
-                assertEquals(modificationEntities.get(2).getId(), modificationInfosCaptor.getValue().get(1).getUuid());
-            }
+        // check "applyModifications" modification uuids match multipleNetworkModificationsInfos one
+        modificationInfosCaptor.getAllValues().forEach(modificationInfos ->
+            assertThat(multipleNetworkModificationsInfos.modificationsUuid()).usingRecursiveComparison().isEqualTo(List.of(modificationEntities.get(0).getId(), modificationEntities.get(2).getId()))
         );
     }
 
