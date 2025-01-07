@@ -14,6 +14,7 @@ import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkInfos;
@@ -84,6 +85,25 @@ class NetworkModificationApplicatorTest {
         when(largeNetworkModificationExecutionService.supplyAsync(any())).thenReturn(CompletableFuture.completedFuture(NetworkModificationResult.builder().build()));
 
         NetworkModificationResult result = applicator.applyModifications(modificationInfosList, networkInfos, reportInfos);
+
+        assertNotNull(result);
+        verify(largeNetworkModificationExecutionService).supplyAsync(any());
+    }
+
+    @Test
+    void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusView() {
+        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups = List.of(Pair.of(mock(ReportInfos.class), List.of(mock(ModificationInfos.class))));
+        NetworkInfos networkInfos = mock(NetworkInfos.class);
+
+        NetworkModificationApplicator applicator = new NetworkModificationApplicator(
+                networkStoreService, equipmentInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
+
+        ModificationType mockModificationType = mock(ModificationType.class);
+        when(modificationInfosGroups.get(0).getRight().get(0).getType()).thenReturn(mockModificationType);
+        when(mockModificationType.getStrategy()).thenReturn(PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW);
+        when(largeNetworkModificationExecutionService.supplyAsync(any())).thenReturn(CompletableFuture.completedFuture(NetworkModificationResult.builder().build()));
+
+        NetworkModificationResult result = applicator.applyModifications(modificationInfosGroups, networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
