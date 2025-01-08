@@ -77,7 +77,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/groups/{groupUuid}", params = {"networkUuid", "reportUuid", "reporterId"}, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
     public ResponseEntity<Optional<NetworkModificationResult>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
@@ -137,6 +137,58 @@ public class NetworkModificationController {
             @RequestBody ModificationInfos modificationInfos) {
         modificationInfos.check();
         return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, new ReportInfos(reportUuid, UUID.fromString(reporterId)), modificationInfos));
+    }
+
+    /**
+     * Temporary endpoint linked to root network implementation
+     * This endpoint creates a modification without applying it, and returning its UUID in order to apply it later
+     */
+    @PostMapping(value = "/network-modifications", params = "groupUuid", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Create a network modification")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "The network modification was created"),
+        @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
+    public ResponseEntity<Optional<UUID>> createNetworkModificationWithoutApplying(
+        @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
+        @RequestBody ModificationInfos modificationInfos) {
+        modificationInfos.check();
+        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(groupUuid, modificationInfos));
+    }
+
+    /**
+     * Temporary endpoint linked to root network implementation
+     * This endpoint creates a modification without applying it, and returning its UUID in order to apply it later
+     */
+    @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
+    @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
+    public ResponseEntity<List<UUID>> handleNetworkModificationsWithoutApplying(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+                                                                                          @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+                                                                                          @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
+                                                                                          @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+                                                                                          @RequestBody List<UUID> modificationsUuidList) {
+        return switch (action) {
+            case COPY ->
+                ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, modificationsUuidList));
+            case INSERT ->
+                ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationsUuidList));
+            case MOVE -> {
+                UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
+                yield ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationsUuidList));
+            }
+        };
+    }
+
+    /**
+     * Temporary endpoint linked to root network implementation
+     * This endpoint applied a list of modifications to multiple network variants, then return ordered impacts on those networks variants
+     */
+    @PostMapping(value = "/network-modifications/apply", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Apply a list of modifications to a list of network contexts")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The network modification was updated")})
+    public ResponseEntity<List<Optional<NetworkModificationResult>>> applyNetworkModification(
+        @RequestBody MultipleNetworkModificationsInfos multipleNetworkModificationsInfos) {
+        return ResponseEntity.ok().body(networkModificationService.applyNetworkModifications(multipleNetworkModificationsInfos));
     }
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
