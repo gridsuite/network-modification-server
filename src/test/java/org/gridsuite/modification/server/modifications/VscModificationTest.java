@@ -76,8 +76,8 @@ class VscModificationTest extends AbstractNetworkModificationTest {
                 .voltageSetpoint(new AttributeModification<>(0.3, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurvePoints(List.of(
-                        new ReactiveCapabilityCurveModificationInfos(0.4, 3., 11., 13., 0.7, 0.9),
-                        new ReactiveCapabilityCurveModificationInfos(0.6, 2., 12., 14., 0.8, 0.11)))
+                        new ReactiveCapabilityCurvePointsInfos(0.4, 11., 0.7),
+                        new ReactiveCapabilityCurvePointsInfos(0.6, 12., 0.8)))
                 .build();
     }
 
@@ -167,7 +167,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
             assertEquals(2, reactiveLimits1.getPointCount());
             Collection<ReactiveCapabilityCurve.Point> points = vscConverterStation1.getReactiveLimits(ReactiveCapabilityCurve.class).getPoints();
             List<ReactiveCapabilityCurve.Point> vscPoints = new ArrayList<>(points);
-            List<ReactiveCapabilityCurveModificationInfos> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
+            List<ReactiveCapabilityCurvePointsInfos> modificationPoints = vscModificationInfos.getConverterStation1().getReactiveCapabilityCurvePoints();
             if (!CollectionUtils.isEmpty(points)) {
                 IntStream.range(0, vscPoints.size())
                         .forEach(i -> {

@@ -11,13 +11,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.GeneratorModificationInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.VoltageRegulationType;
+import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import static org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable.toEmbeddablePoints;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 
@@ -241,29 +245,12 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(generatorModificationInfos.getReactiveCapabilityCurvePoints());
     }
 
-    public static List<ReactiveCapabilityCurveModificationEmbeddable> toEmbeddablePoints(
-            List<ReactiveCapabilityCurveModificationInfos> points) {
-        return points == null ? null
-                : points.stream()
-                        .map(point -> new ReactiveCapabilityCurveModificationEmbeddable(point.getMinQ(), point.getOldMinQ(),
-                                point.getMaxQ(), point.getOldMaxQ(), point.getP(),
-                                point.getOldP()))
-                        .collect(Collectors.toList());
-    }
-
     @Override
     public GeneratorModificationInfos toModificationInfos() {
         return toGeneratorModificationInfosBuilder().build();
     }
 
     private GeneratorModificationInfos.GeneratorModificationInfosBuilder<?, ?> toGeneratorModificationInfosBuilder() {
-        List<ReactiveCapabilityCurveModificationEmbeddable> pointsEmbeddable = !CollectionUtils.isEmpty(reactiveCapabilityCurvePoints) ? reactiveCapabilityCurvePoints : null;
-        List<ReactiveCapabilityCurveModificationInfos> points = pointsEmbeddable != null ? getReactiveCapabilityCurvePoints()
-                .stream()
-                .map(value -> new ReactiveCapabilityCurveModificationInfos(value.getMinQ(), value.getOldMinQ(),
-                        value.getMaxQ(), value.getOldMaxQ(),
-                        value.getP(), value.getOldP()))
-                .collect(Collectors.toList()) : null;
         return GeneratorModificationInfos
                 .builder()
                 .uuid(getId())
@@ -302,7 +289,7 @@ public class GeneratorModificationEntity extends InjectionModificationEntity {
                 .regulatingTerminalVlId(toAttributeModification(getRegulatingTerminalVlId()))
                 .qPercent(toAttributeModification(getQPercent()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
-                .reactiveCapabilityCurvePoints(points)
+                .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
