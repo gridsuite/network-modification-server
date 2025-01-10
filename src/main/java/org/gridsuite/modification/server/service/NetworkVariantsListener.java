@@ -71,7 +71,7 @@ public class NetworkVariantsListener implements NetworkListener {
     }
 
     @Override
-    public void onExtensionCreation(Extension<?> extension) {
+    public void onExtensionBeforeRemoval(Extension<?> extension) {
         // do nothing
     }
 
@@ -81,12 +81,12 @@ public class NetworkVariantsListener implements NetworkListener {
     }
 
     @Override
-    public void onExtensionBeforeRemoval(Extension<?> extension) {
+    public void onExtensionUpdate(Extension<?> extendable, String attribute, String variantId, Object oldValue, Object newValue) {
         // do nothing
     }
 
     @Override
-    public void onExtensionUpdate(Extension<?> extendable, String attribute, String variantId, Object oldValue, Object newValue) {
+    public void onExtensionCreation(Extension<?> extension) {
         // do nothing
     }
 
