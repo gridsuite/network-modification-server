@@ -69,10 +69,16 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     private boolean connected2;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "operational_limits_groups_id"), foreignKey = @ForeignKey(name = "operational_limits_groups1_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "branch_id"), inverseForeignKey = @ForeignKey(name = "branch_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups1")
     private List<OperationalLimitsGroupEntity> operationalLimitsGroups1;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "operational_limits_groups_id"), foreignKey = @ForeignKey(name = "operational_limits_groups2_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "branch_id"), inverseForeignKey = @ForeignKey(name = "branch_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups2")
     private List<OperationalLimitsGroupEntity> operationalLimitsGroups2;
 
