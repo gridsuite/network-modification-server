@@ -123,6 +123,15 @@
     <changeSet author="deharbemat (generated)" id="1736949602785-61">
         <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="operational_limits_groups2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_creation" validate="true"/>
     </changeSet>
+    <changeSet author="deharbemat" id="migrationCurrentLimits_20250115T135946Z">
+        <sqlFile
+                dbms="!postgresql"
+                encoding="UTF-8"
+                path="migrationCurrentLimits_20250115T135946Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+    </changeSet>
     <changeSet author="deharbemat (generated)" id="1736949602785-62">
         <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation" constraintName="current_limits_id1_2wt_fk"/>
     </changeSet>

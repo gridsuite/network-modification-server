@@ -70,16 +70,16 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
-            joinColumns = @JoinColumn(name = "operational_limits_groups_id"), foreignKey = @ForeignKey(name = "operational_limits_groups1_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "branch_id"), inverseForeignKey = @ForeignKey(name = "branch_id_fk"))
-    @OrderColumn(name = "pos_operationalLimitsGroups1")
+            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
+    @OrderColumn(name = "pos_operationalLimitsGroups")
     private List<OperationalLimitsGroupEntity> operationalLimitsGroups1;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
-            joinColumns = @JoinColumn(name = "operational_limits_groups_id"), foreignKey = @ForeignKey(name = "operational_limits_groups2_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "branch_id"), inverseForeignKey = @ForeignKey(name = "branch_id_fk"))
-    @OrderColumn(name = "pos_operationalLimitsGroups2")
+            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
+    @OrderColumn(name = "pos_operationalLimitsGroups")
     private List<OperationalLimitsGroupEntity> operationalLimitsGroups2;
 
     @Column(name = "selectedOperationalLimitsGroupId1")
