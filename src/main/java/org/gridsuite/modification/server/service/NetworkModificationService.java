@@ -146,6 +146,16 @@ public class NetworkModificationService {
     // No transactional because we need to save modification in DB also in case of error
     // Transaction made in 'saveModifications' method
     // TODO Add transaction when errors will no longer be sent to the front
+    public List<Optional<NetworkModificationResult>> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo)).stream().map(ModificationEntity::getId).findFirst();
+
+        return applyModifications(List.of(modificationInfo), applicationContexts);
+    }
+
+    /**
+     * TODO : Remove this endpoint after the final integration of root networks
+     * Need to use tne new endpoint with ModificationApplicationContext DTO (see above)
+     */
     public Optional<NetworkModificationResult> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid,
                                                                          @NonNull ReportInfos reportInfos,
                                                                          @NonNull ModificationInfos modificationInfos) {
@@ -159,53 +169,14 @@ public class NetworkModificationService {
     }
 
     /**
-     * Temporary method linked to root network implementation
+     * Apply modifications on several networks
      */
-    public Optional<UUID> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfos) {
-        return networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfos)).stream().map(ModificationEntity::getId).findFirst();
-    }
-
-    /**
-     * Temporary method linked to root network implementation
-     */
-    @Transactional
-    public List<UUID> duplicateModifications(UUID targetGroupUuid,
-                                                List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
-        return networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::getId).toList();
-    }
-
-    /**
-     * Temporary method linked to root network implementation
-     */
-    @Transactional
-    public List<UUID> insertCompositeModifications(UUID targetGroupUuid,
-                                                    List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
-        return networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::getId).toList();
-    }
-
-    /**
-     * Temporary method linked to root network implementation
-     */
-    @Transactional
-    public List<UUID> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid,
-                                                                 UUID beforeModificationUuid, List<UUID> modificationsToMove) {
-        // update origin/destinations groups to cut and paste all modificationsToMove
-        return networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid).stream().map(ModificationEntity::getId).toList();
-    }
-
-    /**
-     * Temporary method linked to root network implementation
-     */
-    public List<Optional<NetworkModificationResult>> applyNetworkModifications(MultipleNetworkModificationsInfos multipleNetworkModificationsInfos) {
-        List<ModificationInfos> modificationsToApply = networkModificationRepository.getModificationsInfos(multipleNetworkModificationsInfos.modificationsUuid());
-        return multipleNetworkModificationsInfos.networkModificationContextInfos().stream().map(networkModificationContextInfos ->
-            applyModifications(networkModificationContextInfos.networkUuid(),
-                networkModificationContextInfos.variantId(),
-                new ReportInfos(networkModificationContextInfos.reportUuid(),
-                    networkModificationContextInfos.nodeUuid()),
-                modificationsToApply)
+    private List<Optional<NetworkModificationResult>> applyModifications(List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts) {
+        return applicationContexts.stream().map(modificationApplicationContext ->
+            applyModifications(modificationApplicationContext.networkUuid(),
+                modificationApplicationContext.variantId(),
+                new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.nodeUuid()),
+                modifications)
         ).toList();
     }
 
@@ -282,6 +253,22 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public List<Optional<NetworkModificationResult>> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, @NonNull UUID beforeModificationUuid,
+                                                                       @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
+                                                                       boolean canBuildNode) {
+        // update origin/destinations groups to cut and paste all modificationsToMove
+        List<ModificationInfos> modificationInfos = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid).stream()
+            .map(networkModificationRepository::getModificationInfos)
+            .toList();
+
+        return canBuildNode && !modificationInfos.isEmpty() ? applyModifications(modificationInfos, applicationContexts) : List.of();
+    }
+
+    /**
+     * TODO : Remove this endpoint after the final integration of root networks
+     * Need to use the new endpoint with ModificationApplicationContext DTO (see above)
+     */
+    @Transactional
     public Optional<NetworkModificationResult> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid,
                                                                  UUID beforeModificationUuid, UUID networkUuid, String variantId,
                                                                  ReportInfos reportInfos, List<UUID> modificationsToMove, boolean canBuildNode) {
@@ -291,22 +278,22 @@ public class NetworkModificationService {
         if (canBuildNode && !movedEntities.isEmpty()) { // TODO remove canBuildNode ?
             // try to apply the moved modifications only (incremental mode)
             PreloadingStrategy preloadingStrategy = movedEntities.stream()
-                    .map(e -> ModificationType.valueOf(e.getType()))
-                    .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+                .map(e -> ModificationType.valueOf(e.getType()))
+                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
             if (networkInfos.isVariantPresent()) {
                 List<ModificationInfos> movedModifications = movedEntities.stream()
-                        .map(networkModificationRepository::getModificationInfos).toList();
+                    .map(networkModificationRepository::getModificationInfos).toList();
                 return Optional.of(modificationApplicator.applyModifications(
-                        movedModifications,
-                        networkInfos,
-                        reportInfos));
+                    movedModifications,
+                    networkInfos,
+                    reportInfos));
             }
         }
         return Optional.empty();
     }
 
-    public void createModificationGroup(UUID sourceGroupUuid, UUID groupUuid) {
+    public void duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
             networkModificationRepository.saveModificationInfos(groupUuid, networkModificationRepository.getActiveModificationsInfos(sourceGroupUuid));
         } catch (NetworkModificationException e) {
@@ -338,6 +325,17 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public List<Optional<NetworkModificationResult>> duplicateModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
+        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        return applyModifications(modificationInfos, applicationContexts);
+    }
+
+    /**
+     * TODO : Remove this endpoint after the final integration of root networks
+     * Need to use the new endpoint with ModificationApplicationContext DTO (see above)
+     */
+    @Transactional
     public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
@@ -346,6 +344,17 @@ public class NetworkModificationService {
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
+    @Transactional
+    public List<Optional<NetworkModificationResult>> insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
+        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        return applyModifications(modificationInfos, applicationContexts);
+    }
+
+    /**
+     * TODO : Remove this endpoint after the final integration of root networks (used only for move)
+     * Need to use the new endpoint with ModificationApplicationContext DTO (see above)
+     */
     @Transactional
     public Optional<NetworkModificationResult> insertCompositeModifications(UUID targetGroupUuid,
                                                                             UUID networkUuid, String variantId,

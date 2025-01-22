@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import java.util.List;
 import java.util.UUID;
 
-public record MultipleNetworkModificationsInfos(List<UUID> modificationsUuid, List<NetworkModificationContextInfos> networkModificationContextInfos) { }
+public record ModificationApplicationContext(UUID networkUuid, String variantId, UUID reportUuid, UUID nodeUuid) { }
