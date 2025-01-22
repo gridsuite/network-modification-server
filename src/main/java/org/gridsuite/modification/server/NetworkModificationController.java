@@ -11,13 +11,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,7 +78,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/groups/{groupUuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
     public ResponseEntity<List<Optional<NetworkModificationResult>>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
@@ -89,16 +89,16 @@ public class NetworkModificationController {
                                                                                                 @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY ->
-                ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, modificationContextInfos.getLeft(), modificationContextInfos.getRight()));
+                ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
             case INSERT ->
-                ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getLeft(), modificationContextInfos.getRight()));
+                ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean canBuildNode = build;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     canBuildNode = false;
                 }
-                yield ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationContextInfos.getLeft(), modificationContextInfos.getRight(), canBuildNode));
+                yield ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond(), canBuildNode));
             }
         };
     }
@@ -161,8 +161,8 @@ public class NetworkModificationController {
     public ResponseEntity<List<Optional<NetworkModificationResult>>> createNetworkModification(
         @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
         @RequestBody Pair<ModificationInfos, List<ModificationApplicationContext>> modificationContextInfos) {
-        modificationContextInfos.getLeft().check();
-        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(groupUuid, modificationContextInfos.getLeft(), modificationContextInfos.getRight()));
+        modificationContextInfos.getFirst().check();
+        return ResponseEntity.ok().body(networkModificationService.createNetworkModification(groupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
     }
 
     /**

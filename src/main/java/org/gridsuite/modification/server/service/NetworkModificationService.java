@@ -153,8 +153,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * TODO : Remove this endpoint after the final integration of root networks
-     * Need to use tne new endpoint with ModificationApplicationContext DTO (see above)
+     * TODO : Remove this method after the final integration of root networks
+     * Need to use tne new method with ModificationApplicationContext DTO (see above)
      */
     public Optional<NetworkModificationResult> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid,
                                                                          @NonNull ReportInfos reportInfos,
@@ -175,7 +175,7 @@ public class NetworkModificationService {
         return applicationContexts.stream().map(modificationApplicationContext ->
             applyModifications(modificationApplicationContext.networkUuid(),
                 modificationApplicationContext.variantId(),
-                new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.nodeUuid()),
+                new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId()),
                 modifications)
         ).toList();
     }
@@ -253,7 +253,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<Optional<NetworkModificationResult>> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, @NonNull UUID beforeModificationUuid,
+    public List<Optional<NetworkModificationResult>> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
                                                                        @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
                                                                        boolean canBuildNode) {
         // update origin/destinations groups to cut and paste all modificationsToMove
@@ -265,8 +265,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * TODO : Remove this endpoint after the final integration of root networks
-     * Need to use the new endpoint with ModificationApplicationContext DTO (see above)
+     * TODO : Remove this method after the final integration of root networks
+     * Need to use the new method with ModificationApplicationContext DTO (see above)
      */
     @Transactional
     public Optional<NetworkModificationResult> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid,
@@ -332,8 +332,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * TODO : Remove this endpoint after the final integration of root networks
-     * Need to use the new endpoint with ModificationApplicationContext DTO (see above)
+     * TODO : Remove this method after the final integration of root networks
+     * Need to use the new method with ModificationApplicationContext DTO (see above)
      */
     @Transactional
     public Optional<NetworkModificationResult> duplicateModifications(UUID targetGroupUuid,
@@ -352,8 +352,8 @@ public class NetworkModificationService {
     }
 
     /**
-     * TODO : Remove this endpoint after the final integration of root networks (used only for move)
-     * Need to use the new endpoint with ModificationApplicationContext DTO (see above)
+     * TODO : Remove this method after the final integration of root networks (used only for move)
+     * Need to use the new method with ModificationApplicationContext DTO (see above)
      */
     @Transactional
     public Optional<NetworkModificationResult> insertCompositeModifications(UUID targetGroupUuid,
