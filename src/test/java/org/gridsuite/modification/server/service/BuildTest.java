@@ -67,9 +67,6 @@ import java.util.concurrent.*;
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
-import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -121,9 +118,6 @@ class BuildTest {
 
     @Value("${spring.cloud.stream.bindings.publishStoppedBuild-out-0.destination}")
     private String buildStoppedDestination;
-
-    @Value("${spring.cloud.stream.bindings.publishFailedBuild-out-0.destination}")
-    private String buildFailedDestination;
 
     @Autowired
     private OutputDestination output;
@@ -905,9 +899,6 @@ class BuildTest {
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
 
         assertNull(output.receive(TIMEOUT, buildResultDestination));
-        Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
-        assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -970,7 +961,7 @@ class BuildTest {
 
     @AfterEach
     void tearDown(final MockWebServer server) {
-        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
+        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination);
         TestUtils.assertQueuesEmptyThenClear(destinations, output);
         try {
             TestUtils.assertServerRequestsEmptyThenShutdown(server);
