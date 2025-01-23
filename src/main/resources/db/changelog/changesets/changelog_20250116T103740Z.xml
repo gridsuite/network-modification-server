@@ -97,36 +97,44 @@
         <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2" tableName="two_windings_transformer_creation_operational_limits_groups2"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-49">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_creation_operational_limits_groups1" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_creation_operational_limits_groups1" constraintName="line_branch_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-50">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_creation_operational_limits_groups2" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_creation_operational_limits_groups2" constraintName="line_branch_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-51">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_creation_operational_limits_groups1" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_creation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_creation_operational_limits_groups1" constraintName="branch_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_creation" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-52">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_creation" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="branch_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_creation" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-55">
         <addForeignKeyConstraint baseColumnNames="current_limits_id" baseTableName="operational_limits_group" constraintName="current_limits_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-58">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_creation_operational_limits_groups1" constraintName="operational_limits_groups_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_creation_operational_limits_groups1" constraintName="line_operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-59">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_creation_operational_limits_groups2" constraintName="operational_limits_groups_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_creation_operational_limits_groups2" constraintName="line_operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-60">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_creation_operational_limits_groups1" constraintName="operational_limits_groups_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_creation_operational_limits_groups1" constraintName="operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1737023875116-61">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="operational_limits_groups_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
     </changeSet>
     <changeSet author="deharbemat" id="migrationCurrentLimits_20250115T135946Z">
         <sqlFile
+                dbms="!postgresql"
                 encoding="UTF-8"
                 path="migrationCurrentLimits_20250115T135946Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+        <sqlFile
+                dbms="postgresql"
+                encoding="UTF-8"
+                path="migrationCurrentLimits_pg_20250115T135946Z.sql"
                 relativeToChangelogFile="true"
                 splitStatements="true"
                 stripComments="true"/>

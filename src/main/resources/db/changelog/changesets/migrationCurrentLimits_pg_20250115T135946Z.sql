@@ -1,7 +1,7 @@
 -- updates limits creations in line_creation on both sides
 insert into operational_limits_group (uuid, id, current_limits_id)
 select
-    random_uuid(),
+    gen_random_uuid(),
     'DEFAULT',
     current_limits_id1
 from line_creation;
@@ -15,7 +15,7 @@ where line_creation.current_limits_id1 = operational_limits_group.current_limits
 
 insert into operational_limits_group (uuid, id, current_limits_id)
 select
-    random_uuid(),
+    gen_random_uuid(),
     'DEFAULT',
     current_limits_id2
 from line_creation;
@@ -30,7 +30,7 @@ where line_creation.current_limits_id2 = operational_limits_group.current_limits
 -- updates limits creations in two_windings_transformer_creation on both sides
 insert into operational_limits_group (uuid, id, current_limits_id)
 select
-    random_uuid(),
+    gen_random_uuid(),
     'DEFAULT',
     current_limits_id1
 from two_windings_transformer_creation;
@@ -44,7 +44,7 @@ where two_windings_transformer_creation.current_limits_id1 = operational_limits_
 
 insert into operational_limits_group (uuid, id, current_limits_id)
 select
-    random_uuid(),
+    gen_random_uuid(),
     'DEFAULT',
     current_limits_id2
 from two_windings_transformer_creation;
