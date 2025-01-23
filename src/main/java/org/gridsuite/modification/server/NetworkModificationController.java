@@ -89,7 +89,7 @@ public class NetworkModificationController {
                                                                                                 @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY ->
-                ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
+                ResponseEntity.ok().body(networkModificationService.duplicateModifications(targetGroupUuid, originGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
             case INSERT ->
                 ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
             case MOVE -> {
@@ -254,13 +254,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping(value = "/groups/modification", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Create a group containing a modification")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group with the modification has been created")})
-    public ResponseEntity<UUID> createModificationInGroup(@RequestBody ModificationInfos modificationsInfos) {
-        return ResponseEntity.ok().body(networkModificationService.createModificationInGroup(modificationsInfos));
-    }
-
     @PostMapping(value = "/network-composite-modifications", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a network composite modification")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been created")})
@@ -311,18 +304,6 @@ public class NetworkModificationController {
         @Parameter(description = "activate or deactivate network modifications") @RequestParam(name = "activated") Boolean activated) {
         networkModificationService.updateNetworkModificationActivation(networkModificationUuids, activated);
         return ResponseEntity.ok().build();
-    }
-
-    @PutMapping(value = "/groups/{groupUuid}/duplications", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Duplicate all modifications in a group and append them at the end of another modifications group")
-    @ApiResponse(responseCode = "200", description = "The modifications have been duplicated")
-    public ResponseEntity<Optional<NetworkModificationResult>> duplicateModificationsInGroup(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
-                                                                                             @Parameter(description = "the network uuid", required = true) @RequestParam(value = "networkUuid") UUID networkUuid,
-                                                                                             @Parameter(description = "the report uuid", required = true) @RequestParam(value = "reportUuid") UUID reportUuid,
-                                                                                             @Parameter(description = "the reporter id", required = true) @RequestParam(value = "reporterId") UUID reporterId,
-                                                                                             @Parameter(description = "the variant id", required = true) @RequestParam(value = "variantId") String variantId,
-                                                                                             @Parameter(description = "origin group UUID, from where modifications are copied") @RequestParam(value = "duplicateFrom") UUID originGroupUuid) {
-        return ResponseEntity.ok().body(networkModificationService.duplicateModificationsInGroup(targetGroupUuid, networkUuid, variantId, new ReportInfos(reportUuid, reporterId), originGroupUuid));
     }
 
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")

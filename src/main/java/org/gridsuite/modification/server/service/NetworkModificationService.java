@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -31,6 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -325,8 +327,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public List<Optional<NetworkModificationResult>> duplicateModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
+    public List<Optional<NetworkModificationResult>> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
+            throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
+        }
+        List<ModificationInfos> modificationInfos = originGroupUuid != null ? networkModificationRepository.getActiveModificationsInfos(originGroupUuid) : networkModificationRepository.getModificationsInfos(modificationsUuids);
         networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return applyModifications(modificationInfos, applicationContexts);
     }
@@ -364,12 +369,6 @@ public class NetworkModificationService {
         return applyModifications(networkUuid, variantId, reportInfos, modificationInfos);
     }
 
-    public UUID createModificationInGroup(@NonNull ModificationInfos modificationsInfos) {
-        UUID groupUuid = UUID.randomUUID();
-        networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationsInfos));
-        return groupUuid;
-    }
-
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
         return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
@@ -377,16 +376,6 @@ public class NetworkModificationService {
 
     public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
         return networkModificationRepository.duplicateModifications(sourceModificationUuids);
-    }
-
-    @Transactional
-    public Optional<NetworkModificationResult> duplicateModificationsInGroup(UUID targetGroupUuid,
-                                                                             UUID networkUuid, String variantId,
-                                                                             ReportInfos reportInfos,
-                                                                             UUID originGroupUuid) {
-        List<ModificationInfos> modificationsInfos = networkModificationRepository.getActiveModificationsInfos(originGroupUuid);
-        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationsInfos);
-        return applyModifications(networkUuid, variantId, reportInfos, modificationsInfos);
     }
 
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {

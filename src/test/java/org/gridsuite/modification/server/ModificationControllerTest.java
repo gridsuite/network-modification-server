@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -577,16 +578,14 @@ class ModificationControllerTest {
         assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
 
         // Duplicate all modifications in TEST_GROUP_ID, and append them at the end of otherGroupId
+        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         mvcResult = mockMvc.perform(
-                put("/v1/groups/" + otherGroupId + "/duplications"
-                    + "?networkUuid=" + TEST_NETWORK_ID
-                    + "&reportUuid=" + TEST_REPORT_ID
-                    + "&reporterId=" + UUID.randomUUID()
-                    + "&variantId=" + NetworkCreation.VARIANT_ID
-                    + "&duplicateFrom=" + TEST_GROUP_ID)
+                put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
+                    .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        assertApplicationStatusOK(mvcResult);
+        assertApplicationStatusOKNew(mvcResult);
 
         newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
         // now 8 modifications in new group: first 3 are still the same, 5 last are new duplicates from first group
@@ -597,6 +596,16 @@ class ModificationControllerTest {
         for (int i = 3; i < 8; ++i) {
             assertThat(newModificationListOtherGroup.get(i)).recursivelyEquals(modificationList.get(i - 3));
         }
+
+        // Duplicate modifications from a group and from a list : illegal operation
+        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(duplicateModificationUuidList, List.of(applicationContext)));
+        mvcResult = mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest()).andReturn();
+        assertEquals(new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID).getMessage(), mvcResult.getResponse().getContentAsString());
     }
 
     /**
@@ -671,16 +680,14 @@ class ModificationControllerTest {
         assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
 
         // Duplicate all modifications in TEST_GROUP_ID, and append them at the end of otherGroupId
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         mvcResult = mockMvc.perform(
-                put("/v1/groups/" + otherGroupId + "/duplications"
-                    + "?networkUuid=" + TEST_NETWORK_ID
-                    + "&reportUuid=" + TEST_REPORT_ID
-                    + "&reporterId=" + UUID.randomUUID()
-                    + "&variantId=" + NetworkCreation.VARIANT_ID
-                    + "&duplicateFrom=" + TEST_GROUP_ID)
+                put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
+                    .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        assertApplicationStatusOK(mvcResult);
+        assertApplicationStatusOKNew(mvcResult);
 
         newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
         // now 8 modifications in new group: first 3 are still the same, 5 last are new duplicates from first group
@@ -1633,15 +1640,15 @@ class ModificationControllerTest {
                     .build()))
             .build();
 
-        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
-                        .content(objectWriter.writeValueAsString(modificationsInfos1))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        UUID groupUuid = UUID.fromString(mapper.readValue(mvcResult.getResponse().getContentAsString(), String.class));
+        UUID groupUuid = UUID.randomUUID();
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE)
+                .queryParam("groupUuid", groupUuid.toString())
+                .content(objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(modificationsInfos1, List.of())))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
 
         // Get the modifications
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
@@ -1786,14 +1793,15 @@ class ModificationControllerTest {
         CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
                 .modifications(List.of(switchStatusModificationInfos))
                 .build();
-        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
-                .content(objectWriter.writeValueAsString(compositeModificationInfos))
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn();
-        UUID groupUuid = UUID.fromString(mapper.readValue(mvcResult.getResponse().getContentAsString(), String.class));
 
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
+        UUID groupUuid = UUID.randomUUID();
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE)
+                .queryParam("groupUuid", groupUuid.toString())
+                .content(objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(compositeModificationInfos, List.of())))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn();
         List<ModificationInfos> modificationsInfos = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
