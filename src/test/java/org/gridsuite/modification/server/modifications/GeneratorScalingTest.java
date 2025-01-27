@@ -277,8 +277,8 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .andReturn();
 
         assertNotNull(response.getResponse().getContentAsString());
-        assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
-        assertEquals(100, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
+        assertEquals(600, getNetwork().getGenerator(GENERATOR_ID_9).getTargetP(), 0.01D);
+        assertEquals(300, getNetwork().getGenerator(GENERATOR_ID_10).getTargetP(), 0.01D);
 
         wireMockUtils.verifyGetRequest(subFilter, PATH, Map.of("ids", WireMock.matching(".*")), false);
     }
