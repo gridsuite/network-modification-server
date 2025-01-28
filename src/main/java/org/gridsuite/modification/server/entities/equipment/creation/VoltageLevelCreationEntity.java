@@ -6,21 +6,20 @@
  */
 package org.gridsuite.modification.server.entities.equipment.creation;
 
+import com.powsybl.iidm.network.SwitchKind;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
-
-import com.powsybl.iidm.network.SwitchKind;
-
-import jakarta.persistence.*;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +64,15 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     @CollectionTable
     private List<CouplingDeviceCreationEmbeddable> couplingDevices;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "substation_creation_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(
+                    name = "voltageLevel_substationCreation_fk"
+            ))
+    private SubstationCreationEntity substationCreation;
+
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
@@ -88,6 +96,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     private VoltageLevelCreationInfos.VoltageLevelCreationInfosBuilder<?, ?> toVoltageLevelCreationInfosBuilder() {
+        SubstationCreationEntity substationCreationEntity = getSubstationCreation();
         List<CouplingDeviceInfos> couplingDeviceInfos = couplingDevices.stream()
                 .map(cde -> new CouplingDeviceInfos(cde.getBusbarSectionId1(), cde.getBusbarSectionId2()))
                 .collect(Collectors.toList());
@@ -109,6 +118,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
                 .sectionCount(getSectionCount())
                 .switchKinds(getSwitchKinds())
                 .couplingDevices(couplingDeviceInfos)
+                .substationCreation(substationCreationEntity != null ? substationCreationEntity.toSubstationCreationInfos() : null)
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
@@ -133,6 +143,9 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.sectionCount = voltageLevelCreationInfos.getSectionCount();
         this.switchKinds = new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
         this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
+        this.substationCreation = Optional.ofNullable(voltageLevelCreationInfos.getSubstationCreation())
+                .map(SubstationCreationEntity::new)
+                .orElse(null);
     }
 }
 
