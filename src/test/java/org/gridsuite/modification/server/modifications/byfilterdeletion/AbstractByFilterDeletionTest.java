@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationTest {
     protected static final UUID FILTER_ID_1 = UUID.randomUUID();
     protected static final UUID FILTER_ID_2 = UUID.randomUUID();
+    protected static final UUID FILTER_ID_3 = UUID.randomUUID();
+
     protected static final String EQUIPMENT_WRONG_ID_1 = "wrongId1";
 
     protected abstract IdentifiableType getIdentifiableType();
@@ -149,10 +151,15 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                 .name("filter2")
                 .build();
 
+        var filter3 = FilterInfos.builder()
+                .id(FILTER_ID_3)
+                .name("filter3")
+                .build();
+
         return ByFilterDeletionInfos.builder()
                 .stashed(false)
                 .equipmentType(getIdentifiableType())
-                .filters(List.of(filter1, filter2))
+                .filters(List.of(filter1, filter2, filter3))
                 .build();
     }
 

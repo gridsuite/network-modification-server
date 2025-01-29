@@ -269,9 +269,16 @@ public class NetworkStoreListener implements NetworkListener {
 
     private List<AbstractBaseImpact> reduceNetworkImpacts() {
         List<AbstractBaseImpact> reducedImpacts = new ArrayList<>();
-        Set<String> impactedSubstationsIds = new HashSet<>();
 
-        // Impacts type collection
+        List<SimpleElementImpact> deletionImpacts = getDeletionSimpleImpacts();
+        Set<String> deletionImpactedSubstationsIds = getImpactedSubstationIds(deletionImpacts);
+        // All network is impacted ? then return only one substation collection impact
+        if (deletionImpactedSubstationsIds.size() >= collectionThreshold) {
+            return allNetworkImpacted();
+        }
+
+        // Group simple impacts over same element type into collection impact
+        Set<String> impactedSubstationsIds = new HashSet<>();
         for (IdentifiableType elementType : IdentifiableType.values()) {
             List<SimpleElementImpact> impacts = getSimpleImpacts(elementType);
             if (impacts.size() >= collectionThreshold) {
@@ -279,15 +286,13 @@ public class NetworkStoreListener implements NetworkListener {
                     .elementType(elementType)
                     .build());
             } else {
-                impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
+                impactedSubstationsIds.addAll(getImpactedSubstationIds(impacts));
             }
         }
 
-        // All network is impacted ?
+        // All network is impacted ? then return only one substation collection impact
         if (impactedSubstationsIds.size() >= collectionThreshold) {
-            return List.of(CollectionElementImpact.builder()
-                    .elementType(IdentifiableType.SUBSTATION)
-                    .build());
+            return allNetworkImpacted();
         }
 
         // Impacts type simple for substation only
@@ -303,9 +308,28 @@ public class NetworkStoreListener implements NetworkListener {
         );
 
         // Impacts type simple for deletion only
-        reducedImpacts.addAll(simpleImpacts.stream().filter(SimpleElementImpact::isDeletion).distinct().toList());
+        reducedImpacts.addAll(deletionImpacts);
 
         return reducedImpacts;
+    }
+
+    private List<AbstractBaseImpact> allNetworkImpacted() {
+        return List.of(CollectionElementImpact.builder()
+                .elementType(IdentifiableType.SUBSTATION)
+                .build());
+    }
+
+    private Set<String> getImpactedSubstationIds(List<SimpleElementImpact> impacts) {
+        Set<String> impactedSubstationsIds = new HashSet<>();
+        impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
+        return impactedSubstationsIds;
+    }
+
+    private List<SimpleElementImpact> getDeletionSimpleImpacts() {
+        return simpleImpacts.stream()
+                .filter(SimpleElementImpact::isDeletion)
+                .distinct()
+                .toList();
     }
 
     private List<SimpleElementImpact> getSimpleImpacts(IdentifiableType elementType) {

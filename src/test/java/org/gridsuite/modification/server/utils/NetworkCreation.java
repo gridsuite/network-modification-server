@@ -435,6 +435,18 @@ public final class NetworkCreation {
         createSwitch(v32, "v32d1", "v32d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 2);
         createSwitch(v32, "v32d2", "v32d2", SwitchKind.DISCONNECTOR, true, false, false, 1, 3);
 
+        Substation s4 = createSubstation(network, "s4", "s4", Country.FR);
+        VoltageLevel v41 = createVoltageLevel(s4, "v41", "v41", TopologyKind.NODE_BREAKER, 450.0);
+        createBusBarSection(v41, "7.1", "7.1", 0);
+        createLoad(v41, "load11", "load11", 1, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v41, "v41d1", "v41d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
+
+        Substation s5 = createSubstation(network, "s5", "s5", Country.FR);
+        VoltageLevel v51 = createVoltageLevel(s5, "v51", "v51", TopologyKind.NODE_BREAKER, 450.0);
+        createBusBarSection(v51, "8.1", "8.1", 0);
+        createLoad(v51, "load12", "load12", 1, 42.1, 1.0, "cn0", 3, ConnectablePosition.Direction.TOP);
+        createSwitch(v51, "v51d1", "v51d1", SwitchKind.DISCONNECTOR, true, false, false, 0, 1);
+
         network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
         network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, VARIANT_ID);
 

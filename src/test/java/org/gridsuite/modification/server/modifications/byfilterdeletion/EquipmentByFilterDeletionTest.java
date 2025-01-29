@@ -13,6 +13,7 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilter;
 import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAttributes;
 import org.gridsuite.filter.utils.EquipmentType;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -31,6 +34,9 @@ class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
     private static final String LOAD_ID_2 = "load2";
     private static final String LOAD_ID_3 = "load3";
     private static final String LOAD_ID_4 = "load4";
+    private static final String LOAD_ID_7 = "load7";
+    private static final String LOAD_ID_11 = "load11";
+    private static final String LOAD_ID_12 = "load12";
 
     @BeforeEach
     void specificSetUp() {
@@ -49,6 +55,9 @@ class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
         assertNull(getNetwork().getLoad(LOAD_ID_2));
         assertNull(getNetwork().getLoad(LOAD_ID_3));
         assertNull(getNetwork().getLoad(LOAD_ID_4));
+        assertNull(getNetwork().getLoad(LOAD_ID_7));
+        assertNull(getNetwork().getLoad(LOAD_ID_11));
+        assertNull(getNetwork().getLoad(LOAD_ID_12));
     }
 
     @Override
@@ -57,6 +66,9 @@ class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
         assertNotNull(getNetwork().getLoad(LOAD_ID_2));
         assertNotNull(getNetwork().getLoad(LOAD_ID_3));
         assertNotNull(getNetwork().getLoad(LOAD_ID_4));
+        assertNotNull(getNetwork().getLoad(LOAD_ID_7));
+        assertNotNull(getNetwork().getLoad(LOAD_ID_11));
+        assertNotNull(getNetwork().getLoad(LOAD_ID_12));
     }
 
     @Override
@@ -84,6 +96,16 @@ class EquipmentByFilterDeletionTest extends AbstractByFilterDeletionTest {
             .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_3, null),
                 new IdentifierListFilterEquipmentAttributes(LOAD_ID_4, null)))
             .build();
-        return List.of(filter1, filter2);
+        IdentifierListFilter filter3 = IdentifierListFilter.builder().id(FILTER_ID_3).modificationDate(new Date()).equipmentType(EquipmentType.LOAD)
+            .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(LOAD_ID_7, null),
+                new IdentifierListFilterEquipmentAttributes(LOAD_ID_11, null),
+                new IdentifierListFilterEquipmentAttributes(LOAD_ID_12, null)))
+            .build();
+        return List.of(filter1, filter2, filter3);
+    }
+
+    @Override
+    protected void assertResultImpacts(List<AbstractBaseImpact> impacts) {
+        assertThat(impacts).containsExactly(createCollectionElementImpact(IdentifiableType.SUBSTATION));
     }
 }
