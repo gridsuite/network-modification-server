@@ -149,7 +149,7 @@ public class NetworkModificationService {
     // Transaction made in 'saveModifications' method
     // TODO Add transaction when errors will no longer be sent to the front
     public List<Optional<NetworkModificationResult>> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo)).stream().map(ModificationEntity::getId).findFirst();
+        networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
 
         return applyModifications(List.of(modificationInfo), applicationContexts);
     }
