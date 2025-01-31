@@ -79,6 +79,8 @@ public class LineCreationEntity extends BranchCreationEntity {
             .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
             .connectionName1(getConnectionName1())
             .connectionName2(getConnectionName2())
+            .selectedOperationalLimitsGroup1(getSelectedOperationalLimitsGroupId1())
+            .selectedOperationalLimitsGroup2(getSelectedOperationalLimitsGroupId2())
             .connectionDirection1(getConnectionDirection1())
             .connectionDirection2(getConnectionDirection2())
             .connectionPosition1(getConnectionPosition1())
@@ -94,14 +96,10 @@ public class LineCreationEntity extends BranchCreationEntity {
              .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
-                                .toList());
+                                .toList())
+            .operationalLimitsGroups1(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups1()))
+            .operationalLimitsGroups2(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups2()));
 
-        if (getCurrentLimits1() != null) {
-            builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
-        }
-        if (getCurrentLimits2() != null) {
-            builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
-        }
         return builder;
     }
 
