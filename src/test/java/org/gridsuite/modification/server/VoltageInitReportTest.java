@@ -81,7 +81,7 @@ class VoltageInitReportTest {
 
         final UUID networkUuuid = UUID.fromString("11111111-1111-1111-1111-111111111111");
         final UUID reportUuid = UUID.fromString("88888888-8888-8888-8888-888888888888");
-        //simulate PUT /v1/groups/abc/duplications?networkUuid=0000&reportUuid=0000&reporterId=0000&variantId=0000&duplicateFrom=0000
+        //simulate PUT /v1/groups/abc?action=COPY with body ModificationApplicationContext(networkUuid=0000, reportUuid=0000, reporterId=0000, variantId=0000, duplicateFrom=0000)
         assertThat(networkModificationApplicator.applyModifications(
                 List.of(modificationInfos),
                 new NetworkInfos(network, networkUuuid, true),
