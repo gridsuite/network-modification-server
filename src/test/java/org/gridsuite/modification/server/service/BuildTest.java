@@ -24,12 +24,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.NetworkInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.dto.SubstationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
@@ -72,9 +67,6 @@ import java.util.concurrent.*;
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
-import static org.gridsuite.modification.server.service.BuildWorkerService.FAIL_MESSAGE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -126,9 +118,6 @@ class BuildTest {
 
     @Value("${spring.cloud.stream.bindings.publishStoppedBuild-out-0.destination}")
     private String buildStoppedDestination;
-
-    @Value("${spring.cloud.stream.bindings.publishFailedBuild-out-0.destination}")
-    private String buildFailedDestination;
 
     @Autowired
     private OutputDestination output;
@@ -910,9 +899,6 @@ class BuildTest {
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
 
         assertNull(output.receive(TIMEOUT, buildResultDestination));
-        Message<byte[]> message = output.receive(TIMEOUT * 3, buildFailedDestination);
-        assertEquals("me", message.getHeaders().get("receiver"));
-        assertThat((String) message.getHeaders().get("message"), startsWith(FAIL_MESSAGE));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -934,14 +920,19 @@ class BuildTest {
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : No error send with exception
-        Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(TEST_NETWORK_ID, variantId, groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
-        assertTrue(networkModificationResult2.isPresent());
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
+        List<Optional<NetworkModificationResult>> networkModificationResult2 = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        assertEquals(1, networkModificationResult2.size());
+        assertTrue(networkModificationResult2.get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        assertTrue(networkModificationService.createNetworkModification(TEST_NETWORK_ID, UUID.randomUUID().toString(), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
+        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
+        networkModificationResult2 = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        assertEquals(1, networkModificationResult2.size());
+        assertTrue(networkModificationResult2.get(0).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
     }
 
@@ -970,7 +961,7 @@ class BuildTest {
 
     @AfterEach
     void tearDown(final MockWebServer server) {
-        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination, buildFailedDestination);
+        List<String> destinations = List.of(consumeBuildDestination, cancelBuildDestination, buildResultDestination, buildStoppedDestination);
         TestUtils.assertQueuesEmptyThenClear(destinations, output);
         try {
             TestUtils.assertServerRequestsEmptyThenShutdown(server);

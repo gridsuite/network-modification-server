@@ -169,7 +169,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     /*
-    PUT /v1/groups/{groupUuid}/duplications SQL requests analysis
+    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
 
     Given an example with 2 tabular modifications having 1000 modifications each
 
@@ -582,9 +582,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                         ModificationCreation.getFreeProperty(),
                         ModificationCreation.getFreeProperty("test", "value")))
                     .reactiveCapabilityCurvePoints(List.of(
-                        ReactiveCapabilityCurveModificationInfos.builder().p(10.).oldP(15.).build(),
-                            ReactiveCapabilityCurveModificationInfos.builder().maxQ(12.).oldMaxQ(17.).build(),
-                        ReactiveCapabilityCurveModificationInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
+                        ReactiveCapabilityCurvePointsInfos.builder().p(10.).build(),
+                            ReactiveCapabilityCurvePointsInfos.builder().maxQ(17.).build(),
+                        ReactiveCapabilityCurvePointsInfos.builder().minQ(5.).maxQ(5.).p(5.).build()))
                     .build())
             .toList();
     }
