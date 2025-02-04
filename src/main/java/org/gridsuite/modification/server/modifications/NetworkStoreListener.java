@@ -103,24 +103,18 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
-    public void onElementRemoved(Identifiable identifiable, String attribute, Object oldValue) {
+    public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
         addSimpleModificationImpact(identifiable);
     }
 
     @Override
-    public void onElementAdded(Identifiable identifiable, String attribute, Object newValue) {
+    public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
         addSimpleModificationImpact(identifiable);
     }
 
     @Override
-    public void onElementReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
+    public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-    }
-
-    @Override
-    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable);
-        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
     }
 
     @Override
@@ -329,8 +323,23 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
-    public void onExtensionUpdate(Extension<?> extendable, String attribute, Object oldValue, Object newValue) {
+    public void onExtensionUpdate(Extension<?> extendable, String attribute, String variantId, Object oldValue, Object newValue) {
+        Identifiable<?> identifiable = (Identifiable<?>) extendable.getExtendable();
+        onUpdate(identifiable, attribute, variantId, oldValue, newValue);
+    }
+
+    @Override
+    public void onVariantCreated(String sourceVariantId, String targetVariantId) {
         // FIXME: implement this method
     }
 
+    @Override
+    public void onVariantOverwritten(String sourceVariantId, String targetVariantId) {
+        // FIXME: implement this method
+    }
+
+    @Override
+    public void onVariantRemoved(String variantId) {
+        // FIXME: implement this method
+    }
 }

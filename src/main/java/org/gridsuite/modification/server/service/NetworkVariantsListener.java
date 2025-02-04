@@ -47,10 +47,6 @@ public class NetworkVariantsListener implements NetworkListener {
     }
 
     @Override
-    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-    }
-
-    @Override
     public void onVariantCreated(String sourceVariantId, String targetVariantId) {
         // Initial variant modifications are not cloned
         if (!sourceVariantId.equals(VariantManagerConstants.INITIAL_VARIANT_ID)) {
@@ -64,18 +60,13 @@ public class NetworkVariantsListener implements NetworkListener {
     }
 
     @Override
-    public void onUpdate(Identifiable<?> identifiable, String attribute, String variantId, Object oldValue,
-            Object newValue) {
-        // do nothing
+    public void onVariantOverwritten(String sourceVariantId, String targetVariantId) {
+        equipmentInfosService.deleteVariants(networkUuid, List.of(targetVariantId));
+        onVariantCreated(sourceVariantId, targetVariantId);
     }
 
     @Override
-    public void onExtensionCreation(Extension<?> extension) {
-        // do nothing
-    }
-
-    @Override
-    public void onExtensionAfterRemoval(Identifiable<?> identifiable, String extensionName) {
+    public void onUpdate(Identifiable<?> identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         // do nothing
     }
 
@@ -85,8 +76,32 @@ public class NetworkVariantsListener implements NetworkListener {
     }
 
     @Override
-    public void onExtensionUpdate(Extension<?> extendable, String attribute, Object oldValue, Object newValue) {
+    public void onExtensionAfterRemoval(Identifiable<?> identifiable, String extensionName) {
         // do nothing
     }
 
+    @Override
+    public void onExtensionUpdate(Extension<?> extendable, String attribute, String variantId, Object oldValue, Object newValue) {
+        // do nothing
+    }
+
+    @Override
+    public void onExtensionCreation(Extension<?> extension) {
+        // do nothing
+    }
+
+    @Override
+    public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
+        // do nothing
+    }
+
+    @Override
+    public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
+        // do nothing
+    }
+
+    @Override
+    public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
+        // do nothing
+    }
 }
