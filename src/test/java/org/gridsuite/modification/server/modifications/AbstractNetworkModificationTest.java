@@ -205,7 +205,6 @@ public abstract class AbstractNetworkModificationTest {
 
         String modificationToUpdateJson = mapper.writeValueAsString(modificationToUpdate);
 
-        // TODO : ce TU foire et permet de tester mon problème de jpa, donc à prendre en référence
         mockMvc.perform(put(URI_NETWORK_MODIF_GET_PUT + modificationUuid).content(modificationToUpdateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
