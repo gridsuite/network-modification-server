@@ -7,11 +7,13 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.lang.NonNull;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -20,6 +22,8 @@ public interface EquipmentInfosRepository extends ElasticsearchRepository<Equipm
     List<EquipmentInfos> findAllByNetworkUuidAndVariantId(@NonNull UUID networkUuid, @NonNull String variantId);
 
     List<EquipmentInfos> findByIdInAndNetworkUuidAndVariantId(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId);
+
+    Stream<EquipmentInfos> findByIdInAndNetworkUuidAndVariantId(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId, Pageable pageable);
 
     void deleteAllByNetworkUuidAndVariantId(UUID networkUuid, String variantId);
 

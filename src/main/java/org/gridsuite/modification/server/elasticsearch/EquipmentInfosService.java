@@ -11,6 +11,7 @@ import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -91,6 +92,10 @@ public class EquipmentInfosService {
                         })
                         .collect(Collectors.toList())
         );
+    }
+
+    public Set<EquipmentInfos> findEquipmentInfosList(List<String> equipmentIds, UUID networkUuid, String variantId) {
+        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId, Pageable.ofSize(partitionSize)).collect(Collectors.toSet());
     }
 
     public void deleteAll() {
