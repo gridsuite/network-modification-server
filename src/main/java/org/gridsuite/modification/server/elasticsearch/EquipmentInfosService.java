@@ -35,8 +35,8 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size:10000}")
     private int partitionSize;
 
-    @Value("${spring.data.elasticsearch.max-clause-count:2048}")
-    public int maxClauseCount;
+    @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
+    public int partitionSizeForDeletion;
 
     public static final Set<String> EXCLUDED_TYPES_FOR_INDEXING = Set.of(IdentifiableType.SWITCH.name());
 
@@ -62,7 +62,7 @@ public class EquipmentInfosService {
     }
 
     public void deleteEquipmentInfosList(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId) {
-        Lists.partition(equipmentIds, maxClauseCount)
+        Lists.partition(equipmentIds, partitionSizeForDeletion)
                 .forEach(ids -> equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(ids, networkUuid, variantId));
     }
 
