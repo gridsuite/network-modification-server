@@ -87,6 +87,14 @@ public class EquipmentInfos extends BasicEquipmentInfos {
         throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
     }
 
+    public static String getEquipmentTypeName(@NonNull Identifiable<?> identifiable) {
+        return identifiable instanceof HvdcLine hvdcLine
+                ? String.format("%s_%s",
+                identifiable.getType().name(),
+                hvdcLine.getConverterStation1().getHvdcType().name())
+                : identifiable.getType().name();
+    }
+
     public static Set<VoltageLevelInfos> getVoltageLevelsInfos(@NonNull Identifiable<?> identifiable) {
 
         return getVoltageLevels(identifiable).stream()
