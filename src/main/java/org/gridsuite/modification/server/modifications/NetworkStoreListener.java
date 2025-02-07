@@ -268,29 +268,30 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
     }
 
-    private List<? extends AbstractBaseImpact> reduceDeletionImpacts() {
-        List<SimpleElementImpact> deletionImpacts = getDeletionSimpleImpacts();
-        return (getImpactedSubstationIds(deletionImpacts).size() >= collectionThreshold) ? getFullNetworkImpact() : deletionImpacts;
-    }
-
-    private List<AbstractBaseImpact> reduceNoDeletionImpacts() {
+    private List<AbstractBaseImpact> reduceNetworkImpacts() {
         List<AbstractBaseImpact> reducedImpacts = new ArrayList<>();
         Set<String> impactedSubstationsIds = new HashSet<>();
+        List<SimpleElementImpact> deletionImpacts = getDeletionSimpleImpacts();
+
+        // All network is impacted by deletions
+        if (getImpactedSubstationIds(deletionImpacts).size() >= collectionThreshold) {
+            return getFullNetworkImpact();
+        }
 
         // Group simple impacts over same element type into collection impact
         // And compute impactedSubstationsIds on the way
         for (IdentifiableType elementType : IdentifiableType.values()) {
-            List<SimpleElementImpact> noDeletionImpactsByType = getNoDeletionSimpleImpacts(elementType);
-            if (noDeletionImpactsByType.size() >= collectionThreshold) {
+            List<SimpleElementImpact> impactsByType = getCreationModificationSimpleImpacts(elementType);
+            if (impactsByType.size() >= collectionThreshold) {
                 reducedImpacts.add(CollectionElementImpact.builder()
                     .elementType(elementType)
                     .build());
             } else {
-                impactedSubstationsIds.addAll(getImpactedSubstationIds(noDeletionImpactsByType));
+                impactedSubstationsIds.addAll(getImpactedSubstationIds(impactsByType));
             }
         }
 
-        // All network is impacted ? then return only one substation collection impact
+        // All network is impacted by modifications and/or creations
         if (impactedSubstationsIds.size() >= collectionThreshold) {
             return getFullNetworkImpact();
         }
@@ -307,36 +308,14 @@ public class NetworkStoreListener implements NetworkListener {
             ).toList()
         );
 
-        return reducedImpacts;
-    }
-
-    private List<AbstractBaseImpact> reduceNetworkImpacts() {
-
-        List<? extends AbstractBaseImpact> reducedDeletionImpacts = reduceDeletionImpacts();
-        if (isAllNetworkImpacted(reducedDeletionImpacts)) {
-            return getFullNetworkImpact();
-        }
-
-        List<AbstractBaseImpact> reducedModificationImpacts = reduceNoDeletionImpacts();
-        if (isAllNetworkImpacted(reducedModificationImpacts)) {
-            return getFullNetworkImpact();
-        }
-
-        // fuse both reduced impacts
-        return Stream.concat(reducedModificationImpacts.stream(), reducedDeletionImpacts.stream()).toList();
+        // Fuse both reduced impacts
+        return Stream.concat(reducedImpacts.stream(), deletionImpacts.stream()).toList();
     }
 
     private List<AbstractBaseImpact> getFullNetworkImpact() {
         return List.of(CollectionElementImpact.builder()
                 .elementType(IdentifiableType.SUBSTATION)
                 .build());
-    }
-
-    private boolean isAllNetworkImpacted(List<? extends AbstractBaseImpact> impacts) {
-        return impacts.stream()
-            .filter(AbstractBaseImpact::isCollection)
-            .filter(c -> c.getElementType() == IdentifiableType.SUBSTATION)
-            .count() > 0;
     }
 
     private Set<String> getImpactedSubstationIds(List<SimpleElementImpact> impacts) {
@@ -352,7 +331,7 @@ public class NetworkStoreListener implements NetworkListener {
                 .toList();
     }
 
-    private List<SimpleElementImpact> getNoDeletionSimpleImpacts(IdentifiableType elementType) {
+    private List<SimpleElementImpact> getCreationModificationSimpleImpacts(IdentifiableType elementType) {
         return simpleImpacts.stream()
                 .filter(i -> !i.isDeletion() && i.getElementType() == elementType)
                 .distinct()
