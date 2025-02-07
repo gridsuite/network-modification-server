@@ -22,7 +22,6 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
@@ -240,20 +239,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(
-                deletedEquipments.stream().map(EquipmentInfosToDelete::id).toList(),
-                networkUuid,
-                variantId
-        ).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
 
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
         deletedEquipments.forEach(deletedEquipment -> {
-            if (presentEquipmentDeletionsIds.contains(deletedEquipment.id())) {
-                equipmentDeletionsIds.add(deletedEquipment.id());
-            }
             // add only allowed equipments types to be indexed to tombstonedEquipmentInfos
             if (!EquipmentInfosService.EXCLUDED_TYPES_FOR_INDEXING.contains(deletedEquipment.type())) {
+                equipmentDeletionsIds.add(deletedEquipment.id());
                 tombstonedEquipmentInfos.add(
                         TombstonedEquipmentInfos.builder()
                                 .networkUuid(networkUuid)
