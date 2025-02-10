@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ class NetworkVariantsListenerTests {
     @Autowired
     private EquipmentInfosService equipmentInfosService;
 
+    @Autowired
+    private EquipmentInfosRepository equipmentInfosRepository;
+
     @AfterEach
     void tearDown() {
         try {
@@ -45,7 +49,7 @@ class NetworkVariantsListenerTests {
 
         listener.onVariantRemoved(VARIANT_ID);
         listener.onVariantCreated("variant_1", "variant_2");
-        assertEquals(0, equipmentInfosService.findEquipmentInfosList(List.of("equipment1", "equipment2"), NETWORK_UUID, "variant_2").size());
+        assertEquals(0, equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("equipment1", "equipment2"), NETWORK_UUID, "variant_2").size());
         listener.onVariantOverwritten("variant_2", "variant_3");
         listener.onUpdate(null, null, null, null, null);
         listener.onExtensionUpdate(null, null, null, null, null);
