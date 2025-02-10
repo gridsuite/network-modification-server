@@ -190,6 +190,8 @@ public class NetworkModificationApplicator {
         // init application context
         modification.initApplicationContext(this.filterService);
 
+        network.getReportNodeContext().pushReportNode(subReportNode);
+
         // apply all changes on the network
         modification.apply(network, subReportNode);
     }

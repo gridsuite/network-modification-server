@@ -50,6 +50,7 @@
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <network-modification.version>0.6.1</network-modification.version>
+        <powsybl-network-store.version>1.23.0-SNAPSHOT</powsybl-network-store.version>
     </properties>
 
     <build>
@@ -113,6 +114,24 @@
 
     <dependencies>
         <!-- Compilation dependencies -->
+        <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-iidm-impl</artifactId>
+            <version>${powsybl-network-store.version}</version>
+        </dependency>
+        <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-client</artifactId>
+            <version>${powsybl-network-store.version}</version>
+        </dependency>
+        <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-network-store-model</artifactId>
+            <version>${powsybl-network-store.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
