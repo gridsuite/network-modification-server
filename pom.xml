@@ -48,11 +48,10 @@
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
-        <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgra
-e -->
-        <powsybl-network-store.version>1.21.1</powsybl-network-store.version>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <network-modification.version>0.6.1</network-modification.version>
+        <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
+        <powsybl-core.version>6.6.1</powsybl-core.version>
     </properties>
 
     <build>
@@ -95,24 +94,6 @@ e -->
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-client</artifactId>
-                <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-iidm-impl</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-model</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
 
             <!-- imports -->
             <dependency>
@@ -146,6 +127,8 @@ e -->
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-modification</artifactId>
+            <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
+            <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
