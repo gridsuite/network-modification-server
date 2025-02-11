@@ -79,13 +79,13 @@ public class NetworkModificationController {
     }
 
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list")
+    @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list, or Insert them (composite) at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
     public ResponseEntity<List<Optional<NetworkModificationResult>>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
                                                                                                 @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                                                                 @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
                                                                                                 @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
-                                                                                                @Parameter(description = "destination node can be built (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean build,
+                                                                                                @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
                                                                                                 @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY ->
@@ -94,11 +94,11 @@ public class NetworkModificationController {
                 ResponseEntity.ok().body(networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()));
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
-                boolean canBuildNode = build;
+                boolean applyModifications = canApply;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
-                    canBuildNode = false;
+                    applyModifications = false;
                 }
-                yield ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond(), canBuildNode));
+                yield ResponseEntity.ok().body(networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond(), applyModifications));
             }
         };
     }
@@ -141,7 +141,7 @@ public class NetworkModificationController {
     @Operation(summary = "Delete the modifications group")
     @ApiResponse(responseCode = "200", description = "Modifications group deleted")
     public ResponseEntity<Void> deleteModificationGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
-                                                              @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+                                                        @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
     }

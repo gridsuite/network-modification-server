@@ -22,6 +22,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.stereotype.Service;
@@ -250,13 +251,13 @@ public class NetworkModificationService {
     @Transactional
     public List<Optional<NetworkModificationResult>> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
                                                                        @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
-                                                                       boolean canBuildNode) {
+                                                                       boolean applyModifications) {
         // update origin/destinations groups to cut and paste all modificationsToMove
-        List<ModificationInfos> modificationInfos = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid).stream()
-            .map(networkModificationRepository::getModificationInfos)
-            .toList();
+        List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-        return canBuildNode && !modificationInfos.isEmpty() ? applyModifications(modificationInfos, applicationContexts) : List.of();
+        return applyModifications ?
+            applyModifications(modificationEntities.stream().map(networkModificationRepository::getModificationInfos).toList(), applicationContexts) :
+            List.of();
     }
 
     /**
@@ -268,12 +269,11 @@ public class NetworkModificationService {
                                                                  UUID beforeModificationUuid, UUID networkUuid, String variantId,
                                                                  ReportInfos reportInfos, List<UUID> modificationsToMove, boolean applyModifications) {
         // update origin/destinations groups to cut and paste all modificationsToMove
-        List<ModificationInfos> modificationInfos = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid)
-            .stream()
-            .map(networkModificationRepository::getModificationInfos)
-            .toList();
+        List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid);
 
-        return applyModifications ? applyModifications(networkUuid, variantId, reportInfos, modificationInfos) : Optional.empty();
+        return applyModifications ?
+            applyModifications(networkUuid, variantId, reportInfos, modificationEntities.stream().map(networkModificationRepository::getModificationInfos).toList()) :
+            Optional.empty();
     }
 
     public void duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
