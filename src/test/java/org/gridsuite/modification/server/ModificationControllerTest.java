@@ -24,6 +24,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
@@ -59,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -177,6 +179,17 @@ class ModificationControllerTest {
         return tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(networkUuid, variantId).stream().anyMatch(t -> t.getId().equals(equipmentId));
     }
 
+    private void assertApplicationStatusOKNew(MvcResult mvcResult) throws Exception {
+        List<Optional<NetworkModificationResult>> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, networkModificationResult.size());
+        assertTrue(networkModificationResult.get(0).isPresent());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get(0).get().getApplicationStatus());
+    }
+
+    /**
+     * TODO : Remove this method after the final integration of root networks
+     * Need to use the new endpoint with modificationContextInfos DTO (see above)
+     */
     private void assertApplicationStatusOK(MvcResult mvcResult) throws Exception {
         Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationResult.isPresent());
@@ -474,13 +487,14 @@ class ModificationControllerTest {
                 .equipmentId("v1b1")
                 .build();
         MvcResult mvcResult;
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
         for (int i = 0; i < number; i++) {
             switchStatusModificationInfos.setEquipmentAttributeValue(openStates.get(i % 2));
-            String switchStatusModificationInfosJson = objectWriter.writeValueAsString(switchStatusModificationInfos);
-            mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + "&groupUuid=" + groupId + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID())
-                            .content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(applicationContext)));
+            mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + groupId)
+                            .content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-            assertApplicationStatusOK(mvcResult);
+            assertApplicationStatusOKNew(mvcResult);
         }
         var modificationList = modificationRepository.getModifications(groupId, false, true);
         assertEquals(number, modificationList.size());
@@ -504,6 +518,102 @@ class ModificationControllerTest {
 
     @Test
     void testCopyModification() throws Exception {
+        // create 3 modifications
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // Duplicate [0] and [1], and append them at the end of the group modification list.
+        List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
+        List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
+        duplicateModificationUuidList.addAll(badModificationUuidList);
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(duplicateModificationUuidList, List.of(applicationContext)));
+        MvcResult mvcResult = mockMvc.perform(
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOKNew(mvcResult);
+
+        var newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        // now 5 modifications: first 0-1-2 are still the same, last 3-4 are new (duplicates of 0-1)
+        assertEquals(5, newModificationList.size());
+        assertEquals(modificationUuidList, newModificationUuidList.subList(0, 3));
+        // compare duplicates 0 and 3 (same data except uuid)
+        assertThat(newModificationList.get(3)).recursivelyEquals(modificationList.get(0));
+
+        // compare duplicates 1 and 4 (same data except uuid)
+        assertThat(newModificationList.get(4)).recursivelyEquals(modificationList.get(1));
+
+        // bad request error case: wrong action param
+        mockMvc.perform(
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=XXXXXXX")
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+
+        // create 1 modification in another group
+        UUID otherGroupId = UUID.randomUUID();
+        List<ModificationInfos> modificationListOtherGroup = createSomeSwitchModifications(otherGroupId, 1);
+        List<UUID> modificationUuidListOtherGroup = modificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+
+        // Duplicate the same modifications, and append them at the end of this new group modification list.
+        duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
+        bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(duplicateModificationUuidList, List.of(applicationContext)));
+        mvcResult = mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "?action=COPY")
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOKNew(mvcResult);
+
+        var newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, false, true);
+        List<UUID> newModificationUuidListOtherGroup = newModificationListOtherGroup.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        // now 3 modifications in new group: first 0 is still the same, last 1-2 are new (duplicates of 0-1 from first group)
+        assertEquals(3, newModificationListOtherGroup.size());
+        assertEquals(modificationUuidListOtherGroup, newModificationUuidListOtherGroup.subList(0, 1));
+        // compare duplicates
+        assertThat(newModificationListOtherGroup.get(1)).recursivelyEquals(modificationList.get(0));
+        assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
+
+        // Duplicate all modifications in TEST_GROUP_ID, and append them at the end of otherGroupId
+        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
+        mvcResult = mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOKNew(mvcResult);
+
+        newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
+        // now 8 modifications in new group: first 3 are still the same, 5 last are new duplicates from first group
+        assertEquals(8, newModificationListOtherGroup.size());
+
+        // compare duplicates
+        modificationList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        for (int i = 3; i < 8; ++i) {
+            assertThat(newModificationListOtherGroup.get(i)).recursivelyEquals(modificationList.get(i - 3));
+        }
+
+        // Duplicate modifications from a group and from a list : illegal operation
+        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(duplicateModificationUuidList, List.of(applicationContext)));
+        mvcResult = mockMvc.perform(
+                put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest()).andReturn();
+        assertEquals(new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID).getMessage(), mvcResult.getResponse().getContentAsString());
+    }
+
+    /**
+     * TODO : Remove this test after the final integration of root networks
+     * Need to use tne new test with modificationContextInfos DTO (see above)
+     */
+    @Test
+    void testCopyModificationOld() throws Exception {
         // create 3 modifications
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 3);
         List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
@@ -570,16 +680,14 @@ class ModificationControllerTest {
         assertThat(newModificationListOtherGroup.get(2)).recursivelyEquals(modificationList.get(1));
 
         // Duplicate all modifications in TEST_GROUP_ID, and append them at the end of otherGroupId
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         mvcResult = mockMvc.perform(
-                put("/v1/groups/" + otherGroupId + "/duplications"
-                    + "?networkUuid=" + TEST_NETWORK_ID
-                    + "&reportUuid=" + TEST_REPORT_ID
-                    + "&reporterId=" + UUID.randomUUID()
-                    + "&variantId=" + NetworkCreation.VARIANT_ID
-                    + "&duplicateFrom=" + TEST_GROUP_ID)
+                put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
+                    .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        assertApplicationStatusOK(mvcResult);
+        assertApplicationStatusOKNew(mvcResult);
 
         newModificationListOtherGroup = modificationRepository.getModifications(otherGroupId, true, true);
         // now 8 modifications in new group: first 3 are still the same, 5 last are new duplicates from first group
@@ -679,14 +787,11 @@ class ModificationControllerTest {
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
         // swap modifications: move [1] before [0]
-        List<UUID> movingModificationUuidList = Collections.singletonList(modificationUuidList.get(1));
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
-                + "&networkUuid=" + TEST_NETWORK_ID
-                + "&reportUuid=" + TEST_REPORT_ID
-                + "&reporterId=" + UUID.randomUUID()
-                + "&variantId=" + NetworkCreation.VARIANT_ID
-                + "&before=" + modificationUuidList.get(0);
-        mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+        List<UUID> movingModificationUuidList = List.of(modificationUuidList.get(1));
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(movingModificationUuidList, List.of(applicationContext)));
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&before=" + modificationUuidList.get(0);
+        mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -699,6 +804,68 @@ class ModificationControllerTest {
 
     @Test
     void testNetworkCompositeModification() throws Exception {
+        // Insert some switch modifications in the group
+        int modificationsNumber = 2;
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
+        assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // Create a composite modification with the switch modification
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        ModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
+            .modifications(modificationList)
+            .build();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
+        assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // get the composite modification (metadata only)
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications"))
+            .andExpect(status().isOk()).andReturn();
+        List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(modificationsNumber, compositeModificationContent.size());
+        assertNotNull(compositeModificationContent.get(0).getMessageType());
+        assertNotNull(compositeModificationContent.get(0).getMessageValues());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeValue());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
+        assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
+
+        // get the composite modification (complete data)
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications?onlyMetadata=false"))
+            .andExpect(status().isOk()).andReturn();
+        compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
+        assertEquals(Boolean.TRUE, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeValue());
+        assertEquals(IdentifiableType.SWITCH, ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
+        assertEquals("v1b1", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
+
+        // Insert the composite modification in the group
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(List.of(compositeModificationUuid), List.of(applicationContext)));
+        mvcResult = mockMvc.perform(
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT")
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOKNew(mvcResult);
+
+        List<ModificationInfos> newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(modificationsNumber * 2, newModificationList.size());
+        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
+        assertEquals(modificationUuids.get(0), newModificationUuidList.get(0));
+        assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(modificationsNumber));
+    }
+
+    /**
+     * TODO : Remove this test after the final integration of root networks
+     * Need to use tne new test with modificationContextInfos DTO (see above)
+     */
+    @Test
+    void testNetworkCompositeModificationOld() throws Exception {
         // Insert some switch modifications in the group
         int modificationsNumber = 2;
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
@@ -773,24 +940,20 @@ class ModificationControllerTest {
         UUID originSingleModification = createDeletionModification(TEST_GROUP2_ID, IdentifiableType.LOAD, "v1load").getUuid();
 
         // cut origin[0] and append to destination
-        List<UUID> movingModificationUuidList = Collections.singletonList(originSingleModification);
-        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE"
-                + "&networkUuid=" + TEST_NETWORK_ID
-                + "&reportUuid=" + TEST_REPORT_ID
-                + "&reporterId=" + UUID.randomUUID()
-                + "&variantId=" + NetworkCreation.VARIANT_ID
-                + "&originGroupUuid=" + TEST_GROUP2_ID
-                + "&build=true";
-
-        MvcResult mvcResult = mockMvc.perform(put(url).content(objectWriter.writeValueAsString(movingModificationUuidList))
+        List<UUID> movingModificationUuidList = List.of(originSingleModification);
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        String bodyJson = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(movingModificationUuidList, List.of(applicationContext)));
+        String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
+        MvcResult mvcResult = mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        networkModificationResult.get().getNetworkImpacts().forEach(i -> {
+        List<Optional<NetworkModificationResult>> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, networkModificationResult.size());
+        assertTrue(networkModificationResult.get(0).isPresent());
+        networkModificationResult.get(0).get().getNetworkImpacts().forEach(i -> {
             assertTrue(i.isSimple());
             SimpleElementImpact simpleImpact = (SimpleElementImpact) i;
             assertEquals(Set.of(substationS1), simpleImpact.getSubstationIds());
@@ -870,8 +1033,16 @@ class ModificationControllerTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .currentLimits1(c1)
-                .currentLimits2(c2)
+                .operationalLimitsGroups1(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(c1).build()
+                    )
+                )
+                .operationalLimitsGroups2(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(c2).build()
+                    )
+                )
                 .build();
 
         mvcResult = mockMvc.perform(
@@ -1477,15 +1648,15 @@ class ModificationControllerTest {
                     .build()))
             .build();
 
-        MvcResult mvcResult = mockMvc.perform(post("/v1/groups/modification")
-                        .content(objectWriter.writeValueAsString(modificationsInfos1))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        UUID groupUuid = UUID.fromString(mapper.readValue(mvcResult.getResponse().getContentAsString(), String.class));
+        UUID groupUuid = UUID.randomUUID();
+        mockMvc.perform(post(URI_NETWORK_MODIF_BASE)
+                .queryParam("groupUuid", groupUuid.toString())
+                .content(objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(modificationsInfos1, List.of())))
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
 
         // Get the modifications
-        mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
+        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
                 status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 

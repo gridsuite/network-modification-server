@@ -24,12 +24,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.NetworkInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.dto.SubstationInfos;
-import org.gridsuite.modification.server.dto.VoltageLevelInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
@@ -528,7 +523,7 @@ class BuildTest {
                 .connectionPosition(0)
                 .terminalConnected(true)
                 .build()));
-        entities2.add(ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").currentLimits1(null).currentLimits2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
+        entities2.add(ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").operationalLimitsGroups1(null).operationalLimitsGroups2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -584,8 +579,20 @@ class BuildTest {
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("1A")
                 .connected2(true)
-                .currentLimits1(CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                .currentLimits2(CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                .operationalLimitsGroups1(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(3.).build())
+                        .build()
+                    )
+                )
+                .operationalLimitsGroups2(
+                    List.of(
+                        OperationalLimitsGroupInfos.builder().currentLimits(
+                            CurrentLimitsInfos.builder().permanentLimit(2.).build())
+                        .build()
+                    )
+                )
                 .connectionName1("cn201")
                 .connectionDirection1(ConnectablePosition.Direction.TOP)
                 .connectionName2("cn202")
@@ -925,14 +932,19 @@ class BuildTest {
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
 
         // Incremental mode : No error send with exception
-        Optional<NetworkModificationResult> networkModificationResult2 = networkModificationService.createNetworkModification(TEST_NETWORK_ID, variantId, groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos);
-        assertTrue(networkModificationResult2.isPresent());
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
+        List<Optional<NetworkModificationResult>> networkModificationResult2 = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        assertEquals(1, networkModificationResult2.size());
+        assertTrue(networkModificationResult2.get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
-        assertTrue(networkModificationService.createNetworkModification(TEST_NETWORK_ID, UUID.randomUUID().toString(), groupUuid, new ReportInfos(reportUuid, reporterId), loadCreationInfos).isEmpty());
+        applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
+        networkModificationResult2 = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        assertEquals(1, networkModificationResult2.size());
+        assertTrue(networkModificationResult2.get(0).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
     }
 

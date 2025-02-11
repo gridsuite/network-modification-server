@@ -169,7 +169,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
     }
 
     /*
-    PUT /v1/groups/{groupUuid}/duplications SQL requests analysis
+    PUT /v1/groups/{groupUuid}?action=COPY SQL requests analysis
 
     Given an example with 2 tabular modifications having 1000 modifications each
 

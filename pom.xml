@@ -21,7 +21,7 @@
 
     <groupId>org.gridsuite</groupId>
     <artifactId>gridsuite-network-modification-server</artifactId>
-    <version>2.12.0-SNAPSHOT</version>
+    <version>2.14.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>Network modification server</name>
@@ -44,18 +44,14 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>35</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>36.1.0</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
-        <network-modification.version>0.4.0</network-modification.version>
-        <!-- FIXME : Remove when gridsuite-dependencies.version are updated to include gridsuite-filter
-            version 1.0.16 or later -->
-        <filter.version>1.0.16</filter.version>
-
-        <!-- FIXME: powsybl-ws-commons module's version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-commons.version upgrade -->
-        <powsybl-ws-commons.version>1.18.0</powsybl-ws-commons.version>
+        <network-modification.version>0.7.0</network-modification.version>
+        <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
+        <powsybl-core.version>6.6.1</powsybl-core.version>
     </properties>
 
     <build>
@@ -98,13 +94,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- FIXME : Remove this dependency when gridsuite-dependencies.version are updated to include gridsuite-filter
-             version ${filter.version} below or later -->
-            <dependency>
-                <groupId>org.gridsuite</groupId>
-                <artifactId>gridsuite-filter</artifactId>
-                <version>${filter.version}</version>
-            </dependency>
 
             <!-- imports -->
             <dependency>
@@ -138,6 +127,8 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-modification</artifactId>
+            <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
+            <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -146,8 +137,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ws-commons</artifactId>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <version>${powsybl-ws-commons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

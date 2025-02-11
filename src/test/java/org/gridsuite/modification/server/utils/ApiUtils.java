@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -53,17 +54,19 @@ public final class ApiUtils {
     }
 
     public static Optional<NetworkModificationResult> putGroupsDuplications(MockMvc mockMvc, UUID originGroupUuid, UUID targetGroupUuid, UUID networkUuid) throws Exception {
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID());
+        String bodyJson = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(List.of(), List.of(applicationContext)));
         MvcResult mvcResult = mockMvc.perform(
-                put("/v1/groups/{groupUuid}/duplications", targetGroupUuid)
-                    .param("networkUuid", networkUuid.toString())
-                    .param("reporterId", UUID.randomUUID().toString())
-                    .param("duplicateFrom", originGroupUuid.toString())
-                    .param("reportUuid", UUID.randomUUID().toString())
-                    .param("variantId", UUID.randomUUID().toString())
+                put("/v1/groups/{groupUuid}", targetGroupUuid)
+                    .param("action", "COPY")
+                    .param("originGroupUuid", originGroupUuid.toString())
+                    .content(bodyJson)
+                    .contentType(MediaType.APPLICATION_JSON)
             )
             .andExpectAll(status().isOk())
             .andReturn();
-        return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        List<Optional<NetworkModificationResult>> result = getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        return result.isEmpty() ? Optional.empty() : result.get(0);
     }
 
     public static Optional<NetworkModificationResult> putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {

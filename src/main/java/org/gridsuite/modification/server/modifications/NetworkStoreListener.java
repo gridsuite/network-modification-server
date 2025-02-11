@@ -22,7 +22,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
 
@@ -104,24 +104,18 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
-    public void onElementRemoved(Identifiable identifiable, String attribute, Object oldValue) {
+    public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
         addSimpleModificationImpact(identifiable);
     }
 
     @Override
-    public void onElementAdded(Identifiable identifiable, String attribute, Object newValue) {
+    public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
         addSimpleModificationImpact(identifiable);
     }
 
     @Override
-    public void onElementReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
+    public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-    }
-
-    @Override
-    public void onUpdate(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable);
-        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
     }
 
     @Override
@@ -245,20 +239,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void flushEquipmentInfos() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        Set<String> presentEquipmentDeletionsIds = equipmentInfosService.findEquipmentInfosList(
-                deletedEquipments.stream().map(EquipmentInfosToDelete::id).toList(),
-                networkUuid,
-                variantId
-        ).stream().map(EquipmentInfos::getId).collect(Collectors.toSet());
 
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
         deletedEquipments.forEach(deletedEquipment -> {
-            if (presentEquipmentDeletionsIds.contains(deletedEquipment.id())) {
-                equipmentDeletionsIds.add(deletedEquipment.id());
-            }
             // add only allowed equipments types to be indexed to tombstonedEquipmentInfos
             if (!EquipmentInfosService.EXCLUDED_TYPES_FOR_INDEXING.contains(deletedEquipment.type())) {
+                equipmentDeletionsIds.add(deletedEquipment.id());
                 tombstonedEquipmentInfos.add(
                         TombstonedEquipmentInfos.builder()
                                 .networkUuid(networkUuid)
@@ -276,27 +263,32 @@ public class NetworkStoreListener implements NetworkListener {
     private List<AbstractBaseImpact> reduceNetworkImpacts() {
         List<AbstractBaseImpact> reducedImpacts = new ArrayList<>();
         Set<String> impactedSubstationsIds = new HashSet<>();
+        List<SimpleElementImpact> deletionImpacts = getDeletionSimpleImpacts();
 
-        // Impacts type collection
+        // All network is impacted by deletions
+        if (getImpactedSubstationIds(deletionImpacts).size() >= collectionThreshold) {
+            return getFullNetworkImpact();
+        }
+
+        // Group simple impacts over same element type into collection impact
+        // And compute impactedSubstationsIds on the way
         for (IdentifiableType elementType : IdentifiableType.values()) {
-            List<SimpleElementImpact> impacts = getSimpleImpacts(elementType);
-            if (impacts.size() >= collectionThreshold) {
+            List<SimpleElementImpact> impactsByType = getCreationModificationSimpleImpacts(elementType);
+            if (impactsByType.size() >= collectionThreshold) {
                 reducedImpacts.add(CollectionElementImpact.builder()
                     .elementType(elementType)
                     .build());
             } else {
-                impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
+                impactedSubstationsIds.addAll(getImpactedSubstationIds(impactsByType));
             }
         }
 
-        // All network is impacted ?
+        // All network is impacted by modifications and/or creations
         if (impactedSubstationsIds.size() >= collectionThreshold) {
-            return List.of(CollectionElementImpact.builder()
-                    .elementType(IdentifiableType.SUBSTATION)
-                    .build());
+            return getFullNetworkImpact();
         }
 
-        // Impacts type simple for substation only
+        // Create simple impacts for substation type only
         reducedImpacts.addAll(
             impactedSubstationsIds.stream().map(id ->
                 SimpleElementImpact.builder()
@@ -308,13 +300,30 @@ public class NetworkStoreListener implements NetworkListener {
             ).toList()
         );
 
-        // Impacts type simple for deletion only
-        reducedImpacts.addAll(simpleImpacts.stream().filter(SimpleElementImpact::isDeletion).distinct().toList());
-
-        return reducedImpacts;
+        // Fuse both reduced impacts
+        return Stream.concat(reducedImpacts.stream(), deletionImpacts.stream()).toList();
     }
 
-    private List<SimpleElementImpact> getSimpleImpacts(IdentifiableType elementType) {
+    private List<AbstractBaseImpact> getFullNetworkImpact() {
+        return List.of(CollectionElementImpact.builder()
+                .elementType(IdentifiableType.SUBSTATION)
+                .build());
+    }
+
+    private Set<String> getImpactedSubstationIds(List<SimpleElementImpact> impacts) {
+        Set<String> impactedSubstationsIds = new HashSet<>();
+        impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
+        return impactedSubstationsIds;
+    }
+
+    private List<SimpleElementImpact> getDeletionSimpleImpacts() {
+        return simpleImpacts.stream()
+                .filter(SimpleElementImpact::isDeletion)
+                .distinct()
+                .toList();
+    }
+
+    private List<SimpleElementImpact> getCreationModificationSimpleImpacts(IdentifiableType elementType) {
         return simpleImpacts.stream()
                 .filter(i -> !i.isDeletion() && i.getElementType() == elementType)
                 .distinct()
@@ -337,8 +346,23 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
-    public void onExtensionUpdate(Extension<?> extendable, String attribute, Object oldValue, Object newValue) {
+    public void onExtensionUpdate(Extension<?> extendable, String attribute, String variantId, Object oldValue, Object newValue) {
+        Identifiable<?> identifiable = (Identifiable<?>) extendable.getExtendable();
+        onUpdate(identifiable, attribute, variantId, oldValue, newValue);
+    }
+
+    @Override
+    public void onVariantCreated(String sourceVariantId, String targetVariantId) {
         // FIXME: implement this method
     }
 
+    @Override
+    public void onVariantOverwritten(String sourceVariantId, String targetVariantId) {
+        // FIXME: implement this method
+    }
+
+    @Override
+    public void onVariantRemoved(String variantId) {
+        // FIXME: implement this method
+    }
 }

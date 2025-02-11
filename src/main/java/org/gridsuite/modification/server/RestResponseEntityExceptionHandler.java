@@ -9,6 +9,7 @@ package org.gridsuite.modification.server;
 import org.gridsuite.modification.NetworkModificationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,14 +21,24 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class RestResponseEntityExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestResponseEntityExceptionHandler.class);
+    private static final String HANDLER_MESSAGE = "Caught in handler";
 
     @ExceptionHandler(NetworkModificationException.class)
-    protected ResponseEntity<Object> handleNetworkModificationException(NetworkModificationException exception) {
+    protected ResponseEntity<Object> handleException(NetworkModificationException exception) {
+        return handleException(exception.getType().status, exception);
+    }
+
+    @ExceptionHandler(NetworkModificationServerException.class)
+    protected ResponseEntity<Object> handleException(NetworkModificationServerException exception) {
+        return handleException(exception.getType().status, exception);
+    }
+
+    private ResponseEntity<Object> handleException(HttpStatus status, Exception exception) {
         if (LOGGER.isErrorEnabled()) {
-            LOGGER.error(exception.getMessage());
+            LOGGER.error(HANDLER_MESSAGE, exception);
         }
         return ResponseEntity
-                .status(exception.getType().status)
-                .body(exception.getMessage());
+            .status(status)
+            .body(exception.getMessage());
     }
 }
