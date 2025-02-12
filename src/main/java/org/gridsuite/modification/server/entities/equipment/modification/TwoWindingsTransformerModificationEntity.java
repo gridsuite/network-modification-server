@@ -374,6 +374,14 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .ratedU1(IAttributeModificationEmbeddable.toAttributeModification(getRatedU1()))
                 .ratedU2(IAttributeModificationEmbeddable.toAttributeModification(getRatedU2()))
                 .ratedS(IAttributeModificationEmbeddable.toAttributeModification(getRatedS()))
+                .p1MeasurementValue(toAttributeModification(getP1MeasurementValue()))
+                .p1MeasurementValidity(toAttributeModification(getP1MeasurementValidity()))
+                .q1MeasurementValue(toAttributeModification(getQ1MeasurementValue()))
+                .q1MeasurementValidity(toAttributeModification(getQ1MeasurementValidity()))
+                .p2MeasurementValue(toAttributeModification(getP2MeasurementValue()))
+                .p2MeasurementValidity(toAttributeModification(getP2MeasurementValidity()))
+                .q2MeasurementValue(toAttributeModification(getQ2MeasurementValue()))
+                .q2MeasurementValidity(toAttributeModification(getQ2MeasurementValidity()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()
