@@ -16,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,11 +89,31 @@ public class EquipmentInfos extends BasicEquipmentInfos {
     }
 
     public static String getEquipmentTypeName(@NonNull Identifiable<?> identifiable) {
-        return identifiable instanceof HvdcLine hvdcLine
-                ? String.format("%s_%s",
-                identifiable.getType().name(),
-                hvdcLine.getConverterStation1().getHvdcType().name())
-                : identifiable.getType().name();
+        return Optional.of(identifiable)
+                .filter(HvdcLine.class::isInstance)
+                .map(i -> (HvdcLine) i)
+                .map(EquipmentInfos::getHvdcTypeName)
+                .orElseGet(() -> identifiable.getType().name());
+    }
+
+    /**
+     * @param hvdcLine The hvdc line to get hvdc type name
+     * @return The hvdc type name string
+     * @throws NetworkModificationException if converter station types don't match
+     */
+    private static String getHvdcTypeName(HvdcLine hvdcLine) {
+        Optional.of(hvdcLine)
+                .filter(hvdc -> {
+                    var type1 = hvdc.getConverterStation1().getHvdcType();
+                    var type2 = hvdc.getConverterStation2().getHvdcType();
+                    return type1.equals(type2);
+                })
+                .orElseThrow(() -> NetworkModificationException.createEquipmentTypeNotSupported(
+                        hvdcLine.getClass().getSimpleName()));
+
+        return String.format("%s_%s",
+                hvdcLine.getType().name(),
+                hvdcLine.getConverterStation1().getHvdcType().name());
     }
 
     public static Set<VoltageLevelInfos> getVoltageLevelsInfos(@NonNull Identifiable<?> identifiable) {
