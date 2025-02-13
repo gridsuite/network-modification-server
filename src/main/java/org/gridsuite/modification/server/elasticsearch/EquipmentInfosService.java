@@ -35,6 +35,9 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size:10000}")
     private int partitionSize;
 
+    @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
+    public int partitionSizeForDeletion;
+
     public static final Set<String> EXCLUDED_TYPES_FOR_INDEXING = Set.of(IdentifiableType.SWITCH.name());
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
@@ -59,7 +62,8 @@ public class EquipmentInfosService {
     }
 
     public void deleteEquipmentInfosList(@NonNull List<String> equipmentIds, @NonNull UUID networkUuid, @NonNull String variantId) {
-        equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
+        Lists.partition(equipmentIds, partitionSizeForDeletion)
+                .forEach(ids -> equipmentInfosRepository.deleteByIdInAndNetworkUuidAndVariantId(ids, networkUuid, variantId));
     }
 
     public void deleteVariants(@NonNull UUID networkUuid, List<String> variantIds) {
@@ -86,10 +90,6 @@ public class EquipmentInfosService {
                         })
                         .collect(Collectors.toList())
         );
-    }
-
-    public List<EquipmentInfos> findEquipmentInfosList(List<String> equipmentIds, UUID networkUuid, String variantId) {
-        return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(equipmentIds, networkUuid, variantId);
     }
 
     public void deleteAll() {
