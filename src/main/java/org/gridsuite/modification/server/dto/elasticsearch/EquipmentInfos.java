@@ -16,7 +16,6 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -89,11 +88,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
     }
 
     public static String getEquipmentTypeName(@NonNull Identifiable<?> identifiable) {
-        return Optional.of(identifiable)
-                .filter(HvdcLine.class::isInstance)
-                .map(i -> (HvdcLine) i)
-                .map(EquipmentInfos::getHvdcTypeName)
-                .orElseGet(() -> identifiable.getType().name());
+        return identifiable.getType() == IdentifiableType.HVDC_LINE ? getHvdcTypeName((HvdcLine) identifiable) : identifiable.getType().name();
     }
 
     /**
@@ -102,18 +97,11 @@ public class EquipmentInfos extends BasicEquipmentInfos {
      * @throws NetworkModificationException if converter station types don't match
      */
     private static String getHvdcTypeName(HvdcLine hvdcLine) {
-        Optional.of(hvdcLine)
-                .filter(hvdc -> {
-                    var type1 = hvdc.getConverterStation1().getHvdcType();
-                    var type2 = hvdc.getConverterStation2().getHvdcType();
-                    return type1.equals(type2);
-                })
-                .orElseThrow(() -> NetworkModificationException.createEquipmentTypeNotSupported(
-                        hvdcLine.getClass().getSimpleName()));
+        if (hvdcLine.getConverterStation1().getHvdcType() != hvdcLine.getConverterStation2().getHvdcType()) {
+            throw NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId());
+        }
 
-        return String.format("%s_%s",
-                hvdcLine.getType().name(),
-                hvdcLine.getConverterStation1().getHvdcType().name());
+        return String.format("%s_%s", hvdcLine.getType(), hvdcLine.getConverterStation1().getHvdcType());
     }
 
     public static Set<VoltageLevelInfos> getVoltageLevelsInfos(@NonNull Identifiable<?> identifiable) {
