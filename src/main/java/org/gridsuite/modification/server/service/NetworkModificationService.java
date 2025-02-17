@@ -149,9 +149,9 @@ public class NetworkModificationService {
     // Transaction made in 'saveModifications' method
     // TODO Add transaction when errors will no longer be sent to the front
     public NetworkModificationsResult createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
+        List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
 
-        return new NetworkModificationsResult(List.of(modificationInfo.getUuid()), applyModifications(List.of(modificationInfo), applicationContexts));
+        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(List.of(modificationInfo), applicationContexts));
     }
 
     /**
@@ -178,7 +178,7 @@ public class NetworkModificationService {
             applyModifications(modificationApplicationContext.networkUuid(),
                 modificationApplicationContext.variantId(),
                 new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId()),
-                modifications)
+                modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid())).toList())
         ).toList();
     }
 
@@ -210,10 +210,12 @@ public class NetworkModificationService {
 
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reporterId) -> {
+                Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExcludeMap().get(groupUuid);
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
                     modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
                         .stream()
+                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getUuid()))
                         .filter(m -> !m.getStashed())
                         .collect(Collectors.toList());
                 } catch (NetworkModificationException e) {
@@ -341,9 +343,9 @@ public class NetworkModificationService {
             throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
         }
         List<ModificationInfos> modificationInfos = originGroupUuid != null ? networkModificationRepository.getActiveModificationsInfos(originGroupUuid) : networkModificationRepository.getModificationsInfos(modificationsUuids);
-        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        List<ModificationEntity> duplicateModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return new NetworkModificationsResult(
-            modificationInfos.stream().map(ModificationInfos::getUuid).toList(),
+            duplicateModifications.stream().map(ModificationEntity::getId).toList(),
             applyModifications(modificationInfos, applicationContexts)
         );
     }
@@ -364,8 +366,8 @@ public class NetworkModificationService {
     @Transactional
     public NetworkModificationsResult insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
-        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
-        return new NetworkModificationsResult(modificationInfos.stream().map(ModificationInfos::getUuid).toList(), applyModifications(modificationInfos, applicationContexts));
+        List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(modificationInfos, applicationContexts));
     }
 
     /**

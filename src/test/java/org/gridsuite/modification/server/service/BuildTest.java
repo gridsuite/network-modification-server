@@ -263,10 +263,12 @@ class BuildTest {
         modificationRepository.saveModifications(TEST_GROUP_ID_2, entities2);
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)))
+            .build();
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(buildInfos)))
@@ -279,10 +281,12 @@ class BuildTest {
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
-        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
-            VARIANT_ID_2,
-            List.of(),
-            List.of());
+        BuildInfos newBuildInfos = BuildInfos.builder()
+            .originVariantId(NetworkCreation.VARIANT_ID)
+            .destinationVariantId(VARIANT_ID_2)
+            .modificationGroupUuids(List.of())
+            .reportsInfos(List.of())
+            .build();
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(newBuildInfos)))
@@ -303,10 +307,12 @@ class BuildTest {
     @Test
     void runBuildWithEmptyGroupTest(final MockWebServer server) throws Exception {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
+            .build();
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
                 .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
                 .build());
@@ -405,10 +411,12 @@ class BuildTest {
         modificationRepository.saveModifications(TEST_GROUP_ID, equipmentsToAdd);
 
         // Create build infos
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
+            .build();
 
         // Build variant
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
@@ -695,10 +703,12 @@ class BuildTest {
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID, TEST_GROUP_ID_2),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)))
+            .build();
         String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson))
             .andExpect(status().isOk());
@@ -793,10 +803,12 @@ class BuildTest {
 
         // Execute another build starting from variant VARIANT_ID to variant VARIANT_ID_2
         // to check
-        BuildInfos newBuildInfos = new BuildInfos(NetworkCreation.VARIANT_ID,
-            VARIANT_ID_2,
-            Collections.emptyList(),
-            Collections.emptyList());
+        BuildInfos newBuildInfos = BuildInfos.builder()
+            .originVariantId(NetworkCreation.VARIANT_ID)
+            .destinationVariantId(VARIANT_ID_2)
+            .modificationGroupUuids(Collections.emptyList())
+            .reportsInfos(Collections.emptyList())
+            .build();
         buildInfosJson = objectWriter.writeValueAsString(newBuildInfos);
         mockMvc.perform(post(uriString, TEST_NETWORK_ID).contentType(MediaType.APPLICATION_JSON).content(buildInfosJson)).andExpect(status().isOk());
 
@@ -834,10 +846,12 @@ class BuildTest {
 
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
 
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
+            .build();
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
         // test that only non stashed modifications have been made on variant VARIANT_ID
@@ -859,10 +873,12 @@ class BuildTest {
 
         // Build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
         // Because TestChannelBinder implementation is synchronous the build is made in a different thread
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
+            .build();
         String buildInfosJson = mapper.writeValueAsString(buildInfos);
         CompletableFuture.runAsync(() -> {
             try {
@@ -899,10 +915,12 @@ class BuildTest {
 
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
-        BuildInfos buildInfos = new BuildInfos(VariantManagerConstants.INITIAL_VARIANT_ID,
-            NetworkCreation.VARIANT_ID,
-            List.of(TEST_GROUP_ID),
-            List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)));
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)))
+            .build();
         mockMvc.perform(post(uriString, TEST_NETWORK_ID)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsString(buildInfos)))
@@ -933,18 +951,18 @@ class BuildTest {
 
         // Incremental mode : No error send with exception
         ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
-        List<Optional<NetworkModificationResult>> networkModificationResult2 = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
-        assertEquals(1, networkModificationResult2.size());
-        assertTrue(networkModificationResult2.get(0).isPresent());
+        NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
         testNetworkModificationsCount(groupUuid, 1);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
         applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
-        networkModificationResult2 = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
-        assertEquals(1, networkModificationResult2.size());
-        assertTrue(networkModificationResult2.get(0).isEmpty());
+        networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().get(0).isEmpty());
         testNetworkModificationsCount(groupUuid, 2);
     }
 
