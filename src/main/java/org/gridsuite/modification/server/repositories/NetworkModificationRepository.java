@@ -178,7 +178,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public Map<UUID, UUID> duplicateModifications(List<UUID> sourceModificationUuids) {
+    public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
         List<ModificationEntity> sourceEntities = modificationRepository.findAllById(sourceModificationUuids);
         // findAllById does not keep sourceModificationUuids order, but
         // sourceEntities, copyEntities, newEntities have the same order.

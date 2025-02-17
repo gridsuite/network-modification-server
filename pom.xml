@@ -15,7 +15,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>20</version>
+        <version>21</version>
         <relativePath/>
     </parent>
 
@@ -44,14 +44,12 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>36.1.0</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>37.0.0</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <network-modification.version>0.7.0</network-modification.version>
-        <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
-        <powsybl-core.version>6.6.1</powsybl-core.version>
     </properties>
 
     <build>
@@ -127,8 +125,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-modification</artifactId>
-            <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
-            <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
