@@ -12,6 +12,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -65,8 +66,8 @@ public final class ApiUtils {
             )
             .andExpectAll(status().isOk())
             .andReturn();
-        List<Optional<NetworkModificationResult>> result = getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        return result.isEmpty() ? Optional.empty() : result.get(0);
+        NetworkModificationsResult result = getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        return result.modificationResults().isEmpty() ? Optional.empty() : result.modificationResults().get(0);
     }
 
     public static Optional<NetworkModificationResult> putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
