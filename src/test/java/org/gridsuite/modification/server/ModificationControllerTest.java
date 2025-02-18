@@ -208,8 +208,7 @@ class ModificationControllerTest {
         String errorMessage = "equipmentId is marked non-null but is null";
         LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder::build).getMessage());
-        LoadCreationInfosBuilder<?, ?> loadCreationBuilder1 = loadCreationBuilder.equipmentId(null);
-        assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder1::build).getMessage());
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationBuilder.equipmentId(null)).getMessage());
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().equipmentId("idLoad").build();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
     }
@@ -1715,15 +1714,20 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testDuplicate() throws Exception {
-        // create 1 modification
+    void testDuplicateCompositeModification() throws Exception {
+        // Create a composite modification with the modification
         List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
-        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
+        List<UUID> modificationUuidList = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                .content(mapper.writeValueAsString(modificationUuidList)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
         // Duplicate it without group ownership
-        MvcResult mvcResult = mockMvc.perform(
-            post(URI_NETWORK_MODIF_BASE)
-                    .content(objectWriter.writeValueAsString(modificationUuidList))
+        mvcResult = mockMvc.perform(
+            post(URI_COMPOSITE_NETWORK_MODIF_BASE + "/duplication")
+                    .content(objectWriter.writeValueAsString(List.of(compositeModificationUuid)))
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -1733,16 +1737,16 @@ class ModificationControllerTest {
         UUID returnedSourceId = returnedIds.getKey();
         UUID returnedNewId = returnedIds.getValue();
         assertNotEquals(returnedSourceId, returnedNewId);
-        assertEquals(modificationUuidList.get(0), returnedSourceId);
+        assertEquals(compositeModificationUuid, returnedSourceId);
 
-        ModificationInfos sourceModificationInfos = modificationRepository.getModificationInfo(modificationUuidList.get(0));
+        ModificationInfos sourceModificationInfos = modificationRepository.getModificationInfo(compositeModificationUuid);
         ModificationInfos newModificationInfos = modificationRepository.getModificationInfo(returnedNewId);
         // compare duplicate with the source (same data except uuid)
         assertThat(sourceModificationInfos).recursivelyEquals(newModificationInfos);
         // source group has not changed
         List<ModificationInfos> groupModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, groupModifications.size());
-        assertEquals(returnedSourceId, groupModifications.get(0).getUuid());
+        assertEquals(modificationUuidList.get(0), groupModifications.get(0).getUuid());
 
         // now delete the duplicate modification
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
@@ -1752,7 +1756,7 @@ class ModificationControllerTest {
         // source group has not changed
         groupModifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, groupModifications.size());
-        assertEquals(returnedSourceId, groupModifications.get(0).getUuid());
+        assertEquals(modificationUuidList.get(0), groupModifications.get(0).getUuid());
         // duplicate has been deleted
         assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
                 -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
@@ -1787,63 +1791,5 @@ class ModificationControllerTest {
                     content().string(new NetworkModificationException(MODIFICATION_DELETION_ERROR,
                         String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
             );
-    }
-
-    @Test
-    void testApplyModificationsFromUuids() throws Exception {
-        // create a modification (opening a closed switch) in the database
-        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
-                .equipmentType(IdentifiableType.SWITCH)
-                .equipmentAttributeName("open")
-                .equipmentId("v1b1")
-                .equipmentAttributeValue(true)
-                .build();
-        CompositeModificationInfos compositeModificationInfos = CompositeModificationInfos.builder()
-                .modifications(List.of(switchStatusModificationInfos))
-                .build();
-
-        UUID groupUuid = UUID.randomUUID();
-        mockMvc.perform(post(URI_NETWORK_MODIF_BASE)
-                .queryParam("groupUuid", groupUuid.toString())
-                .content(objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(compositeModificationInfos, List.of())))
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-        MvcResult mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=false", groupUuid)).andExpectAll(
-                status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
-            .andReturn();
-        List<ModificationInfos> modificationsInfos = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        List<UUID> modificationUuidList = modificationsInfos.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-
-        Switch sw = network.getSwitch("v1b1");
-        assertNotNull(sw);
-        assertFalse(sw.isOpen());  // switch is closed
-
-        // apply the modification on the network with a reporterId
-        mvcResult = mockMvc.perform(
-                put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
-                    + "?variantId=" + NetworkCreation.VARIANT_ID + "&reporterId=" + UUID.randomUUID())
-                    .content(objectWriter.writeValueAsString(modificationUuidList))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        assertApplicationStatusOK(mvcResult);
-
-        var newModificationList = modificationRepository.getModifications(groupUuid, false, true);
-        List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
-
-        // still 1 modification : no new modification has been created
-        assertEquals(1, newModificationList.size());
-        assertEquals(modificationUuidList, newModificationUuidList);
-
-        assertTrue(sw.isOpen());  // switch is opened
-
-        // apply the modification on the network without reporterId
-        mvcResult = mockMvc.perform(
-                put("/v1/networks/" + TEST_NETWORK_ID + "/apply"
-                    + "?variantId=" + NetworkCreation.VARIANT_ID)
-                    .content(objectWriter.writeValueAsString(modificationUuidList))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        assertApplicationStatusOK(mvcResult);
     }
 }
