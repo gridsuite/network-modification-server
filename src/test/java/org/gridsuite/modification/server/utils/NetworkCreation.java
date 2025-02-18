@@ -207,7 +207,7 @@ public final class NetworkCreation {
         Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(network,
             "v3load",
             "LOAD",
-            "V3");
+            "v3");
         twt2.newPhaseTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)

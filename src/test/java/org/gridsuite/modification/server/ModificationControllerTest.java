@@ -208,8 +208,7 @@ class ModificationControllerTest {
         String errorMessage = "equipmentId is marked non-null but is null";
         LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder::build).getMessage());
-        LoadCreationInfosBuilder<?, ?> loadCreationBuilder1 = loadCreationBuilder.equipmentId(null);
-        assertEquals(errorMessage, assertThrows(NullPointerException.class, loadCreationBuilder1::build).getMessage());
+        assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationBuilder.equipmentId(null)).getMessage());
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().equipmentId("idLoad").build();
         assertEquals(errorMessage, assertThrows(NullPointerException.class, () -> loadCreationInfos.setEquipmentId(null)).getMessage());
     }

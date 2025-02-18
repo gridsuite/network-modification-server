@@ -353,7 +353,7 @@ class BuildTest {
                 .equipmentId("newLoad")
                 .equipmentName("newLoad")
                 .loadType(LoadType.AUXILIARY)
-                .voltageLevelId("vl1")
+                .voltageLevelId("v1")
                 .busOrBusbarSectionId("1.1")
                 .p0(10.)
                 .q0(20.)
@@ -437,7 +437,7 @@ class BuildTest {
                 .id("newLoad")
                 .name("newLoad")
                 .type(IdentifiableType.LOAD.name())
-                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("vl1").name("vl1").build()))
+                .voltageLevels(Set.of(VoltageLevelInfos.builder().id("v1").name("v1").build()))
                 .substations(Set.of(SubstationInfos.builder().id("s1").name("s1").build()))
                 .build();
         equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("newLoad"), TEST_NETWORK_ID, NetworkCreation.VARIANT_ID).get(0);
