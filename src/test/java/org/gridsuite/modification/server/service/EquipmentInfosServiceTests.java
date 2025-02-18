@@ -6,9 +6,7 @@
  */
 package org.gridsuite.modification.server.service;
 
-import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.IdentifiableType;
-import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.NetworkModificationException;
@@ -267,6 +265,14 @@ class EquipmentInfosServiceTests {
 
         errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getSubstationsInfos(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
+    }
+
+    @Test
+    void testUnsupportedHybridHvdc() {
+        Network network = NetworkCreation.create(NETWORK_UUID, true);
+        HvdcLine hvdcLine = network.getHvdcLine("hvdcLine");
+        String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getEquipmentTypeName(hvdcLine)).getMessage();
+        assertEquals(NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId()).getMessage(), errorMessage);
     }
 
     @AfterEach
