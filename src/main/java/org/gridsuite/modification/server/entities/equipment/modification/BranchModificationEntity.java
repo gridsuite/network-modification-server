@@ -136,6 +136,62 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     })
     private BooleanModificationEmbedded terminal2Connected;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "p1MeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p1MeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded p1MeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "p1MeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p1MeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded p1MeasurementValidity;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "q1MeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q1MeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded q1MeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "q1MeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q1MeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded q1MeasurementValidity;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "p2MeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p2MeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded p2MeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "p2MeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "p2MeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded p2MeasurementValidity;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "q2MeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q2MeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded q2MeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "q2MeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "q2MeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded q2MeasurementValidity;
+
     protected BranchModificationEntity(BranchModificationInfos branchModificationInfos) {
         super(branchModificationInfos);
         assignAttributes(branchModificationInfos);
@@ -173,5 +229,13 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         this.connectionPosition2 = branchModificationInfos.getConnectionPosition2() != null ? new IntegerModificationEmbedded(branchModificationInfos.getConnectionPosition2()) : null;
         this.terminal1Connected = branchModificationInfos.getTerminal1Connected() != null ? new BooleanModificationEmbedded(branchModificationInfos.getTerminal1Connected()) : null;
         this.terminal2Connected = branchModificationInfos.getTerminal2Connected() != null ? new BooleanModificationEmbedded(branchModificationInfos.getTerminal2Connected()) : null;
+        this.p1MeasurementValue = branchModificationInfos.getP1MeasurementValue() != null ? new DoubleModificationEmbedded(branchModificationInfos.getP1MeasurementValue()) : null;
+        this.p1MeasurementValidity = branchModificationInfos.getP1MeasurementValidity() != null ? new BooleanModificationEmbedded(branchModificationInfos.getP1MeasurementValidity()) : null;
+        this.q1MeasurementValue = branchModificationInfos.getQ1MeasurementValue() != null ? new DoubleModificationEmbedded(branchModificationInfos.getQ1MeasurementValue()) : null;
+        this.q1MeasurementValidity = branchModificationInfos.getQ1MeasurementValidity() != null ? new BooleanModificationEmbedded(branchModificationInfos.getQ1MeasurementValidity()) : null;
+        this.p2MeasurementValue = branchModificationInfos.getP2MeasurementValue() != null ? new DoubleModificationEmbedded(branchModificationInfos.getP2MeasurementValue()) : null;
+        this.p2MeasurementValidity = branchModificationInfos.getP2MeasurementValidity() != null ? new BooleanModificationEmbedded(branchModificationInfos.getP2MeasurementValidity()) : null;
+        this.q2MeasurementValue = branchModificationInfos.getQ2MeasurementValue() != null ? new DoubleModificationEmbedded(branchModificationInfos.getQ2MeasurementValue()) : null;
+        this.q2MeasurementValidity = branchModificationInfos.getQ2MeasurementValidity() != null ? new BooleanModificationEmbedded(branchModificationInfos.getQ2MeasurementValidity()) : null;
     }
 }
