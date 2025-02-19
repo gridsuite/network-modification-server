@@ -1793,4 +1793,29 @@ class ModificationControllerTest {
                         String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
             );
     }
+
+    @Test
+    void testVerifyModifications() throws Exception {
+        // create a single switch attribute modification in a group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID switchModificationId = modificationList.get(0).getUuid();
+
+        createSomeSwitchModifications(TEST_GROUP2_ID, 1);
+
+
+        // try to verify unexisting modification
+        mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
+            .param("uuids", UUID.randomUUID().toString()))
+            .andExpect(status().isNotFound());
+
+        // try to verify invalid modification
+        mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP2_ID)
+                .param("uuids", switchModificationId.toString()))
+            .andExpect(status().isNotFound());
+
+        // try to verify valid modification
+        mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
+                .param("uuids", switchModificationId.toString()))
+            .andExpect(status().isOk());
+    }
 }
