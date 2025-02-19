@@ -1801,8 +1801,7 @@ class ModificationControllerTest {
         UUID switchModificationId = modificationList.get(0).getUuid();
 
         createSomeSwitchModifications(TEST_GROUP2_ID, 1);
-
-
+        
         // try to verify unexisting modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
             .param("uuids", UUID.randomUUID().toString()))
