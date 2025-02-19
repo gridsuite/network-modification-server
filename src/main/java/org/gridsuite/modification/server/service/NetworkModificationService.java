@@ -300,7 +300,7 @@ public class NetworkModificationService {
             return duplicateModificationMapping;
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
-                return null;
+                return Collections.emptyMap();
             }
             throw e;
         }
