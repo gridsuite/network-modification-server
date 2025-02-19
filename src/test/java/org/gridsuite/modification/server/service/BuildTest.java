@@ -862,6 +862,34 @@ class BuildTest {
     }
 
     @Test
+    void runBuildWithExcludedModificationsTest(final MockWebServer server) {
+        // create modification entities in the database
+        List<ModificationEntity> entities1 = new ArrayList<>();
+        entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
+        entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("willBeExcludedLoad").equipmentName("willBeExcludedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
+
+        List<ModificationEntity> savedModificationEntities = modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
+
+        testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
+
+        // build node with excluded modification
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
+            .modificationUuidsToExcludeMap(Map.of(TEST_GROUP_ID, Set.of(savedModificationEntities.get(1).getId())))
+            .build();
+        networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
+
+        // test that only non excluded modifications have been made on variant VARIANT_ID
+        network.getVariantManager().setWorkingVariant(NetworkCreation.VARIANT_ID);
+        assertTrue(network.getSwitch("v1d1").isOpen());
+        assertNull(network.getLoad("willBeExcludedLoad"));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches("/v1/reports/.*")));
+    }
+
+    @Test
     void stopBuildTest() throws Exception {
         List<ModificationEntity> entities = List.of(
             ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()),
