@@ -54,13 +54,13 @@ class LccCreationTest extends AbstractNetworkModificationTest {
                 .maxP(56.)
                 .activePowerSetpoint(5.)
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER)
-                .converterStation1(buildLccConverterStation("lccStationId1", "lccStationName1", "v1"))
-                .converterStation2(buildLccConverterStation("lccStationId2", "lccStationName2", "v2"))
+                .converterStation1(buildLccConverterStation("lccStationId1", "lccStationName1", "v1", "1.1"))
+                .converterStation2(buildLccConverterStation("lccStationId2", "lccStationName2", "v2", "1B"))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
 
-    private static LccConverterStationCreationInfos buildLccConverterStation(String equipmentId, String equipmentName, String voltageLevel) {
+    private static LccConverterStationCreationInfos buildLccConverterStation(String equipmentId, String equipmentName, String voltageLevel, String busOrBusbarSectionId) {
         return LccConverterStationCreationInfos.builder()
                 .equipmentId(equipmentId)
                 .equipmentName(equipmentName)
@@ -68,7 +68,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
                 .powerFactor(1F)
                 .shuntCompensatorsOnSide(List.of())
                 .voltageLevelId(voltageLevel)
-                .busOrBusbarSectionId("1.1")
+                .busOrBusbarSectionId(busOrBusbarSectionId)
                 .connectionName("top")
                 .connectionDirection(ConnectablePosition.Direction.TOP)
                 .build();
@@ -85,8 +85,8 @@ class LccCreationTest extends AbstractNetworkModificationTest {
                 .maxP(77.)
                 .convertersMode(HvdcLine.ConvertersMode.SIDE_1_RECTIFIER_SIDE_2_INVERTER)
                 .activePowerSetpoint(7.)
-                .converterStation1(buildLccConverterStation("lccStationId1", "lccStationName1", "v1"))
-                .converterStation2(buildLccConverterStation("lccStationId2", "lccStationName2", "v2"))
+                .converterStation1(buildLccConverterStation("lccStationId1", "lccStationName1", "v1", "1.1"))
+                .converterStation2(buildLccConverterStation("lccStationId2", "lccStationName2", "v2", "1B"))
                 .build();
     }
 
@@ -152,7 +152,8 @@ class LccCreationTest extends AbstractNetworkModificationTest {
 
         // not found voltage level
         lccCreationInfos.setEquipmentId("lccId");
-        LccConverterStationCreationInfos converterStationCreationInfos = buildLccConverterStation("lccStationId1", "lccStationName1", "v1");
+        LccConverterStationCreationInfos converterStationCreationInfos = buildLccConverterStation("lccStationId1",
+                "lccStationName1", "v1", "1.1");
         converterStationCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         lccCreationInfos.setConverterStation2(converterStationCreationInfos);
         lccCreationInfosJson = mapper.writeValueAsString(lccCreationInfos);
