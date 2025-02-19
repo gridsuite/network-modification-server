@@ -22,10 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.TYPE_MISMATCH;
 
@@ -59,6 +56,15 @@ public class NetworkModificationController {
                                                                            @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed,
                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
+    }
+
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Check modifications list belong to a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications")
+    public ResponseEntity<List<ModificationInfos>> verifyNetworkModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                              @Parameter(description = "Modifications UUID") @RequestParam(name = "uuids") Set<UUID> modificationUuids) {
+        networkModificationService.verifyModifications(groupUuid, modificationUuids);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications-count", produces = MediaType.APPLICATION_JSON_VALUE)

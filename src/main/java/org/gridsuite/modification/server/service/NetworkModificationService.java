@@ -74,6 +74,16 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
+    public void verifyModifications(UUID groupUuid, Set<UUID> modificationUuids) {
+        if (!networkModificationRepository.getModifications(groupUuid, true, true)
+            .stream().map(ModificationInfos::getUuid)
+            .collect(Collectors.toSet())
+            .containsAll(modificationUuids)) {
+            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+        }
+    }
+
+    @Transactional(readOnly = true)
     public List<ModificationInfos> getNetworkModificationsFromComposite(UUID compositeModificationUuid, boolean onlyMetadata) {
         if (onlyMetadata) {
             return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuid);
