@@ -3,7 +3,6 @@ spring:
     name: network-modification-server
 
   jpa:
-    open-in-view: false
     properties:
       hibernate:
         order_inserts: true
