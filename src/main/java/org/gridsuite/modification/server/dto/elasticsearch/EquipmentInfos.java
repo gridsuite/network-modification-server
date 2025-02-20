@@ -101,7 +101,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
             throw NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId());
         }
 
-        return String.format("%s_%s", hvdcLine.getType(), hvdcLine.getConverterStation1().getHvdcType());
+        return String.format("%s_%s", hvdcLine.getType().name(), hvdcLine.getConverterStation1().getHvdcType().name());
     }
 
     public static Set<VoltageLevelInfos> getVoltageLevelsInfos(@NonNull Identifiable<?> identifiable) {
