@@ -1,0 +1,163 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="braquartdav (generated)" id="1739354243909-25">
+        <addColumn tableName="line_modification">
+            <column name="p1measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-26">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p1measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-27">
+        <addColumn tableName="line_modification">
+            <column name="p1measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-28">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p1measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-29">
+        <addColumn tableName="line_modification">
+            <column name="p1measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-30">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p1measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-31">
+        <addColumn tableName="line_modification">
+            <column name="p1measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-32">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p1measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-33">
+        <addColumn tableName="line_modification">
+            <column name="p2measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-34">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p2measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-35">
+        <addColumn tableName="line_modification">
+            <column name="p2measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-36">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p2measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-37">
+        <addColumn tableName="line_modification">
+            <column name="p2measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-38">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p2measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-39">
+        <addColumn tableName="line_modification">
+            <column name="p2measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-40">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="p2measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-41">
+        <addColumn tableName="line_modification">
+            <column name="q1measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-42">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q1measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-43">
+        <addColumn tableName="line_modification">
+            <column name="q1measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-44">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q1measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-45">
+        <addColumn tableName="line_modification">
+            <column name="q1measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-46">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q1measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-47">
+        <addColumn tableName="line_modification">
+            <column name="q1measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-48">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q1measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-49">
+        <addColumn tableName="line_modification">
+            <column name="q2measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-50">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q2measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-51">
+        <addColumn tableName="line_modification">
+            <column name="q2measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-52">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q2measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-53">
+        <addColumn tableName="line_modification">
+            <column name="q2measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-54">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q2measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-55">
+        <addColumn tableName="line_modification">
+            <column name="q2measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1739354243909-56">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="q2measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -305,7 +305,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .content(modificationInfosJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer with ID '2wt_not_existing' does not exist in the network").getMessage(),
+        assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer with ID '2wt_not_existing' : it does not exist in the network").getMessage(),
                 twoWindingsTransformerModificationInfos.getErrorType().name(), reportService);
     }
 
@@ -589,7 +589,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(getNetwork(),
             "v3load",
             "LOAD",
-            "V3");
+            "v3");
         twt3.newPhaseTapChanger()
             .setLowTapPosition(0)
             .setTapPosition(1)
@@ -938,7 +938,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         Terminal phaseTapChangerTerminal = ModificationUtils.getInstance().getTerminalFromIdentifiable(getNetwork(),
             "v3load",
             "LOAD",
-            "V3");
+            "v3");
         phaseTapChangerAdder.setLowTapPosition(0)
             .setTapPosition(1)
             .setRegulationTerminal(phaseTapChangerTerminal)
@@ -982,7 +982,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .tapPosition(new AttributeModification<>(1, OperationType.SET))
                 .regulatingTerminalId(new AttributeModification<>("v3load", OperationType.SET))
                 .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
-                .regulatingTerminalVlId(new AttributeModification<>("V3", OperationType.SET))
+                .regulatingTerminalVlId(new AttributeModification<>("v3", OperationType.SET))
                 .steps(List.of(TapChangerStepCreationInfos.builder()
                         .index(0)
                         .r(0)
@@ -1029,7 +1029,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .tapPosition(new AttributeModification<>(1, OperationType.SET))
                 .regulatingTerminalId(new AttributeModification<>("v3load", OperationType.SET))
                 .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
-                .regulatingTerminalVlId(new AttributeModification<>("V3", OperationType.SET))
+                .regulatingTerminalVlId(new AttributeModification<>("v3", OperationType.SET))
                 .steps(List.of(TapChangerStepCreationInfos.builder()
                         .index(0)
                         .r(0)
