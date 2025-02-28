@@ -181,7 +181,7 @@ public class NetworkStoreListener implements NetworkListener {
             .variantId(network.getVariantManager().getWorkingVariantId())
             .id(identifiable.getId())
             .name(identifiable.getNameOrId())
-            .type(identifiable.getType().name())
+            .type(EquipmentInfos.getEquipmentTypeName(identifiable))
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
             .build());
@@ -231,7 +231,7 @@ public class NetworkStoreListener implements NetworkListener {
             .variantId(variantId)
             .id(identifiable.getId())
             .name(identifiable.getNameOrId())
-            .type(identifiable.getType().name())
+            .type(EquipmentInfos.getEquipmentTypeName(identifiable))
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
             .build();

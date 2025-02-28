@@ -87,6 +87,23 @@ public class EquipmentInfos extends BasicEquipmentInfos {
         throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
     }
 
+    public static String getEquipmentTypeName(@NonNull Identifiable<?> identifiable) {
+        return identifiable.getType() == IdentifiableType.HVDC_LINE ? getHvdcTypeName((HvdcLine) identifiable) : identifiable.getType().name();
+    }
+
+    /**
+     * @param hvdcLine The hvdc line to get hvdc type name
+     * @return The hvdc type name string
+     * @throws NetworkModificationException if converter station types don't match
+     */
+    private static String getHvdcTypeName(HvdcLine hvdcLine) {
+        if (hvdcLine.getConverterStation1().getHvdcType() != hvdcLine.getConverterStation2().getHvdcType()) {
+            throw NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId());
+        }
+
+        return String.format("%s_%s", hvdcLine.getType().name(), hvdcLine.getConverterStation1().getHvdcType().name());
+    }
+
     public static Set<VoltageLevelInfos> getVoltageLevelsInfos(@NonNull Identifiable<?> identifiable) {
 
         return getVoltageLevels(identifiable).stream()
