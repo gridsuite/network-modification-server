@@ -214,7 +214,7 @@ public class NetworkModificationService {
 
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reporterId) -> {
-                Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExcludeMap().get(groupUuid);
+                Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
                 List<ModificationInfos> modificationsByGroup = List.of();
                 try {
                     modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
@@ -300,7 +300,7 @@ public class NetworkModificationService {
             return duplicateModificationMapping;
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
-                return Collections.emptyMap();
+                return Map.of();
             }
             throw e;
         }

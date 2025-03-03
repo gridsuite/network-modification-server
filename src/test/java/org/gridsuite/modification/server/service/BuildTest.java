@@ -878,7 +878,7 @@ class BuildTest {
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
-            .modificationUuidsToExcludeMap(Map.of(TEST_GROUP_ID, Set.of(savedModificationEntities.get(1).getId())))
+            .modificationUuidsToExclude(Map.of(TEST_GROUP_ID, Set.of(savedModificationEntities.get(1).getId())))
             .build();
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 

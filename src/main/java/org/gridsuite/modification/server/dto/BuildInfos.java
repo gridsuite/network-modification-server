@@ -29,7 +29,7 @@ public class BuildInfos {
 
     // map with modification groups as key, modification to excludes as value
     @Builder.Default
-    private Map<UUID, Set<UUID>> modificationUuidsToExcludeMap = new HashMap<>();
+    private Map<UUID, Set<UUID>> modificationUuidsToExclude = new HashMap<>();
 
     private List<ReportInfos> reportsInfos = new ArrayList<>();
 
