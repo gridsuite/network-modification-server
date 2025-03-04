@@ -11,15 +11,14 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelCreationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.FreePropertyEntity;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -76,6 +75,8 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
+        this.setMessageType(getSubstationCreation() != null ? getType() + "_" + ModificationType.SUBSTATION_CREATION
+                : getMessageType());
     }
 
     public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceInfos> couplingDevicesInfos) {
