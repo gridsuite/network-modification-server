@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.TwoWindingsTransformer;
 
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import com.powsybl.iidm.network.extensions.TwoWindingsTransformerToBeEstimated;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
@@ -63,6 +64,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedU1(new AttributeModification<>(5., OperationType.SET))
                 .ratedU2(new AttributeModification<>(6., OperationType.SET))
                 .ratedS(new AttributeModification<>(7., OperationType.SET))
+                .ratioTapChangerToBeEstimated(new AttributeModification<>(true, OperationType.SET))
+                .phaseTapChangerToBeEstimated(new AttributeModification<>(false, OperationType.SET))
                 .currentLimits1(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(12.0)
                         .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
@@ -273,7 +276,12 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         assertEquals(32, temporaryLimit.getAcceptableDuration());
         assertEquals("name32", temporaryLimit.getName());
         assertEquals(42.0, temporaryLimit.getValue());
-        assertEquals(PROPERTY_VALUE, getNetwork().getTwoWindingsTransformer("trf1").getProperty(PROPERTY_NAME));
+        assertEquals(PROPERTY_VALUE, modifiedTwoWindingsTransformer.getProperty(PROPERTY_NAME));
+        // toBeEstimated extension
+        TwoWindingsTransformerToBeEstimated toBeEstimated = modifiedTwoWindingsTransformer.getExtension(TwoWindingsTransformerToBeEstimated.class);
+        assertNotNull(toBeEstimated);
+        assertTrue(toBeEstimated.shouldEstimateRatioTapChanger());
+        assertFalse(toBeEstimated.shouldEstimatePhaseTapChanger());
     }
 
     @Override
