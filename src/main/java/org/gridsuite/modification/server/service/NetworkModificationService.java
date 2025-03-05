@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
@@ -212,28 +211,25 @@ public class NetworkModificationService {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
 
-        Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
-            (groupUuid, reporterId) -> {
-                Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
-                List<ModificationInfos> modificationsByGroup = List.of();
-                try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
-                        .stream()
-                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getUuid()))
-                        .filter(m -> !m.getStashed())
-                        .collect(Collectors.toList());
-                } catch (NetworkModificationException e) {
-                    if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
-                        throw e;
-                    }
+        buildInfos.getBuildContextsInfos().stream().forEach(buildContext -> {
+            Set<UUID> modificationsToExclude = buildContext.excludedModifications();
+            List<ModificationInfos> modificationsByGroup = List.of();
+            try {
+                modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(buildContext.groupUuid()), false)
+                    .stream()
+                    .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getUuid()))
+                    .filter(m -> !m.getStashed())
+                    .collect(Collectors.toList());
+            } catch (NetworkModificationException e) {
+                if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                    throw e;
                 }
-                modificationInfos.add(
-                    Pair.of(reporterId,
-                        modificationsByGroup)
-                );
-
             }
-        );
+            modificationInfos.add(
+                Pair.of(buildContext.reportInfos(),
+                    modificationsByGroup)
+            );
+        });
 
         PreloadingStrategy preloadingStrategy = modificationInfos.stream().map(Pair::getRight)
             .flatMap(Collection::stream)
