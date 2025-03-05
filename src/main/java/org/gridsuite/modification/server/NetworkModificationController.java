@@ -22,10 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.TYPE_MISMATCH;
 
@@ -61,6 +58,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
     }
 
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Check modifications list belong to a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications")
+    public ResponseEntity<List<ModificationInfos>> verifyNetworkModifications(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                              @Parameter(description = "Modifications UUID") @RequestParam(name = "uuids") Set<UUID> modificationUuids) {
+        networkModificationService.verifyModifications(groupUuid, modificationUuids);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping(value = "/groups/{groupUuid}/network-modifications-count", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a groups's modification count")
     @ApiResponse(responseCode = "200", description = "Count of group's modifications")
@@ -72,16 +78,16 @@ public class NetworkModificationController {
     @PostMapping(value = "/groups")
     @Operation(summary = "Create a modification group based on another group")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The group and its modifications have been duplicated")})
-    public ResponseEntity<Void> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
+    public ResponseEntity<Map<UUID, UUID>> duplicateGroup(@RequestParam("groupUuid") UUID groupUuid,
                                                @RequestParam("duplicateFrom") UUID sourceGroupUuid) {
-        networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid);
-        return ResponseEntity.ok().build();
+
+        return ResponseEntity.ok().body(networkModificationService.duplicateGroup(sourceGroupUuid, groupUuid));
     }
 
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list, or Insert them (composite) at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
-    public ResponseEntity<List<Optional<NetworkModificationResult>>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+    public ResponseEntity<NetworkModificationsResult> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
                                                                                                 @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
                                                                                                 @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
                                                                                                 @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
@@ -158,7 +164,7 @@ public class NetworkModificationController {
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
         @ApiResponse(responseCode = "404", description = "The network or equipment was not found")})
-    public ResponseEntity<List<Optional<NetworkModificationResult>>> createNetworkModification(
+    public ResponseEntity<NetworkModificationsResult> createNetworkModification(
         @Parameter(description = "Group UUID") @RequestParam(name = "groupUuid") UUID groupUuid,
         @RequestBody Pair<ModificationInfos, List<ModificationApplicationContext>> modificationContextInfos) {
         modificationContextInfos.getFirst().check();
