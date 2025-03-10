@@ -269,6 +269,20 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded phaseTapChangerRegulationValue;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangertobeestimated")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangertobeestimatedOp"))
+    })
+    private BooleanModificationEmbedded phaseTapChangerToBeEstimated;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangertobeestimated")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangertobeestimatedOp"))
+    })
+    private BooleanModificationEmbedded ratioTapChangerToBeEstimated;
+
     public TwoWindingsTransformerModificationEntity(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
         super(twoWindingsTransformerModificationInfos);
         assignAttributes(twoWindingsTransformerModificationInfos);
@@ -287,6 +301,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratedU1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU1());
         this.ratedU2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU2());
         this.ratedS = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS());
+        this.phaseTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated()) : null;
+        this.ratioTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated()) : null;
         this.tapChangerSteps = new ArrayList<>();
         assignTapChangers(twoWindingsTransformerModificationInfos);
     }
@@ -382,6 +398,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .p2MeasurementValidity(toAttributeModification(getP2MeasurementValidity()))
                 .q2MeasurementValue(toAttributeModification(getQ2MeasurementValue()))
                 .q2MeasurementValidity(toAttributeModification(getQ2MeasurementValidity()))
+                .phaseTapChangerToBeEstimated(toAttributeModification(getPhaseTapChangerToBeEstimated()))
+                .ratioTapChangerToBeEstimated(toAttributeModification(getRatioTapChangerToBeEstimated()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

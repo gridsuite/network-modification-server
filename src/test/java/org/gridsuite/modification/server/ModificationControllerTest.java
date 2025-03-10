@@ -27,6 +27,7 @@ import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -180,10 +181,10 @@ class ModificationControllerTest {
     }
 
     private void assertApplicationStatusOKNew(MvcResult mvcResult) throws Exception {
-        List<Optional<NetworkModificationResult>> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(1, networkModificationResult.size());
-        assertTrue(networkModificationResult.get(0).isPresent());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get(0).get().getApplicationStatus());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationsResult.modificationResults().get(0).get().getApplicationStatus());
     }
 
     /**
@@ -949,10 +950,10 @@ class ModificationControllerTest {
                 .andReturn();
 
         // incremental build: deletion impacts expected, all related to the moved load deletion (dealing with "s1" substation)
-        List<Optional<NetworkModificationResult>> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(1, networkModificationResult.size());
-        assertTrue(networkModificationResult.get(0).isPresent());
-        networkModificationResult.get(0).get().getNetworkImpacts().forEach(i -> {
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
+        networkModificationsResult.modificationResults().get(0).get().getNetworkImpacts().forEach(i -> {
             assertTrue(i.isSimple());
             SimpleElementImpact simpleImpact = (SimpleElementImpact) i;
             assertEquals(Set.of(substationS1), simpleImpact.getSubstationIds());
@@ -1791,5 +1792,29 @@ class ModificationControllerTest {
                     content().string(new NetworkModificationException(MODIFICATION_DELETION_ERROR,
                         String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
             );
+    }
+
+    @Test
+    void testVerifyModifications() throws Exception {
+        // create a single switch attribute modification in a group
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, 1);
+        UUID switchModificationId = modificationList.get(0).getUuid();
+
+        createSomeSwitchModifications(TEST_GROUP2_ID, 1);
+
+        // try to verify unexisting modification
+        mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
+            .param("uuids", UUID.randomUUID().toString()))
+            .andExpect(status().isNotFound());
+
+        // try to verify invalid modification
+        mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP2_ID)
+                .param("uuids", switchModificationId.toString()))
+            .andExpect(status().isNotFound());
+
+        // try to verify valid modification
+        mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
+                .param("uuids", switchModificationId.toString()))
+            .andExpect(status().isOk());
     }
 }
