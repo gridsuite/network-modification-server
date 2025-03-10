@@ -46,12 +46,12 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final BasicModificationInfosService basicModificationInfosService;
 
-    private final Map<UUID, ImpactedEquipmentsInfos> impactedEquipmentsByModification = new HashMap<>();
+    private final Map<BasicModificationInfos, ImpactedEquipmentsInfos> impactedEquipmentsByModification = new HashMap<>();
 
     // UUID or currently applying modification
     //TODO: set to random by default to keep it working if modification is set ?
     @Setter
-    private UUID applyingModificationUuid;
+    private BasicModificationInfos applyingModification;
 
     private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
@@ -70,11 +70,11 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void updateImpactedEquipment(EquipmentInfos impactedEquipment, boolean isCreating) {
         ImpactedEquipmentsInfos infosToUpdate;
-        if (impactedEquipmentsByModification.get(applyingModificationUuid) != null) {
-            infosToUpdate = impactedEquipmentsByModification.get(applyingModificationUuid);
+        if (impactedEquipmentsByModification.get(applyingModification) != null) {
+            infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
         } else {
-            impactedEquipmentsByModification.put(applyingModificationUuid, new ImpactedEquipmentsInfos());
-            infosToUpdate = impactedEquipmentsByModification.get(applyingModificationUuid);
+            impactedEquipmentsByModification.put(applyingModification, new ImpactedEquipmentsInfos());
+            infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
         }
         if (isCreating) {
             infosToUpdate.getCreatedEquipments().add(impactedEquipment);
@@ -85,8 +85,8 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void updateImpactedEquipment(EquipmentInfosToDelete impactedEquipment) {
         ImpactedEquipmentsInfos infosToUpdate;
-        if (impactedEquipmentsByModification.get(applyingModificationUuid) != null) {
-            infosToUpdate = impactedEquipmentsByModification.get(applyingModificationUuid);
+        if (impactedEquipmentsByModification.get(applyingModification) != null) {
+            infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
         } else {
             infosToUpdate = new ImpactedEquipmentsInfos();
         }
@@ -295,15 +295,13 @@ public class NetworkStoreListener implements NetworkListener {
         equipmentInfosService.addAllEquipmentInfos(createdEquipments);
         List<EquipmentInfos> modifiedEquipments = impactedEquipmentsByModification.values().stream().map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).toList();
         equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
-        List<BasicModificationInfos> basicModificationInfos = new ArrayList<>();
-        impactedEquipmentsByModification.forEach((modificationUuid, impactedEquipment) -> {
-            basicModificationInfos.add(BasicModificationInfos.builder()
-                .modificationUuid(modificationUuid)
-                .networkUuid(networkUuid)
-                .impactedEquipmentUuids(impactedEquipment.getAllEquipmentIds())
-                .build());
+        List<BasicModificationInfos> modificationsToIndex = new ArrayList<>();
+        impactedEquipmentsByModification.forEach((modification, impactedEquipment) -> {
+            modification.setImpactedEquipmentUuids(impactedEquipment.getAllEquipmentIds());
+            modification.setNetworkUuid(networkUuid);
+            modificationsToIndex.add(modification);
         });
-        basicModificationInfosService.add(basicModificationInfos);
+        basicModificationInfosService.add(modificationsToIndex);
     }
 
     private List<AbstractBaseImpact> reduceNetworkImpacts() {
