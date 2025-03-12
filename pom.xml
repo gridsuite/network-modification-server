@@ -94,6 +94,22 @@
                 <scope>import</scope>
             </dependency>
 
+            <dependency>
+              <groupId>com.powsybl</groupId>
+              <artifactId>powsybl-network-store-client</artifactId>
+              <version>${powsybl-network-store.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>com.powsybl</groupId>
+              <artifactId>powsybl-network-store-iidm-impl</artifactId>
+              <version>${powsybl-network-store.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-model</artifactId>
+                <version>${powsybl-network-store.version}</version>
+            </dependency>
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -126,21 +142,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-modification</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-network-store-client</artifactId>
-            <version>${powsybl-network-store.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-network-store-iidm-impl</artifactId>
-            <version>${powsybl-network-store.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-network-store-model</artifactId>
-            <version>${powsybl-network-store.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
