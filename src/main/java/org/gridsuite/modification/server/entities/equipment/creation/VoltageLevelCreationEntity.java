@@ -75,8 +75,6 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {
         super(voltageLevelCreationInfos);
         assignAttributes(voltageLevelCreationInfos);
-        this.setMessageType(getSubstationCreation() != null ? getType() + "_" + ModificationType.SUBSTATION_CREATION
-                : getMessageType());
     }
 
     public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceInfos> couplingDevicesInfos) {
@@ -134,6 +132,9 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     }
 
     private void assignAttributes(VoltageLevelCreationInfos voltageLevelCreationInfos) {
+        this.setMessageType(voltageLevelCreationInfos.getSubstationCreation() != null ?
+                getType() + "_" + ModificationType.SUBSTATION_CREATION
+                : getMessageType());
         this.substationId = voltageLevelCreationInfos.getSubstationId();
         this.nominalV = voltageLevelCreationInfos.getNominalV();
         this.lowVoltageLimit = voltageLevelCreationInfos.getLowVoltageLimit();
