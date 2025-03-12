@@ -86,11 +86,11 @@ public class ShuntCompensatorModificationEntity extends InjectionModificationEnt
     }
 
     private void assignAttributes(ShuntCompensatorModificationInfos shuntCompensatorModificationInfos) {
-        this.maximumSectionCount = new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount());
-        this.sectionCount = new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount());
-        this.maxQAtNominalV = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV());
-        this.shuntCompensatorType = new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType());
-        this.maxSusceptance = new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxSusceptance());
+        this.maximumSectionCount = shuntCompensatorModificationInfos.getMaximumSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getMaximumSectionCount()) : null;
+        this.sectionCount = shuntCompensatorModificationInfos.getSectionCount() != null ? new IntegerModificationEmbedded(shuntCompensatorModificationInfos.getSectionCount()) : null;
+        this.maxQAtNominalV = shuntCompensatorModificationInfos.getMaxQAtNominalV() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxQAtNominalV()) : null;
+        this.shuntCompensatorType = shuntCompensatorModificationInfos.getShuntCompensatorType() != null ? new EnumModificationEmbedded<>(shuntCompensatorModificationInfos.getShuntCompensatorType()) : null;
+        this.maxSusceptance = shuntCompensatorModificationInfos.getMaxSusceptance() != null ? new DoubleModificationEmbedded(shuntCompensatorModificationInfos.getMaxSusceptance()) : null;
     }
 
     @Override
