@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Functions;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
@@ -153,7 +152,7 @@ public class NetworkModificationService {
     // No transactional because we need to save modification in DB also in case of error
     // Transaction made in 'saveModifications' method
     // TODO Add transaction when errors will no longer be sent to the front
-    public NetworkModificationsResult   createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
+    public NetworkModificationsResult createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
 
         return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), applicationContexts, modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> groupUuid))));
