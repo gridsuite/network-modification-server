@@ -24,6 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
@@ -51,9 +52,9 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
                 .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
                 .networkImpacts(List.of())
                 .build();
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class)))
+        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class), any()))
                 .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class)))
+        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class), any()))
                 .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
     }
 

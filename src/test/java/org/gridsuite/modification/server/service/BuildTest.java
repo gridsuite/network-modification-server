@@ -972,7 +972,7 @@ class BuildTest {
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId), new HashMap<>());
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
@@ -1007,7 +1007,7 @@ class BuildTest {
         modificationInfosGroups.add(Pair.of(new ReportInfos(UUID.randomUUID(), nodeUuid2), List.of()));
 
         //Global application status should be in error and last application status should be OK
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), new HashMap<>());
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));

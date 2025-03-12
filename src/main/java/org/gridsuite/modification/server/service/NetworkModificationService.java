@@ -170,7 +170,7 @@ public class NetworkModificationService {
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfos));
 
         return networkInfos.isVariantPresent() ?
-            Optional.of(modificationApplicator.applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), networkInfos, reportInfos, Map.of(groupUuid, modificationEntities.getFirst().getId()))) :
+            Optional.of(modificationApplicator.applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), networkInfos, reportInfos, modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> groupUuid)))) :
             Optional.empty();
     }
 
@@ -229,7 +229,6 @@ public class NetworkModificationService {
                         throw e;
                     }
                 }
-                //TODO: make it better ?
                 modificationUuidToGroupUuid.putAll(modificationsByGroup.stream().collect(Collectors.toMap(ModificationInfos::getUuid, m -> groupUuid)));
                 modificationInfos.add(
                     Pair.of(reporterId,
@@ -374,7 +373,7 @@ public class NetworkModificationService {
                                                                             ReportInfos reportInfos, List<UUID> compositeModificationsUuids) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(compositeModificationsUuids);
         networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
-        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos, modificationInfos.stream().collect(Collectors.toMap(m -> targetGroupUuid, ModificationInfos::getUuid)));
+        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos, modificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, m -> targetGroupUuid)));
     }
 
     @Transactional

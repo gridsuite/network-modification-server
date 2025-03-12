@@ -27,6 +27,7 @@ import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
@@ -46,6 +47,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,9 +71,10 @@ class VoltageInitReportTest {
         final NetworkStoreService networkStoreService = new NetworkStoreServicePublic(restClient, PreloadingStrategy.NONE,
             (restClient_, preloadingStrategy, executorService) -> new CachedNetworkStoreClient(new OfflineNetworkStoreClient()));
         final EquipmentInfosService equipmentInfosService = Mockito.mock(EquipmentInfosService.class);
+        final BasicModificationInfosService basicModificationInfosService = Mockito.mock(BasicModificationInfosService.class);
         final NetworkModificationObserver networkModificationObserver = new NetworkModificationObserver(ObservationRegistry.NOOP, new SimpleMeterRegistry());
         final LargeNetworkModificationExecutionService modificationExecutionService = new LargeNetworkModificationExecutionService(2, networkModificationObserver);
-        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
+        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, basicModificationInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
         networkModificationApplicator.setCollectionThreshold(5);
 
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));
@@ -85,7 +88,8 @@ class VoltageInitReportTest {
         assertThat(networkModificationApplicator.applyModifications(
                 List.of(modificationInfos),
                 new NetworkInfos(network, networkUuuid, true),
-                new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))))
+                new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999")),
+                new HashMap<>()))
                 .as("network modifications results")
             .isNotNull()
             .extracting(NetworkModificationResult::getApplicationStatus)

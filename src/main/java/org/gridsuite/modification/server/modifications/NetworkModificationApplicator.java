@@ -171,11 +171,13 @@ public class NetworkModificationApplicator {
         }
         ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
                 .filter(ModificationInfos::getActivated)
-                .peek(m -> listener.setApplyingModification(BasicModificationInfos.builder()
-                    .groupUuid(modificationUuidToGroupUuid.get(m.getUuid()))
-                    .modificationUuid(m.getUuid())
-                    .build()))
-                .map(m -> apply(m, network, reportNode))
+                .map(m -> {
+                    listener.setApplyingModification(BasicModificationInfos.builder()
+                        .groupUuid(modificationUuidToGroupUuid.get(m.getUuid()))
+                        .modificationUuid(m.getUuid())
+                        .build());
+                    return apply(m, network, reportNode);
+                })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         if (reportInfos.getReportUuid() != null) {
