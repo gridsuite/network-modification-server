@@ -69,13 +69,10 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void updateImpactedEquipment(EquipmentInfos impactedEquipment, boolean isCreating) {
-        ImpactedEquipmentsInfos infosToUpdate;
-        if (impactedEquipmentsByModification.get(applyingModification) != null) {
-            infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
-        } else {
+        if (impactedEquipmentsByModification.get(applyingModification) == null) {
             impactedEquipmentsByModification.put(applyingModification, new ImpactedEquipmentsInfos());
-            infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
         }
+        ImpactedEquipmentsInfos infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
         if (isCreating) {
             infosToUpdate.getCreatedEquipments().add(impactedEquipment);
         } else {
@@ -84,12 +81,10 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void updateImpactedEquipment(EquipmentInfosToDelete impactedEquipment) {
-        ImpactedEquipmentsInfos infosToUpdate;
-        if (impactedEquipmentsByModification.get(applyingModification) != null) {
-            infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
-        } else {
-            infosToUpdate = new ImpactedEquipmentsInfos();
+        if (impactedEquipmentsByModification.get(applyingModification) == null) {
+            impactedEquipmentsByModification.put(applyingModification, new ImpactedEquipmentsInfos());
         }
+        ImpactedEquipmentsInfos infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
         infosToUpdate.getDeletedEquipments().add(impactedEquipment);
     }
 
