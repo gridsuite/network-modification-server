@@ -16,6 +16,7 @@ logging:
     org.springframework.transaction: INFO
     org.hibernate.SQL: INFO
     org.hibernate.type.descriptor.sql.BasicBinder: INFO
+    net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener: WARN
 gridsuite:
   services:
     report-server:
