@@ -38,7 +38,21 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
     public int partitionSizeForDeletion;
 
-    public static final Set<String> EXCLUDED_TYPES_FOR_INDEXING = Set.of(IdentifiableType.SWITCH.name());
+    public static final Set<String> TYPES_FOR_INDEXING = Set.of(
+            IdentifiableType.SUBSTATION.name(),
+            IdentifiableType.VOLTAGE_LEVEL.name(),
+            IdentifiableType.HVDC_LINE.name(),
+            IdentifiableType.LINE.name(),
+            IdentifiableType.TIE_LINE.name(),
+            IdentifiableType.TWO_WINDINGS_TRANSFORMER.name(),
+            IdentifiableType.THREE_WINDINGS_TRANSFORMER.name(),
+            IdentifiableType.GENERATOR.name(),
+            IdentifiableType.BATTERY.name(),
+            IdentifiableType.LOAD.name(),
+            IdentifiableType.SHUNT_COMPENSATOR.name(),
+            IdentifiableType.DANGLING_LINE.name(),
+            IdentifiableType.STATIC_VAR_COMPENSATOR.name(),
+            IdentifiableType.HVDC_CONVERTER_STATION.name());
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
@@ -47,8 +61,9 @@ public class EquipmentInfosService {
 
     public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos) {
         // get only equipments allowed to be indexed
+        //TODO: should we keep this filter here...? Only used for tests...
         List<EquipmentInfos> filteredEquipmentsInfos = equipmentsInfos.stream()
-                .filter(equipmentInfos -> !EXCLUDED_TYPES_FOR_INDEXING.contains(equipmentInfos.getType()))
+                .filter(equipmentInfos -> TYPES_FOR_INDEXING.contains(equipmentInfos.getType()))
                 .toList();
         Lists.partition(filteredEquipmentsInfos, partitionSize)
                 .parallelStream()
