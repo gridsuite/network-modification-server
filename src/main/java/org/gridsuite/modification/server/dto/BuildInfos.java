@@ -9,7 +9,8 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -25,12 +26,5 @@ public class BuildInfos {
 
     private String destinationVariantId;
 
-    private List<UUID> modificationGroupUuids = new ArrayList<>();
-
-    // map with modification groups as key, modification to excludes as value
-    @Builder.Default
-    private Map<UUID, Set<UUID>> modificationUuidsToExclude = new HashMap<>();
-
-    private List<ReportInfos> reportsInfos = new ArrayList<>();
-
+    private List<BuildContext> buildContextsInfos = new ArrayList<>();
 }
