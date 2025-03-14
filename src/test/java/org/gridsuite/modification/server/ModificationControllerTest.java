@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -1375,8 +1376,8 @@ class ModificationControllerTest {
         testNetworkModificationsCount(TEST_GROUP_ID, 14);
 
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).isEmpty());
-        // switches are not indexed in ElasticSearch
-        assertEquals(31, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
+        // switches and bus bar sections are not indexed in ElasticSearch
+        assertEquals(28, tombstonedEquipmentInfosRepository.findAllByNetworkUuidAndVariantId(TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID).size());
     }
 
     private void testConnectableDeletionImpacts(String resultAsString,
@@ -1453,7 +1454,7 @@ class ModificationControllerTest {
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
                 // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for switches
-                if (simpleImpact.getElementType() != IdentifiableType.SWITCH) {
+                if (TYPES_FOR_INDEXING.contains(simpleImpact.getElementType().name())) {
                     assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
                 } else {
                     assertFalse(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
