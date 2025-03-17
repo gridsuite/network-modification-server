@@ -60,12 +60,7 @@ public class EquipmentInfosService {
     }
 
     public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos) {
-        // get only equipments allowed to be indexed
-        //TODO: should we keep this filter here...? Only used for tests...
-        List<EquipmentInfos> filteredEquipmentsInfos = equipmentsInfos.stream()
-                .filter(equipmentInfos -> TYPES_FOR_INDEXING.contains(equipmentInfos.getType()))
-                .toList();
-        Lists.partition(filteredEquipmentsInfos, partitionSize)
+        Lists.partition(equipmentsInfos, partitionSize)
                 .parallelStream()
                 .forEach(equipmentInfosRepository::saveAll);
     }
