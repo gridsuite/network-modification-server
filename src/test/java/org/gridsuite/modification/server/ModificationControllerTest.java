@@ -1453,7 +1453,7 @@ class ModificationControllerTest {
                 // Equipment has been removed from network
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
-                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for switches
+                // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for excluded types
                 if (TYPES_FOR_INDEXING.contains(simpleImpact.getElementType().name())) {
                     assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
                 } else {
