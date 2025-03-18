@@ -339,8 +339,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onExtensionAfterRemoval(Identifiable<?> identifiable, String extensionName) {
-        addSimpleModificationImpact(identifiable);
-        modifiedEquipments.add(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()));
+        // FIXME: implement this method
     }
 
     @Override
