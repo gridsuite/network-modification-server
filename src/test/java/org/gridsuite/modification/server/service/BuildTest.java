@@ -716,12 +716,12 @@ class BuildTest {
         Message<byte[]> resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        // 2 : LOAD and SWITCH equipments are reduced to collection impact
-        // + 2 substation modifications
+        // 3 : LOAD, BUSBAR_SECTION, and SWITCH equipments are reduced to collection impact
+        // + 3 substation modifications
         // (newSubstation is created but transformed to modification type (see NetworkStoreListener::reduceNetworkImpacts))
         // + 3 Equipment deletions ( 1 shunt compensator + 2 switch)
-        // = 7
-        testElementImpacts(mapper, new String(resultMessage.getPayload()), 7, Set.of(IdentifiableType.LOAD, IdentifiableType.SWITCH), Set.of("newSubstation", "s1"));
+        // = 9
+        testElementImpacts(mapper, new String(resultMessage.getPayload()), 9, Set.of(IdentifiableType.LOAD, IdentifiableType.BUSBAR_SECTION, IdentifiableType.SWITCH), Set.of("newSubstation", "s1", "s2"));
         Message<byte[]> buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
