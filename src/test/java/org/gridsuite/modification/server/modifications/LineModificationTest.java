@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.LoadingLimits.TemporaryLimit;
 import com.powsybl.iidm.network.Network;
@@ -18,14 +19,19 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
@@ -534,5 +540,55 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         assertNull(createdModification.getConnectionName2());
         assertNull(createdModification.getConnectionDirection2());
         assertNull(createdModification.getConnectionPosition2());
+    }
+
+    private void assertConnectablePositionImpacts(List<AbstractBaseImpact> impacts) {
+        assertEquals(2, impacts.size());
+        assertTrue(impacts.get(0).isSimple());
+        SimpleElementImpact simpleImpact = (SimpleElementImpact) impacts.get(0);
+        assertEquals(IdentifiableType.SUBSTATION, simpleImpact.getElementType());
+        assertEquals("s1", simpleImpact.getElementId());
+        assertTrue(impacts.get(1).isSimple());
+        simpleImpact = (SimpleElementImpact) impacts.get(1);
+        assertEquals(IdentifiableType.SUBSTATION, simpleImpact.getElementType());
+        assertEquals("s2", simpleImpact.getElementId());
+    }
+
+    @Test
+    void addConnectablePositionExtensionToLine() throws Exception {
+        // creating new extension ConnectablePosition on line3 (which has previously no ConnectablePosition extension),
+        // by only setting this extension fields in the modification applied
+        LineModificationInfos lineModificationInfos = LineModificationInfos.builder()
+            .stashed(false)
+            .equipmentId("line3")
+            .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
+            .connectionName1(new AttributeModification<>("feeder1", OperationType.SET))
+            .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.BOTTOM, OperationType.SET))
+            .build();
+        String modificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+
+        // the extension creation notification leads to creating first a simple impact for the line line3, which then leads to the creation
+        // of 2 simple impacts on both line substations (see reduceNetworkImpacts method called in NetworkStoreListener)
+        assertConnectablePositionImpacts(networkModificationResult.get().getNetworkImpacts());
+
+        // update position field in this existing extension
+        lineModificationInfos = LineModificationInfos.builder()
+            .stashed(false)
+            .equipmentId("line3")
+            .connectionPosition1(new AttributeModification<>(2, OperationType.SET))
+            .build();
+        modificationInfosJson = mapper.writeValueAsString(lineModificationInfos);
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+
+        // the extension update notification leads to creating first a simple impact for the line line3, which then leads to the creation
+        // of 2 simple impacts on both line substations (see reduceNetworkImpacts method called in NetworkStoreListener)
+        assertConnectablePositionImpacts(networkModificationResult.get().getNetworkImpacts());
     }
 }
