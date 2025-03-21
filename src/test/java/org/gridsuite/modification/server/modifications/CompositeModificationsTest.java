@@ -51,9 +51,9 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
                 .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
                 .networkImpacts(List.of())
                 .build();
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class)))
+        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class), any()))
                 .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class)))
+        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class), any()))
                 .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
     }
 
