@@ -371,7 +371,9 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onExtensionCreation(Extension<?> extension) {
-        // FIXME: implement this method
+        Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
+        addSimpleModificationImpact(identifiable);
+        modifiedEquipments.add(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()));
     }
 
     @Override
@@ -385,8 +387,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     @Override
-    public void onExtensionUpdate(Extension<?> extendable, String attribute, String variantId, Object oldValue, Object newValue) {
-        Identifiable<?> identifiable = (Identifiable<?>) extendable.getExtendable();
+    public void onExtensionUpdate(Extension<?> extension, String attribute, String variantId, Object oldValue, Object newValue) {
+        Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
         onUpdate(identifiable, attribute, variantId, oldValue, newValue);
     }
 
