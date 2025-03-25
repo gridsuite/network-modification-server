@@ -15,6 +15,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
@@ -34,6 +35,8 @@ import static org.gridsuite.modification.NetworkModificationException.Type.TYPE_
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
+    private final BasicModificationInfosService basicModificationInfosService;
+
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
     }
@@ -43,9 +46,10 @@ public class NetworkModificationController {
     private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-            LineTypesCatalogService lineTypesCatalogService) {
+                                         LineTypesCatalogService lineTypesCatalogService, BasicModificationInfosService basicModificationInfosService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
+        this.basicModificationInfosService = basicModificationInfosService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -326,5 +330,13 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "List of metadata used to describe modification elements")
     public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
+    }
+
+    @DeleteMapping(value = "/network-modifications/index")
+    @Operation(summary = "Delete indexed modifications")
+    public ResponseEntity<Void> deleteIndexedModifications(@RequestParam("groupUuids") List<UUID> groupUuids,
+                                                           @RequestParam("networkUuid") UUID networkUuid) {
+        networkModificationService.deleteIndexedModificationGroup(groupUuids, networkUuid);
+        return ResponseEntity.ok().build();
     }
 }

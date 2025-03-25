@@ -21,6 +21,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -51,16 +52,18 @@ public class NetworkModificationService {
     private final NotificationService notificationService;
 
     private final ObjectMapper objectMapper;
+    private final BasicModificationInfosService basicModificationInfosService;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       EquipmentInfosService equipmentInfosService, NotificationService notificationService,
-                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper) {
+                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper, BasicModificationInfosService basicModificationInfosService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.notificationService = notificationService;
         this.modificationApplicator = applicationService;
         this.objectMapper = objectMapper;
+        this.basicModificationInfosService = basicModificationInfosService;
     }
 
     public List<UUID> getModificationGroups() {
@@ -101,8 +104,22 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationsCount(groupUuid, stashed);
     }
 
+    @Transactional
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        deleteIndexedModificationGroup(List.of(groupUuid));
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+    }
+
+    @Transactional
+    public void deleteIndexedModificationGroup(List<UUID> groupUuids) {
+        List<UUID> modificationUuids = groupUuids.stream().flatMap(groupUuid -> getNetworkModifications(groupUuid, true, false, false).stream().map(ModificationInfos::getUuid)).toList();
+        basicModificationInfosService.deleteByUuids(modificationUuids);
+    }
+
+    @Transactional
+    public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
+        List<UUID> modificationUuids = groupUuids.stream().flatMap(groupUuid -> getNetworkModifications(groupUuid, true, false, false).stream().map(ModificationInfos::getUuid)).toList();
+        basicModificationInfosService.deleteByNetworkUuid(modificationUuids, networkUuid);
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {
@@ -208,7 +225,7 @@ public class NetworkModificationService {
         return network;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional//(readOnly = true)
     public NetworkModificationResult buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfos = new ArrayList<>();

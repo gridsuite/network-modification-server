@@ -373,7 +373,7 @@ public class NetworkStoreListener implements NetworkListener {
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
         addSimpleModificationImpact(identifiable);
-        modifiedEquipments.add(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()));
+        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), false);
     }
 
     @Override

@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface BasicModificationInfosRepository extends ElasticsearchRepository<BasicModificationInfos, String> {
     void deleteAllByNetworkUuidAndModificationUuidIn(UUID networkUuid, List<UUID> modificationUuid);
+
+    void deleteAllByModificationUuidIn(List<UUID> modificationUuid);
 }
