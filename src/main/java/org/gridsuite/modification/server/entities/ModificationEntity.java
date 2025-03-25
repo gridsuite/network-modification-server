@@ -22,6 +22,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
@@ -67,6 +69,10 @@ public class ModificationEntity {
 
     @Column(name = "activated")
     private Boolean activated = true;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "modification_uuid")
+    private List<ModificationBackupEntity> modificationBackups = new ArrayList<>();
 
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues) {
         this.id = id;

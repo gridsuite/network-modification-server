@@ -64,7 +64,8 @@ public class HvdcLccDeletionEntity extends AbstractEquipmentDeletionEntity {
     public HvdcLccDeletionEntity(AbstractEquipmentDeletionInfos equipmentDeletionInfos) {
         var dto = (HvdcLccDeletionInfos) equipmentDeletionInfos;
         if (dto.getMcsOnSide1() != null && !dto.getMcsOnSide1().isEmpty() || dto.getMcsOnSide2() != null && !dto.getMcsOnSide2().isEmpty()) {
-            new HvdcLccDeletionEntity(toEmbeddableShuntCompensators(dto.getMcsOnSide1()), toEmbeddableShuntCompensators(dto.getMcsOnSide2()));
+            this.shuntCompensatorsSide1 = toEmbeddableShuntCompensators(dto.getMcsOnSide1());
+            this.shuntCompensatorsSide2 = toEmbeddableShuntCompensators(dto.getMcsOnSide2());
         }
     }
 

@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.utils.elasticsearch;
 
+import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
 import org.junit.jupiter.api.Tag;
@@ -22,7 +23,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@MockBeans({@MockBean(EmbeddedElasticsearch.class), @MockBean(EquipmentInfosRepository.class), @MockBean(TombstonedEquipmentInfosRepository.class)})
+@MockBeans({@MockBean(EmbeddedElasticsearch.class), @MockBean(EquipmentInfosRepository.class), @MockBean(BasicModificationInfosRepository.class), @MockBean(TombstonedEquipmentInfosRepository.class)})
 @Tag("Docker")
 public @interface DisableElasticsearch {
 }
