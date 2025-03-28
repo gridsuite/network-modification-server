@@ -1,0 +1,86 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-1">
+        <createTable tableName="lcc_converter_station_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_op" type="VARCHAR(255)"/>
+            <column name="bus_or_busbar_section_id_value" type="VARCHAR(255)"/>
+            <column name="connection_direction_op" type="VARCHAR(255)"/>
+            <column name="connection_direction" type="VARCHAR(255)"/>
+            <column name="connection_name_op" type="VARCHAR(255)"/>
+            <column name="connection_name" type="VARCHAR(255)"/>
+            <column name="connection_position_op" type="VARCHAR(255)"/>
+            <column name="connection_position" type="INT"/>
+            <column name="connected_op" type="VARCHAR(255)"/>
+            <column name="connected" type="BOOLEAN"/>
+            <column name="voltage_level_id_op" type="VARCHAR(255)"/>
+            <column name="voltage_level_id_value" type="VARCHAR(255)"/>
+            <column name="loss_factor_op" type="VARCHAR(255)"/>
+            <column name="loss_factor" type="FLOAT4"/>
+            <column name="power_factor_op" type="VARCHAR(255)"/>
+            <column name="power_factor" type="FLOAT4"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="lcc_converter_station_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-2">
+        <createTable tableName="lcc_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="equipment_name_op" type="VARCHAR(255)"/>
+            <column name="equipment_name_value" type="VARCHAR(255)"/>
+            <column name="active_power_setpoint_op" type="VARCHAR(255)"/>
+            <column name="active_power_setpoint" type="FLOAT(53)"/>
+            <column name="converters_mode_op" type="VARCHAR(255)"/>
+            <column name="converters_mode" type="VARCHAR(255)"/>
+            <column name="maxp_op" type="VARCHAR(255)"/>
+            <column name="maxp" type="FLOAT(53)"/>
+            <column name="nominalv_op" type="VARCHAR(255)"/>
+            <column name="nominalv" type="FLOAT(53)"/>
+            <column name="r_op" type="VARCHAR(255)"/>
+            <column name="r" type="FLOAT(53)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="lcc_modificationPK"/>
+            </column>
+            <column name="lcc_converter_station_1_id" type="UUID"/>
+            <column name="lcc_converter_station_2_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-3">
+        <addUniqueConstraint columnNames="lcc_converter_station_1_id" constraintName="uc_lcc_modificationlcc_converter_station_1_id_col" tableName="lcc_modification"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-4">
+        <addUniqueConstraint columnNames="lcc_converter_station_2_id" constraintName="uc_lcc_modificationlcc_converter_station_2_id_col" tableName="lcc_modification"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-5">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_converter_station_modification" constraintName="lcc_converter_station_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-6">
+            <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_modification" constraintName="lcc_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+
+
+    <changeSet author="elcheikhbas (generated)" id="1743589502652-7">
+        <createTable tableName="shunt_compensator_on_side_modification">
+            <column name="lcc_converter_station_modification_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connected_to_hvdc" type="BOOLEAN"/>
+            <column name="shunt_compensator_id" type="VARCHAR(255)"/>
+            <column name="maxqat_nominalv" type="FLOAT(53)"/>
+            <column name="shunt_compensator_name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="elcheikhbas (generated)" id="1744119886230-8">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_modification_entity_id" baseTableName="shunt_compensator_on_side_modification" constraintName="FK1g3ucfgf7ws0o54y7batko2a3" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744119886230-9">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_1_id" baseTableName="lcc_modification" constraintName="lcc_converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744119886230-10">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_2_id" baseTableName="lcc_modification" constraintName="lcc_converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

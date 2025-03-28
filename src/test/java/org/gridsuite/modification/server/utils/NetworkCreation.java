@@ -568,4 +568,17 @@ public final class NetworkCreation {
 
         return network;
     }
+
+    public static Network createWithLcc(UUID uuid) {
+        NetworkFactoryImpl networkFactory = new NetworkFactoryImpl();
+        Network network = create(uuid, false, networkFactory);
+        VoltageLevel v2 = network.getVoltageLevel("v2");
+
+        createLccConverterStation(v2, "v2lcc", "v2lcc", 11, 0, 0);
+        createSwitch(v2, "v2dlcc", "v2dlcc", SwitchKind.DISCONNECTOR, true, false, false, 0, 12);
+        createSwitch(v2, "v2blcc", "v2blcc", SwitchKind.BREAKER, true, false, false, 12, 11);
+
+        createHvdcLine(network, "hvdcLine", "hvdcLine", 1, 100, HvdcLine.ConvertersMode.SIDE_1_INVERTER_SIDE_2_RECTIFIER, 225, 500, "v1lcc", "v2lcc");
+        return network;
+    }
 }

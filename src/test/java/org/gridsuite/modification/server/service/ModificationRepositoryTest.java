@@ -1249,6 +1249,21 @@ class ModificationRepositoryTest {
     }
 
     @Test
+    void testLccModification() {
+        var lccModificationEntity = ModificationEntity.fromDTO(LccModificationInfos.builder()
+            .equipmentId("LCC1")
+            .converterStation1(LccConverterStationModificationInfos.builder().equipmentId("C1").build())
+            .converterStation2(LccConverterStationModificationInfos.builder().equipmentId("C2").build())
+            .build());
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(lccModificationEntity));
+        assertRequestsCount(2, 5, 0, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
+    }
+
+    @Test
     void testGetModificationCount() {
         var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
