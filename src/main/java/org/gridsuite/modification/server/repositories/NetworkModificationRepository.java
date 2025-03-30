@@ -86,8 +86,14 @@ public class NetworkModificationRepository {
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
-        CompositeModificationEntity compositeEntity = (CompositeModificationEntity) modificationRepository.findById(compositeUuid)
+        ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+
+        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
+            throw new NetworkModificationException(MODIFICATION_ERROR,
+                    String.format("Modification (%s) is not a composite modification", compositeUuid));
+        }
+
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
                 .map(this::getModificationInfos)
                 .map(ModificationEntity::fromDTO)
