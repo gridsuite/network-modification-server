@@ -30,7 +30,7 @@ public class ModificationBackupEntity {
     ModificationEntity modification;
 
     public void setModification(ModificationEntity modification) {
-//        modification.getModificationBackups().add(this);
+        modification.getModificationBackups().add(this);
         this.modification = modification;
     }
 }
