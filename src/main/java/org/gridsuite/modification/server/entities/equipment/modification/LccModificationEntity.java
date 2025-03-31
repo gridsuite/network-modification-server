@@ -15,9 +15,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
 import org.gridsuite.modification.dto.LccModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.LccConverterStationCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 
@@ -68,7 +66,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
         foreignKey = @ForeignKey(
             name = "lcc_converter_station_1_id_fk"
         ))
-    private LccConverterStationCreationEntity converterStation1;
+    private LccConverterStationModificationEntity converterStation1;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(
@@ -90,8 +88,8 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
         this.maxP = new DoubleModificationEmbedded(modificationInfos.getMaxP());
         this.activePowerSetpoint = new DoubleModificationEmbedded(modificationInfos.getActivePowerSetpoint());
         this.convertersMode = new EnumModificationEmbedded<>(modificationInfos.getConvertersMode());
-/*        this.converterStation1 = new LccConverterStationModificationEntity(modificationInfos.getConverterStation1());
-        this.converterStation2 = new LccConverterStationModificationEntity(modificationInfos.getConverterStation2());*/
+        this.converterStation1 = new LccConverterStationModificationEntity(modificationInfos.getConverterStation1());
+        this.converterStation2 = new LccConverterStationModificationEntity(modificationInfos.getConverterStation2());
     }
 
 }

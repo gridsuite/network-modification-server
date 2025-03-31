@@ -12,7 +12,6 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 import org.gridsuite.modification.dto.LccShuntCompensatorInfos;
 
 import java.util.List;
