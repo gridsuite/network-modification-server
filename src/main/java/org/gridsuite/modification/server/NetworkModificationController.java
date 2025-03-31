@@ -175,7 +175,7 @@ public class NetworkModificationController {
      * TODO : Remove this endpoint after the final integration of root networks (all tests need to migrate before)
      * Need to use tne new endpoint with modificationContextInfos DTO (see above)
      */
-    @PostMapping(value = "/network-modifications", params = {"networkUuid", "reportUuid", "reporterId"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+ /*   @PostMapping(value = "/network-modifications", params = {"networkUuid", "reportUuid", "reporterId"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create a network modification")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "The network modification was created"),
@@ -189,7 +189,7 @@ public class NetworkModificationController {
         @RequestBody ModificationInfos modificationInfos) {
         modificationInfos.check();
         return ResponseEntity.ok().body(networkModificationService.createNetworkModification(networkUuid, variantId, groupUuid, new ReportInfos(reportUuid, UUID.fromString(reporterId)), modificationInfos));
-    }
+    }*/
 
     @PutMapping(value = "/network-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Update a network modification")
