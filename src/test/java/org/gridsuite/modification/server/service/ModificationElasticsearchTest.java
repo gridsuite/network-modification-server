@@ -8,6 +8,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -128,7 +130,10 @@ class ModificationElasticsearchTest {
         VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "newVlName");
         String vlModificationJson = mapper.writeValueAsString(vlModification);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        assertEquals(11, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).size());
+        List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
+        assertEquals(11, equipmentsIndexedAfterVlModif.size());
+        assertTrue(equipmentsIndexedAfterVlModif.stream()
+                .allMatch(equipmentInfos -> TYPES_FOR_INDEXING.contains(IdentifiableType.valueOf(equipmentInfos.getType()))));
     }
 
     @Test
@@ -140,7 +145,9 @@ class ModificationElasticsearchTest {
         VoltageLevelCreationInfos volageLevelCreationInfos = ModificationCreation.getCreationVoltageLevel("s1", "v1test", "v1test");
         String voltageLevelCreationJson = mapper.writeValueAsString(volageLevelCreationInfos);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(voltageLevelCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-        assertEquals(1, equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).size());
+        List<EquipmentInfos> equipmentIndexedAfterVlCreation = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
+        assertEquals(1, equipmentIndexedAfterVlCreation.size());
+        assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), equipmentIndexedAfterVlCreation.getFirst().getType());
     }
 
     @Test

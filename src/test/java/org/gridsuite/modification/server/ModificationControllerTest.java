@@ -1454,7 +1454,7 @@ class ModificationControllerTest {
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
                 // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for excluded types
-                if (TYPES_FOR_INDEXING.contains(simpleImpact.getElementType().name())) {
+                if (TYPES_FOR_INDEXING.contains(simpleImpact.getElementType())) {
                     assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
                 } else {
                     assertFalse(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));

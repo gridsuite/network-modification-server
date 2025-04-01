@@ -38,21 +38,21 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
     public int partitionSizeForDeletion;
 
-    public static final Set<String> TYPES_FOR_INDEXING = Set.of(
-            IdentifiableType.SUBSTATION.name(),
-            IdentifiableType.VOLTAGE_LEVEL.name(),
-            IdentifiableType.HVDC_LINE.name(),
-            IdentifiableType.LINE.name(),
-            IdentifiableType.TIE_LINE.name(),
-            IdentifiableType.TWO_WINDINGS_TRANSFORMER.name(),
-            IdentifiableType.THREE_WINDINGS_TRANSFORMER.name(),
-            IdentifiableType.GENERATOR.name(),
-            IdentifiableType.BATTERY.name(),
-            IdentifiableType.LOAD.name(),
-            IdentifiableType.SHUNT_COMPENSATOR.name(),
-            IdentifiableType.DANGLING_LINE.name(),
-            IdentifiableType.STATIC_VAR_COMPENSATOR.name(),
-            IdentifiableType.HVDC_CONVERTER_STATION.name());
+    public static final Set<IdentifiableType> TYPES_FOR_INDEXING = Set.of(
+            IdentifiableType.SUBSTATION,
+            IdentifiableType.VOLTAGE_LEVEL,
+            IdentifiableType.HVDC_LINE,
+            IdentifiableType.LINE,
+            IdentifiableType.TIE_LINE,
+            IdentifiableType.TWO_WINDINGS_TRANSFORMER,
+            IdentifiableType.THREE_WINDINGS_TRANSFORMER,
+            IdentifiableType.GENERATOR,
+            IdentifiableType.BATTERY,
+            IdentifiableType.LOAD,
+            IdentifiableType.SHUNT_COMPENSATOR,
+            IdentifiableType.DANGLING_LINE,
+            IdentifiableType.STATIC_VAR_COMPENSATOR,
+            IdentifiableType.HVDC_CONVERTER_STATION);
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
