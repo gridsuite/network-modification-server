@@ -14,6 +14,8 @@ import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LoadModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperationType;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 
 import jakarta.persistence.*;
 import org.springframework.util.CollectionUtils;
@@ -50,6 +52,34 @@ public class LoadModificationEntity extends InjectionModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationType q0Op;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "pMeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "pMeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded pMeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "pMeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "pMeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded pMeasurementValidity;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "qMeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "qMeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded qMeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "qMeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "qMeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded qMeasurementValidity;
+
     public LoadModificationEntity(@NonNull LoadModificationInfos loadModificationInfos) {
         super(loadModificationInfos);
         assignAttributes(loadModificationInfos);
@@ -68,6 +98,10 @@ public class LoadModificationEntity extends InjectionModificationEntity {
         this.p0Op = loadModificationInfos.getP0() != null ? loadModificationInfos.getP0().getOp() : null;
         this.q0Value = loadModificationInfos.getQ0() != null ? loadModificationInfos.getQ0().getValue() : null;
         this.q0Op = loadModificationInfos.getQ0() != null ? loadModificationInfos.getQ0().getOp() : null;
+        this.pMeasurementValue = loadModificationInfos.getPMeasurementValue() != null ? new DoubleModificationEmbedded(loadModificationInfos.getPMeasurementValue()) : null;
+        this.pMeasurementValidity = loadModificationInfos.getPMeasurementValidity() != null ? new BooleanModificationEmbedded(loadModificationInfos.getPMeasurementValidity()) : null;
+        this.qMeasurementValue = loadModificationInfos.getQMeasurementValue() != null ? new DoubleModificationEmbedded(loadModificationInfos.getQMeasurementValue()) : null;
+        this.qMeasurementValidity = loadModificationInfos.getQMeasurementValidity() != null ? new BooleanModificationEmbedded(loadModificationInfos.getQMeasurementValidity()) : null;
     }
 
     @Override
@@ -93,6 +127,10 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
                 .p0(AttributeModification.toAttributeModification(getP0Value(), getP0Op()))
                 .q0(AttributeModification.toAttributeModification(getQ0Value(), getQ0Op()))
+                .pMeasurementValue(toAttributeModification(getPMeasurementValue()))
+                .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
+                .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
+                .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
