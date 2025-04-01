@@ -4,16 +4,20 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.gridsuite.modification.server.utils.JsonListConverter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Builder
 @Embeddable
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter
 @Entity
-@Table(name = "modification_backup")
-public class ModificationBackupEntity {
+@Table(name = "modification_application")
+public class ModificationApplicationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
@@ -22,15 +26,11 @@ public class ModificationBackupEntity {
     @Column(name = "network_uuid")
     UUID networkUuid;
 
-    @Column(name = "index_infos", columnDefinition = "CLOB")
-    String indexInfos;
+    @Column(name = "impacted_equipment_ids", columnDefinition = "CLOB")
+    @Convert(converter = JsonListConverter.class)
+    private List<String> impactedEquipmentIds;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modification_uuid", foreignKey = @ForeignKey(name = "modification_uuid_fk_constraint"))
     ModificationEntity modification;
-
-    public void setModification(ModificationEntity modification) {
-        modification.getModificationBackups().add(this);
-        this.modification = modification;
-    }
 }
