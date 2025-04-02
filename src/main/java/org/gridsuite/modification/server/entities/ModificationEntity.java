@@ -8,10 +8,7 @@ package org.gridsuite.modification.server.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
@@ -72,7 +69,7 @@ public class ModificationEntity {
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "modification_uuid")
-    private List<ModificationBackupEntity> modificationBackups = new ArrayList<>();
+    private List<ModificationApplicationEntity> modificationApplications = new ArrayList<>();
 
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues) {
         this.id = id;
@@ -146,5 +143,10 @@ public class ModificationEntity {
         } else {
             throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
         }
+    }
+
+    public void addModificationApplication(ModificationApplicationEntity modificationApplicationEntity) {
+        this.modificationApplications.add(modificationApplicationEntity);
+        modificationApplicationEntity.setModification(this);
     }
 }

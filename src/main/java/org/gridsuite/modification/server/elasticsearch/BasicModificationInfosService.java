@@ -1,11 +1,8 @@
 package org.gridsuite.modification.server.elasticsearch;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import org.gridsuite.modification.server.dto.elasticsearch.BasicModificationInfos;
-import org.gridsuite.modification.server.entities.ModificationBackupEntity;
-import org.gridsuite.modification.server.repositories.ModificationBackupRepository;
+import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
+import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,45 +13,39 @@ import java.util.UUID;
 @Service
 public class BasicModificationInfosService {
     private final BasicModificationInfosRepository basicModificationInfosRepository;
-    private final ModificationBackupRepository modificationBackupRepository;
+    private final ModificationApplicationRepository modificationApplicationRepository;
     private final ModificationRepository modificationRepository;
-    private final ObjectWriter objectWriter = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
     public BasicModificationInfosService(BasicModificationInfosRepository basicModificationInfosRepository,
-                                         ModificationBackupRepository modificationBackupRepository,
+                                         ModificationApplicationRepository modificationApplicationRepository,
                                          ModificationRepository modificationRepository) {
         this.basicModificationInfosRepository = basicModificationInfosRepository;
-        this.modificationBackupRepository = modificationBackupRepository;
+        this.modificationApplicationRepository = modificationApplicationRepository;
         this.modificationRepository = modificationRepository;
     }
 
     public void add(List<BasicModificationInfos> basicModificationInfos) {
-        modificationBackupRepository.saveAll(basicModificationInfos.stream().map(modificationInfo ->
-            modificationRepository.findById(modificationInfo.getModificationUuid()).map(modificationEntity -> {
-                    try {
-                        return ModificationBackupEntity.builder()
-                            .networkUuid(modificationInfo.getNetworkUuid())
-                            .modification(modificationEntity)
-                            .indexInfos(objectWriter.writeValueAsString(modificationInfo))
-                            .build();
-                    } catch (JsonProcessingException e) {
-                        //TODO: what to do ?
-                        return null;
-                    }
-                }
-            )
+        modificationApplicationRepository.saveAll(basicModificationInfos.stream().map(modificationInfo ->
+            modificationRepository.findWithApplicationsById(modificationInfo.getModificationUuid()).map(modificationEntity -> {
+                ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
+                    .networkUuid(modificationInfo.getNetworkUuid())
+                    .impactedEquipmentIds(modificationInfo.getImpactedEquipmentUuids())
+                    .build();
+                modificationEntity.addModificationApplication(newModificationApplicationEntity);
+                return newModificationApplicationEntity;
+            })
         ).filter(Optional::isPresent).map(Optional::get).toList());
 
         basicModificationInfosRepository.saveAll(basicModificationInfos);
     }
 
     public void deleteByNetworkUuid(List<UUID> modificationUuids, UUID networkUuid) {
-        modificationBackupRepository.deleteAllByNetworkUuidAndModificationIdIn(networkUuid, modificationUuids);
+        modificationApplicationRepository.deleteAllByNetworkUuidAndModificationIdIn(networkUuid, modificationUuids);
         basicModificationInfosRepository.deleteAllByNetworkUuidAndModificationUuidIn(networkUuid, modificationUuids);
     }
 
     public void deleteByUuids(List<UUID> modificationUuids) {
-        modificationBackupRepository.deleteAllByModificationIdIn(modificationUuids);
+        modificationApplicationRepository.deleteAllByModificationIdIn(modificationUuids);
         basicModificationInfosRepository.deleteAllByModificationUuidIn(modificationUuids);
     }
 }
