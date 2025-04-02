@@ -16,15 +16,14 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
+import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.BasicModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -39,7 +38,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -93,25 +91,25 @@ public class NetworkModificationApplicator {
      * medium : preloadingStrategy = COLLECTION
      * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
      */
-    public NetworkModificationResult applyModifications(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos, Map<UUID, UUID> modificationUuidToGroupUuid) {
-        PreloadingStrategy preloadingStrategy = modificationInfosList.stream()
+    public NetworkModificationResult applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
+        PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
             .map(ModificationInfos::getType)
             .reduce(ModificationType::maxStrategy)
             .map(ModificationType::getStrategy)
             .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosList, networkInfos, reportInfos, modificationUuidToGroupUuid))
+                .supplyAsync(() -> apply(modificationInfosGroup, networkInfos))
                 .join();
         } else {
-            return apply(modificationInfosList, networkInfos, reportInfos, modificationUuidToGroupUuid);
+            return apply(modificationInfosGroup, networkInfos);
         }
     }
 
     // This method is used for incremental modifications
-    private NetworkModificationResult apply(List<ModificationInfos> modificationInfosList, NetworkInfos networkInfos, ReportInfos reportInfos, Map<UUID, UUID> modificationUuidToGroupUuid) {
+    private NetworkModificationResult apply(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, basicModificationInfosService, collectionThreshold);
-        ApplicationStatus groupApplicationStatus = apply(modificationInfosList, listener.getNetwork(), reportInfos, listener, modificationUuidToGroupUuid);
+        ApplicationStatus groupApplicationStatus = apply(modificationInfosGroup, listener);
         List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
         return NetworkModificationResult.builder()
                 .applicationStatus(groupApplicationStatus)
@@ -129,9 +127,9 @@ public class NetworkModificationApplicator {
      * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModifications method
      * and no more builds can go through. If this causes problems we should put them in separate rabbitmq queues.
      */
-    public NetworkModificationResult applyModifications(List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, Map<UUID, UUID> modificationUuidToGroupUuid) {
+    public NetworkModificationResult applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
-                .map(Pair::getRight)
+                .map(ModificationApplicationGroup::modifications)
                 .flatMap(List::stream)
                 .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy)
@@ -139,19 +137,19 @@ public class NetworkModificationApplicator {
                 .orElse(PreloadingStrategy.NONE);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosGroups, networkInfos, modificationUuidToGroupUuid))
+                .supplyAsync(() -> apply(modificationInfosGroups, networkInfos))
                 .join();
         } else {
-            return apply(modificationInfosGroups, networkInfos, modificationUuidToGroupUuid);
+            return apply(modificationInfosGroups, networkInfos);
         }
     }
 
     // This method is used when building a variant
-    private NetworkModificationResult apply(List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups, NetworkInfos networkInfos, Map<UUID, UUID> modificationUuidToGroupUuid) {
+    private NetworkModificationResult apply(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, basicModificationInfosService, collectionThreshold);
         List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
-                        .map(g -> apply(g.getRight(), listener.getNetwork(), g.getLeft(), listener, modificationUuidToGroupUuid))
+                        .map(g -> apply(g, listener))
                         .toList();
         List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
         return NetworkModificationResult.builder()
@@ -161,27 +159,27 @@ public class NetworkModificationApplicator {
                 .build();
     }
 
-    private ApplicationStatus apply(List<ModificationInfos> modificationInfosList, Network network, ReportInfos reportInfos, NetworkStoreListener listener, Map<UUID, UUID> modificationUuidToGroupUuid) {
+    private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener) {
         ReportNode reportNode;
-        if (reportInfos.getNodeUuid() != null) {
-            UUID nodeUuid = reportInfos.getNodeUuid();
-            reportNode = ReportNode.newRootReportNode().withMessageTemplate(nodeUuid.toString(), nodeUuid.toString()).build();
+        if (modificationGroupInfos.reportInfos().getReporterId() != null) {
+            UUID reporterId = modificationGroupInfos.reportInfos().getReporterId();
+            reportNode = ReportNode.newRootReportNode().withMessageTemplate(reporterId.toString(), reporterId.toString()).build();
         } else {
             reportNode = ReportNode.NO_OP;
         }
-        ApplicationStatus groupApplicationStatus = modificationInfosList.stream()
+        ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
                 .filter(ModificationInfos::getActivated)
                 .map(m -> {
                     listener.setApplyingModification(BasicModificationInfos.builder()
-                        .groupUuid(modificationUuidToGroupUuid.get(m.getUuid()))
+                        .groupUuid(modificationGroupInfos.groupUuid())
                         .modificationUuid(m.getUuid())
                         .build());
-                    return apply(m, network, reportNode);
+                    return apply(m, listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
-        if (reportInfos.getReportUuid() != null) {
-            reportService.sendReport(reportInfos.getReportUuid(), reportNode);
+        if (modificationGroupInfos.reportInfos().getReportUuid() != null) {
+            reportService.sendReport(modificationGroupInfos.reportInfos().getReportUuid(), reportNode);
         }
         return groupApplicationStatus;
     }

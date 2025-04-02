@@ -23,10 +23,11 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -47,7 +48,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -86,11 +86,9 @@ class VoltageInitReportTest {
         final UUID reportUuid = UUID.fromString("88888888-8888-8888-8888-888888888888");
         //simulate PUT /v1/groups/abc?action=COPY with body ModificationApplicationContext(networkUuid=0000, reportUuid=0000, reporterId=0000, variantId=0000, duplicateFrom=0000)
         assertThat(networkModificationApplicator.applyModifications(
-                List.of(modificationInfos),
-                new NetworkInfos(network, networkUuuid, true),
-                new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999")),
-                new HashMap<>()))
-                .as("network modifications results")
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(modificationInfos), new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))),
+            new NetworkInfos(network, networkUuuid, true)))
+            .as("network modifications results")
             .isNotNull()
             .extracting(NetworkModificationResult::getApplicationStatus)
             .isEqualTo(resultStatus);

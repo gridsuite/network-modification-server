@@ -15,7 +15,6 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
-import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
@@ -35,8 +34,6 @@ import static org.gridsuite.modification.NetworkModificationException.Type.TYPE_
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    private final BasicModificationInfosService basicModificationInfosService;
-
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
     }
@@ -46,10 +43,9 @@ public class NetworkModificationController {
     private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-                                         LineTypesCatalogService lineTypesCatalogService, BasicModificationInfosService basicModificationInfosService) {
+                                         LineTypesCatalogService lineTypesCatalogService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
-        this.basicModificationInfosService = basicModificationInfosService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)

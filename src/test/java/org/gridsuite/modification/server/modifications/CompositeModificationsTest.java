@@ -12,8 +12,8 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,9 +51,7 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
                 .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
                 .networkImpacts(List.of())
                 .build();
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class), any()))
-                .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
-        when(networkModificationApplicator.applyModifications(any(), any(), any(ReportInfos.class), any()))
+        when(networkModificationApplicator.applyModifications(any(ModificationApplicationGroup.class), any()))
                 .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
     }
 

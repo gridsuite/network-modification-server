@@ -15,7 +15,6 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -172,12 +171,13 @@ public class NetworkModificationService {
     public NetworkModificationsResult createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
 
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), applicationContexts, modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> groupUuid))));
+        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(),
+            applyModifications(groupUuid, modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), applicationContexts));
     }
 
     /**
      * TODO : Remove this method after the final integration of root networks
-     * Need to use tne new method with ModificationApplicationContext DTO (see above)
+     * Need to use the new method with ModificationApplicationContext DTO (see above)
      */
     public Optional<NetworkModificationResult> createNetworkModification(@NonNull UUID networkUuid, String variantId, @NonNull UUID groupUuid,
                                                                          @NonNull ReportInfos reportInfos,
@@ -187,20 +187,22 @@ public class NetworkModificationService {
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfos));
 
         return networkInfos.isVariantPresent() ?
-            Optional.of(modificationApplicator.applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), networkInfos, reportInfos, modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> groupUuid)))) :
+            Optional.of(modificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), reportInfos), networkInfos)) :
             Optional.empty();
     }
 
     /**
      * Apply modifications on several networks
      */
-    private List<Optional<NetworkModificationResult>> applyModifications(List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts, Map<UUID, UUID> modificationUuidToGroupUuid) {
+    private List<Optional<NetworkModificationResult>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts) {
         return applicationContexts.stream().map(modificationApplicationContext ->
-            applyModifications(modificationApplicationContext.networkUuid(),
+            applyModifications(
+                modificationApplicationContext.networkUuid(),
                 modificationApplicationContext.variantId(),
-                new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId()),
-                modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid())).toList(),
-                modificationUuidToGroupUuid)
+                new ModificationApplicationGroup(groupUuid,
+                    modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid())).toList(),
+                    new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
+                ))
         ).toList();
     }
 
@@ -228,34 +230,28 @@ public class NetworkModificationService {
     @Transactional//(readOnly = true)
     public NetworkModificationResult buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
-        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
-        Map<UUID, UUID> modificationUuidToGroupUuid = new HashMap<>();
-
+        List<ModificationApplicationGroup> modificationGroupsInfos = new ArrayList<>();
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
-            (groupUuid, reporterId) -> {
+            (groupUuid, reportInfos) -> {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
-                List<ModificationInfos> modificationsByGroup = List.of();
+                List<ModificationInfos> modifications = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
+                    modifications = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
                         .stream()
                         .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getUuid()))
                         .filter(m -> !m.getStashed())
-                        .collect(Collectors.toList());
+                        .toList();
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
                     }
                 }
-                modificationUuidToGroupUuid.putAll(modificationsByGroup.stream().collect(Collectors.toMap(ModificationInfos::getUuid, m -> groupUuid)));
-                modificationInfos.add(
-                    Pair.of(reporterId,
-                        modificationsByGroup)
-                );
+                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos));
 
             }
         );
 
-        PreloadingStrategy preloadingStrategy = modificationInfos.stream().map(Pair::getRight)
+        PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
             .map(ModificationInfos::getType)
             .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
@@ -263,7 +259,7 @@ public class NetworkModificationService {
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
 
-        return modificationApplicator.applyModifications(modificationInfos, networkInfos, modificationUuidToGroupUuid);
+        return modificationApplicator.applyModifications(modificationGroupsInfos, networkInfos);
     }
 
     public void buildVariantRequest(UUID networkUuid, BuildInfos buildInfos, String receiver) {
@@ -287,7 +283,7 @@ public class NetworkModificationService {
         // update origin/destinations groups to cut and paste all modificationsToMove
         List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-        List<Optional<NetworkModificationResult>> result = applyModifications && !modificationEntities.isEmpty() ? applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), applicationContexts, modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> destinationGroupUuid))) : List.of();
+        List<Optional<NetworkModificationResult>> result = applyModifications && !modificationEntities.isEmpty() ? applyModifications(destinationGroupUuid, modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), applicationContexts) : List.of();
         return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), result);
     }
 
@@ -303,7 +299,7 @@ public class NetworkModificationService {
         List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMove, beforeModificationUuid);
 
         return applyModifications ?
-            applyModifications(networkUuid, variantId, reportInfos, modificationEntities.stream().map(networkModificationRepository::getModificationInfos).toList(), modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> destinationGroupUuid))) :
+            applyModifications(networkUuid, variantId, new ModificationApplicationGroup(destinationGroupUuid, modificationEntities.stream().map(networkModificationRepository::getModificationInfos).toList(), reportInfos)) :
             Optional.empty();
     }
 
@@ -326,22 +322,16 @@ public class NetworkModificationService {
         }
     }
 
-    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId,
-                                                                   ReportInfos reportInfos, List<ModificationInfos> modificationInfos, Map<UUID, UUID> modificationUuidToGroupUuid) {
-        if (!modificationInfos.isEmpty()) {
-            PreloadingStrategy preloadingStrategy = modificationInfos.stream()
+    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+        if (!modificationGroupInfos.modifications().isEmpty()) {
+            PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
                 .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
             // try to apply the duplicated modifications (incremental mode)
             if (networkInfos.isVariantPresent()) {
-                return Optional.of(modificationApplicator.applyModifications(
-                    modificationInfos,
-                    networkInfos,
-                    reportInfos,
-                    modificationUuidToGroupUuid
-                ));
+                return Optional.of(modificationApplicator.applyModifications(modificationGroupInfos, networkInfos));
             }
         }
         return Optional.empty();
@@ -356,7 +346,7 @@ public class NetworkModificationService {
         List<ModificationEntity> duplicateModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return new NetworkModificationsResult(
             duplicateModifications.stream().map(ModificationEntity::getId).toList(),
-            applyModifications(modificationInfos, applicationContexts, duplicateModifications.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> targetGroupUuid)))
+            applyModifications(targetGroupUuid, modificationInfos, applicationContexts)
         );
     }
 
@@ -369,15 +359,15 @@ public class NetworkModificationService {
                                                                       UUID networkUuid, String variantId,
                                                                       ReportInfos reportInfos, List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModificationsInfos(modificationsUuids);
-        List<ModificationEntity> duplicateModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
-        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos, duplicateModifications.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> targetGroupUuid)));
+        networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
+        return applyModifications(networkUuid, variantId, new ModificationApplicationGroup(targetGroupUuid, modificationInfos, reportInfos));
     }
 
     @Transactional
     public NetworkModificationsResult insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(modificationInfos, applicationContexts, modificationEntities.stream().collect(Collectors.toMap(ModificationEntity::getId, m -> targetGroupUuid))));
+        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(targetGroupUuid, modificationInfos, applicationContexts));
     }
 
     /**
@@ -390,7 +380,7 @@ public class NetworkModificationService {
                                                                             ReportInfos reportInfos, List<UUID> compositeModificationsUuids) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(compositeModificationsUuids);
         networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
-        return applyModifications(networkUuid, variantId, reportInfos, modificationInfos, modificationInfos.stream().collect(Collectors.toMap(ModificationInfos::getUuid, m -> targetGroupUuid)));
+        return applyModifications(networkUuid, variantId, new ModificationApplicationGroup(targetGroupUuid, modificationInfos, reportInfos));
     }
 
     @Transactional

@@ -13,14 +13,13 @@ import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
-
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -33,18 +32,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Tag("UnitTest")
 class NetworkModificationApplicatorTest {
@@ -89,7 +84,7 @@ class NetworkModificationApplicatorTest {
         when(mockModificationType.getStrategy()).thenReturn(PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW);
         when(largeNetworkModificationExecutionService.supplyAsync(any())).thenReturn(CompletableFuture.completedFuture(NetworkModificationResult.builder().build()));
 
-        NetworkModificationResult result = applicator.applyModifications(modificationInfosList, networkInfos, reportInfos, new HashMap<>());
+        NetworkModificationResult result = applicator.applyModifications(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
@@ -97,18 +92,18 @@ class NetworkModificationApplicatorTest {
 
     @Test
     void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusView() {
-        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups = List.of(Pair.of(mock(ReportInfos.class), List.of(mock(ModificationInfos.class))));
+        List<ModificationApplicationGroup> modificationInfosGroups = List.of(new ModificationApplicationGroup(UUID.randomUUID(), List.of(mock(ModificationInfos.class)), mock(ReportInfos.class)));
         NetworkInfos networkInfos = mock(NetworkInfos.class);
 
         NetworkModificationApplicator applicator = new NetworkModificationApplicator(
                 networkStoreService, equipmentInfosService, basicModificationInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
 
         ModificationType mockModificationType = mock(ModificationType.class);
-        when(modificationInfosGroups.get(0).getRight().get(0).getType()).thenReturn(mockModificationType);
+        when(modificationInfosGroups.get(0).modifications().get(0).getType()).thenReturn(mockModificationType);
         when(mockModificationType.getStrategy()).thenReturn(PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW);
         when(largeNetworkModificationExecutionService.supplyAsync(any())).thenReturn(CompletableFuture.completedFuture(NetworkModificationResult.builder().build()));
 
-        NetworkModificationResult result = applicator.applyModifications(modificationInfosGroups, networkInfos, new HashMap<>());
+        NetworkModificationResult result = applicator.applyModifications(modificationInfosGroups, networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());

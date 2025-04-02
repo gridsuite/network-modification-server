@@ -20,10 +20,9 @@ import mockwebserver3.MockWebServer;
 import mockwebserver3.RecordedRequest;
 import mockwebserver3.junit5.internal.MockWebServerExtension;
 import okhttp3.HttpUrl;
-import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
@@ -972,7 +971,9 @@ class BuildTest {
         String variantId = network.getVariantManager().getWorkingVariantId();
 
         // Building mode : No error send with exception
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId), new HashMap<>());
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(
+            new ModificationApplicationGroup(groupUuid, List.of(loadCreationInfos), new ReportInfos(reportUuid, reporterId)),
+            new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
@@ -1002,12 +1003,13 @@ class BuildTest {
         UUID nodeUuid1 = UUID.randomUUID();
         UUID nodeUuid2 = UUID.randomUUID();
 
-        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
-        modificationInfosGroups.add(Pair.of(new ReportInfos(reportUuid, nodeUuid1), List.of(loadCreationInfos)));
-        modificationInfosGroups.add(Pair.of(new ReportInfos(UUID.randomUUID(), nodeUuid2), List.of()));
+        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(loadCreationInfos), new ReportInfos(reportUuid, nodeUuid1)),
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(), new ReportInfos(UUID.randomUUID(), nodeUuid2))
+        );
 
         //Global application status should be in error and last application status should be OK
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true), new HashMap<>());
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
