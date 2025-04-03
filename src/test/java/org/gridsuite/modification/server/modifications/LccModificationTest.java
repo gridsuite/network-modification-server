@@ -1,9 +1,11 @@
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.HvdcLine;
 import com.powsybl.iidm.network.LccConverterStation;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
@@ -11,11 +13,19 @@ import org.gridsuite.modification.dto.LccModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperationType;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.NetworkModificationException.Type.HVDC_LINE_ALREADY_EXISTS;
+import static org.gridsuite.modification.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LccModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
@@ -86,10 +96,26 @@ public class LccModificationTest extends AbstractNetworkModificationTest {
     }
 
     @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("LCC_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("lcc1", createdValues.get("equipmentId"));
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("LCC_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("lcc1Edited", updatedValues.get("equipmentId"));
+    }
+
+    @Override
     protected void assertAfterNetworkModificationDeletion() {
-        assertNull(getNetwork().getHvdcLine("hvdcLine"));
+        assertNull(getNetwork().getHvdcLine("lcc1Edited"));
         assertEquals(0, getNetwork().getVoltageLevel("v1").getLccConverterStationStream()
-            .filter(converterStation -> converterStation.getId().equals("v1lcc")).count());
+            .filter(converterStation -> converterStation.getId().equals("lccStationId1")).count());
+        assertEquals(0, getNetwork().getVoltageLevel("v2").getLccConverterStationStream()
+            .filter(converterStation -> converterStation.getId().equals("lccStationId2")).count());
 
     }
 

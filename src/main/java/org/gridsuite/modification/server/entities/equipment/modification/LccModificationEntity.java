@@ -22,9 +22,16 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
+import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
+import org.gridsuite.modification.dto.LccCreationInfos;
 import org.gridsuite.modification.dto.LccModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
+import org.springframework.util.CollectionUtils;
+
+import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 @NoArgsConstructor
 @Getter
@@ -97,6 +104,36 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
         this.convertersMode = new EnumModificationEmbedded<>(modificationInfos.getConvertersMode());
         this.converterStation1 = new LccConverterStationModificationEntity(modificationInfos.getConverterStation1());
         this.converterStation2 = new LccConverterStationModificationEntity(modificationInfos.getConverterStation2());
+    }
+
+    @Override
+    public LccModificationInfos toModificationInfos() {
+        return toLccModificationsInfosBuilder().build();
+    }
+
+    private LccModificationInfos.LccModificationInfosBuilder<?, ?> toLccModificationsInfosBuilder() {
+        LccConverterStationModificationInfos converterStationInfos1 = getConverterStation1() == null ? null : getConverterStation1().toLccConverterStationInfos();
+        LccConverterStationModificationInfos converterStationInfos2 = getConverterStation2() == null ? null : getConverterStation2().toLccConverterStationInfos();
+
+        return LccModificationInfos.builder()
+            .uuid(getId())
+            .date(getDate())
+            .stashed(getStashed())
+            .activated(getActivated())
+            .equipmentId(getEquipmentId())
+            .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+            .nominalV(toAttributeModification(getNominalV()))
+            .r(toAttributeModification(getR()))
+            .maxP(toAttributeModification(getMaxP()))
+            .activePowerSetpoint(toAttributeModification(getActivePowerSetpoint()))
+            .convertersMode(toAttributeModification(getConvertersMode()))
+            .converterStation1(converterStationInfos1)
+            .converterStation2(converterStationInfos2)
+            // properties
+            .properties(CollectionUtils.isEmpty(getProperties()) ? null :
+                getProperties().stream()
+                    .map(FreePropertyEntity::toInfos)
+                    .toList());
     }
 
 }

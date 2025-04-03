@@ -21,11 +21,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.AttributeModification;
+import org.gridsuite.modification.dto.ConverterStationModificationInfos;
+import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
+import org.gridsuite.modification.dto.OperationType;
+import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
 
+import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.fromEmbeddableShuntCompensatorCreation;
 import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.fromEmbeddableShuntCompensatorModification;
 import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.toEmbeddableShuntCompensatorModification;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
@@ -63,17 +68,20 @@ public class LccConverterStationModificationEntity extends InjectionModification
         this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorModification(converterStationModificationInfos.getShuntCompensatorsOnSide());
     }
 
-    private LccConverterStationModificationInfos.LccConverterStationModificationInfosBuilder<?, ?> toConverterStationModificationInfoBuilder() {
-
+    public LccConverterStationModificationInfos toLccConverterStationInfos() {
         return LccConverterStationModificationInfos.builder()
-            .uuid(getId())
-            .date(getDate())
-            .stashed(getStashed())
-            .activated(getActivated())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
+            .voltageLevelId(AttributeModification.toAttributeModification(getVoltageLevelIdValue(), getVoltageLevelIdOp()))
+            .busOrBusbarSectionId(AttributeModification.toAttributeModification(getBusOrBusbarSectionIdValue(), getBusOrBusbarSectionIdOp()))
+            .connectionName(toAttributeModification(getConnectionName()))
+            .connectionPosition(toAttributeModification(getConnectionPosition()))
+            .connectionDirection(toAttributeModification(getConnectionDirection()))
+            .terminalConnected(toAttributeModification(getTerminalConnected()))
+            // ConverterStation
             .lossFactor(toAttributeModification(getLossFactor()))
             .powerFactor(toAttributeModification(getPowerFactor()))
-            .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorModification(getShuntCompensatorsOnSide()));
+            .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorModification(getShuntCompensatorsOnSide()))
+            .build();
     }
 }
