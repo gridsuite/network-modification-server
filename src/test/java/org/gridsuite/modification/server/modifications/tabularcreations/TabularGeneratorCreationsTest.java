@@ -244,7 +244,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
             .creationType(ModificationType.GENERATOR_CREATION)
             .creations(creations)
             .build();
-        String tabularCreationJson = mapper.writeValueAsString(creationInfos);
+        String tabularCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(creationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -293,7 +293,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .creationType(ModificationType.GENERATOR_CREATION)
                 .creations(creations)
                 .build();
-        String tabularCreationJson = mapper.writeValueAsString(creationInfos);
+        String tabularCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(creationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))

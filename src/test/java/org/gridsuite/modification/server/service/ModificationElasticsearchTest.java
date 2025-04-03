@@ -137,6 +137,7 @@ class ModificationElasticsearchTest {
         // vl modification - assert vl name modification, linked load modification and parent subsation modification
         VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "v1_newname");
         String vlModificationJson = mapper.writeValueAsString(vlModification);
+
         mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
 
         checkSomeEquipmentsVoltageLevel(NETWORK_UUID, NEW_VARIANT, "v1_newname");

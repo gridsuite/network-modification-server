@@ -42,6 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,7 +79,6 @@ public abstract class AbstractNetworkModificationTest {
     private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
     private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
     private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY&networkUuid=" + TEST_NETWORK_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID() + "&variantId=" + NetworkCreation.VARIANT_ID;
-    private static final ModificationApplicationContext APPLICATION_CONTEXT = new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
 
     @Autowired
     protected MockMvc mockMvc;
@@ -134,16 +134,17 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCreate() throws Exception {
         MvcResult mvcResult;
-        Optional<NetworkModificationResult> networkModificationResult;
+        Optional<NetworkModificationsResult> networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertResultImpacts(networkModificationResult.get().getNetworkImpacts());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
+        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        assertResultImpacts(getNetworkImpacts(networkModificationsResult.get()));
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()));
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -157,17 +158,19 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCreateDisabledModification() throws Exception {
         MvcResult mvcResult;
-        NetworkModificationsResult networkModificationResult;
+        Optional<NetworkModificationsResult> networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         modificationToCreate.setActivated(false);
-        String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
+        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<NetworkModificationsResult>() { });
-       // assertTrue(networkModificationResult.isPresent());
-        //assertEquals(0, networkModificationResult.get().getNetworkImpacts().size());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.modificationResults().get(0).get().getApplicationStatus());
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+
+        assertEquals(0, getNetworkImpacts(networkModificationsResult.get()).size());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -327,5 +330,21 @@ public abstract class AbstractNetworkModificationTest {
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
+    }
+
+    protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
+        List<NetworkModificationResult.ApplicationStatus> applicationStatuses = new ArrayList<>();
+        networkModificationsResult.modificationResults().forEach(modificationResult -> {
+            modificationResult.ifPresent(networkModificationResult -> applicationStatuses.add(networkModificationResult.getApplicationStatus()));
+        });
+        return Optional.of(applicationStatuses).orElse(List.of());
+    }
+
+    protected List<AbstractBaseImpact> getNetworkImpacts(NetworkModificationsResult networkModificationsResult) {
+        return networkModificationsResult.modificationResults().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(result -> result.getNetworkImpacts().stream())
+                .toList();
     }
 }

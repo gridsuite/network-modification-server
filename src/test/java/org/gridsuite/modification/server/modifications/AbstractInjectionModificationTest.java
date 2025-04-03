@@ -13,6 +13,8 @@ import org.gridsuite.modification.dto.OperationType;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,7 +42,7 @@ abstract class AbstractInjectionModificationTest extends AbstractNetworkModifica
         }
         assertThat(existingEquipment.getTerminal().isConnected()).isNotEqualTo(expectedState);
 
-        String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
+        String modificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // connection state has changed as expected

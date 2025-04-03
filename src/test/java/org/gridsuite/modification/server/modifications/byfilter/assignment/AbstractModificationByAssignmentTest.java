@@ -22,6 +22,7 @@ import org.gridsuite.modification.dto.byfilter.DataType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.DoubleAssignmentInfos;
 import org.gridsuite.modification.dto.byfilter.assignment.PropertyAssignmentInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.service.FilterService;
@@ -185,17 +186,17 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
             .equipmentType(getIdentifiableType())
             .assignmentInfosList(assignmentInfos)
             .build();
-        Optional<NetworkModificationResult> networkModificationResult;
+        Optional<NetworkModificationsResult> networkModificationsResult;
 
-        //String modificationToCreateJson = mapper.writeValueAsString(modificationByAssignmentInfos);
         String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationByAssignmentInfos, List.of(buildApplicationContext())));
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertEquals(applicationStatus, networkModificationResult.get().getApplicationStatus());
+        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        assertEquals(applicationStatus, extractApplicationStatus(networkModificationsResult.get()).getFirst());
     }
 
     @Override

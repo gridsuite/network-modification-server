@@ -106,7 +106,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // invalid Battery id
         BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setEquipmentId("");
-        String batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        String batteryCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(batteryCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", batteryCreationInfos.getErrorType().name(), reportService);

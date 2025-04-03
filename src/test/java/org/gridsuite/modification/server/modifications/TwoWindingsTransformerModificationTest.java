@@ -21,6 +21,7 @@ import com.powsybl.iidm.network.extensions.TwoWindingsTransformerToBeEstimated;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.utils.ModificationUtils;
 import org.junit.jupiter.api.Tag;
@@ -308,7 +309,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
     void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos = (TwoWindingsTransformerModificationInfos) buildModification();
         twoWindingsTransformerModificationInfos.setEquipmentId("2wt_not_existing");
-        String modificationInfosJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        String modificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationInfosJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -330,7 +332,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .build())
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -347,7 +349,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(new AttributeModification<>(250.0, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -361,7 +363,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -374,7 +376,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetDeadband(new AttributeModification<>(22.0, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -387,7 +389,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetDeadband(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTapPosition(new AttributeModification<>(0, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -416,7 +418,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                 .build()
                                 ));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -428,7 +430,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         //disable the tap changer
         twoWindingsTransformerModificationInfos.setRatioTapChanger(RatioTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -454,7 +456,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .build())
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -467,7 +469,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationMode(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(new AttributeModification<>(250.0, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -480,7 +482,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -493,7 +495,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulatingTerminalId(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTargetDeadband(new AttributeModification<>(22.0, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -506,7 +508,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTargetDeadband(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTapPosition(new AttributeModification<>(0, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -536,7 +538,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                             .alpha(1.3)
                             .build()));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -550,7 +552,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET));
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationSide(new AttributeModification<>(RegulationSide.SIDE1, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -563,7 +565,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationType(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationSide(new AttributeModification<>(RegulationSide.SIDE2, OperationType.SET));
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -575,7 +577,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         //disable the tap changer
         twoWindingsTransformerModificationInfos.setPhaseTapChanger(PhaseTapChangerModificationInfos.builder().enabled(new AttributeModification<>(false, OperationType.SET)).build());
 
-        modificationToCreateJson = mapper.writeValueAsString(twoWindingsTransformerModificationInfos);
+        modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerModificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
 
@@ -640,7 +642,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .build())
             .build();
 
-        String modificationToModifyJson = mapper.writeValueAsString(phaseTapChangerCreation);
+        String modificationToModifyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(phaseTapChangerCreation, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -735,7 +738,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .build())
             .build();
 
-        String modificationToModifyJson1 = mapper.writeValueAsString(phaseTapChangerCreation);
+        String modificationToModifyJson1 = mapper.writeValueAsString(org.springframework.data.util.Pair.of(phaseTapChangerCreation, List.of(buildApplicationContext())));
 
         // modification 1 assert
         mockMvc.perform(post(getNetworkModificationUri())
@@ -747,7 +750,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         // modification 2 : FIXED_TAP -> FIXED_TAP
         phaseTapChangerCreation.getPhaseTapChanger().setRegulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET));
 
-        String modificationToModifyJson2 = mapper.writeValueAsString(phaseTapChangerCreation);
+        String modificationToModifyJson2 = mapper.writeValueAsString(org.springframework.data.util.Pair.of(phaseTapChangerCreation, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToModifyJson2).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -831,21 +834,23 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .terminal1Connected(side == TwoSides.ONE ? new AttributeModification<>(expectedState, OperationType.SET) : null)
                         .terminal2Connected(side == TwoSides.TWO ? new AttributeModification<>(expectedState, OperationType.SET) : null)
                         .build();
-        String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
+        String modificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
+
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> modifResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(modifResult.isPresent());
+        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
 
         if (!Objects.isNull(errorMessage)) {
             // change not applied
             assertThat(terminal.isConnected()).isNotEqualTo(expectedState);
-            assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, modifResult.get().getApplicationStatus());
+            assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
             assertLogMessage("BRANCH_MODIFICATION_ERROR : " + errorMessage, "MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR", reportService);
         } else {
             // connection state has changed as expected
             assertThat(terminal.isConnected()).isEqualTo(expectedState);
-            assertEquals(NetworkModificationResult.ApplicationStatus.ALL_OK, modifResult.get().getApplicationStatus());
+            assertEquals(NetworkModificationResult.ApplicationStatus.ALL_OK, extractApplicationStatus(networkModificationsResult.get()).getFirst());
 
             // try to modify again => no change on connection state
             mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -1011,7 +1016,8 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .build())
             .build();
 
-        String modificationToModifyJson = mapper.writeValueAsString(phaseTapChangerCreation);
+        String modificationToModifyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(phaseTapChangerCreation, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToModifyJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 

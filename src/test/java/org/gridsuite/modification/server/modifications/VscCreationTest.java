@@ -214,7 +214,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setEquipmentId("");
-        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", vscCreationInfos.getErrorType().name(), reportService);
@@ -298,7 +298,8 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     void testCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setAngleDroopActivePowerControl(false);
-        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
@@ -316,7 +317,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setAngleDroopActivePowerControl(false);
         vscCreationInfos.setDroop(null);
         vscCreationInfos.setP0(null);
-        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
@@ -358,7 +359,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     private void checkDroopWithAbsentInfos(VscCreationInfos vscCreationInfos) throws Exception {
-        String vscCreationInfosJson = mapper.writeValueAsString(vscCreationInfos);
+        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,

@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -58,7 +59,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
             .equipmentAttributeValue(true)
             .equipmentId("v1b1")
             .build();
-        String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        String switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
 
         // switch opening
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -91,7 +92,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         // switch not existing
         switchStatusModificationInfos.setEquipmentId(switchNotFoundId);
-        String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        String switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
@@ -138,7 +139,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
             .equipmentId("v1b1")
             .build();
 
-        String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        String switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isBadRequest(),

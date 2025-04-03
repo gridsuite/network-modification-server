@@ -98,7 +98,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         VoltageLevelCreationInfos vli = (VoltageLevelCreationInfos) buildModification();
         vli.setSubstationId("absent_station");
 
-        String vliJson = mapper.writeValueAsString(vli);
+        String vliJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage(),
@@ -146,7 +146,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setEquipmentId("vl_1");
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
         vli.getCouplingDevices().get(0).setBusbarSectionId2("bbs");
-        String vliJsonObject = mapper.writeValueAsString(vli);
+        String vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertNotNull(getNetwork().getVoltageLevel("vl_1"));
@@ -166,7 +166,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setEquipmentId("vl_ok");
         vli.setIpMin(25.0);
         vli.setIpMax(25.0);
-        String vliJsonObject = mapper.writeValueAsString(vli);
+        String vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // VL is created
@@ -179,7 +179,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setEquipmentId("vl_ok");
         vli.setIpMin(null);
         vli.setIpMax(25.0);
-        String vliJsonObject = mapper.writeValueAsString(vli);
+        String vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // VL is created
@@ -191,7 +191,8 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setEquipmentId("vl_ko");
         vli.setIpMin(ipMin);
         vli.setIpMax(ipMax);
-        String vliJsonObject = mapper.writeValueAsString(vli);
+        String vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // VL could not have been created

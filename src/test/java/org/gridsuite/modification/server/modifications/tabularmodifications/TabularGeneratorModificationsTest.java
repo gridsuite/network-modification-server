@@ -524,7 +524,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
                 .build();
-        String modificationToCreateJson = mapper.writeValueAsString(modificationInfos);
+        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
