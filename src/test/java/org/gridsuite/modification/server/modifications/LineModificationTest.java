@@ -203,7 +203,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .content(lineModificationInfosJson)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "Line lineNotFound does not exist in network").getMessage(),
+        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "Line 'lineNotFound' : does not exist in network").getMessage(),
                 lineModificationInfos.getErrorType().name(), reportService);
     }
 
