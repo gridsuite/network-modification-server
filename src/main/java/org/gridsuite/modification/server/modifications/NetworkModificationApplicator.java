@@ -24,7 +24,6 @@ import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.dto.elasticsearch.BasicModificationInfos;
 import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
@@ -170,10 +169,7 @@ public class NetworkModificationApplicator {
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
                 .filter(ModificationInfos::getActivated)
                 .map(m -> {
-                    listener.setApplyingModification(BasicModificationInfos.builder()
-                        .groupUuid(modificationGroupInfos.groupUuid())
-                        .modificationUuid(m.getUuid())
-                        .build());
+                    listener.initNetworkModification(modificationGroupInfos.groupUuid(), m.getUuid());
                     return apply(m, listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)

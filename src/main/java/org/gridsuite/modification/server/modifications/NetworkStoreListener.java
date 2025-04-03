@@ -11,7 +11,7 @@ import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
-import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.BasicModificationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
@@ -46,12 +46,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final BasicModificationInfosService basicModificationInfosService;
 
-    private final Map<BasicModificationInfos, ImpactedEquipmentsInfos> impactedEquipmentsByModification = new HashMap<>();
-
-    // UUID or currently applying modification
-    //TODO: set to random by default to keep it working if modification is set ?
-    @Setter
-    private BasicModificationInfos applyingModification;
+    private final List<BasicModificationInfos> impactedEquipmentsByModification = new LinkedList<>();
 
     private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
@@ -68,24 +63,13 @@ public class NetworkStoreListener implements NetworkListener {
         this.collectionThreshold = collectionThreshold;
     }
 
-    private void updateImpactedEquipment(EquipmentInfos impactedEquipment, boolean isCreating) {
-        if (impactedEquipmentsByModification.get(applyingModification) == null) {
-            impactedEquipmentsByModification.put(applyingModification, new ImpactedEquipmentsInfos());
+    private void updateImpactedEquipment(Object impactedEquipment, SimpleImpactType impactType) {
+        ImpactedEquipmentsInfos infosToUpdate = impactedEquipmentsByModification.getLast().getImpactedEquipmentsInfos();
+        switch (impactType) {
+            case CREATION -> infosToUpdate.getCreatedEquipments().add((EquipmentInfos) impactedEquipment);
+            case MODIFICATION -> infosToUpdate.getModifiedEquipments().add((EquipmentInfos) impactedEquipment);
+            case DELETION -> infosToUpdate.getDeletedEquipments().add((EquipmentInfosToDelete) impactedEquipment);
         }
-        ImpactedEquipmentsInfos infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
-        if (isCreating) {
-            infosToUpdate.getCreatedEquipments().add(impactedEquipment);
-        } else {
-            infosToUpdate.getModifiedEquipments().add(impactedEquipment);
-        }
-    }
-
-    private void updateImpactedEquipment(EquipmentInfosToDelete impactedEquipment) {
-        if (impactedEquipmentsByModification.get(applyingModification) == null) {
-            impactedEquipmentsByModification.put(applyingModification, new ImpactedEquipmentsInfos());
-        }
-        ImpactedEquipmentsInfos infosToUpdate = impactedEquipmentsByModification.get(applyingModification);
-        infosToUpdate.getDeletedEquipments().add(impactedEquipment);
     }
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
@@ -153,7 +137,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
-        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, variantId), false);
+        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, variantId), SimpleImpactType.MODIFICATION);
 
         // because all each equipment carry its linked voltage levels/substations name within its document
         // if attribute is "name" and identifiable type is VOLTAGE_LEVEL or SUBSTATION, we need to update all equipments linked to it
@@ -170,7 +154,7 @@ public class NetworkStoreListener implements NetworkListener {
             // update substation linked to voltageLevel
             Optional<Substation> linkedSubstation = updatedVoltageLevel.getSubstation();
             if (linkedSubstation.isPresent()) {
-                updateImpactedEquipment(toEquipmentInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId()), false);
+                updateImpactedEquipment(toEquipmentInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION);
             }
         } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
             Substation updatedSubstation = network.getSubstation(identifiable.getId());
@@ -181,14 +165,14 @@ public class NetworkStoreListener implements NetworkListener {
     private void updateEquipmentsLinkedToSubstation(Substation substation) {
         Iterable<VoltageLevel> linkedVoltageLevels = substation.getVoltageLevels();
         // update all voltageLevels linked to substation
-        linkedVoltageLevels.forEach(vl -> updateImpactedEquipment(toEquipmentInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId()), false));
+        linkedVoltageLevels.forEach(vl -> updateImpactedEquipment(toEquipmentInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION));
         // update all equipments linked to each of the voltageLevels
         linkedVoltageLevels.forEach(vl ->
             Iterables.concat(
                 vl.getConnectables(),
                 vl.getSwitches()
             ).forEach(c ->
-                updateImpactedEquipment(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()), false)
+                updateImpactedEquipment(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION)
             )
         );
     }
@@ -198,7 +182,7 @@ public class NetworkStoreListener implements NetworkListener {
             voltageLevel.getConnectables(),
             voltageLevel.getSwitches()
         ).forEach(c ->
-            updateImpactedEquipment(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()), false)
+            updateImpactedEquipment(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION)
         );
     }
 
@@ -212,7 +196,7 @@ public class NetworkStoreListener implements NetworkListener {
             .type(EquipmentInfos.getEquipmentTypeName(identifiable))
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-            .build(), true);
+            .build(), SimpleImpactType.CREATION);
 
         simpleImpacts.add(
             SimpleElementImpact.builder()
@@ -226,7 +210,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        updateImpactedEquipment(new EquipmentInfosToDelete(identifiable.getId(), identifiable.getType().name()));
+        updateImpactedEquipment(new EquipmentInfosToDelete(identifiable.getId(), identifiable.getType().name()), SimpleImpactType.DELETION);
         simpleImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(SimpleImpactType.DELETION)
@@ -242,11 +226,20 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
+    public void initNetworkModification(UUID groupUuid, UUID modificationUuid) {
+        BasicModificationInfos modificationApplication = BasicModificationInfos.builder()
+            .groupUuid(groupUuid)
+            .modificationUuid(modificationUuid)
+            .networkUuid(networkUuid)
+            .impactedEquipmentsInfos(new ImpactedEquipmentsInfos())
+            .build();
+        impactedEquipmentsByModification.add(modificationApplication);
+    }
+
     public List<AbstractBaseImpact> flushNetworkModifications() {
         try {
             networkStoreService.flush(network); // At first
-            flushEquipmentInfos();
-
+            flushImpactedEquipments();
         } catch (Exception e) {
             throw new NetworkModificationException(MODIFICATION_ERROR, e);
         }
@@ -266,37 +259,30 @@ public class NetworkStoreListener implements NetworkListener {
             .build();
     }
 
-    private void flushEquipmentInfos() {
-        String variantId = network.getVariantManager().getWorkingVariantId();
+    private void flushImpactedEquipments() {
+        flushDeletedEquipments();
+        equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipments()).stream().toList());
+        basicModificationInfosService.addAll(impactedEquipmentsByModification);
+    }
 
+    private void flushDeletedEquipments() {
+        String variantId = network.getVariantManager().getWorkingVariantId();
         List<String> equipmentDeletionsIds = new ArrayList<>();
         List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new ArrayList<>();
-        List<EquipmentInfosToDelete> deletedEquipments = impactedEquipmentsByModification.values().stream().map(ImpactedEquipmentsInfos::getDeletedEquipments).flatMap(List::stream).toList();
-        deletedEquipments.forEach(deletedEquipment -> {
+        getAllDeletedEquipments().forEach(deletedEquipment -> {
             // add only allowed equipments types to be indexed to tombstonedEquipmentInfos
             if (!EquipmentInfosService.EXCLUDED_TYPES_FOR_INDEXING.contains(deletedEquipment.type())) {
                 equipmentDeletionsIds.add(deletedEquipment.id());
                 tombstonedEquipmentInfos.add(
-                        TombstonedEquipmentInfos.builder()
-                                .networkUuid(networkUuid)
-                                .variantId(variantId)
-                                .id(deletedEquipment.id())
-                                .build());
+                    TombstonedEquipmentInfos.builder()
+                        .networkUuid(networkUuid)
+                        .variantId(variantId)
+                        .id(deletedEquipment.id())
+                        .build());
             }
         });
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
         equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
-        List<EquipmentInfos> createdEquipments = impactedEquipmentsByModification.values().stream().map(ImpactedEquipmentsInfos::getCreatedEquipments).flatMap(List::stream).toList();
-        equipmentInfosService.addAllEquipmentInfos(createdEquipments);
-        List<EquipmentInfos> modifiedEquipments = impactedEquipmentsByModification.values().stream().map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).toList();
-        equipmentInfosService.addAllEquipmentInfos(modifiedEquipments);
-        List<BasicModificationInfos> modificationsToIndex = new ArrayList<>();
-        impactedEquipmentsByModification.forEach((modification, impactedEquipment) -> {
-            modification.setImpactedEquipmentUuids(impactedEquipment.getAllEquipmentIds());
-            modification.setNetworkUuid(networkUuid);
-            modificationsToIndex.add(modification);
-        });
-        basicModificationInfosService.add(modificationsToIndex);
     }
 
     private List<AbstractBaseImpact> reduceNetworkImpacts() {
@@ -350,9 +336,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private Set<String> getImpactedSubstationIds(List<SimpleElementImpact> impacts) {
-        Set<String> impactedSubstationsIds = new HashSet<>();
-        impactedSubstationsIds.addAll(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
-        return impactedSubstationsIds;
+        return new HashSet<>(impacts.stream().flatMap(i -> i.getSubstationIds().stream()).toList());
     }
 
     private List<SimpleElementImpact> getDeletionSimpleImpacts() {
@@ -369,11 +353,23 @@ public class NetworkStoreListener implements NetworkListener {
                 .toList();
     }
 
+    private List<EquipmentInfos> getAllCreatedEquipments() {
+        return impactedEquipmentsByModification.stream().map(BasicModificationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getCreatedEquipments).flatMap(List::stream).toList();
+    }
+
+    private List<EquipmentInfos> getAllModifiedEquipments() {
+        return impactedEquipmentsByModification.stream().map(BasicModificationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).toList();
+    }
+
+    private List<EquipmentInfosToDelete> getAllDeletedEquipments() {
+        return impactedEquipmentsByModification.stream().map(BasicModificationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getDeletedEquipments).flatMap(List::stream).toList();
+    }
+
     @Override
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
         addSimpleModificationImpact(identifiable);
-        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), false);
+        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION);
     }
 
     @Override

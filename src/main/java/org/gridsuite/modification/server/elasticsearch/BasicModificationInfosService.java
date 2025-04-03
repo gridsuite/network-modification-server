@@ -24,7 +24,7 @@ public class BasicModificationInfosService {
         this.modificationRepository = modificationRepository;
     }
 
-    public void add(List<BasicModificationInfos> basicModificationInfos) {
+    public void addAll(List<BasicModificationInfos> basicModificationInfos) {
         modificationApplicationRepository.saveAll(basicModificationInfos.stream().map(modificationInfo ->
             modificationRepository.findWithApplicationsById(modificationInfo.getModificationUuid()).map(modificationEntity -> {
                 ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
@@ -39,12 +39,12 @@ public class BasicModificationInfosService {
         basicModificationInfosRepository.saveAll(basicModificationInfos);
     }
 
-    public void deleteByNetworkUuid(List<UUID> modificationUuids, UUID networkUuid) {
+    public void deleteAllByNetworkUuid(List<UUID> modificationUuids, UUID networkUuid) {
         modificationApplicationRepository.deleteAllByNetworkUuidAndModificationIdIn(networkUuid, modificationUuids);
         basicModificationInfosRepository.deleteAllByNetworkUuidAndModificationUuidIn(networkUuid, modificationUuids);
     }
 
-    public void deleteByUuids(List<UUID> modificationUuids) {
+    public void deleteAllByUuids(List<UUID> modificationUuids) {
         modificationApplicationRepository.deleteAllByModificationIdIn(modificationUuids);
         basicModificationInfosRepository.deleteAllByModificationUuidIn(modificationUuids);
     }
