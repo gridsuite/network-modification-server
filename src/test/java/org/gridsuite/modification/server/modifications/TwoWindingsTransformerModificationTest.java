@@ -315,7 +315,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .content(modificationInfosJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer with ID '2wt_not_existing' : it does not exist in the network").getMessage(),
+        assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer '2wt_not_existing' : it does not exist in the network").getMessage(),
                 twoWindingsTransformerModificationInfos.getErrorType().name(), reportService);
     }
 

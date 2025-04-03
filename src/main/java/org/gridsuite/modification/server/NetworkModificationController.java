@@ -285,6 +285,15 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.duplicateCompositeModifications(sourceModificationUuids));
     }
 
+    @PutMapping(value = "/network-composite-modifications/{uuid}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Update a network composite modification")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The composite modification has been updated")})
+    public ResponseEntity<Void> updateNetworkCompositeModification(@PathVariable("uuid") UUID compositeModificationUuid,
+                                                                  @RequestBody List<UUID> modificationUuids) {
+        networkModificationService.updateCompositeModification(compositeModificationUuid, modificationUuids);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "stashed")
     @Operation(summary = "stash or unstash network modifications")
     @ApiResponse(responseCode = "200", description = "The network modifications were stashed")

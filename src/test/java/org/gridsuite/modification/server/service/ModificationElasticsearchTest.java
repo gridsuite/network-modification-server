@@ -8,6 +8,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -28,6 +29,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
+import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -103,6 +106,48 @@ class ModificationElasticsearchTest {
         String loadModificationJson = mapper.writeValueAsString(loadModification);
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_newname", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
+    }
+
+    @Test
+    void testModificationsNotIndexed() throws Exception {
+        // load creation in INITIAL_VARIANT_ID
+        LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
+        String loadCreationJson = mapper.writeValueAsString(loadCreationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getName());
+        assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
+
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
+        network.getVariantManager().setWorkingVariant(NEW_VARIANT);
+
+        // load modification that modify load type is not indexed
+        LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, null, null, LoadType.FICTITIOUS, null, null);
+        String loadModificationJson = mapper.writeValueAsString(loadModification);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).isEmpty());
+
+        // voltage level name modification modifies only equipments indexed contained in the voltage level (not switch, bbs, etc)
+        VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "newVlName");
+        String vlModificationJson = mapper.writeValueAsString(vlModification);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
+        assertEquals(11, equipmentsIndexedAfterVlModif.size());
+        assertTrue(equipmentsIndexedAfterVlModif.stream()
+                .allMatch(equipmentInfos -> TYPES_FOR_INDEXING.contains(IdentifiableType.valueOf(equipmentInfos.getType()))));
+    }
+
+    @Test
+    void testEquipmentTypesCreationNotIndexed() throws Exception {
+        network.getVariantManager().cloneVariant(VariantManagerConstants.INITIAL_VARIANT_ID, NEW_VARIANT);
+        network.getVariantManager().setWorkingVariant(NEW_VARIANT);
+
+        // vl creation should only index vl, not switch or bbs
+        VoltageLevelCreationInfos volageLevelCreationInfos = ModificationCreation.getCreationVoltageLevel("s1", "v1test", "v1test");
+        String voltageLevelCreationJson = mapper.writeValueAsString(volageLevelCreationInfos);
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(voltageLevelCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        List<EquipmentInfos> equipmentIndexedAfterVlCreation = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
+        assertEquals(1, equipmentIndexedAfterVlCreation.size());
+        assertEquals(IdentifiableType.VOLTAGE_LEVEL.name(), equipmentIndexedAfterVlCreation.getFirst().getType());
     }
 
     @Test
