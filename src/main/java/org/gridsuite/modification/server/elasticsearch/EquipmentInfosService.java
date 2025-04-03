@@ -38,7 +38,21 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
     public int partitionSizeForDeletion;
 
-    public static final Set<String> EXCLUDED_TYPES_FOR_INDEXING = Set.of(IdentifiableType.SWITCH.name());
+    public static final Set<IdentifiableType> TYPES_FOR_INDEXING = Set.of(
+            IdentifiableType.SUBSTATION,
+            IdentifiableType.VOLTAGE_LEVEL,
+            IdentifiableType.HVDC_LINE,
+            IdentifiableType.LINE,
+            IdentifiableType.TIE_LINE,
+            IdentifiableType.TWO_WINDINGS_TRANSFORMER,
+            IdentifiableType.THREE_WINDINGS_TRANSFORMER,
+            IdentifiableType.GENERATOR,
+            IdentifiableType.BATTERY,
+            IdentifiableType.LOAD,
+            IdentifiableType.SHUNT_COMPENSATOR,
+            IdentifiableType.DANGLING_LINE,
+            IdentifiableType.STATIC_VAR_COMPENSATOR,
+            IdentifiableType.HVDC_CONVERTER_STATION);
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;
@@ -46,11 +60,7 @@ public class EquipmentInfosService {
     }
 
     public void addAllEquipmentInfos(@NonNull final List<EquipmentInfos> equipmentsInfos) {
-        // get only equipments allowed to be indexed
-        List<EquipmentInfos> filteredEquipmentsInfos = equipmentsInfos.stream()
-                .filter(equipmentInfos -> !EXCLUDED_TYPES_FOR_INDEXING.contains(equipmentInfos.getType()))
-                .toList();
-        Lists.partition(filteredEquipmentsInfos, partitionSize)
+        Lists.partition(equipmentsInfos, partitionSize)
                 .parallelStream()
                 .forEach(equipmentInfosRepository::saveAll);
     }

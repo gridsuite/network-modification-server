@@ -85,6 +85,24 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
+    public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
+        ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
+                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+
+        if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
+            throw new NetworkModificationException(MODIFICATION_ERROR,
+                    String.format("Modification (%s) is not a composite modification", compositeUuid));
+        }
+
+        List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
+                .map(this::getModificationInfos)
+                .map(ModificationEntity::fromDTO)
+                .toList();
+        compositeEntity.getModifications().clear();
+        compositeEntity.getModifications().addAll(copyEntities);
+        modificationRepository.save(compositeEntity);
+    }
+
     private List<ModificationEntity> saveModificationsNonTransactional(UUID groupUuid, List<ModificationEntity> modifications) {
         int order = modificationRepository.countByGroupIdAndStashed(groupUuid, false);
         var modificationGroupEntity = this.modificationGroupRepository
