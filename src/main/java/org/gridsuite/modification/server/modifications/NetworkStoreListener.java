@@ -231,7 +231,6 @@ public class NetworkStoreListener implements NetworkListener {
             .groupUuid(groupUuid)
             .modificationUuid(modificationUuid)
             .networkUuid(networkUuid)
-            .impactedEquipmentsInfos(new ImpactedEquipmentsInfos())
             .build();
         impactedEquipmentsByModification.add(modificationApplication);
     }
@@ -262,7 +261,7 @@ public class NetworkStoreListener implements NetworkListener {
     private void flushImpactedEquipments() {
         flushDeletedEquipments();
         equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipments()).stream().toList());
-        basicModificationInfosService.addAll(impactedEquipmentsByModification);
+        basicModificationInfosService.addAll(impactedEquipmentsByModification.stream().map(BasicModificationInfos::flushImpactedEquipments).toList());
     }
 
     private void flushDeletedEquipments() {

@@ -35,20 +35,19 @@ public class BasicModificationInfos {
         // No setter because it a composite value
     }
 
-    @AccessType(AccessType.Type.PROPERTY)
-    public List<String> getImpactedEquipmentUuids() {
-        return impactedEquipmentsInfos.getAllEquipmentsIds();
-    }
-
-    @SuppressWarnings("unused")
-    public void setImpactedEquipmentUuids(List<String> uuids) {
-        // No setter because it a calculated value
-    }
-
     private UUID modificationUuid;
     private UUID networkUuid;
     private UUID groupUuid;
 
+    private List<String> impactedEquipmentUuids;
+
     @Transient
-    ImpactedEquipmentsInfos impactedEquipmentsInfos;
+    @Builder.Default
+    ImpactedEquipmentsInfos impactedEquipmentsInfos = new ImpactedEquipmentsInfos();
+
+    public BasicModificationInfos flushImpactedEquipments() {
+        impactedEquipmentUuids = impactedEquipmentsInfos.getAllEquipmentsIds();
+        impactedEquipmentsInfos = null;
+        return this;
+    }
 }
