@@ -38,7 +38,9 @@ public class ModificationApplicationInfosService {
             modificationRepository.findWithApplicationsById(modificationInfo.getModificationUuid()).map(modificationEntity -> {
                 ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
                     .networkUuid(modificationInfo.getNetworkUuid())
-                    .impactedEquipmentIds(modificationInfo.getImpactedEquipmentIds())
+                    .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
+                    .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
+                    .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
                     .build();
                 modificationEntity.addModificationApplication(newModificationApplicationEntity);
                 return newModificationApplicationEntity;

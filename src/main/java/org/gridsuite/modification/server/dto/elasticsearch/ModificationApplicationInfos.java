@@ -17,6 +17,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
@@ -49,14 +50,18 @@ public class ModificationApplicationInfos {
     private UUID networkUuid;
     private UUID groupUuid;
 
-    private List<String> impactedEquipmentIds;
+    private List<String> createdEquipmentIds;
+    private List<String> modifiedEquipmentIds;
+    private List<String> deletedEquipmentIds;
 
     @Transient
     @Builder.Default
     ImpactedEquipmentsInfos impactedEquipmentsInfos = new ImpactedEquipmentsInfos();
 
     public ModificationApplicationInfos flushImpactedEquipments() {
-        impactedEquipmentIds = impactedEquipmentsInfos.getAllEquipmentsIds();
+        createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
+        modifiedEquipmentIds = impactedEquipmentsInfos.getModifiedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
+        deletedEquipmentIds = impactedEquipmentsInfos.getTombstonedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
         impactedEquipmentsInfos = null;
         return this;
     }

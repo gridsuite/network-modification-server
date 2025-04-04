@@ -35,9 +35,17 @@ public class ModificationApplicationEntity {
     @Column(name = "network_uuid")
     UUID networkUuid;
 
-    @Column(name = "impacted_equipment_ids", columnDefinition = "CLOB")
+    @Column(name = "created_equipment_ids", columnDefinition = "CLOB")
     @Convert(converter = JsonListConverter.class)
-    private List<String> impactedEquipmentIds;
+    private List<String> createdEquipmentIds;
+
+    @Column(name = "modified_equipment_ids", columnDefinition = "CLOB")
+    @Convert(converter = JsonListConverter.class)
+    private List<String> modifiedEquipmentIds;
+
+    @Column(name = "deleted_equipment_ids", columnDefinition = "CLOB")
+    @Convert(converter = JsonListConverter.class)
+    private List<String> deletedEquipmentIds;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modification_uuid", foreignKey = @ForeignKey(name = "modification_uuid_fk_constraint"))

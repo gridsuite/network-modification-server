@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesaulnierkev (generated)" id="1743777594874-26">
+        <addColumn tableName="modification_application">
+            <column name="created_equipment_ids" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesaulnierkev (generated)" id="1743777594874-27">
+        <addColumn tableName="modification_application">
+            <column name="deleted_equipment_ids" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesaulnierkev (generated)" id="1743777594874-28">
+        <addColumn tableName="modification_application">
+            <column name="modified_equipment_ids" type="CLOB"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesaulnierkev (generated)" id="1743777594874-47">
+        <dropColumn columnName="IMPACTED_EQUIPMENT_IDS" tableName="MODIFICATION_APPLICATION"/>
+    </changeSet>
+</databaseChangeLog>
