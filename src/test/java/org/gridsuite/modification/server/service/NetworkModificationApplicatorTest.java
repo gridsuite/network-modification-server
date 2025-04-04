@@ -20,7 +20,7 @@ import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ class NetworkModificationApplicatorTest {
     private FilterService filterService;
 
     @Mock
-    private BasicModificationInfosService basicModificationInfosService;
+    private ModificationApplicationInfosService modificationApplicationInfosService;
 
     @Mock
     private NetworkModificationObserver networkModificationObserver;
@@ -77,7 +77,7 @@ class NetworkModificationApplicatorTest {
         ReportInfos reportInfos = mock(ReportInfos.class);
 
         NetworkModificationApplicator applicator = new NetworkModificationApplicator(
-                networkStoreService, equipmentInfosService, basicModificationInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
+                networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
 
         ModificationType mockModificationType = mock(ModificationType.class);
         when(modificationInfosList.get(0).getType()).thenReturn(mockModificationType);
@@ -96,7 +96,7 @@ class NetworkModificationApplicatorTest {
         NetworkInfos networkInfos = mock(NetworkInfos.class);
 
         NetworkModificationApplicator applicator = new NetworkModificationApplicator(
-                networkStoreService, equipmentInfosService, basicModificationInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
+                networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
 
         ModificationType mockModificationType = mock(ModificationType.class);
         when(modificationInfosGroups.get(0).modifications().get(0).getType()).thenReturn(mockModificationType);

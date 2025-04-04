@@ -1,6 +1,6 @@
 package org.gridsuite.modification.server.elasticsearch;
 
-import org.gridsuite.modification.server.dto.elasticsearch.BasicModificationInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -11,25 +11,25 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class BasicModificationInfosService {
-    private final BasicModificationInfosRepository basicModificationInfosRepository;
+public class ModificationApplicationInfosService {
+    private final ModificationApplicationInfosRepository basicModificationInfosRepository;
     private final ModificationApplicationRepository modificationApplicationRepository;
     private final ModificationRepository modificationRepository;
 
-    public BasicModificationInfosService(BasicModificationInfosRepository basicModificationInfosRepository,
-                                         ModificationApplicationRepository modificationApplicationRepository,
-                                         ModificationRepository modificationRepository) {
+    public ModificationApplicationInfosService(ModificationApplicationInfosRepository basicModificationInfosRepository,
+                                               ModificationApplicationRepository modificationApplicationRepository,
+                                               ModificationRepository modificationRepository) {
         this.basicModificationInfosRepository = basicModificationInfosRepository;
         this.modificationApplicationRepository = modificationApplicationRepository;
         this.modificationRepository = modificationRepository;
     }
 
-    public void addAll(List<BasicModificationInfos> basicModificationInfos) {
+    public void addAll(List<ModificationApplicationInfos> basicModificationInfos) {
         modificationApplicationRepository.saveAll(basicModificationInfos.stream().map(modificationInfo ->
             modificationRepository.findWithApplicationsById(modificationInfo.getModificationUuid()).map(modificationEntity -> {
                 ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
                     .networkUuid(modificationInfo.getNetworkUuid())
-                    .impactedEquipmentIds(modificationInfo.getImpactedEquipmentUuids())
+                    .impactedEquipmentIds(modificationInfo.getImpactedEquipmentIds())
                     .build();
                 modificationEntity.addModificationApplication(newModificationApplicationEntity);
                 return newModificationApplicationEntity;

@@ -24,7 +24,7 @@ import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.FilterService;
@@ -50,7 +50,7 @@ public class NetworkModificationApplicator {
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private final BasicModificationInfosService basicModificationInfosService;
+    private final ModificationApplicationInfosService applicationInfosService;
 
     private final ReportService reportService;
 
@@ -65,13 +65,13 @@ public class NetworkModificationApplicator {
     private Integer collectionThreshold;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         BasicModificationInfosService basicModificationInfosService,
+                                         ModificationApplicationInfosService applicationInfosService,
                                          ReportService reportService, FilterService filterService,
                                          NetworkModificationObserver networkModificationObserver,
                                          LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
-        this.basicModificationInfosService = basicModificationInfosService;
+        this.applicationInfosService = applicationInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
         this.networkModificationObserver = networkModificationObserver;
@@ -107,9 +107,9 @@ public class NetworkModificationApplicator {
 
     // This method is used for incremental modifications
     private NetworkModificationResult apply(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, basicModificationInfosService, collectionThreshold);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         ApplicationStatus groupApplicationStatus = apply(modificationInfosGroup, listener);
-        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        List<AbstractBaseImpact> networkImpacts = listener.flushModificationApplications();
         return NetworkModificationResult.builder()
                 .applicationStatus(groupApplicationStatus)
                 .lastGroupApplicationStatus(groupApplicationStatus)
@@ -145,12 +145,12 @@ public class NetworkModificationApplicator {
 
     // This method is used when building a variant
     private NetworkModificationResult apply(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, basicModificationInfosService, collectionThreshold);
+        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         List<ApplicationStatus> groupsApplicationStatuses =
                 modificationInfosGroups.stream()
                         .map(g -> apply(g, listener))
                         .toList();
-        List<AbstractBaseImpact> networkImpacts = listener.flushNetworkModifications();
+        List<AbstractBaseImpact> networkImpacts = listener.flushModificationApplications();
         return NetworkModificationResult.builder()
                 .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
                 .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
@@ -169,7 +169,7 @@ public class NetworkModificationApplicator {
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
                 .filter(ModificationInfos::getActivated)
                 .map(m -> {
-                    listener.initNetworkModification(modificationGroupInfos.groupUuid(), m.getUuid());
+                    listener.initModificationApplication(modificationGroupInfos.groupUuid(), m.getUuid());
                     return apply(m, listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)

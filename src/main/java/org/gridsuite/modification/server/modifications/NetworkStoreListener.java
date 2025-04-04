@@ -13,11 +13,11 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.server.dto.elasticsearch.BasicModificationInfos;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfosToDelete;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
-import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
@@ -44,9 +44,9 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final EquipmentInfosService equipmentInfosService;
 
-    private final BasicModificationInfosService basicModificationInfosService;
+    private final ModificationApplicationInfosService modificationApplicationInfosService;
 
-    private final List<BasicModificationInfos> impactedEquipmentsByModification = new LinkedList<>();
+    private final List<ModificationApplicationInfos> modificationApplicationInfosList = new LinkedList<>();
 
     private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
@@ -54,17 +54,17 @@ public class NetworkStoreListener implements NetworkListener {
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                   BasicModificationInfosService basicModificationInfosService, Integer collectionThreshold) {
+                                   ModificationApplicationInfosService modificationApplicationInfosService, Integer collectionThreshold) {
         this.network = network;
         this.networkUuid = networkUuid;
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
-        this.basicModificationInfosService = basicModificationInfosService;
+        this.modificationApplicationInfosService = modificationApplicationInfosService;
         this.collectionThreshold = collectionThreshold;
     }
 
     private void updateImpactedEquipment(Object impactedEquipment, SimpleImpactType impactType) {
-        ImpactedEquipmentsInfos infosToUpdate = impactedEquipmentsByModification.getLast().getImpactedEquipmentsInfos();
+        ImpactedEquipmentsInfos infosToUpdate = modificationApplicationInfosList.getLast().getImpactedEquipmentsInfos();
         switch (impactType) {
             case CREATION -> infosToUpdate.getCreatedEquipments().add((EquipmentInfos) impactedEquipment);
             case MODIFICATION -> infosToUpdate.getModifiedEquipments().add((EquipmentInfos) impactedEquipment);
@@ -73,8 +73,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
-                                              EquipmentInfosService equipmentInfosService, BasicModificationInfosService basicModificationInfosService, Integer collectionThreshold) {
-        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService, basicModificationInfosService, collectionThreshold);
+                                              EquipmentInfosService equipmentInfosService, ModificationApplicationInfosService modificationApplicationInfosService, Integer collectionThreshold) {
+        var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService, modificationApplicationInfosService, collectionThreshold);
         network.addListener(listener);
         return listener;
     }
@@ -226,16 +226,16 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public void initNetworkModification(UUID groupUuid, UUID modificationUuid) {
-        BasicModificationInfos modificationApplication = BasicModificationInfos.builder()
+    public void initModificationApplication(UUID groupUuid, UUID modificationUuid) {
+        ModificationApplicationInfos modificationApplication = ModificationApplicationInfos.builder()
             .groupUuid(groupUuid)
             .modificationUuid(modificationUuid)
             .networkUuid(networkUuid)
             .build();
-        impactedEquipmentsByModification.add(modificationApplication);
+        modificationApplicationInfosList.add(modificationApplication);
     }
 
-    public List<AbstractBaseImpact> flushNetworkModifications() {
+    public List<AbstractBaseImpact> flushModificationApplications() {
         try {
             networkStoreService.flush(network); // At first
             flushImpactedEquipments();
@@ -261,7 +261,7 @@ public class NetworkStoreListener implements NetworkListener {
     private void flushImpactedEquipments() {
         flushDeletedEquipments();
         equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipments()).stream().toList());
-        basicModificationInfosService.addAll(impactedEquipmentsByModification.stream().map(BasicModificationInfos::flushImpactedEquipments).toList());
+        modificationApplicationInfosService.addAll(modificationApplicationInfosList.stream().map(ModificationApplicationInfos::flushImpactedEquipments).toList());
     }
 
     private void flushDeletedEquipments() {
@@ -353,15 +353,15 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private List<EquipmentInfos> getAllCreatedEquipments() {
-        return impactedEquipmentsByModification.stream().map(BasicModificationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getCreatedEquipments).flatMap(List::stream).toList();
+        return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getCreatedEquipments).flatMap(List::stream).toList();
     }
 
     private List<EquipmentInfos> getAllModifiedEquipments() {
-        return impactedEquipmentsByModification.stream().map(BasicModificationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).toList();
+        return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).toList();
     }
 
     private List<EquipmentInfosToDelete> getAllDeletedEquipments() {
-        return impactedEquipmentsByModification.stream().map(BasicModificationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getDeletedEquipments).flatMap(List::stream).toList();
+        return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getDeletedEquipments).flatMap(List::stream).toList();
     }
 
     @Override

@@ -28,7 +28,7 @@ import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.elasticsearch.BasicModificationInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
@@ -71,10 +71,10 @@ class VoltageInitReportTest {
         final NetworkStoreService networkStoreService = new NetworkStoreServicePublic(restClient, PreloadingStrategy.NONE,
             (restClient_, preloadingStrategy, executorService) -> new CachedNetworkStoreClient(new OfflineNetworkStoreClient()));
         final EquipmentInfosService equipmentInfosService = Mockito.mock(EquipmentInfosService.class);
-        final BasicModificationInfosService basicModificationInfosService = Mockito.mock(BasicModificationInfosService.class);
+        final ModificationApplicationInfosService modificationApplicationInfosService = Mockito.mock(ModificationApplicationInfosService.class);
         final NetworkModificationObserver networkModificationObserver = new NetworkModificationObserver(ObservationRegistry.NOOP, new SimpleMeterRegistry());
         final LargeNetworkModificationExecutionService modificationExecutionService = new LargeNetworkModificationExecutionService(2, networkModificationObserver);
-        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, basicModificationInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
+        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
         networkModificationApplicator.setCollectionThreshold(5);
 
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));

@@ -22,7 +22,7 @@ import java.util.UUID;
 @Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}modifications")
 @Setting(settingPath = "elasticsearch_settings.json")
 @TypeAlias(value = "BasicModificationInfos")
-public class BasicModificationInfos {
+public class ModificationApplicationInfos {
     @Id
     @AccessType(AccessType.Type.PROPERTY)
     @SuppressWarnings("unused")
@@ -39,14 +39,14 @@ public class BasicModificationInfos {
     private UUID networkUuid;
     private UUID groupUuid;
 
-    private List<String> impactedEquipmentUuids;
+    private List<String> impactedEquipmentIds;
 
     @Transient
     @Builder.Default
     ImpactedEquipmentsInfos impactedEquipmentsInfos = new ImpactedEquipmentsInfos();
 
-    public BasicModificationInfos flushImpactedEquipments() {
-        impactedEquipmentUuids = impactedEquipmentsInfos.getAllEquipmentsIds();
+    public ModificationApplicationInfos flushImpactedEquipments() {
+        impactedEquipmentIds = impactedEquipmentsInfos.getAllEquipmentsIds();
         impactedEquipmentsInfos = null;
         return this;
     }
