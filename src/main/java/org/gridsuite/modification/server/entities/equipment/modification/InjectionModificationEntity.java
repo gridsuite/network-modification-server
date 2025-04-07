@@ -14,6 +14,7 @@ import org.gridsuite.modification.dto.InjectionModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperationType;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.BooleanModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
@@ -67,6 +68,34 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
     })
     private BooleanModificationEmbedded terminalConnected;
 
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "pMeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "pMeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded pMeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "pMeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "pMeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded pMeasurementValidity;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "qMeasurementValue")),
+        @AttributeOverride(name = "opType", column = @Column(name = "qMeasurementValueOp"))
+    })
+    private DoubleModificationEmbedded qMeasurementValue;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "qMeasurementValidity")),
+        @AttributeOverride(name = "opType", column = @Column(name = "qMeasurementValidityOp"))
+    })
+    private BooleanModificationEmbedded qMeasurementValidity;
+
     protected InjectionModificationEntity(InjectionModificationInfos modificationInfos) {
         super(modificationInfos);
         assignAttributes(modificationInfos);
@@ -87,5 +116,9 @@ public class InjectionModificationEntity extends BasicEquipmentModificationEntit
         this.connectionDirection = modificationInfos.getConnectionDirection() != null ? new EnumModificationEmbedded<>(modificationInfos.getConnectionDirection()) : null;
         this.connectionPosition = modificationInfos.getConnectionPosition() != null ? new IntegerModificationEmbedded(modificationInfos.getConnectionPosition()) : null;
         this.terminalConnected = modificationInfos.getTerminalConnected() != null ? new BooleanModificationEmbedded(modificationInfos.getTerminalConnected()) : null;
+        this.pMeasurementValue = modificationInfos.getPMeasurementValue() != null ? new DoubleModificationEmbedded(modificationInfos.getPMeasurementValue()) : null;
+        this.pMeasurementValidity = modificationInfos.getPMeasurementValidity() != null ? new BooleanModificationEmbedded(modificationInfos.getPMeasurementValidity()) : null;
+        this.qMeasurementValue = modificationInfos.getQMeasurementValue() != null ? new DoubleModificationEmbedded(modificationInfos.getQMeasurementValue()) : null;
+        this.qMeasurementValidity = modificationInfos.getQMeasurementValidity() != null ? new BooleanModificationEmbedded(modificationInfos.getQMeasurementValidity()) : null;
     }
 }
