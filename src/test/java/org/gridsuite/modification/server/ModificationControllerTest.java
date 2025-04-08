@@ -834,13 +834,18 @@ class ModificationControllerTest {
             .build();
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
-        assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
+        // get the modification infos (metadata only)
+        List<ModificationInfos> modificationInfosList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(modificationsNumber, modificationInfosList.size());
         // get the composite modification (metadata only)
         mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications"))
             .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(modificationsNumber, compositeModificationContent.size());
+        for (int i = 0; i < modificationUuids.size(); i++) {
+            assertEquals(modificationInfosList.get(i).getMessageValues(), compositeModificationContent.get(i).getMessageValues());
+        }
         assertNotNull(compositeModificationContent.get(0).getMessageType());
         assertNotNull(compositeModificationContent.get(0).getMessageValues());
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());

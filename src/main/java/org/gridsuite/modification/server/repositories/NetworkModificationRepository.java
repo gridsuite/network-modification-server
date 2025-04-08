@@ -423,9 +423,11 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull UUID uuid) {
         List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-        List<ModificationEntity> networkModificationsEntities = modificationRepository.findBaseDataByIdIn(networkModificationsUuids);
-        return networkModificationsEntities
-                .stream()
+        Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return networkModificationsUuids.stream()
+                .map(entitiesById::get)
+                .filter(Objects::nonNull)
                 .map(this::getModificationInfos)
                 .toList();
     }

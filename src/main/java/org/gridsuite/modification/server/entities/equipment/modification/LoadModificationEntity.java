@@ -93,6 +93,10 @@ public class LoadModificationEntity extends InjectionModificationEntity {
                 .loadType(AttributeModification.toAttributeModification(getLoadTypeValue(), getLoadTypeOp()))
                 .p0(AttributeModification.toAttributeModification(getP0Value(), getP0Op()))
                 .q0(AttributeModification.toAttributeModification(getQ0Value(), getQ0Op()))
+                .pMeasurementValue(toAttributeModification(getPMeasurementValue()))
+                .pMeasurementValidity(toAttributeModification(getPMeasurementValidity()))
+                .qMeasurementValue(toAttributeModification(getQMeasurementValue()))
+                .qMeasurementValidity(toAttributeModification(getQMeasurementValidity()))
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                     getProperties().stream()
