@@ -31,7 +31,12 @@ public final class TestImpactUtils {
     }
 
     public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) throws Exception {
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
+        assertEquals(1, networkModificationsResult.get().modificationResults().size());
+        //extract the NetworkModificationResult and compare it to the expected result.
+        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
         assertTrue(networkModificationResult.isPresent());
         testEmptyImpacts(networkModificationResult.get());
     }
@@ -276,5 +281,11 @@ public final class TestImpactUtils {
                 .map(Optional::get)
                 .flatMap(result -> result.getImpactedSubstationsIds().stream())
                 .collect(Collectors.toSet());
+    }
+
+    public static void testElementEmptyImpacts(ObjectMapper mapper, String resultAsString) throws Exception {
+        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertTrue(networkModificationResult.isPresent());
+        testEmptyImpacts(networkModificationResult.get());
     }
 }
