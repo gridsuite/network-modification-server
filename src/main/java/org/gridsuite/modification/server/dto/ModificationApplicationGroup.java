@@ -6,7 +6,7 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,5 +14,5 @@ import java.util.UUID;
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public record ModificationApplicationGroup(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos) {
+public record ModificationApplicationGroup(UUID groupUuid, List<ModificationEntity> modifications, ReportInfos reportInfos) {
 }

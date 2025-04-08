@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -227,11 +228,12 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public void initModificationApplication(UUID groupUuid, UUID modificationUuid) {
+    public void initModificationApplication(UUID groupUuid, ModificationEntity modification) {
         ModificationApplicationInfos modificationApplication = ModificationApplicationInfos.builder()
             .groupUuid(groupUuid)
-            .modificationUuid(modificationUuid)
+            .modificationUuid(modification.getId())
             .networkUuid(networkUuid)
+            .modification(modification)
             .build();
         modificationApplicationInfosList.add(modificationApplication);
     }

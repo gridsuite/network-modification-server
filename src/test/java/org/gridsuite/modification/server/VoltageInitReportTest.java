@@ -30,6 +30,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult.Applicati
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
 import org.gridsuite.modification.server.service.NetworkModificationObserver;
@@ -86,7 +87,7 @@ class VoltageInitReportTest {
         final UUID reportUuid = UUID.fromString("88888888-8888-8888-8888-888888888888");
         //simulate PUT /v1/groups/abc?action=COPY with body ModificationApplicationContext(networkUuid=0000, reportUuid=0000, reporterId=0000, variantId=0000, duplicateFrom=0000)
         assertThat(networkModificationApplicator.applyModifications(
-            new ModificationApplicationGroup(UUID.randomUUID(), List.of(modificationInfos), new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))),
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(modificationInfos)), new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))),
             new NetworkInfos(network, networkUuuid, true)))
             .as("network modifications results")
             .isNotNull()

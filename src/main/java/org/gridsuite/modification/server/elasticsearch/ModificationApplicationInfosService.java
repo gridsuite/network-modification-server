@@ -13,7 +13,6 @@ import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -34,19 +33,16 @@ public class ModificationApplicationInfosService {
     }
 
     public void addAll(List<ModificationApplicationInfos> basicModificationInfos) {
-        modificationApplicationRepository.saveAll(basicModificationInfos.stream().map(modificationInfo ->
-            modificationRepository.findWithApplicationsById(modificationInfo.getModificationUuid()).map(modificationEntity -> {
-                ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
-                    .networkUuid(modificationInfo.getNetworkUuid())
-                    .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
-                    .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
-                    .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
-                    .build();
-                modificationEntity.addModificationApplication(newModificationApplicationEntity);
-                return newModificationApplicationEntity;
-            })
-        ).filter(Optional::isPresent).map(Optional::get).toList());
-
+        modificationApplicationRepository.saveAll(basicModificationInfos.stream().map(modificationInfo -> {
+            ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
+                .networkUuid(modificationInfo.getNetworkUuid())
+                .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
+                .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
+                .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
+                .build();
+            modificationInfo.getModification().addModificationApplication(newModificationApplicationEntity);
+            return newModificationApplicationEntity;
+        }).toList());
         basicModificationInfosRepository.saveAll(basicModificationInfos);
     }
 

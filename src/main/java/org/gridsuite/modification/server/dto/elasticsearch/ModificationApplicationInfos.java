@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto.elasticsearch;
 
 import lombok.*;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
@@ -57,6 +58,9 @@ public class ModificationApplicationInfos {
     @Transient
     @Builder.Default
     ImpactedEquipmentsInfos impactedEquipmentsInfos = new ImpactedEquipmentsInfos();
+
+    @Transient
+    ModificationEntity modification;
 
     public ModificationApplicationInfos flushImpactedEquipments() {
         createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
