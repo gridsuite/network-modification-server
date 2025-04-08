@@ -178,7 +178,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
             );
 
         // modification action not existing
-        modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationJson.replace("LOCKOUT", "INVALID_ACTION"), List.of(buildApplicationContext())));// note: should never happen in real
+        modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationJson.replace("LOCKOUT", "INVALID_ACTION"), List.of(buildApplicationContext()))); // note: should never happen in real
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
                         status().is4xxClientError());
