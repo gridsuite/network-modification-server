@@ -19,17 +19,17 @@ import java.util.UUID;
  */
 @Service
 public class ModificationApplicationInfosService {
-    private final ModificationApplicationInfosRepository basicModificationInfosRepository;
+    private final ModificationApplicationInfosRepository modificationApplicationInfosRepository;
     private final ModificationApplicationRepository modificationApplicationRepository;
 
-    public ModificationApplicationInfosService(ModificationApplicationInfosRepository basicModificationInfosRepository,
+    public ModificationApplicationInfosService(ModificationApplicationInfosRepository modificationApplicationInfosRepository,
                                                ModificationApplicationRepository modificationApplicationRepository) {
-        this.basicModificationInfosRepository = basicModificationInfosRepository;
+        this.modificationApplicationInfosRepository = modificationApplicationInfosRepository;
         this.modificationApplicationRepository = modificationApplicationRepository;
     }
 
-    public void addAll(List<ModificationApplicationInfos> basicModificationInfos) {
-        modificationApplicationRepository.saveAll(basicModificationInfos.stream().map(modificationInfo -> {
+    public void addAll(List<ModificationApplicationInfos> modificationApplicationInfos) {
+        modificationApplicationRepository.saveAll(modificationApplicationInfos.stream().map(modificationInfo -> {
             ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
                 .networkUuid(modificationInfo.getNetworkUuid())
                 .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
@@ -39,16 +39,16 @@ public class ModificationApplicationInfosService {
             modificationInfo.getModification().addModificationApplication(newModificationApplicationEntity);
             return newModificationApplicationEntity;
         }).toList());
-        basicModificationInfosRepository.saveAll(basicModificationInfos);
+        modificationApplicationInfosRepository.saveAll(modificationApplicationInfos);
     }
 
     public void deleteAllByNetworkUuid(List<UUID> modificationUuids, UUID networkUuid) {
         modificationApplicationRepository.deleteAllByNetworkUuidAndModificationIdIn(networkUuid, modificationUuids);
-        basicModificationInfosRepository.deleteAllByNetworkUuidAndModificationUuidIn(networkUuid, modificationUuids);
+        modificationApplicationInfosRepository.deleteAllByNetworkUuidAndModificationUuidIn(networkUuid, modificationUuids);
     }
 
     public void deleteAllByUuids(List<UUID> modificationUuids) {
         modificationApplicationRepository.deleteAllByModificationIdIn(modificationUuids);
-        basicModificationInfosRepository.deleteAllByModificationUuidIn(modificationUuids);
+        modificationApplicationInfosRepository.deleteAllByModificationUuidIn(modificationUuids);
     }
 }

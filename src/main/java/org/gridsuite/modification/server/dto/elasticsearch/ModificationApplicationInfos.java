@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}modifications")
 @Setting(settingPath = "elasticsearch_settings.json")
-@TypeAlias(value = "BasicModificationInfos")
+@TypeAlias(value = "ModificationApplicationInfos")
 public class ModificationApplicationInfos {
     @Id
     @AccessType(AccessType.Type.PROPERTY)

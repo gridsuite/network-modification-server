@@ -171,8 +171,8 @@ public class NetworkModificationApplicator {
 
     private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener) {
         ReportNode reportNode;
-        if (modificationGroupInfos.reportInfos().getReporterId() != null) {
-            UUID reporterId = modificationGroupInfos.reportInfos().getReporterId();
+        if (modificationGroupInfos.reportInfos().getNodeUuid() != null) {
+            UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
             reportNode = ReportNode.newRootReportNode().withMessageTemplate(reporterId.toString(), reporterId.toString()).build();
         } else {
             reportNode = ReportNode.NO_OP;
