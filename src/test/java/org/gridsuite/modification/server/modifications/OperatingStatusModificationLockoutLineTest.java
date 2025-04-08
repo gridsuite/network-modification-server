@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -97,7 +98,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId(lineID);
         modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
         assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -158,7 +159,8 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         // line not existing
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("notFound");
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
@@ -168,7 +170,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         // modification action empty
         modificationInfos.setEquipmentId("line2");
         modificationInfos.setAction(null);
-        modificationJson = mapper.writeValueAsString(modificationInfos);
+        modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().isBadRequest(),
@@ -176,7 +178,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
             );
 
         // modification action not existing
-        modificationJson = modificationJson.replace("LOCKOUT", "INVALID_ACTION"); // note: should never happen in real
+        modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationJson.replace("LOCKOUT", "INVALID_ACTION"), List.of(buildApplicationContext())));// note: should never happen in real
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
                         status().is4xxClientError());

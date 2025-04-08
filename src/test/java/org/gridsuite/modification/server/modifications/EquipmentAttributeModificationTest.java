@@ -68,8 +68,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         // switch in variant VARIANT_ID opening
         switchStatusModificationInfos.setEquipmentId("break1Variant");
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri() + "&variantId=" + NetworkCreation.VARIANT_ID).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext(NetworkCreation.VARIANT_ID))));
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1Variant"));
     }
@@ -101,27 +101,27 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // switch closing when already closed
         switchStatusModificationInfos.setEquipmentId(switchId1);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testEmptyImpacts(mapper, mvcResult.getResponse().getContentAsString());
 
         // switch opening
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch closing
         switchStatusModificationInfos.setEquipmentId(switchId2);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch opening on another substation
         switchStatusModificationInfos.setEquipmentId(switchId3);
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), otherSubstationsIds);
 
@@ -148,7 +148,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // bad equipment attribute value
         switchStatusModificationInfos.setEquipmentAttributeName("open");
         switchStatusModificationInfos.setEquipmentAttributeValue("opened"); // bad
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        switchStatusModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(switchStatusModificationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isBadRequest(),

@@ -18,6 +18,7 @@ import org.gridsuite.modification.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.dto.HvdcLccDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.equipment.deletion.HvdcLccDeletionEntity;
 import org.gridsuite.modification.server.entities.equipment.deletion.ShuntCompensatorSelectionEmbeddable;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -83,7 +84,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v5load")
                 .build();
-        String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
+        String equipmentDeletionInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(equipmentDeletionInfos, List.of(buildApplicationContext())));
 
         // delete load with error removing dangling switches, because the load connection node is not linked to any other node
         mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -99,7 +100,8 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(equipmentDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(equipmentDeletionInfos, List.of(buildApplicationContext())));
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
                 equipmentDeletionInfos.getErrorType().name(), reportService);
@@ -125,14 +127,15 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .equipmentId(hvdcLineName)
                 .equipmentInfos(hvdcLccDeletionInfos)
                 .build();
-        String equipmentDeletionInfosJson = mapper.writeValueAsString(equipmentDeletionInfos);
+        String equipmentDeletionInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(equipmentDeletionInfos, List.of(buildApplicationContext())));
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        Optional<NetworkModificationResult> modifResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(modifResult.isPresent());
-        assertEquals(expectedStatus, modifResult.get().getApplicationStatus());
+        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        assertEquals(expectedStatus, extractApplicationStatus(networkModificationsResult.get()).getFirst());
 
         assertNull(getNetwork().getHvdcLine(hvdcLineName));
         assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);

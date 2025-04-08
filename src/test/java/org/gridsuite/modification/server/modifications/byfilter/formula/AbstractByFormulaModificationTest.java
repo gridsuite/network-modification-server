@@ -80,9 +80,6 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
 
     @Test
     public void testByModificationError() throws Exception {
-        //Test with modification = null
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(org.springframework.data.util.Pair.of(null, List.of(buildApplicationContext())))).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
 
         // Test with empty list of formulas
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),

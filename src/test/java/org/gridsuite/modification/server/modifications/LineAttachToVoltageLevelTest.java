@@ -144,7 +144,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
 
         LineAttachToVoltageLevelInfos lineMissingLine = (LineAttachToVoltageLevelInfos) buildModification();
         lineMissingLine.setAttachmentLine(null); // we omit a mandatory input data
-        String lineMissingLineJson = mapper.writeValueAsString(lineMissingLine);
+        String lineMissingLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineMissingLine, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().is4xxClientError(),
@@ -170,7 +170,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         // try to create an already existing VL
         LineAttachToVoltageLevelInfos tryWithAttachmentPointId = (LineAttachToVoltageLevelInfos) buildModification();
         tryWithAttachmentPointId.setAttachmentPointId("v5");
-        String tryWithExistingLineJson = mapper.writeValueAsString(tryWithAttachmentPointId);
+        String tryWithExistingLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(tryWithAttachmentPointId, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v5").getMessage(),

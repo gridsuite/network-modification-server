@@ -108,7 +108,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         // try to create an already existing line
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine1Id("l1");
-        lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
+        lineAttachToAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(linesAttachToSplitLinesInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
@@ -116,7 +116,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
-        lineAttachToAbsentLineJson = mapper.writeValueAsString(linesAttachToSplitLinesInfos);
+        lineAttachToAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(linesAttachToSplitLinesInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),

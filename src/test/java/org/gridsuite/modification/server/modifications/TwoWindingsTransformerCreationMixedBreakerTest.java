@@ -298,7 +298,7 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
         assertLogMessage("Invalid id ''", twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
-        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
+        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),

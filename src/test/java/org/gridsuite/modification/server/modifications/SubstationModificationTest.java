@@ -95,7 +95,7 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
                 .equipmentId("unknown")
                 .country(new AttributeModification<>(Country.JP, OperationType.SET))
                 .build();
-        String infosJson = mapper.writeValueAsString(infos);
+        String infosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(infos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", infos.getErrorType().name(), reportService);

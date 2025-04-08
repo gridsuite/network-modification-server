@@ -113,7 +113,7 @@ public class NetworkModificationController {
      * TODO : Remove this endpoint after the final integration of root networks (used only for move and tests)
      * Need to use the new endpoint with modificationContextInfos DTO (see above)
      */
-    @PutMapping(value = "/groups/{groupUuid}", params = {"networkUuid", "reportUuid", "reporterId"}, produces = MediaType.APPLICATION_JSON_VALUE)
+   /* @PutMapping(value = "/groups/{groupUuid}", params = {"networkUuid", "reportUuid", "reporterId"}, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list, or Insert them (composite) at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
     public ResponseEntity<Optional<NetworkModificationResult>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
@@ -141,7 +141,7 @@ public class NetworkModificationController {
             default:
                 throw new NetworkModificationException(TYPE_MISMATCH);
         }
-    }
+    }*/
 
     @DeleteMapping(value = "/groups/{groupUuid}")
     @Operation(summary = "Delete the modifications group")

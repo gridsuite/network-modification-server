@@ -13,6 +13,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -235,12 +236,14 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setEquipmentName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext("variant_not_existing"))));
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationsResult);
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty());  // no modifications returned
         assertNull(getNetwork().getGenerator("idGenerator3"));  // generator was not created
         testNetworkModificationsCount(getGroupId(), 10);  // new modification stored in the database
     }

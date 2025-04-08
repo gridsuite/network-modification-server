@@ -15,6 +15,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -532,7 +533,7 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         testNetworkModificationsCount(getGroupId(), 1);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
-        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
+        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),
@@ -543,18 +544,20 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         // Only the modification should be added in the database but the transformer cannot be created
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
-        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext("variant_not_existing"))));
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isEmpty()); // no modifications returned
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationsResult);
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty()); // no modifications returned
         assertNull(getNetwork().getTwoWindingsTransformer("id2wt3"));  // transformer was not created
         testNetworkModificationsCount(getGroupId(), 3);
 
         // try to create an existing equipment
         twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
         twoWindingsTransformerCreationInfos.setEquipmentId("trf1");
-        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
+        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, "trf1").getMessage(),
@@ -566,7 +569,7 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         MvcResult mvcResult;
         final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
 
-        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(twoWindingsTransformerCreationInfos);
+        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         TwoWindingsTransformer twoWindingsTransformer = getNetwork().getTwoWindingsTransformer(transformerId);

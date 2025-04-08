@@ -17,6 +17,7 @@ import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +41,9 @@ import static org.mockito.Mockito.*;
 public final class TestUtils {
 
     private static final long TIMEOUT = 100;
+    private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
+    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
+
 
     private TestUtils() {
         throw new IllegalCallerException("Utility class");

@@ -23,7 +23,6 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -42,10 +41,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -77,8 +74,7 @@ public abstract class AbstractNetworkModificationTest {
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
-    private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY&networkUuid=" + TEST_NETWORK_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID() + "&variantId=" + NetworkCreation.VARIANT_ID;
+    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -248,9 +244,10 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
+        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(List.of(modificationUuid), List.of(buildApplicationContext())));
 
         mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
-                        .content(mapper.writeValueAsString(List.of(modificationUuid)))
+                        .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -305,7 +302,11 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected ModificationApplicationContext buildApplicationContext() {
-        return new ModificationApplicationContext(TEST_NETWORK_ID, NetworkCreation.VARIANT_ID, TEST_REPORT_ID, UUID.randomUUID());
+        return buildApplicationContext(null);
+    }
+
+    protected ModificationApplicationContext buildApplicationContext(String variantId) {
+        return new ModificationApplicationContext(TEST_NETWORK_ID, variantId, TEST_REPORT_ID, UUID.randomUUID());
     }
 
     protected String getNetworkModificationUriWithBadVariant() {
@@ -346,5 +347,13 @@ public abstract class AbstractNetworkModificationTest {
                 .map(Optional::get)
                 .flatMap(result -> result.getNetworkImpacts().stream())
                 .toList();
+    }
+
+    protected Set<String> getImpactedSubstationsIds(NetworkModificationsResult networkModificationsResult) {
+        return networkModificationsResult.modificationResults().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(result -> result.getImpactedSubstationsIds().stream())
+                .collect(Collectors.toSet());
     }
 }

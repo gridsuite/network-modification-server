@@ -107,7 +107,8 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
         vli.getCouplingDevices().get(0).setBusbarSectionId2("1.1");
-        String vliJsonObject = mapper.writeValueAsString(vli);
+        String vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
@@ -116,7 +117,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.setIpMin(0.0);
         vli.setIpMax(null);
-        vliJsonObject = mapper.writeValueAsString(vli);
+        vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(),
@@ -125,7 +126,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
         vli.setEquipmentId("");
-        String vliJsonS2Object = mapper.writeValueAsString(vli);
+        String vliJsonS2Object = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", vli.getErrorType().name(), reportService);
@@ -133,7 +134,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         // try to create an existing VL
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.setEquipmentId("v1");
-        vliJsonObject = mapper.writeValueAsString(vli);
+        vliJsonObject = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
@@ -154,7 +155,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setEquipmentId("vl_2");
         vli.getCouplingDevices().get(0).setBusbarSectionId1("bbs");
         vli.getCouplingDevices().get(0).setBusbarSectionId2("1.1");
-        String vliJsonObject2 = mapper.writeValueAsString(vli);
+        String vliJsonObject2 = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vli, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject2).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertNotNull(getNetwork().getVoltageLevel("vl_2"));

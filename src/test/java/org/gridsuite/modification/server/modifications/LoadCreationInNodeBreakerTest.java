@@ -15,6 +15,7 @@ import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         LoadCreationInfos loadCreationInfos1 = (LoadCreationInfos) buildModification();
         loadCreationInfos1.setConnectionDirection(null);
         loadCreationInfos1.setConnectionName(null);
-        String loadCreationInfosJson1 = mapper.writeValueAsString(loadCreationInfos1);
+        String loadCreationInfosJson1 = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos1, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Technical error: java.lang.NullPointerException", loadCreationInfos1.getErrorType().name(), reportService);
@@ -53,7 +54,8 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // Equipment Id invalid
         LoadCreationInfos loadCreationInfos = (LoadCreationInfos) buildModification();
         loadCreationInfos.setEquipmentId("");
-        String loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
+        String loadCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", loadCreationInfos.getErrorType().name(), reportService);
@@ -61,7 +63,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         // VoltageLevel not found
         loadCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
-        loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
+        loadCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
@@ -71,7 +73,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         loadCreationInfos.setEquipmentId("idLoad1");
         loadCreationInfos.setVoltageLevelId("v2");
         loadCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
-        loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
+        loadCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
@@ -80,18 +82,19 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
         loadCreationInfos.setP0(Double.NaN);
-        loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
+        loadCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Load 'idLoad1': p0 is invalid", loadCreationInfos.getErrorType().name(), reportService);
         testNetworkModificationsCount(getGroupId(), 5);
 
-        loadCreationInfosJson = mapper.writeValueAsString(loadCreationInfos);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        loadCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(buildApplicationContext("variant_not_existing"))));
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(networkModificationResult);
-        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationsResult);
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty());  // no modifications returned
         assertNull(getNetwork().getLoad("idLoad1"));  // load was not created
         testNetworkModificationsCount(getGroupId(), 6);
     }

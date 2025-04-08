@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -38,12 +39,13 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         LineCreationInfos modificationToCreate = (LineCreationInfos) buildModification();
         modificationToCreate.setEquipmentId("idLine2");
         modificationToCreate.setEquipmentName("nameLine2");
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext("variant_not_existing"))));
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(networkModificationResult);
-        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationsResult);
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty());  // no modifications returned
         assertNull(getNetwork().getLine("idLine2"));  // line was not created
         testNetworkModificationsCount(getGroupId(), 1);  // new modification stored in the database
     }
@@ -52,14 +54,14 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
         lineCreationInfos.setEquipmentId("");
-        String lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        String lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", lineCreationInfos.getErrorType().name(), reportService);
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
-        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage(),
@@ -67,7 +69,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("notFoundBusbarSection1");
-        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage(),
@@ -76,21 +78,21 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
         lineCreationInfos.setR(Double.NaN);
-        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("AC Line 'idLine4': r is invalid", lineCreationInfos.getErrorType().name(), reportService);
 
         lineCreationInfos.setR(100.0);
         lineCreationInfos.setX(Double.NaN);
-        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("AC Line 'idLine4': x is invalid", lineCreationInfos.getErrorType().name(), reportService);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");
-        lineCreationInfosJson = mapper.writeValueAsString(lineCreationInfos);
+        lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage(),
@@ -134,7 +136,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .connectionPosition2(0)
                 .build();
 
-        String lineCreationJson = mapper.writeValueAsString(lineCreation);
+        String lineCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreation, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -190,7 +192,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .connectionPosition2(0)
                 .build();
 
-        String lineCreationJson = mapper.writeValueAsString(lineCreation);
+        String lineCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreation, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -248,7 +250,8 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .connected2(false)
                 .build();
 
-        String lineCreationJson = mapper.writeValueAsString(lineCreation);
+        String lineCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreation, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
