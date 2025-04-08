@@ -16,7 +16,7 @@ import java.util.UUID;
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 public interface ModificationApplicationInfosRepository extends ElasticsearchRepository<ModificationApplicationInfos, String> {
-    void deleteAllByNetworkUuidAndModificationUuidIn(UUID networkUuid, List<UUID> modificationUuid);
+    void deleteAllByNetworkUuidAndGroupUuidIn(UUID networkUuid, List<UUID> groupUuid);
 
-    void deleteAllByModificationUuidIn(List<UUID> modificationUuid);
+    void deleteAllByGroupUuidIn(List<UUID> groupUuid);
 }

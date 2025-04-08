@@ -112,20 +112,12 @@ public class NetworkModificationService {
     }
 
     private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
-        List<UUID> modificationUuids = groupUuids.stream().flatMap(this::getModificationsUuids).toList();
-        applicationInfosService.deleteAllByUuids(modificationUuids);
+        applicationInfosService.deleteAllByGroupUuids(groupUuids);
     }
 
     @Transactional
     public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
-        List<UUID> modificationUuids = groupUuids.stream().flatMap(this::getModificationsUuids).toList();
-        applicationInfosService.deleteAllByNetworkUuid(modificationUuids, networkUuid);
-    }
-
-    private Stream<UUID> getModificationsUuids(UUID groupUuid) {
-        return networkModificationRepository.getModifications(groupUuid, true, false, false)
-            .stream()
-            .map(ModificationInfos::getUuid);
+        applicationInfosService.deleteAllByGroupUuidsAndNetworkUuid(groupUuids, networkUuid);
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {
