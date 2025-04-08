@@ -20,8 +20,8 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
-import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
@@ -112,20 +111,12 @@ public class NetworkModificationService {
     }
 
     private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
-        List<UUID> modificationUuids = groupUuids.stream().flatMap(this::getModificationsUuids).toList();
-        applicationInfosService.deleteAllByUuids(modificationUuids);
+        applicationInfosService.deleteAllByGroupUuids(groupUuids);
     }
 
     @Transactional
     public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
-        List<UUID> modificationUuids = groupUuids.stream().flatMap(this::getModificationsUuids).toList();
-        applicationInfosService.deleteAllByNetworkUuid(modificationUuids, networkUuid);
-    }
-
-    private Stream<UUID> getModificationsUuids(UUID groupUuid) {
-        return networkModificationRepository.getModifications(groupUuid, true, false, false)
-            .stream()
-            .map(ModificationInfos::getUuid);
+        applicationInfosService.deleteAllByGroupUuidsAndNetworkUuid(groupUuids, networkUuid);
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {

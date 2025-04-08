@@ -42,13 +42,13 @@ public class ModificationApplicationInfosService {
         modificationApplicationInfosRepository.saveAll(modificationApplicationInfos);
     }
 
-    public void deleteAllByNetworkUuid(List<UUID> modificationUuids, UUID networkUuid) {
-        modificationApplicationRepository.deleteAllByNetworkUuidAndModificationIdIn(networkUuid, modificationUuids);
-        modificationApplicationInfosRepository.deleteAllByNetworkUuidAndModificationUuidIn(networkUuid, modificationUuids);
+    public void deleteAllByGroupUuidsAndNetworkUuid(List<UUID> groupUuids, UUID networkUuid) {
+        modificationApplicationRepository.deleteAllByNetworkUuidAndModificationGroupIdIn(networkUuid, groupUuids);
+        modificationApplicationInfosRepository.deleteAllByNetworkUuidAndGroupUuidIn(networkUuid, groupUuids);
     }
 
-    public void deleteAllByUuids(List<UUID> modificationUuids) {
-        modificationApplicationRepository.deleteAllByModificationIdIn(modificationUuids);
-        modificationApplicationInfosRepository.deleteAllByModificationUuidIn(modificationUuids);
+    public void deleteAllByGroupUuids(List<UUID> groupUuids) {
+        modificationApplicationRepository.deleteAllByModificationGroupIdIn(groupUuids);
+        modificationApplicationInfosRepository.deleteAllByGroupUuidIn(groupUuids);
     }
 }
