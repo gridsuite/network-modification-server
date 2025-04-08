@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
@@ -51,6 +52,7 @@ public class NetworkModificationService {
     private final NotificationService notificationService;
 
     private final ObjectMapper objectMapper;
+
     private final ModificationApplicationInfosService applicationInfosService;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
@@ -109,16 +111,21 @@ public class NetworkModificationService {
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
     }
 
-    @Transactional
-    public void deleteIndexedModificationGroup(List<UUID> groupUuids) {
-        List<UUID> modificationUuids = groupUuids.stream().flatMap(groupUuid -> getNetworkModifications(groupUuid, true, false, false).stream().map(ModificationInfos::getUuid)).toList();
+    private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
+        List<UUID> modificationUuids = groupUuids.stream().flatMap(this::getModificationsUuids).toList();
         applicationInfosService.deleteAllByUuids(modificationUuids);
     }
 
     @Transactional
     public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
-        List<UUID> modificationUuids = groupUuids.stream().flatMap(groupUuid -> getNetworkModifications(groupUuid, true, false, false).stream().map(ModificationInfos::getUuid)).toList();
+        List<UUID> modificationUuids = groupUuids.stream().flatMap(this::getModificationsUuids).toList();
         applicationInfosService.deleteAllByNetworkUuid(modificationUuids, networkUuid);
+    }
+
+    private Stream<UUID> getModificationsUuids(UUID groupUuid) {
+        return networkModificationRepository.getModifications(groupUuid, true, false, false)
+            .stream()
+            .map(ModificationInfos::getUuid);
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {

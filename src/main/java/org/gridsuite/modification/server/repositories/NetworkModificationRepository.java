@@ -221,7 +221,6 @@ public class NetworkModificationRepository {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
-    @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
             return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsEntities(List.of(groupUuid), onlyStashed).stream().map(this::getModificationInfos).toList();

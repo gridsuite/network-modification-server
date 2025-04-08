@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.elasticsearch;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
-import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,14 +21,11 @@ import java.util.UUID;
 public class ModificationApplicationInfosService {
     private final ModificationApplicationInfosRepository basicModificationInfosRepository;
     private final ModificationApplicationRepository modificationApplicationRepository;
-    private final ModificationRepository modificationRepository;
 
     public ModificationApplicationInfosService(ModificationApplicationInfosRepository basicModificationInfosRepository,
-                                               ModificationApplicationRepository modificationApplicationRepository,
-                                               ModificationRepository modificationRepository) {
+                                               ModificationApplicationRepository modificationApplicationRepository) {
         this.basicModificationInfosRepository = basicModificationInfosRepository;
         this.modificationApplicationRepository = modificationApplicationRepository;
-        this.modificationRepository = modificationRepository;
     }
 
     public void addAll(List<ModificationApplicationInfos> basicModificationInfos) {
