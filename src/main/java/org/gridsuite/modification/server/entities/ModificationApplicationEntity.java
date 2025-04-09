@@ -27,8 +27,8 @@ import java.util.UUID;
 public class ModificationApplicationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "uuid")
+    private UUID uuid;
 
     @Column(name = "network_uuid")
     UUID networkUuid;
