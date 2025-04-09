@@ -141,17 +141,16 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
         // Since only name changes impact indexation, we add the identifiable information to modifiedEquipments only in this case
-        if (attribute.equals("name")) {
-            updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, variantId), SimpleImpactType.MODIFICATION);
-            // If the updated attribute is "name" and the identifiable is a VOLTAGE_LEVEL or SUBSTATION,
-            // we must update all linked equipment to reflect the name change
-            if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
-                updateLinkedEquipments(identifiable);
-            }
+        boolean shouldIndexEquipments = attribute.equals("name");
+        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, variantId, shouldIndexEquipments), SimpleImpactType.MODIFICATION);
+        // If the updated attribute is "name" and the identifiable is a VOLTAGE_LEVEL or SUBSTATION,
+        // we must update all linked equipment to reflect the name change
+        if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
+            updateLinkedEquipments(identifiable, shouldIndexEquipments);
         }
     }
 
-    private void updateLinkedEquipments(Identifiable<?> identifiable) {
+    private void updateLinkedEquipments(Identifiable<?> identifiable, boolean shouldIndexEquipments) {
         if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
             VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
             // update all equipments linked to voltageLevel
@@ -159,18 +158,18 @@ public class NetworkStoreListener implements NetworkListener {
             // update substation linked to voltageLevel
             Optional<Substation> linkedSubstation = updatedVoltageLevel.getSubstation();
             if (linkedSubstation.isPresent()) {
-                updateImpactedEquipment(toEquipmentInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION);
+                updateImpactedEquipment(toEquipmentInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId(), shouldIndexEquipments), SimpleImpactType.MODIFICATION);
             }
         } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
             Substation updatedSubstation = network.getSubstation(identifiable.getId());
-            updateEquipmentsLinkedToSubstation(updatedSubstation);
+            updateEquipmentsLinkedToSubstation(updatedSubstation, shouldIndexEquipments);
         }
     }
 
-    private void updateEquipmentsLinkedToSubstation(Substation substation) {
+    private void updateEquipmentsLinkedToSubstation(Substation substation, boolean shouldIndexEquipments) {
         Iterable<VoltageLevel> linkedVoltageLevels = substation.getVoltageLevels();
         // update all voltageLevels linked to substation
-        linkedVoltageLevels.forEach(vl -> updateImpactedEquipment(toEquipmentInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION));
+        linkedVoltageLevels.forEach(vl -> updateImpactedEquipment(toEquipmentInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId(), shouldIndexEquipments), SimpleImpactType.MODIFICATION));
         // update all equipments linked to each of the voltageLevels
         linkedVoltageLevels.forEach(this::updateEquipmentsLinkedToVoltageLevel);
     }
@@ -250,6 +249,10 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
+        return toEquipmentInfos(identifiable, networkUuid, variantId, true);
+    }
+
+    private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId, boolean shouldIndexEquipments) {
         return EquipmentInfos.builder()
             .networkUuid(networkUuid)
             .variantId(variantId)
@@ -258,12 +261,13 @@ public class NetworkStoreListener implements NetworkListener {
             .type(EquipmentInfos.getEquipmentTypeName(identifiable))
             .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
             .substations(EquipmentInfos.getSubstationsInfos(identifiable))
+            .toBeIndexed(shouldIndexEquipments)
             .build();
     }
 
     private void flushImpactedEquipments() {
         flushDeletedEquipments();
-        equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipments()).stream().toList());
+        equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipmentsToBeIndexed()).stream().toList());
         modificationApplicationInfosService.addAll(modificationApplicationInfosList.stream().map(ModificationApplicationInfos::flushImpactedEquipments).toList());
     }
 
@@ -352,6 +356,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     private List<TombstonedEquipmentInfos> getAllTombstonedEquipments() {
         return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getTombstonedEquipments).flatMap(List::stream).toList();
+    }
+
+    private List<EquipmentInfos> getAllModifiedEquipmentsToBeIndexed() {
+        return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).filter(EquipmentInfos::isToBeIndexed).toList();
     }
 
     @Override
