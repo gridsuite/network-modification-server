@@ -140,7 +140,7 @@ public abstract class AbstractNetworkModificationTest {
         assertTrue(networkModificationsResult.isPresent());
         assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult.get()));
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()));
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -307,10 +307,6 @@ public abstract class AbstractNetworkModificationTest {
 
     protected ModificationApplicationContext buildApplicationContext(String variantId) {
         return new ModificationApplicationContext(TEST_NETWORK_ID, variantId, TEST_REPORT_ID, UUID.randomUUID());
-    }
-
-    protected String getNetworkModificationUriWithBadVariant() {
-        return getNetworkModificationUri() + "&variantId=variant_not_existing";
     }
 
     protected abstract Network createNetwork(UUID networkUuid);
