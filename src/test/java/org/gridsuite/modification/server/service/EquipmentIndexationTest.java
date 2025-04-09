@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @Tag("IntegrationTest")
-class ModificationElasticsearchTest {
+class EquipmentIndexationTest {
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();

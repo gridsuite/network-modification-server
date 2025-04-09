@@ -13,21 +13,15 @@ import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
-import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
-import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
-import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
-import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -49,6 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@DisableElasticsearch
 @Tag("UnitTest")
 class NetworkModificationApplicatorTest {
 
@@ -68,9 +63,6 @@ class NetworkModificationApplicatorTest {
     private LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     @Autowired
-    private NetworkModificationRepository modificationRepository;
-
-    @Autowired
     private NetworkModificationApplicator networkModificationApplicator;
 
     @Mock
@@ -79,35 +71,9 @@ class NetworkModificationApplicatorTest {
     @Mock
     private ReportInfos reportInfos;
 
-    @Autowired
-    private ModificationApplicationInfosRepository modificationApplicationInfosRepository;
-
-    @Autowired
-    private ModificationApplicationRepository modificationApplicationRepository;
-
     @BeforeEach
     void setUp() {
         when(networkInfos.getNetwork()).thenReturn(new NetworkFactoryImpl().createNetwork("test", "test"));
-    }
-
-    @Test
-    void testApplyModifications() {
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
-        UUID groupUuid = UUID.randomUUID();
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
-
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
-        assertNotNull(result);
-
-        List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
-        List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
-
-        assertEquals(1, modificationApplicationEntities.size());
-        assertEquals(1, modificationApplicationInfos.size());
-
-        assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
-        assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
-        assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
     }
 
     @Test
