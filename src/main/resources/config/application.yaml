@@ -9,6 +9,7 @@ spring:
         order_updates: true
         jdbc:
           batch_size: 128
+    show-sql: true
 
   cloud:
     function:

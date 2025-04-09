@@ -12,13 +12,12 @@ import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import lombok.NonNull;
 import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
@@ -39,9 +38,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.util.List;
 import java.util.UUID;
 
+import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Tag("UnitTest")
@@ -56,6 +60,9 @@ class ModificationIndexationTest {
     @Mock
     private NetworkInfos networkInfos;
 
+    @MockBean
+    private NetworkStoreService networkStoreService;
+
     @Mock
     private ReportInfos reportInfos;
 
@@ -64,12 +71,20 @@ class ModificationIndexationTest {
 
     @Autowired
     private ModificationApplicationRepository modificationApplicationRepository;
+    @Autowired
+    private NetworkModificationService networkModificationService;
+
+    UUID networkUuid = UUID.randomUUID();
+    String variant2 = "variant_2";
 
     @BeforeEach
     void setUp() {
         cleanDB();
-        Network network = NetworkCreation.createLoadNetwork(UUID.randomUUID(), new NetworkFactoryImpl());
+        Network network = NetworkCreation.createLoadNetwork(networkUuid, new NetworkFactoryImpl());
+        network.getVariantManager().cloneVariant(INITIAL_VARIANT_ID, variant2);
         when(networkInfos.getNetwork()).thenReturn(network);
+        when(networkInfos.getNetworkUuuid()).thenReturn(networkUuid);
+        when(networkStoreService.getNetwork(eq(networkInfos.getNetworkUuuid()), any(PreloadingStrategy.class))).thenReturn(network);
     }
 
     @AfterEach
@@ -163,5 +178,57 @@ class ModificationIndexationTest {
         assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
         assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
         assertEquals(deletedEquipmentId, modificationApplicationInfos.getFirst().getDeletedEquipmentIds().getFirst());
+    }
+
+    @Test
+    void testDuplicateModifications() {
+        /*
+        Create first modification then apply it on group 1
+         */
+        String newEquipmentId = "newLoad";
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+            .stashed(false)
+            .loadType(LoadType.FICTITIOUS)
+            .p0(300.0)
+            .q0(50.0)
+            .connectionName("bottom")
+            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+            .voltageLevelId("v1")
+            .equipmentId(newEquipmentId)
+            .busOrBusbarSectionId("1.1")
+            .build();
+        UUID groupUuid1 = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        /*
+        Duplicate this modification to group 2, variant 2
+         */
+        UUID groupUuid2 = UUID.randomUUID();
+        NetworkModificationsResult modificationsResult = networkModificationService.duplicateModifications(
+            groupUuid2,
+            null,
+            entities.stream().map(ModificationEntity::getId).toList(),
+            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+        );
+
+        /*
+        check results in database and in elasticsearch
+         */
+        List<UUID> expectedModificationUuids = List.of(entities.getFirst().getId(), modificationsResult.modificationUuids().getFirst());
+        List<UUID> expectedGroupUuids = List.of(groupUuid1, groupUuid2);
+
+        List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
+        List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
+
+        assertThat(modificationApplicationEntities.stream().map(m -> m.getModification().getId()).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
+        assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
+
+        assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
+        modificationApplicationInfos.forEach(applicationInfo -> {
+            assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst());
+        });
     }
 }
