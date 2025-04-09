@@ -80,7 +80,7 @@ class EquipmentIndexationTest {
     private Network network;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         network = NetworkCreation.create(NETWORK_UUID, true);
         when(networkStoreService.getNetwork(eq(NETWORK_UUID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
 

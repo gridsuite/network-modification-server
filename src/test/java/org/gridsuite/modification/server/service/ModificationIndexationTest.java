@@ -22,6 +22,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -77,8 +78,12 @@ class ModificationIndexationTest {
         when(networkInfos.getNetwork()).thenReturn(new NetworkFactoryImpl().createNetwork("test", "test"));
     }
 
+    @AfterEach
+    void tearDown() {
+        cleanDB();
+    }
+
     private void cleanDB() {
-        // clean DB
         modificationRepository.deleteAll();
         modificationApplicationRepository.deleteAll();
         modificationApplicationInfosRepository.deleteAll();
