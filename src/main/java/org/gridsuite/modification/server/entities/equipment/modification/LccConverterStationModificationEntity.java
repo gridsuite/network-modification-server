@@ -21,16 +21,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.AttributeModification;
-import org.gridsuite.modification.dto.ConverterStationModificationInfos;
-import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
-import org.gridsuite.modification.dto.OperationType;
-import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
 
-import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.fromEmbeddableShuntCompensatorCreation;
 import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.fromEmbeddableShuntCompensatorModification;
 import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.toEmbeddableShuntCompensatorModification;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
@@ -39,22 +34,22 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "lccConverterStationModification")
+@Table(name = "lcc_converter_station_modification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "lcc_converter_station_modification_id_fk_constraint"))
 public class LccConverterStationModificationEntity extends InjectionModificationEntity {
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "lossFactor")), @AttributeOverride(name = "opType", column = @Column(name = "lossFactorOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "loss_factor")), @AttributeOverride(name = "opType", column = @Column(name = "lossFactorOp"))
     })
     private FloatModificationEmbedded lossFactor;
 
     @Embedded
-    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "powerFactor")), @AttributeOverride(name = "opType", column = @Column(name = "powerFactorOp"))
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "power_factor")), @AttributeOverride(name = "opType", column = @Column(name = "powerFactorOp"))
     })
     private FloatModificationEmbedded powerFactor;
 
     @ElementCollection
-    @CollectionTable(name = "shunt_compensator_on_side")
+    @CollectionTable(name = "shunt_compensator_on_side_modification")
     private List<ShuntCompensatorModificationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationModificationEntity(LccConverterStationModificationInfos converterStationModificationInfos) {

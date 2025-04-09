@@ -26,7 +26,6 @@ import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
 import org.gridsuite.modification.dto.LccModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.VscModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EnumModificationEmbedded;
 import org.springframework.util.CollectionUtils;
@@ -36,40 +35,40 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "lccModification")
+@Table(name = "lcc_modification")
 public class LccModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "nominalv")),
-        @AttributeOverride(name = "opType", column = @Column(name = "nominalvOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "nominalv_op"))
     })
     private DoubleModificationEmbedded nominalV;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "r")),
-        @AttributeOverride(name = "opType", column = @Column(name = "rOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "r_op"))
     })
     private DoubleModificationEmbedded r;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "maxp")),
-        @AttributeOverride(name = "opType", column = @Column(name = "maxpOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "maxp_op"))
     })
     private DoubleModificationEmbedded maxP;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "convertersMode")),
-        @AttributeOverride(name = "opType", column = @Column(name = "convertersModeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "converters_mode")),
+        @AttributeOverride(name = "opType", column = @Column(name = "converters_mode_op"))
     })
     private EnumModificationEmbedded<HvdcLine.ConvertersMode> convertersMode;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "activePowerSetpoint")),
-        @AttributeOverride(name = "opType", column = @Column(name = "activePowerSetpointOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "active_power_setpoint")),
+        @AttributeOverride(name = "opType", column = @Column(name = "active_power_setpoint_op"))
     })
     private DoubleModificationEmbedded activePowerSetpoint;
 
