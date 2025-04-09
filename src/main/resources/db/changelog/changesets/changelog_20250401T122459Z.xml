@@ -1,14 +1,13 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="lesaulnierkev (generated)" id="1743510331023-25">
-        <createSequence incrementBy="50" sequenceName="modification_application_seq" startValue="1"/>
-    </changeSet>
     <changeSet author="lesaulnierkev (generated)" id="1743510331023-26">
         <createTable tableName="modification_application">
-            <column autoIncrement="true" name="id" type="BIGINT">
+            <column name="uuid" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="modification_applicationPK"/>
             </column>
-            <column name="impacted_equipment_ids" type="CLOB"/>
+            <column name="created_equipment_ids" type="CLOB"/>
+            <column name="deleted_equipment_ids" type="CLOB"/>
+            <column name="modified_equipment_ids" type="CLOB"/>
             <column name="network_uuid" type="UUID"/>
             <column name="modification_uuid" type="UUID"/>
         </createTable>
