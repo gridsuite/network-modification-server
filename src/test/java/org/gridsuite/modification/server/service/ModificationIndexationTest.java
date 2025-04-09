@@ -14,7 +14,6 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import lombok.NonNull;
 import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.*;
@@ -45,7 +44,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.*;
-
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Tag("UnitTest")
