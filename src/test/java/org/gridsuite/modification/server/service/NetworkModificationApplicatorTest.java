@@ -13,16 +13,21 @@ import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
+import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,62 +35,86 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Tag("UnitTest")
 class NetworkModificationApplicatorTest {
 
-    @Mock
+    @MockBean
     private NetworkStoreService networkStoreService;
 
-    @Mock
-    private EquipmentInfosService equipmentInfosService;
-
-    @Mock
+    @MockBean
     private ReportService reportService;
 
-    @Mock
+    @MockBean
     private FilterService filterService;
 
-    @Mock
-    private ModificationApplicationInfosService modificationApplicationInfosService;
-
-    @Mock
+    @MockBean
     private NetworkModificationObserver networkModificationObserver;
 
-    @Mock
+    @SpyBean
     private LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
+    @Autowired
+    private NetworkModificationRepository modificationRepository;
+
+    @Autowired
     private NetworkModificationApplicator networkModificationApplicator;
+
+    @Mock
+    private NetworkInfos networkInfos;
+
+    @Mock
+    private ReportInfos reportInfos;
+
+    @Autowired
+    private ModificationApplicationInfosRepository modificationApplicationInfosRepository;
+
+    @Autowired
+    private ModificationApplicationRepository modificationApplicationRepository;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        when(networkInfos.getNetwork()).thenReturn(new NetworkFactoryImpl().createNetwork("test", "test"));
+    }
 
-        networkModificationApplicator = new NetworkModificationApplicator(
-            networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, filterService, networkModificationObserver, largeNetworkModificationExecutionService);
-        ReflectionTestUtils.setField(networkModificationApplicator, "collectionThreshold", Integer.MAX_VALUE);
+    @Test
+    void testApplyModifications() {
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
+        List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
+
+        assertEquals(1, modificationApplicationEntities.size());
+        assertEquals(1, modificationApplicationInfos.size());
+
+        assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
+        assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
+        assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
     }
 
     @Test
     void testApplyModificationsWithAllCollectionsNeededForBusView() {
         List<ModificationEntity> modificationInfosList = List.of(mock(ModificationEntity.class));
-        NetworkInfos networkInfos = mock(NetworkInfos.class);
-        ReportInfos reportInfos = mock(ReportInfos.class);
 
-        when(networkInfos.getNetwork()).thenReturn(new NetworkFactoryImpl().createNetwork("test", "test"));
         when(modificationInfosList.get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
-        when(largeNetworkModificationExecutionService.supplyAsync(any())).thenReturn(CompletableFuture.completedFuture(ApplicationStatus.ALL_OK));
 
         NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
 
@@ -96,11 +125,8 @@ class NetworkModificationApplicatorTest {
     @Test
     void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusView() {
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(new ModificationApplicationGroup(UUID.randomUUID(), List.of(mock(ModificationEntity.class)), mock(ReportInfos.class)));
-        NetworkInfos networkInfos = mock(NetworkInfos.class);
 
-        when(networkInfos.getNetwork()).thenReturn(new NetworkFactoryImpl().createNetwork("test", "test"));
         when(modificationInfosGroups.get(0).modifications().get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
-        when(largeNetworkModificationExecutionService.supplyAsync(any())).thenReturn(CompletableFuture.completedFuture(List.of(ApplicationStatus.ALL_OK)));
 
         NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
 

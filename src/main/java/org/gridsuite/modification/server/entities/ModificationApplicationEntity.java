@@ -7,10 +7,7 @@
 package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.gridsuite.modification.server.utils.JsonListConverter;
 
 import java.util.List;
@@ -24,6 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
+@Getter
 @Entity
 @Table(name = "modification_application")
 public class ModificationApplicationEntity {
