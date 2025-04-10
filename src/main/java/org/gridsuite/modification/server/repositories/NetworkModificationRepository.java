@@ -139,6 +139,8 @@ public class NetworkModificationRepository {
             // insert into origin list
             insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
         } else { // 2-group case
+            // before moving origin modifications between nodes, remove applications since they are not applicable anymore
+            modificationsToMove.forEach(ModificationEntity::removeAllModificationApplication);
             // read destination group and modifications (group must be created if missing)
             ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
             List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();

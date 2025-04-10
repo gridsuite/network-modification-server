@@ -67,7 +67,7 @@ public class ModificationEntity {
     @Column(name = "activated")
     private Boolean activated = true;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "modification_uuid")
     private List<ModificationApplicationEntity> modificationApplications = new ArrayList<>();
 
@@ -148,5 +148,12 @@ public class ModificationEntity {
     public void addModificationApplication(ModificationApplicationEntity modificationApplicationEntity) {
         this.modificationApplications.add(modificationApplicationEntity);
         modificationApplicationEntity.setModification(this);
+    }
+
+    public void removeAllModificationApplication() {
+        for (ModificationApplicationEntity modificationApplication : new ArrayList<>(modificationApplications)) {
+            modificationApplication.setModification(null);
+        }
+        modificationApplications.clear();
     }
 }
