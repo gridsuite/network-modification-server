@@ -139,6 +139,8 @@ public class NetworkModificationRepository {
             // insert into origin list
             insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
         } else { // 2-group case
+            // before moving origin modifications between nodes, remove applications since they are not applicable anymore
+            modificationsToMove.forEach(ModificationEntity::removeAllModificationApplication);
             // read destination group and modifications (group must be created if missing)
             ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
             List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();
@@ -221,10 +223,9 @@ public class NetworkModificationRepository {
         return getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, false);
     }
 
-    @Transactional(readOnly = true)
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
+            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsEntities(List.of(groupUuid), onlyStashed).stream().map(this::getModificationInfos).toList();
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -323,25 +324,24 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    public List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
-        Stream<ModificationEntity> modificationEntity = groupUuids.stream().flatMap(this::getModificationEntityStream);
+    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
+        Stream<ModificationEntity> entityStream = groupUuids.stream().flatMap(this::getModificationEntityStream);
         if (onlyStashed) {
-            return modificationEntity.filter(m -> m.getStashed() == onlyStashed)
-                    .map(this::getModificationInfos)
-                    .collect(Collectors.toList());
+            return entityStream.filter(m -> m.getStashed() == onlyStashed).toList();
         } else {
-            return modificationEntity.map(this::getModificationInfos)
-                .collect(Collectors.toList());
+            return entityStream.toList();
         }
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
-        Optional<ModificationEntity> optionalModificationEntity = modificationRepository.findById(modificationUuid);
-        if (!optionalModificationEntity.isPresent()) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString());
-        }
-        return getModificationInfos(optionalModificationEntity.get());
+        return getModificationInfos(getModificationEntity(modificationUuid));
+    }
+
+    public ModificationEntity getModificationEntity(UUID modificationUuid) {
+        return modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()));
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
