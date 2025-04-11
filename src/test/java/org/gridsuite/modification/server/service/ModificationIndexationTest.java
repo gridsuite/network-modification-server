@@ -14,6 +14,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.*;
@@ -38,16 +39,20 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Tag("UnitTest")
 class ModificationIndexationTest {
+
+    // Need to mock the send reports
+    @MockBean
+    private ReportService reportService;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
@@ -201,6 +206,9 @@ class ModificationIndexationTest {
         NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
         assertNotNull(result);
 
+        // Need to remove the listener created in the last modifications application
+        ((NetworkImpl) networkInfos.getNetwork()).getListeners().clear();
+
         /*
         Duplicate this modification to group 2, variant 2
          */
@@ -225,9 +233,7 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> {
-            assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst());
-        });
+        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst()));
     }
 
     @Test
@@ -253,6 +259,9 @@ class ModificationIndexationTest {
         NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
         assertNotNull(result);
 
+        // Need to remove the listener created in the last modifications application
+        ((NetworkImpl) networkInfos.getNetwork()).getListeners().clear();
+
         /*
         Move this modification to group 2, variant 2
          */
@@ -270,7 +279,7 @@ class ModificationIndexationTest {
         check results in database and in elasticsearch
          */
         List<UUID> expectedModificationUuids = List.of(modificationsResult.modificationUuids().getFirst());
-        List<UUID> expectedGroupUuids = List.of( groupUuid2);
+        List<UUID> expectedGroupUuids = List.of(groupUuid2);
 
         List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
         List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
@@ -279,8 +288,6 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> {
-            assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst());
-        });
+        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst()));
     }
 }
