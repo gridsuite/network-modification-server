@@ -31,14 +31,10 @@ public final class TestImpactUtils {
     }
 
     public static void testEmptyImpacts(ObjectMapper mapper, String resultAsString) throws Exception {
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
-        assertEquals(1, networkModificationsResult.get().modificationResults().size());
-        //extract the NetworkModificationResult and compare it to the expected result.
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
-        assertTrue(networkModificationResult.isPresent());
-        testEmptyImpacts(networkModificationResult.get());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
+        testEmptyImpacts(networkModificationsResult.modificationResults().getFirst().get());
     }
 
     public static void testEmptyImpacts(NetworkModificationResult networkModificationResult) {
@@ -73,19 +69,15 @@ public final class TestImpactUtils {
     }
 
     public static void testElementImpacts(ObjectMapper mapper, String resultAsString, List<AbstractBaseImpact> elementImpactsExpected) throws Exception {
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
-        assertEquals(1, networkModificationsResult.get().modificationResults().size());
-        //extract the NetworkModificationResult and compare it to the expected result.
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
-        assertTrue(networkModificationResult.isPresent());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(elementImpactsExpected)
             .build();
-        assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
+        assertThat(networkModificationsResult.modificationResults().getFirst().get()).recursivelyEquals(resultExpected);
     }
 
     public static void testElementModificationImpact(ObjectMapper mapper, String resultAsString, Set<String> substationIds) throws Exception {
@@ -93,37 +85,29 @@ public final class TestImpactUtils {
     }
 
     public static void testElementImpact(ObjectMapper mapper, String resultAsString, Set<String> substationIds) throws Exception {
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
-        assertEquals(1, networkModificationsResult.get().modificationResults().size());
-        //extract the NetworkModificationResult and compare it to the expected result.
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
-        assertTrue(networkModificationResult.isPresent());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createSubstationImpacts(substationIds))
             .build();
-        assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
+        assertThat(networkModificationsResult.modificationResults().getFirst().get()).recursivelyEquals(resultExpected);
     }
 
     public static void testConnectableDeletionImpacts(ObjectMapper mapper, String resultAsString,
                                                       IdentifiableType connectableType, String connectableId,
                                                       String breakerId, String disconnectorId, String substationId) throws JsonProcessingException {
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
-        assertEquals(1, networkModificationsResult.get().modificationResults().size());
-        //extract the NetworkModificationResult and compare it to the expected result.
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
-        assertTrue(networkModificationResult.isPresent());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createConnectableDeletionImpacts(connectableType, connectableId, breakerId, disconnectorId, substationId))
             .build();
-        assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
+        assertThat(networkModificationsResult.modificationResults().getFirst().get()).recursivelyEquals(resultExpected);
     }
 
     private static List<AbstractBaseImpact> createConnectableDeletionImpacts(IdentifiableType connectableType, String connectableId,
@@ -158,19 +142,15 @@ public final class TestImpactUtils {
                                          IdentifiableType branchType, String branchId,
                                          String breakerId1, String disconnectorId1, String substationId1,
                                          String breakerId2, String disconnectorId2, String substationId2) throws JsonProcessingException {
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
-        assertEquals(1, networkModificationsResult.get().modificationResults().size());
-        //extract the NetworkModificationResult and compare it to the expected result.
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
-        assertTrue(networkModificationResult.isPresent());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(createBranchImpacts(type, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2))
             .build();
-        assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
+        assertThat(networkModificationsResult.modificationResults().getFirst().get()).recursivelyEquals(resultExpected);
     }
 
     private static List<AbstractBaseImpact> createBranchImpacts(SimpleImpactType type, IdentifiableType branchType, String branchId,
@@ -193,19 +173,15 @@ public final class TestImpactUtils {
                                               String breakerId2, String disconnectorId2,
                                               String breakerId3, String disconnectorId3,
                                               String substationId) throws JsonProcessingException {
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertFalse(networkModificationsResult.get().modificationResults().isEmpty());
-        assertEquals(1, networkModificationsResult.get().modificationResults().size());
-        //extract the NetworkModificationResult and compare it to the expected result.
-        Optional<NetworkModificationResult> networkModificationResult = networkModificationsResult.get().modificationResults().getFirst();
-        assertTrue(networkModificationResult.isPresent());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isPresent());
         NetworkModificationResult resultExpected = NetworkModificationResult.builder()
             .applicationStatus(ApplicationStatus.ALL_OK)
             .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
             .networkImpacts(create3wtDeletionImpacts(w3tId, breakerId1, disconnectorId1, breakerId2, disconnectorId2, breakerId3, disconnectorId3, substationId))
             .build();
-        assertThat(networkModificationResult.get()).recursivelyEquals(resultExpected);
+        assertThat(networkModificationsResult.modificationResults().getFirst().get()).recursivelyEquals(resultExpected);
     }
 
     private static List<AbstractBaseImpact> create3wtDeletionImpacts(String w3tId,
