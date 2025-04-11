@@ -229,4 +229,58 @@ class ModificationIndexationTest {
             assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst());
         });
     }
+
+    @Test
+    void testMoveModifications() {
+        /*
+        Create first modification then apply it on group 1
+         */
+        String newEquipmentId = "newLoad";
+        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
+            .stashed(false)
+            .loadType(LoadType.FICTITIOUS)
+            .p0(300.0)
+            .q0(50.0)
+            .connectionName("bottom")
+            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+            .voltageLevelId("v1")
+            .equipmentId(newEquipmentId)
+            .busOrBusbarSectionId("1.1")
+            .build();
+        UUID groupUuid1 = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        /*
+        Move this modification to group 2, variant 2
+         */
+        UUID groupUuid2 = UUID.randomUUID();
+        NetworkModificationsResult modificationsResult = networkModificationService.moveModifications(
+            groupUuid2,
+            groupUuid1,
+            null,
+            entities.stream().map(ModificationEntity::getId).toList(),
+            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID())),
+            true
+        );
+
+        /*
+        check results in database and in elasticsearch
+         */
+        List<UUID> expectedModificationUuids = List.of(modificationsResult.modificationUuids().getFirst());
+        List<UUID> expectedGroupUuids = List.of( groupUuid2);
+
+        List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
+        List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
+
+        assertThat(modificationApplicationEntities.stream().map(m -> m.getModification().getId()).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
+        assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
+
+        assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
+        modificationApplicationInfos.forEach(applicationInfo -> {
+            assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst());
+        });
+    }
 }
