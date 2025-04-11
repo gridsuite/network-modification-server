@@ -52,6 +52,8 @@
         <network-modification.version>0.12.0</network-modification.version>
         <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
         <powsybl-network-store.version>1.24.0</powsybl-network-store.version>
+        <sonar.organization>gridsuite</sonar.organization>
+        <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
     </properties>
 
     <build>
