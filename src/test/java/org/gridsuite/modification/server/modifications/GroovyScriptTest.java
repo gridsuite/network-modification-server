@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -68,8 +69,7 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .script("network.getGenerator('idGenerator').targetP=12\n")
                 .build();
-        String groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
-
+        String groovyScriptInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())));
         // apply groovy script with generator target P modification
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
@@ -77,35 +77,35 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
 
         // apply groovy script with load type modification
         groovyScriptInfos.setScript("network.getLoad('v1load').loadType=com.powsybl.iidm.network.LoadType.FICTITIOUS\n");
-        groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
+        groovyScriptInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with lcc converter station power factor modification
         groovyScriptInfos.setScript("network.getLccConverterStation('v1lcc').powerFactor=1\n");
-        groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
+        groovyScriptInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with line R modification
         groovyScriptInfos.setScript("network.getLine('line1').r=2\n");
-        groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
+        groovyScriptInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1", "s2"));
 
         // apply groovy script with two windings transformer ratio tap modification
         groovyScriptInfos.setScript("network.getTwoWindingsTransformer('trf1').getRatioTapChanger().tapPosition=2\n");
-        groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
+        groovyScriptInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
         // apply groovy script with three windings transformer phase tap modification
         groovyScriptInfos.setScript("network.getThreeWindingsTransformer('trf6').getLeg1().getPhaseTapChanger().tapPosition=0\n");
-        groovyScriptInfosJson = mapper.writeValueAsString(groovyScriptInfos);
+        groovyScriptInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())));
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
                 .andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
@@ -118,21 +118,22 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
         GroovyScriptInfos groovyScriptInfos = (GroovyScriptInfos) buildModification();
         groovyScriptInfos.setScript("");
         // apply empty groovy script
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
                 groovyScriptInfos.getErrorType().name(), reportService);
 
         groovyScriptInfos.setScript("      ");
         // apply blank groovy script
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
                 groovyScriptInfos.getErrorType().name(), reportService);
 
         groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=12\n");
         // apply groovy script with unknown generator
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(groovyScriptInfos)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(org.springframework.data.util.Pair.of(groovyScriptInfos, List.of(buildApplicationContext())))).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
                 groovyScriptInfos.getErrorType().name(), reportService);

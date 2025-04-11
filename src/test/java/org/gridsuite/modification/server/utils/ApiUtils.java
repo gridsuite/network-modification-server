@@ -70,20 +70,20 @@ public final class ApiUtils {
         return result.modificationResults().isEmpty() ? Optional.empty() : result.modificationResults().get(0);
     }
 
-    public static Optional<NetworkModificationResult> putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
+    public static Optional<NetworkModificationsResult> putGroupsWithCopy(MockMvc mockMvc, UUID targetGroupUuid, List<UUID> modificationUuids, UUID networkUuid) throws Exception {
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, UUID.randomUUID().toString(), UUID.randomUUID(), UUID.randomUUID(), Set.of());
+        String body = getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(modificationUuids, List.of(applicationContext)));
+
         MvcResult mvcResult = mockMvc.perform(
                 put("/v1/groups/{groupUuid}", targetGroupUuid)
                     .param("action", "COPY")
-                    .param("networkUuid", networkUuid.toString())
-                    .param("reporterId", UUID.randomUUID().toString())
-                    .param("reportUuid", UUID.randomUUID().toString())
-                    .param("variantId", UUID.randomUUID().toString())
                     .contentType("application/json")
-                    .content(new ObjectMapper().writeValueAsString(modificationUuids))
+                    .content(body)
             )
             .andExpectAll(status().isOk())
             .andReturn();
-        return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        NetworkModificationsResult results = getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        return Optional.of(results);
     }
 
     public static Map<UUID, UUID> postNetworkModificationsDuplicate(MockMvc mockMvc, List<UUID> modificationUuids) throws Exception {

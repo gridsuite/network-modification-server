@@ -299,7 +299,7 @@ class BuildTest {
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
-        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
+        testElementEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
         TestUtils.purgeRequests(server);
     }
@@ -815,7 +815,7 @@ class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
+        testElementEmptyImpacts(mapper, new String(resultMessage.getPayload()));
         buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -92,7 +93,8 @@ class OperatingStatusModificationEnergiseSideTwoLineTest extends AbstractNetwork
         assertNotNull(line);
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("cantdisconnect");
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),

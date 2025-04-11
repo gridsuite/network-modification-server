@@ -8,6 +8,7 @@ import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -96,14 +97,15 @@ class ModificationElasticsearchTest {
 
         // load creation - assert name and vl name values
         LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
-        String loadCreationJson = mapper.writeValueAsString(loadCreationInfos);
+        String loadCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
+
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
 
         // load modification - assert name modification
         LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, "v1load_newname", null, null, null, null);
-        String loadModificationJson = mapper.writeValueAsString(loadModification);
+        String loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_newname", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
     }
@@ -112,7 +114,7 @@ class ModificationElasticsearchTest {
     void testModificationsNotIndexed() throws Exception {
         // load creation in INITIAL_VARIANT_ID
         LoadCreationInfos loadCreationInfos = ModificationCreation.getCreationLoad("v1", "v1Load", "v1load_name", "1.1", LoadType.UNDEFINED);
-        String loadCreationJson = mapper.writeValueAsString(loadCreationInfos);
+        String loadCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadCreationInfos, List.of(getNetworkModificationContext(INITIAL_VARIANT_ID))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_name", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, INITIAL_VARIANT_ID).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v1")));
@@ -122,13 +124,13 @@ class ModificationElasticsearchTest {
 
         // load modification that modify load type is not indexed
         LoadModificationInfos loadModification = ModificationCreation.getModificationLoad("v1Load", null, null, null, LoadType.FICTITIOUS, null, null);
-        String loadModificationJson = mapper.writeValueAsString(loadModification);
+        String loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertTrue(equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT).isEmpty());
 
         // voltage level name modification modifies only equipments indexed contained in the voltage level (not switch, bbs, etc)
         VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "newVlName");
-        String vlModificationJson = mapper.writeValueAsString(vlModification);
+        String vlModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vlModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(11, equipmentsIndexedAfterVlModif.size());
@@ -143,7 +145,8 @@ class ModificationElasticsearchTest {
 
         // vl creation should only index vl, not switch or bbs
         VoltageLevelCreationInfos volageLevelCreationInfos = ModificationCreation.getCreationVoltageLevel("s1", "v1test", "v1test");
-        String voltageLevelCreationJson = mapper.writeValueAsString(volageLevelCreationInfos);
+        String voltageLevelCreationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(volageLevelCreationInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
+
         mockMvc.perform(post(URI_NETWORK_MODIF).content(voltageLevelCreationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         List<EquipmentInfos> equipmentIndexedAfterVlCreation = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(1, equipmentIndexedAfterVlCreation.size());
@@ -157,14 +160,15 @@ class ModificationElasticsearchTest {
 
         // modify generator in the new variant
         GeneratorModificationInfos generatorModificationInfos = ModificationCreation.getModificationGenerator("idGenerator", "modifiedGeneratorName");
-        String generatorModificationJson = mapper.writeValueAsString(generatorModificationInfos);
+        String generatorModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorModificationInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
+
         mockMvc.perform(post(URI_NETWORK_MODIF).content(generatorModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("modifiedGeneratorName", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("idGenerator"), NETWORK_UUID, NEW_VARIANT).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals("v2")));
 
         //then delete the voltage level containing the generator we just modified
         EquipmentDeletionInfos voltageLevelDeletionInfos = EquipmentDeletionInfos.builder().stashed(false).equipmentType(IdentifiableType.VOLTAGE_LEVEL).equipmentId("v2").build();
-        String substationDeletionJson = mapper.writeValueAsString(voltageLevelDeletionInfos);
+        String substationDeletionJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(voltageLevelDeletionInfos, List.of(getNetworkModificationContext(NEW_VARIANT))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(substationDeletionJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertTrue(equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v2"), NETWORK_UUID, NEW_VARIANT).isEmpty());
 
@@ -181,7 +185,8 @@ class ModificationElasticsearchTest {
 
         // vl modification - assert vl name modification, linked load modification and parent subsation modification
         VoltageLevelModificationInfos vlModification = ModificationCreation.getModificationVoltageLevel("v1", "v1_newname");
-        String vlModificationJson = mapper.writeValueAsString(vlModification);
+        String vlModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vlModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
+
         mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
 
         checkSomeEquipmentsVoltageLevel(NETWORK_UUID, NEW_VARIANT, "v1_newname");
@@ -191,7 +196,8 @@ class ModificationElasticsearchTest {
         network.getVariantManager().setWorkingVariant(NEW_VARIANT_2);
         // vl modification - assert vl name modification, linked load modification and parent subsation modification
         VoltageLevelModificationInfos vlModification2 = ModificationCreation.getModificationVoltageLevel("v1", "v1_newname_2");
-        String vlModification2Json = mapper.writeValueAsString(vlModification2);
+        String vlModification2Json = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vlModification2, List.of(getNetworkModificationContext(NEW_VARIANT_2))));
+
         mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModification2Json).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
 
         checkSomeEquipmentsVoltageLevel(NETWORK_UUID, NEW_VARIANT, "v1_newname");
@@ -214,5 +220,9 @@ class ModificationElasticsearchTest {
 
     private boolean checkEquipmentHasVoltageLevelWithName(UUID networkUuid, String variantId, String equipmentId, String voltageLevelName) {
         return equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of(equipmentId), networkUuid, variantId).get(0).getVoltageLevels().stream().anyMatch(vl -> vl.getName().equals(voltageLevelName));
+    }
+
+    private ModificationApplicationContext getNetworkModificationContext(String variantId) {
+        return new ModificationApplicationContext(NETWORK_UUID, variantId, TEST_REPORT_ID, UUID.randomUUID());
     }
 }

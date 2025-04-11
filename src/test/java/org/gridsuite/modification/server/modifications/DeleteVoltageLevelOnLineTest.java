@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -88,7 +89,8 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
                 .replacingLine1Id("replacementLineId")
                 .build();
         var objectWriter = mapper.writer().withDefaultPrettyPrinter();
-        String json = objectWriter.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        String json = objectWriter.writeValueAsString(org.springframework.data.util.Pair.of(deleteVoltageLevelOnLineInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage(),
@@ -100,7 +102,7 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
         // try to create an already existing line
         DeleteVoltageLevelOnLineInfos deleteVoltageLevelOnLineInfos = (DeleteVoltageLevelOnLineInfos) buildModification();
         deleteVoltageLevelOnLineInfos.setReplacingLine1Id("l2");
-        String lineAttachToAbsentLineJson = mapper.writeValueAsString(deleteVoltageLevelOnLineInfos);
+        String lineAttachToAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(deleteVoltageLevelOnLineInfos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),

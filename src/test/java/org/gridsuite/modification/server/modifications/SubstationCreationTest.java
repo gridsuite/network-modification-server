@@ -73,7 +73,8 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         SubstationCreationInfos substationCreationInfos = (SubstationCreationInfos) buildModification();
         substationCreationInfos.setEquipmentId("");
-        String substationCreationInfosJson = mapper.writeValueAsString(substationCreationInfos);
+        String substationCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(substationCreationInfos, List.of(buildApplicationContext())));
+
         mockMvc.perform(post(getNetworkModificationUri()).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", substationCreationInfos.getErrorType().name(), reportService);

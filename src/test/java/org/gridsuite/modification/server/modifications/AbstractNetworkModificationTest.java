@@ -16,12 +16,13 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
-import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.WireMockUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -40,9 +41,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -74,8 +74,7 @@ public abstract class AbstractNetworkModificationTest {
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
-    private static final String URI_NETWORK_MODIF_PARAMS = "&groupUuid=" + TEST_GROUP_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID();
-    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY&networkUuid=" + TEST_NETWORK_ID + "&reportUuid=" + TEST_REPORT_ID + "&reporterId=" + UUID.randomUUID() + "&variantId=" + NetworkCreation.VARIANT_ID;
+    private static final String URI_NETWORK_MODIF_COPY = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -131,16 +130,17 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCreate() throws Exception {
         MvcResult mvcResult;
-        Optional<NetworkModificationResult> networkModificationResult;
+        Optional<NetworkModificationsResult> networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertResultImpacts(networkModificationResult.get().getNetworkImpacts());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
+        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        assertResultImpacts(getNetworkImpacts(networkModificationsResult.get()));
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -154,17 +154,19 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCreateDisabledModification() throws Exception {
         MvcResult mvcResult;
-        Optional<NetworkModificationResult> networkModificationResult;
+        Optional<NetworkModificationsResult> networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         modificationToCreate.setActivated(false);
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk()).andReturn();
-        networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertEquals(0, networkModificationResult.get().getNetworkImpacts().size());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
+                .andExpect(status().isOk()).andReturn();
+        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+
+        assertEquals(0, getNetworkImpacts(networkModificationsResult.get()).size());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -242,9 +244,10 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
+        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(List.of(modificationUuid), List.of(buildApplicationContext())));
 
         mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
-                        .content(mapper.writeValueAsString(List.of(modificationUuid)))
+                        .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -295,11 +298,15 @@ public abstract class AbstractNetworkModificationTest {
     }
 
     protected String getNetworkModificationUri() {
-        return URI_NETWORK_MODIF_BASE + "?networkUuid=" + TEST_NETWORK_ID + URI_NETWORK_MODIF_PARAMS;
+        return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
     }
 
-    protected String getNetworkModificationUriWithBadVariant() {
-        return getNetworkModificationUri() + "&variantId=variant_not_existing";
+    protected ModificationApplicationContext buildApplicationContext() {
+        return buildApplicationContext(null);
+    }
+
+    protected ModificationApplicationContext buildApplicationContext(String variantId) {
+        return new ModificationApplicationContext(TEST_NETWORK_ID, variantId, TEST_REPORT_ID, UUID.randomUUID());
     }
 
     protected abstract Network createNetwork(UUID networkUuid);
@@ -320,5 +327,29 @@ public abstract class AbstractNetworkModificationTest {
     @SuppressWarnings("java:S1130") // Exceptions are throws by overrides
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("{}", modificationInfos.getMessageValues());
+    }
+
+    protected List<NetworkModificationResult.ApplicationStatus> extractApplicationStatus(NetworkModificationsResult networkModificationsResult) {
+        List<NetworkModificationResult.ApplicationStatus> applicationStatuses = new ArrayList<>();
+        networkModificationsResult.modificationResults().forEach(modificationResult -> {
+            modificationResult.ifPresent(networkModificationResult -> applicationStatuses.add(networkModificationResult.getApplicationStatus()));
+        });
+        return Optional.of(applicationStatuses).orElse(List.of());
+    }
+
+    protected List<AbstractBaseImpact> getNetworkImpacts(NetworkModificationsResult networkModificationsResult) {
+        return networkModificationsResult.modificationResults().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(result -> result.getNetworkImpacts().stream())
+                .toList();
+    }
+
+    protected Set<String> getImpactedSubstationsIds(NetworkModificationsResult networkModificationsResult) {
+        return networkModificationsResult.modificationResults().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMap(result -> result.getImpactedSubstationsIds().stream())
+                .collect(Collectors.toSet());
     }
 }

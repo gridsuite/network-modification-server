@@ -240,8 +240,9 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     }
 
     private void applyModification(VoltageLevelModificationInfos infos) throws Exception {
+        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(infos, List.of(buildApplicationContext())));
         mockMvc.perform(post(getNetworkModificationUri())
-                        .content(mapper.writeValueAsString(infos))
+                        .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
     }
