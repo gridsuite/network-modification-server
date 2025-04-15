@@ -23,11 +23,14 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
-import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
+import org.gridsuite.modification.server.dto.ReportInfos;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
 import org.gridsuite.modification.server.service.NetworkModificationObserver;
@@ -69,9 +72,10 @@ class VoltageInitReportTest {
         final NetworkStoreService networkStoreService = new NetworkStoreServicePublic(restClient, PreloadingStrategy.NONE,
             (restClient_, preloadingStrategy, executorService) -> new CachedNetworkStoreClient(new OfflineNetworkStoreClient()));
         final EquipmentInfosService equipmentInfosService = Mockito.mock(EquipmentInfosService.class);
+        final ModificationApplicationInfosService modificationApplicationInfosService = Mockito.mock(ModificationApplicationInfosService.class);
         final NetworkModificationObserver networkModificationObserver = new NetworkModificationObserver(ObservationRegistry.NOOP, new SimpleMeterRegistry());
         final LargeNetworkModificationExecutionService modificationExecutionService = new LargeNetworkModificationExecutionService(2, networkModificationObserver);
-        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
+        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
         networkModificationApplicator.setCollectionThreshold(5);
 
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));
@@ -83,10 +87,9 @@ class VoltageInitReportTest {
         final UUID reportUuid = UUID.fromString("88888888-8888-8888-8888-888888888888");
         //simulate PUT /v1/groups/abc?action=COPY with body ModificationApplicationContext(networkUuid=0000, reportUuid=0000, reporterId=0000, variantId=0000, duplicateFrom=0000)
         assertThat(networkModificationApplicator.applyModifications(
-                List.of(modificationInfos),
-                new NetworkInfos(network, networkUuuid, true),
-                new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))))
-                .as("network modifications results")
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(modificationInfos)), new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))),
+            new NetworkInfos(network, networkUuuid, true)))
+            .as("network modifications results")
             .isNotNull()
             .extracting(NetworkModificationResult::getApplicationStatus)
             .isEqualTo(resultStatus);

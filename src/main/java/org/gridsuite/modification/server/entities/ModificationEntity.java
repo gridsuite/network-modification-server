@@ -8,10 +8,7 @@ package org.gridsuite.modification.server.entities;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
