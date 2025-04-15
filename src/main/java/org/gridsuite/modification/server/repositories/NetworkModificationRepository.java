@@ -11,6 +11,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -39,20 +41,25 @@ public class NetworkModificationRepository {
 
     private final GeneratorCreationRepository generatorCreationRepository;
 
+    private final ModificationApplicationInfosService modificationApplicationInfosService;
+
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
                                          GeneratorModificationRepository generatorModificationRepository,
-                                         GeneratorCreationRepository generatorCreationRepository) {
+                                         GeneratorCreationRepository generatorCreationRepository,
+                                         ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
+        this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
-    @Transactional // To have the 2 delete in the same transaction (atomic)
+    @Transactional // To have all the delete in the same transaction (atomic)
     public void deleteAll() {
+        modificationApplicationInfosService.deleteAll();
         modificationRepository.deleteAll();
         modificationGroupRepository.deleteAll();
     }
@@ -140,7 +147,7 @@ public class NetworkModificationRepository {
             insertModifications(originModificationEntities, modificationsToMove, referenceModificationUuid);
         } else { // 2-group case
             // before moving origin modifications between nodes, remove applications since they are not applicable anymore
-            modificationsToMove.forEach(ModificationEntity::removeAllModificationApplication);
+            modificationApplicationInfosService.deleteAllByModificationIds(modificationsToMove.stream().map(ModificationEntity::getId).collect(Collectors.toList()));
             // read destination group and modifications (group must be created if missing)
             ModificationGroupEntity destinationModificationGroupEntity = getOrCreateModificationGroup(destinationGroupUuid);
             List<ModificationEntity> destinationModificationEntities = destinationModificationGroupEntity.getModifications();
@@ -551,24 +558,28 @@ public class NetworkModificationRepository {
         // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
-        modificationEntities.forEach(m -> {
-            if (m instanceof TabularModificationEntity tabularModificationEntity) {
-                deleteTabularModification(tabularModificationEntity);
-            } else {
-                modificationRepository.delete(m);
-            }
-        });
+        List<TabularModificationEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationEntity.class::isInstance).map(TabularModificationEntity.class::cast).toList();
+        List<UUID> uuidToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationEntity.class::isInstance)).map(ModificationEntity::getId).toList();
+        // delete tabular modification
+        tabularModificationsToDelete.forEach(this::deleteTabularModification);
+        // delete other modification types with "in" requests
+        modificationApplicationInfosService.deleteAllByModificationIds(uuidToDelete);
+        modificationRepository.deleteByIdIn(uuidToDelete);
     }
 
     public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
+        List<UUID> modificationToCleanUuids = new ArrayList<>();
+        modificationToCleanUuids.add(tabularModificationEntity.getId());
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
                 List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(tabularModificationEntity.getId());
+                modificationToCleanUuids.addAll(subModificationsIds);
                 generatorModificationRepository.deleteTabularModification(subModificationsIds, tabularModificationEntity.getId());
                 break;
             default:
                 modificationRepository.delete(tabularModificationEntity);
                 break;
         }
+        modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
     }
 }

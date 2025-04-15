@@ -12,6 +12,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -78,6 +79,8 @@ class EquipmentIndexationTest {
     private TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository;
 
     private Network network;
+    @Autowired
+    private ModificationApplicationRepository modificationApplicationRepository;
 
     @BeforeEach
     void setUp() {
@@ -85,6 +88,7 @@ class EquipmentIndexationTest {
         when(networkStoreService.getNetwork(eq(NETWORK_UUID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
 
         // clean DB
+        modificationApplicationRepository.deleteAll();
         modificationRepository.deleteAll();
         equipmentInfosService.deleteAll();
     }

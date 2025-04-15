@@ -36,7 +36,7 @@ public class ModificationApplicationInfosService {
                 .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
                 .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
                 .build();
-            modificationInfo.getModification().addModificationApplication(newModificationApplicationEntity);
+            newModificationApplicationEntity.setModification(modificationInfo.getModification());
             return newModificationApplicationEntity;
         }).toList());
         modificationApplicationInfosRepository.saveAll(modificationApplicationInfos);
@@ -50,5 +50,15 @@ public class ModificationApplicationInfosService {
     public void deleteAllByGroupUuids(List<UUID> groupUuids) {
         modificationApplicationRepository.deleteAllByModificationGroupIdIn(groupUuids);
         modificationApplicationInfosRepository.deleteAllByGroupUuidIn(groupUuids);
+    }
+
+    public void deleteAllByModificationIds(List<UUID> modificationIds) {
+        modificationApplicationRepository.deleteAllByModificationIdIn(modificationIds);
+        modificationApplicationInfosRepository.deleteAllByModificationUuidIn(modificationIds);
+    }
+
+    public void deleteAll() {
+        modificationApplicationRepository.deleteAll();
+        modificationApplicationInfosRepository.deleteAll();
     }
 }

@@ -19,8 +19,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
@@ -66,10 +64,6 @@ public class ModificationEntity {
 
     @Column(name = "activated")
     private Boolean activated = true;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "modification_uuid")
-    private List<ModificationApplicationEntity> modificationApplications = new ArrayList<>();
 
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues) {
         this.id = id;
@@ -143,17 +137,5 @@ public class ModificationEntity {
         } else {
             throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());
         }
-    }
-
-    public void addModificationApplication(ModificationApplicationEntity modificationApplicationEntity) {
-        this.modificationApplications.add(modificationApplicationEntity);
-        modificationApplicationEntity.setModification(this);
-    }
-
-    public void removeAllModificationApplication() {
-        for (ModificationApplicationEntity modificationApplication : new ArrayList<>(modificationApplications)) {
-            modificationApplication.setModification(null);
-        }
-        modificationApplications.clear();
     }
 }

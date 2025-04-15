@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -104,17 +105,7 @@ class ModificationIndexationTest {
     @Test
     void testApplyCreatingModifications() {
         String newEquipmentId = "newLoad";
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-            .stashed(false)
-            .loadType(LoadType.FICTITIOUS)
-            .p0(300.0)
-            .q0(50.0)
-            .connectionName("bottom")
-            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-            .voltageLevelId("v1")
-            .equipmentId(newEquipmentId)
-            .busOrBusbarSectionId("1.1")
-            .build();
+        LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
         UUID groupUuid = UUID.randomUUID();
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
@@ -189,17 +180,7 @@ class ModificationIndexationTest {
         Create first modification then apply it on group 1
          */
         String newEquipmentId = "newLoad";
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-            .stashed(false)
-            .loadType(LoadType.FICTITIOUS)
-            .p0(300.0)
-            .q0(50.0)
-            .connectionName("bottom")
-            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-            .voltageLevelId("v1")
-            .equipmentId(newEquipmentId)
-            .busOrBusbarSectionId("1.1")
-            .build();
+        LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
@@ -242,17 +223,7 @@ class ModificationIndexationTest {
         Create first modification then apply it on group 1
          */
         String newEquipmentId = "newLoad";
-        LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder()
-            .stashed(false)
-            .loadType(LoadType.FICTITIOUS)
-            .p0(300.0)
-            .q0(50.0)
-            .connectionName("bottom")
-            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-            .voltageLevelId("v1")
-            .equipmentId(newEquipmentId)
-            .busOrBusbarSectionId("1.1")
-            .build();
+        LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
@@ -289,5 +260,75 @@ class ModificationIndexationTest {
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
         modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().getFirst()));
+    }
+
+    @Test
+    void testDeleteModifications() {
+        /*
+        Create modification then apply it on group 1
+         */
+        LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoad");
+        UUID groupUuid1 = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        /*
+        Delete this modification
+         */
+        networkModificationService.deleteNetworkModifications(
+            groupUuid1,
+            entities.stream().map(ModificationEntity::getId).toList()
+        );
+
+        /*
+        check results in database and in elasticsearch
+         */
+
+        assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
+        assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
+    }
+
+    @Test
+    void testDeleteModificationGroup() {
+        /*
+        Create modification then apply it on group 1
+         */
+        LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoad");
+        UUID groupUuid1 = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        /*
+        Delete modification group
+         */
+        networkModificationService.deleteModificationGroup(
+            groupUuid1,
+            true
+        );
+
+        /*
+        check results in database and in elasticsearch
+         */
+
+        assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
+        assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
+    }
+
+    private LoadCreationInfos createLoadCreationInfos(String loadId) {
+        return LoadCreationInfos.builder()
+            .stashed(false)
+            .loadType(LoadType.FICTITIOUS)
+            .p0(300.0)
+            .q0(50.0)
+            .connectionName("bottom")
+            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+            .voltageLevelId("v1")
+            .equipmentId(loadId)
+            .busOrBusbarSectionId("1.1")
+            .build();
     }
 }
