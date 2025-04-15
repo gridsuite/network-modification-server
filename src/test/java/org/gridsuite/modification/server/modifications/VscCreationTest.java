@@ -214,7 +214,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setEquipmentId("");
-        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", vscCreationInfos.getErrorType().name(), reportService);
@@ -224,7 +224,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         ConverterStationCreationInfos converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
         converterStationCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         vscCreationInfos.setConverterStation2(converterStationCreationInfos);
-        vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
@@ -238,7 +238,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos.setMinQ(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
-        vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : minimum reactive power is not set").getMessage(),
@@ -251,7 +251,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos.setMaxQ(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
-        vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is not set").getMessage(),
@@ -265,7 +265,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos.setMaxQ(100.);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
-        vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
@@ -278,7 +278,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         converterStationCreationInfos.getReactiveCapabilityCurvePoints().get(0).setP(Double.NaN);
         vscCreationInfos.setConverterStation1(converterStationCreationInfos);
 
-        vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : P is not set in a reactive capability curve limits point").getMessage(),
@@ -287,7 +287,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         // try to create an existing vsc
         vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setEquipmentId("hvdcLine");
-        vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),
@@ -298,7 +298,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     void testCreateAngleDroopPowerControlWithoutEnabling() throws Exception {
         VscCreationInfos vscCreationInfos = (VscCreationInfos) buildModification();
         vscCreationInfos.setAngleDroopActivePowerControl(false);
-        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -317,7 +317,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setAngleDroopActivePowerControl(false);
         vscCreationInfos.setDroop(null);
         vscCreationInfos.setP0(null);
-        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
@@ -359,7 +359,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
     }
 
     private void checkDroopWithAbsentInfos(VscCreationInfos vscCreationInfos) throws Exception {
-        String vscCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(vscCreationInfos, List.of(buildApplicationContext())));
+        String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,

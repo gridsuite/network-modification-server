@@ -48,7 +48,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .stashed(false)
                 .equipmentId("wrong id")
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensator, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensator, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -64,7 +64,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
                 .maximumSectionCount(new AttributeModification<>(-1, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensator, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensator, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -80,7 +80,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
                 .maximumSectionCount(new AttributeModification<>(1, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensator, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensator, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -102,7 +102,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("v7shunt")
                 .sectionCount(new AttributeModification<>(3, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensatorModifications, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensatorModifications, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -124,7 +124,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("v7shunt")
                 .sectionCount(new AttributeModification<>(-1, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensatorModifications, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensatorModifications, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -140,7 +140,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("v5shunt")
                 .maxQAtNominalV(new AttributeModification<>(-15.0, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensator, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensator, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -164,7 +164,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("v7shunt")
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.REACTOR, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(modificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -187,7 +187,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .equipmentId("v7shunt")
                 .maxSusceptance(AttributeModification.toAttributeModification(3.0, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(modificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -206,7 +206,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .maximumSectionCount(AttributeModification.toAttributeModification(3, OperationType.SET))
                 .sectionCount(AttributeModification.toAttributeModification(2, OperationType.SET))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(shuntCompensator, List.of(buildApplicationContext())));
+        String body = getJsonBody(shuntCompensator, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -236,10 +236,10 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .shuntCompensatorType(new AttributeModification<>(ShuntCompensatorType.CAPACITOR, OperationType.SET))
                 .build();
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos1, List.of(buildApplicationContext())))).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(modificationInfos1, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationInfos2, List.of(buildApplicationContext())))).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(modificationInfos2, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         var shuntCompensator1 = getNetwork().getShuntCompensator("v7shunt");

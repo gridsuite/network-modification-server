@@ -138,7 +138,7 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
     void testCreateWithBusbarSectionErrors() throws Exception {
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(generatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
@@ -152,7 +152,7 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
         generatorCreationInfos.setRegulatingTerminalType("LINE");
         generatorCreationInfos.setRegulatingTerminalId("titi");
 
-        String generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),

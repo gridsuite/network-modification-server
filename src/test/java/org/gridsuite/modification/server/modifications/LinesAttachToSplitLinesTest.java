@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -100,7 +99,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         // use an unexisting line
         LinesAttachToSplitLinesInfos linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setLineToAttachTo1Id("absent_line_id");
-        String lineAttachToAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(linesAttachToSplitLinesInfos, List.of(buildApplicationContext())));
+        String lineAttachToAbsentLineJson = getJsonBody(linesAttachToSplitLinesInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
@@ -108,7 +107,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         // try to create an already existing line
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine1Id("l1");
-        lineAttachToAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(linesAttachToSplitLinesInfos, List.of(buildApplicationContext())));
+        lineAttachToAbsentLineJson = getJsonBody(linesAttachToSplitLinesInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
@@ -116,7 +115,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
-        lineAttachToAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(linesAttachToSplitLinesInfos, List.of(buildApplicationContext())));
+        lineAttachToAbsentLineJson = getJsonBody(linesAttachToSplitLinesInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),

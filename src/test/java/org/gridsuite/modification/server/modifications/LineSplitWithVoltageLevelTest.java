@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -106,7 +105,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         // try to create an already existing line
         LineSplitWithVoltageLevelInfos tryWithNewLine1Id = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithNewLine1Id.setNewLine1Id("line1");
-        String tryWithNewLine1IdJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(tryWithNewLine1Id, List.of(buildApplicationContext())));
+        String tryWithNewLine1IdJson = getJsonBody(tryWithNewLine1Id, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine1IdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -116,7 +115,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         // same test with "newLine2Id"
         LineSplitWithVoltageLevelInfos tryWithNewLine2Id = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithNewLine2Id.setNewLine2Id("line1");
-        String tryWithNewLine2IdJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(tryWithNewLine2Id, List.of(buildApplicationContext())));
+        String tryWithNewLine2IdJson = getJsonBody(tryWithNewLine2Id, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine2IdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -129,7 +128,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         // not existing busbar
         LineSplitWithVoltageLevelInfos tryWithBadId = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithBadId.setBbsOrBusId("999A");
-        String tryWithBadIdJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(tryWithBadId, List.of(buildApplicationContext())));
+        String tryWithBadIdJson = getJsonBody(tryWithBadId, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithBadIdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -139,7 +138,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         // try with a switch, not a busbar
         LineSplitWithVoltageLevelInfos tryWithSwitchId = (LineSplitWithVoltageLevelInfos) buildModification();
         tryWithSwitchId.setBbsOrBusId("v1d1");
-        String tryWithSwitchIdJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(tryWithSwitchId, List.of(buildApplicationContext())));
+        String tryWithSwitchIdJson = getJsonBody(tryWithSwitchId, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithSwitchIdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

@@ -108,7 +108,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
     void testCreateWithBusBarSectionErrors() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(staticVarCompensatorCreationInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(staticVarCompensatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -124,7 +124,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         staticVarCompensatorCreationInfos.setRegulatingTerminalId("test");
         staticVarCompensatorCreationInfos.setRegulatingTerminalType("STATIC_VAR_COMPENSATOR");
 
-        String staticVarCompensatorInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(staticVarCompensatorCreationInfos, List.of(buildApplicationContext())));
+        String staticVarCompensatorInfosJson = getJsonBody(staticVarCompensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(staticVarCompensatorInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=test not found with type STATIC_VAR_COMPENSATOR").getMessage(),

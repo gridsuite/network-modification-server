@@ -119,7 +119,7 @@ class LoadModificationTest extends AbstractInjectionModificationTest {
                 .equipmentId("v1load")
                 .loadType(new AttributeModification<>(null, OperationType.UNSET))
                 .build();
-        String loadModificationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModificationInfos, List.of(buildApplicationContext())));
+        String loadModificationInfosJson = getJsonBody(loadModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

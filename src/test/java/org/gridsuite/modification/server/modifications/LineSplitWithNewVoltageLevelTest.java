@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,7 +36,7 @@ class LineSplitWithNewVoltageLevelTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         LineSplitWithVoltageLevelInfos lineSplitAbsentLine = (LineSplitWithVoltageLevelInfos) buildModification();
         lineSplitAbsentLine.setLineToSplitId("absent_line_id");
-        String lineSplitAbsentLineJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineSplitAbsentLine, List.of(buildApplicationContext())));
+        String lineSplitAbsentLineJson = getJsonBody(lineSplitAbsentLine, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineSplitAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),

@@ -113,7 +113,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // network with 2 synchronous components, no battery, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -134,7 +134,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertFalse(getNetwork().getBattery(BATTERY3_ID).getTerminal().isConnected());
         final double batteryTotalTargetP = getNetwork().getBattery(BATTERY1_ID).getTargetP() + getNetwork().getBattery(BATTERY2_ID).getTargetP();
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -155,7 +155,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         getNetwork().getBattery(BATTERY3_ID).getTerminal().connect();
         final double batteryTotalTargetP = getNetwork().getBattery(BATTERY1_ID).getTargetP() + getNetwork().getBattery(BATTERY2_ID).getTargetP() + getNetwork().getBattery(BATTERY3_ID).getTargetP();
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -168,7 +168,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
 
         setNetwork(Network.read("testGenerationDispatchWithMultipleEnergySource.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithMultipleEnergySource.xiidm")));
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -190,7 +190,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // network with 2 synchronous components, 2 hvdc lines between them and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatch.xiidm", getClass().getResourceAsStream("/testGenerationDispatch.xiidm")));
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -230,7 +230,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // network with unique synchronous component, 2 internal hvdc lines and no forcedOutageRate and plannedOutageRate for the generators
         setNetwork(Network.read("testGenerationDispatchInternalHvdc.xiidm", getClass().getResourceAsStream("/testGenerationDispatchInternalHvdc.xiidm")));
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -277,7 +277,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(filters))
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -343,7 +343,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(filtersForFixedSupply))
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -440,7 +440,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -492,7 +492,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         // network
         setNetwork(Network.read("ieee118cdf_testDemGroupe.xiidm", getClass().getResourceAsStream("/ieee118cdf_testDemGroupe.xiidm")));
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
@@ -600,7 +600,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
                         .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        String modificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String modificationJson = getJsonBody(modification, null);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });

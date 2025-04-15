@@ -186,7 +186,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation1))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
+        String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -222,7 +222,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorScalingInfo, List.of(buildApplicationContext())));
+        String body = getJsonBody(generatorScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -269,7 +269,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorScalingInfo, List.of(buildApplicationContext())));
+        String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
         var response = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
@@ -476,7 +476,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorScalingInfo, List.of(buildApplicationContext())));
+        String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)

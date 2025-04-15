@@ -84,7 +84,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .equipmentType(IdentifiableType.LOAD)
                 .equipmentId("v5load")
                 .build();
-        String equipmentDeletionInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(equipmentDeletionInfos, List.of(buildApplicationContext())));
+        String equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, null);
 
         // delete load with error removing dangling switches, because the load connection node is not linked to any other node
         mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -100,7 +100,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         // delete load (fail because the load is not found)
         EquipmentDeletionInfos equipmentDeletionInfos = (EquipmentDeletionInfos) buildModification();
         equipmentDeletionInfos.setEquipmentId("notFoundLoad");
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(equipmentDeletionInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(equipmentDeletionInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
@@ -127,7 +127,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .equipmentId(hvdcLineName)
                 .equipmentInfos(hvdcLccDeletionInfos)
                 .build();
-        String equipmentDeletionInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(equipmentDeletionInfos, List.of(buildApplicationContext())));
+        String equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, null);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

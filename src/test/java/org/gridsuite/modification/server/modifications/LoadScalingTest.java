@@ -181,7 +181,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
+        String body = getJsonBody(modificationToCreate, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
@@ -218,7 +218,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadScalingInfo, List.of(buildApplicationContext())));
+        String body = getJsonBody(loadScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(body)
@@ -268,7 +268,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadScalingInfo, List.of(buildApplicationContext())));
+        String body = getJsonBody(loadScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(body)
@@ -485,7 +485,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadScalingInfo, List.of(buildApplicationContext())));
+        String modificationToCreateJson = getJsonBody(loadScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)

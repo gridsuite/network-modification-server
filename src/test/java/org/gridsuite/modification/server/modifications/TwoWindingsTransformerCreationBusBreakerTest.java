@@ -283,14 +283,14 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
     void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
         twoWindingsTransformerCreationInfos.setEquipmentId("");
-        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
+        String twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
-        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
+        twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -424,7 +424,7 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
         MvcResult mvcResult;
         final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
 
-        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
+        String twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         testBranchCreationImpacts(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));

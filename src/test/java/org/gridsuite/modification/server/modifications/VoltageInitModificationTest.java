@@ -283,7 +283,7 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
                     .connect(connect)
                     .build()))
             .build();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modification, List.of(buildApplicationContext())));
+        String body = getJsonBody(modification, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());

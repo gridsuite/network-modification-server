@@ -108,7 +108,7 @@ class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     void testCreateWithBusbarSectionErrors() throws Exception {
         BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(batteryCreationInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),

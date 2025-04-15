@@ -188,7 +188,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
             .build();
         Optional<NetworkModificationsResult> networkModificationsResult;
 
-        String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationByAssignmentInfos, List.of(buildApplicationContext())));
+        String bodyJson = getJsonBody(modificationByAssignmentInfos, null);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();

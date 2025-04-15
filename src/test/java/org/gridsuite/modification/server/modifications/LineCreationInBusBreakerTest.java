@@ -37,7 +37,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         LineCreationInfos lineCreationInfos = (LineCreationInfos) buildModification();
         lineCreationInfos.setBusOrBusbarSectionId2("notFoundBus");
-        String lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfos, List.of(buildApplicationContext())));
+        String lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
@@ -59,7 +59,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId2("bus2")
                 .build();
 
-        String lineCreationInfosNoShuntJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfosNoShunt, List.of(buildApplicationContext())));
+        String lineCreationInfosNoShuntJson = getJsonBody(lineCreationInfosNoShunt, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
@@ -88,7 +88,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosNoShunt.setB1(null);
         lineCreationInfosNoShunt.setB2(60.0);
 
-        String lineCreationInfosNoShuntJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfosNoShunt, List.of(buildApplicationContext())));
+        String lineCreationInfosNoShuntJson = getJsonBody(lineCreationInfosNoShunt, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosNoShuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
@@ -121,7 +121,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 )
                 .build();
 
-        String lineCreationInfosPermanentLimitOKJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfosPermanentLimitOK, List.of(buildApplicationContext())));
+        String lineCreationInfosPermanentLimitOKJson = getJsonBody(lineCreationInfosPermanentLimitOK, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -153,7 +153,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .operationalLimitsGroups2(null)
                 .build();
 
-        String lineCreationInfosPermanentLimitOKJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfosPermanentLimitOK, List.of(buildApplicationContext())));
+        String lineCreationInfosPermanentLimitOKJson = getJsonBody(lineCreationInfosPermanentLimitOK, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -185,7 +185,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                     )
                 )
                 .build();
-        String lineCreationInfosPermanentLimitNOKJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfosPermanentLimitNOK, List.of(buildApplicationContext())));
+        String lineCreationInfosPermanentLimitNOKJson = getJsonBody(lineCreationInfosPermanentLimitNOK, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitNOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("AC Line 'idLine2': permanent limit must be >= 0", lineCreationInfosPermanentLimitNOK.getErrorType().name(), reportService);
@@ -212,7 +212,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 )
                 .build();
 
-        String lineCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lineCreationInfosOK, List.of(buildApplicationContext())));
+        String lineCreationInfosJson = getJsonBody(lineCreationInfosOK, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
     }

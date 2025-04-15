@@ -135,7 +135,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         // invalid Generator id
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setEquipmentId("");
-        String generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -144,7 +144,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         // not found voltage level
         generatorCreationInfos.setEquipmentId("idGenerator1");
         generatorCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -154,7 +154,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         // not found busbar section
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -166,7 +166,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
         generatorCreationInfos.setMinP(Double.NaN);
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -178,7 +178,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setReactiveCapabilityCurve(false);
         generatorCreationInfos.setMinQ(Double.NaN);
 
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
@@ -189,7 +189,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setReactiveCapabilityCurve(false);
         generatorCreationInfos.setMaxQ(Double.NaN);
 
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
@@ -201,7 +201,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setMinQ(200.);
         generatorCreationInfos.setMaxQ(100.);
 
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
@@ -212,7 +212,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.getReactiveCapabilityCurvePoints().get(0).setP(Double.NaN);
 
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
@@ -222,7 +222,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         // try to create an existing generator
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setEquipmentId("v5generator");
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -235,7 +235,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         generatorCreationInfos.setEquipmentName("nameGenerator3");
         generatorCreationInfos.setVoltageLevelId("v2");
         generatorCreationInfos.setBusOrBusbarSectionId("1B");
-        generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext("variant_not_existing"))));
+        generatorCreationInfosJson = getJsonBody(generatorCreationInfos, "variant_not_existing");
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
@@ -253,7 +253,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setDirectTransX(Double.NaN);
 
-        String generatorCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(generatorCreationInfos, List.of(buildApplicationContext())));
+        String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

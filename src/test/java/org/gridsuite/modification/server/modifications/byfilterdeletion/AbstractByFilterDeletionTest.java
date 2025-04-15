@@ -81,7 +81,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(byFilterDeletionInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(byFilterDeletionInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -124,7 +124,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(byFilterDeletionInfos, List.of(buildApplicationContext())));
+        String body = getJsonBody(byFilterDeletionInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

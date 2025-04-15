@@ -196,7 +196,7 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
 
     protected void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
                                                   NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
-        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(byFormulaModificationInfos, List.of(buildApplicationContext())));
+        String modificationToCreateJson = getJsonBody(byFormulaModificationInfos, null);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();

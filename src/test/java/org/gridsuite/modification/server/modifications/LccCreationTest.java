@@ -145,7 +145,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
     void testCreateWithErrors() throws Exception {
         LccCreationInfos lccCreationInfos = (LccCreationInfos) buildModification();
         lccCreationInfos.setEquipmentId("");
-        String lccCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lccCreationInfos, List.of(buildApplicationContext())));
+        String lccCreationInfosJson = getJsonBody(lccCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lccCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", lccCreationInfos.getErrorType().name(), reportService);
@@ -156,7 +156,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
                 "lccStationName1", "v1", "1.1");
         converterStationCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
         lccCreationInfos.setConverterStation2(converterStationCreationInfos);
-        lccCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lccCreationInfos, List.of(buildApplicationContext())));
+        lccCreationInfosJson = getJsonBody(lccCreationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(lccCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -166,7 +166,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
         // try to create an existing lcc
         lccCreationInfos = (LccCreationInfos) buildModification();
         lccCreationInfos.setEquipmentId("hvdcLine");
-        lccCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(lccCreationInfos, List.of(buildApplicationContext())));
+        lccCreationInfosJson = getJsonBody(lccCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lccCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),

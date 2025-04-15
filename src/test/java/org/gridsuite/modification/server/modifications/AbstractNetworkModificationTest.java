@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.modifications;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -16,7 +17,6 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -132,7 +132,7 @@ public abstract class AbstractNetworkModificationTest {
         MvcResult mvcResult;
         Optional<NetworkModificationsResult> networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
-        String bodyJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
+        String bodyJson = getJsonBody(modificationToCreate, null);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -157,7 +157,7 @@ public abstract class AbstractNetworkModificationTest {
         Optional<NetworkModificationsResult> networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         modificationToCreate.setActivated(false);
-        String modificationToCreateJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(modificationToCreate, List.of(buildApplicationContext())));
+        String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -244,8 +244,7 @@ public abstract class AbstractNetworkModificationTest {
         ModificationInfos modificationToCopy = buildModification();
 
         UUID modificationUuid = saveModification(modificationToCopy);
-        String body = mapper.writeValueAsString(org.springframework.data.util.Pair.of(List.of(modificationUuid), List.of(buildApplicationContext())));
-
+        String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
         mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -301,12 +300,8 @@ public abstract class AbstractNetworkModificationTest {
         return URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
     }
 
-    protected ModificationApplicationContext buildApplicationContext() {
-        return buildApplicationContext(null);
-    }
-
-    protected ModificationApplicationContext buildApplicationContext(String variantId) {
-        return new ModificationApplicationContext(TEST_NETWORK_ID, variantId, TEST_REPORT_ID, UUID.randomUUID());
+    protected String getJsonBody(ModificationInfos modificationInfos, String variantId) throws JsonProcessingException {
+        return TestUtils.getJsonBody(modificationInfos, AbstractNetworkModificationTest.TEST_NETWORK_ID, variantId);
     }
 
     protected abstract Network createNetwork(UUID networkUuid);

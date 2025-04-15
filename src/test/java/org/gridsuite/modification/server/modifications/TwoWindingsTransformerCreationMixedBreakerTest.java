@@ -292,13 +292,13 @@ class TwoWindingsTransformerCreationMixedBreakerTest extends AbstractNetworkModi
     void testCreateWithErrors() throws Exception {
         TwoWindingsTransformerCreationInfos twoWindingsTransformerCreationInfos = (TwoWindingsTransformerCreationInfos) buildModification();
         twoWindingsTransformerCreationInfos.setEquipmentId("");
-        String twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
+        String twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", twoWindingsTransformerCreationInfos.getErrorType().name(), reportService);
 
         twoWindingsTransformerCreationInfos.setBusOrBusbarSectionId1("notFoundBus");
-        twoWindingsTransformerCreationInfosJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(twoWindingsTransformerCreationInfos, List.of(buildApplicationContext())));
+        twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),
