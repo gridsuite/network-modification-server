@@ -62,8 +62,7 @@ class ModificationRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        modificationRepository.deleteAll();
-        modificationGroupRepository.deleteAll();
+        networkModificationRepository.deleteAll();
         SQLStatementCountValidator.reset();
     }
 
@@ -459,15 +458,15 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLineEntity2.getId(), createLineEntity3.getId()));
-//        assertRequestsCount(12, 0, 0, 11);
+        assertRequestsCount(12, 0, 0, 11);
 
         SQLStatementCountValidator.reset();
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-//        assertRequestsCount(12, 0, 0, 0);
+        assertRequestsCount(12, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-//        assertRequestsCount(12, 0, 0, 12);
+        assertRequestsCount(12, 0, 0, 12);
 
         assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
                 new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
