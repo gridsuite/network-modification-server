@@ -43,6 +43,8 @@ public class BuildWorkerService {
 
     private final NetworkModificationService networkModificationService;
 
+    private final NetworkModificationObserver networkModificationObserver;
+
     private final ObjectMapper objectMapper;
 
     private final BuildStoppedPublisherService stoppedPublisherService;
@@ -59,9 +61,11 @@ public class BuildWorkerService {
     private NotificationService notificationService;
 
     public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
+                              @NonNull NetworkModificationObserver networkModificationObserver,
                               @NonNull ObjectMapper objectMapper,
                               @NonNull BuildStoppedPublisherService stoppedPublisherService) {
         this.networkModificationService = networkModificationService;
+        this.networkModificationObserver = networkModificationObserver;
         this.objectMapper = objectMapper;
         this.stoppedPublisherService = stoppedPublisherService;
     }
@@ -94,7 +98,7 @@ public class BuildWorkerService {
 
     @Bean
     public Consumer<Message<String>> consumeBuild() {
-        return message -> {
+        return message -> networkModificationObserver.observe("build", () -> {
             BuildExecContext execContext;
             try {
                 execContext = BuildExecContext.fromMessage(message, objectMapper);
@@ -102,7 +106,7 @@ public class BuildWorkerService {
                 throw new BuildException("Failed to read build message", e);
             }
             startBuild(Objects.requireNonNull(execContext));
-        };
+        });
     }
 
     private void startBuild(BuildExecContext execContext) {
