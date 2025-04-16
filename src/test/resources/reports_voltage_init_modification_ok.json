@@ -1,10 +1,10 @@
 {
-  "version": "2.1",
+  "version": "3.0",
   "dictionaries": {
     "default": {
       "2WindingsTransformerModification": "2 windings transformer with id=${id} modified :",
       "2WindingsTransformersModifications": "2 windings transformers",
-      "99999999-9999-9999-9999-999999999999": "99999999-9999-9999-9999-999999999999",
+      "network.modification.server.nodeUuid": "${nodeUuid}",
       "GeneratorsModifications": "Generators",
       "ShuntCompensatorsModifications": "Shunt compensators",
       "StaticVarCompensatorsModifications": "Static var compensators",
@@ -24,7 +24,7 @@
     }
   },
   "reportRoot": {
-    "messageKey": "99999999-9999-9999-9999-999999999999",
+    "messageKey": "network.modification.server.nodeUuid",
     "children": [
       {
         "messageKey": "VOLTAGE_INIT_MODIFICATION",
