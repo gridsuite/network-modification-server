@@ -20,6 +20,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
@@ -75,8 +76,12 @@ class ModificationIndexationTest {
 
     @Autowired
     private ModificationApplicationRepository modificationApplicationRepository;
+
     @Autowired
     private NetworkModificationService networkModificationService;
+
+    @Autowired
+    private ModificationApplicationInfosService modificationApplicationInfosService;
 
     UUID networkUuid = UUID.randomUUID();
     String variant2 = "variant_2";
@@ -316,6 +321,35 @@ class ModificationIndexationTest {
 
         assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
         assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
+    }
+
+    @Test
+    public void testReindexAll() {
+        List<LoadCreationInfos> loadCreationInfosList = List.of(
+            createLoadCreationInfos("newLoad"),
+            createLoadCreationInfos("newLoad2"),
+            createLoadCreationInfos("newLoad3")
+        );
+        UUID groupUuid1 = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, loadCreationInfosList.stream().map(ModificationEntity::fromDTO).toList());
+
+        // apply modifications to index them
+        networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+
+        // assert they are both stored in ES and in postgres
+        assertEquals(3, modificationApplicationRepository.findAll().size());
+        List<ModificationApplicationInfos> applicationBeforeReindexing = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
+        assertEquals(3, applicationBeforeReindexing.size());
+
+        // remove elasticsearch content
+        modificationApplicationInfosRepository.deleteAll();
+        assertEquals(0, IterableUtils.toList(modificationApplicationInfosRepository.findAll()).size());
+
+        // reindex all modification to check they are all reindexed with the same values
+        modificationApplicationInfosService.reindexAll();
+        assertThat(applicationBeforeReindexing).usingRecursiveComparison().isEqualTo(IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
+        assertEquals(3, IterableUtils.toList(modificationApplicationInfosRepository.findAll()).size());
+
     }
 
     private LoadCreationInfos createLoadCreationInfos(String loadId) {

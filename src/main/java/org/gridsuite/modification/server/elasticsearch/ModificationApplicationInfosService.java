@@ -10,6 +10,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -60,5 +61,30 @@ public class ModificationApplicationInfosService {
     public void deleteAll() {
         modificationApplicationRepository.deleteAll();
         modificationApplicationInfosRepository.deleteAll();
+    }
+
+    @Transactional(readOnly = true)
+    public long getIndexModificationsCount() {
+        return modificationApplicationInfosRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public long getModificationsToReindexCount() {
+        return modificationApplicationRepository.count();
+    }
+
+    @Transactional
+    public void reindexAll() {
+        modificationApplicationInfosRepository.deleteAll();
+        modificationApplicationInfosRepository.saveAll(modificationApplicationRepository.findAll().stream().map(
+            applicationInfo -> ModificationApplicationInfos.builder()
+                .modificationUuid(applicationInfo.getModification().getId())
+                .deletedEquipmentIds(applicationInfo.getDeletedEquipmentIds())
+                .createdEquipmentIds(applicationInfo.getCreatedEquipmentIds())
+                .modifiedEquipmentIds(applicationInfo.getModifiedEquipmentIds())
+                .networkUuid(applicationInfo.getNetworkUuid())
+                .groupUuid(applicationInfo.getModification().getGroup().getId())
+                .build()
+        ).toList());
     }
 }

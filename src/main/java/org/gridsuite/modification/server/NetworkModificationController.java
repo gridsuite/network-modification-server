@@ -15,6 +15,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
 import org.springframework.data.util.Pair;
@@ -42,10 +43,14 @@ public class NetworkModificationController {
 
     private final LineTypesCatalogService lineTypesCatalogService;
 
+    private final ModificationApplicationInfosService modificationApplicationInfosService;
+
     public NetworkModificationController(NetworkModificationService networkModificationService,
-                                         LineTypesCatalogService lineTypesCatalogService) {
+                                         LineTypesCatalogService lineTypesCatalogService,
+                                         ModificationApplicationInfosService modificationApplicationInfosService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
+        this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -342,6 +347,13 @@ public class NetworkModificationController {
     public ResponseEntity<Void> deleteIndexedModifications(@RequestParam("groupUuids") List<UUID> groupUuids,
                                                            @RequestParam("networkUuid") UUID networkUuid) {
         networkModificationService.deleteIndexedModificationGroup(groupUuids, networkUuid);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/network-modifications/index")
+    @Operation(summary = "Reindex all modifications")
+    public ResponseEntity<Void> reindexAllModifications() {
+        modificationApplicationInfosService.reindexAll();
         return ResponseEntity.ok().build();
     }
 }
