@@ -77,7 +77,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
         name = "lcc_converter_station_1_id",
         referencedColumnName = "id",
         foreignKey = @ForeignKey(
-            name = "lcc_converter_station_1_id_fk"
+            name = "lcc_modification_converter_station_1_id_fk"
         ))
     private LccConverterStationModificationEntity converterStation1;
 
@@ -86,7 +86,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
         name = "lcc_converter_station_2_id",
         referencedColumnName = "id",
         foreignKey = @ForeignKey(
-            name = "lcc_converter_station_2_id_fk"
+            name = "lcc_modification_converter_station_2_id_fk"
         ))
     private LccConverterStationModificationEntity converterStation2;
 

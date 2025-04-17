@@ -54,6 +54,7 @@
     <changeSet author="elcheikhbas (generated)" id="1743589502652-4">
         <addUniqueConstraint columnNames="lcc_converter_station_2_id" constraintName="uc_lcc_modificationlcc_converter_station_2_id_col" tableName="lcc_modification"/>
     </changeSet>
+
     <changeSet author="elcheikhbas (generated)" id="1743589502652-5">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_converter_station_modification" constraintName="lcc_converter_station_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
@@ -61,10 +62,9 @@
             <addForeignKeyConstraint baseColumnNames="id" baseTableName="lcc_modification" constraintName="lcc_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 
-
-    <changeSet author="elcheikhbas (generated)" id="1743589502652-7">
-        <createTable tableName="shunt_compensator_on_side_modification">
-            <column name="lcc_converter_station_modification_entity_id" type="UUID">
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-25">
+        <createTable tableName="lcc_converter_station_modification_on_side">
+            <column name="lcc_converter_station_modification_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
             <column name="connected_to_hvdc" type="BOOLEAN"/>
@@ -73,14 +73,55 @@
             <column name="shunt_compensator_name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-26">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="p_measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-27">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="p_measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-28">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="p_measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-29">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="p_measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-30">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="q_measurement_validity" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-31">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="q_measurement_validity_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-32">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="q_measurement_value" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-33">
+        <addColumn tableName="lcc_converter_station_modification">
+            <column name="q_measurement_value_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
 
-    <changeSet author="elcheikhbas (generated)" id="1744119886230-8">
-        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_modification_entity_id" baseTableName="shunt_compensator_on_side_modification" constraintName="FK1g3ucfgf7ws0o54y7batko2a3" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
+
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-52">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_1_id" baseTableName="lcc_modification" constraintName="lcc_modification_converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
     </changeSet>
-    <changeSet author="elcheikhbas (generated)" id="1744119886230-9">
-        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_1_id" baseTableName="lcc_modification" constraintName="lcc_converter_station_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
+    <changeSet author="elcheikhbas (generated)" id="1744810076802-53">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_2_id" baseTableName="lcc_modification" constraintName="lcc_modification_converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
     </changeSet>
-    <changeSet author="elcheikhbas (generated)" id="1744119886230-10">
-        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_2_id" baseTableName="lcc_modification" constraintName="lcc_converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
+    <changeSet author="elcheikhbas (generated)" id="1744811473239-43">
+        <addForeignKeyConstraint baseColumnNames="lcc_converter_station_modification_id" baseTableName="lcc_converter_station_modification_on_side" constraintName="lcc_converter_station_modification_on_side_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="lcc_converter_station_modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>

@@ -15,6 +15,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -22,12 +23,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
+import org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
 
-import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.fromEmbeddableShuntCompensatorModification;
-import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.toEmbeddableShuntCompensatorModification;
+import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.fromEmbeddableShuntCompensatorCreation;
+import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.toEmbeddableShuntCompensatorCreation;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 @AllArgsConstructor
@@ -49,8 +51,9 @@ public class LccConverterStationModificationEntity extends InjectionModification
     private FloatModificationEmbedded powerFactor;
 
     @ElementCollection
-    @CollectionTable(name = "shunt_compensator_on_side_modification")
-    private List<ShuntCompensatorModificationEmbeddable> shuntCompensatorsOnSide;
+    @CollectionTable(name = "lcc_converter_station_modification_on_side", joinColumns = @JoinColumn(name = "lcc_converter_station_modification_id"),
+        foreignKey = @ForeignKey(name = "lcc_converter_station_modification_on_side_fk"))
+    private List<ShuntCompensatorCreationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationModificationEntity(LccConverterStationModificationInfos converterStationModificationInfos) {
         super(converterStationModificationInfos);
@@ -60,7 +63,7 @@ public class LccConverterStationModificationEntity extends InjectionModification
     private void assignAttributes(LccConverterStationModificationInfos converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.powerFactor = converterStationModificationInfos.getPowerFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getPowerFactor()) : null;
-        this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorModification(converterStationModificationInfos.getShuntCompensatorsOnSide());
+        this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorCreation(converterStationModificationInfos.getShuntCompensatorsOnSide());
     }
 
     public LccConverterStationModificationInfos toLccConverterStationInfos() {
@@ -76,7 +79,7 @@ public class LccConverterStationModificationEntity extends InjectionModification
             // ConverterStation
             .lossFactor(toAttributeModification(getLossFactor()))
             .powerFactor(toAttributeModification(getPowerFactor()))
-            .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorModification(getShuntCompensatorsOnSide()))
+            .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorCreation(getShuntCompensatorsOnSide()))
             .build();
     }
 }
