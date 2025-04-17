@@ -130,17 +130,16 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCreate() throws Exception {
         MvcResult mvcResult;
-        Optional<NetworkModificationsResult> networkModificationsResult;
+        NetworkModificationsResult networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         String bodyJson = getJsonBody(modificationToCreate, null);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
-        assertResultImpacts(getNetworkImpacts(networkModificationsResult.get()));
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
+        assertResultImpacts(getNetworkImpacts(networkModificationsResult));
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -154,7 +153,7 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testCreateDisabledModification() throws Exception {
         MvcResult mvcResult;
-        Optional<NetworkModificationsResult> networkModificationsResult;
+        NetworkModificationsResult networkModificationsResult;
         ModificationInfos modificationToCreate = buildModification();
         modificationToCreate.setActivated(false);
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
@@ -162,11 +161,10 @@ public abstract class AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
 
-        assertEquals(0, getNetworkImpacts(networkModificationsResult.get()).size());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
+        assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
         ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
@@ -182,7 +180,7 @@ public abstract class AbstractNetworkModificationTest {
     @Test
     public void testRead() throws Exception {
         MvcResult mvcResult;
-        Optional<NetworkModificationResult> networkModificationResult;
+        NetworkModificationResult networkModificationResult;
         ModificationInfos modificationToRead = buildModification();
 
         UUID modificationUuid = saveModification(modificationToRead);
@@ -190,8 +188,7 @@ public abstract class AbstractNetworkModificationTest {
         mvcResult = mockMvc.perform(get(URI_NETWORK_MODIF_GET_PUT + modificationUuid))
                 .andExpect(status().isOk()).andReturn();
         networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.get().getApplicationStatus());
+        assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, networkModificationResult.getApplicationStatus());
         String resultAsString = mvcResult.getResponse().getContentAsString();
         ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertThat(receivedModification).recursivelyEquals(modificationToRead);

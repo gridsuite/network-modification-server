@@ -841,19 +841,18 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
 
         if (!Objects.isNull(errorMessage)) {
             // change not applied
             assertThat(terminal.isConnected()).isNotEqualTo(expectedState);
-            assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult.get()).getFirst());
+            assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
             assertLogMessage("BRANCH_MODIFICATION_ERROR : " + errorMessage, "MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR", reportService);
         } else {
             // connection state has changed as expected
             assertThat(terminal.isConnected()).isEqualTo(expectedState);
-            assertEquals(NetworkModificationResult.ApplicationStatus.ALL_OK, extractApplicationStatus(networkModificationsResult.get()).getFirst());
+            assertEquals(NetworkModificationResult.ApplicationStatus.ALL_OK, extractApplicationStatus(networkModificationsResult).getFirst());
 
             // try to modify again => no change on connection state
             mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))

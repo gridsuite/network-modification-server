@@ -31,7 +31,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
@@ -132,10 +131,9 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
-        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationsResult.isPresent());
-        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
-        assertEquals(expectedStatus, extractApplicationStatus(networkModificationsResult.get()).getFirst());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
+        assertEquals(expectedStatus, extractApplicationStatus(networkModificationsResult).getFirst());
 
         assertNull(getNetwork().getHvdcLine(hvdcLineName));
         assertEquals(selected, getNetwork().getShuntCompensator(shuntNameToBeRemoved) == null);
