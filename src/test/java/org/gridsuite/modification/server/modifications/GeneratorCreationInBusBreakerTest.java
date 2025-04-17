@@ -138,7 +138,8 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
     void testCreateWithBusbarSectionErrors() throws Exception {
         GeneratorCreationInfos generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
+        String body = getJsonBody(generatorCreationInfos, null);
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
                 generatorCreationInfos.getErrorType().name(), reportService);
@@ -151,7 +152,7 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
         generatorCreationInfos.setRegulatingTerminalType("LINE");
         generatorCreationInfos.setRegulatingTerminalId("titi");
 
-        String generatorCreationInfosJson = mapper.writeValueAsString(generatorCreationInfos);
+        String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),

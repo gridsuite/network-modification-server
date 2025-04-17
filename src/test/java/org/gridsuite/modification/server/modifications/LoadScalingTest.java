@@ -181,8 +181,9 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .variationType(VariationType.DELTA_P)
             .variations(List.of(variation1))
             .build();
+        String body = getJsonBody(modificationToCreate, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modificationToCreate)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
         wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(FILTER_NO_DK), false);
@@ -217,9 +218,10 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter1)))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        String body = getJsonBody(loadScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
-                .content(mapper.writeValueAsString(loadScalingInfo))
+                .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(loadScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
@@ -266,9 +268,10 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(List.of(wrongIdFilter2, filter5)))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        String body = getJsonBody(loadScalingInfo, null);
 
         mockMvc.perform(post(getNetworkModificationUri())
-                .content(mapper.writeValueAsString(loadScalingInfo))
+                .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isOk(),
@@ -482,7 +485,8 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(loadScalingInfo);
+        String modificationToCreateJson = getJsonBody(loadScalingInfo, null);
+
         mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))

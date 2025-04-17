@@ -58,7 +58,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
             .equipmentAttributeValue(true)
             .equipmentId("v1b1")
             .build();
-        String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
 
         // switch opening
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
@@ -67,8 +67,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         // switch in variant VARIANT_ID opening
         switchStatusModificationInfos.setEquipmentId("break1Variant");
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri() + "&variantId=" + NetworkCreation.VARIANT_ID).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, NetworkCreation.VARIANT_ID);
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1Variant"));
     }
@@ -76,10 +76,10 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
     @Test
     void testSwitch() throws Exception {
         // switches modifications on initial variant
-        switchModifications("", "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 5);
+        switchModifications(null, "v1b1", "disc1Variant", "v2b1", "v3b1", Set.of("s1"), Set.of("s2"), 5);
 
         // switches modifications on variant VARIANT_ID
-        switchModifications("&variantId=" + NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 10);
+        switchModifications(NetworkCreation.VARIANT_ID, "break1Variant", "notFound", "disc1Variant", "break2Variant", Set.of("s1Variant"), Set.of("s2Variant"), 10);
     }
 
     private void switchModifications(String extraParams, String switchId1, String switchNotFoundId, String switchId2, String switchId3,
@@ -91,8 +91,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         // switch not existing
         switchStatusModificationInfos.setEquipmentId(switchNotFoundId);
-        String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
+        mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
                 switchStatusModificationInfos.getErrorType().name(), reportService);
@@ -100,28 +100,28 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // switch closing when already closed
         switchStatusModificationInfos.setEquipmentId(switchId1);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testEmptyImpacts(mapper, mvcResult.getResponse().getContentAsString());
 
         // switch opening
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch closing
         switchStatusModificationInfos.setEquipmentId(switchId2);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch opening on another substation
         switchStatusModificationInfos.setEquipmentId(switchId3);
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri() + extraParams).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), otherSubstationsIds);
 
         testNetworkModificationsCount(getGroupId(), modificationsCount);
@@ -138,7 +138,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
             .equipmentId("v1b1")
             .build();
 
-        String switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isBadRequest(),
@@ -147,7 +147,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // bad equipment attribute value
         switchStatusModificationInfos.setEquipmentAttributeName("open");
         switchStatusModificationInfos.setEquipmentAttributeValue("opened"); // bad
-        switchStatusModificationInfosJson = mapper.writeValueAsString(switchStatusModificationInfos);
+        switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isBadRequest(),
