@@ -12,7 +12,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
+import org.gridsuite.modification.dto.LccShuntCompensatorInfos;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ public class ShuntCompensatorCreationEmbeddable {
     @Column
     private Boolean connectedToHvdc;
 
-    public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccConverterStationCreationInfos.ShuntCompensatorInfos> compensatorCreationInfos) {
+    public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccShuntCompensatorInfos> compensatorCreationInfos) {
         return compensatorCreationInfos == null ? null :
                 compensatorCreationInfos.stream()
                         .map(compensatorCreationInfo -> new ShuntCompensatorCreationEmbeddable(compensatorCreationInfo.getId(),
@@ -47,10 +47,11 @@ public class ShuntCompensatorCreationEmbeddable {
                         .toList();
     }
 
-    public static List<LccConverterStationCreationInfos.ShuntCompensatorInfos> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
+    public static List<LccShuntCompensatorInfos> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
         return compensatorCreationEmbeddables == null ? null :
                 compensatorCreationEmbeddables.stream()
-                        .map(compensatorCreationEmbeddable -> new LccConverterStationCreationInfos.ShuntCompensatorInfos(compensatorCreationEmbeddable.getId(),
+                        .map(compensatorCreationEmbeddable ->
+                            new LccShuntCompensatorInfos(compensatorCreationEmbeddable.getId(),
                                 compensatorCreationEmbeddable.getName(),
                                 compensatorCreationEmbeddable.getMaxQAtNominalV(),
                                 compensatorCreationEmbeddable.getConnectedToHvdc()))
