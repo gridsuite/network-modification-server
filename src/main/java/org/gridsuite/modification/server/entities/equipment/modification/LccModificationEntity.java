@@ -18,6 +18,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,6 +37,7 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Getter
 @Entity
 @Table(name = "lcc_modification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "lcc_modification_id_fk_constraint"))
 public class LccModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
