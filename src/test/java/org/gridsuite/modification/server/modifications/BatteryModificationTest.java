@@ -13,7 +13,7 @@ import com.powsybl.iidm.network.ReactiveCapabilityCurve;
 import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -141,7 +141,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .setMinQ(0.)
                 .endPoint()
                 .add();
-        String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -153,7 +153,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
 
         // Modifying only min reactive limit
         batteryModificationInfos.setMinQ(new AttributeModification<>(-200., OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -166,7 +166,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         // Modifying only max reactive limit
         batteryModificationInfos.setMinQ(null);
         batteryModificationInfos.setMaxQ(new AttributeModification<>(200., OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -178,7 +178,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
 
         // Modifying both min and max reactive limits
         batteryModificationInfos.setMinQ(new AttributeModification<>(-1.1, OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -193,7 +193,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.setEquipmentName(null);
         batteryModificationInfos.setMinP(null);
         batteryModificationInfos.setMaxP(null);
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         createdModification = (BatteryModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
@@ -206,7 +206,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
 
         batteryModificationInfos.getDroop().setValue(18f);
-        String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -217,7 +217,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
 
         // setting droop to null, modifying only participate
         batteryModificationInfos.setDroop(null);
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -230,7 +230,8 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
     @Test
     void testImpactsAfterActivePowerControlModifications() throws Exception {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
-        String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         Battery battery = getNetwork().getBattery("v3Battery");
@@ -238,26 +239,26 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         assertTrue(battery.getExtension(ActivePowerControl.class).isParticipate());
         //modify only droop
         batteryModificationInfos.setDroop(new AttributeModification<>(0.5f, OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         //check impacts
         String resultAsString = mvcResult.getResponse().getContentAsString();
-        NetworkModificationResult networkModificationResult = mapper.readValue(resultAsString, NetworkModificationResult.class);
-        assertEquals(1, networkModificationResult.getNetworkImpacts().size());
-        assertEquals(1, networkModificationResult.getImpactedSubstationsIds().size());
-        assertEquals("[s2]", networkModificationResult.getImpactedSubstationsIds().toString());
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, NetworkModificationsResult.class);
+        assertEquals(1, getNetworkImpacts(networkModificationsResult).size());
+        assertEquals(1, getImpactedSubstationsIds(networkModificationsResult).size());
+        assertEquals("[s2]", getImpactedSubstationsIds(networkModificationsResult).toString());
         //modify only participate
         batteryModificationInfos.setParticipate(new AttributeModification<>(false, OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         //check impacts
         resultAsString = mvcResult.getResponse().getContentAsString();
-        networkModificationResult = mapper.readValue(resultAsString, NetworkModificationResult.class);
-        assertEquals(1, networkModificationResult.getNetworkImpacts().size());
-        assertEquals(1, networkModificationResult.getImpactedSubstationsIds().size());
-        assertEquals("[s2]", networkModificationResult.getImpactedSubstationsIds().toString());
+        networkModificationsResult = mapper.readValue(resultAsString, NetworkModificationsResult.class);
+        assertEquals(1, getNetworkImpacts(networkModificationsResult).size());
+        assertEquals(1, getImpactedSubstationsIds(networkModificationsResult).size());
+        assertEquals("[s2]", getImpactedSubstationsIds(networkModificationsResult).toString());
 
     }
 
@@ -274,7 +275,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         Double maxActivePower = batteryModificationInfos.getMaxP() != null ? batteryModificationInfos.getMaxP().getValue() : battery.getMaxP();
         Double activePower = batteryModificationInfos.getTargetP() != null ? batteryModificationInfos.getTargetP().getValue() : battery.getTargetP();
 
-        String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
@@ -319,7 +320,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                         minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
         }
-        String modificationToCreateJson = mapper.writeValueAsString(batteryModificationInfos);
+        String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),

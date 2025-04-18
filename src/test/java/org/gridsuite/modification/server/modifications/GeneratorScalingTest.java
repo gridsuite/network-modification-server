@@ -186,7 +186,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation1))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(modificationToCreate);
+        String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -222,8 +222,9 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variationType(VariationType.TARGET_P)
                 .variations(List.of(variation))
                 .build();
+        String body = getJsonBody(generatorScalingInfo, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(generatorScalingInfo)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(generatorScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
                 "invalidFilters", reportService);
@@ -268,7 +269,7 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
+        String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
         var response = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
@@ -475,7 +476,8 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
                 .variations(List.of(variation))
                 .build();
 
-        String modificationToCreateJson = mapper.writeValueAsString(generatorScalingInfo);
+        String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
+
         mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
