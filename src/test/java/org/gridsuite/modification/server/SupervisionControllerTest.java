@@ -2,7 +2,6 @@ package org.gridsuite.modification.server;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
-import org.gridsuite.modification.server.elasticsearch.ESConfig;
 import org.gridsuite.modification.server.service.SupervisionService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
