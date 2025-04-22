@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.ESConfig;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
+import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -45,14 +46,7 @@ public class SupervisionService {
     public void reindexAll() {
         modificationApplicationInfosRepository.deleteAll();
         modificationApplicationInfosRepository.saveAll(modificationApplicationRepository.findAllWithModificationAndGroup().stream().map(
-            applicationInfo -> ModificationApplicationInfos.builder()
-                .modificationUuid(applicationInfo.getModification().getId())
-                .deletedEquipmentIds(applicationInfo.getDeletedEquipmentIds())
-                .createdEquipmentIds(applicationInfo.getCreatedEquipmentIds())
-                .modifiedEquipmentIds(applicationInfo.getModifiedEquipmentIds())
-                .networkUuid(applicationInfo.getNetworkUuid())
-                .groupUuid(applicationInfo.getModification().getGroup().getId())
-                .build()
+            ModificationApplicationEntity::toModificationApplicationInfos
         ).toList());
     }
 
@@ -61,13 +55,13 @@ public class SupervisionService {
         boolean isDeleted = indexOperations.delete();
         if (!isDeleted) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Failed to delete elements ElasticSearch index");
+                "Failed to delete modifications ElasticSearch index");
         }
 
         boolean isCreated = indexOperations.createWithMapping();
         if (!isCreated) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Failed to create elements ElasticSearch index");
+                "Failed to create modifications ElasticSearch index");
         }
     }
 }

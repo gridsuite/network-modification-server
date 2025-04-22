@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.utils.JsonListConverter;
 
 import java.util.List;
@@ -48,4 +49,15 @@ public class ModificationApplicationEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modification_uuid", foreignKey = @ForeignKey(name = "modification_uuid_fk_constraint"))
     ModificationEntity modification;
+
+    public ModificationApplicationInfos toModificationApplicationInfos() {
+        return ModificationApplicationInfos.builder()
+            .modificationUuid(this.getModification().getId())
+            .deletedEquipmentIds(this.getDeletedEquipmentIds())
+            .createdEquipmentIds(this.getCreatedEquipmentIds())
+            .modifiedEquipmentIds(this.getModifiedEquipmentIds())
+            .networkUuid(this.getNetworkUuid())
+            .groupUuid(this.getModification().getGroup().getId())
+            .build();
+    }
 }
