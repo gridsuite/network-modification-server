@@ -40,7 +40,7 @@ abstract class AbstractInjectionModificationTest extends AbstractNetworkModifica
         }
         assertThat(existingEquipment.getTerminal().isConnected()).isNotEqualTo(expectedState);
 
-        String modificationInfosJson = mapper.writeValueAsString(modificationInfos);
+        String modificationInfosJson = getJsonBody(modificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         // connection state has changed as expected

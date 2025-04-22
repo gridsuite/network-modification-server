@@ -97,7 +97,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId(lineID);
         modificationInfos.setAction(OperatingStatusModificationInfos.ActionType.LOCKOUT);
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        String modificationJson = getJsonBody(modificationInfos, null);
         assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -158,7 +158,8 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         // line not existing
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("notFound");
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        String modificationJson = getJsonBody(modificationInfos, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
@@ -168,16 +169,15 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         // modification action empty
         modificationInfos.setEquipmentId("line2");
         modificationInfos.setAction(null);
-        modificationJson = mapper.writeValueAsString(modificationInfos);
+        modificationJson = getJsonBody(modificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().isBadRequest(),
                     content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage())
             );
-
         // modification action not existing
-        modificationJson = modificationJson.replace("LOCKOUT", "INVALID_ACTION"); // note: should never happen in real
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+        // note: should never happen in real
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson.replace("LOCKOUT", "INVALID_ACTION")).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
                         status().is4xxClientError());
     }

@@ -81,7 +81,8 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+        String body = getJsonBody(byFilterDeletionInfos, null);
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         assertLogMessage("Cannot find the following equipments " + EQUIPMENT_WRONG_ID_1 + " in filter filter1",
@@ -123,8 +124,9 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(filters))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        String body = getJsonBody(byFilterDeletionInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(byFilterDeletionInfos)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(byFilterDeletionInfos.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
             "invalidFilters", reportService);

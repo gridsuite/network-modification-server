@@ -39,7 +39,8 @@ class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificati
     void testCreateWithErrors() throws Exception {
         ShuntCompensatorCreationInfos shunt = (ShuntCompensatorCreationInfos) buildModification();
         shunt.setBusOrBusbarSectionId("notFoundBus");
-        String shuntJson = mapper.writeValueAsString(shunt);
+        String shuntJson = getJsonBody(shunt, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),

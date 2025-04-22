@@ -93,7 +93,8 @@ class OperatingStatusModificationEnergiseSideOneLineTest extends AbstractNetwork
         assertNotNull(line);
         OperatingStatusModificationInfos modificationInfos = (OperatingStatusModificationInfos) buildModification();
         modificationInfos.setEquipmentId("cantdisconnect");
-        String modificationJson = mapper.writeValueAsString(modificationInfos);
+        String modificationJson = getJsonBody(modificationInfos, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),

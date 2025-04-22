@@ -32,9 +32,17 @@ public class NetworkModificationObserver {
         createObservation(name, modificationType).observeChecked(runnable);
     }
 
+    public <E extends Throwable> void observe(String name, Observation.CheckedRunnable<E> runnable) throws E {
+        createObservation(name).observeChecked(runnable);
+    }
+
     private Observation createObservation(String name, ModificationType modificationType) {
         return Observation.createNotStarted(OBSERVATION_PREFIX + name, observationRegistry)
             .lowCardinalityKeyValue(MODIFICATION_TYPE_TAG_NAME, modificationType.name());
+    }
+
+    private Observation createObservation(String name) {
+        return Observation.createNotStarted(OBSERVATION_PREFIX + name, observationRegistry);
     }
 
     public void createThreadPoolMetric(ThreadPoolExecutor threadPoolExecutor) {

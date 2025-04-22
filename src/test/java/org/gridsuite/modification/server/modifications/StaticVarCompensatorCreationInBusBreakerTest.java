@@ -108,7 +108,9 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
     void testCreateWithBusBarSectionErrors() throws Exception {
         StaticVarCompensatorCreationInfos staticVarCompensatorCreationInfos = (StaticVarCompensatorCreationInfos) buildModification();
         staticVarCompensatorCreationInfos.setBusOrBusbarSectionId("notFoundBus");
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(staticVarCompensatorCreationInfos)).contentType(MediaType.APPLICATION_JSON))
+        String body = getJsonBody(staticVarCompensatorCreationInfos, null);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
                 staticVarCompensatorCreationInfos.getErrorType().name(), reportService);
@@ -122,7 +124,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         staticVarCompensatorCreationInfos.setRegulatingTerminalId("test");
         staticVarCompensatorCreationInfos.setRegulatingTerminalType("STATIC_VAR_COMPENSATOR");
 
-        String staticVarCompensatorInfosJson = mapper.writeValueAsString(staticVarCompensatorCreationInfos);
+        String staticVarCompensatorInfosJson = getJsonBody(staticVarCompensatorCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(staticVarCompensatorInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=test not found with type STATIC_VAR_COMPENSATOR").getMessage(),
