@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.dto.elasticsearch;
 
 import lombok.*;
+import org.gridsuite.modification.server.elasticsearch.ESConfig;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
 import org.springframework.data.annotation.AccessType;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 @Setter
 @ToString
 @EqualsAndHashCode
-@Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}modifications")
+@Document(indexName = ESConfig.MODIFICATIONS_INDEX_NAME)
 @Setting(settingPath = "elasticsearch_settings.json")
 @TypeAlias(value = "ModificationApplicationInfos")
 public class ModificationApplicationInfos {
