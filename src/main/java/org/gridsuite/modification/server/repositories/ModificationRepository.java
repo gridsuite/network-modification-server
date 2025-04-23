@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -64,5 +63,5 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 
-    void deleteByIdIn(Collection<UUID> ids);
+    void deleteAllByIdIn(List<UUID> ids);
 }

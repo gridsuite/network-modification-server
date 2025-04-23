@@ -21,6 +21,4 @@ public interface ModificationApplicationRepository extends JpaRepository<Modific
     void deleteAllByModificationGroupIdIn(List<UUID> groupUuid);
 
     void deleteAllByModificationIdIn(List<UUID> modificationIds);
-
-    void deleteByModificationId(UUID modificationId);
 }

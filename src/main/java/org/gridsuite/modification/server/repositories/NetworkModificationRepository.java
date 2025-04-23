@@ -558,28 +558,31 @@ public class NetworkModificationRepository {
         // This optimizes the treatment for tabular modifications but reduces efficiency for a list of 'unitary'
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
-        List<TabularModificationEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationEntity.class::isInstance).map(TabularModificationEntity.class::cast).toList();
-        List<UUID> uuidToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationEntity.class::isInstance)).map(ModificationEntity::getId).toList();
+
         // delete tabular modification
+        List<TabularModificationEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationEntity.class::isInstance).map(TabularModificationEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
+
         // delete other modification types with "in" requests
-        modificationApplicationInfosService.deleteAllByModificationIds(uuidToDelete);
-        modificationRepository.deleteByIdIn(uuidToDelete);
+        List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationEntity.class::isInstance)).map(ModificationEntity::getId).toList();
+        modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
+        modificationRepository.deleteAllByIdIn(uuidsToDelete);
     }
 
-    public void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
+    private void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
         List<UUID> modificationToCleanUuids = new ArrayList<>();
         modificationToCleanUuids.add(tabularModificationEntity.getId());
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION:
                 List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(tabularModificationEntity.getId());
                 modificationToCleanUuids.addAll(subModificationsIds);
+                modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
                 generatorModificationRepository.deleteTabularModification(subModificationsIds, tabularModificationEntity.getId());
                 break;
             default:
+                modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
                 modificationRepository.delete(tabularModificationEntity);
                 break;
         }
-        modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
     }
 }

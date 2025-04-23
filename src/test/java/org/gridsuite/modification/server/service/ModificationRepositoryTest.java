@@ -458,7 +458,9 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLineEntity2.getId(), createLineEntity3.getId()));
-        assertRequestsCount(12, 0, 0, 11);
+        // TODO : Due to an issue the deletion counter is not deterministic
+        // https://github.com/jdbc-observations/datasource-proxy/issues/123
+        assertRequestsCount(12, 0, 0);
 
         SQLStatementCountValidator.reset();
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
@@ -466,7 +468,9 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
-        assertRequestsCount(12, 0, 0, 12);
+        // TODO : Due to an issue the deletion counter is not deterministic
+        // https://github.com/jdbc-observations/datasource-proxy/issues/123
+        assertRequestsCount(12, 0, 0);
 
         assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
                 new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
@@ -892,7 +896,7 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(lineSplitEntity1.getId(),
                 voltageLevelCreationEntity.getId(),
                 lineSplitEntity2.getId()));
-        assertRequestsCount(8, 0, 0, 10);
+        assertRequestsCount(8, 0, 0);
 
         modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(0, modificationInfos.size());
