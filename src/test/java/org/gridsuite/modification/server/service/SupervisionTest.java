@@ -31,7 +31,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SpringBootTest
 @DisableElasticsearch
-public class SupervisionTest {
+class SupervisionTest {
     @Autowired
     private SupervisionService supervisionService;
 
@@ -148,7 +148,7 @@ public class SupervisionTest {
     }
 
     @AfterEach
-    public void verifyNoMoreInteractionsMocks() {
+    void verifyNoMoreInteractionsMocks() {
         verifyNoMoreInteractions(modificationApplicationInfosRepository);
         verifyNoMoreInteractions(modificationApplicationRepository);
         verifyNoMoreInteractions(elasticsearchOperations);

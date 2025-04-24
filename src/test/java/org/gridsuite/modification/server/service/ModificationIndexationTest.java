@@ -322,7 +322,7 @@ class ModificationIndexationTest {
     }
 
     @Test
-    public void testReindexAll() {
+    void testReindexAll() {
         List<LoadCreationInfos> loadCreationInfosList = List.of(
             createLoadCreationInfos("newLoad"),
             createLoadCreationInfos("newLoad2"),

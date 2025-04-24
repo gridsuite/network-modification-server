@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @DisableElasticsearch
-public class SupervisionControllerTest {
+class SupervisionControllerTest {
     @SpyBean
     private SupervisionService supervisionService;
 
@@ -32,7 +32,7 @@ public class SupervisionControllerTest {
     private RestClient restClient;
 
     @Test
-    public void testGetElasticSearchHost() throws Exception {
+    void testGetElasticSearchHost() throws Exception {
         HttpHost httpHost = restClient.getNodes().get(0).getHost();
         String host = httpHost.getHostName()
             + ":"
@@ -46,7 +46,7 @@ public class SupervisionControllerTest {
     }
 
     @Test
-    public void testReindexAllModifications() throws Exception {
+    void testReindexAllModifications() throws Exception {
         Mockito.doNothing().when(supervisionService).reindexAll();
         mockMvc.perform(post("/v1/supervision/network-modifications/reindex"))
             .andExpectAll(
@@ -57,7 +57,7 @@ public class SupervisionControllerTest {
     }
 
     @Test
-    public void testRecreateModificationsIndex() throws Exception {
+    void testRecreateModificationsIndex() throws Exception {
         Mockito.doNothing().when(supervisionService).recreateIndex();
         mockMvc.perform(post("/v1/supervision/network-modifications/index"))
             .andExpectAll(
@@ -68,7 +68,7 @@ public class SupervisionControllerTest {
     }
 
     @Test
-    public void testIndexationCount() throws Exception {
+    void testIndexationCount() throws Exception {
         Mockito.when(supervisionService.getIndexModificationsCount()).thenReturn(15L);
         mockMvc.perform(get("/v1/supervision/network-modifications/indexation-count"))
             .andExpectAll(
@@ -80,7 +80,7 @@ public class SupervisionControllerTest {
     }
 
     @Test
-    public void testToReindexCount() throws Exception {
+    void testToReindexCount() throws Exception {
         Mockito.when(supervisionService.getModificationsToReindexCount()).thenReturn(20L);
         mockMvc.perform(get("/v1/supervision/network-modifications/to-reindex-count"))
             .andExpectAll(
@@ -92,7 +92,7 @@ public class SupervisionControllerTest {
     }
 
     @Test
-    public void testGetIndexName() throws Exception {
+    void testGetIndexName() throws Exception {
         mockMvc.perform(get("/v1/supervision/network-modifications/index-name"))
             .andExpectAll(
                 status().isOk(),
