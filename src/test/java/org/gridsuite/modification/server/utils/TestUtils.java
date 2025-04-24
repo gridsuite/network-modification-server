@@ -99,6 +99,12 @@ public final class TestUtils {
         assertDeleteCount(delete);
     }
 
+    public static void assertRequestsCount(long select, long insert, long update) {
+        assertSelectCount(select);
+        assertInsertCount(insert);
+        assertUpdateCount(update);
+    }
+
     @SuppressWarnings("unchecked")
     public static void assertOperatingStatus(Network network, String identifiableName, OperatingStatus.Status status) {
         assertNotNull(network);
