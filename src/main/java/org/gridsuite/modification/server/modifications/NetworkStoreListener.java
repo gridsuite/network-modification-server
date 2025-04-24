@@ -350,10 +350,6 @@ public class NetworkStoreListener implements NetworkListener {
         return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getCreatedEquipments).flatMap(List::stream).toList();
     }
 
-    private List<EquipmentInfos> getAllModifiedEquipments() {
-        return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getModifiedEquipments).flatMap(List::stream).toList();
-    }
-
     private List<TombstonedEquipmentInfos> getAllTombstonedEquipments() {
         return modificationApplicationInfosList.stream().map(ModificationApplicationInfos::getImpactedEquipmentsInfos).map(ImpactedEquipmentsInfos::getTombstonedEquipments).flatMap(List::stream).toList();
     }
