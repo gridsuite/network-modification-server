@@ -151,16 +151,23 @@ public final class TestImpactUtils {
     private static List<AbstractBaseImpact> createBranchImpacts(SimpleImpactType type, IdentifiableType branchType, String branchId,
                                                                  String breakerId1, String disconnectorId1, String substationId1,
                                                                  String breakerId2, String disconnectorId2, String substationId2) {
-        if (type == SimpleImpactType.DELETION) {
-            return List.of(
+        if (type != SimpleImpactType.DELETION) {
+            return createSubstationImpacts(Set.copyOf(List.of(substationId1, substationId2)));
+        }
+
+        List<AbstractBaseImpact> expectedImpacts = new ArrayList<>();
+        // For two windings transformers, resetting regulation on delete adds a modification impact on the substation
+        if (branchType == IdentifiableType.TWO_WINDINGS_TRANSFORMER) {
+            expectedImpacts.add(createModificationImpactType(IdentifiableType.SUBSTATION, substationId1, Set.of(substationId1)));
+        }
+        expectedImpacts.addAll(List.of(
                 createElementImpact(SimpleImpactType.DELETION, branchType, branchId, Set.copyOf(List.of(substationId1, substationId2))),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId1, Set.of(substationId1)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId1)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, breakerId2, Set.of(substationId2)),
                 createElementImpact(SimpleImpactType.DELETION, IdentifiableType.SWITCH, disconnectorId2, Set.of(substationId2))
-            );
-        }
-        return createSubstationImpacts(Set.copyOf(List.of(substationId1, substationId2)));
+        ));
+        return expectedImpacts;
     }
 
     public static void test3WTDeletionImpacts(ObjectMapper mapper, String resultAsString, String w3tId,
@@ -184,6 +191,8 @@ public final class TestImpactUtils {
                                                                       String breakerId3, String disconnectorId3,
                                                                       String substationId) {
         return List.of(
+            // For three windings transformers, resetting regulation on delete adds a modification impact on the substation
+            createModificationImpactType(IdentifiableType.SUBSTATION, substationId, Set.of(substationId)),
             createDeletionImpactType(IdentifiableType.SWITCH, breakerId1, Set.of(substationId)),
             createDeletionImpactType(IdentifiableType.SWITCH, disconnectorId1, Set.of(substationId)),
             createDeletionImpactType(IdentifiableType.SWITCH, breakerId2, Set.of(substationId)),
