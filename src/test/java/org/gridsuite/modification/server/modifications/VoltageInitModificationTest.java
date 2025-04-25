@@ -283,8 +283,9 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
                     .connect(connect)
                     .build()))
             .build();
+        String body = getJsonBody(modification, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(modification)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
     }
 

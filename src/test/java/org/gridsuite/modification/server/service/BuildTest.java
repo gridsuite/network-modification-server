@@ -20,10 +20,9 @@ import mockwebserver3.MockWebServer;
 import mockwebserver3.RecordedRequest;
 import mockwebserver3.junit5.internal.MockWebServerExtension;
 import okhttp3.HttpUrl;
-import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.TapChangerType;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.ContextConfigurationWithTestChannel;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
@@ -299,7 +298,7 @@ class BuildTest {
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
 
-        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
+        testElementEmptyImpacts(mapper, new String(resultMessage.getPayload()));
 
         TestUtils.purgeRequests(server);
     }
@@ -815,7 +814,7 @@ class BuildTest {
         resultMessage = output.receive(TIMEOUT, buildResultDestination);
         assertNotNull(resultMessage);
         assertEquals("me", resultMessage.getHeaders().get("receiver"));
-        testEmptyImpacts(mapper, new String(resultMessage.getPayload()));
+        testElementEmptyImpacts(mapper, new String(resultMessage.getPayload()));
         buildMessage = output.receive(TIMEOUT, consumeBuildDestination);
         assertNotNull(buildMessage);
         assertEquals("me", buildMessage.getHeaders().get("receiver"));
@@ -971,8 +970,12 @@ class BuildTest {
         UUID reporterId = UUID.randomUUID();
         String variantId = network.getVariantManager().getWorkingVariantId();
 
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
         // Building mode : No error send with exception
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(List.of(loadCreationInfos), new NetworkInfos(network, TEST_NETWORK_ID, true), new ReportInfos(reportUuid, reporterId));
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(
+            new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, reporterId)),
+            new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
@@ -984,27 +987,31 @@ class BuildTest {
         assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
-        testNetworkModificationsCount(groupUuid, 1);
+        testNetworkModificationsCount(groupUuid, 2);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
         applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
         networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isEmpty());
-        testNetworkModificationsCount(groupUuid, 2);
+        testNetworkModificationsCount(groupUuid, 3);
     }
 
     @Test
     void testLastGroupModificationStatus(final MockWebServer server) {
         Network network = NetworkCreation.create(TEST_NETWORK_ID, true);
         LoadCreationInfos loadCreationInfos = LoadCreationInfos.builder().voltageLevelId("unknownVoltageLevelId").equipmentId("loadId").build();
+        UUID groupUuid = UUID.randomUUID();
         UUID reportUuid = UUID.randomUUID();
         UUID nodeUuid1 = UUID.randomUUID();
         UUID nodeUuid2 = UUID.randomUUID();
 
-        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfosGroups = new ArrayList<>();
-        modificationInfosGroups.add(Pair.of(new ReportInfos(reportUuid, nodeUuid1), List.of(loadCreationInfos)));
-        modificationInfosGroups.add(Pair.of(new ReportInfos(UUID.randomUUID(), nodeUuid2), List.of()));
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
+            new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, nodeUuid1)),
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(), new ReportInfos(UUID.randomUUID(), nodeUuid2))
+        );
 
         //Global application status should be in error and last application status should be OK
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));

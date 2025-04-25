@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.dto.byfilter.formula.FormulaInfos;
 import org.gridsuite.modification.dto.byfilter.formula.Operator;
 import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.service.FilterService;
@@ -79,9 +80,6 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
 
     @Test
     public void testByModificationError() throws Exception {
-        //Test with modification = null
-        mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(null)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
 
         // Test with empty list of formulas
         checkCreationApplicationStatus(ByFormulaModificationInfos.builder().identifiableType(getIdentifiableType()).formulaInfosList(List.of()).build(),
@@ -198,14 +196,15 @@ abstract class AbstractByFormulaModificationTest extends AbstractNetworkModifica
 
     protected void checkCreationApplicationStatus(ByFormulaModificationInfos byFormulaModificationInfos,
                                                   NetworkModificationResult.ApplicationStatus applicationStatus) throws Exception {
-        String modificationToCreateJson = mapper.writeValueAsString(byFormulaModificationInfos);
+        String modificationToCreateJson = getJsonBody(byFormulaModificationInfos, null);
 
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isPresent());
-        assertEquals(applicationStatus, networkModificationResult.get().getApplicationStatus());
+        Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertTrue(networkModificationsResult.isPresent());
+        assertEquals(1, extractApplicationStatus(networkModificationsResult.get()).size());
+        assertEquals(applicationStatus, extractApplicationStatus(networkModificationsResult.get()).getFirst());
     }
 
     @Override

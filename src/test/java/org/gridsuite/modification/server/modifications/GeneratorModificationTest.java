@@ -169,7 +169,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .setMinQ(0.)
                 .endPoint()
                 .add();
-        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -181,7 +181,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // Modifying only min reactive limit
         generatorModificationInfos.setMinQ(new AttributeModification<>(-200., OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -194,7 +194,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         // Modifying only max reactive limit
         generatorModificationInfos.setMinQ(null);
         generatorModificationInfos.setMaxQ(new AttributeModification<>(200., OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -206,7 +206,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // Modifying both min and max reactive limits
         generatorModificationInfos.setMinQ(new AttributeModification<>(-1.1, OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -223,7 +223,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setMinP(null);
         generatorModificationInfos.setMaxP(null);
         generatorModificationInfos.setRatedS(null);
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
@@ -237,7 +237,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // setting transient reactance to null, modifying only step up transformer reactance
         generatorModificationInfos.setDirectTransX(null);
-        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -250,7 +250,8 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         // setting step up transformer reactance to null, modifying only transient reactance
         generatorModificationInfos.setDirectTransX(new AttributeModification<>(1.1, OperationType.SET));
         generatorModificationInfos.setStepUpTransformerX(null);
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -267,7 +268,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // setting voltageRegulatorOn to true, applying qPercent and regulatingTerminal
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
-        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -279,7 +280,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // setting voltageRegulatorOn to null, no modification on voltageRegulationOn
         generatorModificationInfos.setVoltageRegulationOn(null);
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -291,7 +292,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // setting voltageRegulationType to local, setting reginingTerminal to null
         generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET));
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -308,7 +309,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setVoltageRegulationOn(null);
         generatorModificationInfos.setParticipate(null);
 
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
@@ -323,7 +324,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         // Unset an attribute that should not be null
         generatorModificationInfos.setEnergySource(new AttributeModification<>(null, OperationType.UNSET));
 
-        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        String generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(EnergySource.OTHER, getNetwork().getGenerator("idGenerator").getEnergySource());
@@ -336,7 +337,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         GeneratorModificationInfos generatorModificationInfos = (GeneratorModificationInfos) buildModification();
 
         generatorModificationInfos.getDroop().setValue(18f);
-        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -347,7 +348,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         // setting droop to null, modifying only participate
         generatorModificationInfos.setDroop(null);
-        modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
@@ -394,7 +395,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                         minQ.set(newPoint.getMinQ() != null ? newPoint.getMinQ() : oldMinQ);
                     });
         }
-        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
@@ -415,7 +416,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         Double maxActivePower = generatorModificationInfos.getMaxP() != null ? generatorModificationInfos.getMaxP().getValue() : generator.getMaxP();
         Double activePower = generatorModificationInfos.getTargetP() != null ? generatorModificationInfos.getTargetP().getValue() : generator.getTargetP();
 
-        String modificationToCreateJson = mapper.writeValueAsString(generatorModificationInfos);
+        String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
@@ -430,7 +431,8 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         // Unset TargetV
         generatorModificationInfos.setTargetV(new AttributeModification<>(null, OperationType.UNSET));
 
-        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        String generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetV());
@@ -439,7 +441,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
         generatorModificationInfos.setTargetV(new AttributeModification<>(44.0, OperationType.SET));
         generatorModificationInfos.setTargetQ(new AttributeModification<>(null, OperationType.UNSET));
-        generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
@@ -457,7 +459,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .equipmentId("idGenerator1")
                 .connectionPosition(new AttributeModification<>(1, OperationType.SET))
                 .build();
-        String generatorModificationInfosJson = mapper.writeValueAsString(generatorModificationInfos);
+        String generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         generatorModificationInfos = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);

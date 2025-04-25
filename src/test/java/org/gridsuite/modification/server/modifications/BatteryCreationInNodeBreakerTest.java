@@ -11,7 +11,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -106,7 +106,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // invalid Battery id
         BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setEquipmentId("");
-        String batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        String batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Invalid id ''", batteryCreationInfos.getErrorType().name(), reportService);
@@ -114,7 +114,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // not found voltage level
         batteryCreationInfos.setEquipmentId("idBattery1");
         batteryCreationInfos.setVoltageLevelId("notFoundVoltageLevelId");
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
@@ -123,7 +123,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // not found busbar section
         batteryCreationInfos.setVoltageLevelId("v2");
         batteryCreationInfos.setBusOrBusbarSectionId("notFoundBusbarSection");
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
@@ -134,7 +134,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         batteryCreationInfos.setBusOrBusbarSectionId("1B");
         batteryCreationInfos.setMinP(Double.NaN);
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Battery 'idBattery1': invalid value (NaN) for minimum P",
@@ -145,7 +145,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         batteryCreationInfos.setReactiveCapabilityCurve(false);
         batteryCreationInfos.setMinQ(Double.NaN);
 
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_BATTERY_ERROR, "Battery 'idBattery1' : minimum reactive power is not set").getMessage(),
@@ -155,7 +155,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         batteryCreationInfos.setReactiveCapabilityCurve(false);
         batteryCreationInfos.setMaxQ(Double.NaN);
 
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_BATTERY_ERROR, "Battery 'idBattery1' : maximum reactive power is not set").getMessage(),
@@ -166,7 +166,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         batteryCreationInfos.setMinQ(200.);
         batteryCreationInfos.setMaxQ(100.);
 
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_BATTERY_ERROR, "Battery 'idBattery1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
@@ -176,7 +176,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.getReactiveCapabilityCurvePoints().get(0).setP(Double.NaN);
 
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_BATTERY_ERROR, "Battery 'idBattery1' : P is not set in a reactive capability curve limits point").getMessage(),
@@ -185,7 +185,7 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         // try to create an existing battery
         batteryCreationInfos = (BatteryCreationInfos) buildModification();
         batteryCreationInfos.setEquipmentId("v3Battery");
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BATTERY_ALREADY_EXISTS, "v3Battery").getMessage(),
@@ -194,11 +194,13 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         batteryCreationInfos.setEquipmentName("nameBattery3");
         batteryCreationInfos.setVoltageLevelId("v2");
         batteryCreationInfos.setBusOrBusbarSectionId("1B");
-        batteryCreationInfosJson = mapper.writeValueAsString(batteryCreationInfos);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUriWithBadVariant()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        batteryCreationInfosJson = getJsonBody(batteryCreationInfos, "variant_not_existing");
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        Optional<NetworkModificationResult> networkModificationResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertTrue(networkModificationResult.isEmpty());  // no modifications returned
+        NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(networkModificationsResult);
+        assertEquals(1, networkModificationsResult.modificationResults().size());
+        assertTrue(networkModificationsResult.modificationResults().getFirst().isEmpty());  // no modifications returned
         assertNull(getNetwork().getBattery("idBattery3"));  // battery was not created
         testNetworkModificationsCount(getGroupId(), 10);  // new modification stored in the database
     }

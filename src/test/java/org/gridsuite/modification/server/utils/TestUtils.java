@@ -6,6 +6,9 @@
  */
 package org.gridsuite.modification.server.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.io.ByteStreams;
@@ -17,6 +20,8 @@ import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
@@ -92,6 +97,12 @@ public final class TestUtils {
         assertInsertCount(insert);
         assertUpdateCount(update);
         assertDeleteCount(delete);
+    }
+
+    public static void assertRequestsCount(long select, long insert, long update) {
+        assertSelectCount(select);
+        assertInsertCount(insert);
+        assertUpdateCount(update);
     }
 
     @SuppressWarnings("unchecked")
@@ -191,4 +202,20 @@ public final class TestUtils {
         }
     }
 
+    private static String createJsonPayload(Object data, UUID networkUuid, String variantId) throws JsonProcessingException {
+        ModificationApplicationContext applicationContext = new ModificationApplicationContext(networkUuid, variantId, UUID.randomUUID(), UUID.randomUUID());
+        return getObjectMapper().writeValueAsString(org.springframework.data.util.Pair.of(data, List.of(applicationContext)));
+    }
+
+    public static String getJsonBody(ModificationInfos modificationInfos, UUID networkUuid, String variantId) throws JsonProcessingException {
+        return createJsonPayload(modificationInfos, networkUuid, variantId);
+    }
+
+    public static String getJsonBody(List<UUID> uuids, UUID networkUuid, String variantId) throws JsonProcessingException {
+        return createJsonPayload(uuids, networkUuid, variantId);
+    }
+
+    private static ObjectMapper getObjectMapper() {
+        return new ObjectMapper().registerModule(new JavaTimeModule());
+    }
 }

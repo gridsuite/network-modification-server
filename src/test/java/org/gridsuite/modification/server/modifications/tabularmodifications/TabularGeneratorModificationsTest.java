@@ -346,8 +346,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
-        // It is actually (5, 0, 0, 15) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(5, 0, 0, 1);
+        // It is actually (10, 0, 0, 15) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(10, 0, 0, 1);
     }
 
     @Test
@@ -356,8 +356,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
-        // It is actually (7, 0, 0, 29) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(7, 0, 0, 1);
+        // It is actually (14, 0, 0, 29) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(14, 0, 0, 1);
     }
 
     /*
@@ -384,8 +384,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (4, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(4, 0, 0, 0);
+        // It is actually (8, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(8, 0, 0, 0);
     }
 
     @Test
@@ -395,8 +395,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (6, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        // It is actually (12, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(12, 0, 0, 0);
     }
 
     /*
@@ -422,8 +422,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
-        // It is actually (4, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(4, 0, 0, 0);
+        // It is actually (8, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(8, 0, 0, 0);
     }
 
     @Test
@@ -432,8 +432,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
-        // It is actually (6, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        // It is actually (12, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(12, 0, 0, 0);
     }
 
     /*
@@ -460,8 +460,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft())); // removing only 1 tabular modification in the group
-        // It is actually (3, 0, 1, 7) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(3, 0, 0, 0);
+        // It is actually (6, 0, 1, 7) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(6, 0, 0, 0);
     }
 
     @Test
@@ -470,8 +470,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList()); // removing only 3 tabular modification in the group
-        // It is actually (5, 0, 1, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(5, 0, 0, 0);
+        // It is actually (10, 0, 1, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(10, 0, 0, 0);
     }
 
     /*
@@ -498,8 +498,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModifications(mockMvc, idsMapping.values().stream().toList());
-        // It is actually (3, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(3, 0, 0, 0);
+        // It is actually (7, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(7, 0, 0, 0);
     }
 
     @Test
@@ -509,8 +509,8 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModifications(mockMvc, idsMapping.values().stream().toList());
-        // It is actually (5, 0, 0, 28) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(5, 0, 0, 0);
+        // It is actually (11, 0, 0, 28) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(11, 0, 0, 0);
     }
 
     @Test
@@ -524,7 +524,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(modifications)
                 .build();
-        String modificationToCreateJson = mapper.writeValueAsString(modificationInfos);
+        String modificationToCreateJson = getJsonBody(modificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
