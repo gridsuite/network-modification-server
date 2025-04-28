@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.gridsuite.modification.server.utils.JsonListConverter;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 

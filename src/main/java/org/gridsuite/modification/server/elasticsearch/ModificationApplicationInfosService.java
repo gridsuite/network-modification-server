@@ -39,7 +39,7 @@ public class ModificationApplicationInfosService {
                     .build();
                 newModificationApplicationEntity.setModification(modificationInfo.getModification());
                 return newModificationApplicationEntity;
-        }).toList());
+            }).toList());
         modificationApplicationInfosRepository.saveAll(modificationApplicationInfos);
     }
 

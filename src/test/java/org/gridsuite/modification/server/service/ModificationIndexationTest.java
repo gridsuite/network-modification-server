@@ -22,7 +22,6 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
