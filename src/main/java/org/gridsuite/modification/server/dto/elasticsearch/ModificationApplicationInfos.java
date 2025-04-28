@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto.elasticsearch;
 import lombok.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
+import org.gridsuite.modification.server.modifications.IndexedImpactedEquipmentInfos;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -63,14 +64,26 @@ public class ModificationApplicationInfos {
     ModificationEntity modification;
 
     public ModificationApplicationInfos flushImpactedEquipments() {
-        createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toSet());
-        modifiedEquipmentIds = impactedEquipmentsInfos.getModifiedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toSet());
-        deletedEquipmentIds = impactedEquipmentsInfos.getTombstonedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toSet());
+        createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream()
+            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
+            .map(BasicEquipmentInfos::getId)
+            .collect(Collectors.toSet());
+        modifiedEquipmentIds = impactedEquipmentsInfos.getModifiedEquipments().stream()
+            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
+            .map(BasicEquipmentInfos::getId)
+            .collect(Collectors.toSet());
+        deletedEquipmentIds = impactedEquipmentsInfos.getTombstonedEquipments().stream()
+            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
+            .map(BasicEquipmentInfos::getId)
+            .collect(Collectors.toSet());
         impactedEquipmentsInfos = null;
         return this;
     }
 
     public boolean hasAnyImpactedEquipment() {
-        return impactedEquipmentsInfos.hasAnyImpactedEquipment();
+        return impactedEquipmentsInfos.hasAnyImpactedEquipmentToIndexInModification();
     }
 }
