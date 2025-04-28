@@ -40,7 +40,7 @@ public class NetworkModificationController {
     private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-            LineTypesCatalogService lineTypesCatalogService) {
+                                         LineTypesCatalogService lineTypesCatalogService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
     }
@@ -278,5 +278,13 @@ public class NetworkModificationController {
     @ApiResponse(responseCode = "200", description = "List of metadata used to describe modification elements")
     public ResponseEntity<List<ModificationMetadata>> getModificationsMetadata(@RequestParam("ids") List<UUID> ids) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(networkModificationService.getModificationsMetadata(ids));
+    }
+
+    @DeleteMapping(value = "/network-modifications/index")
+    @Operation(summary = "Delete indexed modifications")
+    public ResponseEntity<Void> deleteIndexedModifications(@RequestParam("groupUuids") List<UUID> groupUuids,
+                                                           @RequestParam("networkUuid") UUID networkUuid) {
+        networkModificationService.deleteIndexedModificationGroup(groupUuids, networkUuid);
+        return ResponseEntity.ok().build();
     }
 }

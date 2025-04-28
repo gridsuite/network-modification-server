@@ -62,4 +62,6 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
+
+    void deleteAllByIdIn(List<UUID> ids);
 }
