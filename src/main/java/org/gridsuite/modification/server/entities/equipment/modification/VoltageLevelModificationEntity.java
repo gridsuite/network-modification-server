@@ -84,11 +84,11 @@ public class VoltageLevelModificationEntity extends BasicEquipmentModificationEn
     }
 
     private void assignAttributes(VoltageLevelModificationInfos voltageLevelModificationInfos) {
-        this.nominalV = new DoubleModificationEmbedded(voltageLevelModificationInfos.getNominalV());
-        this.lowVoltageLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getLowVoltageLimit());
-        this.highVoltageLimit = new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighVoltageLimit());
-        this.ipMin = new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMin());
-        this.ipMax = new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMax());
+        this.nominalV = voltageLevelModificationInfos.getNominalV() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getNominalV()) : null;
+        this.lowVoltageLimit = voltageLevelModificationInfos.getLowVoltageLimit() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getLowVoltageLimit()) : null;
+        this.highVoltageLimit = voltageLevelModificationInfos.getHighVoltageLimit() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getHighVoltageLimit()) : null;
+        this.ipMin = voltageLevelModificationInfos.getIpMin() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMin()) : null;
+        this.ipMax = voltageLevelModificationInfos.getIpMax() != null ? new DoubleModificationEmbedded(voltageLevelModificationInfos.getIpMax()) : null;
     }
 
     @Override

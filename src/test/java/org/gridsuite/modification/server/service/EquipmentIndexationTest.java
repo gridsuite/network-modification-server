@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -43,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @Tag("IntegrationTest")
-class ModificationElasticsearchTest {
+class EquipmentIndexationTest {
     private static final UUID NETWORK_UUID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_REPORT_ID = UUID.randomUUID();
@@ -79,13 +80,16 @@ class ModificationElasticsearchTest {
     private TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository;
 
     private Network network;
+    @Autowired
+    private ModificationApplicationRepository modificationApplicationRepository;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         network = NetworkCreation.create(NETWORK_UUID, true);
         when(networkStoreService.getNetwork(eq(NETWORK_UUID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
 
         // clean DB
+        modificationApplicationRepository.deleteAll();
         modificationRepository.deleteAll();
         equipmentInfosService.deleteAll();
     }
