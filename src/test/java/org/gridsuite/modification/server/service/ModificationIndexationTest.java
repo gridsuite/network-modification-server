@@ -360,6 +360,32 @@ class ModificationIndexationTest {
         assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
     }
 
+    @Test
+    void testUpdateSubstationName() {
+        SubstationModificationInfos substationModificationInfos = SubstationModificationInfos.builder()
+            .equipmentId("s1")
+            .equipmentName(AttributeModification.toAttributeModification("newSubstationName", OperationType.SET))
+            .build();
+
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
+        ModificationApplicationInfos modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll()).getFirst();
+
+        assertEquals(entities.getFirst().getId(), modificationApplicationEntity.getModification().getId());
+        assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getModificationUuid());
+        assertEquals(groupUuid, modificationApplicationInfos.getGroupUuid());
+
+        assertEquals(1, modificationApplicationEntity.getModifiedEquipmentIds().size());
+        assertEquals(1, modificationApplicationInfos.getModifiedEquipmentIds().size());
+
+        assertEquals("s1", modificationApplicationEntity.getModifiedEquipmentIds().stream().findAny().get());
+        assertEquals("s1", modificationApplicationInfos.getModifiedEquipmentIds().stream().findAny().get());
+    }
+
     private LoadCreationInfos createLoadCreationInfos(String loadId) {
         return LoadCreationInfos.builder()
             .stashed(false)
