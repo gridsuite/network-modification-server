@@ -8,7 +8,7 @@ package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.server.utils.JsonListConverter;
+import org.gridsuite.modification.server.utils.JsonSetConverter;
 
 import java.util.Set;
 import java.util.UUID;
@@ -34,15 +34,15 @@ public class ModificationApplicationEntity {
     UUID networkUuid;
 
     @Column(name = "created_equipment_ids", columnDefinition = "CLOB")
-    @Convert(converter = JsonListConverter.class)
+    @Convert(converter = JsonSetConverter.class)
     private Set<String> createdEquipmentIds;
 
     @Column(name = "modified_equipment_ids", columnDefinition = "CLOB")
-    @Convert(converter = JsonListConverter.class)
+    @Convert(converter = JsonSetConverter.class)
     private Set<String> modifiedEquipmentIds;
 
     @Column(name = "deleted_equipment_ids", columnDefinition = "CLOB")
-    @Convert(converter = JsonListConverter.class)
+    @Convert(converter = JsonSetConverter.class)
     private Set<String> deletedEquipmentIds;
 
     @ManyToOne(fetch = FetchType.LAZY)

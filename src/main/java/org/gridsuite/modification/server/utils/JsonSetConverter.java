@@ -12,13 +12,14 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Set;
 
 /**
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 @Converter
-public class JsonListConverter implements AttributeConverter<Set<String>, String> {
+public class JsonSetConverter implements AttributeConverter<Set<String>, String> {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -26,7 +27,7 @@ public class JsonListConverter implements AttributeConverter<Set<String>, String
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (IOException e) {
-            throw new RuntimeException("JSON writing error", e);
+            throw new UncheckedIOException("JSON writing error", e);
         }
     }
 
@@ -35,7 +36,7 @@ public class JsonListConverter implements AttributeConverter<Set<String>, String
         try {
             return objectMapper.readValue(dataFromDb, new TypeReference<>() { });
         } catch (IOException e) {
-            throw new RuntimeException("JSON reading error", e);
+            throw new UncheckedIOException("JSON reading error", e);
         }
     }
 }
