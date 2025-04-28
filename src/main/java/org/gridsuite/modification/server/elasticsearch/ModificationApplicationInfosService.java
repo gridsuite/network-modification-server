@@ -29,15 +29,16 @@ public class ModificationApplicationInfosService {
     }
 
     public void addAll(List<ModificationApplicationInfos> modificationApplicationInfos) {
-        modificationApplicationRepository.saveAll(modificationApplicationInfos.stream().map(modificationInfo -> {
-            ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
-                .networkUuid(modificationInfo.getNetworkUuid())
-                .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
-                .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
-                .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
-                .build();
-            newModificationApplicationEntity.setModification(modificationInfo.getModification());
-            return newModificationApplicationEntity;
+        modificationApplicationRepository.saveAll(modificationApplicationInfos.stream()
+            .map(modificationInfo -> {
+                ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
+                    .networkUuid(modificationInfo.getNetworkUuid())
+                    .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
+                    .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
+                    .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
+                    .build();
+                newModificationApplicationEntity.setModification(modificationInfo.getModification());
+                return newModificationApplicationEntity;
         }).toList());
         modificationApplicationInfosRepository.saveAll(modificationApplicationInfos);
     }

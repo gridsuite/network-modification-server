@@ -23,4 +23,10 @@ public class ImpactedEquipmentsInfos {
     private final List<TombstonedEquipmentInfos> tombstonedEquipments = new ArrayList<>();
     private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
     private final List<EquipmentInfos> modifiedEquipments = new ArrayList<>();
+
+    public boolean hasAnyImpactedEquipment() {
+        return !createdEquipments.isEmpty()
+            || !modifiedEquipments.isEmpty()
+            || !tombstonedEquipments.isEmpty();
+    }
 }

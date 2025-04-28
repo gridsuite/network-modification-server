@@ -13,16 +13,17 @@ import jakarta.persistence.Converter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 @Converter
-public class JsonListConverter implements AttributeConverter<List<String>, String> {
+public class JsonListConverter implements AttributeConverter<Set<String>, String> {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String convertToDatabaseColumn(List<String> attribute) {
+    public String convertToDatabaseColumn(Set<String> attribute) {
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (IOException e) {
@@ -31,7 +32,7 @@ public class JsonListConverter implements AttributeConverter<List<String>, Strin
     }
 
     @Override
-    public List<String> convertToEntityAttribute(String dataFromDb) {
+    public Set<String> convertToEntityAttribute(String dataFromDb) {
         try {
             return objectMapper.readValue(dataFromDb, new TypeReference<>() { });
         } catch (IOException e) {

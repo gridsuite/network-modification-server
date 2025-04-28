@@ -268,7 +268,9 @@ public class NetworkStoreListener implements NetworkListener {
     private void flushImpactedEquipments() {
         flushDeletedEquipments();
         equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipmentsToBeIndexed()).stream().toList());
-        modificationApplicationInfosService.addAll(modificationApplicationInfosList.stream().map(ModificationApplicationInfos::flushImpactedEquipments).toList());
+        modificationApplicationInfosService.addAll(modificationApplicationInfosList.stream()
+            .filter(ModificationApplicationInfos::hasAnyImpactedEquipment)
+            .map(ModificationApplicationInfos::flushImpactedEquipments).toList());
     }
 
     private void flushDeletedEquipments() {
