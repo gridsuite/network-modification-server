@@ -144,11 +144,12 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
-        // Since only name changes impact indexation, we add the identifiable information to modifiedEquipments only in this case
+        // Equipments should be indexed in equipment index only if equipment name has been updated
         boolean shouldIndexEquipments = attribute.equals("name");
         updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, variantId), SimpleImpactType.MODIFICATION, shouldIndexEquipments, true);
         // If the updated attribute is "name" and the identifiable is a VOLTAGE_LEVEL or SUBSTATION,
-        // we must update all linked equipment to reflect the name change
+        // we must update all linked equipment in equipment index to reflect the name change
+        // modification index is not updated here
         if (shouldIndexEquipments && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
             updateLinkedEquipments(identifiable);
         }
