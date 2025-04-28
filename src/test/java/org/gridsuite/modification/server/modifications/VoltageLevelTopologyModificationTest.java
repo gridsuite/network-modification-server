@@ -72,7 +72,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
     }
 
@@ -98,7 +98,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
     }
 
@@ -152,7 +152,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("nonexistent_vl")
-                .equipmentAttributeModification(List.of())
+                .equipmentAttributeModificationList(List.of())
                 .build();
 
         String body = getJsonBody(infos, null);
@@ -169,7 +169,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModification(emptyModifications)
+                .equipmentAttributeModificationList(emptyModifications)
                 .build();
 
         String body = getJsonBody(infos, null);
@@ -194,7 +194,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
         VoltageLevelTopologyModificationInfos infos = VoltageLevelTopologyModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("v1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
 
         String body = getJsonBody(infos, null);

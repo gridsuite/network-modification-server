@@ -1363,7 +1363,7 @@ class ModificationRepositoryTest {
         );
         var voltageLevelTopologyModificationEntity = ModificationEntity.fromDTO(VoltageLevelTopologyModificationInfos.builder()
                 .equipmentId("VL1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageLevelTopologyModificationEntity));

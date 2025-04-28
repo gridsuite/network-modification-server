@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -19,7 +19,6 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author REHILI Ghazwa <ghazwarhili@gmail.com>
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "voltageLevelTopologyModification")
+@Table(name = "voltage_level_topology_modification")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "voltageLevelTopologyModification_id_fk_constraint"))
 public class VoltageLevelTopologyModificationEntity extends EquipmentModificationEntity {
 
@@ -37,7 +36,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
             name = "voltage_level_topology_modification_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
-                    name = "voltageLevel_booleanEquipmentAttributeModification_fk"
+                    name = "voltageLevelTopologyModification_booleanEquipmentAttributeModification_fk"
             ))
     @OrderBy
     private List<BooleanEquipmentAttributeModificationEntity> equipmentAttributeModification;
@@ -62,11 +61,11 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
         }
 
         // Add new entities to the existing collection
-        if (voltageLevelTopologyModificationInfos.getEquipmentAttributeModification() != null) {
+        if (voltageLevelTopologyModificationInfos.getEquipmentAttributeModificationList() != null) {
             List<BooleanEquipmentAttributeModificationEntity> newEntities =
-                    voltageLevelTopologyModificationInfos.getEquipmentAttributeModification().stream()
+                    voltageLevelTopologyModificationInfos.getEquipmentAttributeModificationList().stream()
                             .map(BooleanEquipmentAttributeModificationEntity::new)
-                            .collect(Collectors.toList());
+                            .toList();
 
             this.equipmentAttributeModification.addAll(newEntities);
         }
@@ -85,7 +84,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
-                .equipmentAttributeModification(Optional.ofNullable(attributeModificationEntities)
+                .equipmentAttributeModificationList(Optional.ofNullable(attributeModificationEntities)
                         .map(list -> list.stream()
                                 .map(EquipmentAttributeModificationEntity::toModificationInfos)
                                 .toList())
