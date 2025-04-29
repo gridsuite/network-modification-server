@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto.elasticsearch;
 import lombok.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
+import org.gridsuite.modification.server.modifications.IndexedImpactedEquipmentInfos;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -16,7 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -51,9 +52,9 @@ public class ModificationApplicationInfos {
     private UUID networkUuid;
     private UUID groupUuid;
 
-    private List<String> createdEquipmentIds;
-    private List<String> modifiedEquipmentIds;
-    private List<String> deletedEquipmentIds;
+    private Set<String> createdEquipmentIds;
+    private Set<String> modifiedEquipmentIds;
+    private Set<String> deletedEquipmentIds;
 
     @Transient
     @Builder.Default
@@ -63,10 +64,26 @@ public class ModificationApplicationInfos {
     ModificationEntity modification;
 
     public ModificationApplicationInfos flushImpactedEquipments() {
-        createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
-        modifiedEquipmentIds = impactedEquipmentsInfos.getModifiedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
-        deletedEquipmentIds = impactedEquipmentsInfos.getTombstonedEquipments().stream().map(BasicEquipmentInfos::getId).collect(Collectors.toList());
+        createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream()
+            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
+            .map(BasicEquipmentInfos::getId)
+            .collect(Collectors.toSet());
+        modifiedEquipmentIds = impactedEquipmentsInfos.getModifiedEquipments().stream()
+            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
+            .map(BasicEquipmentInfos::getId)
+            .collect(Collectors.toSet());
+        deletedEquipmentIds = impactedEquipmentsInfos.getTombstonedEquipments().stream()
+            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
+            .map(BasicEquipmentInfos::getId)
+            .collect(Collectors.toSet());
         impactedEquipmentsInfos = null;
         return this;
+    }
+
+    public boolean hasAnyImpactedEquipment() {
+        return impactedEquipmentsInfos.hasAnyImpactedEquipmentToIndexInModification();
     }
 }

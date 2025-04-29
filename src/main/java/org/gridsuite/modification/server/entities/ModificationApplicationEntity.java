@@ -8,9 +8,9 @@ package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.gridsuite.modification.server.utils.JsonListConverter;
+import org.gridsuite.modification.server.utils.JsonSetConverter;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -34,16 +34,16 @@ public class ModificationApplicationEntity {
     UUID networkUuid;
 
     @Column(name = "created_equipment_ids", columnDefinition = "CLOB")
-    @Convert(converter = JsonListConverter.class)
-    private List<String> createdEquipmentIds;
+    @Convert(converter = JsonSetConverter.class)
+    private Set<String> createdEquipmentIds;
 
     @Column(name = "modified_equipment_ids", columnDefinition = "CLOB")
-    @Convert(converter = JsonListConverter.class)
-    private List<String> modifiedEquipmentIds;
+    @Convert(converter = JsonSetConverter.class)
+    private Set<String> modifiedEquipmentIds;
 
     @Column(name = "deleted_equipment_ids", columnDefinition = "CLOB")
-    @Convert(converter = JsonListConverter.class)
-    private List<String> deletedEquipmentIds;
+    @Convert(converter = JsonSetConverter.class)
+    private Set<String> deletedEquipmentIds;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modification_uuid", foreignKey = @ForeignKey(name = "modification_uuid_fk_constraint"))
