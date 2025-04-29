@@ -20,7 +20,13 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class ImpactedEquipmentsInfos {
-    private final List<TombstonedEquipmentInfos> tombstonedEquipments = new ArrayList<>();
-    private final List<EquipmentInfos> createdEquipments = new ArrayList<>();
-    private final List<EquipmentInfos> modifiedEquipments = new ArrayList<>();
+    private final List<IndexedImpactedEquipmentInfos<TombstonedEquipmentInfos>> tombstonedEquipments = new ArrayList<>();
+    private final List<IndexedImpactedEquipmentInfos<EquipmentInfos>> createdEquipments = new ArrayList<>();
+    private final List<IndexedImpactedEquipmentInfos<EquipmentInfos>> modifiedEquipments = new ArrayList<>();
+
+    public boolean hasAnyImpactedEquipmentToIndexInModification() {
+        return createdEquipments.stream().anyMatch(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            || modifiedEquipments.stream().anyMatch(IndexedImpactedEquipmentInfos::shouldIndexInModification)
+            || tombstonedEquipments.stream().anyMatch(IndexedImpactedEquipmentInfos::shouldIndexInModification);
+    }
 }

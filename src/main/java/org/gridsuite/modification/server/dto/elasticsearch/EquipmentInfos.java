@@ -12,7 +12,6 @@ import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.SubstationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
@@ -52,9 +51,6 @@ public class EquipmentInfos extends BasicEquipmentInfos {
 
     @Field(type = FieldType.Nested, includeInParent = true)
     private Set<SubstationInfos> substations;
-
-    @Transient
-    boolean toBeIndexed;
 
     public static Set<VoltageLevel> getVoltageLevels(@NonNull Identifiable<?> identifiable) {
         if (identifiable instanceof Substation) {
