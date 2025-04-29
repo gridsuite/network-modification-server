@@ -12,10 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.BuildInfos;
-import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.ModificationMetadata;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
@@ -24,10 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
