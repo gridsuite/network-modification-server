@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,15 +72,15 @@ class SupervisionTest {
 
         ModificationApplicationEntity modificationApplicationEntity = ModificationApplicationEntity.builder()
             .networkUuid(networkUuid)
-            .modifiedEquipmentIds(List.of("equipment1"))
-            .createdEquipmentIds(List.of("equipment2"))
-            .deletedEquipmentIds(List.of("equipment3"))
+            .modifiedEquipmentIds(Set.of("equipment1"))
+            .createdEquipmentIds(Set.of("equipment2"))
+            .deletedEquipmentIds(Set.of("equipment3"))
             .build();
         ModificationApplicationEntity modificationApplicationEntity2 = ModificationApplicationEntity.builder()
             .networkUuid(networkUuid)
-            .modifiedEquipmentIds(List.of("equipment21"))
-            .createdEquipmentIds(List.of("equipment22"))
-            .deletedEquipmentIds(List.of("equipment23"))
+            .modifiedEquipmentIds(Set.of("equipment21"))
+            .createdEquipmentIds(Set.of("equipment22"))
+            .deletedEquipmentIds(Set.of("equipment23"))
             .build();
 
         modificationApplicationEntity = Mockito.spy(modificationApplicationEntity);
@@ -91,14 +92,24 @@ class SupervisionTest {
         Mockito.when(modificationApplicationEntity2.getModification()).thenReturn(modificationMock);
 
         List<ModificationApplicationEntity> allModifications = List.of(modificationApplicationEntity, modificationApplicationEntity2);
-        when(modificationApplicationRepository.findAllWithModificationAndGroup()).thenReturn(allModifications);
+        when(modificationApplicationRepository.findWithModificationAndGroupByNetworkUuid(networkUuid)).thenReturn(allModifications);
 
-        supervisionService.reindexAll();
+        supervisionService.reindexByNetworkUuid(networkUuid);
 
-        verify(modificationApplicationInfosRepository, times(1)).deleteAll();
-        verify(modificationApplicationRepository, times(1)).findAllWithModificationAndGroup();
+        verify(modificationApplicationInfosRepository, times(1)).deleteAllByNetworkUuid(networkUuid);
+        verify(modificationApplicationRepository, times(1)).findWithModificationAndGroupByNetworkUuid(networkUuid);
         verify(modificationApplicationInfosRepository, times(1)).saveAll(modificationListCaptor.capture());
         assertThat(modificationListCaptor.getValue()).usingRecursiveComparison().isEqualTo(allModifications.stream().map(ModificationApplicationEntity::toModificationApplicationInfos).toList());
+    }
+
+    @Test
+    void testGetAllNetworkUuids() {
+        List<UUID> expectedNetworkUuids = List.of(UUID.randomUUID(), UUID.randomUUID());
+
+        when(modificationApplicationRepository.findAllNetworkUuids()).thenReturn(expectedNetworkUuids);
+        assertThat(supervisionService.getNetworkUuids()).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(expectedNetworkUuids);
+
+        verify(modificationApplicationRepository, times(1)).findAllNetworkUuids();
     }
 
     @Test

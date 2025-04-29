@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,13 +49,14 @@ class SupervisionControllerTest {
 
     @Test
     void testReindexAllModifications() throws Exception {
-        Mockito.doNothing().when(supervisionService).reindexAll();
-        mockMvc.perform(post("/v1/supervision/network-modifications/reindex"))
+        UUID networkUuid = UUID.randomUUID();
+        Mockito.doNothing().when(supervisionService).reindexByNetworkUuid(networkUuid);
+        mockMvc.perform(post("/v1/supervision/network-modifications/reindex").param("networkUuid", networkUuid.toString()))
             .andExpectAll(
                 status().isOk()
             );
 
-        Mockito.verify(supervisionService, times(1)).reindexAll();
+        Mockito.verify(supervisionService, times(1)).reindexByNetworkUuid(networkUuid);
     }
 
     @Test

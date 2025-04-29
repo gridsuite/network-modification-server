@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
 public class SupervisionService {
     private final ModificationApplicationInfosRepository modificationApplicationInfosRepository;
@@ -43,11 +46,15 @@ public class SupervisionService {
     }
 
     @Transactional
-    public void reindexAll() {
-        modificationApplicationInfosRepository.deleteAll();
-        modificationApplicationInfosRepository.saveAll(modificationApplicationRepository.findAllWithModificationAndGroup().stream().map(
+    public void reindexByNetworkUuid(UUID networkUuid) {
+        modificationApplicationInfosRepository.deleteAllByNetworkUuid(networkUuid);
+        modificationApplicationInfosRepository.saveAll(modificationApplicationRepository.findWithModificationAndGroupByNetworkUuid(networkUuid).stream().map(
             ModificationApplicationEntity::toModificationApplicationInfos
         ).toList());
+    }
+
+    public List<UUID> getNetworkUuids() {
+        return modificationApplicationRepository.findAllNetworkUuids();
     }
 
     public void recreateIndex() {

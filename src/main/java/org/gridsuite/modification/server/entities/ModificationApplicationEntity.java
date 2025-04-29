@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.utils.JsonSetConverter;
 
 import java.util.Set;

@@ -343,7 +343,7 @@ class ModificationIndexationTest {
         assertEquals(0, IterableUtils.toList(modificationApplicationInfosRepository.findAll()).size());
 
         // reindex all modification to check they are all reindexed with the same values
-        supervisionService.reindexAll();
+        supervisionService.reindexByNetworkUuid(networkInfos.getNetworkUuuid());
         assertThat(applicationBeforeReindexing).usingRecursiveComparison().isEqualTo(IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
         assertEquals(3, IterableUtils.toList(modificationApplicationInfosRepository.findAll()).size());
 

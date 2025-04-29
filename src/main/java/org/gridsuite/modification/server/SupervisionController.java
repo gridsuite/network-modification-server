@@ -15,10 +15,10 @@ import org.elasticsearch.client.RestClient;
 import org.gridsuite.modification.server.service.SupervisionService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Kevin Le Saulnier <kevin.le-saulnier at rte-france.com>
@@ -48,14 +48,6 @@ public class SupervisionController {
         return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(host);
     }
 
-    @PostMapping(value = "/network-modifications/reindex")
-    @Operation(summary = "reindex all modifications")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Modifications have been reindexed")})
-    public ResponseEntity<Void> reindexAllModifications() {
-        supervisionService.reindexAll();
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping(value = "/network-modifications/index")
     @Operation(summary = "Recreate modifications index")
     @ApiResponses(value = {
@@ -64,6 +56,21 @@ public class SupervisionController {
     })
     public ResponseEntity<Void> recreateESIndex() {
         supervisionService.recreateIndex();
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/network-modifications/network-uuids")
+    @Operation(summary = "get network uuids of all modifications")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Indexed modifications count")})
+    public ResponseEntity<List<UUID>> getAllNetworkUuids() {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(supervisionService.getNetworkUuids());
+    }
+
+    @PostMapping(value = "/network-modifications/reindex")
+    @Operation(summary = "reindex all modifications with a specific networkUuid")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Modifications have been reindexed")})
+    public ResponseEntity<Void> reindexNetworkModifications(@RequestParam(name = "networkUuid") UUID networkUuid) {
+        supervisionService.reindexByNetworkUuid(networkUuid);
         return ResponseEntity.ok().build();
     }
 
