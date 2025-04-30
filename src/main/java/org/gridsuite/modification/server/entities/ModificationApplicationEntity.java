@@ -24,7 +24,12 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
-@Table(name = "modification_application")
+@Table(
+    name = "modification_application",
+    indexes = {
+        @Index(name = "idx_modification_application_networkUuid", columnList = "networkUuid")
+    }
+)
 public class ModificationApplicationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -106,10 +106,10 @@ class SupervisionTest {
     void testGetAllNetworkUuids() {
         List<UUID> expectedNetworkUuids = List.of(UUID.randomUUID(), UUID.randomUUID());
 
-        when(modificationApplicationRepository.findAllNetworkUuids()).thenReturn(expectedNetworkUuids);
+        when(modificationApplicationRepository.findDistinctNetworkUuids()).thenReturn(expectedNetworkUuids);
         assertThat(supervisionService.getNetworkUuids()).usingRecursiveComparison().ignoringCollectionOrder().isEqualTo(expectedNetworkUuids);
 
-        verify(modificationApplicationRepository, times(1)).findAllNetworkUuids();
+        verify(modificationApplicationRepository, times(1)).findDistinctNetworkUuids();
     }
 
     @Test

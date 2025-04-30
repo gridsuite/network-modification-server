@@ -28,5 +28,5 @@ public interface ModificationApplicationRepository extends JpaRepository<Modific
     List<ModificationApplicationEntity> findWithModificationAndGroupByNetworkUuid(UUID networkUuid);
 
     @Query("SELECT distinct ma.networkUuid from ModificationApplicationEntity ma")
-    List<UUID> findAllNetworkUuids();
+    List<UUID> findDistinctNetworkUuids();
 }

@@ -54,7 +54,7 @@ public class SupervisionService {
     }
 
     public List<UUID> getNetworkUuids() {
-        return modificationApplicationRepository.findAllNetworkUuids();
+        return modificationApplicationRepository.findDistinctNetworkUuids();
     }
 
     public void recreateIndex() {
