@@ -7,12 +7,11 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.LccShuntCompensatorInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.AbstractShuntCompensatorEmbeddable;
 
 import java.util.List;
 
@@ -21,21 +20,13 @@ import java.util.List;
  */
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Embeddable
-public class ShuntCompensatorCreationEmbeddable {
-    @Column(name = "shuntCompensatorId")
-    private String id;
+public class ShuntCompensatorCreationEmbeddable extends AbstractShuntCompensatorEmbeddable {
 
-    @Column(name = "shuntCompensatorName")
-    private String name;
-
-    @Column
-    private Double maxQAtNominalV;
-
-    @Column
-    private Boolean connectedToHvdc;
+    ShuntCompensatorCreationEmbeddable(String id, String name, Double maxQAtNominalV, Boolean connectedToHvdc) {
+        super(id, name, maxQAtNominalV, connectedToHvdc);
+    }
 
     public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccShuntCompensatorInfos> compensatorCreationInfos) {
         return compensatorCreationInfos == null ? null :

@@ -71,6 +71,7 @@
             <column name="shunt_compensator_id" type="VARCHAR(255)"/>
             <column name="maxqat_nominalv" type="FLOAT(53)"/>
             <column name="shunt_compensator_name" type="VARCHAR(255)"/>
+            <column name="deletion_mark" type="boolean"/>
         </createTable>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1744810076802-26">

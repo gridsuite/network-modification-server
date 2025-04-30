@@ -23,13 +23,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.AttributeModification;
 import org.gridsuite.modification.dto.LccConverterStationModificationInfos;
-import org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.FloatModificationEmbedded;
 
 import java.util.List;
 
-import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.fromEmbeddableShuntCompensatorCreation;
-import static org.gridsuite.modification.server.entities.equipment.creation.ShuntCompensatorCreationEmbeddable.toEmbeddableShuntCompensatorCreation;
+import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.fromEmbeddableShuntCompensatorModification;
+import static org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEmbeddable.toEmbeddableShuntCompensatorModification;
 import static org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable.toAttributeModification;
 
 @AllArgsConstructor
@@ -53,7 +52,7 @@ public class LccConverterStationModificationEntity extends InjectionModification
     @ElementCollection
     @CollectionTable(name = "lcc_converter_station_modification_on_side", joinColumns = @JoinColumn(name = "lcc_converter_station_modification_id"),
         foreignKey = @ForeignKey(name = "lcc_converter_station_modification_on_side_fk"))
-    private List<ShuntCompensatorCreationEmbeddable> shuntCompensatorsOnSide;
+    private List<ShuntCompensatorModificationEmbeddable> shuntCompensatorsOnSide;
 
     public LccConverterStationModificationEntity(LccConverterStationModificationInfos converterStationModificationInfos) {
         super(converterStationModificationInfos);
@@ -63,7 +62,7 @@ public class LccConverterStationModificationEntity extends InjectionModification
     private void assignAttributes(LccConverterStationModificationInfos converterStationModificationInfos) {
         this.lossFactor = converterStationModificationInfos.getLossFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getLossFactor()) : null;
         this.powerFactor = converterStationModificationInfos.getPowerFactor() != null ? new FloatModificationEmbedded(converterStationModificationInfos.getPowerFactor()) : null;
-        this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorCreation(converterStationModificationInfos.getShuntCompensatorsOnSide());
+        this.shuntCompensatorsOnSide = toEmbeddableShuntCompensatorModification(converterStationModificationInfos.getShuntCompensatorsOnSide());
     }
 
     public LccConverterStationModificationInfos toLccConverterStationInfos() {
@@ -79,7 +78,7 @@ public class LccConverterStationModificationEntity extends InjectionModification
             // ConverterStation
             .lossFactor(toAttributeModification(getLossFactor()))
             .powerFactor(toAttributeModification(getPowerFactor()))
-            .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorCreation(getShuntCompensatorsOnSide()))
+            .shuntCompensatorsOnSide(fromEmbeddableShuntCompensatorModification(getShuntCompensatorsOnSide()))
             .build();
     }
 }
