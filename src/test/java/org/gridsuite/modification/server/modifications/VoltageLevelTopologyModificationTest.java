@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
@@ -31,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTest {
-    private ObjectMapper objectMapper;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -201,14 +199,6 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-    }
-
-    private void applyModification(VoltageLevelTopologyModificationInfos infos) throws Exception {
-        String body = getJsonBody(infos, null);
-        mockMvc.perform(post(getNetworkModificationUri())
-                        .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
     }
 
     @Override
