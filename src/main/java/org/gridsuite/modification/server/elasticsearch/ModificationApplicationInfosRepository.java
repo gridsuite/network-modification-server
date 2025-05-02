@@ -21,4 +21,6 @@ public interface ModificationApplicationInfosRepository extends ElasticsearchRep
     void deleteAllByGroupUuidIn(List<UUID> groupUuid);
 
     void deleteAllByModificationUuidIn(List<UUID> modificationUuid);
+
+    void deleteAllByNetworkUuid(UUID networkUuid);
 }
