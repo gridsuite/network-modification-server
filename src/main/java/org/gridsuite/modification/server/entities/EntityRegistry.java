@@ -65,6 +65,7 @@ public final class EntityRegistry {
         register(ByFormulaModificationInfos.class, ByFormulaModificationEntity.class);
         register(ModificationByAssignmentInfos.class, ModificationByAssignmentEntity.class);
         register(EquipmentAttributeModificationInfos.class, EquipmentAttributeModificationEntity.class);
+        register(VoltageLevelTopologyModificationInfos.class, VoltageLevelTopologyModificationEntity.class);
 
         // // attatching and splitting
         register(LineAttachToVoltageLevelInfos.class, LineAttachToVoltageLevelEntity.class);
