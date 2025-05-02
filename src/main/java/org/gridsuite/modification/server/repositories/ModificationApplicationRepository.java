@@ -7,7 +7,9 @@
 package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,4 +23,10 @@ public interface ModificationApplicationRepository extends JpaRepository<Modific
     void deleteAllByModificationGroupIdIn(List<UUID> groupUuid);
 
     void deleteAllByModificationIdIn(List<UUID> modificationIds);
+
+    @EntityGraph(attributePaths = {"modification", "modification.group"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<ModificationApplicationEntity> findWithModificationAndGroupByNetworkUuid(UUID networkUuid);
+
+    @Query("SELECT distinct ma.networkUuid from ModificationApplicationEntity ma")
+    List<UUID> findDistinctNetworkUuids();
 }

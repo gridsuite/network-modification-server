@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.utils.JsonSetConverter;
 
 import java.util.Set;
@@ -23,7 +24,12 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
-@Table(name = "modification_application")
+@Table(
+    name = "modification_application",
+    indexes = {
+        @Index(name = "idx_modification_application_networkUuid", columnList = "networkUuid")
+    }
+)
 public class ModificationApplicationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -48,4 +54,15 @@ public class ModificationApplicationEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modification_uuid", foreignKey = @ForeignKey(name = "modification_uuid_fk_constraint"))
     ModificationEntity modification;
+
+    public ModificationApplicationInfos toModificationApplicationInfos() {
+        return ModificationApplicationInfos.builder()
+            .modificationUuid(this.getModification().getId())
+            .deletedEquipmentIds(this.getDeletedEquipmentIds())
+            .createdEquipmentIds(this.getCreatedEquipmentIds())
+            .modifiedEquipmentIds(this.getModifiedEquipmentIds())
+            .networkUuid(this.getNetworkUuid())
+            .groupUuid(this.getModification().getGroup().getId())
+            .build();
+    }
 }
