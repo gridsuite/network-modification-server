@@ -176,7 +176,8 @@ public class NetworkModificationApplicator {
             reportNode = ReportNode.newRootReportNode()
                     .withAllResourceBundlesFromClasspath()
                     .withMessageTemplate("network.modification.server.nodeUuid")
-                    .withUntypedValue("nodeUuid", reporterId.toString()).build();
+                    .withUntypedValue("nodeUuid", reporterId.toString())
+                    .build();
         } else {
             reportNode = ReportNode.NO_OP;
         }

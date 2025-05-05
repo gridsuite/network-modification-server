@@ -97,6 +97,8 @@ class VoltageInitReportTest {
         Mockito.verify(reportService, Mockito.times(1)).sendReport(Mockito.eq(reportUuid), reporterCaptor.capture());
         final ReportNode result = reporterCaptor.getValue();
         log.info("Result = {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+        String test = Files.readString(Paths.get(this.getClass().getClassLoader().getResource(logsJsonFile).toURI()));
+        String test2 = objectMapper.writeValueAsString(result);
         JSONAssert.assertEquals("voltage-init plan logs aggregated",
                 Files.readString(Paths.get(this.getClass().getClassLoader().getResource(logsJsonFile).toURI())),
                 objectMapper.writeValueAsString(result), false);

@@ -168,7 +168,8 @@ public final class TestUtils {
 
     private static Optional<String> getMessageFromReporter(String reportKey, ReportNode reporterModel, int rank) {
         Optional<String> message = Optional.empty();
-
+        String messageTest = reporterModel.getMessage();
+        String messageKey = reporterModel.getMessage();
         Iterator<ReportNode> reportsIterator = reporterModel.getChildren().iterator();
         int nbTimes = 0;
         while (message.isEmpty() && reportsIterator.hasNext()) {

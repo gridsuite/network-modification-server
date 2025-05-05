@@ -305,7 +305,6 @@ class BuildTest {
 
     @Test
     void runBuildWithEmptyGroupTest(final MockWebServer server) throws Exception {
-        Network network = NetworkCreation.create(TEST_NETWORK_ID, false);
         BuildInfos buildInfos = BuildInfos.builder()
             .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
@@ -313,7 +312,9 @@ class BuildTest {
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
             .build();
         String expectedBody = mapper.writeValueAsString(ReportNode.newRootReportNode()
-                .withMessageTemplate(TEST_SUB_REPORTER_ID_1.toString(), TEST_SUB_REPORTER_ID_1.toString())
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("network.modification.server.nodeUuid")
+                .withUntypedValue("nodeUuid", TEST_SUB_REPORTER_ID_1.toString())
                 .build());
 
         // Group does not exist
