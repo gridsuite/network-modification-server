@@ -7,12 +7,11 @@
 
 package org.gridsuite.modification.server.entities.equipment.creation;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.LccConverterStationCreationInfos;
+import org.gridsuite.modification.dto.LccShuntCompensatorInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.AbstractShuntCompensatorEmbeddable;
 
 import java.util.List;
 
@@ -21,23 +20,15 @@ import java.util.List;
  */
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Embeddable
-public class ShuntCompensatorCreationEmbeddable {
-    @Column(name = "shuntCompensatorId")
-    private String id;
+public class ShuntCompensatorCreationEmbeddable extends AbstractShuntCompensatorEmbeddable {
 
-    @Column(name = "shuntCompensatorName")
-    private String name;
+    ShuntCompensatorCreationEmbeddable(String id, String name, Double maxQAtNominalV, Boolean connectedToHvdc) {
+        super(id, name, maxQAtNominalV, connectedToHvdc);
+    }
 
-    @Column
-    private Double maxQAtNominalV;
-
-    @Column
-    private Boolean connectedToHvdc;
-
-    public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccConverterStationCreationInfos.ShuntCompensatorInfos> compensatorCreationInfos) {
+    public static List<ShuntCompensatorCreationEmbeddable> toEmbeddableShuntCompensatorCreation(List<LccShuntCompensatorInfos> compensatorCreationInfos) {
         return compensatorCreationInfos == null ? null :
                 compensatorCreationInfos.stream()
                         .map(compensatorCreationInfo -> new ShuntCompensatorCreationEmbeddable(compensatorCreationInfo.getId(),
@@ -47,10 +38,11 @@ public class ShuntCompensatorCreationEmbeddable {
                         .toList();
     }
 
-    public static List<LccConverterStationCreationInfos.ShuntCompensatorInfos> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
+    public static List<LccShuntCompensatorInfos> fromEmbeddableShuntCompensatorCreation(List<ShuntCompensatorCreationEmbeddable> compensatorCreationEmbeddables) {
         return compensatorCreationEmbeddables == null ? null :
                 compensatorCreationEmbeddables.stream()
-                        .map(compensatorCreationEmbeddable -> new LccConverterStationCreationInfos.ShuntCompensatorInfos(compensatorCreationEmbeddable.getId(),
+                        .map(compensatorCreationEmbeddable ->
+                            new LccShuntCompensatorInfos(compensatorCreationEmbeddable.getId(),
                                 compensatorCreationEmbeddable.getName(),
                                 compensatorCreationEmbeddable.getMaxQAtNominalV(),
                                 compensatorCreationEmbeddable.getConnectedToHvdc()))
