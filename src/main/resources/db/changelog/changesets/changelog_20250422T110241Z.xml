@@ -1,0 +1,24 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1745319776062-25">
+        <createTable tableName="voltage_level_topology_modification">
+            <column name="equipment_id" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="voltage_level_topology_modificationPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1745319776062-26">
+        <addColumn tableName="boolean_equipment_attribute_modification">
+            <column name="voltage_level_topology_modification_id" type="uuid"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1745319776062-44">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="voltage_level_topology_modification" constraintName="voltageLevelTopologyModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1745319776062-45">
+        <addForeignKeyConstraint baseColumnNames="voltage_level_topology_modification_id" baseTableName="boolean_equipment_attribute_modification" constraintName="voltageLevelTopologyModification_booleanEquipmentAttributeModification_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_topology_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>

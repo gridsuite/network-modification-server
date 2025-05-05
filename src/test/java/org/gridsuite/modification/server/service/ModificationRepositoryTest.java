@@ -1367,4 +1367,28 @@ class ModificationRepositoryTest {
         assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
                 new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
     }
+
+    @Test
+    void testVoltageLevelTopologyModification() {
+        List<EquipmentAttributeModificationInfos> equipmentAttributeModificationInfos = new ArrayList<>(
+                Arrays.asList(
+                        EquipmentAttributeModificationInfos.builder()
+                                .equipmentId("sw1")
+                                .equipmentAttributeName("open")
+                                .equipmentAttributeValue(false)
+                                .equipmentType(IdentifiableType.SWITCH)
+                                .build()
+                )
+        );
+        var voltageLevelTopologyModificationEntity = ModificationEntity.fromDTO(VoltageLevelTopologyModificationInfos.builder()
+                .equipmentId("VL1")
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
+                .build());
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(voltageLevelTopologyModificationEntity));
+        assertRequestsCount(2, 5, 1, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
+    }
 }
