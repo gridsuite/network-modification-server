@@ -65,7 +65,7 @@ class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(50., getNetwork().getBattery("v1Battery").getMaxP(), 0.001);
         assertEquals(5., getNetwork().getBattery("v2Battery").getMinP(), 0.001);
         assertEquals(5., getNetwork().getBattery("v3Battery").getTargetP(), 0.001);
-        assertLogMessage("BATTERY_NOT_FOUND : Battery unknownBattery does not exist in network", ModificationType.BATTERY_MODIFICATION.name() + "1", reportService);
+        assertLogMessage("BATTERY_NOT_FOUND : Battery unknownBattery does not exist in network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override
