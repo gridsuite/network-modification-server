@@ -124,7 +124,8 @@ import static org.mockito.Mockito.when;
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
         ReportNode reportNode = ReportNode.newRootReportNode()
-                .withMessageTemplate("test", "test")
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("test")
                 .build();
 
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
@@ -159,7 +160,8 @@ import static org.mockito.Mockito.when;
         when(shuntCompensator.getId()).thenReturn("id");
 
         ReportNode reportNode = ReportNode.newRootReportNode()
-                .withMessageTemplate("test", "test")
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("test")
                 .build();
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);
 
@@ -187,7 +189,8 @@ import static org.mockito.Mockito.when;
         when(shuntCompensator.getModelType()).thenReturn(ShuntCompensatorModelType.LINEAR);
         when(shuntCompensator.getId()).thenReturn("id");
         ReportNode reportNode = ReportNode.newRootReportNode()
-                .withMessageTemplate("test", "test")
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("test")
                 .build();
 
         tabularModification.checkShuntCompensatorModification(network, shuntModification, reportNode);

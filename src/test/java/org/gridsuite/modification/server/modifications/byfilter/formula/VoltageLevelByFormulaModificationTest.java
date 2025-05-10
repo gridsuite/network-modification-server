@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.modifications.byfilter.AbstractModificationByAssignment.REPORT_KEY_BY_FILTER_MODIFICATION_SOME;
-import static org.gridsuite.modification.modifications.byfilter.ByFormulaModification.REPORT_KEY_EQUIPMENT_MODIFIED_ERROR;
+import static org.gridsuite.modification.modifications.byfilter.AbstractModificationByAssignment.REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_NULL;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -239,7 +239,7 @@ class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificatio
 
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getLowVoltageLimit()));
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getHighVoltageLimit()));
-        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is null", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR, reportService);
+        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is null", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_NULL, reportService);
         assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 4 equipment(s) not modified", REPORT_KEY_BY_FILTER_MODIFICATION_SOME, reportService);
     }
 

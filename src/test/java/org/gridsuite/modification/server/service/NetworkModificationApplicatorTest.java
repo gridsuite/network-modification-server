@@ -107,15 +107,16 @@ class NetworkModificationApplicatorTest {
         assertEquals(6, reports.size(), "We need exactly 6 reports to run the test");
 
         ReportNode rootReportNode = ReportNode.newRootReportNode()
-                .withMessageTemplate("rep1", "")
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("rep1")
                 .build();
 
-        ReportNode subReportNode1 = rootReportNode.newReportNode().withMessageTemplate("subrep1", "").add();
-        ReportNode subReportNode2 = rootReportNode.newReportNode().withMessageTemplate("subrep2", "").add();
-        ReportNode subReportNode3 = rootReportNode.newReportNode().withMessageTemplate("rep2", "").add();
+        ReportNode subReportNode1 = rootReportNode.newReportNode().withMessageTemplate("subrep1").add();
+        ReportNode subReportNode2 = rootReportNode.newReportNode().withMessageTemplate("subrep2").add();
+        ReportNode subReportNode3 = rootReportNode.newReportNode().withMessageTemplate("rep2").add();
 
-        ReportNode subSubReportNode1 = subReportNode3.newReportNode().withMessageTemplate("subsubrep1", "").add();
-        ReportNode subSubReportNode2 = subReportNode3.newReportNode().withMessageTemplate("subsubrep2", "").add();
+        ReportNode subSubReportNode1 = subReportNode3.newReportNode().withMessageTemplate("subsubrep1").add();
+        ReportNode subSubReportNode2 = subReportNode3.newReportNode().withMessageTemplate("subsubrep2").add();
 
         addSubReport(rootReportNode, reports.get(0));
         addSubReport(subReportNode1, reports.get(1));
@@ -129,7 +130,9 @@ class NetworkModificationApplicatorTest {
     }
 
     private static void addSubReport(ReportNode parent, ReportNode child) {
-        ReportNodeAdder adder = parent.newReportNode().withMessageTemplate(child.getMessageKey(), child.getMessageTemplate());
+        ReportNodeAdder adder = parent.newReportNode()
+                .withMessageTemplate("message")
+                .withUntypedValue("message", child.getMessageTemplate());
         TypedValue severity = child.getValue(ReportConstants.SEVERITY_KEY).orElse(null);
         if (severity != null) {
             adder.withSeverity(severity);
@@ -140,10 +143,11 @@ class NetworkModificationApplicatorTest {
     @Test
     void shouldThrowExceptionOnBadSeverity() {
         ReportNode rootReportNode = ReportNode.newRootReportNode()
-                .withMessageTemplate("rep1", "")
+                .withResourceBundles("i18n.reports")
+                .withMessageTemplate("rep1")
                 .build();
         rootReportNode.newReportNode()
-                .withMessageTemplate("badSeverity", "Bad severity message")
+                .withMessageTemplate("badSeverity")
                 .withUntypedValue("reportSeverity", "bad severity")
                 .add();
 
@@ -228,22 +232,26 @@ class NetworkModificationApplicatorTest {
     }
 
     private static ReportNode infoReport = ReportNode.newRootReportNode()
-            .withMessageTemplate("info", "Info severity message")
+            .withResourceBundles("i18n.reports")
+            .withMessageTemplate("info")
             .withSeverity(TypedValue.INFO_SEVERITY)
             .build();
 
     private static ReportNode warningReport = ReportNode.newRootReportNode()
-            .withMessageTemplate("warning", "Warning severity message")
+            .withResourceBundles("i18n.reports")
+            .withMessageTemplate("warning")
             .withSeverity(TypedValue.WARN_SEVERITY)
             .build();
 
     private static ReportNode errorReport = ReportNode.newRootReportNode()
-            .withMessageTemplate("error", "Error severity message")
+            .withResourceBundles("i18n.reports")
+            .withMessageTemplate("error")
             .withSeverity(TypedValue.ERROR_SEVERITY)
             .build();
 
     private static ReportNode notSeverityReport = ReportNode.newRootReportNode()
-            .withMessageTemplate("notSeverity", "Not a severity message")
+            .withResourceBundles("i18n.reports")
+            .withMessageTemplate("notSeverity")
             .withUntypedValue("rand", "random value")
             .build();
 }

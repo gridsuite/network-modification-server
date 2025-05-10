@@ -80,7 +80,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         assertEquals(500., getNetwork().getGenerator("idGenerator").getMaxP(), 0.001);
         assertEquals(500., getNetwork().getGenerator("v5generator").getMaxP(), 0.001);
         assertEquals(500., getNetwork().getGenerator("v6generator").getMaxP(), 0.001);
-        assertLogMessage("GENERATOR_NOT_FOUND : Generator unknownGenerator does not exist in network", ModificationType.GENERATOR_MODIFICATION.name() + "1", reportService);
+        assertLogMessage("GENERATOR_NOT_FOUND : Generator unknownGenerator does not exist in network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override
@@ -529,7 +529,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk()).andReturn();
-        assertLogMessage("Tabular modification: No generators have been modified", "tabularGENERATOR_MODIFICATIONError", reportService);
+        assertLogMessage("Tabular modification: No generators have been modified", "network.modification.tabular.modification.error", reportService);
     }
 
     @Override

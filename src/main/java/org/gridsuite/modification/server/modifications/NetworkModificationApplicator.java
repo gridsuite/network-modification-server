@@ -173,7 +173,11 @@ public class NetworkModificationApplicator {
         ReportNode reportNode;
         if (modificationGroupInfos.reportInfos().getNodeUuid() != null) {
             UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
-            reportNode = ReportNode.newRootReportNode().withMessageTemplate(reporterId.toString(), reporterId.toString()).build();
+            reportNode = ReportNode.newRootReportNode()
+                    .withAllResourceBundlesFromClasspath()
+                    .withMessageTemplate("network.modification.server.nodeUuid")
+                    .withUntypedValue("nodeUuid", reporterId.toString())
+                    .build();
         } else {
             reportNode = ReportNode.NO_OP;
         }

@@ -68,7 +68,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(0.0, getNetwork().getTwoWindingsTransformer("trf1").getR(), 0.001);
         assertEquals(1.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
-        assertLogMessage("TWO_WINDINGS_TRANSFORMER_NOT_FOUND : Two windings transformer 'unknownTwt' : it does not exist in the network", ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION.name() + "1", reportService);
+        assertLogMessage("TWO_WINDINGS_TRANSFORMER_NOT_FOUND : Two windings transformer 'unknownTwt' : it does not exist in the network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override
