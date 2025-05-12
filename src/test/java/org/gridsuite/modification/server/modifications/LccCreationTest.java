@@ -37,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LccCreationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -148,7 +149,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
         String lccCreationInfosJson = getJsonBody(lccCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lccCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", lccCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // not found voltage level
         lccCreationInfos.setEquipmentId("lccId");
@@ -161,7 +162,7 @@ class LccCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lccCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
-                lccCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing lcc
         lccCreationInfos = (LccCreationInfos) buildModification();
@@ -170,6 +171,6 @@ class LccCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lccCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),
-                lccCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 }

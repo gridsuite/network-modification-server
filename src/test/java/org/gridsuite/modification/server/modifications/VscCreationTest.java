@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class VscCreationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -217,7 +218,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", vscCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // not found voltage level
         vscCreationInfos.setEquipmentId("vscId");
@@ -228,7 +229,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // invalid min max reactive limit
         vscCreationInfos = (VscCreationInfos) buildModification();
@@ -242,7 +243,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : minimum reactive power is not set").getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         vscCreationInfos = (VscCreationInfos) buildModification();
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
@@ -255,7 +256,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is not set").getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         vscCreationInfos = (VscCreationInfos) buildModification();
         converterStationCreationInfos = buildConverterStationWithMinMaxReactiveLimits();
@@ -269,7 +270,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // invalid reactive capability curve limit
         vscCreationInfos = (VscCreationInfos) buildModification();
@@ -282,7 +283,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VSC_ERROR, "Vsc 'vsc1' : P is not set in a reactive capability curve limits point").getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing vsc
         vscCreationInfos = (VscCreationInfos) buildModification();
@@ -291,7 +292,7 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(HVDC_LINE_ALREADY_EXISTS, "hvdcLine").getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -364,6 +365,6 @@ class VscCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
                         ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG).getMessage(),
-                vscCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 }

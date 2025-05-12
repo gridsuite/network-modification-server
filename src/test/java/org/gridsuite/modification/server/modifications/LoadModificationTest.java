@@ -123,7 +123,7 @@ class LoadModificationTest extends AbstractInjectionModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Load 'v1load': load type is null", loadModificationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Load 'v1load': load type is null", "network.modification.server.errorMessage", reportService);
     }
 
     @Override

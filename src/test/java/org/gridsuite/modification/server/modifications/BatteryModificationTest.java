@@ -36,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BatteryModificationTest extends AbstractInjectionModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -279,7 +280,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
-                batteryModificationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
     }
 
@@ -324,7 +325,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
-                batteryModificationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

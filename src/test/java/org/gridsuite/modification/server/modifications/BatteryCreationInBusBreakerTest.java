@@ -112,7 +112,7 @@ class BatteryCreationInBusBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
-                batteryCreationInfos.getErrorType().name(), reportService);
+                "network.modification.server.errorMessage", reportService);
     }
 
     @Override

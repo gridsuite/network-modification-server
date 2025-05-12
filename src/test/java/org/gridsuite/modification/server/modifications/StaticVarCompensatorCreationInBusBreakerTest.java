@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -113,7 +114,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
-                staticVarCompensatorCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -128,7 +129,7 @@ class StaticVarCompensatorCreationInBusBreakerTest extends AbstractNetworkModifi
         mockMvc.perform(post(getNetworkModificationUri()).content(staticVarCompensatorInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=test not found with type STATIC_VAR_COMPENSATOR").getMessage(),
-                staticVarCompensatorCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

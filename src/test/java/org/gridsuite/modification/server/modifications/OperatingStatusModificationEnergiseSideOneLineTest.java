@@ -98,7 +98,7 @@ class OperatingStatusModificationEnergiseSideOneLineTest extends AbstractNetwork
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),
-                modificationInfos.getErrorType().name(), reportService);
+                "network.modification.server.errorMessage", reportService);
     }
 
     @Override

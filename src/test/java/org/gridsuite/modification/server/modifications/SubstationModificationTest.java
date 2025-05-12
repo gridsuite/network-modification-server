@@ -98,7 +98,7 @@ class SubstationModificationTest extends AbstractNetworkModificationTest {
         String infosJson = getJsonBody(infos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(infosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", infos.getErrorType().name(), reportService);
+        assertLogMessage("SUBSTATION_NOT_FOUND : Substation unknown does not exist in network", "network.modification.server.errorMessage", reportService);
     }
 
     @Override

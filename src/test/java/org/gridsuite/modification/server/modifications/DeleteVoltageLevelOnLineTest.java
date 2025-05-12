@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -93,7 +94,7 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
         mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage(),
-                deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -105,7 +106,7 @@ class DeleteVoltageLevelOnLineTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
-                deleteVoltageLevelOnLineInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

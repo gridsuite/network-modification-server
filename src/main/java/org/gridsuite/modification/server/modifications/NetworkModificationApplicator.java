@@ -224,7 +224,7 @@ public class NetworkModificationApplicator {
         String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
 
         subReportNode.newReportNode()
-                .withMessageTemplate(typeIfError.name(), "${errorMessage}")
+                .withMessageTemplate("network.modification.server.errorMessage")
                 .withTypedValue("typedValue", 20, "type")
                 .withUntypedValue("errorMessage", errorMessage)
                 .withSeverity(TypedValue.ERROR_SEVERITY)

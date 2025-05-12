@@ -77,7 +77,7 @@ class SubstationCreationTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(substationCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", substationCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", "network.modification.server.errorMessage", reportService);
     }
 
     @Override

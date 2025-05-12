@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Test
     void testCreateWithBadVariant() throws Exception {
@@ -56,7 +57,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         String lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", lineCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setEquipmentId("idLine4");
         lineCreationInfos.setVoltageLevelId1("notFoundVoltageLevelId1");
@@ -64,7 +65,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage(),
-                lineCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("notFoundBusbarSection1");
@@ -72,7 +73,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage(),
-                lineCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
         lineCreationInfos.setBusOrBusbarSectionId1("1.1");
@@ -80,14 +81,14 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': r is invalid", lineCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("AC Line 'idLine4': r is invalid", ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setR(100.0);
         lineCreationInfos.setX(Double.NaN);
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("AC Line 'idLine4': x is invalid", lineCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("AC Line 'idLine4': x is invalid", ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing line
         lineCreationInfos.setEquipmentId("line2");
@@ -95,7 +96,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage(),
-                lineCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test

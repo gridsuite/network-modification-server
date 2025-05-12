@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -149,7 +150,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         assertNotNull(identifiableShortCircuit1);
         assertEquals(beforeUpdateIpMin, identifiableShortCircuit1.getIpMin(), 0);
         assertEquals(beforeUpdateIpMax, identifiableShortCircuit1.getIpMax(), 0);
-        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), vli.getErrorType().name(), reportService);
+        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -214,7 +215,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithNoIcc);
         assertNotNull(voltageLevelUpdated);
         assertNull(voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class));
-        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(), vli.getErrorType().name(), reportService);
+        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(), ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test

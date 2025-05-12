@@ -32,8 +32,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 class GeneratorModificationTest extends AbstractInjectionModificationTest {
-    private static String PROPERTY_NAME = "property-name";
-    private static String PROPERTY_VALUE = "property-value";
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -329,7 +330,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .andExpect(status().isOk());
         assertEquals(EnergySource.OTHER, getNetwork().getGenerator("idGenerator").getEnergySource());
         assertLogMessage("Generator '" + "idGenerator" + "': energy source is not set",
-                generatorModificationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -399,7 +400,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
-                generatorModificationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -420,7 +421,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
-                generatorModificationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
     }
 

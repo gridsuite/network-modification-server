@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -110,7 +111,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine1IdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage(),
-                tryWithNewLine1Id.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // same test with "newLine2Id"
         LineSplitWithVoltageLevelInfos tryWithNewLine2Id = (LineSplitWithVoltageLevelInfos) buildModification();
@@ -120,7 +121,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine2IdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage(),
-                tryWithNewLine2Id.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -133,7 +134,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithBadIdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "999A").getMessage(),
-                tryWithBadId.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // try with a switch, not a busbar
         LineSplitWithVoltageLevelInfos tryWithSwitchId = (LineSplitWithVoltageLevelInfos) buildModification();
@@ -143,7 +144,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithSwitchIdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage(),
-                tryWithBadId.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

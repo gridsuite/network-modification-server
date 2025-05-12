@@ -103,7 +103,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
-                equipmentDeletionInfos.getErrorType().name(), reportService);
+                "network.modification.server.errorMessage", reportService);
     }
 
     private void deleteHvdcLineWithShuntCompensator(String shuntNameToBeRemoved, boolean selected, int side, boolean warningCase) throws Exception {

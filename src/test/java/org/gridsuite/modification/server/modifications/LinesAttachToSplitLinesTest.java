@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -103,7 +104,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
-                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
         // try to create an already existing line
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine1Id("l1");
@@ -111,7 +112,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
-                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
         // same test on 'replacingLine2Id'
         linesAttachToSplitLinesInfos = (LinesAttachToSplitLinesInfos) buildModification();
         linesAttachToSplitLinesInfos.setReplacingLine2Id("l1");
@@ -119,7 +120,7 @@ class LinesAttachToSplitLinesTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l1").getMessage(),
-                linesAttachToSplitLinesInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

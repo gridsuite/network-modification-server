@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -139,7 +140,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", generatorCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // not found voltage level
         generatorCreationInfos.setEquipmentId("idGenerator1");
@@ -149,7 +150,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // not found busbar section
         generatorCreationInfos.setVoltageLevelId("v2");
@@ -159,7 +160,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // invalid min active power
         generatorCreationInfos.setVoltageLevelId("v2");
@@ -171,7 +172,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Generator 'idGenerator1': invalid value (NaN) for minimum P",
-                generatorCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // invalid min max reactive limit
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -183,7 +184,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : minimum reactive power is not set").getMessage(),
-            generatorCreationInfos.getErrorType().name(), reportService);
+            ERROR_MESSAGE_KEY, reportService);
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
@@ -194,7 +195,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is not set").getMessage(),
-            generatorCreationInfos.getErrorType().name(), reportService);
+            ERROR_MESSAGE_KEY, reportService);
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
         generatorCreationInfos.setReactiveCapabilityCurve(false);
@@ -206,7 +207,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
-            generatorCreationInfos.getErrorType().name(), reportService);
+            ERROR_MESSAGE_KEY, reportService);
 
         // invalid reactive capability curve limit
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -217,7 +218,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : P is not set in a reactive capability curve limits point").getMessage(),
-            generatorCreationInfos.getErrorType().name(), reportService);
+            ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing generator
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -227,7 +228,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GENERATOR_ALREADY_EXISTS, "v5generator").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reportService);
+               ERROR_MESSAGE_KEY, reportService);
 
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :
         // Only the modification should be added in the database but the generator cannot be created

@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 class GroovyScriptTest extends AbstractNetworkModificationTest {
+    private static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -121,20 +122,20 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(groovyScriptInfos, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
-                groovyScriptInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         groovyScriptInfos.setScript("      ");
         // apply blank groovy script
         mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(groovyScriptInfos, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
-                groovyScriptInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=12\n");
         // apply groovy script with unknown generator
         mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(groovyScriptInfos, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
-                groovyScriptInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 }

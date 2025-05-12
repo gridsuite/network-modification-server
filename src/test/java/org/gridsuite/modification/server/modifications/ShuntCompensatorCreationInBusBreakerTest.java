@@ -44,7 +44,7 @@ class ShuntCompensatorCreationInBusBreakerTest extends AbstractNetworkModificati
         mockMvc.perform(post(getNetworkModificationUri()).content(shuntJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
-                shunt.getErrorType().name(), reportService);
+                "network.modification.server.errorMessage", reportService);
     }
 
     @Override

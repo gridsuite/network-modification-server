@@ -164,7 +164,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
             .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "notFound").getMessage(),
-                modificationInfos.getErrorType().name(), reportService);
+                "network.modification.server.errorMessage", reportService);
 
         // modification action empty
         modificationInfos.setEquipmentId("line2");

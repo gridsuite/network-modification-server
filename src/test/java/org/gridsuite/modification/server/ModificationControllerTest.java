@@ -463,7 +463,7 @@ class ModificationControllerTest {
         assertNotNull(network.getGenerator("idGenerator"));
         assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
-                groovyScriptInfos.getErrorType().name(), reportService);
+                "network.modification.server.errorMessage", reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
