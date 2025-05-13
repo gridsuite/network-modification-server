@@ -287,4 +287,15 @@ public class NetworkModificationController {
         networkModificationService.deleteIndexedModificationGroup(groupUuids, networkUuid);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping(value = "/network-modifications/indexation-infos", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Search modifications in elasticsearch by equipmentId")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of modifications found")
+    })
+    public ResponseEntity<List<ModificationsSearchResultByGroup>> searchModifications(
+            @RequestParam("networkUuid") UUID networkUuid,
+            @RequestParam(value = "userInput") String userInput) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.searchNetworkModifications(networkUuid, userInput));
+    }
 }
