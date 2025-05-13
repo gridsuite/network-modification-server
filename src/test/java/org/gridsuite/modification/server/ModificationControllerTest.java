@@ -65,8 +65,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -1859,5 +1858,31 @@ class ModificationControllerTest {
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
                 .param("uuids", switchModificationId.toString()))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    void testSearchModificationInfos() throws Exception {
+        // create and build generator without startup
+        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
+        String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
+        MvcResult mvcResult;
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        assertApplicationStatusOK(mvcResult);
+
+        GeneratorStartup generatorStartup = network.getGenerator("idGenerator1").getExtension(GeneratorStartup.class);
+        assertNull(generatorStartup);
+
+        MvcResult mvcModificationResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/indexation-infos?networkUuid={networkUuid}&userInput={userInput}",
+                        TEST_NETWORK_ID, "id")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<ModificationsSearchResultByGroup> networkModificationsResult = mapper.readValue(
+                mvcModificationResult.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(1, networkModificationsResult.size());
     }
 }
