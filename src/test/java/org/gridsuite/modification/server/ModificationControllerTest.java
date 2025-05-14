@@ -63,6 +63,7 @@ import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -463,7 +464,7 @@ class ModificationControllerTest {
         assertNotNull(network.getGenerator("idGenerator"));
         assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
-                "network.modification.server.errorMessage", reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }

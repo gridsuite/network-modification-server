@@ -18,6 +18,8 @@ public final class NetworkModificationServerReportResourceBundle implements Repo
 
     public static final String BASE_NAME = "org.gridsuite.modification.server.reports";
 
+    public static final String ERROR_MESSAGE_KEY = "network.modification.server.errorMessage";
+
     public String getBaseName() {
         return BASE_NAME;
     }

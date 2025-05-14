@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmptyImpacts;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -95,7 +96,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
-                "network.modification.server.errorMessage", reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         // switch closing when already closed
         switchStatusModificationInfos.setEquipmentId(switchId1);

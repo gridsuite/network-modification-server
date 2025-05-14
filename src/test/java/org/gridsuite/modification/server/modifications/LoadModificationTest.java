@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -123,7 +124,7 @@ class LoadModificationTest extends AbstractInjectionModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Load 'v1load': load type is null", "network.modification.server.errorMessage", reportService);
+        assertLogMessage("Load 'v1load': load type is null", ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

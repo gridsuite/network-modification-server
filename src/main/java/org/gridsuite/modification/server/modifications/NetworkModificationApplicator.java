@@ -40,6 +40,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
+
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
@@ -224,7 +226,7 @@ public class NetworkModificationApplicator {
         String errorMessage = isApplicationException ? e.getMessage() : "Technical error: " + e;
 
         subReportNode.newReportNode()
-                .withMessageTemplate("network.modification.server.errorMessage")
+                .withMessageTemplate(ERROR_MESSAGE_KEY)
                 .withTypedValue("typedValue", 20, "type")
                 .withUntypedValue("errorMessage", errorMessage)
                 .withSeverity(TypedValue.ERROR_SEVERITY)
