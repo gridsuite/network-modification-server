@@ -49,7 +49,6 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
-        <network-modification.version>0.15.0-SNAPSHOT</network-modification.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
     </properties>
@@ -115,11 +114,6 @@
 
     <dependencies>
         <!-- Compilation dependencies -->
-        <dependency>
-            <groupId>org.gridsuite</groupId>
-            <artifactId>gridsuite-network-modification</artifactId>
-            <version>${network-modification.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-api</artifactId>
