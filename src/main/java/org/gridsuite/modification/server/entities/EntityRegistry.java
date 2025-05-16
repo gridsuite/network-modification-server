@@ -65,6 +65,8 @@ public final class EntityRegistry {
         register(ByFormulaModificationInfos.class, ByFormulaModificationEntity.class);
         register(ModificationByAssignmentInfos.class, ModificationByAssignmentEntity.class);
         register(EquipmentAttributeModificationInfos.class, EquipmentAttributeModificationEntity.class);
+        register(LccModificationInfos.class, LccModificationEntity.class);
+        register(LccConverterStationModificationInfos.class, LccConverterStationModificationEntity.class);
         register(VoltageLevelTopologyModificationInfos.class, VoltageLevelTopologyModificationEntity.class);
 
         // // attatching and splitting
