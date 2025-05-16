@@ -115,6 +115,10 @@
     <dependencies>
         <!-- Compilation dependencies -->
         <dependency>
+            <groupId>org.gridsuite</groupId>
+            <artifactId>gridsuite-network-modification</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-api</artifactId>
         </dependency>
