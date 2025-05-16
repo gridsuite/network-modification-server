@@ -63,6 +63,7 @@ import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -463,7 +464,7 @@ class ModificationControllerTest {
         assertNotNull(network.getGenerator("idGenerator"));
         assertEquals(20, network.getGenerator("idGenerator").getTargetP(), 0.1);
         assertLogMessage("Technical error: java.lang.NullPointerException: Cannot set property 'targetP' on null object",
-                groovyScriptInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         assertEquals(2, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
     }
@@ -1330,7 +1331,10 @@ class ModificationControllerTest {
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
-        expectedImpacts = createMultipleDeletionImpacts(
+        expectedImpacts = new ArrayList<>();
+        // Two winding transformer trf2 (in s1) is regulating on v3load (in s2), resetting regulation on delete of v3load adds a modification impact on the substation s1
+        expectedImpacts.add(createModificationImpactType(IdentifiableType.SUBSTATION, "s1", Set.of("s1")));
+        expectedImpacts.addAll(createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.SUBSTATION, "s2"), Pair.of(IdentifiableType.VOLTAGE_LEVEL, "v3"),
                 Pair.of(IdentifiableType.BUSBAR_SECTION, "3A"), Pair.of(IdentifiableType.LOAD, "v3load"),
@@ -1339,7 +1343,7 @@ class ModificationControllerTest {
                 Pair.of(IdentifiableType.SWITCH, "v3bl3"), Pair.of(IdentifiableType.SWITCH, "v3dl3")
             ),
             Set.of("s2")
-        );
+        ));
         expectedImpacts.addAll(createMultipleDeletionImpacts(
             List.of(
                 Pair.of(IdentifiableType.SWITCH, "v1bl3"), Pair.of(IdentifiableType.SWITCH, "v1dl3"),
@@ -1382,7 +1386,7 @@ class ModificationControllerTest {
         TestImpactUtils.testBranchDeletionImpacts(mapper, resultAsString, branchType, branchId, breakerId1, disconnectorId1, substationId1, breakerId2, disconnectorId2, substationId2);
 
         // line and switches have been removed from network
-        assertNull(network.getLine(branchId));
+        assertNull(network.getBranch(branchId));
         assertNull(network.getSwitch(breakerId1));
         assertNull(network.getSwitch(disconnectorId1));
         assertNull(network.getSwitch(breakerId2));
@@ -1427,7 +1431,7 @@ class ModificationControllerTest {
 
     private void testMultipleDeletionImpacts(String networkModificationResultAsString, List<AbstractBaseImpact> expectedImpacts) throws Exception {
         for (AbstractBaseImpact impact : expectedImpacts) {
-            if (impact instanceof SimpleElementImpact simpleImpact) {
+            if (impact instanceof SimpleElementImpact simpleImpact && simpleImpact.isDeletion()) {
                 // Equipment has been removed from network
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 

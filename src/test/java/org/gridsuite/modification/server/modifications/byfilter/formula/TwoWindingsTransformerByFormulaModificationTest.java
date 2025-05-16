@@ -359,7 +359,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         assertNotNull(ratioTapChanger1);
         assertEquals(100, ratioTapChanger1.getTargetV(), 0);
         assertEquals(1, ratioTapChanger1.getLowTapPosition());
-        assertEquals(4, ratioTapChanger1.getTapPosition());
+        assertEquals(5, ratioTapChanger1.getTapPosition());
         assertEquals(11, ratioTapChanger1.getTargetDeadband(), 0);
         assertEquals(60, twt1.getX(), 0);
         assertEquals(150, twt1.getB(), 0);
@@ -385,7 +385,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
         assertNotNull(ratioTapChanger3);
         assertEquals(1, ratioTapChanger3.getLowTapPosition());
-        assertEquals(4, ratioTapChanger3.getTapPosition());
+        assertEquals(5, ratioTapChanger3.getTapPosition());
         assertEquals(80, twt3.getR(), 0);
         assertEquals(85, twt3.getG(), 0);
         assertEquals(35, twt3.getRatedU1(), 0);
@@ -397,7 +397,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         assertNotNull(phaseTapChanger4);
         assertEquals(90, phaseTapChanger4.getRegulationValue(), 0);
         assertEquals(2, phaseTapChanger4.getLowTapPosition());
-        assertEquals(4, phaseTapChanger4.getTapPosition());
+        assertEquals(5, phaseTapChanger4.getTapPosition());
         assertEquals(24, phaseTapChanger4.getTargetDeadband(), 0);
         assertEquals(90, twt4.getR(), 0);
         assertEquals(75, twt4.getX(), 0);
@@ -411,7 +411,7 @@ class TwoWindingsTransformerByFormulaModificationTest extends AbstractByFormulaM
         PhaseTapChanger phaseTapChanger5 = twt5.getPhaseTapChanger();
         assertNotNull(phaseTapChanger4);
         assertEquals(4, phaseTapChanger5.getLowTapPosition());
-        assertEquals(4, phaseTapChanger5.getTapPosition());
+        assertEquals(6, phaseTapChanger5.getTapPosition());
         assertEquals(100, twt5.getR(), 0);
         assertEquals(200, twt5.getB(), 0);
         assertEquals(20, twt5.getRatedU2(), 0);

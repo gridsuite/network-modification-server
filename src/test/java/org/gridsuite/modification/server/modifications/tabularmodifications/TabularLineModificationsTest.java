@@ -69,7 +69,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(20., getNetwork().getLine("line2").getX(), 0.001);
         assertEquals(30., getNetwork().getLine("line3").getG1(), 0.001);
         assertEquals(40., getNetwork().getLine("line3").getB1(), 0.001);
-        assertLogMessage("LINE_NOT_FOUND : Line 'unknownLine' : does not exist in network", ModificationType.LINE_MODIFICATION.name() + "1", reportService);
+        assertLogMessage("LINE_NOT_FOUND : Line 'unknownLine' : does not exist in network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override

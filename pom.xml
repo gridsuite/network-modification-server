@@ -44,14 +44,11 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>38.0.0</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>39.0.0</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
-        <network-modification.version>0.14.0</network-modification.version>
-        <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
-        <powsybl-network-store.version>1.24.0</powsybl-network-store.version>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
     </properties>
@@ -97,25 +94,6 @@
                 <scope>import</scope>
             </dependency>
 
-            <dependency>
-              <groupId>com.powsybl</groupId>
-              <artifactId>powsybl-network-store-client</artifactId>
-                <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-              <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-              <groupId>com.powsybl</groupId>
-              <artifactId>powsybl-network-store-iidm-impl</artifactId>
-              <version>${powsybl-network-store.version}</version>
-            </dependency>
-            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-network-store-model</artifactId>
-                <version>${powsybl-network-store.version}</version>
-            </dependency>
-
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
@@ -139,7 +117,6 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
-            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

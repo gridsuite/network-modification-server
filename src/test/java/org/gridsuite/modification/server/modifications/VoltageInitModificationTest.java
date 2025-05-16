@@ -292,39 +292,39 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     @Test
     void testVoltageInitConnectedSectionCountNull() throws Exception {
         testVoltageInitShunt("v2shunt", 0, null, false);
-        assertLogMessage("Section count value is undefined", "shuntCompensatorSectionCountUndefined", reportService);
+        assertLogMessage("Section count value is undefined", "network.modification.shuntCompensatorSectionCountUndefined", reportService);
     }
 
     @Test
     void testVoltageInitConnectedCurrentSection0Section0() throws Exception {
         testVoltageInitShunt("v2shunt", 0, 0, false);
-        assertLogMessage("Shunt compensator disconnected", "shuntCompensatorDisconnected", reportService);
+        assertLogMessage("Shunt compensator disconnected", "network.modification.shuntCompensatorDisconnected", reportService);
     }
 
     @Test
     void testVoltageInitDisconnectedConnectNull() throws Exception {
         testVoltageInitShunt("v5shunt", 0, 0, null);
-        assertLogMessage("Connect value is undefined", "shuntCompensatorConnectUndefined", reportService);
+        assertLogMessage("Connect value is undefined", "network.modification.shuntCompensatorConnectUndefined", reportService);
     }
 
     @Test
     void testVoltageInitDisconnectedCurrentSection0Section2() throws Exception {
         testVoltageInitShunt("v5shunt", 0, 2, true);
-        assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
-        assertLogMessage("Section count : 0 → 2", "modification-indent1", reportService);
+        assertLogMessage("Shunt compensator reconnected", "network.modification.shuntCompensatorReconnected", reportService);
+        assertLogMessage("Section count : 0 → 2", "network.modification.fieldModification", reportService);
         assertEquals(2, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
     }
 
     @Test
     void testVoltageInitDisconnectedCurrentSection1Section1() throws Exception {
         testVoltageInitShunt("v5shunt", 1, 1, true);
-        assertLogMessage("Shunt compensator reconnected", "shuntCompensatorReconnected", reportService);
+        assertLogMessage("Shunt compensator reconnected", "network.modification.shuntCompensatorReconnected", reportService);
         assertEquals(1, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
     }
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertLogMessage("Shunt compensator with id=shuntNotFound not found", "shuntCompensatorNotFound", reportService);
+        assertLogMessage("Shunt compensator with id=shuntNotFound not found", "network.modification.shuntCompensatorNotFound", reportService);
         assertEquals(10., getNetwork().getGenerator("idGenerator").getTargetQ(), 0.001);
         assertEquals(226., getNetwork().getGenerator("newGen").getTargetV(), 0.001);
         assertEquals(2, getNetwork().getTwoWindingsTransformer("trf1").getRatioTapChanger().getTapPosition());

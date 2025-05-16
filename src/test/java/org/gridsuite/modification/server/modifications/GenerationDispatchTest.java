@@ -32,8 +32,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogNthMessage;
+import static org.gridsuite.modification.server.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,26 +83,26 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
     }
 
     private void assertLogReportsForDefaultNetwork(double batteryBalanceOnSc2) {
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The battery balance is : 0.0 MW", "TotalActiveBatteryTargetP" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 138.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 528.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The battery balance is : 0.0 MW", "network.modification.TotalActiveBatteryTargetP", reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 138.0 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
         // on SC 2, we have to substract the battery balance
         final double defaultTotalAmount = 330.0;
         DecimalFormat df = new DecimalFormat("#0.0", new DecimalFormatSymbols(Locale.US));
         final String totalAmount = df.format(defaultTotalAmount - batteryBalanceOnSc2);
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The battery balance is : " + df.format(batteryBalanceOnSc2) + " MW", "TotalActiveBatteryTargetP" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : " + totalAmount + " MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in SOUTH region: " + totalAmount + " MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: " + totalAmount + " MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerSOUTH" + secondSynchronousComponentNum, reportService);
+        // GH1 is in second synchronous component
+        assertLogMessageWithoutRank("The total demand is : 240.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The battery balance is : " + df.format(batteryBalanceOnSc2) + " MW", "network.modification.TotalActiveBatteryTargetP", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : " + totalAmount + " MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("Marginal cost: 150.0", "network.modification.MaxUsedMarginalCost", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
+        assertLogMessageWithoutRank("Sum of generator active power setpoints in SOUTH region: " + totalAmount + " MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: " + totalAmount + " MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
     }
 
     @Test
@@ -172,14 +171,13 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        int synchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum();
-        assertLogMessage("The total demand is : 768.0 MW", "TotalDemand" + synchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + synchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + synchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 858.0 MW", "TotalAmountSupplyToBeDispatched" + synchronousComponentNum, reportService);
-        assertLogMessage("Marginal cost: 28.0", "MaxUsedMarginalCost" + synchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + synchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in SOUTH region: 858.0 MW (NUCLEAR: 150.0 MW, THERMAL: 200.0 MW, HYDRO: 108.0 MW, WIND AND SOLAR: 150.0 MW, OTHER: 250.0 MW).", "SumGeneratorActivePowerSOUTH" + synchronousComponentNum, reportService);
+        assertLogMessageWithoutRank("The total demand is : 768.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : 858.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("Marginal cost: 28.0", "network.modification.MaxUsedMarginalCost", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
+        assertLogMessageWithoutRank("Sum of generator active power setpoints in SOUTH region: 858.0 MW (NUCLEAR: 150.0 MW, THERMAL: 200.0 MW, HYDRO: 108.0 MW, WIND AND SOLAR: 150.0 MW, OTHER: 250.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
     }
 
     @Test
@@ -208,19 +206,19 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 836.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 746.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 446.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 836.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 746.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 446.0 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
 
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 380.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 470.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 70.0 MW", "SupplyDemandBalanceCouldNotBeMet" + secondSynchronousComponentNum, reportService);
+        // GH1 is in second synchronous component
+        assertLogMessageWithoutRank("The total demand is : 380.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : 470.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could not be met : the remaining power imbalance is 70.0 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
     }
 
     @Test
@@ -248,12 +246,12 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         // test total demand and remaining power imbalance on unique synchronous component
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in the unique synchronous component
-        assertLogMessage("The total demand is : 768.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 0.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 768.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 68.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        // GTH1 is in the unique synchronous component
+        assertLogMessage("The total demand is : 768.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 0.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 768.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 68.0 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
     }
 
     @Test
@@ -295,21 +293,21 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 169.0 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 528.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 169.0 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
 
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in WEST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerWEST" + secondSynchronousComponentNum, reportService);
+        // GH1 is in second synchronous component
+        assertLogMessageWithoutRank("The total demand is : 240.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : 330.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("Marginal cost: 150.0", "network.modification.MaxUsedMarginalCost", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
+        assertLogMessageWithoutRank("Sum of generator active power setpoints in WEST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
@@ -360,27 +358,27 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(5., getNetwork().getGenerator(NEW_GROUP1_ID).getTargetP(), 0.001);  // not modified : not in main connected component
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
-        assertLogMessage("Generators without outage simulation: Cannot find 2 generators in filter filter3", "filterGeneratorsNotFoundgeneratorsWithoutOutage", reportService);
-        assertLogMessage("Generators without outage simulation: Cannot find generator notFoundGen1 in filter filter3", "generatorNotFoundnotFoundGen1generatorsWithoutOutage", reportService);
-        assertLogMessage("Generators without outage simulation: Cannot find generator notFoundGen2 in filter filter3", "generatorNotFoundnotFoundGen2generatorsWithoutOutage", reportService);
-        assertLogMessage("Generators with fixed active power: Cannot find 1 generators in filter filter1", "filterGeneratorsNotFoundgeneratorsWithFixedSupply", reportService);
-        assertLogMessage("Generators with fixed active power: Cannot find generator notFoundGen1 in filter filter1", "generatorNotFoundnotFoundGen1generatorsWithFixedSupply", reportService);
+        assertLogMessage("Generators without outage simulation: Cannot find 2 generators in filter filter3", "network.modification.filterGeneratorsNotFound.generatorsWithoutOutage", reportService);
+        assertLogMessage("Generators without outage simulation: Cannot find generator notFoundGen1 in filter filter3", "network.modification.generatorNotFound.generatorsWithoutOutage", reportService);
+        assertLogMessageWithoutRank("Generators without outage simulation: Cannot find generator notFoundGen2 in filter filter3", "network.modification.generatorNotFound.generatorsWithoutOutage", reportService);
+        assertLogMessage("Generators with fixed active power: Cannot find 1 generators in filter filter1", "network.modification.filterGeneratorsNotFound.generatorsWithFixedSupply", reportService);
+        assertLogMessage("Generators with fixed active power: Cannot find generator notFoundGen1 in filter filter1", "network.modification.generatorNotFound.generatorsWithFixedSupply", reportService);
 
         // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 60.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 90.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply exceeds the total demand", "TotalAmountFixedSupplyExceedsTotalDemand" + firstSynchronousComponentNum, reportService);
+        // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 60.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 90.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The total amount of fixed supply exceeds the total demand", "network.modification.TotalAmountFixedSupplyExceedsTotalDemand", reportService);
 
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in EAST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerEAST" + secondSynchronousComponentNum, reportService);
+        // GH1 is in second synchronous component
+        assertLogMessageWithoutRank("The total demand is : 240.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : 330.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("Marginal cost: 150.0", "network.modification.MaxUsedMarginalCost", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
+        assertLogMessageWithoutRank("Sum of generator active power setpoints in EAST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(filtersForPmaxReduction.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFixedSupply, PATH, handleQueryParams(filtersForFixedSupply.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
@@ -458,21 +456,21 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(7., getNetwork().getGenerator(NEW_GROUP2_ID).getTargetP(), 0.001);  // not modified : not in main connected component
 
         // test total demand and remaining power imbalance on synchronous components
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 177.9 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
+        // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 528.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 177.9 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
 
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in WEST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerWEST" + secondSynchronousComponentNum, reportService);
+        // GH1 is in second synchronous component
+        assertLogMessageWithoutRank("The total demand is : 240.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : 330.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("Marginal cost: 150.0", "network.modification.MaxUsedMarginalCost", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
+        assertLogMessageWithoutRank("Sum of generator active power setpoints in WEST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getGeneratorsWithoutOutageFilters123().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilters45().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
@@ -608,27 +606,27 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertEquals(NetworkModificationResult.ApplicationStatus.WITH_WARNINGS, extractApplicationStatus(networkModificationsResult).getFirst());
 
         // check logs
-        int firstSynchronousComponentNum = getNetwork().getGenerator(GTH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GTH1 is in first synchronous component
-        assertLogMessage("The total demand is : 528.0 MW", "TotalDemand" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : 90.0 MW", "TotalOutwardHvdcFlow" + firstSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "TotalAmountSupplyToBeDispatched" + firstSynchronousComponentNum, reportService);
-        assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.4 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 1);
-        assertLogNthMessage("The active power set point of generator GTH1 has been set to 80.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 2);
-        assertLogNthMessage("The active power set point of generator GTH2 has been set to 146.0 MW", "GeneratorSetTargetP" + firstSynchronousComponentNum, reportService, 3);
-        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.6 MW", "SupplyDemandBalanceCouldNotBeMet" + firstSynchronousComponentNum, reportService);
-        int secondSynchronousComponentNum = getNetwork().getGenerator(GH1_ID).getTerminal().getBusView().getBus().getSynchronousComponent().getNum(); // GH1 is in second synchronous component
-        assertLogMessage("The total demand is : 240.0 MW", "TotalDemand" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "TotalAmountFixedSupply" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The HVDC balance is : -90.0 MW", "TotalOutwardHvdcFlow" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The total amount of supply to be dispatched is : 330.0 MW", "TotalAmountSupplyToBeDispatched" + secondSynchronousComponentNum, reportService);
-        assertLogNthMessage("The active power set point of generator GH1 has been set to 80.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 1);
-        assertLogNthMessage("The active power set point of generator GH2 has been set to 60.0 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 2);
-        assertLogNthMessage("The active power set point of generator GH3 has been set to 126.1 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 3);
-        assertLogNthMessage("The active power set point of generator ABC has been set to 63.9 MW", "GeneratorSetTargetP" + secondSynchronousComponentNum, reportService, 4);
-        assertLogMessage("Marginal cost: 150.0", "MaxUsedMarginalCost" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("The supply-demand balance could be met", "SupplyDemandBalanceCouldBeMet" + secondSynchronousComponentNum, reportService);
-        assertLogMessage("Sum of generator active power setpoints in NORTH region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "SumGeneratorActivePowerNORTH" + secondSynchronousComponentNum, reportService);
+        // GTH1 is in first synchronous component
+        assertLogMessage("The total demand is : 528.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessage("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessage("The HVDC balance is : 90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessage("The total amount of supply to be dispatched is : 438.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogNthMessage("The active power set point of generator TEST1 has been set to 40.4 MW", "network.modification.GeneratorSetTargetP", reportService, 1);
+        assertLogNthMessage("The active power set point of generator GTH1 has been set to 80.0 MW", "network.modification.GeneratorSetTargetP", reportService, 2);
+        assertLogNthMessage("The active power set point of generator GTH2 has been set to 146.0 MW", "network.modification.GeneratorSetTargetP", reportService, 3);
+        assertLogMessage("The supply-demand balance could not be met : the remaining power imbalance is 171.6 MW", "network.modification.SupplyDemandBalanceCouldNotBeMet", reportService);
+        // GH1 is in second synchronous component
+        assertLogMessageWithoutRank("The total demand is : 240.0 MW", "network.modification.TotalDemand", reportService);
+        assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
+        assertLogMessageWithoutRank("The HVDC balance is : -90.0 MW", "network.modification.TotalOutwardHvdcFlow", reportService);
+        assertLogMessageWithoutRank("The total amount of supply to be dispatched is : 330.0 MW", "network.modification.TotalAmountSupplyToBeDispatched", reportService);
+        assertLogMessageWithoutRank("The active power set point of generator GH1 has been set to 80.0 MW", "network.modification.GeneratorSetTargetP", reportService);
+        assertLogMessageWithoutRank("The active power set point of generator GH2 has been set to 60.0 MW", "network.modification.GeneratorSetTargetP", reportService);
+        assertLogMessageWithoutRank("The active power set point of generator GH3 has been set to 126.1 MW", "network.modification.GeneratorSetTargetP", reportService);
+        assertLogMessageWithoutRank("The active power set point of generator ABC has been set to 63.9 MW", "network.modification.GeneratorSetTargetP", reportService);
+        assertLogMessageWithoutRank("Marginal cost: 150.0", "network.modification.MaxUsedMarginalCost", reportService);
+        assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
+        assertLogMessageWithoutRank("Sum of generator active power setpoints in NORTH region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
 
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getGeneratorsWithoutOutageFilters123().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilters45().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);

@@ -338,7 +338,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         assertNotNull(ratioTapChanger1);
         assertEquals(2, ratioTapChanger1.getTargetV(), 0);
         assertEquals(4, ratioTapChanger1.getLowTapPosition());
-        assertEquals(4, ratioTapChanger1.getTapPosition());
+        assertEquals(8, ratioTapChanger1.getTapPosition());
         assertEquals(5, ratioTapChanger1.getTargetDeadband(), 0);
         assertEquals(20, twt1.getX(), 0);
         assertEquals(2.5, twt1.getB(), 0);
@@ -364,7 +364,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         RatioTapChanger ratioTapChanger3 = twt3.getRatioTapChanger();
         assertNotNull(ratioTapChanger3);
         assertEquals(4, ratioTapChanger3.getLowTapPosition());
-        assertEquals(4, ratioTapChanger3.getTapPosition());
+        assertEquals(8, ratioTapChanger3.getTapPosition());
         assertEquals(2, twt3.getR(), 0);
         assertEquals(25, twt3.getG(), 0);
         assertEquals(15, twt3.getRatedU1(), 0);
@@ -376,7 +376,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         assertNotNull(phaseTapChanger4);
         assertEquals(2, phaseTapChanger4.getRegulationValue(), 0);
         assertEquals(2, phaseTapChanger4.getLowTapPosition());
-        assertEquals(2, phaseTapChanger4.getTapPosition());
+        assertEquals(3, phaseTapChanger4.getTapPosition());
         assertEquals(10, phaseTapChanger4.getTargetDeadband(), 0);
         assertEquals(2, twt4.getR(), 0);
         assertEquals(20, twt4.getX(), 0);

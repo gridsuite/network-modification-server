@@ -151,8 +151,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getGenerator("id3"));
         assertNotNull(getNetwork().getGenerator("id4"));
         assertNotNull(getNetwork().getGenerator("id5"));
-        assertLogMessage("Tabular creation: 5 generators have been created and 1 have not been created", "tabularGENERATOR_CREATIONWarning", reportService);
-        assertLogMessage("GENERATOR_ALREADY_EXISTS : v5generator", ModificationType.GENERATOR_CREATION.name() + "1", reportService);
+        assertLogMessage("Tabular creation: 5 generators have been created and 1 have not been created", "network.modification.tabular.creation.warning", reportService);
+        assertLogMessage("GENERATOR_ALREADY_EXISTS : v5generator", "network.modification.tabular.creation.exception", reportService);
     }
 
     @Override
@@ -249,7 +249,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk()).andReturn();
-        assertLogMessage("Tabular creation: 2 generators have been created", "tabularGENERATOR_CREATION", reportService);
+        assertLogMessage("Tabular creation: 2 generators have been created", "network.modification.tabular.creation", reportService);
     }
 
     @Test
@@ -298,7 +298,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk()).andReturn();
-        assertLogMessage("Tabular creation: No generators have been created", "tabularGENERATOR_CREATIONError", reportService);
+        assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
     }
 
     @Override
