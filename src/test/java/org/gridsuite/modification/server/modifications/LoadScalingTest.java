@@ -225,7 +225,7 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(loadScalingInfo.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
-                "invalidFilters", reportService);
+                "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(stubWithWrongId, PATH, handleQueryParams(FILTER_WRONG_ID_1), false);
     }
 

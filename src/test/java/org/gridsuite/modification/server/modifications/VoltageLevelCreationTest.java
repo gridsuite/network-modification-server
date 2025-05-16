@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -102,7 +103,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage(),
-                vli.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.getCouplingDevices().get(0).setBusbarSectionId1("1.1");
@@ -112,7 +113,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
-                vli.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
         vli.setIpMin(0.0);
@@ -121,7 +122,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(),
-                vli.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
 
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
 
@@ -129,7 +130,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         String vliJsonS2Object = getJsonBody(vli, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonS2Object).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", vli.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing VL
         vli = (VoltageLevelCreationInfos) buildModification();
@@ -138,7 +139,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
-                vli.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -198,7 +199,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         // VL could not have been created
         assertNull(getNetwork().getVoltageLevel("vl_ko"));
-        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), vli.getErrorType().name(), reportService);
+        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test

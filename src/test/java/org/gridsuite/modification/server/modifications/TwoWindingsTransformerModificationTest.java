@@ -34,6 +34,7 @@ import java.util.*;
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR;
 import static org.gridsuite.modification.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 import static org.gridsuite.modification.modifications.TwoWindingsTransformerModification.processPhaseTapRegulation;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -316,7 +317,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer '2wt_not_existing' : it does not exist in the network").getMessage(),
-                twoWindingsTransformerModificationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -748,7 +749,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .content(modificationToModifyJson1).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value is missing, phase tap changer can not regulate").getMessage(),
-            phaseTapChangerCreation.getErrorType().name(), reportService);
+            ERROR_MESSAGE_KEY, reportService);
 
         // modification 2 : FIXED_TAP -> FIXED_TAP
         phaseTapChangerCreation.getPhaseTapChanger().setRegulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET));
@@ -848,7 +849,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             // change not applied
             assertThat(terminal.isConnected()).isNotEqualTo(expectedState);
             assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-            assertLogMessage("BRANCH_MODIFICATION_ERROR : " + errorMessage, "MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR", reportService);
+            assertLogMessage("BRANCH_MODIFICATION_ERROR : " + errorMessage, ERROR_MESSAGE_KEY, reportService);
         } else {
             // connection state has changed as expected
             assertThat(terminal.isConnected()).isEqualTo(expectedState);
