@@ -86,7 +86,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                 .andExpect(status().isOk());
 
         assertLogMessage("Cannot find the following equipments " + EQUIPMENT_WRONG_ID_1 + " in filter filter1",
-            "filterEquipmentsNotFound_filter1", reportService);
+            "network.modification.filterEquipmentsNotFound.inFilter", reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 
@@ -129,7 +129,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(byFilterDeletionInfos.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
-            "invalidFilters", reportService);
+            "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
 

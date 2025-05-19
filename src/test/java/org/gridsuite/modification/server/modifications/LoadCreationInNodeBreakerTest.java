@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
 import static org.gridsuite.modification.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,8 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
-    private static String PROPERTY_NAME = "property-name";
-    private static String PROPERTY_VALUE = "property-value";
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Test
     void testCreateWithErrors() throws Exception {
@@ -46,7 +47,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         String loadCreationInfosJson1 = getJsonBody(loadCreationInfos1, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson1).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Technical error: java.lang.NullPointerException", loadCreationInfos1.getErrorType().name(), reportService);
+        assertLogMessage("Technical error: java.lang.NullPointerException", ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 1);
 
         // Equipment Id invalid
@@ -56,7 +57,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Invalid id ''", loadCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Invalid id ''", ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 2);
 
         // VoltageLevel not found
@@ -65,7 +66,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
-                loadCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 3);
 
         loadCreationInfos.setEquipmentId("idLoad1");
@@ -75,7 +76,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
-                loadCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 4);
 
         loadCreationInfos.setBusOrBusbarSectionId("1B");
@@ -83,7 +84,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         loadCreationInfosJson = getJsonBody(loadCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("Load 'idLoad1': p0 is invalid", loadCreationInfos.getErrorType().name(), reportService);
+        assertLogMessage("Load 'idLoad1': p0 is invalid", ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 5);
 
         loadCreationInfosJson = getJsonBody(loadCreationInfos, "variant_not_existing");
