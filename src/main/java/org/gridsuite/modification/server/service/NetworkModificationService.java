@@ -409,7 +409,7 @@ public class NetworkModificationService {
                 .toList();
     }
 
-    public List<ModificationsSearchResultByGroup> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
+    public Map<UUID, ModificationsSearchResult> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
 
         Map<UUID, List<UUID>> modificationsByGroupUuid = modifications.stream()
@@ -418,18 +418,16 @@ public class NetworkModificationService {
                         Collectors.mapping(ModificationApplicationInfos::getModificationUuid, Collectors.toList())
                 ));
 
-        return modificationsByGroupUuid.entrySet().stream()
-                .map(entry -> {
-                    UUID groupUuids = entry.getKey();
-                    List<ModificationsSearchResult> modificationInfosList = entry.getValue().stream()
-                            .map(this::getModification)
-                            .filter(Objects::nonNull)
-                            .map(this::mapToModificationsSearchResult)
-                            .toList();
+        Map<UUID, ModificationsSearchResult> modificationsSearchResultByGroupUuid = new HashMap<>();
+        modificationsByGroupUuid.forEach((groupUuid, modificationUuids) -> modificationUuids.stream()
+                .map(this::getModification)
+                .filter(Objects::nonNull)
+                .map(this::mapToModificationsSearchResult)
+                .forEach(modificationResult ->
+                        modificationsSearchResultByGroupUuid.put(groupUuid, modificationResult)
+            ));
 
-                    return new ModificationsSearchResultByGroup(groupUuids, modificationInfosList);
-                })
-                .toList();
+        return modificationsSearchResultByGroupUuid;
     }
 
     private BoolQuery buildSearchModificationsQuery(

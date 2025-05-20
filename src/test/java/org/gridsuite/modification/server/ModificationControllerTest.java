@@ -1883,7 +1883,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        List<ModificationsSearchResultByGroup> networkModificationsResult = mapper.readValue(
+        Map<UUID, ModificationsSearchResult> networkModificationsResult = mapper.readValue(
                 mvcModificationResult.getResponse().getContentAsString(),
                 new TypeReference<>() {
                 });
