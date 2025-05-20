@@ -369,30 +369,16 @@ public class NetworkModificationService {
     }
 
     public static String escapeLucene(String s) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(s.length() + 16);
 
         for (int i = 0; i < s.length(); ++i) {
             char c = s.charAt(i);
-            switch (c) {
-                case '+', '\\', '-', '!', '(', ')', ':', '^', '[', ']', '"', '{', '}', '~', '*', '?', '|', '&', '/',
-                     ' ': // white space has to be escaped, too
-                    sb.append('\\');
-                    break;
-                default:
-                    // do nothing but appease sonarlint
+            if ("+\\-!()^[]\"{}~*?|&/ ".indexOf(c) != -1) {
+                sb.append('\\');
             }
             sb.append(c);
         }
         return sb.toString();
-    }
-
-    private ModificationsSearchResult mapToModificationsSearchResult(ModificationEntity modificationEntity) {
-        return ModificationsSearchResult.builder()
-                .modificationUuid(modificationEntity.getId())
-                .type(modificationEntity.getType())
-                .messageType(modificationEntity.getMessageType())
-                .messageValues(modificationEntity.getMessageValues())
-                .build();
     }
 
     public List<ModificationApplicationInfos> searchNetworkModificationsResult(@NonNull UUID networkUuid, @NonNull String userInput) {
@@ -424,7 +410,7 @@ public class NetworkModificationService {
                     List<ModificationsSearchResult> modificationInfosList = entry.getValue().stream()
                             .map(this::getModification)
                             .filter(Objects::nonNull)
-                            .map(this::mapToModificationsSearchResult)
+                            .map(ModificationsSearchResult::fromModificationEntity)
                             .toList();
 
                     return new ModificationsSearchResultByGroup(groupUuids, modificationInfosList);

@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.UUID;
 
@@ -37,4 +38,13 @@ public class ModificationsSearchResult {
             description = "Message values"
     )
     private String messageValues;
+
+    public static ModificationsSearchResult fromModificationEntity(ModificationEntity modificationEntity) {
+        return ModificationsSearchResult.builder()
+                .modificationUuid(modificationEntity.getId())
+                .type(modificationEntity.getType())
+                .messageType(modificationEntity.getMessageType())
+                .messageValues(modificationEntity.getMessageValues())
+                .build();
+    }
 }
