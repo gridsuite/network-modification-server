@@ -27,6 +27,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -68,10 +69,11 @@ public class NetworkModificationService {
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
+    private final ModificationRepository modificationRepository;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       EquipmentInfosService equipmentInfosService, NotificationService notificationService,
-                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper, ModificationApplicationInfosService applicationInfosService, ElasticsearchOperations elasticsearchOperations) {
+                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper, ModificationApplicationInfosService applicationInfosService, ElasticsearchOperations elasticsearchOperations, ModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -80,6 +82,7 @@ public class NetworkModificationService {
         this.objectMapper = objectMapper;
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
+        this.modificationRepository = modificationRepository;
     }
 
     public List<UUID> getModificationGroups() {
@@ -92,9 +95,8 @@ public class NetworkModificationService {
         return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedModifications);
     }
 
-    @Transactional(readOnly = true)
-    public ModificationEntity getModification(UUID modificationUuid) {
-        return networkModificationRepository.getModificationEntity(modificationUuid);
+    public List<ModificationEntity> getModificationsByUuids(List<UUID> modificationUuids) {
+        return modificationRepository.findAllByIdIn(modificationUuids);
     }
 
     @Transactional(readOnly = true)
@@ -406,14 +408,11 @@ public class NetworkModificationService {
 
         return modificationsByGroupUuid.entrySet().stream()
                 .map(entry -> {
-                    UUID groupUuids = entry.getKey();
-                    List<ModificationsSearchResult> modificationInfosList = entry.getValue().stream()
-                            .map(this::getModification)
-                            .filter(Objects::nonNull)
-                            .map(ModificationsSearchResult::fromModificationEntity)
+                    UUID groupUuid = entry.getKey();
+                    List<ModificationsSearchResult> modificationInfosList = getModificationsByUuids(entry.getValue()).stream().map(ModificationsSearchResult::fromModificationEntity)
                             .toList();
 
-                    return new ModificationsSearchResultByGroup(groupUuids, modificationInfosList);
+                    return new ModificationsSearchResultByGroup(groupUuid, modificationInfosList);
                 })
                 .toList();
     }
