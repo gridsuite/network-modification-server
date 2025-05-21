@@ -292,7 +292,7 @@ public class NetworkModificationController {
     @Operation(summary = "Search modifications in elasticsearch by equipmentId")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of modifications found")
     })
-    public ResponseEntity<List<ModificationsSearchResultByGroup>> searchModifications(
+    public ResponseEntity<Map<UUID, Object>> searchModifications(
             @RequestParam("networkUuid") UUID networkUuid,
             @RequestParam(value = "userInput") String userInput) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)

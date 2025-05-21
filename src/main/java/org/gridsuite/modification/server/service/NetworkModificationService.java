@@ -397,7 +397,7 @@ public class NetworkModificationService {
                 .toList();
     }
 
-    public List<ModificationsSearchResultByGroup> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
+    public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
 
         Map<UUID, List<UUID>> modificationsByGroupUuid = modifications.stream()
@@ -407,14 +407,12 @@ public class NetworkModificationService {
                 ));
 
         return modificationsByGroupUuid.entrySet().stream()
-                .map(entry -> {
-                    UUID groupUuid = entry.getKey();
-                    List<ModificationsSearchResult> modificationInfosList = getModificationsByUuids(entry.getValue()).stream().map(ModificationsSearchResult::fromModificationEntity)
-                            .toList();
-
-                    return new ModificationsSearchResultByGroup(groupUuid, modificationInfosList);
-                })
-                .toList();
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> getModificationsByUuids(entry.getValue()).stream()
+                                .map(ModificationsSearchResult::fromModificationEntity)
+                                .toList()
+                ));
     }
 
     private BoolQuery buildSearchModificationsQuery(

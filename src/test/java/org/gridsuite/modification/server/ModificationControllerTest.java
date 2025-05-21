@@ -1895,8 +1895,8 @@ class ModificationControllerTest {
         assertApplicationStatusOK(mvcResult3);
 
         MvcResult mvcModificationResult;
-        List<ModificationsSearchResultByGroup> networkModificationsResult;
-        ModificationsSearchResultByGroup networkModificationsSearchResultByGroup;
+        Map<UUID, List<ModificationsSearchResult>> networkModificationsResult;
+        List<ModificationsSearchResult> modificationsSearchResult;
 
         // search modifications by equipment id containing userInput "id"
         mvcModificationResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/indexation-infos?networkUuid={networkUuid}&userInput={userInput}",
@@ -1910,10 +1910,10 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(1, networkModificationsResult.size());
-        networkModificationsSearchResultByGroup = networkModificationsResult.getFirst();
-        assertEquals(1, networkModificationsSearchResultByGroup.modifications().size());
-        assertEquals("GENERATOR_CREATION", networkModificationsSearchResultByGroup.modifications().getFirst().getMessageType());
-        assertEquals("{\"equipmentId\":\"idGenerator1\"}", networkModificationsSearchResultByGroup.modifications().getFirst().getMessageValues());
+        modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
+        assertEquals(1, modificationsSearchResult.size());
+        assertEquals("GENERATOR_CREATION", modificationsSearchResult.getFirst().getMessageType());
+        assertEquals("{\"equipmentId\":\"idGenerator1\"}", modificationsSearchResult.getFirst().getMessageValues());
 
         // search modifications by equipment id containing userInput "v"
         mvcModificationResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/indexation-infos?networkUuid={networkUuid}&userInput={userInput}",
@@ -1927,10 +1927,9 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(1, networkModificationsResult.size());
-        networkModificationsSearchResultByGroup = networkModificationsResult.getFirst();
-        assertEquals(1, networkModificationsSearchResultByGroup.modifications().size());
-        assertEquals("EQUIPMENT_DELETION", networkModificationsSearchResultByGroup.modifications().getFirst().getMessageType());
-        assertEquals("{\"equipmentId\":\"v5load\"}", networkModificationsSearchResultByGroup.modifications().getFirst().getMessageValues());
+        modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
+        assertEquals("EQUIPMENT_DELETION", modificationsSearchResult.getFirst().getMessageType());
+        assertEquals("{\"equipmentId\":\"v5load\"}", modificationsSearchResult.getFirst().getMessageValues());
 
         // search modifications by equipment id containing userInput "s1"
         mvcModificationResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/indexation-infos?networkUuid={networkUuid}&userInput={userInput}",
@@ -1944,10 +1943,9 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(1, networkModificationsResult.size());
-        networkModificationsSearchResultByGroup = networkModificationsResult.getFirst();
-        assertEquals(1, networkModificationsSearchResultByGroup.modifications().size());
-        assertEquals("SUBSTATION_MODIFICATION", networkModificationsSearchResultByGroup.modifications().getFirst().getMessageType());
-        assertEquals("{\"equipmentId\":\"s1\"}", networkModificationsSearchResultByGroup.modifications().getFirst().getMessageValues());
+        modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
+        assertEquals("SUBSTATION_MODIFICATION", modificationsSearchResult.getFirst().getMessageType());
+        assertEquals("{\"equipmentId\":\"s1\"}", modificationsSearchResult.getFirst().getMessageValues());
 
         // search modifications by non existing equipment Id "notFound"
         mvcModificationResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/indexation-infos?networkUuid={networkUuid}&userInput={userInput}",
