@@ -1391,4 +1391,19 @@ class ModificationRepositoryTest {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
     }
+
+    @Test
+    void testCouplingDeviceCreation() {
+        ModificationEntity modification = ModificationEntity.fromDTO(CouplingDeviceCreationInfos.builder()
+                    .busOrBbsId1("bbs1")
+                    .busOrBbsId2("bbs2")
+                    .switchPrefixId("test")
+                    .build());
+
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
+        assertRequestsCount(0, 1, 0, 0);
+
+        List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modificationInfos.size());
+    }
 }
