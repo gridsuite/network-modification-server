@@ -29,6 +29,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
@@ -70,6 +71,7 @@ public class NetworkModificationService {
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
     static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
     private final ModificationRepository modificationRepository;
+    private static final int PAGE_MAX_SIZE = 500;
 
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       EquipmentInfosService equipmentInfosService, NotificationService notificationService,
@@ -388,6 +390,7 @@ public class NetworkModificationService {
 
         NativeQuery nativeQuery = new NativeQueryBuilder()
                 .withQuery(boolQueryBuilder._toQuery())
+                .withPageable(PageRequest.of(0, PAGE_MAX_SIZE))
                 .build();
 
         return elasticsearchOperations

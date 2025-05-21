@@ -24,6 +24,7 @@ import org.gridsuite.modification.server.modifications.NetworkModificationApplic
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.assertions.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -37,8 +38,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -118,47 +119,47 @@ class ModificationSearchTest {
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
-        // apply modifications to index them on groupUuid
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
-        assertNotNull(result);
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(
+                new ModificationApplicationGroup(groupUuid, entities, reportInfos),
+                networkInfos
+        );
+        assertThat(result).isNotNull();
+
         List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
-        assertEquals(3, modificationApplicationInfos.size());
+        assertThat(modificationApplicationInfos).hasSize(3);
 
         // Search with network UUID and userInput 'Id' to search all equipmentIds containing 'Id'
-        Set<ModificationApplicationInfos> hits = new HashSet<>();
-        hits.addAll(networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "Id"));
-        assertEquals(3, hits.size());
+        List<ModificationApplicationInfos> hits = networkModificationService
+                .searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "Id");
 
-        // Verify that all UUIDs from the hits are present in modificationApplicationInfos
-        Set<UUID> expectedUuids = modificationApplicationInfos.stream()
-                .map(ModificationApplicationInfos::getModificationUuid)
-                .collect(Collectors.toSet());
-        for (ModificationApplicationInfos hit : hits) {
-            assertTrue(expectedUuids.contains(hit.getModificationUuid()));
-        }
-        hits.clear();
+        assertThat(hits)
+                .hasSize(3)
+                .extracting(ModificationApplicationInfos::getModificationUuid)
+                .allMatch(modificationApplicationInfos.stream()
+                        .map(ModificationApplicationInfos::getModificationUuid)
+                        .collect(Collectors.toSet())::contains);
 
         // search with userInput 'load'
-        hits.addAll(networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "load"));
-        assertEquals(1, hits.size());
-        ModificationApplicationInfos hit = hits.iterator().next();
+        hits = networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "load");
+        assertThat(hits).hasSize(1);
 
-        List<ModificationApplicationInfos> loadModificationsApplicationInfos = modificationApplicationInfos.stream().filter(modificationApplicationInfos1 -> modificationApplicationInfos1.getCreatedEquipmentIds().contains(loadCreationInfos.getEquipmentId())).toList();
-        assertEquals(1, loadModificationsApplicationInfos.size());
+        ModificationApplicationInfos hit = hits.getFirst();
+
+        List<ModificationApplicationInfos> loadModificationsApplicationInfos = modificationApplicationInfos.stream()
+                .filter(infos -> infos.getCreatedEquipmentIds().contains(loadCreationInfos.getEquipmentId()))
+                .toList();
+        assertThat(loadModificationsApplicationInfos).hasSize(1);
+
         ModificationApplicationInfos loadModificationApplicationInfos = loadModificationsApplicationInfos.getFirst();
-        assertEquals(hit.getModificationUuid(), loadModificationApplicationInfos.getModificationUuid());
-        hits.clear();
+        assertThat(hit.getModificationUuid()).isEqualTo(loadModificationApplicationInfos.getModificationUuid());
 
         // search using an equipment identifier that doesn't exist ("notFound")
-        hits.addAll(networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "notFound"));
-        assertEquals(0, hits.size());
-        hits.clear();
+        hits = networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "notFound");
+        Assertions.assertThat(hits).isEmpty();
 
-        // search using an equipment identifier on non existing network
-        hits.addAll(networkModificationService.searchNetworkModificationsResult(UUID.randomUUID(), "Id"));
-        assertEquals(0, hits.size());
-        hits.clear();
-
+        // search using an equipment identifier on non-existing network
+        hits = networkModificationService.searchNetworkModificationsResult(UUID.randomUUID(), "Id");
+        assertThat(hits).isEmpty();
     }
 
     private LoadCreationInfos createLoadCreationInfos(String loadId) {
