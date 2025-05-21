@@ -24,6 +24,8 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "couplingDeviceCreation_id_fk_constraint"))
 public class CouplingDeviceCreationEntity extends ModificationEntity {
     @Column
+    private String voltageLevelId;
+    @Column
     private String busOrBbsId1;
     @Column
     private String busOrBbsId2;
@@ -35,6 +37,7 @@ public class CouplingDeviceCreationEntity extends ModificationEntity {
     }
 
     private void assignAttributes(CouplingDeviceCreationInfos couplingDeviceCreationInfos) {
+        this.voltageLevelId = couplingDeviceCreationInfos.getVoltageLevelId();
         this.busOrBbsId1 = couplingDeviceCreationInfos.getBusOrBbsId1();
         this.busOrBbsId2 = couplingDeviceCreationInfos.getBusOrBbsId2();
     }
@@ -51,6 +54,11 @@ public class CouplingDeviceCreationEntity extends ModificationEntity {
 
     private CouplingDeviceCreationInfos.CouplingDeviceCreationInfosBuilder<?, ?> toCouplingDeviceCreationInfos() {
         return CouplingDeviceCreationInfos.builder()
+            .uuid(getId())
+            .date(getDate())
+            .stashed(getStashed())
+            .activated(getActivated())
+            .voltageLevelId(getVoltageLevelId())
             .busOrBbsId1(getBusOrBbsId1())
             .busOrBbsId2(getBusOrBbsId2());
     }

@@ -7,12 +7,18 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.dto.CouplingDeviceCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
@@ -29,6 +35,13 @@ class CouplingDeviceCreationTest extends AbstractNetworkModificationTest {
             .setName("b3")
             .setNode(15)
             .add();
+        network.getVoltageLevel("vl1")
+            .getNodeBreakerView()
+            .newBusbarSection()
+            .setId("b9")
+            .setName("b9")
+            .setNode(20)
+            .add();
         return network;
     }
 
@@ -37,24 +50,36 @@ class CouplingDeviceCreationTest extends AbstractNetworkModificationTest {
         return CouplingDeviceCreationInfos.builder()
             .busOrBbsId1("b1")
             .busOrBbsId2("b3")
-            .switchPrefixId("test")
             .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return null;
+        return CouplingDeviceCreationInfos.builder()
+            .busOrBbsId1("b1")
+            .busOrBbsId2("b4")
+            .build();
     }
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        System.out.println("After network modification creation");
-        getNetwork().getSwitches().forEach(switchId -> {System.out.println(switchId.getId());});
+        assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet())
+            .containsAll(Set.of("vl1_BREAKER", "vl1_DISCONNECTOR_22_15", "vl1_DISCONNECTOR_21_0")));
     }
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
-        System.out.println("After network modification deletion");
-        getNetwork().getSwitches().forEach(switchId -> {System.out.println(switchId.getId());});
+        assertEquals(4, getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet()).size());
+        assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet()).containsAll(Set.of("br21", "b4", "b5", "br11")));
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("{\"switchPrefixId\":null,\"busOrBbsId1\":\"b1\",\"busOrBbsId2\":\"b3\"}", modificationInfos.getMessageValues());
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
+        assertEquals("{\"switchPrefixId\":null,\"busOrBbsId1\":\"b1\",\"busOrBbsId2\":\"b4\"}", modificationInfos.getMessageValues());
     }
 }

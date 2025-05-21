@@ -5,6 +5,7 @@
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="coupling_device_creationPK"/>
             </column>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
             <column name="bus_or_bbs_id1" type="VARCHAR(255)"/>
             <column name="bus_or_bbs_id2" type="VARCHAR(255)"/>
         </createTable>

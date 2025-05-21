@@ -1401,7 +1401,7 @@ class ModificationRepositoryTest {
                     .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
-        assertRequestsCount(0, 1, 0, 0);
+        assertRequestsCount(2, 3, 0, 0);
 
         List<ModificationInfos> modificationInfos = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(1, modificationInfos.size());
