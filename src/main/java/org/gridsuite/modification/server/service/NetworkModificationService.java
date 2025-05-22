@@ -410,14 +410,7 @@ public class NetworkModificationService {
     public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         // Compile regex pattern from user input
         Pattern pattern = Pattern.compile(Pattern.quote(userInput), Pattern.CASE_INSENSITIVE);
-        // Fetch modifications and filter them
-        List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput).stream()
-                .filter(modif ->
-                        streamContainsPattern(modif.getModifiedEquipmentIds(), pattern) ||
-                                streamContainsPattern(modif.getCreatedEquipmentIds(), pattern) ||
-                                streamContainsPattern(modif.getDeletedEquipmentIds(), pattern)
-                )
-                .toList();
+        List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
         // Group remaining modifications by groupUuid
         Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
                 .collect(Collectors.groupingBy(ModificationApplicationInfos::getGroupUuid));
