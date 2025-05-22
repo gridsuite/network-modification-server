@@ -483,7 +483,7 @@ class ModificationControllerTest {
             assertApplicationStatusOK(mvcResult);
         }
         var modificationList = modificationRepository.getModifications(groupId, false, true);
-     //   assertEquals(number, modificationList.size());
+        assertEquals(number, modificationList.size());
         return modificationList;
     }
 

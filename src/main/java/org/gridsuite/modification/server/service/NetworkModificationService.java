@@ -39,7 +39,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
@@ -400,22 +402,84 @@ public class NetworkModificationService {
                 .toList();
     }
 
-    public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
-        List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
+    // check if any element in the list matches the regex
+    private boolean streamContainsPattern(Set<String> ids, Pattern pattern) {
+        return ids != null && ids.stream().anyMatch(id -> pattern.matcher(id).find());
+    }
 
-        Map<UUID, List<UUID>> modificationsByGroupUuid = modifications.stream()
-                .collect(Collectors.groupingBy(
-                        ModificationApplicationInfos::getGroupUuid,
-                        Collectors.mapping(ModificationApplicationInfos::getModificationUuid, Collectors.toList())
-                ));
+    public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
+        // Compile regex pattern from user input
+        Pattern pattern = Pattern.compile(Pattern.quote(userInput), Pattern.CASE_INSENSITIVE);
+        // Fetch modifications and filter them
+        List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput).stream()
+                .filter(modif ->
+                        streamContainsPattern(modif.getModifiedEquipmentIds(), pattern) ||
+                                streamContainsPattern(modif.getCreatedEquipmentIds(), pattern) ||
+                                streamContainsPattern(modif.getDeletedEquipmentIds(), pattern)
+                )
+                .toList();
+        // Group remaining modifications by groupUuid
+        Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
+                .collect(Collectors.groupingBy(ModificationApplicationInfos::getGroupUuid));
 
         return modificationsByGroupUuid.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> getModificationsByUuids(entry.getValue()).stream()
-                                .map(ModificationsSearchResult::fromModificationEntity)
-                                .toList()
+                        entry -> {
+                            List<ModificationApplicationInfos> infos = entry.getValue();
+                            Map<UUID, ModificationApplicationInfos> infosByUuid = groupModificationApplication(infos);
+
+                            List<UUID> modificationUuids = new ArrayList<>(infosByUuid.keySet());
+                            // get modification entities by Uuids
+                            List<ModificationEntity> entities = getModificationsByUuids(modificationUuids);
+                            return extractSearchModificationInfos(entities, infosByUuid, pattern);
+                        }
                 ));
+    }
+
+    // map list of infos by modification UUID
+    private Map<UUID, ModificationApplicationInfos> groupModificationApplication(List<ModificationApplicationInfos> infos) {
+        return infos.stream()
+                .collect(Collectors.toMap(ModificationApplicationInfos::getModificationUuid, info -> info));
+    }
+
+    // map to search results by splitting by matching equipment
+    private List<ModificationsSearchResult> extractSearchModificationInfos(
+            List<ModificationEntity> entities,
+            Map<UUID, ModificationApplicationInfos> infosByUuid,
+            Pattern pattern) {
+
+        return entities.stream()
+                .flatMap(entity -> {
+                    ModificationApplicationInfos matchedInfo = infosByUuid.get(entity.getId());
+                    return splitEntityByMatchingEquipment(entity, matchedInfo, pattern).stream();
+                })
+                .toList();
+    }
+
+    private List<ModificationsSearchResult> splitEntityByMatchingEquipment(
+            ModificationEntity entity,
+            ModificationApplicationInfos matchedInfos,
+            Pattern pattern) {
+
+        List<ModificationsSearchResult> results = new ArrayList<>();
+
+        Stream.of(
+                        matchedInfos.getCreatedEquipmentIds(),
+                        matchedInfos.getModifiedEquipmentIds(),
+                        matchedInfos.getDeletedEquipmentIds()
+                )
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .filter(Objects::nonNull)
+                .distinct()
+                .filter(id -> pattern.matcher(id).find())
+                .map(id -> ModificationsSearchResult.fromModificationEntity(entity)
+                        .impactedEquipmentId(id)
+                        .build())
+                .forEach(results::add);
+
+        return results;
     }
 
     private BoolQuery buildSearchModificationsQuery(

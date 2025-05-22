@@ -34,17 +34,22 @@ public class ModificationsSearchResult {
             description = "Message type"
     )
     private String messageType;
+
+    @Schema(
+            description = "Impacted equipment ID"
+    )
+
+    private String impactedEquipmentId;
     @Schema(
             description = "Message values"
     )
     private String messageValues;
 
-    public static ModificationsSearchResult fromModificationEntity(ModificationEntity modificationEntity) {
+    public static ModificationsSearchResult.ModificationsSearchResultBuilder fromModificationEntity(ModificationEntity modificationEntity) {
         return ModificationsSearchResult.builder()
                 .modificationUuid(modificationEntity.getId())
                 .type(modificationEntity.getType())
                 .messageType(modificationEntity.getMessageType())
-                .messageValues(modificationEntity.getMessageValues())
-                .build();
+                .messageValues(modificationEntity.getMessageValues());
     }
 }
