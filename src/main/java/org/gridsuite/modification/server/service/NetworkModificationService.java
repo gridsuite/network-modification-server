@@ -402,13 +402,7 @@ public class NetworkModificationService {
                 .toList();
     }
 
-    // check if any element in the list matches the regex
-    private boolean streamContainsPattern(Set<String> ids, Pattern pattern) {
-        return ids != null && ids.stream().anyMatch(id -> pattern.matcher(id).find());
-    }
-
     public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
-        // Compile regex pattern from user input
         Pattern pattern = Pattern.compile(Pattern.quote(userInput), Pattern.CASE_INSENSITIVE);
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
         // Group remaining modifications by groupUuid
