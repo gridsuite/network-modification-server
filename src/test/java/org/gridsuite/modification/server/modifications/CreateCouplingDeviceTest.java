@@ -9,7 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.dto.AddCouplingDeviceInfos;
+import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
  */
-class AddCouplingDeviceTest extends AbstractNetworkModificationTest {
+class CreateCouplingDeviceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -47,7 +47,7 @@ class AddCouplingDeviceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        return AddCouplingDeviceInfos.builder()
+        return CreateCouplingDeviceInfos.builder()
             .busOrBbsId1("b1")
             .busOrBbsId2("b3")
             .voltageLevelId("v1")
@@ -56,7 +56,7 @@ class AddCouplingDeviceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return AddCouplingDeviceInfos.builder()
+        return CreateCouplingDeviceInfos.builder()
             .busOrBbsId1("b1")
             .busOrBbsId2("b4")
             .voltageLevelId("v1")

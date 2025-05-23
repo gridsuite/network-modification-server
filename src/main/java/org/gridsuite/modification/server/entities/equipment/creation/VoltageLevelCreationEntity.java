@@ -61,7 +61,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
 
     @ElementCollection
     @CollectionTable
-    private List<AddCouplingDeviceEmbeddable> couplingDevices;
+    private List<CouplingDeviceCreationEmbeddable> couplingDevices;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(
@@ -77,9 +77,9 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         assignAttributes(voltageLevelCreationInfos);
     }
 
-    public static List<AddCouplingDeviceEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceInfos> couplingDevicesInfos) {
+    public static List<CouplingDeviceCreationEmbeddable> toEmbeddableCouplingDevices(List<CouplingDeviceInfos> couplingDevicesInfos) {
         return couplingDevicesInfos.stream()
-                .map(couplingDevice -> new AddCouplingDeviceEmbeddable(couplingDevice.getBusbarSectionId1(),
+                .map(couplingDevice -> new CouplingDeviceCreationEmbeddable(couplingDevice.getBusbarSectionId1(),
                         couplingDevice.getBusbarSectionId2()))
                 .collect(Collectors.toList());
     }

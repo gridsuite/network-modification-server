@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Getter
 @Embeddable
-public class AddCouplingDeviceEmbeddable {
+public class CouplingDeviceCreationEmbeddable {
     @Column
     private String busbarSectionId1;
 

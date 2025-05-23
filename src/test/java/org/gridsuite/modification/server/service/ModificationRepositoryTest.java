@@ -1393,8 +1393,8 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testAddCouplingDevice() {
-        ModificationEntity modification = ModificationEntity.fromDTO(AddCouplingDeviceInfos.builder()
+    void testCreateCouplingDevice() {
+        ModificationEntity modification = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
                     .busOrBbsId1("bbs1")
                     .busOrBbsId2("bbs2")
                     .build());

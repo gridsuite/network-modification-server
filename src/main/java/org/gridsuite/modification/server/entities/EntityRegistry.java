@@ -68,7 +68,7 @@ public final class EntityRegistry {
         register(LccModificationInfos.class, LccModificationEntity.class);
         register(LccConverterStationModificationInfos.class, LccConverterStationModificationEntity.class);
         register(VoltageLevelTopologyModificationInfos.class, VoltageLevelTopologyModificationEntity.class);
-        register(AddCouplingDeviceInfos.class, AddCouplingDeviceEntity.class);
+        register(CreateCouplingDeviceInfos.class, CreateCouplingDeviceEntity.class);
 
         // // attatching and splitting
         register(LineAttachToVoltageLevelInfos.class, LineAttachToVoltageLevelEntity.class);
