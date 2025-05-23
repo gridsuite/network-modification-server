@@ -405,7 +405,6 @@ public class NetworkModificationService {
     public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         Pattern pattern = Pattern.compile(Pattern.quote(userInput), Pattern.CASE_INSENSITIVE);
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
-        // Group remaining modifications by groupUuid
         Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
                 .collect(Collectors.groupingBy(ModificationApplicationInfos::getGroupUuid));
 
@@ -417,20 +416,17 @@ public class NetworkModificationService {
                             Map<UUID, ModificationApplicationInfos> infosByUuid = groupModificationApplication(infos);
 
                             List<UUID> modificationUuids = new ArrayList<>(infosByUuid.keySet());
-                            // get modification entities by Uuids
                             List<ModificationEntity> entities = getModificationsByUuids(modificationUuids);
                             return extractSearchModificationInfos(entities, infosByUuid, pattern);
                         }
                 ));
     }
 
-    // map list of infos by modification UUID
     private Map<UUID, ModificationApplicationInfos> groupModificationApplication(List<ModificationApplicationInfos> infos) {
         return infos.stream()
                 .collect(Collectors.toMap(ModificationApplicationInfos::getModificationUuid, info -> info));
     }
 
-    // map to search results by splitting by matching equipment
     private List<ModificationsSearchResult> extractSearchModificationInfos(
             List<ModificationEntity> entities,
             Map<UUID, ModificationApplicationInfos> infosByUuid,
