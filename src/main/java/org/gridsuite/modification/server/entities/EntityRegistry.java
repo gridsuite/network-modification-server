@@ -89,6 +89,8 @@ public final class EntityRegistry {
 
         register(GroovyScriptInfos.class, GroovyScriptEntity.class);
 
+        register(BalancesAdjustmentModificationInfos.class, BalancesAdjustmentEntity.class);
+
         // // deletion
         register(ByFilterDeletionInfos.class, ByFilterDeletionEntity.class);
         register(EquipmentDeletionInfos.class, EquipmentDeletionEntity.class);
