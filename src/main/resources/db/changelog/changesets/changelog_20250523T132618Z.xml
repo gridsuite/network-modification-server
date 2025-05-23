@@ -1,0 +1,37 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="mancinijor (generated)" id="1748006804556-25">
+        <createTable tableName="balances_adjustment">
+            <column name="countries_to_balance" type="VARCHAR(255)"/>
+            <column name="max_number_iterations" type="INT"/>
+            <column name="threshold_net_position" type="FLOAT(53)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="balances_adjustmentPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1748006804556-26">
+        <createTable tableName="balances_adjustment_area">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="balances_adjustment_areaPK"/>
+            </column>
+            <column name="countries" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="net_position" type="FLOAT(53)"/>
+            <column name="shift_equipment_type" type="VARCHAR(255)"/>
+            <column name="shift_type" type="VARCHAR(255)"/>
+            <column name="balances_adjustment_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1748006804556-38">
+        <createIndex indexName="area_balances_adjustment_id_idx" tableName="balances_adjustment_area">
+            <column name="balances_adjustment_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1748006804556-40">
+        <addForeignKeyConstraint baseColumnNames="balances_adjustment_id" baseTableName="balances_adjustment_area" constraintName="area_balances_adjustment_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="balances_adjustment" validate="true"/>
+    </changeSet>
+    <changeSet author="mancinijor (generated)" id="1748006804556-41">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="balances_adjustment" constraintName="balancesAdjustment_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
