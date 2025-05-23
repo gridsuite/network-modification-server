@@ -15,8 +15,7 @@ import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.util.Set;
 import java.util.UUID;
@@ -53,8 +52,31 @@ public class ModificationApplicationInfos {
     private UUID networkUuid;
     private UUID groupUuid;
 
+    @MultiField(
+            mainField = @Field(type = FieldType.Text),
+            otherFields = {
+                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
+                @InnerField(suffix = "raw", type = FieldType.Keyword)
+            }
+    )
     private Set<String> createdEquipmentIds;
+
+    @MultiField(
+            mainField = @Field(type = FieldType.Text),
+            otherFields = {
+                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
+                @InnerField(suffix = "raw", type = FieldType.Keyword)
+            }
+    )
     private Set<String> modifiedEquipmentIds;
+
+    @MultiField(
+            mainField = @Field(type = FieldType.Text),
+            otherFields = {
+                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
+                @InnerField(suffix = "raw", type = FieldType.Keyword)
+            }
+    )
     private Set<String> deletedEquipmentIds;
 
     @Transient
