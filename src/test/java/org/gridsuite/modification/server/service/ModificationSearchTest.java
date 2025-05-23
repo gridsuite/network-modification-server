@@ -138,12 +138,12 @@ class ModificationSearchTest {
         // search by userInput containing accent
         List<ModificationApplicationInfos> hitsAccent2 = networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "test");
         assertThat(hitsAccent2).hasSize(1);
-        assertThat(hitsAccent2.getFirst().getCreatedEquipmentIds().contains(equipmentIdAccent)).isTrue();
+        assertThat(hitsAccent2.getFirst().getCreatedEquipmentIds()).contains(equipmentIdAccent);
 
         // search by term containing special chars
         List<ModificationApplicationInfos> hitsSpecial = networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "SpecialChars@");
         assertThat(hitsSpecial).hasSize(1);
-        assertThat(hitsSpecial.getFirst().getCreatedEquipmentIds().contains(equipmentIdSpecial)).isTrue();
+        assertThat(hitsSpecial.getFirst().getCreatedEquipmentIds()).contains(equipmentIdSpecial);
     }
 
     @Test
