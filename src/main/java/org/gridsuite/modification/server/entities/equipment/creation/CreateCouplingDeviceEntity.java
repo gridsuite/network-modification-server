@@ -23,10 +23,13 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 @Table(name = "create_coupling_device")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "create_coupling_device_id_fk_constraint"))
 public class CreateCouplingDeviceEntity extends ModificationEntity {
+
     @Column(name = "voltage_level_id")
     private String voltageLevelId;
+
     @Column(name = "bus_or_bbs_id1")
     private String busOrBbsId1;
+
     @Column(name = "bus_or_bbs_id2")
     private String busOrBbsId2;
 
