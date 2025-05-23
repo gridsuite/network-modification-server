@@ -27,9 +27,6 @@ public class ModificationsSearchResult {
     @Schema(description = "Modification id")
     private UUID modificationUuid;
 
-    @Schema(description = "Modification type")
-    private String type;
-
     @Schema(
             description = "Message type"
     )
@@ -48,7 +45,6 @@ public class ModificationsSearchResult {
     public static ModificationsSearchResult.ModificationsSearchResultBuilder fromModificationEntity(ModificationEntity modificationEntity) {
         return ModificationsSearchResult.builder()
                 .modificationUuid(modificationEntity.getId())
-                .type(modificationEntity.getType())
                 .messageType(modificationEntity.getMessageType())
                 .messageValues(modificationEntity.getMessageValues());
     }
