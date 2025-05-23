@@ -100,6 +100,53 @@ class ModificationSearchTest {
     }
 
     @Test
+    void testSearchModificationsWithAccentsAndSpecialChars() {
+        String equipmentIdAccent = "TéstÉquipé";
+        String equipmentIdSpecial = "SpecialChars@#d'Essai";
+
+        SubstationCreationInfos creationWithAccent = SubstationCreationInfos.builder()
+                .equipmentId(equipmentIdAccent)
+                .equipmentName("accent")
+                .country(Country.FR)
+                .properties(null)
+                .build();
+
+        SubstationCreationInfos creationWithSpecial = SubstationCreationInfos.builder()
+                .equipmentId(equipmentIdSpecial)
+                .equipmentName("SpecialChars")
+                .country(Country.FR)
+                .properties(null)
+                .build();
+
+        List<ModificationEntity> entities = modificationRepository.saveModifications(
+                groupUuid,
+                List.of(
+                        ModificationEntity.fromDTO(creationWithAccent),
+                        ModificationEntity.fromDTO(creationWithSpecial)
+                )
+        );
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(
+                new ModificationApplicationGroup(groupUuid, entities, reportInfos),
+                networkInfos
+        );
+        assertThat(result).isNotNull();
+
+        List<ModificationApplicationInfos> allModifications = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
+        assertThat(allModifications).hasSize(2);
+
+        // search by userInput containing accent
+        List<ModificationApplicationInfos> hitsAccent2 = networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "test");
+        assertThat(hitsAccent2).hasSize(1);
+        assertThat(hitsAccent2.getFirst().getCreatedEquipmentIds().contains(equipmentIdAccent)).isTrue();
+
+        // search by term containing special chars
+        List<ModificationApplicationInfos> hitsSpecial = networkModificationService.searchNetworkModificationsResult(networkInfos.getNetworkUuuid(), "SpecialChars@");
+        assertThat(hitsSpecial).hasSize(1);
+        assertThat(hitsSpecial.getFirst().getCreatedEquipmentIds().contains(equipmentIdSpecial)).isTrue();
+    }
+
+    @Test
     void testSearchModificationsByGroup() {
         // Substation creation for equipment Id substationId
         SubstationCreationInfos substationCreationInfos = SubstationCreationInfos.builder()
