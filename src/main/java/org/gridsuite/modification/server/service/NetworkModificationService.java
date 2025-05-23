@@ -402,8 +402,12 @@ public class NetworkModificationService {
                 .toList();
     }
 
+    public static String normalizeToAscii(String input) {
+        return StringUtils.stripAccents(input);
+    }
+
     public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
-        Pattern pattern = Pattern.compile(Pattern.quote(userInput), Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile(Pattern.quote(normalizeToAscii(userInput)), Pattern.CASE_INSENSITIVE);
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
         Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
                 .collect(Collectors.groupingBy(ModificationApplicationInfos::getGroupUuid));
@@ -456,7 +460,7 @@ public class NetworkModificationService {
                 .flatMap(Collection::stream)
                 .filter(Objects::nonNull)
                 .distinct()
-                .filter(id -> pattern.matcher(id).find())
+                .filter(id -> pattern.matcher(normalizeToAscii(id)).find())
                 .map(id -> ModificationsSearchResult.fromModificationEntity(entity)
                         .impactedEquipmentId(id)
                         .build())
