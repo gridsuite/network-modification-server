@@ -9,21 +9,21 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.dto.CouplingDeviceCreationInfos;
+import org.gridsuite.modification.dto.AddCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
  */
-class CouplingDeviceCreationTest extends AbstractNetworkModificationTest {
+class AddCouplingDeviceTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -47,17 +47,19 @@ class CouplingDeviceCreationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected ModificationInfos buildModification() {
-        return CouplingDeviceCreationInfos.builder()
+        return AddCouplingDeviceInfos.builder()
             .busOrBbsId1("b1")
             .busOrBbsId2("b3")
+            .voltageLevelId("v1")
             .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return CouplingDeviceCreationInfos.builder()
+        return AddCouplingDeviceInfos.builder()
             .busOrBbsId1("b1")
             .busOrBbsId2("b4")
+            .voltageLevelId("v1")
             .build();
     }
 
@@ -75,11 +77,11 @@ class CouplingDeviceCreationTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("{\"switchPrefixId\":null,\"busOrBbsId1\":\"b1\",\"busOrBbsId2\":\"b3\"}", modificationInfos.getMessageValues());
+        assertEquals("{\"voltageLevelId\":\"v1\"}", modificationInfos.getMessageValues());
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("{\"switchPrefixId\":null,\"busOrBbsId1\":\"b1\",\"busOrBbsId2\":\"b4\"}", modificationInfos.getMessageValues());
+        assertEquals("{\"voltageLevelId\":\"v1\"}", modificationInfos.getMessageValues());
     }
 }

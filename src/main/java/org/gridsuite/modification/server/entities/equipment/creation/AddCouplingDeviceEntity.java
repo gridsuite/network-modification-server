@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.CouplingDeviceCreationInfos;
+import org.gridsuite.modification.dto.AddCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
@@ -20,9 +20,9 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "couplingDeviceCreation")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "couplingDeviceCreation_id_fk_constraint"))
-public class CouplingDeviceCreationEntity extends ModificationEntity {
+@Table(name = "addCouplingDevice")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "addCouplingDevice_id_fk_constraint"))
+public class AddCouplingDeviceEntity extends ModificationEntity {
     @Column
     private String voltageLevelId;
     @Column
@@ -33,27 +33,27 @@ public class CouplingDeviceCreationEntity extends ModificationEntity {
     @Override
     public void update(@NonNull ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        assignAttributes((CouplingDeviceCreationInfos) modificationInfos);
+        assignAttributes((AddCouplingDeviceInfos) modificationInfos);
     }
 
-    private void assignAttributes(CouplingDeviceCreationInfos couplingDeviceCreationInfos) {
-        this.voltageLevelId = couplingDeviceCreationInfos.getVoltageLevelId();
-        this.busOrBbsId1 = couplingDeviceCreationInfos.getBusOrBbsId1();
-        this.busOrBbsId2 = couplingDeviceCreationInfos.getBusOrBbsId2();
+    private void assignAttributes(AddCouplingDeviceInfos addCouplingDeviceInfos) {
+        this.voltageLevelId = addCouplingDeviceInfos.getVoltageLevelId();
+        this.busOrBbsId1 = addCouplingDeviceInfos.getBusOrBbsId1();
+        this.busOrBbsId2 = addCouplingDeviceInfos.getBusOrBbsId2();
     }
 
-    public CouplingDeviceCreationEntity(CouplingDeviceCreationInfos couplingDeviceCreationInfos) {
-        super(couplingDeviceCreationInfos);
-        assignAttributes(couplingDeviceCreationInfos);
+    public AddCouplingDeviceEntity(AddCouplingDeviceInfos addCouplingDeviceInfos) {
+        super(addCouplingDeviceInfos);
+        assignAttributes(addCouplingDeviceInfos);
     }
 
     @Override
-    public CouplingDeviceCreationInfos toModificationInfos() {
-        return toCouplingDeviceCreationInfos().build();
+    public AddCouplingDeviceInfos toModificationInfos() {
+        return toAddCouplingDeviceInfos().build();
     }
 
-    private CouplingDeviceCreationInfos.CouplingDeviceCreationInfosBuilder<?, ?> toCouplingDeviceCreationInfos() {
-        return CouplingDeviceCreationInfos.builder()
+    private AddCouplingDeviceInfos.AddCouplingDeviceInfosBuilder<?, ?> toAddCouplingDeviceInfos() {
+        return AddCouplingDeviceInfos.builder()
             .uuid(getId())
             .date(getDate())
             .stashed(getStashed())

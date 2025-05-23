@@ -1393,11 +1393,10 @@ class ModificationRepositoryTest {
     }
 
     @Test
-    void testCouplingDeviceCreation() {
-        ModificationEntity modification = ModificationEntity.fromDTO(CouplingDeviceCreationInfos.builder()
+    void testAddCouplingDevice() {
+        ModificationEntity modification = ModificationEntity.fromDTO(AddCouplingDeviceInfos.builder()
                     .busOrBbsId1("bbs1")
                     .busOrBbsId2("bbs2")
-                    .switchPrefixId("test")
                     .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
