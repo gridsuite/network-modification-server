@@ -448,7 +448,6 @@ public class NetworkModificationService {
                 )
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
-                .filter(Objects::nonNull)
                 .distinct()
                 .filter(id -> pattern.matcher(stripAccents(id)).find())
                 .map(id -> ModificationsSearchResult.fromModificationEntity(modificationEntity)
