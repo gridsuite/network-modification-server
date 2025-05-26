@@ -406,7 +406,7 @@ public class NetworkModificationService {
         return StringUtils.stripAccents(input);
     }
 
-    public Map<UUID, Object> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
+    public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
         Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
