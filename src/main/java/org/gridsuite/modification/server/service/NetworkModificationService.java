@@ -417,56 +417,56 @@ public class NetworkModificationService {
                         Map.Entry::getKey,
                         entry -> {
                             List<ModificationApplicationInfos> infos = entry.getValue();
-                            Map<UUID, ModificationApplicationInfos> infosByUuid = groupModificationApplication(infos);
+                            Map<UUID, ModificationApplicationInfos> infosByUuid = groupModificationApplicationByUuid(infos);
 
                             List<UUID> modificationUuids = new ArrayList<>(infosByUuid.keySet());
                             List<ModificationEntity> entities = getModificationsByUuids(modificationUuids);
-                            return extractSearchModificationInfos(entities, infosByUuid, pattern);
+                            return mapModificationEntitiesToSearchResults(entities, infosByUuid, pattern);
                         }
                 ));
     }
 
-    private Map<UUID, ModificationApplicationInfos> groupModificationApplication(List<ModificationApplicationInfos> infos) {
-        return infos.stream()
+    private Map<UUID, ModificationApplicationInfos> groupModificationApplicationByUuid(List<ModificationApplicationInfos> modificationApplications) {
+        return modificationApplications.stream()
                 .collect(Collectors.toMap(ModificationApplicationInfos::getModificationUuid, info -> info));
     }
 
-    private List<ModificationsSearchResult> extractSearchModificationInfos(
-            List<ModificationEntity> entities,
-            Map<UUID, ModificationApplicationInfos> infosByUuid,
+    private List<ModificationsSearchResult> mapModificationEntitiesToSearchResults(
+            List<ModificationEntity> modificationEntities,
+            Map<UUID, ModificationApplicationInfos> modificationApplicationByUuid,
             Pattern pattern) {
 
-        return entities.stream()
+        return modificationEntities.stream()
                 .flatMap(entity -> {
-                    ModificationApplicationInfos matchedInfo = infosByUuid.get(entity.getId());
-                    return splitEntityByMatchingEquipment(entity, matchedInfo, pattern).stream();
+                    ModificationApplicationInfos matchedModification = modificationApplicationByUuid.get(entity.getId());
+                    return findMatchingEquipmentResults(entity, matchedModification, pattern).stream();
                 })
                 .toList();
     }
 
-    private List<ModificationsSearchResult> splitEntityByMatchingEquipment(
-            ModificationEntity entity,
-            ModificationApplicationInfos matchedInfos,
+    private List<ModificationsSearchResult> findMatchingEquipmentResults(
+            ModificationEntity modificationEntity,
+            ModificationApplicationInfos matchedModification,
             Pattern pattern) {
 
-        List<ModificationsSearchResult> results = new ArrayList<>();
+        List<ModificationsSearchResult> modificationSearchResults = new ArrayList<>();
 
         Stream.of(
-                        matchedInfos.getCreatedEquipmentIds(),
-                        matchedInfos.getModifiedEquipmentIds(),
-                        matchedInfos.getDeletedEquipmentIds()
+                        matchedModification.getCreatedEquipmentIds(),
+                        matchedModification.getModifiedEquipmentIds(),
+                        matchedModification.getDeletedEquipmentIds()
                 )
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
                 .filter(Objects::nonNull)
                 .distinct()
                 .filter(id -> pattern.matcher(stripAccents(id)).find())
-                .map(id -> ModificationsSearchResult.fromModificationEntity(entity)
+                .map(id -> ModificationsSearchResult.fromModificationEntity(modificationEntity)
                         .impactedEquipmentId(id)
                         .build())
-                .forEach(results::add);
+                .forEach(modificationSearchResults::add);
 
-        return results;
+        return modificationSearchResults;
     }
 
     private BoolQuery buildSearchModificationsQuery(
