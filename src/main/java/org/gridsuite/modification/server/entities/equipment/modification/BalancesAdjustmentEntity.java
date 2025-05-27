@@ -7,6 +7,7 @@
 
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import com.powsybl.loadflow.LoadFlowParameters;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,6 +40,10 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Column(name = "countries_to_balance")
     private String countriesToBalance = CountriesUtils.stringify(DEFAULT_COUNTRIES_TO_BALANCE);
 
+    @Column(name = "balance_type")
+    @Enumerated(EnumType.STRING)
+    private LoadFlowParameters.BalanceType balanceType = DEFAULT_BALANCE_TYPE;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "balances_adjustment_id", foreignKey = @ForeignKey(name = "area_balances_adjustment_id_fk"))
     private List<BalancesAdjustmentAreaEntity> areas;
@@ -59,6 +64,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
             .thresholdNetPosition(thresholdNetPosition)
             .maxNumberIterations(maxNumberIterations)
             .countriesToBalance(CountriesUtils.toList(countriesToBalance))
+            .balanceType(balanceType)
             .build();
     }
 
@@ -72,6 +78,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
         maxNumberIterations = balancesAdjustmentModificationInfos.getMaxNumberIterations();
         thresholdNetPosition = balancesAdjustmentModificationInfos.getThresholdNetPosition();
         countriesToBalance = CountriesUtils.stringify(balancesAdjustmentModificationInfos.getCountriesToBalance());
+        balanceType = balancesAdjustmentModificationInfos.getBalanceType();
         List<BalancesAdjustmentAreaEntity> areaEntities = balancesAdjustmentModificationInfos
             .getAreas()
             .stream()
