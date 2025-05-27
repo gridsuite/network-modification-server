@@ -388,7 +388,7 @@ public class NetworkModificationService {
         return sb.toString();
     }
 
-    public List<ModificationApplicationInfos> searchNetworkModificationsResult(@NonNull UUID networkUuid, @NonNull String userInput) {
+    public List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
         BoolQuery boolQueryBuilder = buildSearchModificationsQuery(userInput, networkUuid);
 
         NativeQuery nativeQuery = new NativeQueryBuilder()
@@ -403,53 +403,48 @@ public class NetworkModificationService {
                 .toList();
     }
 
-    private static String stripAccents(String input) {
-        return StringUtils.stripAccents(input);
-    }
-
     public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
-        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
-        List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
+        List<ModificationApplicationInfos> rawSearchModificationInfos = searchNetworkModificationInfos(networkUuid, userInput);
 
-        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(modifications);
+        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(rawSearchModificationInfos);
 
-        List<ModificationsSearchResult> filteredModificationsResult = modifications.stream()
-                .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, pattern))
+        List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
+                .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput))
                 .flatMap(List::stream)
                 .toList();
 
-        Map<UUID, UUID> modificationToGroupMap = createModificationToGroupMapping(modifications);
+        return groupSearchResultsByGroupUuid(filteredSearchModificationsResult, rawSearchModificationInfos);
+    }
 
-        return filteredModificationsResult.stream()
+    private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults, List<ModificationApplicationInfos> modificationApplicationInfos) {
+        Map<UUID, UUID> modificationToGroupMap = modificationApplicationInfos.stream()
+                .collect(Collectors.toMap(
+                        ModificationApplicationInfos::getModificationUuid,
+                        ModificationApplicationInfos::getGroupUuid
+                ));
+
+        return modificationsSearchResults.stream()
                 .collect(Collectors.groupingBy(
                         result -> modificationToGroupMap.get(result.getModificationUuid()),
                         Collectors.toList()
                 ));
     }
 
-    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modifications) {
-        return getModificationsByUuids(modifications.stream()
+    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modificationInfos) {
+        return getModificationsByUuids(modificationInfos.stream()
                 .map(ModificationApplicationInfos::getModificationUuid)
                 .toList())
                 .stream()
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
     }
 
-    private Map<UUID, UUID> createModificationToGroupMapping(List<ModificationApplicationInfos> modifications) {
-        return modifications.stream()
-                .collect(Collectors.toMap(
-                        ModificationApplicationInfos::getModificationUuid,
-                        ModificationApplicationInfos::getGroupUuid
-                ));
-    }
-
     private List<ModificationsSearchResult> findMatchingEquipmentResults(
             ModificationEntity modificationEntity,
             ModificationApplicationInfos matchedModification,
-            Pattern pattern) {
+            String userInput) {
+        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
 
         List<ModificationsSearchResult> modificationSearchResults = new ArrayList<>();
-
         Stream.of(
                         matchedModification.getCreatedEquipmentIds(),
                         matchedModification.getModifiedEquipmentIds(),
@@ -465,6 +460,10 @@ public class NetworkModificationService {
                 .forEach(modificationSearchResults::add);
 
         return modificationSearchResults;
+    }
+
+    private static String stripAccents(String input) {
+        return StringUtils.stripAccents(input);
     }
 
     private BoolQuery buildSearchModificationsQuery(
