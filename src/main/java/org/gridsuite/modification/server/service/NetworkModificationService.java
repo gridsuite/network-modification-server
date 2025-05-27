@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -387,7 +388,7 @@ public class NetworkModificationService {
         return sb.toString();
     }
 
-    public List<ModificationApplicationInfos> searchNetworkModificationsResult(@NonNull UUID networkUuid, @NonNull String userInput) {
+    public List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
         BoolQuery boolQueryBuilder = buildSearchModificationsQuery(userInput, networkUuid);
 
         NativeQuery nativeQuery = new NativeQueryBuilder()
@@ -402,55 +403,48 @@ public class NetworkModificationService {
                 .toList();
     }
 
-    private static String stripAccents(String input) {
-        return StringUtils.stripAccents(input);
+    public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
+        List<ModificationApplicationInfos> rawSearchModificationInfos = searchNetworkModificationInfos(networkUuid, userInput);
+
+        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(rawSearchModificationInfos);
+
+        List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
+                .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput))
+                .flatMap(List::stream)
+                .toList();
+
+        return groupSearchResultsByGroupUuid(filteredSearchModificationsResult, rawSearchModificationInfos);
     }
 
-    public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
-        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
-        List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
-        Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
-                .collect(Collectors.groupingBy(ModificationApplicationInfos::getGroupUuid));
-
-        return modificationsByGroupUuid.entrySet().stream()
+    private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults, List<ModificationApplicationInfos> modificationApplicationInfos) {
+        Map<UUID, UUID> modificationToGroupMap = modificationApplicationInfos.stream()
                 .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> {
-                            List<ModificationApplicationInfos> infos = entry.getValue();
-                            Map<UUID, ModificationApplicationInfos> infosByUuid = groupModificationApplicationByUuid(infos);
+                        ModificationApplicationInfos::getModificationUuid,
+                        ModificationApplicationInfos::getGroupUuid
+                ));
 
-                            List<UUID> modificationUuids = new ArrayList<>(infosByUuid.keySet());
-                            List<ModificationEntity> entities = getModificationsByUuids(modificationUuids);
-                            return mapModificationEntitiesToSearchResults(entities, infosByUuid, pattern);
-                        }
+        return modificationsSearchResults.stream()
+                .collect(Collectors.groupingBy(
+                        result -> modificationToGroupMap.get(result.getModificationUuid()),
+                        Collectors.toList()
                 ));
     }
 
-    private Map<UUID, ModificationApplicationInfos> groupModificationApplicationByUuid(List<ModificationApplicationInfos> modificationApplications) {
-        return modificationApplications.stream()
-                .collect(Collectors.toMap(ModificationApplicationInfos::getModificationUuid, info -> info));
-    }
-
-    private List<ModificationsSearchResult> mapModificationEntitiesToSearchResults(
-            List<ModificationEntity> modificationEntities,
-            Map<UUID, ModificationApplicationInfos> modificationApplicationByUuid,
-            Pattern pattern) {
-
-        return modificationEntities.stream()
-                .flatMap(entity -> {
-                    ModificationApplicationInfos matchedModification = modificationApplicationByUuid.get(entity.getId());
-                    return findMatchingEquipmentResults(entity, matchedModification, pattern).stream();
-                })
-                .toList();
+    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modificationInfos) {
+        return getModificationsByUuids(modificationInfos.stream()
+                .map(ModificationApplicationInfos::getModificationUuid)
+                .toList())
+                .stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
     }
 
     private List<ModificationsSearchResult> findMatchingEquipmentResults(
             ModificationEntity modificationEntity,
             ModificationApplicationInfos matchedModification,
-            Pattern pattern) {
+            String userInput) {
+        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
 
         List<ModificationsSearchResult> modificationSearchResults = new ArrayList<>();
-
         Stream.of(
                         matchedModification.getCreatedEquipmentIds(),
                         matchedModification.getModifiedEquipmentIds(),
@@ -466,6 +460,10 @@ public class NetworkModificationService {
                 .forEach(modificationSearchResults::add);
 
         return modificationSearchResults;
+    }
+
+    private static String stripAccents(String input) {
+        return StringUtils.stripAccents(input);
     }
 
     private BoolQuery buildSearchModificationsQuery(
