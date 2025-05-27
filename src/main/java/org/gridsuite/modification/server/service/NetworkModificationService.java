@@ -39,7 +39,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -410,28 +409,39 @@ public class NetworkModificationService {
     public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
         Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
+        Map<UUID, List<ModificationApplicationInfos>> modificationsByGroupUuid = modifications.stream()
+                .collect(Collectors.groupingBy(ModificationApplicationInfos::getGroupUuid));
 
-        Map<UUID, ModificationEntity> modificationEntitiesById =
-                getModificationsByUuids(modifications.stream()
-                        .map(ModificationApplicationInfos::getModificationUuid)
-                        .toList())
-                        .stream()
-                        .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-
-        List<ModificationsSearchResult> filteredModificationsResult = modifications.stream()
-                .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, pattern))
-                .flatMap(List::stream)
-                .toList();
-
-        return filteredModificationsResult.stream()
-                .map(result -> {
-                    ModificationEntity modification = modificationEntitiesById.get(result.getModificationUuid());
-                    return new AbstractMap.SimpleEntry<>(modification.getGroup().getId(), result);
-                })
-                .collect(Collectors.groupingBy(
+        return modificationsByGroupUuid.entrySet().stream()
+                .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        Collectors.mapping(Map.Entry::getValue, Collectors.toList())
+                        entry -> {
+                            List<ModificationApplicationInfos> infos = entry.getValue();
+                            Map<UUID, ModificationApplicationInfos> infosByUuid = groupModificationApplicationByUuid(infos);
+
+                            List<UUID> modificationUuids = new ArrayList<>(infosByUuid.keySet());
+                            List<ModificationEntity> entities = getModificationsByUuids(modificationUuids);
+                            return mapModificationEntitiesToSearchResults(entities, infosByUuid, pattern);
+                        }
                 ));
+    }
+
+    private Map<UUID, ModificationApplicationInfos> groupModificationApplicationByUuid(List<ModificationApplicationInfos> modificationApplications) {
+        return modificationApplications.stream()
+                .collect(Collectors.toMap(ModificationApplicationInfos::getModificationUuid, info -> info));
+    }
+
+    private List<ModificationsSearchResult> mapModificationEntitiesToSearchResults(
+            List<ModificationEntity> modificationEntities,
+            Map<UUID, ModificationApplicationInfos> modificationApplicationByUuid,
+            Pattern pattern) {
+
+        return modificationEntities.stream()
+                .flatMap(entity -> {
+                    ModificationApplicationInfos matchedModification = modificationApplicationByUuid.get(entity.getId());
+                    return findMatchingEquipmentResults(entity, matchedModification, pattern).stream();
+                })
+                .toList();
     }
 
     private List<ModificationsSearchResult> findMatchingEquipmentResults(
