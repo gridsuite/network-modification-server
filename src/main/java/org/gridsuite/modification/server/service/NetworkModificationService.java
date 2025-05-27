@@ -411,28 +411,35 @@ public class NetworkModificationService {
         Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
         List<ModificationApplicationInfos> modifications = searchNetworkModificationsResult(networkUuid, userInput);
 
-        Map<UUID, UUID> modificationToGroupMap = modifications.stream()
-                .collect(Collectors.toMap(
-                        ModificationApplicationInfos::getModificationUuid,
-                        ModificationApplicationInfos::getGroupUuid
-                ));
-
-        Map<UUID, ModificationEntity> modificationEntitiesById =
-                getModificationsByUuids(modifications.stream()
-                        .map(ModificationApplicationInfos::getModificationUuid)
-                        .toList())
-                        .stream()
-                        .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(modifications);
 
         List<ModificationsSearchResult> filteredModificationsResult = modifications.stream()
                 .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, pattern))
                 .flatMap(List::stream)
                 .toList();
 
+        Map<UUID, UUID> modificationToGroupMap = createModificationToGroupMapping(modifications);
+
         return filteredModificationsResult.stream()
                 .collect(Collectors.groupingBy(
                         result -> modificationToGroupMap.get(result.getModificationUuid()),
                         Collectors.toList()
+                ));
+    }
+
+    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modifications) {
+        return getModificationsByUuids(modifications.stream()
+                .map(ModificationApplicationInfos::getModificationUuid)
+                .toList())
+                .stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+    }
+
+    private Map<UUID, UUID> createModificationToGroupMapping(List<ModificationApplicationInfos> modifications) {
+        return modifications.stream()
+                .collect(Collectors.toMap(
+                        ModificationApplicationInfos::getModificationUuid,
+                        ModificationApplicationInfos::getGroupUuid
                 ));
     }
 
