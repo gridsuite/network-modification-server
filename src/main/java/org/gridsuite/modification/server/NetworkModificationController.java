@@ -165,9 +165,18 @@ public class NetworkModificationController {
     @PostMapping(value = "/networks/{networkUuid}/build")
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
-    public ResponseEntity<Void> buildVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                     @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
+    public ResponseEntity<NetworkModificationResult> buildVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
                                                      @RequestBody BuildInfos buildInfos) {
+        ;
+        return ResponseEntity.ok().body(networkModificationService.buildVariant(networkUuid, buildInfos));
+    }
+
+    @PostMapping(value = "/networks/{networkUuid}/build-and-save")
+    @Operation(summary = "Build a network variant")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
+    public ResponseEntity<Void> buildAndSaveVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
+                                             @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                             @RequestBody BuildInfos buildInfos) {
         networkModificationService.buildVariantRequest(networkUuid, buildInfos, receiver);
         return ResponseEntity.ok().build();
     }
