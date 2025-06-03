@@ -1395,9 +1395,11 @@ class ModificationRepositoryTest {
     @Test
     void testCreateCouplingDevice() {
         ModificationEntity modification = ModificationEntity.fromDTO(CreateCouplingDeviceInfos.builder()
-                    .busOrBbsId1("bbs1")
-                    .busOrBbsId2("bbs2")
-                    .build());
+            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                .busbarSectionId1("bbs1")
+                .busbarSectionId2("bbs2")
+                .build())
+            .build());
 
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modification));
         assertRequestsCount(2, 3, 0, 0);

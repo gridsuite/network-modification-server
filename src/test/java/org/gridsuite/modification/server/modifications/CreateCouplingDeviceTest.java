@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.modifications;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -48,8 +49,10 @@ class CreateCouplingDeviceTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         return CreateCouplingDeviceInfos.builder()
-            .busOrBbsId1("b1")
-            .busOrBbsId2("b3")
+            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                .busbarSectionId1("b1")
+                .busbarSectionId2("b3")
+                .build())
             .voltageLevelId("v1")
             .build();
     }
@@ -57,8 +60,10 @@ class CreateCouplingDeviceTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return CreateCouplingDeviceInfos.builder()
-            .busOrBbsId1("b1")
-            .busOrBbsId2("b4")
+            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                .busbarSectionId1("b1")
+                .busbarSectionId2("b4")
+                .build())
             .voltageLevelId("v1")
             .build();
     }
