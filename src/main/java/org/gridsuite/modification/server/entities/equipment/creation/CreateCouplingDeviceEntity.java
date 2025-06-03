@@ -10,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.CreateCouplingDeviceInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -41,8 +42,10 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
 
     private void assignAttributes(CreateCouplingDeviceInfos createCouplingDeviceInfos) {
         this.voltageLevelId = createCouplingDeviceInfos.getVoltageLevelId();
-        this.busOrBbsId1 = createCouplingDeviceInfos.getBusOrBbsId1();
-        this.busOrBbsId2 = createCouplingDeviceInfos.getBusOrBbsId2();
+        if (createCouplingDeviceInfos.getCouplingDeviceInfos() != null) {
+            this.busOrBbsId1 = createCouplingDeviceInfos.getCouplingDeviceInfos().getBusbarSectionId1();
+            this.busOrBbsId2 = createCouplingDeviceInfos.getCouplingDeviceInfos().getBusbarSectionId2();
+        }
     }
 
     public CreateCouplingDeviceEntity(CreateCouplingDeviceInfos createCouplingDeviceInfos) {
@@ -62,7 +65,9 @@ public class CreateCouplingDeviceEntity extends ModificationEntity {
             .stashed(getStashed())
             .activated(getActivated())
             .voltageLevelId(getVoltageLevelId())
-            .busOrBbsId1(getBusOrBbsId1())
-            .busOrBbsId2(getBusOrBbsId2());
+            .couplingDeviceInfos(CouplingDeviceInfos.builder()
+                .busbarSectionId1(getBusOrBbsId1())
+                .busbarSectionId2(getBusOrBbsId2())
+                .build());
     }
 }
