@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.service;
 
 import lombok.NonNull;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.WorkflowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class NotificationService {
     private static final String CATEGORY_BROKER_OUTPUT = BuildWorkerService.class.getName() + ".output-broker-messages";
     private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
     public static final String RECEIVER_HEADER = "receiver";
+    public static final String WORKFLOW_TYPE_HEADER = "workflowType";
+    public static final String WORKFLOW_INFOS_HEADER = "workflowInfos";
     public static final String NETWORK_UUID_HEADER = "networkUuid";
 
     @Autowired
@@ -38,11 +41,19 @@ public class NotificationService {
         publisher.send(bindingName, message);
     }
 
-    public void emitBuildResultMessage(@NonNull NetworkModificationResult payload, @NonNull String receiver) {
-        Message<NetworkModificationResult> message = MessageBuilder.withPayload(payload)
-                .setHeader(RECEIVER_HEADER, receiver)
-                .build();
-        sendMessage(message, "publishResultBuild-out-0");
+    public void emitBuildResultMessage(@NonNull NetworkModificationResult payload, @NonNull String receiver, WorkflowType workflowType, String workflowInfos) {
+        MessageBuilder<NetworkModificationResult> messageBuilder = MessageBuilder.withPayload(payload)
+                .setHeader(RECEIVER_HEADER, receiver);
+
+        if (workflowType != null) {
+            messageBuilder.setHeader(WORKFLOW_TYPE_HEADER, workflowType);
+        }
+
+        if (workflowInfos != null) {
+            messageBuilder.setHeader(WORKFLOW_INFOS_HEADER, workflowInfos);
+        }
+
+        sendMessage(messageBuilder.build(), "publishResultBuild-out-0");
     }
 
     public void emitBuildMessage(@NonNull Message<String> message) {
