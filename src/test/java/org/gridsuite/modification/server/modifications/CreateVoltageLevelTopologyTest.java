@@ -31,20 +31,20 @@ public class CreateVoltageLevelTopologyTest extends AbstractNetworkModificationT
 
     @Override
     protected ModificationInfos buildModification() {
-        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("v1").sectionCount(3).alignedBusesOrBusbarCount(1).build();
+        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("vl1").sectionCount(3).alignedBusesOrBusbarCount(1).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("v1").sectionCount(2).alignedBusesOrBusbarCount(2).build();
+        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("vl1").sectionCount(2).alignedBusesOrBusbarCount(2).build();
     }
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
         List<String> busBarIds = new ArrayList<>();
         getNetwork().getBusbarSections().forEach(busbarSection -> busBarIds.add(busbarSection.getId()));
-        Assertions.assertEquals(7, busBarIds.size());
-        Assertions.assertTrue(busBarIds.containsAll(List.of("v1_1_1", "v1_1_2", "v1_1_3", "bbs1", "bbs2", "bbs3", "bbs4")));
+        Assertions.assertEquals(5, busBarIds.size());
+        Assertions.assertTrue(busBarIds.containsAll(List.of("b1", "b2", "vl1_1_1", "vl1_1_2", "vl1_1_3")));
     }
 
     @Override
@@ -57,11 +57,11 @@ public class CreateVoltageLevelTopologyTest extends AbstractNetworkModificationT
 
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("{\"voltageLevelId\":\"v1\"}", modificationInfos.getMessageValues());
+        assertEquals("{\"voltageLevelId\":\"vl1\"}", modificationInfos.getMessageValues());
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) {
-        assertEquals("{\"voltageLevelId\":\"v1\"}", modificationInfos.getMessageValues());
+        assertEquals("{\"voltageLevelId\":\"vl1\"}", modificationInfos.getMessageValues());
     }
 }
