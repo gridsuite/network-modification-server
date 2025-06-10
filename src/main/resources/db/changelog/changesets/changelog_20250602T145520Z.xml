@@ -5,4 +5,10 @@
             <column name="with_load_flow" type="boolean"/>
         </addColumn>
     </changeSet>
+    <changeSet author="berrahmaach" id="1748876161766-26">
+        <update tableName="balances_adjustment">
+            <column name="with_load_flow" valueBoolean="true"/>
+            <where>with_load_flow IS NULL</where>
+        </update>
+    </changeSet>
 </databaseChangeLog>
