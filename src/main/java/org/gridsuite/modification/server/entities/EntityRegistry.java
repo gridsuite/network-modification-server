@@ -68,6 +68,7 @@ public final class EntityRegistry {
         register(LccModificationInfos.class, LccModificationEntity.class);
         register(LccConverterStationModificationInfos.class, LccConverterStationModificationEntity.class);
         register(VoltageLevelTopologyModificationInfos.class, VoltageLevelTopologyModificationEntity.class);
+        register(CreateCouplingDeviceInfos.class, CreateCouplingDeviceEntity.class);
 
         // // attatching and splitting
         register(LineAttachToVoltageLevelInfos.class, LineAttachToVoltageLevelEntity.class);
@@ -88,6 +89,8 @@ public final class EntityRegistry {
         register(VoltageInitModificationInfos.class, VoltageInitModificationEntity.class);
 
         register(GroovyScriptInfos.class, GroovyScriptEntity.class);
+
+        register(BalancesAdjustmentModificationInfos.class, BalancesAdjustmentEntity.class);
 
         // // deletion
         register(ByFilterDeletionInfos.class, ByFilterDeletionEntity.class);
