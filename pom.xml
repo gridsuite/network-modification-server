@@ -102,6 +102,8 @@
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-core</artifactId>
                 <version>${powsybl-core.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.gridsuite</groupId>
