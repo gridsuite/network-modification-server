@@ -44,6 +44,9 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Enumerated(EnumType.STRING)
     private LoadFlowParameters.BalanceType balanceType = DEFAULT_BALANCE_TYPE;
 
+    @Column(name = "with_load_flow")
+    private boolean withLoadFlow = DEFAULT_WITH_LOAD_FLOW;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "balances_adjustment_id", foreignKey = @ForeignKey(name = "area_balances_adjustment_id_fk"))
     private List<BalancesAdjustmentAreaEntity> areas;
@@ -56,16 +59,17 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Override
     public BalancesAdjustmentModificationInfos toModificationInfos() {
         return BalancesAdjustmentModificationInfos.builder()
-            .date(getDate())
-            .uuid(getId())
-            .stashed(getStashed())
-            .activated(getActivated())
-            .areas(areas.stream().map(BalancesAdjustmentAreaEntity::getAreaInfos).toList())
-            .thresholdNetPosition(thresholdNetPosition)
-            .maxNumberIterations(maxNumberIterations)
-            .countriesToBalance(CountriesUtils.toList(countriesToBalance))
-            .balanceType(balanceType)
-            .build();
+                .date(getDate())
+                .uuid(getId())
+                .stashed(getStashed())
+                .activated(getActivated())
+                .areas(areas.stream().map(BalancesAdjustmentAreaEntity::getAreaInfos).toList())
+                .thresholdNetPosition(thresholdNetPosition)
+                .maxNumberIterations(maxNumberIterations)
+                .countriesToBalance(CountriesUtils.toList(countriesToBalance))
+                .balanceType(balanceType)
+                .withLoadFlow(withLoadFlow)
+                .build();
     }
 
     @Override
@@ -79,6 +83,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
         thresholdNetPosition = balancesAdjustmentModificationInfos.getThresholdNetPosition();
         countriesToBalance = CountriesUtils.stringify(balancesAdjustmentModificationInfos.getCountriesToBalance());
         balanceType = balancesAdjustmentModificationInfos.getBalanceType();
+        withLoadFlow = balancesAdjustmentModificationInfos.isWithLoadFlow();
         List<BalancesAdjustmentAreaEntity> areaEntities = balancesAdjustmentModificationInfos
             .getAreas()
             .stream()
