@@ -2,13 +2,9 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="berrahmaach (generated)" id="1748876161766-25">
         <addColumn tableName="balances_adjustment">
-            <column name="with_load_flow" type="boolean"/>
+            <column name="with_load_flow" type="boolean" defaultValueBoolean="true" valueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
         </addColumn>
-    </changeSet>
-    <changeSet author="berrahmaach" id="1748876161766-26">
-        <update tableName="balances_adjustment">
-            <column name="with_load_flow" valueBoolean="true"/>
-            <where>with_load_flow IS NULL</where>
-        </update>
     </changeSet>
 </databaseChangeLog>
