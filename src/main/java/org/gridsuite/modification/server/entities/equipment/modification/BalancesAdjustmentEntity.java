@@ -47,6 +47,9 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Column(name = "with_load_flow")
     private boolean withLoadFlow = DEFAULT_WITH_LOAD_FLOW;
 
+    @Column(name = "subtract_load_flow_balancing")
+    private boolean subtractLoadFlowBalancing = DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "balances_adjustment_id", foreignKey = @ForeignKey(name = "area_balances_adjustment_id_fk"))
     private List<BalancesAdjustmentAreaEntity> areas;
@@ -69,6 +72,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
                 .countriesToBalance(CountriesUtils.toList(countriesToBalance))
                 .balanceType(balanceType)
                 .withLoadFlow(withLoadFlow)
+                .subtractLoadFlowBalancing(subtractLoadFlowBalancing)
                 .build();
     }
 
@@ -84,6 +88,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
         countriesToBalance = CountriesUtils.stringify(balancesAdjustmentModificationInfos.getCountriesToBalance());
         balanceType = balancesAdjustmentModificationInfos.getBalanceType();
         withLoadFlow = balancesAdjustmentModificationInfos.isWithLoadFlow();
+        subtractLoadFlowBalancing = balancesAdjustmentModificationInfos.isSubtractLoadFlowBalancing();
         List<BalancesAdjustmentAreaEntity> areaEntities = balancesAdjustmentModificationInfos
             .getAreas()
             .stream()
