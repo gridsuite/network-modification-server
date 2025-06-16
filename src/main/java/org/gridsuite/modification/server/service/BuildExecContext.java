@@ -36,14 +36,6 @@ public class BuildExecContext {
 
     private final String workflowInfos;
 
-    public BuildExecContext(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos, @NonNull String receiver) {
-        this.networkUuid = networkUuid;
-        this.buildInfos = buildInfos;
-        this.receiver = receiver;
-        this.workflowType = null;
-        this.workflowInfos = null;
-    }
-
     public BuildExecContext(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos, @NonNull String receiver, WorkflowType workflowType, String workflowInfos) {
         this.networkUuid = networkUuid;
         this.buildInfos = buildInfos;
