@@ -18,6 +18,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.service.NotificationService.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +44,7 @@ class BuildWorkerServiceTest {
     @MockBean
     private NetworkModificationService networkModificationService;
     @MockBean
-    private NotificationService notificationService;
+    private StreamBridge publisher;
 
     @Test
     void testConsumeBuildWithMalformedInput() {
@@ -73,10 +76,18 @@ class BuildWorkerServiceTest {
         MessageHeaders messageHeaders = new MessageHeaders(headers);
 
         when(networkModificationService.buildVariant(eq(networkUuid), any(BuildInfos.class))).thenReturn(modificationResult);
+
         buildWorkerService.consumeBuild().accept(MessageBuilder.createMessage(objectMapper.writeValueAsString(buildInfos), messageHeaders));
+
         ArgumentCaptor<BuildInfos> buildInfosArgumentCaptor = ArgumentCaptor.forClass(BuildInfos.class);
         verify(networkModificationService, times(1)).buildVariant(eq(networkUuid), buildInfosArgumentCaptor.capture());
         assertThat(buildInfosArgumentCaptor.getValue()).usingRecursiveComparison().isEqualTo(buildInfos);
-        verify(notificationService, times(1)).emitBuildResultMessage(modificationResult, receiver, workflowType, workflowInfos);
+
+        ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+        verify(publisher, times(1)).send(eq("publishResultBuild-out-0"), messageArgumentCaptor.capture());
+        MessageHeaders messageCaptorHeaders = messageArgumentCaptor.getValue().getHeaders();
+        assertEquals(workflowType, messageCaptorHeaders.get(WORKFLOW_TYPE_HEADER));
+        assertEquals(workflowInfos, messageCaptorHeaders.get(WORKFLOW_INFOS_HEADER));
+        assertEquals(receiver, messageCaptorHeaders.get(RECEIVER_HEADER));
     }
 }
