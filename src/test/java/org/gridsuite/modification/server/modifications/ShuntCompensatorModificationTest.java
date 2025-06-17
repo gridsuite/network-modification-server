@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
 import static org.gridsuite.modification.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,7 +55,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
                         "Shunt compensator wrong id does not exist in network").getMessage(),
-                shuntCompensator.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -70,7 +71,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         String.format("Maximum section count should be greater or equal to 1")).getMessage(),
-                shuntCompensator.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -86,7 +87,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
-                shuntCompensator.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -108,7 +109,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
-                shuntCompensatorModifications.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -130,7 +131,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                          "Section count should be between 0 and Maximum section count (1), actual : -1").getMessage(),
-                shuntCompensatorModifications.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -146,7 +147,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         "Qmax at nominal voltage should be greater or equal to 0").getMessage(),
-                shuntCompensator.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test

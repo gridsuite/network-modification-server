@@ -296,11 +296,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     }
 
     private void assignAttributes(TwoWindingsTransformerModificationInfos twoWindingsTransformerModificationInfos) {
-        this.g = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getG());
-        this.b = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getB());
-        this.ratedU1 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU1());
-        this.ratedU2 = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU2());
-        this.ratedS = new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS());
+        this.g = twoWindingsTransformerModificationInfos.getG() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getG()) : null;
+        this.b = twoWindingsTransformerModificationInfos.getB() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getB()) : null;
+        this.ratedU1 = twoWindingsTransformerModificationInfos.getRatedU1() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU1()) : null;
+        this.ratedU2 = twoWindingsTransformerModificationInfos.getRatedU2() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedU2()) : null;
+        this.ratedS = twoWindingsTransformerModificationInfos.getRatedS() != null ? new DoubleModificationEmbedded(twoWindingsTransformerModificationInfos.getRatedS()) : null;
         this.phaseTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(twoWindingsTransformerModificationInfos.getPhaseTapChangerToBeEstimated()) : null;
         this.ratioTapChangerToBeEstimated = twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated() != null ? new BooleanModificationEmbedded(twoWindingsTransformerModificationInfos.getRatioTapChangerToBeEstimated()) : null;
         this.tapChangerSteps = new ArrayList<>();
@@ -313,35 +313,35 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     }
 
     private void assignRatioTapChanger(RatioTapChangerModificationInfos ratioTapChanger) {
-        this.ratioTapChangerEnabled = new BooleanModificationEmbedded(ratioTapChanger.getEnabled());
-        this.ratioTapChangerRegulationType = new EnumModificationEmbedded<>(ratioTapChanger.getRegulationType());
-        this.ratioTapChangerRegulationSide = new EnumModificationEmbedded<>(ratioTapChanger.getRegulationSide());
-        this.ratioTapChangerLowTapPosition = new IntegerModificationEmbedded(ratioTapChanger.getLowTapPosition());
-        this.ratioTapChangerTapPosition = new IntegerModificationEmbedded(ratioTapChanger.getTapPosition());
-        this.ratioTapChangerRegulating = new BooleanModificationEmbedded(ratioTapChanger.getRegulating());
-        this.ratioTapChangerTargetDeadband = new DoubleModificationEmbedded(ratioTapChanger.getTargetDeadband());
-        this.ratioTapChangerTerminalRefConnectableId = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalId());
-        this.ratioTapChangerTerminalRefVoltageLevelId = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalVlId());
-        this.ratioTapChangerTerminalRefType = new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalType());
-        this.ratioTapChangerLoadTapChangingCapabilities = new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities());
-        this.ratioTapChangerTargetV = new DoubleModificationEmbedded(ratioTapChanger.getTargetV());
+        this.ratioTapChangerEnabled = ratioTapChanger.getEnabled() != null ? new BooleanModificationEmbedded(ratioTapChanger.getEnabled()) : null;
+        this.ratioTapChangerRegulationType = ratioTapChanger.getRegulationType() != null ? new EnumModificationEmbedded<>(ratioTapChanger.getRegulationType()) : null;
+        this.ratioTapChangerRegulationSide = ratioTapChanger.getRegulationSide() != null ? new EnumModificationEmbedded<>(ratioTapChanger.getRegulationSide()) : null;
+        this.ratioTapChangerLowTapPosition = ratioTapChanger.getLowTapPosition() != null ? new IntegerModificationEmbedded(ratioTapChanger.getLowTapPosition()) : null;
+        this.ratioTapChangerTapPosition = ratioTapChanger.getTapPosition() != null ? new IntegerModificationEmbedded(ratioTapChanger.getTapPosition()) : null;
+        this.ratioTapChangerRegulating = ratioTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(ratioTapChanger.getRegulating()) : null;
+        this.ratioTapChangerTargetDeadband = ratioTapChanger.getTargetDeadband() != null ? new DoubleModificationEmbedded(ratioTapChanger.getTargetDeadband()) : null;
+        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId() != null ? new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalId()) : null;
+        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalVlId()) : null;
+        this.ratioTapChangerTerminalRefType = ratioTapChanger.getRegulatingTerminalType() != null ? new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalType()) : null;
+        this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities()) : null;
+        this.ratioTapChangerTargetV = ratioTapChanger.getTargetV() != null ? new DoubleModificationEmbedded(ratioTapChanger.getTargetV()) : null;
         if (ratioTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddableRatioTapChangerSteps(ratioTapChanger.getSteps()));
         }
     }
 
     private void assignPhaseTapChanger(PhaseTapChangerModificationInfos phaseTapChanger) {
-        this.phaseTapChangerEnabled = new BooleanModificationEmbedded(phaseTapChanger.getEnabled());
-        this.phaseTapChangerRegulationType = new EnumModificationEmbedded<>(phaseTapChanger.getRegulationType());
-        this.phaseTapChangerRegulationSide = new EnumModificationEmbedded<>(phaseTapChanger.getRegulationSide());
-        this.phaseTapChangerRegulationMode = new EnumModificationEmbedded<>(phaseTapChanger.getRegulationMode());
-        this.phaseTapChangerRegulationValue = new DoubleModificationEmbedded(phaseTapChanger.getRegulationValue());
-        this.phaseTapChangerLowTapPosition = new IntegerModificationEmbedded(phaseTapChanger.getLowTapPosition());
-        this.phaseTapChangerTapPosition = new IntegerModificationEmbedded(phaseTapChanger.getTapPosition());
-        this.phaseTapChangerTargetDeadband = new DoubleModificationEmbedded(phaseTapChanger.getTargetDeadband());
-        this.phaseTapChangerTerminalRefConnectableId = new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalId());
-        this.phaseTapChangerTerminalRefVoltageLevelId = new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalVlId());
-        this.phaseTapChangerTerminalRefType = new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalType());
+        this.phaseTapChangerEnabled = phaseTapChanger.getEnabled() != null ? new BooleanModificationEmbedded(phaseTapChanger.getEnabled()) : null;
+        this.phaseTapChangerRegulationType = phaseTapChanger.getRegulationType() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationType()) : null;
+        this.phaseTapChangerRegulationSide = phaseTapChanger.getRegulationSide() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationSide()) : null;
+        this.phaseTapChangerRegulationMode = phaseTapChanger.getRegulationMode() != null ? new EnumModificationEmbedded<>(phaseTapChanger.getRegulationMode()) : null;
+        this.phaseTapChangerRegulationValue = phaseTapChanger.getRegulationValue() != null ? new DoubleModificationEmbedded(phaseTapChanger.getRegulationValue()) : null;
+        this.phaseTapChangerLowTapPosition = phaseTapChanger.getLowTapPosition() != null ? new IntegerModificationEmbedded(phaseTapChanger.getLowTapPosition()) : null;
+        this.phaseTapChangerTapPosition = phaseTapChanger.getTapPosition() != null ? new IntegerModificationEmbedded(phaseTapChanger.getTapPosition()) : null;
+        this.phaseTapChangerTargetDeadband = phaseTapChanger.getTargetDeadband() != null ? new DoubleModificationEmbedded(phaseTapChanger.getTargetDeadband()) : null;
+        this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getRegulatingTerminalId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalId()) : null;
+        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalVlId()) : null;
+        this.phaseTapChangerTerminalRefType = phaseTapChanger.getRegulatingTerminalType() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalType()) : null;
         if (phaseTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
         }

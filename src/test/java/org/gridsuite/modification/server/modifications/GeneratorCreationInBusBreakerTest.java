@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
 import static org.gridsuite.modification.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,8 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("IntegrationTest")
 class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest {
-    private static String PROPERTY_NAME = "property-name";
-    private static String PROPERTY_VALUE = "property-value";
+    private static final String PROPERTY_NAME = "property-name";
+    private static final String PROPERTY_VALUE = "property-value";
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -142,7 +143,7 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(BUS_NOT_FOUND, "notFoundBus").getMessage(),
-                generatorCreationInfos.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -156,7 +157,7 @@ class GeneratorCreationInBusBreakerTest extends AbstractNetworkModificationTest 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=titi not found with type LINE").getMessage(),
-            generatorCreationInfos.getErrorType().name(), reportService);
+            ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.Switch;
@@ -31,7 +30,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTest {
-    private ObjectMapper objectMapper;
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -72,7 +70,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
     }
 
@@ -98,7 +96,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
     }
 
@@ -152,7 +150,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("nonexistent_vl")
-                .equipmentAttributeModification(List.of())
+                .equipmentAttributeModificationList(List.of())
                 .build();
 
         String body = getJsonBody(infos, null);
@@ -169,7 +167,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .stashed(false)
                 .activated(true)
                 .equipmentId("v1")
-                .equipmentAttributeModification(emptyModifications)
+                .equipmentAttributeModificationList(emptyModifications)
                 .build();
 
         String body = getJsonBody(infos, null);
@@ -194,21 +192,13 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
         VoltageLevelTopologyModificationInfos infos = VoltageLevelTopologyModificationInfos.builder()
                 .stashed(false)
                 .equipmentId("v1")
-                .equipmentAttributeModification(equipmentAttributeModificationInfos)
+                .equipmentAttributeModificationList(equipmentAttributeModificationInfos)
                 .build();
 
         String body = getJsonBody(infos, null);
         mockMvc.perform(post(getNetworkModificationUri())
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
-    }
-
-    private void applyModification(VoltageLevelTopologyModificationInfos infos) throws Exception {
-        String body = getJsonBody(infos, null);
-        mockMvc.perform(post(getNetworkModificationUri())
-                        .content(body)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
     }
 
     @Override

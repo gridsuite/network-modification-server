@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
+
     private static LineCreationInfos getAttachmentLine(String lineName) {
         return LineCreationInfos.builder()
                 .stashed(false)
@@ -127,7 +129,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, existingLineId).getMessage(),
-                tryWithExistingLine.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -138,7 +140,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "absent_line_id").getMessage(),
-                lineAttachToAbsentLine.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 1);
 
         LineAttachToVoltageLevelInfos lineMissingLine = (LineAttachToVoltageLevelInfos) buildModification();
@@ -173,7 +175,7 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithExistingLineJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v5").getMessage(),
-                tryWithAttachmentPointId.getErrorType().name(), reportService);
+                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Override

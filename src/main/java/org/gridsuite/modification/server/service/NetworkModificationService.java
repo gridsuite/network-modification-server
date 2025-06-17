@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
@@ -15,21 +17,32 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
+import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.client.elc.Queries;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
@@ -52,15 +65,29 @@ public class NetworkModificationService {
 
     private final ObjectMapper objectMapper;
 
+    private final ElasticsearchOperations elasticsearchOperations;
+
+    private final ModificationApplicationInfosService applicationInfosService;
+
+    static final String NETWORK_UUID = "networkUuid.keyword";
+    static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
+    static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
+    static final String DELETED_EQUIPMENT_IDS = "deletedEquipmentIds.fullascii";
+    private final ModificationRepository modificationRepository;
+    private static final int PAGE_MAX_SIZE = 500;
+
     public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
                                       EquipmentInfosService equipmentInfosService, NotificationService notificationService,
-                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper) {
+                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper, ModificationApplicationInfosService applicationInfosService, ElasticsearchOperations elasticsearchOperations, ModificationRepository modificationRepository) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
         this.notificationService = notificationService;
         this.modificationApplicator = applicationService;
         this.objectMapper = objectMapper;
+        this.applicationInfosService = applicationInfosService;
+        this.elasticsearchOperations = elasticsearchOperations;
+        this.modificationRepository = modificationRepository;
     }
 
     public List<UUID> getModificationGroups() {
@@ -71,6 +98,10 @@ public class NetworkModificationService {
     // Need a transaction for collections lazy loading
     public List<ModificationInfos> getNetworkModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean stashedModifications) {
         return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedModifications);
+    }
+
+    public List<ModificationEntity> getModificationsByUuids(List<UUID> modificationUuids) {
+        return modificationRepository.findAllByIdIn(modificationUuids);
     }
 
     @Transactional(readOnly = true)
@@ -101,8 +132,19 @@ public class NetworkModificationService {
         return networkModificationRepository.getModificationsCount(groupUuid, stashed);
     }
 
+    @Transactional
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
+        deleteIndexedModificationGroup(List.of(groupUuid));
         networkModificationRepository.deleteModificationGroup(groupUuid, errorOnGroupNotFound);
+    }
+
+    private void deleteIndexedModificationGroup(List<UUID> groupUuids) {
+        applicationInfosService.deleteAllByGroupUuids(groupUuids);
+    }
+
+    @Transactional
+    public void deleteIndexedModificationGroup(List<UUID> groupUuids, UUID networkUuid) {
+        applicationInfosService.deleteAllByGroupUuidsAndNetworkUuid(groupUuids, networkUuid);
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {
@@ -155,18 +197,22 @@ public class NetworkModificationService {
     public NetworkModificationsResult createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
 
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(List.of(modificationInfo), applicationContexts));
+        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(),
+            applyModifications(groupUuid, modificationEntities, applicationContexts));
     }
 
     /**
      * Apply modifications on several networks
      */
-    private List<Optional<NetworkModificationResult>> applyModifications(List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts) {
+    private List<Optional<NetworkModificationResult>> applyModifications(UUID groupUuid, List<ModificationEntity> modifications, List<ModificationApplicationContext> applicationContexts) {
         return applicationContexts.stream().map(modificationApplicationContext ->
-            applyModifications(modificationApplicationContext.networkUuid(),
+            applyModifications(
+                modificationApplicationContext.networkUuid(),
                 modificationApplicationContext.variantId(),
-                new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId()),
-                modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid())).toList())
+                new ModificationApplicationGroup(groupUuid,
+                    modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getId())).toList(),
+                    new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
+                ))
         ).toList();
     }
 
@@ -191,43 +237,40 @@ public class NetworkModificationService {
         return network;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public NetworkModificationResult buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
-        List<Pair<ReportInfos, List<ModificationInfos>>> modificationInfos = new ArrayList<>();
-
+        List<ModificationApplicationGroup> modificationGroupsInfos = new ArrayList<>();
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
-            (groupUuid, reporterId) -> {
+            (groupUuid, reportInfos) -> {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
-                List<ModificationInfos> modificationsByGroup = List.of();
+                List<ModificationEntity> modifications = List.of();
                 try {
-                    modificationsByGroup = networkModificationRepository.getModificationsInfos(List.of(groupUuid), false)
+                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
                         .stream()
-                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getUuid()))
+                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
                         .filter(m -> !m.getStashed())
-                        .collect(Collectors.toList());
+                        .toList();
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
                     }
                 }
-                modificationInfos.add(
-                    Pair.of(reporterId,
-                        modificationsByGroup)
-                );
+                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos));
 
             }
         );
 
-        PreloadingStrategy preloadingStrategy = modificationInfos.stream().map(Pair::getRight)
+        PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
-            .map(ModificationInfos::getType)
+            .map(ModificationEntity::getType)
+            .map(ModificationType::valueOf)
             .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
 
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
 
-        return modificationApplicator.applyModifications(modificationInfos, networkInfos);
+        return modificationApplicator.applyModifications(modificationGroupsInfos, networkInfos);
     }
 
     public void buildVariantRequest(UUID networkUuid, BuildInfos buildInfos, String receiver) {
@@ -251,7 +294,7 @@ public class NetworkModificationService {
         // update origin/destinations groups to cut and paste all modificationsToMove
         List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-        List<Optional<NetworkModificationResult>> result = applyModifications && !modificationEntities.isEmpty() ? applyModifications(modificationEntities.stream().map(ModificationEntity::toModificationInfos).toList(), applicationContexts) : List.of();
+        List<Optional<NetworkModificationResult>> result = applyModifications && !modificationEntities.isEmpty() ? applyModifications(destinationGroupUuid, modificationEntities, applicationContexts) : List.of();
         return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), result);
     }
 
@@ -274,21 +317,17 @@ public class NetworkModificationService {
         }
     }
 
-    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId,
-                                                                   ReportInfos reportInfos, List<ModificationInfos> modificationInfos) {
-        if (!modificationInfos.isEmpty()) {
-            PreloadingStrategy preloadingStrategy = modificationInfos.stream()
-                .map(ModificationInfos::getType)
+    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+        if (!modificationGroupInfos.modifications().isEmpty()) {
+            PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
+                .map(ModificationEntity::getType)
+                .map(ModificationType::valueOf)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
             // try to apply the duplicated modifications (incremental mode)
             if (networkInfos.isVariantPresent()) {
-                return Optional.of(modificationApplicator.applyModifications(
-                    modificationInfos,
-                    networkInfos,
-                    reportInfos
-                ));
+                return Optional.of(modificationApplicator.applyModifications(modificationGroupInfos, networkInfos));
             }
         }
         return Optional.empty();
@@ -303,7 +342,7 @@ public class NetworkModificationService {
         List<ModificationEntity> duplicateModifications = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
         return new NetworkModificationsResult(
             duplicateModifications.stream().map(ModificationEntity::getId).toList(),
-            applyModifications(modificationInfos, applicationContexts)
+            applyModifications(targetGroupUuid, duplicateModifications, applicationContexts)
         );
     }
 
@@ -311,7 +350,7 @@ public class NetworkModificationService {
     public NetworkModificationsResult insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modificationInfos = networkModificationRepository.getCompositeModificationsInfos(modificationsUuids);
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(targetGroupUuid, modificationInfos);
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(modificationInfos, applicationContexts));
+        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(targetGroupUuid, modificationEntities, applicationContexts));
     }
 
     @Transactional
@@ -334,5 +373,128 @@ public class NetworkModificationService {
 
     public List<ModificationMetadata> getModificationsMetadata(List<UUID> ids) {
         return networkModificationRepository.getModificationsMetadata(ids);
+    }
+
+    public static String escapeLucene(String s) {
+        StringBuilder sb = new StringBuilder(s.length() + 16);
+
+        for (int i = 0; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if ("+\\-!()^[]\"{}~*?|&/ ".indexOf(c) != -1) {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    public List<ModificationApplicationInfos> searchNetworkModificationInfos(@NonNull UUID networkUuid, @NonNull String userInput) {
+        BoolQuery boolQueryBuilder = buildSearchModificationsQuery(userInput, networkUuid);
+
+        NativeQuery nativeQuery = new NativeQueryBuilder()
+                .withQuery(boolQueryBuilder._toQuery())
+                .withPageable(PageRequest.of(0, PAGE_MAX_SIZE))
+                .build();
+
+        return elasticsearchOperations
+                .search(nativeQuery, ModificationApplicationInfos.class)
+                .stream()
+                .map(SearchHit::getContent)
+                .toList();
+    }
+
+    public Map<UUID, List<ModificationsSearchResult>> searchNetworkModifications(@NonNull UUID networkUuid, @NonNull String userInput) {
+        List<ModificationApplicationInfos> rawSearchModificationInfos = searchNetworkModificationInfos(networkUuid, userInput);
+
+        Map<UUID, ModificationEntity> modificationEntitiesById = getModificationEntitiesById(rawSearchModificationInfos);
+
+        List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
+                .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput))
+                .flatMap(List::stream)
+                .toList();
+
+        return groupSearchResultsByGroupUuid(filteredSearchModificationsResult, rawSearchModificationInfos);
+    }
+
+    private Map<UUID, List<ModificationsSearchResult>> groupSearchResultsByGroupUuid(List<ModificationsSearchResult> modificationsSearchResults, List<ModificationApplicationInfos> modificationApplicationInfos) {
+        Map<UUID, UUID> modificationToGroupMap = modificationApplicationInfos.stream()
+                .collect(Collectors.toMap(
+                        ModificationApplicationInfos::getModificationUuid,
+                        ModificationApplicationInfos::getGroupUuid
+                ));
+
+        return modificationsSearchResults.stream()
+                .collect(Collectors.groupingBy(
+                        result -> modificationToGroupMap.get(result.getModificationUuid()),
+                        Collectors.toList()
+                ));
+    }
+
+    private Map<UUID, ModificationEntity> getModificationEntitiesById(List<ModificationApplicationInfos> modificationInfos) {
+        return getModificationsByUuids(modificationInfos.stream()
+                .map(ModificationApplicationInfos::getModificationUuid)
+                .toList())
+                .stream()
+                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+    }
+
+    private List<ModificationsSearchResult> findMatchingEquipmentResults(
+            ModificationEntity modificationEntity,
+            ModificationApplicationInfos matchedModification,
+            String userInput) {
+        Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
+
+        List<ModificationsSearchResult> modificationSearchResults = new ArrayList<>();
+        Stream.of(
+                        matchedModification.getCreatedEquipmentIds(),
+                        matchedModification.getModifiedEquipmentIds(),
+                        matchedModification.getDeletedEquipmentIds()
+                )
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .distinct()
+                .filter(id -> pattern.matcher(stripAccents(id)).find())
+                .map(id -> ModificationsSearchResult.fromModificationEntity(modificationEntity)
+                        .impactedEquipmentId(id)
+                        .build())
+                .forEach(modificationSearchResults::add);
+
+        return modificationSearchResults;
+    }
+
+    private static String stripAccents(String input) {
+        return StringUtils.stripAccents(input);
+    }
+
+    private BoolQuery buildSearchModificationsQuery(
+            @NonNull String userInput,
+            @NonNull UUID networkUuid) {
+
+        String normalizedUserInput = "*" + escapeLucene(userInput) + "*";
+
+        Query createdEquipmentQuery = Queries
+                .wildcardQuery(CREATED_EQUIPMENT_IDS, normalizedUserInput)
+                ._toQuery();
+
+        Query modifiedEquipmentQuery = Queries
+                .wildcardQuery(MODIFIED_EQUIPMENT_IDS, normalizedUserInput)
+                ._toQuery();
+
+        Query deletedEquipmentQuery = Queries
+                .wildcardQuery(DELETED_EQUIPMENT_IDS, normalizedUserInput)
+                ._toQuery();
+
+        BoolQuery equipmentImpactedQuery = new BoolQuery.Builder()
+                .should(List.of(createdEquipmentQuery, modifiedEquipmentQuery, deletedEquipmentQuery))
+                .build();
+
+        Query networkFilter = Queries
+                .termQuery(NETWORK_UUID, networkUuid.toString())
+                ._toQuery();
+
+        BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder()
+                .filter(List.of(equipmentImpactedQuery._toQuery(), networkFilter));
+
+        return boolQueryBuilder.build();
     }
 }
