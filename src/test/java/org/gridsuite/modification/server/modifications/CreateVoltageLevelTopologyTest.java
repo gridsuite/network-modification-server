@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Switch;
+import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.gridsuite.modification.dto.CreateVoltageLevelTopologyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -15,7 +17,9 @@ import org.junit.jupiter.api.Assertions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,12 +35,14 @@ public class CreateVoltageLevelTopologyTest extends AbstractNetworkModificationT
 
     @Override
     protected ModificationInfos buildModification() {
-        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("vl1").sectionCount(3).alignedBusesOrBusbarCount(1).build();
+        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("vl1").sectionCount(3)
+            .switchKinds(List.of(SwitchKind.DISCONNECTOR, SwitchKind.DISCONNECTOR)).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("vl1").sectionCount(2).alignedBusesOrBusbarCount(2).build();
+        return CreateVoltageLevelTopologyInfos.builder().voltageLevelId("vl1").sectionCount(2)
+            .switchKinds(List.of(SwitchKind.DISCONNECTOR)).build();
     }
 
     @Override
@@ -44,7 +50,9 @@ public class CreateVoltageLevelTopologyTest extends AbstractNetworkModificationT
         List<String> busBarIds = new ArrayList<>();
         getNetwork().getBusbarSections().forEach(busbarSection -> busBarIds.add(busbarSection.getId()));
         Assertions.assertEquals(5, busBarIds.size());
-        Assertions.assertTrue(busBarIds.containsAll(List.of("b1", "b2", "vl1_1_1", "vl1_1_2", "vl1_1_3")));
+        Assertions.assertTrue(busBarIds.containsAll(List.of("b1", "b2", "vl1_2_1", "vl1_2_2", "vl1_2_3")));
+        Set<String> switchIds = getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet());
+        Assertions.assertTrue(switchIds.containsAll(Set.of("vl1_DISCONNECTOR_4_5", "vl1_DISCONNECTOR_3_4")));
     }
 
     @Override
