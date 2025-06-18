@@ -6,13 +6,16 @@
  */
 package org.gridsuite.modification.server.service;
 
+import org.gridsuite.modification.server.dto.WorkflowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
+
+import static org.gridsuite.modification.server.service.NotificationService.WORKFLOW_INFOS_HEADER;
+import static org.gridsuite.modification.server.service.NotificationService.WORKFLOW_TYPE_HEADER;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -27,17 +30,25 @@ public class BuildStoppedPublisherService {
     @Autowired
     private StreamBridge stoppedMessagePublisher;
 
-    public void publishCancel(String receiver, String cancelMessage) {
-        publish(receiver, cancelMessage);
+    public void publishCancel(String receiver, String cancelMessage, WorkflowType workflowType, String workflowInfos) {
+        publish(receiver, cancelMessage, workflowType, workflowInfos);
     }
 
-    private void publish(String receiver, String stopMessage) {
-        Message<String> message = MessageBuilder
+    private void publish(String receiver, String stopMessage, WorkflowType workflowType, String workflowInfos) {
+        MessageBuilder<String> message = MessageBuilder
                 .withPayload("")
                 .setHeader("receiver", receiver)
-                .setHeader("message", stopMessage)
-                .build();
-        LOGGER.debug("Sending message : {}", message);
-        stoppedMessagePublisher.send("publishStoppedBuild-out-0", message);
+                .setHeader("message", stopMessage);
+
+        if (workflowType != null) {
+            message.setHeader(WORKFLOW_TYPE_HEADER, workflowType);
+        }
+
+        if (workflowInfos != null) {
+            message.setHeader(WORKFLOW_INFOS_HEADER, workflowInfos);
+        }
+
+        LOGGER.debug("Sending message : {}", message.build());
+        stoppedMessagePublisher.send("publishStoppedBuild-out-0", message.build());
     }
 }

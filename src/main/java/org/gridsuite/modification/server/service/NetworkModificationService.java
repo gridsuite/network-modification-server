@@ -273,8 +273,8 @@ public class NetworkModificationService {
         return modificationApplicator.applyModifications(modificationGroupsInfos, networkInfos);
     }
 
-    public void buildVariantRequest(UUID networkUuid, BuildInfos buildInfos, String receiver) {
-        notificationService.emitBuildMessage(new BuildExecContext(networkUuid, buildInfos, receiver).toMessage(objectMapper));
+    public void buildVariantRequest(UUID networkUuid, BuildInfos buildInfos, String receiver, WorkflowType workflowType, String workflowInfos) {
+        notificationService.emitBuildMessage(new BuildExecContext(networkUuid, buildInfos, receiver, workflowType, workflowInfos).toMessage(objectMapper));
     }
 
     public void stopBuildRequest(String receiver) {

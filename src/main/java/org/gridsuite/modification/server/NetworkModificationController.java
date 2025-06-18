@@ -166,9 +166,11 @@ public class NetworkModificationController {
     @Operation(summary = "Build a network variant")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The build has been done")})
     public ResponseEntity<Void> buildVariant(@Parameter(description = "Network UUID") @PathVariable("networkUuid") UUID networkUuid,
-                                                     @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
-                                                     @RequestBody BuildInfos buildInfos) {
-        networkModificationService.buildVariantRequest(networkUuid, buildInfos, receiver);
+                                             @Parameter(description = "Receiver") @RequestParam(name = "receiver", required = false) String receiver,
+                                             @Parameter(description = "Workflow type") @RequestParam(name = "workflowType", required = false) WorkflowType workflowType,
+                                             @Parameter(description = "Workflow infos") @RequestParam(name = "workflowInfos", required = false) String workflowInfos,
+                                             @RequestBody BuildInfos buildInfos) {
+        networkModificationService.buildVariantRequest(networkUuid, buildInfos, receiver, workflowType, workflowInfos);
         return ResponseEntity.ok().build();
     }
 
