@@ -34,9 +34,9 @@ public class LoadFlowService implements ILoadFlowService {
     private final String loadFlowServerBaseUri;
     private final RestTemplate restTemplate;
 
-    public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String loadFlowServerBaseUri) {
+    public LoadFlowService(@Value("${gridsuite.services.loadflow-server.base-uri:http://loadflow-server/}") String loadFlowServerBaseUri, RestTemplate restTemplate) {
         this.loadFlowServerBaseUri = loadFlowServerBaseUri;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     @Override
