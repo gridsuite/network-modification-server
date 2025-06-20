@@ -75,7 +75,7 @@ class VoltageInitReportTest {
         final ModificationApplicationInfosService modificationApplicationInfosService = Mockito.mock(ModificationApplicationInfosService.class);
         final NetworkModificationObserver networkModificationObserver = new NetworkModificationObserver(ObservationRegistry.NOOP, new SimpleMeterRegistry());
         final LargeNetworkModificationExecutionService modificationExecutionService = new LargeNetworkModificationExecutionService(2, networkModificationObserver);
-        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, null, networkModificationObserver, modificationExecutionService);
+        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, null, null, networkModificationObserver, modificationExecutionService);
         networkModificationApplicator.setCollectionThreshold(5);
 
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));

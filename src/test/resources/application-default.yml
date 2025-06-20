@@ -23,6 +23,8 @@ gridsuite:
       base-uri: http://localhost:5028
     filter-server:
       base-uri: http://localhost:5027
+    loadflow-server:
+      base-uri: http://localhost:5008
 
 powsybl-ws:
   database:

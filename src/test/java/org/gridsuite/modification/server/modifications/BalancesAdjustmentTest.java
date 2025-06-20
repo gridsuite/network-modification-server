@@ -10,18 +10,24 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.loadflow.LoadFlowParameters;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.service.LoadFlowService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,6 +36,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
+    private static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
+
+    @MockBean
+    private LoadFlowService loadFlowService;
+
+    @BeforeEach
+    public void setupLoadFlowServiceMock() {
+        when(loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID))
+                .thenReturn(LoadFlowParametersInfos.builder()
+                        .provider("OpenLoadFlow")
+                        .commonParameters(LoadFlowParameters.load())
+                        .specificParametersPerProvider(Map.of("OpenLoadFlow", Map.of(
+                                "key1", "value1"
+                        )))
+                        .build());
+    }
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return Network.read("fourSubstationsNb_country 2_N1.xiidm", getClass().getResourceAsStream("/fourSubstationsNb_country 2_N1.xiidm"));
@@ -69,6 +92,7 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
                     .build()
             ))
             .withLoadFlow(true)
+            .loadFlowParametersId(LOADFLOW_PARAMETERS_UUID)
             .build();
     }
 
