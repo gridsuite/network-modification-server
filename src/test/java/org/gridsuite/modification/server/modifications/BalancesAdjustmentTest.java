@@ -68,6 +68,7 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
                     .shiftEquipmentType(ShiftEquipmentType.LOAD)
                     .build()
             ))
+            .withLoadFlow(true)
             .build();
     }
 
