@@ -44,6 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -69,7 +71,7 @@ import static org.gridsuite.modification.server.service.BuildWorkerService.CANCE
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,6 +91,7 @@ class BuildTest {
     private MockMvc mockMvc;
     private static final UUID TEST_NETWORK_ID = UUID.fromString("7928181c-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_NETWORK_STOP_BUILD_ID = UUID.fromString("11111111-7977-4592-ba19-88027e4254e4");
+    private static final UUID TEST_NETWORK_WITH_WORKFLOW_INFOS = UUID.fromString("22222222-7977-4592-ba19-88027e4254e4");
     private static final UUID TEST_GROUP_ID = UUID.randomUUID();
     private static final UUID TEST_GROUP_ID_2 = UUID.randomUUID();
 
@@ -147,6 +150,9 @@ class BuildTest {
 
     @Autowired
     private EquipmentInfosRepository equipmentInfosRepository;
+
+    @SpyBean
+    private NotificationService notificationService;
 
     @Autowired
     private ObjectMapper mapper;
@@ -1019,6 +1025,32 @@ class BuildTest {
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+    }
+
+    @Test
+    void testBuildWithWorkflowInfos() throws Exception {
+        UUID networkUuid = TEST_NETWORK_WITH_WORKFLOW_INFOS;
+        WorkflowType workflowType = WorkflowType.RERUN_LOAD_FLOW;
+        String workflowInfos = "workflowInfos";
+        String receiver = "me";
+        String uriString = "/v1/networks/{networkUuid}/build?receiver=" + receiver;
+        BuildInfos buildInfos = BuildInfos.builder()
+            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .destinationVariantId(NetworkCreation.VARIANT_ID)
+            .modificationGroupUuids(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2))
+            .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)))
+            .build();
+        String buildInfosJson = objectWriter.writeValueAsString(buildInfos);
+        doNothing().when(notificationService).emitBuildMessage(any());
+        mockMvc.perform(post(uriString, networkUuid).contentType(MediaType.APPLICATION_JSON)
+                .param("workflowType", workflowType.name())
+                .param("workflowInfos", workflowInfos)
+                .content(buildInfosJson))
+            .andExpect(status().isOk());
+
+        ArgumentCaptor<Message<String>> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+        verify(notificationService, times(1)).emitBuildMessage(messageArgumentCaptor.capture());
+        Assertions.assertThat(messageArgumentCaptor.getValue()).usingRecursiveComparison().ignoringFields("headers.timestamp", "headers.id").isEqualTo(new BuildExecContext(networkUuid, buildInfos, receiver, workflowType, workflowInfos).toMessage(mapper));
     }
 
     private void testNetworkModificationsCount(UUID groupUuid, int actualSize) {
