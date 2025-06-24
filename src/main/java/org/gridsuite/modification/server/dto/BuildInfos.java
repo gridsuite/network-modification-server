@@ -32,5 +32,4 @@ public class BuildInfos {
     private Map<UUID, Set<UUID>> modificationUuidsToExclude = new HashMap<>();
 
     private List<ReportInfos> reportsInfos = new ArrayList<>();
-
 }
