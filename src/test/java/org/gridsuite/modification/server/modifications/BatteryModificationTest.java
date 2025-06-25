@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ReactiveCapabilityCurve;
 import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -28,8 +29,7 @@ import java.util.stream.IntStream;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -350,5 +350,15 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
     @Test
     void testConnection() throws Exception {
         assertChangeConnectionState(getNetwork().getBattery("v3Battery"), true);
+    }
+
+    @Test
+    void testConnectionError() {
+        getNetwork().getSwitch("v3dBattery").setOpen(true);
+        BatteryModificationInfos batteryModificationInfos = new BatteryModificationInfos();
+        batteryModificationInfos.setEquipmentId("v3Battery");
+        batteryModificationInfos.setTerminalConnected(new AttributeModification<>(true, OperationType.SET));
+        String message = assertThrows(NetworkModificationException.class, () -> batteryModificationInfos.toModification().apply(getNetwork())).getMessage();
+        assertEquals("INJECTION_MODIFICATION_ERROR : Could not connect equipment 'v3Battery'", message);
     }
 }
