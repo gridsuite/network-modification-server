@@ -51,6 +51,9 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Column(name = "load_flow_parameters_id")
     private UUID loadFlowParametersId;
 
+    @Column(name = "with_ratio_tap_changers")
+    private boolean withRatioTapChangers = DEFAULT_WITH_RATIO_TAP_CHANGERS;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "balances_adjustment_id", foreignKey = @ForeignKey(name = "area_balances_adjustment_id_fk"))
     private List<BalancesAdjustmentAreaEntity> areas;
@@ -74,6 +77,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
                 .balanceType(balanceType)
                 .withLoadFlow(withLoadFlow)
                 .loadFlowParametersId(loadFlowParametersId)
+                .withRatioTapChangers(withRatioTapChangers)
                 .build();
     }
 
@@ -90,6 +94,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
         balanceType = balancesAdjustmentModificationInfos.getBalanceType();
         withLoadFlow = balancesAdjustmentModificationInfos.isWithLoadFlow();
         loadFlowParametersId = balancesAdjustmentModificationInfos.getLoadFlowParametersId();
+        withRatioTapChangers = balancesAdjustmentModificationInfos.isWithRatioTapChangers();
         List<BalancesAdjustmentAreaEntity> areaEntities = balancesAdjustmentModificationInfos
             .getAreas()
             .stream()

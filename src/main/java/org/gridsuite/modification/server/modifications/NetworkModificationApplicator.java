@@ -212,8 +212,7 @@ public class NetworkModificationApplicator {
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this.filterService);
-        modification.initApplicationContext(this.loadFlowService);
+        modification.initApplicationContext(this.filterService, this.loadFlowService);
 
         // apply all changes on the network
         modification.apply(network, subReportNode);

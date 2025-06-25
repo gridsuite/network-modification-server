@@ -5,4 +5,11 @@
             <column name="load_flow_parameters_id" type="uuid"/>
         </addColumn>
     </changeSet>
+    <changeSet author="berrahmaach (generated)" id="1750420752597-29">
+        <addColumn tableName="balances_adjustment">
+            <column name="with_ratio_tap_changers" type="boolean" defaultValueBoolean="false" valueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
