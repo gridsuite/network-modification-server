@@ -200,7 +200,7 @@ public class NetworkModificationApplicator {
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observe("apply", modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
