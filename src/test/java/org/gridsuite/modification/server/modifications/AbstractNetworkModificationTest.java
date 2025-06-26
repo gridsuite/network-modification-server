@@ -13,6 +13,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.exceptions.UncheckedInterruptedException;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.Switch;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
@@ -100,7 +101,7 @@ public abstract class AbstractNetworkModificationTest {
     @BeforeEach
     public void setUp() {
         network = createNetwork(TEST_NETWORK_ID);
-
+        Set<String> switchIds = getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet());
         modificationRepository.deleteAll();
 
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
