@@ -152,7 +152,7 @@
               "value" : "VSC1"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -172,7 +172,7 @@
               "value" : "40.0"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -183,7 +183,7 @@
               "value" : "VSC2"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -203,7 +203,7 @@
               "value" : "224.0"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
