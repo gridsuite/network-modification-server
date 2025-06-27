@@ -48,7 +48,7 @@ public class LoadFlowService implements ILoadFlowService {
         } catch (HttpStatusCodeException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 log.error("Load flow parameters with UUID {} not found", uuid);
-                throw new NetworkModificationException(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_NOT_FOUND, "Load flow parameters not found for UUID: " + uuid);
+                return null;
             } else {
                 throw handleChangeError(e, NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR);
             }
