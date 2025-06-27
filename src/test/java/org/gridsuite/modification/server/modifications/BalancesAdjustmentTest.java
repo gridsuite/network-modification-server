@@ -16,6 +16,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.NetworkModificationServerException;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
+class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     private static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID NON_EXISTENT_LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID ERROR_LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
@@ -48,7 +49,7 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     private LoadFlowService loadFlowService;
 
     @BeforeEach
-    public void setupLoadFlowServiceMock() {
+    void setupLoadFlowServiceMock() {
         when(loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID))
                 .thenReturn(LoadFlowParametersInfos.builder()
                         .provider("OpenLoadFlow")
@@ -139,7 +140,7 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test LoadFlowService.getLoadFlowParametersInfos() method for successful case
      */
     @Test
-    public void testGetLoadFlowParametersInfosSuccess() {
+    void testGetLoadFlowParametersInfosSuccess() {
         LoadFlowParametersInfos result = loadFlowService.getLoadFlowParametersInfos(LOADFLOW_PARAMETERS_UUID);
 
         assertNotNull(result);
@@ -153,7 +154,7 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test LoadFlowService.getLoadFlowParametersInfos() method for not found case (404)
      */
     @Test
-    public void testGetLoadFlowParametersInfosNotFound() {
+    void testGetLoadFlowParametersInfosNotFound() {
         LoadFlowParametersInfos result = loadFlowService.getLoadFlowParametersInfos(NON_EXISTENT_LOADFLOW_PARAMETERS_UUID);
 
         assertNull(result);
@@ -163,7 +164,7 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test LoadFlowService.getLoadFlowParametersInfos() method for server error case
      */
     @Test
-    public void testGetLoadFlowParametersInfosServerError() {
+    void testGetLoadFlowParametersInfosServerError() {
         NetworkModificationException exception = assertThrows(
                 NetworkModificationException.class,
                 () -> loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID)
@@ -177,8 +178,9 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test NetworkModificationServerException.handleChangeError() method with empty response body
      */
     @Test
-    public void testHandleChangeErrorWithEmptyResponseBody() {
+    void testHandleChangeErrorWithEmptyResponseBody() {
         HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.INTERNAL_SERVER_ERROR) {
+            @NotNull
             @Override
             public String getResponseBodyAsString() {
                 return "";
@@ -198,8 +200,9 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test NetworkModificationServerException.handleChangeError() method with JSON response body containing message
      */
     @Test
-    public void testHandleChangeErrorWithJsonResponseBody() {
+    void testHandleChangeErrorWithJsonResponseBody() {
         HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.BAD_REQUEST) {
+            @NotNull
             @Override
             public String getResponseBodyAsString() {
                 return "{\"message\": \"Invalid parameters provided\", \"code\": 400}";
@@ -219,8 +222,9 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test NetworkModificationServerException.handleChangeError() method with plain text response body
      */
     @Test
-    public void testHandleChangeErrorWithPlainTextResponseBody() {
+    void testHandleChangeErrorWithPlainTextResponseBody() {
         HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.NOT_FOUND) {
+            @NotNull
             @Override
             public String getResponseBodyAsString() {
                 return "Resource not found";
@@ -240,8 +244,9 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test NetworkModificationServerException.handleChangeError() method with invalid JSON response body
      */
     @Test
-    public void testHandleChangeErrorWithInvalidJsonResponseBody() {
+    void testHandleChangeErrorWithInvalidJsonResponseBody() {
         HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.INTERNAL_SERVER_ERROR) {
+            @NotNull
             @Override
             public String getResponseBodyAsString() {
                 return "{invalid json structure";
@@ -261,8 +266,9 @@ public class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      * Test NetworkModificationServerException.handleChangeError() method with JSON response body without message field
      */
     @Test
-    public void testHandleChangeErrorWithJsonResponseBodyWithoutMessage() {
+    void testHandleChangeErrorWithJsonResponseBodyWithoutMessage() {
         HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.CONFLICT) {
+            @NotNull
             @Override
             public String getResponseBodyAsString() {
                 return "{\"error\": \"Conflict occurred\", \"timestamp\": \"2025-01-01T10:00:00Z\"}";
