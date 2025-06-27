@@ -6,18 +6,12 @@
  */
 package org.gridsuite.modification.server.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.filter.utils.FilterServiceUtils;
 import org.gridsuite.modification.IFilterService;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.FilterEquipments;
 import org.gridsuite.modification.dto.IdentifiableAttributes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -35,13 +29,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.FILTERS_NOT_FOUND;
+import static org.gridsuite.modification.server.NetworkModificationServerException.handleChangeError;
 
 /**
  * @author bendaamerahm <ahmed.bendaamer at rte-france.com>
  */
 @Service
 public class FilterService implements IFilterService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FilterService.class);
 
     private static final String FILTER_SERVER_API_VERSION = "v1";
 
@@ -81,26 +75,5 @@ public class FilterService implements IFilterService {
                 f.getIdentifiableAttributes().stream().map(i -> new IdentifiableAttributes(i.getId(), i.getType(), i.getDistributionKey())).toList(),
                 f.getNotFoundEquipments()))
             .collect(Collectors.toMap(FilterEquipments::getFilterId, Function.identity()));
-    }
-
-    private NetworkModificationException handleChangeError(HttpStatusCodeException httpException, NetworkModificationException.Type type) {
-        String responseBody = httpException.getResponseBodyAsString();
-        if (responseBody.isEmpty()) {
-            return new NetworkModificationException(type, httpException.getStatusCode().toString());
-        }
-
-        String message = responseBody;
-        try {
-            JsonNode node = new ObjectMapper().readTree(responseBody).path("message");
-            if (!node.isMissingNode()) {
-                message = node.asText();
-            }
-        } catch (JsonProcessingException e) {
-            // responseBody by default
-        }
-
-        LOGGER.error(message, httpException);
-
-        return new NetworkModificationException(type, message);
     }
 }
