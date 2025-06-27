@@ -245,7 +245,7 @@ public class NetworkModificationApplicator {
         }
 
         TypedValue severity = reportNode.getValues().get(ReportConstants.SEVERITY_KEY);
-        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY)) {
+        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DETAIL_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
         } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {
             return ApplicationStatus.WITH_WARNINGS;

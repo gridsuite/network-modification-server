@@ -41,7 +41,7 @@
               "value" : "GTH2"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -61,7 +61,7 @@
               "value" : "0.1"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -86,7 +86,7 @@
               "value" : "TWT2"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -106,7 +106,7 @@
               "value" : "2"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -131,7 +131,7 @@
               "value" : "SVC"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -151,7 +151,7 @@
               "value" : "1346.7"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -176,7 +176,7 @@
               "value" : "SHUNT3"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -184,7 +184,7 @@
           "messageKey" : "network.modification.shuntCompensatorDisconnected",
           "values" : {
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -204,7 +204,7 @@
               "value" : "0"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -229,7 +229,7 @@
               "value" : "VSC2"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
@@ -249,7 +249,7 @@
               "value" : "326.6"
             },
             "reportSeverity" : {
-              "value" : "TRACE",
+              "value" : "DETAIL",
               "type" : "SEVERITY"
             }
           }
