@@ -13,8 +13,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
-import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,8 +37,13 @@ public class NetworkModificationRepository {
     private final ModificationRepository modificationRepository;
 
     private final GeneratorModificationRepository generatorModificationRepository;
+    private final BatteryModificationRepository batteryModificationRepository;
+    private final LineModificationRepository lineModificationRepository;
+    private final TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository;
+    private final SubstationModificationRepository substationModificationRepository;
 
     private final GeneratorCreationRepository generatorCreationRepository;
+    private final BatteryCreationRepository batteryCreationRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
@@ -47,13 +51,23 @@ public class NetworkModificationRepository {
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
-                                         GeneratorModificationRepository generatorModificationRepository,
                                          GeneratorCreationRepository generatorCreationRepository,
+                                         BatteryCreationRepository batteryCreationRepository,
+                                         GeneratorModificationRepository generatorModificationRepository,
+                                         BatteryModificationRepository batteryModificationRepository,
+                                         LineModificationRepository lineModificationRepository,
+                                         TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
+                                         SubstationModificationRepository substationModificationRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
-        this.generatorModificationRepository = generatorModificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
+        this.batteryCreationRepository = batteryCreationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
+        this.batteryModificationRepository = batteryModificationRepository;
+        this.lineModificationRepository = lineModificationRepository;
+        this.twoWindingsTransformerModificationRepository = twoWindingsTransformerModificationRepository;
+        this.substationModificationRepository = substationModificationRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
@@ -258,63 +272,123 @@ public class NetworkModificationRepository {
         }
     }
 
-    public TabularModificationInfos loadTabularModificationSubEntities(ModificationEntity modificationEntity) {
-        TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
-        switch (tabularModificationEntity.getModificationType()) {
-            case GENERATOR_MODIFICATION:
-                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
-                // We retrieve generator modifications by generatorModificationRepository and store them as a map by IDs to re-order them later on
-                Map<UUID, GeneratorModificationEntity> generatorModifications = generatorModificationRepository
-                    .findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
-                    .stream()
-                    .collect(Collectors.toMap(
+    private List<EquipmentModificationEntity> reorderModifications(List<? extends EquipmentModificationEntity> modifications, List<UUID> subModificationsOrderedUuids) {
+        Map<UUID, EquipmentModificationEntity> modificationsMap = modifications.stream()
+                .collect(Collectors.toMap(
                         ModificationEntity::getId,
                         Function.identity()
-                    ));
-                // We load properties on the generators, it uses hibernate first-level cache to fill them up directly in the map
+                ));
+        return subModificationsOrderedUuids
+                .stream()
+                .map(modificationsMap::get)
+                .toList();
+    }
+
+    private List<? extends EquipmentModificationEntity> loadTabularModificationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
+        List<? extends EquipmentModificationEntity> modifications;
+        switch (modificationType) {
+            case GENERATOR_MODIFICATION -> {
+                // load generator modifications with curvePoints
+                modifications = generatorModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
                 generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-                // Then we can re-order the list of GeneratorModificationEntity based on ordered list of IDs
-                List<GeneratorModificationEntity> orderedGeneratorModifications = subModificationsUuids
-                    .stream()
-                    .map(generatorModifications::get)
-                    .toList();
+            }
+            case BATTERY_MODIFICATION -> {
+                // load battery modifications with curvePoints
+                modifications = batteryModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                batteryModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            case LINE_MODIFICATION -> {
+                // load line modifications with limitSets1
+                modifications = lineModificationRepository.findAllLimitSets1ByIdIn(subModificationsUuids);
+                // load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
+                lineModificationRepository.findAllLimitSets2ByIdIn(subModificationsUuids);
+                // same with properties
+                lineModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
+                // load 2wt modifications with limitSets1
+                modifications = twoWindingsTransformerModificationRepository.findAllLimitSets1ByIdIn(subModificationsUuids);
+                // load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
+                twoWindingsTransformerModificationRepository.findAllLimitSets2ByIdIn(subModificationsUuids);
+                // same with properties
+                twoWindingsTransformerModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            case SUBSTATION_MODIFICATION ->
+                // load substation modifications with properties
+                modifications = substationModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+
+            default ->
+                throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
+        }
+        return modifications;
+    }
+
+    private TabularModificationInfos loadTabularModification(ModificationEntity modificationEntity) {
+        TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
+        switch (tabularModificationEntity.getModificationType()) {
+            case GENERATOR_MODIFICATION, BATTERY_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION, TWO_WINDINGS_TRANSFORMER_MODIFICATION:
+                // fetch embedded modifications uuids only
+                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+                // optimized entities full loading, per type
+                List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularModificationEntity.getModificationType());
+                // re-order the list of entities based on the ordered list of IDs
+                List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
+                // then build DTOs
                 return TabularModificationInfos.builder()
-                    .uuid(tabularModificationEntity.getId())
-                    .date(tabularModificationEntity.getDate())
-                    .stashed(tabularModificationEntity.getStashed())
-                    .activated(tabularModificationEntity.getActivated())
-                    .modificationType(tabularModificationEntity.getModificationType())
-                    .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
-                    .build();
+                        .uuid(tabularModificationEntity.getId())
+                        .date(tabularModificationEntity.getDate())
+                        .stashed(tabularModificationEntity.getStashed())
+                        .activated(tabularModificationEntity.getActivated())
+                        .modificationType(tabularModificationEntity.getModificationType())
+                        .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
+                        .build();
             default:
                 break;
         }
         return tabularModificationEntity.toModificationInfos();
     }
 
-    public TabularCreationInfos loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
+    private List<? extends EquipmentModificationEntity> loadTabularCreationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
+        List<? extends EquipmentModificationEntity> modifications;
+        switch (modificationType) {
+            case GENERATOR_CREATION -> {
+                // load generator modifications with curvePoints
+                modifications = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            case BATTERY_CREATION -> {
+                // load battery modifications with curvePoints
+                modifications = batteryCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                batteryCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            default ->
+                throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
+        }
+        return modifications;
+    }
+
+    private TabularCreationInfos loadTabularCreation(ModificationEntity modificationEntity) {
         TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
         switch (tabularCreationEntity.getCreationType()) {
-            case GENERATOR_CREATION:
+            case GENERATOR_CREATION, BATTERY_CREATION:
+                // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
-                Map<UUID, GeneratorCreationEntity> generatorCreations = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
-                        .stream()
-                        .collect(Collectors.toMap(
-                                ModificationEntity::getId,
-                                Function.identity()
-                        ));
-                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-                List<GeneratorCreationEntity> orderedGeneratorCreation = subModificationsUuids
-                        .stream()
-                        .map(generatorCreations::get)
-                        .toList();
+                // optimized entities full loading, per type
+                List<? extends EquipmentModificationEntity> modifications = loadTabularCreationSubEntities(subModificationsUuids, tabularCreationEntity.getCreationType());
+                // re-order the list of entities based on the ordered list of IDs
+                List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
+                // then build DTOs
                 return TabularCreationInfos.builder()
                         .uuid(tabularCreationEntity.getId())
                         .date(tabularCreationEntity.getDate())
                         .stashed(tabularCreationEntity.getStashed())
                         .activated(tabularCreationEntity.getActivated())
                         .creationType(tabularCreationEntity.getCreationType())
-                        .creations(orderedGeneratorCreation.stream().map(GeneratorCreationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                        .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
                         .build();
             default:
                 break;
@@ -324,9 +398,9 @@ public class NetworkModificationRepository {
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModificationSubEntities(modificationEntity);
+            return loadTabularModification(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
-            return loadTabularCreationSubEntities(modificationEntity);
+            return loadTabularCreation(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
