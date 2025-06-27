@@ -43,6 +43,7 @@ public class NetworkModificationRepository {
     private final SubstationModificationRepository substationModificationRepository;
 
     private final GeneratorCreationRepository generatorCreationRepository;
+    private final BatteryCreationRepository batteryCreationRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
@@ -50,18 +51,20 @@ public class NetworkModificationRepository {
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
+                                         GeneratorCreationRepository generatorCreationRepository,
+                                         BatteryCreationRepository batteryCreationRepository,
                                          GeneratorModificationRepository generatorModificationRepository,
                                          BatteryModificationRepository batteryModificationRepository,
-                                         GeneratorCreationRepository generatorCreationRepository,
                                          LineModificationRepository lineModificationRepository,
                                          TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
                                          SubstationModificationRepository substationModificationRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
+        this.generatorCreationRepository = generatorCreationRepository;
+        this.batteryCreationRepository = batteryCreationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
         this.batteryModificationRepository = batteryModificationRepository;
-        this.generatorCreationRepository = generatorCreationRepository;
         this.lineModificationRepository = lineModificationRepository;
         this.twoWindingsTransformerModificationRepository = twoWindingsTransformerModificationRepository;
         this.substationModificationRepository = substationModificationRepository;
@@ -356,8 +359,14 @@ public class NetworkModificationRepository {
                 // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
                 generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
+            case BATTERY_CREATION -> {
+                // load battery modifications with curvePoints
+                modifications = batteryCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                batteryCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
             default ->
-                    throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
+                throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
         }
         return modifications;
     }
@@ -365,7 +374,7 @@ public class NetworkModificationRepository {
     private TabularCreationInfos loadTabularCreation(ModificationEntity modificationEntity) {
         TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
         switch (tabularCreationEntity.getCreationType()) {
-            case GENERATOR_CREATION:
+            case GENERATOR_CREATION, BATTERY_CREATION:
                 // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
                 // optimized entities full loading, per type
