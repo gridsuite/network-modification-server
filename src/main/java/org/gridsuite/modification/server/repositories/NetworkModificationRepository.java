@@ -13,8 +13,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
-import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.BasicEquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -264,8 +263,20 @@ public class NetworkModificationRepository {
         }
     }
 
-    private List<? extends BasicEquipmentModificationEntity> loadTabularModificationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
-        List<? extends BasicEquipmentModificationEntity> modifications;
+    private List<EquipmentModificationEntity> reorderModifications(List<? extends EquipmentModificationEntity> modifications, List<UUID> subModificationsOrderedUuids) {
+        Map<UUID, EquipmentModificationEntity> modificationsMap = modifications.stream()
+                .collect(Collectors.toMap(
+                        ModificationEntity::getId,
+                        Function.identity()
+                ));
+        return subModificationsOrderedUuids
+                .stream()
+                .map(modificationsMap::get)
+                .toList();
+    }
+
+    private List<? extends EquipmentModificationEntity> loadTabularModificationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
+        List<? extends EquipmentModificationEntity> modifications;
         switch (modificationType) {
             case GENERATOR_MODIFICATION -> {
                 // We retrieve generator modifications with curvePoints
@@ -281,34 +292,26 @@ public class NetworkModificationRepository {
                 // same with properties
                 lineModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
-            case SUBSTATION_MODIFICATION -> {
-                // We retrieve substations modifications with properties
+            case SUBSTATION_MODIFICATION ->
+                // We retrieve substation modifications with properties
                 modifications = substationModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-            }
+
             default ->
                 throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
         }
         return modifications;
     }
 
-    private TabularModificationInfos loadTabularModifications(ModificationEntity modificationEntity) {
+    private TabularModificationInfos loadTabularModification(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
             case GENERATOR_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION:
                 // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
                 // optimized entities full loading, per type
-                List<? extends BasicEquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularModificationEntity.getModificationType());
+                List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularModificationEntity.getModificationType());
                 // re-order the list of entities based on the ordered list of IDs
-                Map<UUID, BasicEquipmentModificationEntity> modificationsMap = modifications.stream()
-                    .collect(Collectors.toMap(
-                            ModificationEntity::getId,
-                            Function.identity()
-                    ));
-                List<BasicEquipmentModificationEntity> orderedModifications = subModificationsUuids
-                        .stream()
-                        .map(modificationsMap::get)
-                        .toList();
+                List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
                 // then build DTOs
                 return TabularModificationInfos.builder()
                         .uuid(tabularModificationEntity.getId())
@@ -324,29 +327,39 @@ public class NetworkModificationRepository {
         return tabularModificationEntity.toModificationInfos();
     }
 
-    public TabularCreationInfos loadTabularCreationSubEntities(ModificationEntity modificationEntity) {
+    private List<? extends EquipmentModificationEntity> loadTabularCreationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
+        List<? extends EquipmentModificationEntity> modifications;
+        switch (modificationType) {
+            case GENERATOR_CREATION -> {
+                // We retrieve generator modifications with curvePoints
+                modifications = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // We load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            default ->
+                    throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
+        }
+        return modifications;
+    }
+
+    private TabularCreationInfos loadTabularCreation(ModificationEntity modificationEntity) {
         TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
         switch (tabularCreationEntity.getCreationType()) {
             case GENERATOR_CREATION:
+                // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
-                Map<UUID, GeneratorCreationEntity> generatorCreations = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids)
-                        .stream()
-                        .collect(Collectors.toMap(
-                                ModificationEntity::getId,
-                                Function.identity()
-                        ));
-                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-                List<GeneratorCreationEntity> orderedGeneratorCreation = subModificationsUuids
-                        .stream()
-                        .map(generatorCreations::get)
-                        .toList();
+                // optimized entities full loading, per type
+                List<? extends EquipmentModificationEntity> modifications = loadTabularCreationSubEntities(subModificationsUuids, tabularCreationEntity.getCreationType());
+                // re-order the list of entities based on the ordered list of IDs
+                List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
+                // then build DTOs
                 return TabularCreationInfos.builder()
                         .uuid(tabularCreationEntity.getId())
                         .date(tabularCreationEntity.getDate())
                         .stashed(tabularCreationEntity.getStashed())
                         .activated(tabularCreationEntity.getActivated())
                         .creationType(tabularCreationEntity.getCreationType())
-                        .creations(orderedGeneratorCreation.stream().map(GeneratorCreationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                        .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
                         .build();
             default:
                 break;
@@ -356,9 +369,9 @@ public class NetworkModificationRepository {
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModifications(modificationEntity);
+            return loadTabularModification(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
-            return loadTabularCreationSubEntities(modificationEntity);
+            return loadTabularCreation(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
