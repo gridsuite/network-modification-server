@@ -28,12 +28,12 @@ public class NetworkModificationObserver {
         this.meterRegistry = meterRegistry;
     }
 
-    public <E extends Throwable> void observe(String name, ModificationType modificationType, Observation.CheckedRunnable<E> runnable) throws E {
-        createObservation(name, modificationType).observeChecked(runnable);
+    public <E extends Throwable> void observeApply(ModificationType modificationType, Observation.CheckedRunnable<E> runnable) throws E {
+        createObservation("apply", modificationType).observeChecked(runnable);
     }
 
-    public <E extends Throwable> void observe(String name, Observation.CheckedRunnable<E> runnable) throws E {
-        createObservation(name).observeChecked(runnable);
+    public <E extends Throwable> void observeBuild(Observation.CheckedRunnable<E> runnable) throws E {
+        createObservation("build").observeChecked(runnable);
     }
 
     private Observation createObservation(String name, ModificationType modificationType) {
