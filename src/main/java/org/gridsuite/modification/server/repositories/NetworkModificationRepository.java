@@ -37,7 +37,9 @@ public class NetworkModificationRepository {
     private final ModificationRepository modificationRepository;
 
     private final GeneratorModificationRepository generatorModificationRepository;
+    private final BatteryModificationRepository batteryModificationRepository;
     private final LineModificationRepository lineModificationRepository;
+    private final TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository;
     private final SubstationModificationRepository substationModificationRepository;
 
     private final GeneratorCreationRepository generatorCreationRepository;
@@ -49,15 +51,19 @@ public class NetworkModificationRepository {
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
                                          GeneratorModificationRepository generatorModificationRepository,
+                                         BatteryModificationRepository batteryModificationRepository,
                                          GeneratorCreationRepository generatorCreationRepository,
                                          LineModificationRepository lineModificationRepository,
+                                         TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
                                          SubstationModificationRepository substationModificationRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
+        this.batteryModificationRepository = batteryModificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
         this.lineModificationRepository = lineModificationRepository;
+        this.twoWindingsTransformerModificationRepository = twoWindingsTransformerModificationRepository;
         this.substationModificationRepository = substationModificationRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
@@ -279,21 +285,35 @@ public class NetworkModificationRepository {
         List<? extends EquipmentModificationEntity> modifications;
         switch (modificationType) {
             case GENERATOR_MODIFICATION -> {
-                // We retrieve generator modifications with curvePoints
+                // load generator modifications with curvePoints
                 modifications = generatorModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
-                // We load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
                 generatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
+            case BATTERY_MODIFICATION -> {
+                // load battery modifications with curvePoints
+                modifications = batteryModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                batteryModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
             case LINE_MODIFICATION -> {
-                // We retrieve line modifications with limitSets1
+                // load line modifications with limitSets1
                 modifications = lineModificationRepository.findAllLimitSets1ByIdIn(subModificationsUuids);
-                // We load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
+                // load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
                 lineModificationRepository.findAllLimitSets2ByIdIn(subModificationsUuids);
                 // same with properties
                 lineModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
+                // load 2wt modifications with limitSets1
+                modifications = twoWindingsTransformerModificationRepository.findAllLimitSets1ByIdIn(subModificationsUuids);
+                // load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
+                twoWindingsTransformerModificationRepository.findAllLimitSets2ByIdIn(subModificationsUuids);
+                // same with properties
+                twoWindingsTransformerModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
             case SUBSTATION_MODIFICATION ->
-                // We retrieve substation modifications with properties
+                // load substation modifications with properties
                 modifications = substationModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
 
             default ->
@@ -305,7 +325,7 @@ public class NetworkModificationRepository {
     private TabularModificationInfos loadTabularModification(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
-            case GENERATOR_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION:
+            case GENERATOR_MODIFICATION, BATTERY_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION, TWO_WINDINGS_TRANSFORMER_MODIFICATION:
                 // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
                 // optimized entities full loading, per type
@@ -331,9 +351,9 @@ public class NetworkModificationRepository {
         List<? extends EquipmentModificationEntity> modifications;
         switch (modificationType) {
             case GENERATOR_CREATION -> {
-                // We retrieve generator modifications with curvePoints
+                // load generator modifications with curvePoints
                 modifications = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
-                // We load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
                 generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             default ->
