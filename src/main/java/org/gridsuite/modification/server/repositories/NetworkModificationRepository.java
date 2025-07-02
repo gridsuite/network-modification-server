@@ -590,10 +590,20 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
-        this.modificationRepository
-            .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)))
-            .update(modificationInfos);
+        ModificationEntity entity = getModificationEntity(modificationUuid);
+        if (modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION) {
+            TabularModificationEntity tabularEntity = (TabularModificationEntity) entity;
+            // TODO deleteTabularModificationSubModifications
+            tabularEntity.update(modificationInfos);
+        } else if (modificationInfos.getType() == ModificationType.TABULAR_CREATION) {
+            TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) entity;
+            // Before updating/adding new sub-modifications, we delete and clear existing sub-modifications manually
+            // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
+            deleteTabularCreationSubModifications(tabularCreationEntity);
+            tabularCreationEntity.update(modificationInfos);
+        } else {
+            entity.update(modificationInfos);
+        }
     }
 
     @Transactional
@@ -657,6 +667,19 @@ public class NetworkModificationRepository {
                 modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
                 modificationRepository.delete(tabularModificationEntity);
                 break;
+        }
+    }
+
+    private void deleteTabularCreationSubModifications(TabularCreationEntity tabularCreationEntity) {
+        List<UUID> subModificationsIds;
+        if (tabularCreationEntity.getCreationType() == ModificationType.GENERATOR_CREATION) {
+            subModificationsIds = modificationRepository.findSubModificationIdsByTabularCreationId(tabularCreationEntity.getId());
+            tabularCreationEntity.setCreations(null);
+            modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
+            generatorCreationRepository.deleteTabularSubModifications(subModificationsIds);
+        } else {
+            // TODO new error
+            throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular deletion for: %s", tabularCreationEntity.getCreationType()));
         }
     }
 }

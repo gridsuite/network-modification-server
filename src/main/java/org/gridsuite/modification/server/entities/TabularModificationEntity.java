@@ -32,7 +32,7 @@ public class TabularModificationEntity extends ModificationEntity {
     @Enumerated(EnumType.STRING)
     private ModificationType modificationType;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL)
     @OrderColumn
     private List<ModificationEntity> modifications;
 
