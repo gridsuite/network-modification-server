@@ -93,6 +93,8 @@ public final class NetworkUtil {
             .setNode2(node2)
             .add();
 
+        addLimits(l);
+
         l.newExtension(ConnectablePositionAdder.class)
                 .newFeeder1()
                 .withName(feederName1)
@@ -103,6 +105,17 @@ public final class NetworkUtil {
                 .withOrder(feederOrder2)
                 .withDirection(direction2).add()
                 .add();
+    }
+
+    private static void addLimits(Branch<?> branch) {
+        branch.newOperationalLimitsGroup1("group0");
+        branch.newOperationalLimitsGroup1("group1");
+        branch.newOperationalLimitsGroup1("group2");
+        branch.setSelectedOperationalLimitsGroup1("group0");
+        branch.newOperationalLimitsGroup2("group0");
+        branch.newOperationalLimitsGroup2("group1");
+        branch.newOperationalLimitsGroup2("group2");
+        branch.setSelectedOperationalLimitsGroup2("group0");
     }
 
     public static void createLineWithoutConnectivity(Network network, String id, String name, String voltageLevel1, String voltageLevel2, int node1, int node2,
@@ -213,6 +226,8 @@ public final class NetworkUtil {
             .setNode2(node2)
             .setVoltageLevel2(idVoltageLevel2)
             .add();
+
+        addLimits(t);
 
         t.newExtension(ConnectablePositionAdder.class)
             .newFeeder1()
