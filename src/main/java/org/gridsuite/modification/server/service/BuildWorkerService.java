@@ -98,7 +98,7 @@ public class BuildWorkerService {
 
     @Bean
     public Consumer<Message<String>> consumeBuild() {
-        return message -> networkModificationObserver.observe("build", () -> {
+        return message -> networkModificationObserver.observeBuild(() -> {
             BuildExecContext execContext;
             try {
                 execContext = BuildExecContext.fromMessage(message, objectMapper);

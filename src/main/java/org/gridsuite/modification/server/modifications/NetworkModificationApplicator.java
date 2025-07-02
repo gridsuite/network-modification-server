@@ -27,10 +27,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
-import org.gridsuite.modification.server.service.FilterService;
-import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
-import org.gridsuite.modification.server.service.NetworkModificationObserver;
-import org.gridsuite.modification.server.service.ReportService;
+import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +55,8 @@ public class NetworkModificationApplicator {
 
     @Getter private final FilterService filterService;
 
+    @Getter private final LoadFlowService loadFlowService;
+
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     private final NetworkModificationObserver networkModificationObserver;
@@ -69,6 +68,7 @@ public class NetworkModificationApplicator {
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
                                          ReportService reportService, FilterService filterService,
+                                         LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
                                          LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
         this.networkStoreService = networkStoreService;
@@ -76,6 +76,7 @@ public class NetworkModificationApplicator {
         this.applicationInfosService = applicationInfosService;
         this.reportService = reportService;
         this.filterService = filterService;
+        this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
     }
@@ -199,7 +200,7 @@ public class NetworkModificationApplicator {
     private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observe("apply", modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
@@ -211,7 +212,7 @@ public class NetworkModificationApplicator {
         modification.check(network);
 
         // init application context
-        modification.initApplicationContext(this.filterService);
+        modification.initApplicationContext(this.filterService, this.loadFlowService);
 
         // apply all changes on the network
         modification.apply(network, subReportNode);
@@ -244,7 +245,7 @@ public class NetworkModificationApplicator {
         }
 
         TypedValue severity = reportNode.getValues().get(ReportConstants.SEVERITY_KEY);
-        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY)) {
+        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DETAIL_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
         } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {
             return ApplicationStatus.WITH_WARNINGS;
