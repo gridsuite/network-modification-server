@@ -49,6 +49,8 @@
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <!-- TODO network-modification.version remove when migration powsybl -->
         <network-modification.version>0.23.0</network-modification.version>
+        <!-- TODO network-store-client.version remove when migration powsybl -->
+        <network-store-client.version>1.27.1</network-store-client.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
@@ -94,6 +96,24 @@
                 <version>${mockwebserver3.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-client</artifactId>
+                <version>${network-store-client.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-iidm-impl</artifactId>
+                <version>${network-store-client.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-model</artifactId>
+                <version>${network-store-client.version}</version>
             </dependency>
 
             <!-- imports -->
