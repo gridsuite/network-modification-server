@@ -23,8 +23,8 @@ import java.util.Date;
 import java.util.List;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createLine;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
@@ -143,14 +143,26 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
 
         StringAssignmentInfos assignmentInfos7 = StringAssignmentInfos.builder()
             .filters(List.of(filter1))
-            .editedField(LineField.OPERATIONAL_LIMITS_GROUP_1.name())
+            .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_1.name())
             .value("group1")
             .build();
 
         StringAssignmentInfos assignmentInfos8 = StringAssignmentInfos.builder()
             .filters(List.of(filter2))
-            .editedField(LineField.OPERATIONAL_LIMITS_GROUP_2.name())
+            .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_2.name())
             .value("group2")
+            .build();
+
+        StringAssignmentInfos assignmentInfos9 = StringAssignmentInfos.builder()
+            .filters(List.of(filter3))
+            .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_1.name())
+            .value(null)
+            .build();
+
+        StringAssignmentInfos assignmentInfos10 = StringAssignmentInfos.builder()
+            .filters(List.of(filter3))
+            .editedField(LineField.SELECTED_OPERATIONAL_LIMITS_GROUP_2.name())
+            .value("")
             .build();
 
         List<AssignmentInfos<?>> infosList = super.getAssignmentInfos();
@@ -161,7 +173,9 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
             assignmentInfos5,
             assignmentInfos6,
             assignmentInfos7,
-            assignmentInfos8));
+            assignmentInfos8,
+            assignmentInfos9,
+            assignmentInfos10));
 
         return infosList;
     }
@@ -211,6 +225,8 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
         assertEquals(90, line4.getB2(), 0);
         assertEquals(5, line4.getG1(), 0);
         assertEquals(1, line4.getG2(), 0);
+        assertFalse(line4.getSelectedOperationalLimitsGroupId1().isPresent());
+        assertFalse(line4.getSelectedOperationalLimitsGroupId2().isPresent());
 
         Line line5 = getNetwork().getLine(LINE_ID_5);
         assertEquals(3, line5.getR(), 0);
@@ -219,6 +235,8 @@ public class LineModificationByAssignmentTest extends AbstractModificationByAssi
         assertEquals(90, line5.getB2(), 0);
         assertEquals(5, line5.getG1(), 0);
         assertEquals(1, line5.getG2(), 0);
+        assertFalse(line5.getSelectedOperationalLimitsGroupId1().isPresent());
+        assertFalse(line5.getSelectedOperationalLimitsGroupId2().isPresent());
 
         Line line6 = getNetwork().getLine(LINE_ID_6);
         assertEquals(3, line6.getR(), 0);
