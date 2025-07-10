@@ -51,6 +51,8 @@
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
+        <!-- TODO network-modification.version remove when migration powsybl -->
+        <network-modification.version>0.25.0</network-modification.version>
     </properties>
 
     <build>
@@ -117,6 +119,7 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
+            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
