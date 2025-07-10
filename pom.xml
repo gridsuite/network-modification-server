@@ -44,7 +44,8 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>41.0.0</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>41.1.0-SNAPSHOT</gridsuite-dependencies.version>
+        <network-modification.version>0.26.0-SNAPSHOT</network-modification.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
@@ -93,7 +94,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-network-modification</artifactId>
+                <version>${network-modification.version}</version>
+            </dependency>
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>

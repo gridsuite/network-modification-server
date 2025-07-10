@@ -269,6 +269,22 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded phaseTapChangerRegulationValue;
 
+    @Column(name = "phasetapchangerregulating")
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerregulating")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerregulatingOp"))
+    })
+    private BooleanModificationEmbedded phaseTapChangerRegulating;
+
+    @Column(name = "phasetapchangerloadtapchangingcapabilities")
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerloadtapchangingcapabilities")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerloadtapchangingcapabilitiesOp"))
+    })
+    private BooleanModificationEmbedded phaseTapChangerLoadTapChangingCapabilities;
+
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "phasetapchangertobeestimated")),
@@ -342,6 +358,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getRegulatingTerminalId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalId()) : null;
         this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalVlId()) : null;
         this.phaseTapChangerTerminalRefType = phaseTapChanger.getRegulatingTerminalType() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalType()) : null;
+        this.phaseTapChangerRegulating = phaseTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(phaseTapChanger.getRegulating()) : null;
+        this.phaseTapChangerLoadTapChangingCapabilities = phaseTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(phaseTapChanger.getLoadTapChangingCapabilities()) : null;
         if (phaseTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
         }
