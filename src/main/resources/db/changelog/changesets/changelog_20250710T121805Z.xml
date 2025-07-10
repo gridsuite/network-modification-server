@@ -20,4 +20,13 @@
             <column name="phasetapchangerregulating_op" type="varchar(255)"/>
         </addColumn>
     </changeSet>
+    <!-- set the newly created regulating field according to regulationMode, and remove FIXED_TAB regulation mode -->
+    <changeSet author="deharbemat" id="1752149928226-99">
+        <sqlFile
+                encoding="UTF-8"
+                path="migrationRegulationMode_20250710T121805Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+    </changeSet>
 </databaseChangeLog>
