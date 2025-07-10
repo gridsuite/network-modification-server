@@ -8,7 +8,6 @@
 package org.gridsuite.modification.server.entities.equipment.modification.byfilter.assignment;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gridsuite.modification.dto.FilterInfos;
@@ -16,6 +15,8 @@ import org.gridsuite.modification.dto.byfilter.DataType;
 import org.gridsuite.modification.dto.byfilter.assignment.*;
 import org.gridsuite.modification.server.entities.equipment.modification.VariationFilterEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.AbstractAssignmentEntity;
+
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
     @Enumerated(EnumType.STRING)
     private DataType dataType;
 
-    @NotNull
+    @Nullable
     @Column(name = "value_") // "value" is not supported in UT with H2
     private String value; // all values of different data types will be serialized as a string, deserialization is based on dataType
 
@@ -45,7 +46,7 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
     public AssignmentEntity(AssignmentInfos<?> assignmentInfos) {
         super(assignmentInfos);
         this.dataType = assignmentInfos.getDataType();
-        this.value = assignmentInfos.getValue().toString();
+        this.value = assignmentInfos.getValue() == null ? null : assignmentInfos.getValue().toString();
         this.filters = assignmentInfos.getFilters().stream()
             .map(VariationFilterEntity::new)
             .toList();
@@ -71,6 +72,9 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
             case PROPERTY -> PropertyAssignmentInfos.builder()
                 .value(value)
                 .propertyName(propertyName)
+                .build();
+            case STRING -> StringAssignmentInfos.builder()
+                .value(value)
                 .build();
         };
 
