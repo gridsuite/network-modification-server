@@ -211,8 +211,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
                                 .toList())
-                .operationalLimitsGroups1(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups1()))
-                .operationalLimitsGroups2(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups2()));
+                .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
 
         if (!ratioTapChangerSteps.isEmpty()) {
             List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = ratioTapChangerSteps.stream().map(TapChangerStepCreationEmbeddable::toModificationInfos).collect(Collectors.toList());
