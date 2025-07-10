@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.utils.CountriesUtils;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.gridsuite.modification.dto.BalancesAdjustmentModificationInfos.*;
 
@@ -47,6 +48,12 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Column(name = "with_load_flow")
     private boolean withLoadFlow = DEFAULT_WITH_LOAD_FLOW;
 
+    @Column(name = "load_flow_parameters_id")
+    private UUID loadFlowParametersId;
+
+    @Column(name = "with_ratio_tap_changers")
+    private boolean withRatioTapChangers = DEFAULT_WITH_RATIO_TAP_CHANGERS;
+
     @Column(name = "subtract_load_flow_balancing")
     private boolean subtractLoadFlowBalancing = DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
 
@@ -72,6 +79,8 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
                 .countriesToBalance(CountriesUtils.toList(countriesToBalance))
                 .balanceType(balanceType)
                 .withLoadFlow(withLoadFlow)
+                .loadFlowParametersId(loadFlowParametersId)
+                .withRatioTapChangers(withRatioTapChangers)
                 .subtractLoadFlowBalancing(subtractLoadFlowBalancing)
                 .build();
     }
@@ -88,6 +97,8 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
         countriesToBalance = CountriesUtils.stringify(balancesAdjustmentModificationInfos.getCountriesToBalance());
         balanceType = balancesAdjustmentModificationInfos.getBalanceType();
         withLoadFlow = balancesAdjustmentModificationInfos.isWithLoadFlow();
+        loadFlowParametersId = balancesAdjustmentModificationInfos.getLoadFlowParametersId();
+        withRatioTapChangers = balancesAdjustmentModificationInfos.isWithRatioTapChangers();
         subtractLoadFlowBalancing = balancesAdjustmentModificationInfos.isSubtractLoadFlowBalancing();
         List<BalancesAdjustmentAreaEntity> areaEntities = balancesAdjustmentModificationInfos
             .getAreas()

@@ -6,15 +6,14 @@ powsybl:
     network-store-server:
       base-uri: http://localhost:8080
 
-network-store-server:
-  base-uri: http://localhost:8080
-
 gridsuite:
   services:
     report-server:
       base-uri: http://localhost:5028
     filter-server:
       base-uri: http://localhost:5027
+    loadflow-server:
+      base-uri: http://localhost:5008
 
 spring:
   rabbitmq:
