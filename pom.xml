@@ -206,6 +206,11 @@
             <artifactId>powsybl-open-loadflow</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-config-classic</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
