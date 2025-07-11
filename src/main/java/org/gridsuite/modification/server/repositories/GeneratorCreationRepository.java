@@ -10,6 +10,8 @@ package org.gridsuite.modification.server.repositories;
 import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCreationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,4 +26,13 @@ public interface GeneratorCreationRepository extends JpaRepository<GeneratorCrea
 
     @EntityGraph(attributePaths = {"properties"}, type = EntityGraph.EntityGraphType.LOAD)
     List<GeneratorCreationEntity> findAllPropertiesByIdIn(List<UUID> ids);
+
+    @Modifying
+    @Query(value = "BEGIN;" +
+            "DELETE FROM generator_creation_entity_reactive_capability_curve_points cp WHERE cp.generator_creation_entity_id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE FROM generator_creation WHERE id IN ?1 ;" +
+            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteTabularSubModifications(List<UUID> subModificationIds);
 }
