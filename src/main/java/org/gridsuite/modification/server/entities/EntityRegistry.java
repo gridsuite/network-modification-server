@@ -62,6 +62,7 @@ public final class EntityRegistry {
         register(VscModificationInfos.class, VscModificationEntity.class);
         register(ConverterStationModificationInfos.class, ConverterStationModificationEntity.class);
         register(TabularModificationInfos.class, TabularModificationEntity.class);
+        register(LimitSetsTabularModificationInfos.class, TabularModificationEntity.class);
         register(ByFormulaModificationInfos.class, ByFormulaModificationEntity.class);
         register(ModificationByAssignmentInfos.class, ModificationByAssignmentEntity.class);
         register(EquipmentAttributeModificationInfos.class, EquipmentAttributeModificationEntity.class);

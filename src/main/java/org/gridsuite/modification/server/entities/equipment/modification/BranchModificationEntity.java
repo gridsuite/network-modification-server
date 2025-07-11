@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
+import org.hibernate.annotations.Filter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -51,6 +55,20 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
             name = "current_limits_modification_id2_fk"
         ), nullable = true)
     private CurrentLimitsModificationEntity currentLimits2;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id1_fk"))
+    @OrderColumn(name = "pos_operationalLimitsGroups")
+    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups1;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id2_fk"))
+    @OrderColumn(name = "pos_operationalLimitsGroups")
+    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups2;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -212,10 +230,26 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         } else {
             currentLimits1 = null;
         }
+        if (branchModificationInfos.getOperationalLimitsGroup1() != null) {
+            opLimitsGroups1 = new ArrayList<>();
+            for(var operationalLimitsGroup : branchModificationInfos.getOperationalLimitsGroup1()) {
+                opLimitsGroups1.add(new OperationalLimitsGroupModificationEntity(operationalLimitsGroup));
+            }
+        } else {
+            opLimitsGroups1 = null;
+        }
         if (branchModificationInfos.getCurrentLimits2() != null) {
             currentLimits2 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits2());
         } else {
             currentLimits2 = null;
+        }
+        if (branchModificationInfos.getOperationalLimitsGroup2() != null) {
+            opLimitsGroups2 = new ArrayList<>();
+            for(var operationalLimitsGroup : branchModificationInfos.getOperationalLimitsGroup2()) {
+                opLimitsGroups2.add(new OperationalLimitsGroupModificationEntity(operationalLimitsGroup));
+            }
+        } else {
+            opLimitsGroups2 = null;
         }
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
