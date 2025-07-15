@@ -10,6 +10,8 @@ package org.gridsuite.modification.server.repositories;
 import org.gridsuite.modification.server.entities.equipment.modification.BatteryModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,4 +28,26 @@ public interface BatteryModificationRepository extends JpaRepository<BatteryModi
 
     @EntityGraph(attributePaths = {"properties"}, type = EntityGraph.EntityGraphType.LOAD)
     List<BatteryModificationEntity> findAllPropertiesByIdIn(List<UUID> ids);
+
+    @Modifying
+    @Query(value = "BEGIN;" +
+            "DELETE FROM battery_modification_entity_reactive_capability_curve_points cp WHERE cp.battery_modification_entity_id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE FROM battery_modification WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
+            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteTabularSubModifications(List<UUID> subModificationIds, UUID tabularModificationId);
+
+    @Modifying
+    @Query(value = "BEGIN;" +
+            "DELETE FROM battery_modification_entity_reactive_capability_curve_points cp WHERE cp.battery_modification_entity_id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE FROM battery_modification WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
+            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_modification WHERE id = ?2 ;" +
+            "DELETE FROM modification WHERE id = ?2 ;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteTabularModification(List<UUID> subModificationIds, UUID tabularModificationId);
 }

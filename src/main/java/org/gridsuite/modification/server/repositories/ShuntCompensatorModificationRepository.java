@@ -7,7 +7,7 @@
 
 package org.gridsuite.modification.server.repositories;
 
-import org.gridsuite.modification.server.entities.equipment.modification.SubstationModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.ShuntCompensatorModificationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,15 +21,15 @@ import java.util.UUID;
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @Repository
-public interface SubstationModificationRepository extends JpaRepository<SubstationModificationEntity, UUID> {
+public interface ShuntCompensatorModificationRepository extends JpaRepository<ShuntCompensatorModificationEntity, UUID> {
 
     @EntityGraph(attributePaths = {"properties"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<SubstationModificationEntity> findAllPropertiesByIdIn(List<UUID> ids);
+    List<ShuntCompensatorModificationEntity> findAllPropertiesByIdIn(List<UUID> ids);
 
     @Modifying
     @Query(value = "BEGIN;" +
             "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
-            "DELETE FROM substation_modification WHERE id IN ?1 ;" +
+            "DELETE FROM shunt_compensator_modification WHERE id IN ?1 ;" +
             "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
             "DELETE FROM modification WHERE id IN ?1 ;" +
             "COMMIT;", nativeQuery = true)
@@ -38,7 +38,7 @@ public interface SubstationModificationRepository extends JpaRepository<Substati
     @Modifying
     @Query(value = "BEGIN;" +
             "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
-            "DELETE FROM substation_modification WHERE id IN ?1 ;" +
+            "DELETE FROM shunt_compensator_modification WHERE id IN ?1 ;" +
             "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
             "DELETE FROM modification WHERE id IN ?1 ;" +
             "DELETE FROM tabular_modification WHERE id = ?2 ;" +

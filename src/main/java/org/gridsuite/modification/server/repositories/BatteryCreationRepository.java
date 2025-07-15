@@ -10,6 +10,8 @@ package org.gridsuite.modification.server.repositories;
 import org.gridsuite.modification.server.entities.equipment.creation.BatteryCreationEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,4 +26,26 @@ public interface BatteryCreationRepository extends JpaRepository<BatteryCreation
 
     @EntityGraph(attributePaths = {"properties"}, type = EntityGraph.EntityGraphType.LOAD)
     List<BatteryCreationEntity> findAllPropertiesByIdIn(List<UUID> ids);
+
+    @Modifying
+    @Query(value = "BEGIN;" +
+            "DELETE FROM battery_creation_entity_reactive_capability_curve_points cp WHERE cp.battery_creation_entity_id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE FROM battery_creation WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_creation_creations WHERE tabular_creation_entity_id = ?2 ;" +
+            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteTabularSubModifications(List<UUID> subModificationIds, UUID tabularModificationId);
+
+    @Modifying
+    @Query(value = "BEGIN;" +
+            "DELETE FROM battery_creation_entity_reactive_capability_curve_points cp WHERE cp.battery_creation_entity_id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE FROM battery_creation WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_creation_creations WHERE tabular_creation_entity_id = ?2 ;" +
+            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "DELETE FROM tabular_creation WHERE id = ?2 ;" +
+            "DELETE FROM modification WHERE id = ?2 ;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteTabularModification(List<UUID> subModificationIds, UUID tabularModificationId);
 }
