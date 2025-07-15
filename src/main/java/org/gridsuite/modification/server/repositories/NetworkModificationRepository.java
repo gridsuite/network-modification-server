@@ -24,6 +24,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.gridsuite.modification.ModificationType.GENERATOR_CREATION;
+import static org.gridsuite.modification.ModificationType.GENERATOR_MODIFICATION;
+import static org.gridsuite.modification.ModificationType.LOAD_CREATION;
+import static org.gridsuite.modification.ModificationType.LOAD_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 
 /**
@@ -41,6 +45,9 @@ public class NetworkModificationRepository {
     private final LineModificationRepository lineModificationRepository;
     private final TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository;
     private final SubstationModificationRepository substationModificationRepository;
+    private final VoltageLevelModificationRepository voltageLevelModificationRepository;
+    private final LoadModificationRepository loadModificationRepository;
+    private final LoadCreationRepository loadCreationRepository;
 
     private final GeneratorCreationRepository generatorCreationRepository;
     private final BatteryCreationRepository batteryCreationRepository;
@@ -58,6 +65,9 @@ public class NetworkModificationRepository {
                                          LineModificationRepository lineModificationRepository,
                                          TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
                                          SubstationModificationRepository substationModificationRepository,
+                                         VoltageLevelModificationRepository voltageLevelModificationRepository,
+                                         LoadModificationRepository loadModificationRepository,
+                                         LoadCreationRepository loadCreationRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
@@ -68,6 +78,9 @@ public class NetworkModificationRepository {
         this.lineModificationRepository = lineModificationRepository;
         this.twoWindingsTransformerModificationRepository = twoWindingsTransformerModificationRepository;
         this.substationModificationRepository = substationModificationRepository;
+        this.voltageLevelModificationRepository = voltageLevelModificationRepository;
+        this.loadModificationRepository = loadModificationRepository;
+        this.loadCreationRepository = loadCreationRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
@@ -315,9 +328,15 @@ public class NetworkModificationRepository {
                 // same with properties
                 twoWindingsTransformerModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
+            case LOAD_MODIFICATION ->
+                // load Load modifications with properties
+                modifications = loadModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             case SUBSTATION_MODIFICATION ->
                 // load substation modifications with properties
                 modifications = substationModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            case VOLTAGE_LEVEL_MODIFICATION ->
+                // load VL modifications with properties
+                modifications = voltageLevelModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
 
             default ->
                 throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
@@ -328,7 +347,8 @@ public class NetworkModificationRepository {
     private TabularModificationInfos loadTabularModification(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
         switch (tabularModificationEntity.getModificationType()) {
-            case GENERATOR_MODIFICATION, BATTERY_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION, TWO_WINDINGS_TRANSFORMER_MODIFICATION:
+            case GENERATOR_MODIFICATION, BATTERY_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION,
+                 TWO_WINDINGS_TRANSFORMER_MODIFICATION, LOAD_MODIFICATION, VOLTAGE_LEVEL_MODIFICATION:
                 // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
                 // optimized entities full loading, per type
@@ -365,6 +385,12 @@ public class NetworkModificationRepository {
                 // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
                 batteryCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
+            case LOAD_CREATION ->
+                // load Load modifications with properties
+                modifications = loadCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            case SHUNT_COMPENSATOR_CREATION ->
+                // load MCS modifications with properties
+                    modifications = ShuntCompensatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             default ->
                 throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
         }
@@ -374,7 +400,7 @@ public class NetworkModificationRepository {
     private TabularCreationInfos loadTabularCreation(ModificationEntity modificationEntity) {
         TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
         switch (tabularCreationEntity.getCreationType()) {
-            case GENERATOR_CREATION, BATTERY_CREATION:
+            case GENERATOR_CREATION, BATTERY_CREATION, LOAD_CREATION, SHUNT_COMPENSATOR_CREATION:
                 // fetch embedded modifications uuids only
                 List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
                 // optimized entities full loading, per type
@@ -591,14 +617,15 @@ public class NetworkModificationRepository {
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity entity = getModificationEntity(modificationUuid);
+        // Tabular modifications optim:
+        // Before updating/adding new sub-modifications, we delete and clear existing sub-modifications manually
+        // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
         if (modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION) {
-            TabularModificationEntity tabularEntity = (TabularModificationEntity) entity;
-            // TODO deleteTabularModificationSubModifications
-            tabularEntity.update(modificationInfos);
+            TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) entity;
+            deleteTabularModificationSubModifications(tabularModificationEntity);
+            tabularModificationEntity.update(modificationInfos);
         } else if (modificationInfos.getType() == ModificationType.TABULAR_CREATION) {
             TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) entity;
-            // Before updating/adding new sub-modifications, we delete and clear existing sub-modifications manually
-            // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
             deleteTabularCreationSubModifications(tabularCreationEntity);
             tabularCreationEntity.update(modificationInfos);
         } else {
@@ -643,43 +670,98 @@ public class NetworkModificationRepository {
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
 
-        // delete tabular modification
+        // delete tabular modifications
         List<TabularModificationEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationEntity.class::isInstance).map(TabularModificationEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
+        List<TabularCreationEntity> tabularCreationsToDelete = modificationEntities.stream().filter(TabularCreationEntity.class::isInstance).map(TabularCreationEntity.class::cast).toList();
+        tabularCreationsToDelete.forEach(this::deleteTabularCreation);
 
         // delete other modification types with "in" requests
         List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationEntity.class::isInstance)).map(ModificationEntity::getId).toList();
-        modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
-        modificationRepository.deleteAllByIdIn(uuidsToDelete);
+        if (!uuidsToDelete.isEmpty()) {
+            modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
+            modificationRepository.deleteAllByIdIn(uuidsToDelete);
+        }
+    }
+
+    private void deleteTabularCreation(TabularCreationEntity tabularCreationEntity) {
+        deleteTabular(tabularCreationEntity.getCreationType(), tabularCreationEntity);
     }
 
     private void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
+        deleteTabular(tabularModificationEntity.getModificationType(), tabularModificationEntity);
+    }
+
+    private void deleteTabular(ModificationType tabularModificationType, ModificationEntity modificationEntity) {
         List<UUID> modificationToCleanUuids = new ArrayList<>();
-        modificationToCleanUuids.add(tabularModificationEntity.getId());
-        switch (tabularModificationEntity.getModificationType()) {
-            case GENERATOR_MODIFICATION:
-                List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(tabularModificationEntity.getId());
+        UUID modificationUuid = modificationEntity.getId();
+        modificationToCleanUuids.add(modificationUuid);
+        switch (tabularModificationType) {
+            case GENERATOR_MODIFICATION, GENERATOR_CREATION, LOAD_MODIFICATION, LOAD_CREATION,
+                 VOLTAGE_LEVEL_MODIFICATION -> {
+                List<UUID> subModificationsIds = modificationEntity instanceof TabularModificationEntity ?
+                        modificationRepository.findSubModificationIdsByTabularModificationId(modificationUuid) :
+                        modificationRepository.findSubModificationIdsByTabularCreationId(modificationUuid);
                 modificationToCleanUuids.addAll(subModificationsIds);
                 modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
-                generatorModificationRepository.deleteTabularModification(subModificationsIds, tabularModificationEntity.getId());
-                break;
-            default:
+                if (tabularModificationType == GENERATOR_MODIFICATION) {
+                    generatorModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+                } else if (tabularModificationType == GENERATOR_CREATION) {
+                    generatorCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+                } else if (tabularModificationType == LOAD_MODIFICATION) {
+                    loadModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+                } else if (tabularModificationType == LOAD_CREATION) {
+                    loadCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+                } else {
+                    voltageLevelModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+                }
+            }
+            default -> {
                 modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
-                modificationRepository.delete(tabularModificationEntity);
-                break;
+                modificationRepository.delete(modificationEntity);
+            }
         }
     }
 
     private void deleteTabularCreationSubModifications(TabularCreationEntity tabularCreationEntity) {
         List<UUID> subModificationsIds;
-        if (tabularCreationEntity.getCreationType() == ModificationType.GENERATOR_CREATION) {
-            subModificationsIds = modificationRepository.findSubModificationIdsByTabularCreationId(tabularCreationEntity.getId());
-            tabularCreationEntity.setCreations(null);
-            modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
-            generatorCreationRepository.deleteTabularSubModifications(subModificationsIds);
-        } else {
-            // TODO new error
-            throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular deletion for: %s", tabularCreationEntity.getCreationType()));
+        ModificationType tabularCreationType = tabularCreationEntity.getCreationType();
+        UUID modificationId = tabularCreationEntity.getId();
+        switch (tabularCreationType) {
+            case GENERATOR_CREATION, LOAD_CREATION -> {
+                subModificationsIds = modificationRepository.findSubModificationIdsByTabularCreationId(modificationId);
+                tabularCreationEntity.setCreations(null);
+                modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
+                if (tabularCreationType == GENERATOR_CREATION) {
+                    generatorCreationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+                } else {
+                    loadCreationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+                }
+            }
+            default ->
+                throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular deletion for: %s", tabularCreationType));
+        }
+    }
+
+    private void deleteTabularModificationSubModifications(TabularModificationEntity tabularModificationEntity) {
+        List<UUID> subModificationsIds;
+        ModificationType tabularModificationType = tabularModificationEntity.getModificationType();
+        UUID modificationId = tabularModificationEntity.getId();
+        switch (tabularModificationType) {
+            case GENERATOR_MODIFICATION, LOAD_MODIFICATION, VOLTAGE_LEVEL_MODIFICATION -> {
+                subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(modificationId);
+                tabularModificationEntity.setModifications(null);
+                modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
+                if (tabularModificationType == GENERATOR_MODIFICATION) {
+                    generatorModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+                } else if (tabularModificationType == LOAD_MODIFICATION) {
+                    loadModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+                } else {
+                    voltageLevelModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+                }
+            }
+            default ->
+                throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, String.format("Missing tabular deletion for: %s", tabularModificationType));
         }
     }
 }
