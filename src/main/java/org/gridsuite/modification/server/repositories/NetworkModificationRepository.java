@@ -344,36 +344,28 @@ public class NetworkModificationRepository {
                 // load MCS modifications with properties
                 modifications = shuntCompensatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             default ->
-                throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
+                throw new UnsupportedOperationException(String.format("No sub-modifications loading for modification type: %s", modificationType));
         }
         return modifications;
     }
 
     private TabularModificationInfos loadTabularModification(ModificationEntity modificationEntity) {
         TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
-        switch (tabularModificationEntity.getModificationType()) {
-            case GENERATOR_MODIFICATION, BATTERY_MODIFICATION, LINE_MODIFICATION, SUBSTATION_MODIFICATION,
-                 TWO_WINDINGS_TRANSFORMER_MODIFICATION, LOAD_MODIFICATION, VOLTAGE_LEVEL_MODIFICATION,
-                 SHUNT_COMPENSATOR_MODIFICATION:
-                // fetch embedded modifications uuids only
-                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
-                // optimized entities full loading, per type
-                List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularModificationEntity.getModificationType());
-                // re-order the list of entities based on the ordered list of IDs
-                List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
-                // then build DTOs
-                return TabularModificationInfos.builder()
-                        .uuid(tabularModificationEntity.getId())
-                        .date(tabularModificationEntity.getDate())
-                        .stashed(tabularModificationEntity.getStashed())
-                        .activated(tabularModificationEntity.getActivated())
-                        .modificationType(tabularModificationEntity.getModificationType())
-                        .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                        .build();
-            default:
-                break;
-        }
-        return tabularModificationEntity.toModificationInfos();
+        // fetch embedded modifications uuids only
+        List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+        // optimized entities full loading, per type
+        List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularModificationEntity.getModificationType());
+        // re-order the list of entities based on the ordered list of IDs
+        List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
+        // then build DTOs
+        return TabularModificationInfos.builder()
+                .uuid(tabularModificationEntity.getId())
+                .date(tabularModificationEntity.getDate())
+                .stashed(tabularModificationEntity.getStashed())
+                .activated(tabularModificationEntity.getActivated())
+                .modificationType(tabularModificationEntity.getModificationType())
+                .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
+                .build();
     }
 
     private List<? extends EquipmentModificationEntity> loadTabularCreationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
@@ -398,34 +390,28 @@ public class NetworkModificationRepository {
                 // load MCS modifications with properties
                 modifications = shuntCompensatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             default ->
-                throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular loading for: %s", modificationType));
+                throw new UnsupportedOperationException(String.format("No sub-modifications loading for creation type: %s", modificationType));
         }
         return modifications;
     }
 
     private TabularCreationInfos loadTabularCreation(ModificationEntity modificationEntity) {
         TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
-        switch (tabularCreationEntity.getCreationType()) {
-            case GENERATOR_CREATION, BATTERY_CREATION, LOAD_CREATION, SHUNT_COMPENSATOR_CREATION:
-                // fetch embedded modifications uuids only
-                List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
-                // optimized entities full loading, per type
-                List<? extends EquipmentModificationEntity> modifications = loadTabularCreationSubEntities(subModificationsUuids, tabularCreationEntity.getCreationType());
-                // re-order the list of entities based on the ordered list of IDs
-                List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
-                // then build DTOs
-                return TabularCreationInfos.builder()
-                        .uuid(tabularCreationEntity.getId())
-                        .date(tabularCreationEntity.getDate())
-                        .stashed(tabularCreationEntity.getStashed())
-                        .activated(tabularCreationEntity.getActivated())
-                        .creationType(tabularCreationEntity.getCreationType())
-                        .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                        .build();
-            default:
-                break;
-        }
-        return tabularCreationEntity.toModificationInfos();
+        // fetch embedded modifications uuids only
+        List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
+        // optimized entities full loading, per type
+        List<? extends EquipmentModificationEntity> modifications = loadTabularCreationSubEntities(subModificationsUuids, tabularCreationEntity.getCreationType());
+        // re-order the list of entities based on the ordered list of IDs
+        List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
+        // then build DTOs
+        return TabularCreationInfos.builder()
+                .uuid(tabularCreationEntity.getId())
+                .date(tabularCreationEntity.getDate())
+                .stashed(tabularCreationEntity.getStashed())
+                .activated(tabularCreationEntity.getActivated())
+                .creationType(tabularCreationEntity.getCreationType())
+                .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
+                .build();
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
@@ -623,8 +609,8 @@ public class NetworkModificationRepository {
     @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity entity = getModificationEntity(modificationUuid);
-        // Tabular modifications optim:
-        // Before updating/adding new sub-modifications, we delete and clear existing sub-modifications manually
+        // Tabular modifications optimization:
+        // Before updating/adding with new sub-modifications, we delete and clear existing sub-modifications manually
         // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
         if (modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION) {
             TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) entity;
@@ -709,34 +695,32 @@ public class NetworkModificationRepository {
         modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
 
         switch (tabularModificationType) {
-            case GENERATOR_MODIFICATION ->
-                generatorModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case GENERATOR_CREATION ->
                 generatorCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            case LOAD_MODIFICATION ->
-                loadModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case LOAD_CREATION ->
                 loadCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            case VOLTAGE_LEVEL_MODIFICATION ->
-                voltageLevelModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case SHUNT_COMPENSATOR_CREATION ->
                 shuntCompensatorCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+            case BATTERY_CREATION ->
+                batteryCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+            case GENERATOR_MODIFICATION ->
+                generatorModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+            case LOAD_MODIFICATION ->
+                loadModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case SHUNT_COMPENSATOR_MODIFICATION ->
                 shuntCompensatorModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+            case BATTERY_MODIFICATION ->
+                batteryModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+            case VOLTAGE_LEVEL_MODIFICATION ->
+                voltageLevelModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case LINE_MODIFICATION ->
                 lineModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION ->
                 twoWindingsTransformerModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case SUBSTATION_MODIFICATION ->
                 substationModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            case BATTERY_CREATION ->
-                batteryCreationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            case BATTERY_MODIFICATION ->
-                batteryModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            default -> {
-                modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
-                modificationRepository.delete(modificationEntity);
-            }
+            default ->
+                throw new UnsupportedOperationException(String.format("No modification full deletion for type: %s", tabularModificationType));
         }
     }
 
@@ -756,7 +740,7 @@ public class NetworkModificationRepository {
             case BATTERY_CREATION ->
                 batteryCreationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             default ->
-                throw new NetworkModificationException(TABULAR_CREATION_ERROR, String.format("Missing tabular deletion for: %s", tabularCreationType));
+                throw new UnsupportedOperationException(String.format("No sub-modifications deletion for creation type: %s", tabularCreationType));
         }
     }
 
@@ -771,20 +755,20 @@ public class NetworkModificationRepository {
                 generatorModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case LOAD_MODIFICATION ->
                 loadModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
-            case VOLTAGE_LEVEL_MODIFICATION ->
-                voltageLevelModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case SHUNT_COMPENSATOR_MODIFICATION ->
                 shuntCompensatorModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+            case BATTERY_MODIFICATION ->
+                batteryModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+            case VOLTAGE_LEVEL_MODIFICATION ->
+                voltageLevelModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case LINE_MODIFICATION ->
                 lineModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION ->
                 twoWindingsTransformerModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case SUBSTATION_MODIFICATION ->
                 substationModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
-            case BATTERY_MODIFICATION ->
-                batteryModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             default ->
-                throw new NetworkModificationException(TABULAR_MODIFICATION_ERROR, String.format("Missing tabular deletion for: %s", tabularModificationType));
+                throw new UnsupportedOperationException(String.format("No sub-modifications deletion for modification type: %s", tabularModificationType));
         }
     }
 }
