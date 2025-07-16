@@ -619,9 +619,10 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         assertEquals("No sub-modifications deletion for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
 
         // try to delete
+        List<UUID> ids = List.of(modifId);
         exception = assertThrows(
                 UnsupportedOperationException.class,
-                () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(modifId))
+                () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
         );
         assertEquals("No modification full deletion for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
     }
