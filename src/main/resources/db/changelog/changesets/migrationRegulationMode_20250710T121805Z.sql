@@ -13,3 +13,7 @@ WHERE phasetapchangerregulationmode <> 'FIXED_TAP' AND phasetapchangerregulation
 UPDATE two_windings_transformer_modification
 SET phasetapchangerregulationmode = NULL, phasetapchangerregulationmode_op = NULL
 WHERE phasetapchangerregulationmode = 'FIXED_TAP';
+
+UPDATE static_var_compensator_creation SET regulating = 'false' WHERE regulation_mode = 'OFF';
+UPDATE static_var_compensator_creation SET regulating = 'true' WHERE regulation_mode <> 'OFF';
+UPDATE static_var_compensator_creation SET regulation_mode = NULL WHERE regulation_mode = 'OFF';
