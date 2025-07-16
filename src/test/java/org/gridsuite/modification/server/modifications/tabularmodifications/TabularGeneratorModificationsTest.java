@@ -8,16 +8,22 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.StaticVarCompensator;
+import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ApiUtils;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -33,6 +39,8 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,6 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest {
+    @Autowired
+    private ModificationRepository modificationRepository;
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -346,8 +357,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
-        // It is actually (10, 0, 0, 15) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(10, 0, 0, 1);
+        // It is actually (8, 0, 0, 15) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(8, 0, 0, 1);
+        assertEquals(0, modificationRepository.count());
     }
 
     @Test
@@ -356,8 +368,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
-        // It is actually (14, 0, 0, 29) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(14, 0, 0, 1);
+        // It is actually (12, 0, 0, 29) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(12, 0, 0, 1);
+        assertEquals(0, modificationRepository.count());
     }
 
     /*
@@ -384,8 +397,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (8, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 0, 0);
+        // It is actually (6, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        assertEquals(0, modificationRepository.count());
     }
 
     @Test
@@ -395,8 +409,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteStashedInGroup(mockMvc, getGroupId());
-        // It is actually (12, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(12, 0, 0, 0);
+        // It is actually (10, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(10, 0, 0, 0);
+        assertEquals(0, modificationRepository.count());
     }
 
     /*
@@ -422,8 +437,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
-        // It is actually (8, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 0, 0);
+        // It is actually (6, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        assertEquals(0, modificationRepository.count());
     }
 
     @Test
@@ -432,8 +448,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId());
-        // It is actually (12, 0, 0, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(12, 0, 0, 0);
+        // It is actually (10, 0, 0, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(10, 0, 0, 0);
+        assertEquals(0, modificationRepository.count());
     }
 
     /*
@@ -459,9 +476,11 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         List<Pair<UUID, ModificationInfos>> modifications = createFewTabularModifications();
 
         reset();
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft())); // removing only 1 tabular modification in the group
-        // It is actually (6, 0, 1, 7) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(6, 0, 0, 0);
+        // removing only first tabular modification in the group
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), List.of(modifications.get(0).getLeft()));
+        // It is actually (4, 0, 1, 7) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(4, 0, 0, 0);
+        assertEquals(4, modificationRepository.count()); // then second tabular still exists (and its sub-modifications)
     }
 
     @Test
@@ -469,9 +488,11 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
 
         reset();
-        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList()); // removing only 3 tabular modification in the group
-        // It is actually (10, 0, 1, 21) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(10, 0, 0, 0);
+        // removing only 3 first tabular modifications in the group
+        ApiUtils.deleteNetworkModificationsInGroup(mockMvc, getGroupId(), modifications.subList(0, 3).stream().map(Pair::getLeft).toList());
+        // It is actually (8, 0, 1, 21) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(8, 0, 0, 0);
+        assertEquals(31, modificationRepository.count()); // then last tabular still exists (and its sub-modifications)
     }
 
     /*
@@ -497,20 +518,25 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
 
         reset();
+        // remove duplicates
         ApiUtils.deleteNetworkModifications(mockMvc, idsMapping.values().stream().toList());
-        // It is actually (7, 0, 0, 14) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(7, 0, 0, 0);
+        // It is actually (5, 0, 0, 14) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(5, 0, 0, 0);
+        assertEquals(6, modificationRepository.count()); // source Modifications not removed
     }
 
     @Test
     void testSqlRequestsCountOnDeleteNetworkModificationsByIds2() throws Exception {
         List<Pair<UUID, ModificationInfos>> modifications = createMoreTabularModifications();
-        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
+        List<UUID> sourceModifications = modifications.stream().map(Pair::getLeft).toList();
+        Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, sourceModifications);
 
         reset();
+        // remove duplicates
         ApiUtils.deleteNetworkModifications(mockMvc, idsMapping.values().stream().toList());
-        // It is actually (11, 0, 0, 28) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(11, 0, 0, 0);
+        // It is actually (9, 0, 0, 28) because deletes made in the native query are not counted
+        TestUtils.assertRequestsCount(9, 0, 0, 0);
+        assertEquals(48, modificationRepository.count()); // source Modifications not removed
     }
 
     @Test
@@ -530,6 +556,75 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk()).andReturn();
         assertLogMessage("Tabular modification: No generators have been modified", "network.modification.tabular.modification.error", reportService);
+    }
+
+    @Test
+    void testUnsupportedTabularModificationType() throws Exception {
+        List<ModificationInfos> modifications = List.of(
+                StaticVarCompensatorCreationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("idStaticVarCompensator1")
+                        .equipmentName("nameStaticVarCompensator1")
+                        .voltageLevelId("v2")
+                        .busOrBusbarSectionId("1B")
+                        .connectionName("top")
+                        .connectionDirection(ConnectablePosition.Direction.TOP)
+                        .maxSusceptance(224.0)
+                        .minSusceptance(200.0)
+                        .maxQAtNominalV(null)
+                        .minQAtNominalV(null)
+                        .regulationMode(StaticVarCompensator.RegulationMode.VOLTAGE)
+                        .voltageSetpoint(120.0)
+                        .reactivePowerSetpoint(300.0)
+                        .voltageRegulationType(VoltageRegulationType.LOCAL)
+                        .standbyAutomatonOn(false)
+                        .properties(List.of(FreePropertyInfos.builder().name("PROPERTY_NAME").value("PROPERTY_VALUE").build()))
+                        .build()
+        );
+        ModificationInfos tabularInfos = TabularModificationInfos.builder()
+                .modificationType(ModificationType.STATIC_VAR_COMPENSATOR_CREATION)
+                .modifications(modifications)
+                .build();
+        String tabularModificationJson = getJsonBody(tabularInfos, null);
+
+        // creation
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularModificationJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(result);
+        assertEquals(1, result.modificationUuids().size());
+        UUID modifId = result.modificationUuids().get(0);
+
+        // try to get via the group
+        UnsupportedOperationException exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+        assertEquals("No sub-modifications loading for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+
+        // try to get via id
+        exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.getModificationInfo(modifId)
+        );
+        assertEquals("No sub-modifications loading for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+
+        // try to update
+        exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.updateModification(modifId, tabularInfos)
+        );
+        // deletion error because we try to remove the sub-modifications before updating them
+        assertEquals("No sub-modifications deletion for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+
+        // try to delete
+        List<UUID> ids = List.of(modifId);
+        exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
+        );
+        assertEquals("No modification full deletion for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
     }
 
     @Override
