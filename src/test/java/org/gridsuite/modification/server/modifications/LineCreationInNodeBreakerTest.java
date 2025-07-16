@@ -140,7 +140,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(5., createdModification.getOperationalLimitsGroups1().get(0).getCurrentLimits().getPermanentLimit(), 0.);
         assertEquals(6., createdModification.getOperationalLimitsGroups2().get(0).getCurrentLimits().getPermanentLimit(), 0.);
         assertTrue(createdModification.getOperationalLimitsGroups1().get(0).getCurrentLimits().getTemporaryLimits().isEmpty());
@@ -196,7 +196,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertNull(createdModification.getOperationalLimitsGroups1().get(0).getCurrentLimits().getPermanentLimit());
         assertNull(createdModification.getOperationalLimitsGroups2().get(0).getCurrentLimits().getPermanentLimit());
         assertEquals(1, createdModification.getOperationalLimitsGroups1().get(0).getCurrentLimits().getTemporaryLimits().size());
@@ -255,7 +255,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineCreationInfos createdModification = (LineCreationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(200., createdModification.getOperationalLimitsGroups1().get(0).getCurrentLimits().getPermanentLimit(), 0.);
         assertEquals(100., createdModification.getOperationalLimitsGroups2().get(0).getCurrentLimits().getPermanentLimit(), 0.);
         assertEquals(1, createdModification.getOperationalLimitsGroups1().get(0).getCurrentLimits().getTemporaryLimits().size());

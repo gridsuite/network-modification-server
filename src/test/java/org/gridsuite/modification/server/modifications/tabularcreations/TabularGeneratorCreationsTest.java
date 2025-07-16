@@ -7,20 +7,25 @@
 package org.gridsuite.modification.server.modifications.tabularcreations;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.SubstationCreationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
@@ -313,5 +318,61 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         assertEquals(ModificationType.TABULAR_CREATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.GENERATOR_CREATION.name(), updatedValues.get("tabularCreationType"));
+    }
+
+    @Test
+    void testUnsupportedTabularCreationType() throws Exception {
+        List<ModificationInfos> creations = List.of(
+                SubstationCreationInfos.builder()
+                        .stashed(false)
+                        .equipmentId("SubstationId")
+                        .equipmentName("SubstationName")
+                        .country(Country.AF)
+                        .properties(List.of(FreePropertyInfos.builder().name("DEMO").value("DemoC").build()))
+                        .build()
+        );
+        ModificationInfos creationInfos = TabularCreationInfos.builder()
+                .creationType(ModificationType.SUBSTATION_CREATION)
+                .creations(creations)
+                .build();
+        String tabularCreationJson = getJsonBody(creationInfos, null);
+
+        // creation
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertNotNull(result);
+        assertEquals(1, result.modificationUuids().size());
+        UUID modifId = result.modificationUuids().get(0);
+
+        // try to get via the group
+        UnsupportedOperationException exception = assertThrows(
+                UnsupportedOperationException.class,
+            () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
+        );
+        assertEquals("No sub-modifications loading for creation type: SUBSTATION_CREATION", exception.getMessage());
+
+        // try to get via id
+        exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.getModificationInfo(modifId)
+        );
+        assertEquals("No sub-modifications loading for creation type: SUBSTATION_CREATION", exception.getMessage());
+
+        // try to update
+        exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.updateModification(modifId, creationInfos)
+        );
+        // deletion error because we try to remove the sub-modifications before updating them
+        assertEquals("No sub-modifications deletion for creation type: SUBSTATION_CREATION", exception.getMessage());
+
+        // try to delete
+        exception = assertThrows(
+                UnsupportedOperationException.class,
+                () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(modifId))
+        );
+        assertEquals("No modification full deletion for type: SUBSTATION_CREATION", exception.getMessage());
     }
 }

@@ -126,13 +126,13 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
         networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
-        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertAfterNetworkModificationCreation();
 
-        ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
