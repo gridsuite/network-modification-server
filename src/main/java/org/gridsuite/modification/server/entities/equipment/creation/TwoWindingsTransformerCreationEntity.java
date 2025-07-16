@@ -237,6 +237,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .tapPosition(getPhaseTapChangerTapPosition())
                     .targetDeadband(getPhaseTapChangerTargetDeadband())
                     .regulating(getPhaseTapChangerRegulating())
+                    .loadTapChangingCapabilities(true)
                     .regulationMode(getPhaseTapChangerRegulationMode())
                     .regulationValue(getPhaseTapChangerRegulationValue())
                     .regulatingTerminalId(getPhaseTapChangerTerminalRefConnectableId())

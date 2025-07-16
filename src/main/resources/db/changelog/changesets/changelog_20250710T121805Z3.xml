@@ -20,6 +20,11 @@
             <column name="phasetapchangerregulating_op" type="varchar(255)"/>
         </addColumn>
     </changeSet>
+    <changeSet author="deharbemat" id="1752149928226-35">
+        <addColumn tableName="two_windings_transformer_creation">
+            <column name="phasetapchangerloadtapchangingcapabilities" type="boolean"/>
+        </addColumn>
+    </changeSet>
     <!-- set the newly created regulating field according to regulationMode, and remove FIXED_TAB regulation mode -->
     <changeSet author="deharbemat" id="1752149928226-99">
         <sqlFile
