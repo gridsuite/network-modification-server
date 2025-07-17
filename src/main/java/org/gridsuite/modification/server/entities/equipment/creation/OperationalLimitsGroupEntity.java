@@ -66,6 +66,7 @@ public class OperationalLimitsGroupEntity {
                         .map(limitsGroupEntity ->
                                 OperationalLimitsGroupInfos.builder()
                                         .id(limitsGroupEntity.getId())
+                                        .applicability(limitsGroupEntity.getApplicability())
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
                                         .build()
                         )
