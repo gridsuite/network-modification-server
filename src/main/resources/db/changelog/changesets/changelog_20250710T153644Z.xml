@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-<!--    <changeSet author="elcheikhbas (generated)" id="1752161859419-31">
+    <changeSet author="elcheikhbas (generated)" id="1752161859419-31">
         <createTable tableName="line_creation_operational_limits_groups">
             <column name="branch_id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="line_creation_operational_limits_groupsPK"/>
@@ -30,7 +30,7 @@
         <addColumn tableName="operational_limits_group">
             <column name="applicability" type="varchar(255)"/>
         </addColumn>
-    </changeSet>-->
+    </changeSet>
 
     <!-- Drop constraints -->
     <changeSet author="elcheikhbas (generated)" id="1752161859419-37">
@@ -94,7 +94,7 @@
     </changeSet>
 
     <!-- drop tables -->
-    <!-- <changeSet author="elcheikhbas (generated)" id="1752161859419-70">
+    <changeSet author="elcheikhbas (generated)" id="1752161859419-70">
         <dropTable tableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS1"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-71">
@@ -105,5 +105,5 @@
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-73">
         <dropTable tableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2"/>
-    </changeSet>-->
+    </changeSet>
 </databaseChangeLog>

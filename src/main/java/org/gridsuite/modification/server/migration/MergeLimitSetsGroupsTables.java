@@ -18,6 +18,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MergeLimitSetsGroupsTables implements CustomSqlChange {
@@ -25,16 +26,19 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
     private static final Logger LOGGER = LoggerFactory.getLogger(MergeLimitSetsGroupsTables.class);
     private static final String UUID_COL = "uuid";
     private static final String ID_COL = "id";
-    private static final String OPERATIONAL_LG_ID = "operational_limits_groups_id";
-    private static final String CURRENT_LIMITS_ID = "current_limits_id";
+    private static final String OPERATIONAL_LG_ID_COL = "operational_limits_groups_id";
+    private static final String CURRENT_LIMITS_ID_COL = "current_limits_id";
+    private static final String POS_OP_LG_COL = "pos_operational_limits_groups";
+    private static final String OPERATIONAL_LIMITS_GROUPS_TABLE = "operational_limits_group";
+    private static final String BRANCH_ID_COL = "branch_id";
 
     private String createQueryLineOpLimitsGroups(String id, String tableName) {
         return "select * from " + tableName + " where branch_id = '" + id + "'";
     }
 
-    private List<String> getOperationalLimitsGroupsNames(JdbcConnection connection, String id) throws SQLException, DatabaseException {
+    private List<String> getOperationalLimitsGroupsNames(JdbcConnection connection, String tableName, String id) throws SQLException, DatabaseException {
         ArrayList<String> names = new ArrayList<>();
-        ResultSet resultSet = connection.createStatement().executeQuery(createQueryLineOpLimitsGroups(id, "line_creation_operational_limits_groups1"));
+        ResultSet resultSet = connection.createStatement().executeQuery(createQueryLineOpLimitsGroups(id, tableName));
         while (resultSet.next()) {
             String query = "select id from operational_limits_group where uuid = '" + resultSet.getString("operational_limits_groups_id") + "'";
             ResultSet resultSetOp = connection.createStatement().executeQuery(query);
@@ -72,8 +76,8 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
 
         if (currentLimits1.next() && currentLimits2.next()) {
             String currentLimitsQuery = "select permanent_limit from current_limits where id = '<id>'";
-            String currentLimitsId1 = currentLimits1.getString(CURRENT_LIMITS_ID);
-            String currentLimitsId2 = currentLimits2.getString(CURRENT_LIMITS_ID);
+            String currentLimitsId1 = currentLimits1.getString(CURRENT_LIMITS_ID_COL);
+            String currentLimitsId2 = currentLimits2.getString(CURRENT_LIMITS_ID_COL);
             ResultSet permanentLimit = connection.createStatement().executeQuery(currentLimitsQuery.replace("<id>", currentLimitsId1));
             ResultSet permanentLimit2 = connection.createStatement().executeQuery(currentLimitsQuery.replace("<id>", currentLimitsId2));
 
@@ -133,19 +137,24 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
         return newName;
     }
 
-    private void changeIdOperationalLimitsGroup(Database database, ResultSet operationalLimitsGroups,
+    private void addOperationalLimitsGroupApplicability(Database database, ResultSet operationalLimitsGroups,
+                                                List<SqlStatement> statements, String applicability) throws SQLException {
+        addOperationalLimitsGroupApplicability(database, operationalLimitsGroups, statements, "", applicability);
+    }
+
+    private void addOperationalLimitsGroupApplicability(Database database, ResultSet operationalLimitsGroups,
                                                 List<SqlStatement> statements, String name, String applicability) throws SQLException {
 
         //Delete statement
         if (operationalLimitsGroups.next()) {
-            statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "operational_limits_group")
+            statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), OPERATIONAL_LIMITS_GROUPS_TABLE)
                 .setWhereClause(UUID_COL + " = '" + operationalLimitsGroups.getString(UUID_COL) + "'"));
 
             //Add statement
-            statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "operational_limits_group")
+            statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), OPERATIONAL_LIMITS_GROUPS_TABLE)
                 .addColumnValue(UUID_COL, operationalLimitsGroups.getString(UUID_COL))
-                .addColumnValue("id", name)
-                .addColumnValue("current_limits_id", operationalLimitsGroups.getString("current_limits_id"))
+                .addColumnValue(ID_COL, !name.isEmpty() ? name : operationalLimitsGroups.getString(ID_COL))
+                .addColumnValue(CURRENT_LIMITS_ID_COL, operationalLimitsGroups.getString(CURRENT_LIMITS_ID_COL))
                 .addColumnValue("applicability", applicability));
         }
     }
@@ -155,71 +164,87 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
         JdbcConnection connection = (JdbcConnection) database.getConnection();
 
         List<SqlStatement> statements = new ArrayList<>();
-        String linesToProcess = "Select id from line_creation";
+
         try {
-            try (ResultSet lines = connection.createStatement().executeQuery(linesToProcess)) {
-                while (lines.next()) {
-                    //get operational limits groups1
-                    ResultSet lineCreationOpLimitsGroups1 = connection.createStatement()
-                        .executeQuery(createQueryLineOpLimitsGroups(lines.getString("id"), "line_creation_operational_limits_groups1"));
-                    List<String> oldNames = getOperationalLimitsGroupsNames(connection, lines.getString(ID_COL));
-                    ArrayList<String> newNames = new ArrayList<>();
+            for (int i = 0; i < 2; i++) {
+                final String branchCreationTable = i == 0 ? "line_creation" : "two_windings_transformer_creation";
+                final String branchCreationOpLimitsGroups1Table = i == 0 ? "line_creation_operational_limits_groups1"
+                    : "two_windings_transformer_creation_operational_limits_groups1";
+                final String branchCreationOpLimitsGroups2Table = i == 0 ? "line_creation_operational_limits_groups2"
+                    : "two_windings_transformer_creation_operational_limits_groups2";
+                final String branchCreationOpLimitsGroupsTable = i == 0 ? "line_creation_operational_limits_groups"
+                    : "two_windings_transformer_creation_operational_limits_groups";
 
-                    while (lineCreationOpLimitsGroups1.next()) {
-                        String lineCreationOpLimitsGroup1Id = lineCreationOpLimitsGroups1.getString(OPERATIONAL_LG_ID);
-                        String lineCreationOpLimitsGroup1Pos = lineCreationOpLimitsGroups1.getString("pos_operational_limits_groups");
+                String branchesToProcess = "Select id from " + branchCreationTable;
+                try (ResultSet lines = connection.createStatement().executeQuery(branchesToProcess)) {
+                    while (lines.next()) {
+                        int position = 0;
+                        //get operational limits groups1
+                        ResultSet branchCreationOpLimitsGroups1 = connection.createStatement()
+                            .executeQuery(createQueryLineOpLimitsGroups(lines.getString(ID_COL), branchCreationOpLimitsGroups1Table));
+                        List<String> oldNames = getOperationalLimitsGroupsNames(connection, branchCreationOpLimitsGroups1Table, lines.getString(ID_COL));
+                        ArrayList<String> newNames = new ArrayList<>();
 
-                        ResultSet lineCreationOpLimitsGroups2 = connection.createStatement()
-                            .executeQuery(createQueryLineOpLimitsGroupsWithPos("line_creation_operational_limits_groups2", lines.getString("id"), lineCreationOpLimitsGroup1Pos));
+                        while (branchCreationOpLimitsGroups1.next()) {
+                            String branchCreationOpLimitsGroup1Id = branchCreationOpLimitsGroups1.getString(OPERATIONAL_LG_ID_COL);
+                            String branchCreationOpLimitsGroup1Pos = branchCreationOpLimitsGroups1.getString(POS_OP_LG_COL);
 
-                        lineCreationOpLimitsGroups2.next();
-                        String lineCreationOpLimitsGroup2Id = lineCreationOpLimitsGroups2.getString(OPERATIONAL_LG_ID);
+                            ResultSet branchCreationOpLimitsGroups2 = connection.createStatement()
+                                .executeQuery(createQueryLineOpLimitsGroupsWithPos(branchCreationOpLimitsGroups2Table, lines.getString(ID_COL),
+                                    branchCreationOpLimitsGroup1Pos));
 
-                        // Compare Both limitsGroups 1 and 2 limits
-                        if (compareOperationalLimitsInfos(connection, lineCreationOpLimitsGroup1Id, lineCreationOpLimitsGroup2Id)) {
-                            ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select current_limits_id from operational_limits_group where " + UUID_COL + " = '" + lineCreationOpLimitsGroup2Id + "'");
+                            branchCreationOpLimitsGroups2.next();
+                            String branchCreationOpLimitsGroup2Id = branchCreationOpLimitsGroups2.getString(OPERATIONAL_LG_ID_COL);
 
-                            // - remove line from operational_limits_group
-                            // - remove related permanent limit from current_limits
-                            // - remove all other related limits from current_temporary_limits
-                            if (operationalLimitsGroups2.next()) {
-                                String currentLimitId = operationalLimitsGroups2.getString("current_limits_id");
-                                statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "current_limits")
-                                    .setWhere(UUID_COL + " = '" + currentLimitId + "'"));
-                                statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "current_temporary_limits")
-                                    .setWhere(UUID_COL + " = '" + currentLimitId + "'"));
-                                statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "operational_limits_group")
-                                    .setWhere(UUID_COL + " = '" + lineCreationOpLimitsGroup2Id + "'"));
+                            // Compare Both limitsGroups 1 and 2 limits
+                            ResultSet operationalLimitsGroups1 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup1Id + "'");
+
+                            if (compareOperationalLimitsInfos(connection, branchCreationOpLimitsGroup1Id, branchCreationOpLimitsGroup2Id)) {
+                                ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select current_limits_id from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup2Id + "'");
+
+                                // - remove line from operational_limits_group
+                                // - remove related permanent limit from current_limits
+                                // - remove all other related limits from current_temporary_limits
+                                if (operationalLimitsGroups2.next()) {
+                                    statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), OPERATIONAL_LIMITS_GROUPS_TABLE)
+                                        .setWhere(UUID_COL + " = '" + branchCreationOpLimitsGroup2Id + "'"));
+                                    String currentLimitId = operationalLimitsGroups2.getString(CURRENT_LIMITS_ID_COL);
+                                    statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "current_temporary_limits")
+                                        .setWhere(ID_COL + " = '" + currentLimitId + "'"));
+                                    statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "current_limits")
+                                        .setWhere(ID_COL + " = '" + currentLimitId + "'"));
+                                }
+
+                                addOperationalLimitsGroupApplicability(database, operationalLimitsGroups1, statements, "EQUIPMENT");
+
+                                // if they are equal then add only one limitGroup in new Table with application side = equipment (both)
+                                statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), branchCreationOpLimitsGroupsTable)
+                                    .addColumnValue(BRANCH_ID_COL, lines.getString(ID_COL))
+                                    .addColumnValue(OPERATIONAL_LG_ID_COL, branchCreationOpLimitsGroup1Id)
+                                    .addColumnValue(POS_OP_LG_COL, position++));
+                            } else {
+                                //change their names in operational_limits_group
+                                String oldName = getLimitsGroupId(connection, branchCreationOpLimitsGroup1Id);
+                                String newName = generateNewName(oldNames, newNames, oldName, "_OR");
+                                newNames.add(newName);
+                                addOperationalLimitsGroupApplicability(database, operationalLimitsGroups1, statements, newName, "SIDE1");
+
+                                statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), branchCreationOpLimitsGroupsTable)
+                                    .addColumnValue(BRANCH_ID_COL, lines.getString(ID_COL))
+                                    .addColumnValue(OPERATIONAL_LG_ID_COL, branchCreationOpLimitsGroup1Id)
+                                    .addColumnValue(POS_OP_LG_COL, position++));
+
+                                oldName = getLimitsGroupId(connection, branchCreationOpLimitsGroup1Id);
+                                newName = generateNewName(oldNames, newNames, oldName, "_EX");
+                                newNames.add(newName);
+                                ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup2Id + "'");
+                                addOperationalLimitsGroupApplicability(database, operationalLimitsGroups2, statements, newName, "SIDE2");
+
+                                statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), branchCreationOpLimitsGroupsTable)
+                                    .addColumnValue(BRANCH_ID_COL, lines.getString(ID_COL))
+                                    .addColumnValue(OPERATIONAL_LG_ID_COL, branchCreationOpLimitsGroup2Id)
+                                    .addColumnValue(POS_OP_LG_COL, position++));
                             }
-                            // if they are equal then add only one limitGroup in new Table with application side = equipment (both)
-                            statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "line_creation_operational_limits_groups")
-                                .addColumnValue("branch_id", lines.getString("id"))
-                                .addColumnValue(OPERATIONAL_LG_ID, lineCreationOpLimitsGroups1.getString(OPERATIONAL_LG_ID))
-                                .addColumnValue("pos_operational_limits_groups", lineCreationOpLimitsGroups1.getString("pos_operational_limits_groups"))
-                                .addColumnValue("applicability", "EQUIPMENT"));
-                        } else {
-                            //change their names in operational_limits_group
-                            String oldName = getLimitsGroupId(connection, lineCreationOpLimitsGroup1Id);
-                            String newName = generateNewName(oldNames, newNames, oldName, "_OR");
-                            newNames.add(newName);
-                            ResultSet operationalLimitsGroups1 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + lineCreationOpLimitsGroup1Id + "'");
-                            changeIdOperationalLimitsGroup(database, operationalLimitsGroups1, statements, newName, "SIDE1");
-
-                            statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "line_creation_operational_limits_groups")
-                                .addColumnValue("branch_id", lines.getString("id"))
-                                .addColumnValue(OPERATIONAL_LG_ID, lineCreationOpLimitsGroups1.getString(OPERATIONAL_LG_ID))
-                                .addColumnValue("pos_operational_limits_groups", lineCreationOpLimitsGroups1.getString("pos_operational_limits_groups")));
-
-                            oldName = getLimitsGroupId(connection, lineCreationOpLimitsGroup1Id);
-                            newName = generateNewName(oldNames, newNames, oldName, "_EX");
-                            newNames.add(newName);
-                            ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + lineCreationOpLimitsGroup2Id + "'");
-                            changeIdOperationalLimitsGroup(database, operationalLimitsGroups2, statements, newName, "SIDE2");
-
-                            statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), "line_creation_operational_limits_groups")
-                                .addColumnValue("branch_id", lines.getString("id"))
-                                .addColumnValue(OPERATIONAL_LG_ID, lineCreationOpLimitsGroups2.getString(OPERATIONAL_LG_ID))
-                                .addColumnValue("pos_operational_limits_groups", lineCreationOpLimitsGroups2.getString("pos_operational_limits_groups")));
                         }
                     }
                 }
