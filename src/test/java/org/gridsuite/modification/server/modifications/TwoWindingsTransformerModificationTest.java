@@ -589,10 +589,6 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
     }
 
     private TwoWindingsTransformer createPhaseTapChanger() {
-        return createPhaseTapChanger(PhaseTapChanger.RegulationMode.CURRENT_LIMITER);
-    }
-
-    private TwoWindingsTransformer createPhaseTapChanger(PhaseTapChanger.RegulationMode regulationMode) {
         TwoWindingsTransformer twt3 = createTwoWindingsTransformer(getNetwork().getSubstation("s1"), "trf3", "trf3", 2.0, 14.745, 0.0, 3.2E-5, 400.0, 225.0,
             41, 151, getNetwork().getVoltageLevel("v1").getId(), getNetwork().getVoltageLevel("v2").getId(),
             "trf3", 1, ConnectablePosition.Direction.TOP,
@@ -605,7 +601,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             .setLowTapPosition(0)
             .setTapPosition(1)
             .setRegulationTerminal(phaseTapChangerTerminal)
-            .setRegulationMode(regulationMode)
+            .setRegulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
             .beginStep()
             .setR(39.78473)
             .setX(39.784725)
