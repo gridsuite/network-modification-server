@@ -11,6 +11,7 @@ import liquibase.resource.ResourceAccessor;
 import liquibase.statement.SqlStatement;
 import liquibase.statement.core.DeleteStatement;
 import liquibase.statement.core.InsertStatement;
+import liquibase.statement.core.UpdateStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class MergeLimitSetsGroupsTables implements CustomSqlChange {
@@ -145,18 +145,19 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
     private void addOperationalLimitsGroupApplicability(Database database, ResultSet operationalLimitsGroups,
                                                 List<SqlStatement> statements, String name, String applicability) throws SQLException {
 
-        //Delete statement
         if (operationalLimitsGroups.next()) {
-            statements.add(new DeleteStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), OPERATIONAL_LIMITS_GROUPS_TABLE)
-                .setWhereClause(UUID_COL + " = '" + operationalLimitsGroups.getString(UUID_COL) + "'"));
-
-            //Add statement
-            statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), OPERATIONAL_LIMITS_GROUPS_TABLE)
-                .addColumnValue(UUID_COL, operationalLimitsGroups.getString(UUID_COL))
-                .addColumnValue(ID_COL, !name.isEmpty() ? name : operationalLimitsGroups.getString(ID_COL))
-                .addColumnValue(CURRENT_LIMITS_ID_COL, operationalLimitsGroups.getString(CURRENT_LIMITS_ID_COL))
-                .addColumnValue("applicability", applicability));
+            statements.add(new UpdateStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), OPERATIONAL_LIMITS_GROUPS_TABLE)
+                .setWhereClause(UUID_COL + " = '" + operationalLimitsGroups.getString(UUID_COL) + "'")
+                .addNewColumnValue("applicability", applicability)
+                .addNewColumnValue(ID_COL, !name.isEmpty() ? name : operationalLimitsGroups.getString(ID_COL)));
         }
+    }
+
+    private void changeActiveLimitGroupName(Database database, String tableName, List<SqlStatement> statements,
+                                            String id, String colName, String name) {
+        statements.add(new UpdateStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), tableName)
+            .setWhereClause(ID_COL + " = '" + id + "'")
+            .addNewColumnValue(colName, name));
     }
 
     @Override
@@ -167,6 +168,7 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
 
         try {
             for (int i = 0; i < 2; i++) {
+                // Define tables names ( i= 0 => lines, i=1 => twoWindingsTransformers)
                 final String branchCreationTable = i == 0 ? "line_creation" : "two_windings_transformer_creation";
                 final String branchCreationOpLimitsGroups1Table = i == 0 ? "line_creation_operational_limits_groups1"
                     : "two_windings_transformer_creation_operational_limits_groups1";
@@ -175,14 +177,14 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
                 final String branchCreationOpLimitsGroupsTable = i == 0 ? "line_creation_operational_limits_groups"
                     : "two_windings_transformer_creation_operational_limits_groups";
 
-                String branchesToProcess = "Select id from " + branchCreationTable;
-                try (ResultSet lines = connection.createStatement().executeQuery(branchesToProcess)) {
-                    while (lines.next()) {
+                String branchesToProcess = "Select id, selected_operational_limits_group_id1, selected_operational_limits_group_id2  from " + branchCreationTable;
+                try (ResultSet branches = connection.createStatement().executeQuery(branchesToProcess)) {
+                    while (branches.next()) {
                         int position = 0;
                         //get operational limits groups1
                         ResultSet branchCreationOpLimitsGroups1 = connection.createStatement()
-                            .executeQuery(createQueryLineOpLimitsGroups(lines.getString(ID_COL), branchCreationOpLimitsGroups1Table));
-                        List<String> oldNames = getOperationalLimitsGroupsNames(connection, branchCreationOpLimitsGroups1Table, lines.getString(ID_COL));
+                            .executeQuery(createQueryLineOpLimitsGroups(branches.getString(ID_COL), branchCreationOpLimitsGroups1Table));
+                        List<String> oldNames = getOperationalLimitsGroupsNames(connection, branchCreationOpLimitsGroups1Table, branches.getString(ID_COL));
                         ArrayList<String> newNames = new ArrayList<>();
 
                         while (branchCreationOpLimitsGroups1.next()) {
@@ -190,7 +192,7 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
                             String branchCreationOpLimitsGroup1Pos = branchCreationOpLimitsGroups1.getString(POS_OP_LG_COL);
 
                             ResultSet branchCreationOpLimitsGroups2 = connection.createStatement()
-                                .executeQuery(createQueryLineOpLimitsGroupsWithPos(branchCreationOpLimitsGroups2Table, lines.getString(ID_COL),
+                                .executeQuery(createQueryLineOpLimitsGroupsWithPos(branchCreationOpLimitsGroups2Table, branches.getString(ID_COL),
                                     branchCreationOpLimitsGroup1Pos));
 
                             branchCreationOpLimitsGroups2.next();
@@ -219,29 +221,38 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
 
                                 // if they are equal then add only one limitGroup in new Table with application side = equipment (both)
                                 statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), branchCreationOpLimitsGroupsTable)
-                                    .addColumnValue(BRANCH_ID_COL, lines.getString(ID_COL))
+                                    .addColumnValue(BRANCH_ID_COL, branches.getString(ID_COL))
                                     .addColumnValue(OPERATIONAL_LG_ID_COL, branchCreationOpLimitsGroup1Id)
                                     .addColumnValue(POS_OP_LG_COL, position++));
                             } else {
                                 //change their names in operational_limits_group
                                 String oldName = getLimitsGroupId(connection, branchCreationOpLimitsGroup1Id);
+                                String activeLs1 = branches.getString("selected_operational_limits_group_id1");
                                 String newName = generateNewName(oldNames, newNames, oldName, "_OR");
+                                if (oldName.equals(activeLs1)) {
+                                    changeActiveLimitGroupName(database, branchCreationTable, statements, branches.getString(ID_COL), "selected_operational_limits_group_id1", newName);
+                                }
                                 newNames.add(newName);
                                 addOperationalLimitsGroupApplicability(database, operationalLimitsGroups1, statements, newName, "SIDE1");
 
                                 statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), branchCreationOpLimitsGroupsTable)
-                                    .addColumnValue(BRANCH_ID_COL, lines.getString(ID_COL))
+                                    .addColumnValue(BRANCH_ID_COL, branches.getString(ID_COL))
                                     .addColumnValue(OPERATIONAL_LG_ID_COL, branchCreationOpLimitsGroup1Id)
                                     .addColumnValue(POS_OP_LG_COL, position++));
 
                                 oldName = getLimitsGroupId(connection, branchCreationOpLimitsGroup1Id);
                                 newName = generateNewName(oldNames, newNames, oldName, "_EX");
+                                String activeLs2 = branches.getString("selected_operational_limits_group_id2");
+
                                 newNames.add(newName);
+                                if (oldName.equals(activeLs2)) {
+                                    changeActiveLimitGroupName(database, branchCreationTable, statements, branches.getString(ID_COL), "selected_operational_limits_group_id2", newName);
+                                }
                                 ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup2Id + "'");
                                 addOperationalLimitsGroupApplicability(database, operationalLimitsGroups2, statements, newName, "SIDE2");
 
                                 statements.add(new InsertStatement(database.getDefaultCatalogName(), database.getDefaultSchemaName(), branchCreationOpLimitsGroupsTable)
-                                    .addColumnValue(BRANCH_ID_COL, lines.getString(ID_COL))
+                                    .addColumnValue(BRANCH_ID_COL, branches.getString(ID_COL))
                                     .addColumnValue(OPERATIONAL_LG_ID_COL, branchCreationOpLimitsGroup2Id)
                                     .addColumnValue(POS_OP_LG_COL, position++));
                             }
