@@ -98,7 +98,7 @@ public class BuildWorkerService {
 
     @Bean
     public Consumer<Message<String>> consumeBuild() {
-        return message -> networkModificationObserver.observe("build", () -> {
+        return message -> networkModificationObserver.observeBuild(() -> {
             BuildExecContext execContext;
             try {
                 execContext = BuildExecContext.fromMessage(message, objectMapper);
@@ -115,15 +115,15 @@ public class BuildWorkerService {
             CompletableFuture<NetworkModificationResult> future = execBuildVariant(execContext, buildInfos);
             NetworkModificationResult result;
             if (future != null && (result = future.join()) != null) {  // result available
-                notificationService.emitBuildResultMessage(result, execContext.getReceiver());
+                notificationService.emitBuildResultMessage(result, execContext.getReceiver(), execContext.getWorkflowType(), execContext.getWorkflowInfos());
                 LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
             } else {  // result not available : stop build request
                 if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
-                    stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE);
+                    stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE, execContext.getWorkflowType(), execContext.getWorkflowInfos());
                 }
             }
         } catch (CancellationException e) {
-            stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE);
+            stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE, execContext.getWorkflowType(), execContext.getWorkflowInfos());
         } catch (Exception e) {
             throw new BuildException("Node build failed", e);
         } finally {
