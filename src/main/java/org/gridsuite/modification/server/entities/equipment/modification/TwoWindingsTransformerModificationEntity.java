@@ -465,7 +465,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             .regulationMode(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationMode()))
             .regulationValue(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationValue()))
             .regulating(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulating()))
-            .loadTapChangingCapabilities((IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerLoadTapChangingCapabilities())))
+            .loadTapChangingCapabilities(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerLoadTapChangingCapabilities()))
             .regulatingTerminalId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefConnectableId()))
             .regulatingTerminalVlId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
             .regulatingTerminalType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefType()))
