@@ -41,7 +41,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "g")),
-        @AttributeOverride(name = "opType", column = @Column(name = "gOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "g_op"))
     })
     private DoubleModificationEmbedded g;
 
@@ -49,127 +49,127 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "b")),
-        @AttributeOverride(name = "opType", column = @Column(name = "bOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "b_op"))
     })
     private DoubleModificationEmbedded b;
 
-    @Column(name = "ratedU1")
+    @Column(name = "rated_u1")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedU1")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedU1_op"))
+        @AttributeOverride(name = "value", column = @Column(name = "rated_u1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "rated_u1_op"))
     })
     private DoubleModificationEmbedded ratedU1;
 
-    @Column(name = "ratedU2")
+    @Column(name = "rated_u2")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratedU2")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedU2_op"))
+        @AttributeOverride(name = "value", column = @Column(name = "rated_u2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "rated_u2_op"))
     })
     private DoubleModificationEmbedded ratedU2;
 
-    @Column(name = "rateds")
+    @Column(name = "rated_s")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "rateds")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratedsOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "rated_s")),
+        @AttributeOverride(name = "opType", column = @Column(name = "rateds_op"))
     })
     private DoubleModificationEmbedded ratedS;
 
-    @Column(name = "ratioTapChangerEnabled")
+    @Column(name = "ratio_tap_changer_enabled")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratioTapChangerEnabled")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratioTapChangerEnabledOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_enabled")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_enabled_op"))
     })
     private BooleanModificationEmbedded ratioTapChangerEnabled;
 
-    @Column(name = "ratiotapchangerregulationtype")
+    @Column(name = "ratio_tap_changer_regulation_type")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerregulationtype")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerregulationtypeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_regulation_type")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_regulation_type_op"))
     })
     private EnumModificationEmbedded<VoltageRegulationType> ratioTapChangerRegulationType;
 
-    @Column(name = "ratiotapchangerregulationside")
+    @Column(name = "ratio_tap_changer_regulation_side")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerregulationside")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerregulationsideOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_regulation_side")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_regulation_side_Op"))
     })
     private EnumModificationEmbedded<RegulationSide> ratioTapChangerRegulationSide;
 
-    @Column(name = "ratiotapchangerlowtapposition")
+    @Column(name = "ratio_tap_changer_low_tap_position")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerlowtapposition")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerlowtappositionOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_low_tap_position")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_low_tap_position_op"))
     })
     private IntegerModificationEmbedded ratioTapChangerLowTapPosition;
 
-    @Column(name = "ratiotapchangertapposition")
+    @Column(name = "ratio_tap_changer_tap_position")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangertapposition")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangertappositionOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_tap_position")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_tap_position_op"))
     })
     private IntegerModificationEmbedded ratioTapChangerTapPosition;
 
-    @Column(name = "ratiotapchangerregulating")
+    @Column(name = "ratio_tap_changer_regulating")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerregulating")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerregulatingOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_regulating")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_regulating_op"))
     })
     private BooleanModificationEmbedded ratioTapChangerRegulating;
 
-    @Column(name = "ratiotapchangertargetdeadband")
+    @Column(name = "ratio_tap_changer_target_deadband")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangertargetdeadband")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangertargetdeadbandOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_target_deadband")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_target_deadband_op"))
     })
     private DoubleModificationEmbedded ratioTapChangerTargetDeadband;
 
-    @Column(name = "ratiotapchangerterminalrefconnectableid")
+    @Column(name = "ratio_tap_changer_terminal_ref_connectable_id")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerterminalrefconnectableid")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerterminalrefconnectableidOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_terminal_ref_connectable_id")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_terminal_ref_connectable_id_op"))
     })
     private StringModificationEmbedded ratioTapChangerTerminalRefConnectableId;
 
-    @Column(name = "ratiotapchangerterminalrefvoltagelevelid")
+    @Column(name = "ratio_tap_changer_terminal_ref_voltagelevel_id")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerterminalrefvoltagelevelid")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerterminalrefvoltagelevelidOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_terminal_ref_voltagelevel_id")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_terminal_ref_voltagelevel_id_op"))
     })
     private StringModificationEmbedded ratioTapChangerTerminalRefVoltageLevelId;
 
-    @Column(name = "ratiotapchangerterminalreftype")
+    @Column(name = "ratio_tap_changer_terminal_ref_type")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerterminalreftype")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerterminalreftypeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_terminal_ref_type")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_terminal_ref_type_op"))
     })
     private StringModificationEmbedded ratioTapChangerTerminalRefType;
 
-    @Column(name = "ratiotapchangerloadtapchangingcapabilities")
+    @Column(name = "ratio_tap_changer_load_tap_changing_capabilities")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangerloadtapchangingcapabilities")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangerloadtapchangingcapabilitiesOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_load_tap_changing_capabilities")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_load_tap_changing_capabilities_op"))
     })
     private BooleanModificationEmbedded ratioTapChangerLoadTapChangingCapabilities;
 
-    @Column(name = "ratiotapchangertargetv")
+    @Column(name = "ratio_tap_changer_target_v")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangertargetv")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangertargetvOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_target_v")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_target_v_op"))
     })
     private DoubleModificationEmbedded ratioTapChangerTargetV;
 
@@ -180,106 +180,106 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     )
     private List<TapChangerStepCreationEmbeddable> tapChangerSteps;
 
-    @Column(name = "phasetapchangerenabled")
+    @Column(name = "phase_tap_changer_enabled")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerenabled")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerenabledOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_enabled")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_enabled_op"))
     })
     private BooleanModificationEmbedded phaseTapChangerEnabled;
 
-    @Column(name = "phasetapchangerregulationtype")
+    @Column(name = "phase_tap_changer_regulation_type")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerregulationtype")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerregulationtypeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_regulation_type")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_regulation_type_op"))
     })
     private EnumModificationEmbedded<VoltageRegulationType> phaseTapChangerRegulationType;
 
-    @Column(name = "phasetapchangerregulationside")
+    @Column(name = "phase_tap_changer_regulation_side")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerregulationside")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerregulationsideOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_regulation_side")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_regulation_side_op"))
     })
     private EnumModificationEmbedded<RegulationSide> phaseTapChangerRegulationSide;
 
-    @Column(name = "phasetapchangerlowtapposition")
+    @Column(name = "phase_tap_changer_low_tap_position")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerlowtapposition")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerlowtappositionOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_low_tap_position")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_low_tap_position_op"))
     })
     private IntegerModificationEmbedded phaseTapChangerLowTapPosition;
 
-    @Column(name = "phasetapchangertapposition")
+    @Column(name = "phase_tap_changer_tap_position")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangertapposition")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangertappositionOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_tap_position")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_tap_position_op"))
     })
     private IntegerModificationEmbedded phaseTapChangerTapPosition;
 
-    @Column(name = "phasetapchangertargetdeadband")
+    @Column(name = "phase_tap_changer_target_deadband")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangertargetdeadband")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangertargetdeadbandOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_target_deadband")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_target_deadband_op"))
     })
     private DoubleModificationEmbedded phaseTapChangerTargetDeadband;
 
-    @Column(name = "phasetapchangerterminalrefconnectableid")
+    @Column(name = "phase_tap_changer_terminal_ref_connectable_id")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerterminalrefconnectableid")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerterminalrefconnectableidOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_terminal_ref_connectable_id")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_terminal_ref_connectable_id_op"))
     })
     private StringModificationEmbedded phaseTapChangerTerminalRefConnectableId;
 
-    @Column(name = "phasetapchangerterminalrefvoltagelevelid")
+    @Column(name = "phase_tap_changer_terminal_ref_voltagelevel_id")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerterminalrefvoltagelevelid")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerterminalrefvoltagelevelidOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_terminal_ref_voltagelevel_id")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_terminal_ref_voltagelevel_id_op"))
     })
     private StringModificationEmbedded phaseTapChangerTerminalRefVoltageLevelId;
 
-    @Column(name = "phasetapchangerterminalreftype")
+    @Column(name = "phase_tap_changer_terminal_ref_type")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerterminalreftype")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerterminalreftypeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_terminal_ref_type")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_terminal_ref_type_op"))
     })
     private StringModificationEmbedded phaseTapChangerTerminalRefType;
 
-    @Column(name = "phasetapchangerregulationmode")
+    @Column(name = "phase_tap_changer_regulation_mode")
     @Enumerated(EnumType.STRING)
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerregulationmode")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerregulationmodeOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_regulation_mode")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_regulation_mode_op"))
     })
     private EnumModificationEmbedded<PhaseTapChanger.RegulationMode> phaseTapChangerRegulationMode;
 
-    @Column(name = "phasetapchangerregulationvalue")
+    @Column(name = "phase_tap_changer_regulation_value")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerregulationvalue")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangerregulationvalueOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_regulation_value")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_regulation_value_op"))
     })
     private DoubleModificationEmbedded phaseTapChangerRegulationValue;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phasetapchangertobeestimated")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phasetapchangertobeestimatedOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_to_be_estimated")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_to_be_estimated_op"))
     })
     private BooleanModificationEmbedded phaseTapChangerToBeEstimated;
 
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratiotapchangertobeestimated")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratiotapchangertobeestimatedOp"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_to_be_estimated")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_to_be_estimated_op"))
     })
     private BooleanModificationEmbedded ratioTapChangerToBeEstimated;
 

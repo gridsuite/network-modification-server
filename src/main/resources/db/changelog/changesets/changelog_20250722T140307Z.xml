@@ -1,0 +1,268 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1753193038896-31">
+        <renameColumn  newColumnName="phase_tap_changer_enabled"
+                       oldColumnName="phasetapchangerenabled"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-32">
+        <renameColumn  newColumnName="phase_tap_changer_enabled_op"
+                       oldColumnName="phasetapchangerenabled_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-33">
+        <renameColumn  newColumnName="phase_tap_changer_low_tap_position"
+                       oldColumnName="phasetapchangerlowtapposition"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-34">
+        <renameColumn  newColumnName="phase_tap_changer_low_tap_position_op"
+                       oldColumnName="phasetapchangerlowtapposition_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-35">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_mode"
+                       oldColumnName="phasetapchangerregulationmode"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-36">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_mode_op"
+                       oldColumnName="phasetapchangerregulationmode_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-37">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_side"
+                       oldColumnName="phasetapchangerregulationside"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-38">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_side_op"
+                       oldColumnName="phasetapchangerregulationside_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-39">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_type"
+                       oldColumnName="phasetapchangerregulationtype"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-40">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_type_op"
+                       oldColumnName="phasetapchangerregulationtype_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-41">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_value"
+                       oldColumnName="phasetapchangerregulationvalue"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-42">
+        <renameColumn  newColumnName="phase_tap_changer_regulation_value_op"
+                       oldColumnName="phasetapchangerregulationvalue_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-43">
+        <renameColumn  newColumnName="phase_tap_changer_tap_position"
+                       oldColumnName="phasetapchangertapposition"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-44">
+        <renameColumn  newColumnName="phase_tap_changer_tap_position_op"
+                       oldColumnName="phasetapchangertapposition_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-45">
+        <renameColumn  newColumnName="phase_tap_changer_target_deadband"
+                       oldColumnName="phasetapchangertargetdeadband"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-46">
+        <renameColumn  newColumnName="phase_tap_changer_target_deadband_op"
+                       oldColumnName="phasetapchangertargetdeadband_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-47">
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_connectable_id"
+                       oldColumnName="phasetapchangerterminalrefconnectableid"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-48">
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_connectable_id_op"
+                       oldColumnName="phasetapchangerterminalrefconnectableid_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-49">
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_type"
+                       oldColumnName="phasetapchangerterminalreftype"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-50">
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_type_op"
+                       oldColumnName="phasetapchangerterminalreftype_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-51">
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_voltagelevel_id"
+                       oldColumnName="phasetapchangerterminalrefvoltagelevelid"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-52">
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_voltagelevel_id_op"
+                       oldColumnName="phasetapchangerterminalrefvoltagelevelid_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-53">
+        <renameColumn  newColumnName="phase_tap_changer_to_be_estimated"
+                       oldColumnName="phasetapchangertobeestimated"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-54">
+        <renameColumn  newColumnName="phase_tap_changer_to_be_estimated_op"
+                       oldColumnName="phasetapchangertobeestimated_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-55">
+        <renameColumn  newColumnName="rated_s"
+                       oldColumnName="rateds"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-56">
+        <renameColumn  newColumnName="rated_u1"
+                       oldColumnName="ratedu1"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-57">
+        <renameColumn  newColumnName="rated_u1_op"
+                       oldColumnName="ratedu1_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-58">
+        <renameColumn  newColumnName="rated_u2"
+                       oldColumnName="ratedu2"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-59">
+        <renameColumn  newColumnName="rated_u2_op"
+                       oldColumnName="ratedu2_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-60">
+        <renameColumn  newColumnName="ratio_tap_changer_load_tap_changing_capabilities"
+                       oldColumnName="ratiotapchangerloadtapchangingcapabilities"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-61">
+        <renameColumn  newColumnName="ratio_tap_changer_load_tap_changing_capabilities_op"
+                       oldColumnName="ratiotapchangerloadtapchangingcapabilities_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-62">
+        <renameColumn  newColumnName="ratio_tap_changer_low_tap_position"
+                       oldColumnName="ratiotapchangerlowtapposition"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-63">
+        <renameColumn  newColumnName="ratio_tap_changer_low_tap_position_op"
+                       oldColumnName="ratiotapchangerlowtapposition_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-64">
+        <renameColumn  newColumnName="ratio_tap_changer_regulating"
+                       oldColumnName="ratiotapchangerregulating"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-65">
+        <renameColumn  newColumnName="ratio_tap_changer_regulating_op"
+                       oldColumnName="ratiotapchangerregulating_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-66">
+        <renameColumn  newColumnName="ratio_tap_changer_regulation_side"
+                       oldColumnName="ratiotapchangerregulationside"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-67">
+        <renameColumn  newColumnName="ratio_tap_changer_regulation_side_op"
+                       oldColumnName="ratiotapchangerregulationside_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-68">
+        <renameColumn  newColumnName="ratio_tap_changer_regulation_type"
+                       oldColumnName="ratiotapchangerregulationtype"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-69">
+        <renameColumn  newColumnName="ratio_tap_changer_regulation_type_op"
+                       oldColumnName="ratiotapchangerregulationtype_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-70">
+        <renameColumn  newColumnName="ratio_tap_changer_tap_position"
+                       oldColumnName="ratiotapchangertapposition"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-71">
+        <renameColumn  newColumnName="ratio_tap_changer_tap_position_op"
+                       oldColumnName="ratiotapchangertapposition_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-72">
+        <renameColumn  newColumnName="ratio_tap_changer_target_deadband"
+                       oldColumnName="ratiotapchangertargetdeadband"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-73">
+        <renameColumn  newColumnName="ratio_tap_changer_target_deadband_op"
+                       oldColumnName="ratiotapchangertargetdeadband_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-74">
+        <renameColumn  newColumnName="ratio_tap_changer_target_v"
+                       oldColumnName="ratiotapchangertargetv"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-75">
+        <renameColumn  newColumnName="ratio_tap_changer_target_v_op"
+                       oldColumnName="ratiotapchangertargetv_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-76">
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_connectable_id"
+                       oldColumnName="ratiotapchangerterminalrefconnectableid"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-77">
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_connectable_id_op"
+                       oldColumnName="ratiotapchangerterminalrefconnectableid_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-78">
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_type"
+                       oldColumnName="ratiotapchangerterminalreftype"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-79">
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_type_op"
+                       oldColumnName="ratiotapchangerterminalreftype_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-80">
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltagelevel_id"
+                       oldColumnName="ratiotapchangerterminalrefvoltagelevelid"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-81">
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltagelevel_id_op"
+                       oldColumnName="ratiotapchangerterminalrefvoltagelevelid_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-82">
+        <renameColumn  newColumnName="ratio_tap_changer_to_be_estimated"
+                       oldColumnName="ratiotapchangertobeestimated"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753193038896-83">
+        <renameColumn  newColumnName="ratio_tap_changer_to_be_estimated_op"
+                       oldColumnName="ratiotapchangertobeestimated_op"
+                       tableName="two_windings_transformer_modification"/>
+    </changeSet>
+</databaseChangeLog>
