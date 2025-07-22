@@ -30,5 +30,17 @@
             <column name="regulating" type="boolean"/>
         </addColumn>
     </changeSet>
-
+    <changeSet author="deharbemat" id="1753188911693-37">
+        <addColumn tableName="two_windings_transformer_creation">
+        <column name="phase_tap_changer_load_tap_changing_capabilities" type="boolean"/>
+    </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat" id="1753188911693-99">
+        <sqlFile
+                encoding="UTF-8"
+                path="migrationRegulationMode_20250710T121805Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+    </changeSet>
 </databaseChangeLog>
