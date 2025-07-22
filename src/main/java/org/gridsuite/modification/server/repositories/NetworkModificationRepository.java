@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -47,7 +48,7 @@ public class NetworkModificationRepository {
     private final LoadCreationRepository loadCreationRepository;
     private final ShuntCompensatorCreationRepository shuntCompensatorCreationRepository;
     private final ShuntCompensatorModificationRepository shuntCompensatorModificationRepository;
-
+    private final TabularPropertyRepository tabularPropertyRepository;
     private final GeneratorCreationRepository generatorCreationRepository;
     private final BatteryCreationRepository batteryCreationRepository;
 
@@ -69,6 +70,7 @@ public class NetworkModificationRepository {
                                          VoltageLevelModificationRepository voltageLevelModificationRepository,
                                          LoadModificationRepository loadModificationRepository,
                                          LoadCreationRepository loadCreationRepository,
+                                         TabularPropertyRepository tabularPropertyRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
@@ -84,6 +86,7 @@ public class NetworkModificationRepository {
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
         this.loadModificationRepository = loadModificationRepository;
         this.loadCreationRepository = loadCreationRepository;
+        this.tabularPropertyRepository = tabularPropertyRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
@@ -364,6 +367,9 @@ public class NetworkModificationRepository {
                 .stashed(tabularModificationEntity.getStashed())
                 .activated(tabularModificationEntity.getActivated())
                 .modificationType(tabularModificationEntity.getModificationType())
+                .properties(CollectionUtils.isEmpty(tabularModificationEntity.getProperties()) ? null : tabularModificationEntity.getProperties().stream()
+                        .map(TabularPropertyEntity::toInfos)
+                        .toList())
                 .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
                 .build();
     }
@@ -693,6 +699,7 @@ public class NetworkModificationRepository {
                 modificationRepository.findSubModificationIdsByTabularCreationId(modificationUuid);
         modificationToCleanUuids.addAll(subModificationsIds);
         modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
+        tabularPropertyRepository.deleteTabularProperties(modificationUuid);
 
         switch (tabularModificationType) {
             case GENERATOR_CREATION ->
