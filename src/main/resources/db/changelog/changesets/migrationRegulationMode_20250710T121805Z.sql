@@ -1,13 +1,13 @@
-UPDATE two_windings_transformer_creation SET phasetapchangerregulating = 'false' WHERE phasetapchangerregulationmode = 'FIXED_TAP';
-UPDATE two_windings_transformer_creation SET phasetapchangerregulating = 'true' WHERE phasetapchangerregulationmode <> 'FIXED_TAP';
+UPDATE two_windings_transformer_creation SET phase_tap_changer_regulating = 'false' WHERE phasetapchangerregulationmode = 'FIXED_TAP';
+UPDATE two_windings_transformer_creation SET phase_tap_changer_regulating = 'true' WHERE phasetapchangerregulationmode <> 'FIXED_TAP';
 UPDATE two_windings_transformer_creation SET phasetapchangerregulationmode = NULL WHERE phasetapchangerregulationmode = 'FIXED_TAP';
 
 UPDATE two_windings_transformer_modification
-SET phasetapchangerregulating = 'false', phasetapchangerregulating_op = 'SET'
+SET phase_tap_changer_regulating = 'false', phase_tap_changer_regulating_op = 'SET'
 WHERE phasetapchangerregulationmode = 'FIXED_TAP' AND phasetapchangerregulationmode_op = 'SET';
 
 UPDATE two_windings_transformer_modification
-SET phasetapchangerregulating = 'true', phasetapchangerregulating_op = 'SET'
+SET phase_tap_changer_regulating = 'true', phase_tap_changer_regulating_op = 'SET'
 WHERE phasetapchangerregulationmode <> 'FIXED_TAP' AND phasetapchangerregulationmode_op = 'SET';
 
 UPDATE two_windings_transformer_modification

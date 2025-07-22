@@ -53,7 +53,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     @Column(name = "phasetapchangertapposition")
     private Integer phaseTapChangerTapPosition;
 
-    @Column(name = "phasetapchangerregulating")
+    @Column(name = "phase_tap_changer_regulating")
     private Boolean phaseTapChangerRegulating;
 
     @Column(name = "phasetapchangertargetdeadband")
