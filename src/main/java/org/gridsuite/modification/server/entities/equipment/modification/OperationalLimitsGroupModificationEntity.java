@@ -11,10 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.CurrentLimitsModificationInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.entities.equipment.creation.CurrentLimitsEntity;
 import org.gridsuite.modification.server.entities.equipment.creation.OperationalLimitsGroupEntity;
 import org.springframework.util.CollectionUtils;
@@ -55,6 +52,10 @@ public class OperationalLimitsGroupModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationalLimitsGroupModificationType modificationType;
 
+    @Column(name = "temporaryLimitsModificationType")
+    @Enumerated(EnumType.STRING)
+    private TemporaryLimitModificationType temporaryLimitsModificationType;
+
     @Column(name = "side")
     private String side;
 
@@ -84,7 +85,7 @@ public class OperationalLimitsGroupModificationEntity {
     }
 
     public OperationalLimitsGroupModificationEntity (OperationalLimitsGroupModificationInfos operationalLimitsGroupModificationInfos) {
-        this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getSide());
+        this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(), operationalLimitsGroupModificationInfos.getSide());
     }
 
     public OperationalLimitsGroupModificationInfos toOperationalLimitsGroupModificationInfos() {
@@ -93,6 +94,7 @@ public class OperationalLimitsGroupModificationEntity {
                 .id(getId())
                 .side(getSide())
                 .modificationType(getModificationType())
+                .temporaryLimitsModificationType(getTemporaryLimitsModificationType())
                 .currentLimits(getCurrentLimits().toCurrentLimitsInfos())
                 .build();
     }
