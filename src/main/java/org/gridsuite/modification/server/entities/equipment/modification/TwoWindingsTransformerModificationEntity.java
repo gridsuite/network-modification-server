@@ -269,7 +269,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded phaseTapChangerRegulationValue;
 
-    @Column(name = "phasetapchangerregulating")
+    @Column(name = "phase_tap_changer_regulating")
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerregulating")),
@@ -277,7 +277,7 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private BooleanModificationEmbedded phaseTapChangerRegulating;
 
-    @Column(name = "phasetapchangerloadtapchangingcapabilities")
+    @Column(name = "phase_tap_changer_load_tap_changing_capabilities")
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "phasetapchangerloadtapchangingcapabilities")),
