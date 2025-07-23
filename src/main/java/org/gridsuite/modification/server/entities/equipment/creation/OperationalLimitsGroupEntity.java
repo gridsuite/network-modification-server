@@ -34,6 +34,10 @@ public class OperationalLimitsGroupEntity {
     @Column(name = "id")
     private String id;
 
+    @Column(name = "applicability")
+    @Enumerated(EnumType.STRING)
+    private OperationalLimitsGroupInfos.Applicability applicability;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "current_limits_id",
             referencedColumnName = "id",
@@ -49,6 +53,7 @@ public class OperationalLimitsGroupEntity {
                         new OperationalLimitsGroupEntity(
                                 null,
                                 limitsGroup.getId(),
+                                limitsGroup.getApplicability(),
                                 new CurrentLimitsEntity(limitsGroup.getCurrentLimits())
                         )
                 )
@@ -61,6 +66,7 @@ public class OperationalLimitsGroupEntity {
                         .map(limitsGroupEntity ->
                                 OperationalLimitsGroupInfos.builder()
                                         .id(limitsGroupEntity.getId())
+                                        .applicability(limitsGroupEntity.getApplicability())
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
                                         .build()
                         )

@@ -71,16 +71,9 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id1_fk"))
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups")
-    private List<OperationalLimitsGroupEntity> operationalLimitsGroups1;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinTable(
-            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id2_fk"))
-    @OrderColumn(name = "pos_operationalLimitsGroups")
-    private List<OperationalLimitsGroupEntity> operationalLimitsGroups2;
+    private List<OperationalLimitsGroupEntity> operationalLimitsGroups;
 
     @Column(name = "selectedOperationalLimitsGroupId1")
     private String selectedOperationalLimitsGroupId1;
@@ -107,8 +100,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
         voltageLevelId2 = branchCreationInfos.getVoltageLevelId2();
         busOrBusbarSectionId1 = branchCreationInfos.getBusOrBusbarSectionId1();
         busOrBusbarSectionId2 = branchCreationInfos.getBusOrBusbarSectionId2();
-        operationalLimitsGroups1 = assignOperationalLimitsGroups(branchCreationInfos.getOperationalLimitsGroups1(), operationalLimitsGroups1);
-        operationalLimitsGroups2 = assignOperationalLimitsGroups(branchCreationInfos.getOperationalLimitsGroups2(), operationalLimitsGroups2);
+        operationalLimitsGroups = assignOperationalLimitsGroups(branchCreationInfos.getOperationalLimitsGroups(), operationalLimitsGroups);
         connectionDirection1 = branchCreationInfos.getConnectionDirection1();
         connectionName1 = branchCreationInfos.getConnectionName1();
         connectionDirection2 = branchCreationInfos.getConnectionDirection2();
@@ -125,6 +117,7 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
      * the point of this function is to avoid dereferencing operationalLimitsGroups if it already exists,
      * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
+    //TODO basseche : change this function to extract correct operational limits
     private List<OperationalLimitsGroupEntity> assignOperationalLimitsGroups(
             List<OperationalLimitsGroupInfos> operationalLimitsGroupInfos,
             List<OperationalLimitsGroupEntity> operationalLimitsGroups
