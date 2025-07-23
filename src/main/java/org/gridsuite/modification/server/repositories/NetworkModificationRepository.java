@@ -417,6 +417,9 @@ public class NetworkModificationRepository {
                 .activated(tabularCreationEntity.getActivated())
                 .creationType(tabularCreationEntity.getCreationType())
                 .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
+                .properties(CollectionUtils.isEmpty(tabularCreationEntity.getProperties()) ? null : tabularCreationEntity.getProperties().stream()
+                        .map(TabularPropertyEntity::toInfos)
+                        .toList())
                 .build();
     }
 
