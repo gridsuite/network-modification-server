@@ -141,11 +141,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private StringModificationEmbedded ratioTapChangerTerminalRefConnectableId;
 
-    @Column(name = "ratio_tap_changer_terminal_ref_voltagelevel_id")
+    @Column(name = "ratio_tap_changer_terminal_ref_voltage_level_id")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_terminal_ref_voltagelevel_id")),
-        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_terminal_ref_voltagelevel_id_op"))
+        @AttributeOverride(name = "value", column = @Column(name = "ratio_tap_changer_terminal_ref_voltage_level_id")),
+        @AttributeOverride(name = "opType", column = @Column(name = "ratio_tap_changer_terminal_ref_voltage_level_id_op"))
     })
     private StringModificationEmbedded ratioTapChangerTerminalRefVoltageLevelId;
 
@@ -236,11 +236,11 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private StringModificationEmbedded phaseTapChangerTerminalRefConnectableId;
 
-    @Column(name = "phase_tap_changer_terminal_ref_voltagelevel_id")
+    @Column(name = "phase_tap_changer_terminal_ref_voltage_level_id")
     @Embedded
     @AttributeOverrides(value = {
-        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_terminal_ref_voltagelevel_id")),
-        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_terminal_ref_voltagelevel_id_op"))
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_terminal_ref_voltage_level_id")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_terminal_ref_voltage_level_id_op"))
     })
     private StringModificationEmbedded phaseTapChangerTerminalRefVoltageLevelId;
 

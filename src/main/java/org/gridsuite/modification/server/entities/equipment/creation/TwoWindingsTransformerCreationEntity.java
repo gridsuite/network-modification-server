@@ -38,68 +38,68 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
     @Column(name = "b")
     private double b;
 
-    @Column(name = "ratedU1")
+    @Column(name = "rated_u1")
     private double ratedU1;
 
-    @Column(name = "ratedU2")
+    @Column(name = "rated_u2")
     private double ratedU2;
 
-    @Column(name = "rateds")
+    @Column(name = "rated_s")
     private Double ratedS;
 
-    @Column(name = "phasetapchangerlowtapposition")
+    @Column(name = "phase_tap_changer_low_tap_position")
     private Integer phaseTapChangerLowTapPosition;
 
-    @Column(name = "phasetapchangertapposition")
+    @Column(name = "phase_tap_changer_tap_position")
     private Integer phaseTapChangerTapPosition;
 
-    @Column(name = "phasetapchangerregulating")
+    @Column(name = "phase_tap_changer_regulating")
     private Boolean phaseTapChangerRegulating;
 
-    @Column(name = "phasetapchangertargetdeadband")
+    @Column(name = "phase_tap_changer_target_deadband")
     private Double phaseTapChangerTargetDeadband;
 
-    @Column(name = "phasetapchangerterminalrefconnectableid")
+    @Column(name = "phase_tap_changer_terminal_ref_connectable_id")
     private String phaseTapChangerTerminalRefConnectableId;
 
-    @Column(name = "phasetapchangerterminalrefvoltagelevelid")
+    @Column(name = "phase_tap_changer_terminal_ref_voltage_level_id")
     private String phaseTapChangerTerminalRefVoltageLevelId;
 
-    @Column(name = "phasetapchangerterminalreftype")
+    @Column(name = "phase_tap_changer_terminal_ref_type")
     private String phaseTapChangerTerminalRefType;
 
-    @Column(name = "phasetapchangerregulationmode")
+    @Column(name = "phase_tap_changer_regulation_mode")
     @Enumerated(EnumType.STRING)
     private PhaseTapChanger.RegulationMode phaseTapChangerRegulationMode;
 
-    @Column(name = "phasetapchangerregulationvalue")
+    @Column(name = "phase_tap_changer_regulation_value")
     private Double phaseTapChangerRegulationValue;
 
-    @Column(name = "ratiotapchangerlowtapposition")
+    @Column(name = "ratio_tap_changer_low_tap_position")
     private Integer ratioTapChangerLowTapPosition;
 
-    @Column(name = "ratiotapchangertapposition")
+    @Column(name = "ratio_tap_changer_tap_position")
     private Integer ratioTapChangerTapPosition;
 
-    @Column(name = "ratiotapchangerregulating")
+    @Column(name = "ratio_tap_changer_regulating")
     private Boolean ratioTapChangerRegulating;
 
-    @Column(name = "ratiotapchangertargetdeadband")
+    @Column(name = "ratio_tap_changer_target_deadband")
     private Double ratioTapChangerTargetDeadband;
 
-    @Column(name = "ratiotapchangerterminalrefconnectableid")
+    @Column(name = "ratio_tap_changer_terminal_ref_connectable_id")
     private String ratioTapChangerTerminalRefConnectableId;
 
-    @Column(name = "ratiotapchangerterminalrefvoltagelevelid")
+    @Column(name = "ratio_tap_changer_terminal_ref_voltage_level_id")
     private String ratioTapChangerTerminalRefVoltageLevelId;
 
-    @Column(name = "ratiotapchangerterminalreftype")
+    @Column(name = "ratio_tap_changer_terminal_ref_type")
     private String ratioTapChangerTerminalRefType;
 
-    @Column(name = "ratiotapchangerloadtapchangingcapabilities")
+    @Column(name = "ratio_tap_changer_load_tap_changing_capabilities")
     private Boolean ratioTapChangerLoadTapChangingCapabilities;
 
-    @Column(name = "ratiotapchangertargetv")
+    @Column(name = "ratio_tap_changer_target_v")
     private Double ratioTapChangerTargetV;
 
     @ElementCollection

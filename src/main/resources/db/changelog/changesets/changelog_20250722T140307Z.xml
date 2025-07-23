@@ -101,12 +101,12 @@
                        tableName="two_windings_transformer_modification"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753193038896-51">
-        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_voltagelevel_id"
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_voltage_level_id"
                        oldColumnName="phasetapchangerterminalrefvoltagelevelid"
                        tableName="two_windings_transformer_modification"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753193038896-52">
-        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_voltagelevel_id_op"
+        <renameColumn  newColumnName="phase_tap_changer_terminal_ref_voltage_level_id_op"
                        oldColumnName="phasetapchangerterminalrefvoltagelevelid_op"
                        tableName="two_windings_transformer_modification"/>
     </changeSet>
@@ -246,12 +246,12 @@
                        tableName="two_windings_transformer_modification"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753193038896-80">
-        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltagelevel_id"
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltage_level_id"
                        oldColumnName="ratiotapchangerterminalrefvoltagelevelid"
                        tableName="two_windings_transformer_modification"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753193038896-81">
-        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltagelevel_id_op"
+        <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltage_level_id_op"
                        oldColumnName="ratiotapchangerterminalrefvoltagelevelid_op"
                        tableName="two_windings_transformer_modification"/>
     </changeSet>
