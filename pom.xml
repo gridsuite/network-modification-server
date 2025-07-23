@@ -54,8 +54,8 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when upgrading gridsuite dependencies -->
-        <network-modification.version>0.26.0-SNAPSHOT</network-modification.version>
-        <powsybl-balances-adjustment.version>2.15.0-SNAPSHOT</powsybl-balances-adjustment.version>
+        <network-modification.version>0.27.0-SNAPSHOT</network-modification.version>
+        <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
     </properties>
 
     <build>

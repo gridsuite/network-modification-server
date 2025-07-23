@@ -869,7 +869,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         List<ReportNode> regulationReports = new ArrayList<>();
         processPhaseTapRegulation(phaseTapChanger, null, true,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET),
-            null, null, regulationReports);
+            null, null, null, regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.FIXED_TAP, phaseTapChanger.getRegulationMode());
         assertTrue(Double.isNaN(phaseTapChanger.getRegulationValue()));
         assertTrue(Double.isNaN(phaseTapChanger.getTargetDeadband()));
@@ -877,7 +877,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         processPhaseTapRegulation(phaseTapChanger, null, true,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, OperationType.SET),
-            new AttributeModification<>(10.0, OperationType.SET), null, regulationReports);
+            new AttributeModification<>(10.0, OperationType.SET), null, null, regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, phaseTapChanger.getRegulationMode());
         assertEquals(10.0, phaseTapChanger.getRegulationValue());
         assertEquals(0.0, phaseTapChanger.getTargetDeadband());
@@ -885,7 +885,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         processPhaseTapRegulation(phaseTapChanger, null, true,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET),
-            null, null, regulationReports);
+            null, null, null, regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.ACTIVE_POWER_CONTROL, phaseTapChanger.getRegulationMode());
         assertEquals(10.0, phaseTapChanger.getRegulationValue());
         assertEquals(0.0, phaseTapChanger.getTargetDeadband());
@@ -895,7 +895,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
             new AttributeModification<>(12.0, OperationType.SET),
             new AttributeModification<>(8.0, OperationType.SET),
-            regulationReports);
+            null, regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());
         assertEquals(12.0, phaseTapChanger.getRegulationValue());
         assertEquals(8.0, phaseTapChanger.getTargetDeadband());
@@ -903,7 +903,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         processPhaseTapRegulation(phaseTapChanger, null, true,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET),
-            null, null, regulationReports);
+            null, null, null, regulationReports);
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());
         assertEquals(12.0, phaseTapChanger.getRegulationValue());
         assertEquals(8.0, phaseTapChanger.getTargetDeadband());
@@ -920,16 +920,16 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         PhaseTapChangerAdder adder = twt.newPhaseTapChanger();
         preparePhaseTapChangerAdder(adder);
         String message = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
-            null, null, null, regulationReports)).getMessage();
+            null, null, null, null, regulationReports)).getMessage();
         assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation mode is missing when creating tap phase changer", message);
 
         AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET);
         String message2 = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
-            regulationModeModification, null, null, regulationReports)).getMessage();
+            regulationModeModification, null, null, null, regulationReports)).getMessage();
         assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation value is missing when creating tap phase changer with regulation enabled (different from FIXED_TAP)", message2);
         processPhaseTapRegulation(null, adder, false,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.FIXED_TAP, OperationType.SET),
-            null, null, regulationReports);
+            null, null, null, regulationReports);
         adder.add();
         PhaseTapChanger phaseTapChanger = twt.getPhaseTapChanger();
         assertEquals(PhaseTapChanger.RegulationMode.FIXED_TAP, phaseTapChanger.getRegulationMode());
@@ -941,7 +941,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         preparePhaseTapChangerAdder(adder1);
         processPhaseTapRegulation(null, adder1, false,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
-            new AttributeModification<>(10.0, OperationType.SET), null, regulationReports);
+            new AttributeModification<>(10.0, OperationType.SET), null, null, regulationReports);
         adder1.add();
         phaseTapChanger = twt.getPhaseTapChanger();
         assertEquals(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, phaseTapChanger.getRegulationMode());
