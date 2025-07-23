@@ -27,7 +27,7 @@ import org.springframework.util.CollectionUtils;
 @Setter
 @Entity
 @Table(name = "tabular_modification")
-public class TabularModificationEntity extends ModificationEntity {
+public class TabularModificationEntity extends TabularBaseEntity {
 
     @Column(name = "modificationType")
     @Enumerated(EnumType.STRING)
@@ -36,11 +36,6 @@ public class TabularModificationEntity extends ModificationEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn
     private List<ModificationEntity> modifications;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "tabular_modification_id")
-    @OrderColumn(name = "insert_position")
-    private List<TabularPropertyEntity> properties;
 
     public TabularModificationEntity(@NonNull TabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
@@ -85,19 +80,6 @@ public class TabularModificationEntity extends ModificationEntity {
             modifications.addAll(tabularModificationInfos.getModifications().stream()
                 .map(ModificationEntity::fromDTO)
                 .toList());
-        }
-        List<TabularPropertyEntity> newProperties = tabularModificationInfos.getProperties() == null ? null :
-                tabularModificationInfos.getProperties().stream()
-                        .map(TabularPropertyEntity::new)
-                        .toList();
-        if (this.properties != null) {
-            // update using the same reference with clear/add (to avoid JPA exception)
-            this.properties.clear();
-            if (newProperties != null) {
-                this.properties.addAll(newProperties);
-            }
-        } else {
-            this.properties = newProperties;
         }
     }
 }

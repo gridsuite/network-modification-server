@@ -323,6 +323,9 @@ public class NetworkModificationRepository {
                         .activated(tabularCreationEntity.getActivated())
                         .creationType(tabularCreationEntity.getCreationType())
                         .creations(orderedGeneratorCreation.stream().map(GeneratorCreationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                        .properties(CollectionUtils.isEmpty(tabularCreationEntity.getProperties()) ? null : tabularCreationEntity.getProperties().stream()
+                                .map(TabularPropertyEntity::toInfos)
+                                .toList())
                         .build();
             default:
                 break;

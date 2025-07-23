@@ -20,6 +20,6 @@
         </createIndex>
     </changeSet>
     <changeSet author="braquartdav (generated)" id="1753191875093-44">
-        <addForeignKeyConstraint baseColumnNames="tabular_modification_id" baseTableName="tabular_property" constraintName="FK1t4r9etm29snityophivgnkce" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tabular_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="tabular_modification_id" baseTableName="tabular_property" constraintName="FK1t4r9etm29snityophivgnkce" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
