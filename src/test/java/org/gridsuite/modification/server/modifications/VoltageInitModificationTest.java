@@ -47,7 +47,7 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
             .setLowTapPosition(0)
             .setTapPosition(1)
             .setLoadTapChangingCapabilities(false)
-            .setRegulating(true)
+            .setRegulating(false)
             .setTargetDeadband(1.0)
             .setTargetV(220.0)
             .beginStep()

@@ -269,6 +269,22 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
     })
     private DoubleModificationEmbedded phaseTapChangerRegulationValue;
 
+    @Column(name = "phase_tap_changer_regulating")
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_regulating")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_regulating_op"))
+    })
+    private BooleanModificationEmbedded phaseTapChangerRegulating;
+
+    @Column(name = "phase_tap_changer_load_tap_changing_capabilities")
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "phase_tap_changer_load_tap_changing_capabilities")),
+        @AttributeOverride(name = "opType", column = @Column(name = "phase_tap_changer_load_tap_changing_capabilities_op"))
+    })
+    private BooleanModificationEmbedded phaseTapChangerLoadTapChangingCapabilities;
+
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "phasetapchangertobeestimated")),
@@ -342,6 +358,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getRegulatingTerminalId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalId()) : null;
         this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalVlId()) : null;
         this.phaseTapChangerTerminalRefType = phaseTapChanger.getRegulatingTerminalType() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalType()) : null;
+        this.phaseTapChangerRegulating = phaseTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(phaseTapChanger.getRegulating()) : null;
+        this.phaseTapChangerLoadTapChangingCapabilities = phaseTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(phaseTapChanger.getLoadTapChangingCapabilities()) : null;
         if (phaseTapChanger.getSteps() != null) {
             this.tapChangerSteps.addAll(TapChangerStepCreationEmbeddable.toEmbeddablePhaseTapChangerSteps(phaseTapChanger.getSteps()));
         }
@@ -446,6 +464,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             .targetDeadband(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTargetDeadband()))
             .regulationMode(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationMode()))
             .regulationValue(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationValue()))
+            .regulating(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulating()))
+            .loadTapChangingCapabilities(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerLoadTapChangingCapabilities()))
             .regulatingTerminalId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefConnectableId()))
             .regulatingTerminalVlId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
             .regulatingTerminalType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefType()))
