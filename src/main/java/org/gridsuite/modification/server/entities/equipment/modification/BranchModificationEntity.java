@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
-import org.hibernate.annotations.Filter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -232,7 +231,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         }
         if (branchModificationInfos.getOperationalLimitsGroup1() != null) {
             opLimitsGroups1 = new ArrayList<>();
-            for(var operationalLimitsGroup : branchModificationInfos.getOperationalLimitsGroup1()) {
+            for (var operationalLimitsGroup : branchModificationInfos.getOperationalLimitsGroup1()) {
                 opLimitsGroups1.add(new OperationalLimitsGroupModificationEntity(operationalLimitsGroup));
             }
         } else {
@@ -245,7 +244,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         }
         if (branchModificationInfos.getOperationalLimitsGroup2() != null) {
             opLimitsGroups2 = new ArrayList<>();
-            for(var operationalLimitsGroup : branchModificationInfos.getOperationalLimitsGroup2()) {
+            for (var operationalLimitsGroup : branchModificationInfos.getOperationalLimitsGroup2()) {
                 opLimitsGroups2.add(new OperationalLimitsGroupModificationEntity(operationalLimitsGroup));
             }
         } else {
