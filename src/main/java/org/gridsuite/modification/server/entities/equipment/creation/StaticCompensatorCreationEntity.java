@@ -41,6 +41,9 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
     @Column(name = "regulationMode")
     private StaticVarCompensator.RegulationMode regulationMode;
 
+    @Column(name = "regulating")
+    private boolean regulating;
+
     @Column
     private Double voltageSetpoint;
 
@@ -102,6 +105,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
         this.maxQAtNominalV = creationInfos.getMaxQAtNominalV();
         this.minQAtNominalV = creationInfos.getMinQAtNominalV();
         this.regulationMode = creationInfos.getRegulationMode();
+        this.regulating = creationInfos.isRegulating();
         this.voltageSetpoint = creationInfos.getVoltageSetpoint();
         this.reactivePowerSetpoint = creationInfos.getReactivePowerSetpoint();
         this.voltageRegulationType = creationInfos.getVoltageRegulationType();
@@ -144,6 +148,7 @@ public class StaticCompensatorCreationEntity extends InjectionCreationEntity {
             .minQAtNominalV(getMinQAtNominalV())
             .maxQAtNominalV(getMaxQAtNominalV())
             .regulationMode(getRegulationMode())
+            .regulating(isRegulating())
             .reactivePowerSetpoint(getReactivePowerSetpoint())
             .voltageSetpoint(getVoltageSetpoint())
             .voltageRegulationType(getVoltageRegulationType())
