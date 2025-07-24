@@ -5,11 +5,6 @@
                        oldColumnName="phasetapchangerlowtapposition"
                        tableName="two_windings_transformer_creation"/>
     </changeSet>
-    <changeSet author="lesoteti (generated)" id="1753252430685-32">
-        <renameColumn  newColumnName="phase_tap_changer_regulating"
-                       oldColumnName="phasetapchangerregulating"
-                       tableName="two_windings_transformer_creation"/>
-    </changeSet>
     <changeSet author="lesoteti (generated)" id="1753252430685-33">
         <renameColumn  newColumnName="phase_tap_changer_regulation_mode"
                        oldColumnName="phasetapchangerregulationmode"
