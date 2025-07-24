@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Embeddable
 public class TapChangerStepCreationEmbeddable {
 
-    @Column(name = "tapchangertype")
+    @Column(name = "tap_changer_type")
     @Enumerated(EnumType.STRING)
     private TapChangerType tapChangerType;
 
