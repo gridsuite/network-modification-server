@@ -237,6 +237,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                     .tapPosition(getPhaseTapChangerTapPosition())
                     .targetDeadband(getPhaseTapChangerTargetDeadband())
                     .regulating(getPhaseTapChangerRegulating())
+                    // loadTapChangingCapabilities always true because in gridsuite the user can't change it
+                    .loadTapChangingCapabilities(true)
                     .regulationMode(getPhaseTapChangerRegulationMode())
                     .regulationValue(getPhaseTapChangerRegulationValue())
                     .regulatingTerminalId(getPhaseTapChangerTerminalRefConnectableId())

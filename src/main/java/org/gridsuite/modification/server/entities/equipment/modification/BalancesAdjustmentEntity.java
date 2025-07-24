@@ -20,6 +20,7 @@ import org.gridsuite.modification.server.utils.CountriesUtils;
 import java.util.List;
 import java.util.UUID;
 
+import static com.powsybl.balances_adjustment.balance_computation.BalanceComputationParameters.DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
 import static org.gridsuite.modification.dto.BalancesAdjustmentModificationInfos.*;
 
 /**
@@ -54,6 +55,9 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Column(name = "with_ratio_tap_changers")
     private boolean withRatioTapChangers = DEFAULT_WITH_RATIO_TAP_CHANGERS;
 
+    @Column(name = "subtract_load_flow_balancing")
+    private boolean subtractLoadFlowBalancing = DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "balances_adjustment_id", foreignKey = @ForeignKey(name = "area_balances_adjustment_id_fk"))
     private List<BalancesAdjustmentAreaEntity> areas;
@@ -78,6 +82,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
                 .withLoadFlow(withLoadFlow)
                 .loadFlowParametersId(loadFlowParametersId)
                 .withRatioTapChangers(withRatioTapChangers)
+                .subtractLoadFlowBalancing(subtractLoadFlowBalancing)
                 .build();
     }
 
@@ -95,6 +100,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
         withLoadFlow = balancesAdjustmentModificationInfos.isWithLoadFlow();
         loadFlowParametersId = balancesAdjustmentModificationInfos.getLoadFlowParametersId();
         withRatioTapChangers = balancesAdjustmentModificationInfos.isWithRatioTapChangers();
+        subtractLoadFlowBalancing = balancesAdjustmentModificationInfos.isSubtractLoadFlowBalancing();
         List<BalancesAdjustmentAreaEntity> areaEntities = balancesAdjustmentModificationInfos
             .getAreas()
             .stream()
