@@ -125,6 +125,12 @@ public class LineModificationEntity extends BranchModificationEntity {
         if (getCurrentLimits2() != null) {
             builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
         }
+        if (getOpLimitsGroups1() != null) {
+            builder.operationalLimitsGroup1(getOpLimitsGroups1().stream().map(OperationalLimitsGroupModificationEntity::toOperationalLimitsGroupModificationInfos).toList());
+        }
+        if (getOpLimitsGroups2() != null) {
+            builder.operationalLimitsGroup2(getOpLimitsGroups2().stream().map(OperationalLimitsGroupModificationEntity::toOperationalLimitsGroupModificationInfos).toList());
+        }
         return builder;
     }
 
