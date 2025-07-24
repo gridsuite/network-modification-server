@@ -35,22 +35,28 @@ public interface TwoWindingsTransformerModificationRepository extends JpaReposit
     @Modifying
     @Query(value = "BEGIN;" +
             "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE from current_temporary_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id1 = CL.id and TW.id IN ?1 ;" +
+            "DELETE from current_temporary_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id2 = CL.id and TW.id IN ?1 ;" +
+            "DELETE from current_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id1 = CL.id and TW.id IN ?1 ;" +
+            "DELETE from current_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id2 = CL.id and TW.id IN ?1 ;" +
             "DELETE FROM two_windings_transformer_modification WHERE id IN ?1 ;" +
             "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
             "DELETE FROM modification WHERE id IN ?1 ;" +
             "COMMIT;", nativeQuery = true)
-        // TODO delete currentLimits1/currentLimits2
     void deleteTabularSubModifications(List<UUID> subModificationIds, UUID tabularModificationId);
 
     @Modifying
     @Query(value = "BEGIN;" +
             "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
+            "DELETE from current_temporary_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id1 = CL.id and TW.id IN ?1 ;" +
+            "DELETE from current_temporary_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id2 = CL.id and TW.id IN ?1 ;" +
+            "DELETE from current_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id1 = CL.id and TW.id IN ?1 ;" +
+            "DELETE from current_limits_modification CL USING two_windings_transformer_modification TW where TW.current_limits_modification_id2 = CL.id and TW.id IN ?1 ;" +
             "DELETE FROM two_windings_transformer_modification WHERE id IN ?1 ;" +
             "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
             "DELETE FROM modification WHERE id IN ?1 ;" +
             "DELETE FROM tabular_modification WHERE id = ?2 ;" +
             "DELETE FROM modification WHERE id = ?2 ;" +
             "COMMIT;", nativeQuery = true)
-        // TODO delete currentLimits1/currentLimits2
     void deleteTabularModification(List<UUID> subModificationIds, UUID tabularModificationId);
 }
