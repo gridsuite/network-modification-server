@@ -1,0 +1,46 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1753188911693-31">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phase_tap_changer_load_tap_changing_capabilities" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753188911693-32">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phase_tap_changer_load_tap_changing_capabilities_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753188911693-33">
+        <renameColumn  newColumnName="phase_tap_changer_regulating"
+                       oldColumnName="phasetapchangerregulating"
+                       tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753188911693-34">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phase_tap_changer_regulating" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753188911693-35">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="phase_tap_changer_regulating_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753188911693-36">
+        <addColumn tableName="static_var_compensator_creation">
+            <column name="regulating" type="boolean"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat" id="1753188911693-37">
+        <addColumn tableName="two_windings_transformer_creation">
+        <column name="phase_tap_changer_load_tap_changing_capabilities" type="boolean"/>
+    </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat" id="1753188911693-99">
+        <sqlFile
+                encoding="UTF-8"
+                path="migrationRegulationMode_20250710T121805Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+    </changeSet>
+</databaseChangeLog>
