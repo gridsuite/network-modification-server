@@ -106,12 +106,6 @@
 
             <!-- imports -->
             <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-core</artifactId>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.gridsuite</groupId>
                 <artifactId>gridsuite-dependencies</artifactId>
                 <version>${gridsuite-dependencies.version}</version>
