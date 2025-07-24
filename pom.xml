@@ -50,7 +50,7 @@
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <!-- TODO network-modification.version remove when migration powsybl -->
-        <network-modification.version>0.27.0-SNAPSHOT</network-modification.version>
+        <network-modification.version>0.28.0-SNAPSHOT</network-modification.version>
         <powsybl-core.version>6.8.0-SNAPSHOT</powsybl-core.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
