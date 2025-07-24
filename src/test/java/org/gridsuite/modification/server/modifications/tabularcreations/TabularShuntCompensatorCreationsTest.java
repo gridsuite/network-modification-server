@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
+ * @author David Braquart <david.braquart_externe at rte-france.com>
  */
 @Tag("IntegrationTest")
 class TabularShuntCompensatorCreationsTest extends AbstractNetworkModificationTest {
