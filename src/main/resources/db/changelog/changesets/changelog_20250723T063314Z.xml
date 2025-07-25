@@ -95,15 +95,15 @@
                        oldColumnName="ratiotapchangerterminalreftype"
                        tableName="two_windings_transformer_creation"/>
     </changeSet>
-    <changeSet author="lesoteti (generated)" id="1753252430685-51">
-        <renameColumn  newColumnName="tap_changer_type"
-                       oldColumnName="tapchangertype"
-                       tableName="tap_changer_step_creation"/>
-    </changeSet>
     <changeSet author="lesoteti (generated)" id="1753252430685-53">
         <renameColumn  newColumnName="ratio_tap_changer_terminal_ref_voltage_level_id"
                        oldColumnName="ratiotapchangerterminalrefvoltagelevelid"
                        tableName="two_windings_transformer_creation"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753252430685-51">
+        <renameColumn  newColumnName="tap_changer_type"
+                       oldColumnName="tapchangertype"
+                       tableName="tap_changer_step_creation"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753252430685-52">
         <renameColumn  newColumnName="tap_changer_type"
