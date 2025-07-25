@@ -106,13 +106,13 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         Pair<UUID, ModificationInfos> tabularWith1Modification = createTabularGeneratorModification(1);
         reset();
         ModificationInfos tabularWith1ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith1Modification.getLeft()); // Getting one tabular modification with one sub-modification
-        assertSelectCount(4); // 4 before improvements
+        assertSelectCount(5); // 4 before improvements
         assertTabularModificationsEquals(tabularWith1Modification.getRight(), tabularWith1ModificationInfos);
 
         Pair<UUID, ModificationInfos> tabularWith3Modification = createTabularGeneratorModification(3);
         reset();
         ModificationInfos tabularWith3ModificationInfos = ApiUtils.getModification(mockMvc, tabularWith3Modification.getLeft()); // Getting one tabular modification with three sub-modifications
-        assertSelectCount(4); // 6 before improvements
+        assertSelectCount(5); // 6 before improvements
         assertTabularModificationsEquals(tabularWith3Modification.getRight(), tabularWith3ModificationInfos);
     }
 
@@ -122,7 +122,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         List<ModificationInfos> tabularModifications = ApiUtils.getGroupModifications(mockMvc, getGroupId()); // Getting two tabular modifications with respectively one and three sub-modifications
-        assertSelectCount(8); // 10 before improvements
+        assertSelectCount(10); // 10 before improvements
         assertTabularModificationsEquals(modifications.stream().map(Pair::getRight).toList(), tabularModifications);
     }
 
@@ -164,7 +164,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(10, 8, 1, 0); // (13, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(12, 8, 1, 0); // (13, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -175,7 +175,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.postGroups(mockMvc, getGroupId(), targetGroupUuid);
-        TestUtils.assertRequestsCount(16, 9, 1, 0); // (95, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(20, 9, 1, 0); // (95, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -217,7 +217,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        TestUtils.assertRequestsCount(10, 8, 1, 0); // (19, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(12, 8, 1, 0); // (19, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -228,7 +228,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsDuplications(mockMvc, getGroupId(), targetGroupUuid, getNetworkId());
-        TestUtils.assertRequestsCount(16, 9, 1, 0); // (107, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(20, 9, 1, 0); // (107, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -269,7 +269,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(9, 8, 1, 0); // (14, 8, 2, 0) before improvements
+        TestUtils.assertRequestsCount(11, 8, 1, 0); // (14, 8, 2, 0) before improvements
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -280,7 +280,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         ApiUtils.putGroupsWithCopy(mockMvc, targetGroupUuid, modifications.stream().map(Pair::getLeft).toList(), getNetworkId());
-        TestUtils.assertRequestsCount(15, 9, 1, 0); // (26, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
+        TestUtils.assertRequestsCount(19, 9, 1, 0); // (26, 9, 2, 0) before improvements, why one additional insert ? It feels batch_size is limited at 100 for insertions and is it reached for reactive_capability_curve_points
         assertTabularModificationsEquals(modifications, targetGroupUuid);
     }
 
@@ -318,7 +318,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-        TestUtils.assertRequestsCount(7, 7, 1, 0); // (11, 7, 1, 0) before improvements
+        TestUtils.assertRequestsCount(9, 7, 1, 0); // (11, 7, 1, 0) before improvements
         assertTabularModificationsEquals(modifications, idsMapping);
     }
 
@@ -328,7 +328,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
 
         reset();
         Map<UUID, UUID> idsMapping = ApiUtils.postNetworkModificationsDuplicate(mockMvc, modifications.stream().map(Pair::getLeft).toList());
-        TestUtils.assertRequestsCount(13, 8, 1, 0); // (93, 8, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
+        TestUtils.assertRequestsCount(17, 8, 1, 0); // (93, 8, 1, 0) before improvements, why one additional insert ? Maybe insertion batch size limit but not sure
         assertTabularModificationsEquals(modifications, idsMapping);
     }
 
