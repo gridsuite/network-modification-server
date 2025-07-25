@@ -90,7 +90,7 @@ public abstract class AbstractNetworkModificationTest {
     protected ReportService reportService;
 
     @Autowired
-    protected NetworkModificationRepository modificationRepository;
+    protected NetworkModificationRepository networkModificationRepository;
 
     @Autowired
     protected ObjectMapper mapper;
@@ -101,7 +101,7 @@ public abstract class AbstractNetworkModificationTest {
     public void setUp() {
         network = createNetwork(TEST_NETWORK_ID);
 
-        modificationRepository.deleteAll();
+        networkModificationRepository.deleteAll();
 
         when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), any(PreloadingStrategy.class))).thenThrow(new PowsyblException());
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_ID), any(PreloadingStrategy.class))).then((Answer<Network>) invocation -> network);
@@ -113,7 +113,7 @@ public abstract class AbstractNetworkModificationTest {
 
     @AfterEach
     public void tearOff() {
-        modificationRepository.deleteAll();
+        networkModificationRepository.deleteAll();
 
         try {
             TestUtils.assertWiremockServerRequestsEmptyThenShutdown(wireMockServer);
@@ -140,13 +140,13 @@ public abstract class AbstractNetworkModificationTest {
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertResultImpacts(getNetworkImpacts(networkModificationsResult));
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         assertAfterNetworkModificationCreation();
 
-        ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
@@ -165,14 +165,14 @@ public abstract class AbstractNetworkModificationTest {
 
         assertEquals(0, getNetworkImpacts(networkModificationsResult).size());
         assertNotEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-        ModificationInfos createdModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(modificationToCreate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
         // when modification is not active, element created by the modifications should NOT be present in network
         assertAfterNetworkModificationDeletion();
 
-        ModificationInfos createdModificationWithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testCreationModificationMessage(createdModificationWithOnlyMetadata);
         assertEquals(false, createdModificationWithOnlyMetadata.getActivated());
     }
@@ -210,11 +210,11 @@ public abstract class AbstractNetworkModificationTest {
         // TODO Need a test for substations impacted
         //assertThat(bsmListResult.get(0)).recursivelyEquals(ModificationType.LOAD_CREATION, "idLoad1", Set.of("s1"));
 
-        ModificationInfos updatedModification = modificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
+        ModificationInfos updatedModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
         assertThat(updatedModification).recursivelyEquals(modificationToUpdate);
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
 
-        ModificationInfos updatedModificationwithOnlyMetadata = modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
+        ModificationInfos updatedModificationwithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
         testUpdateModificationMessage(updatedModificationwithOnlyMetadata);
 
     }
@@ -230,7 +230,7 @@ public abstract class AbstractNetworkModificationTest {
                         .queryParam("uuids", modificationUuid.toString()))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> storedModifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        List<ModificationInfos> storedModifications = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true);
 
         assertTrue(storedModifications.isEmpty());
         assertAfterNetworkModificationDeletion();
@@ -247,7 +247,7 @@ public abstract class AbstractNetworkModificationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        List<ModificationInfos> modifications = modificationRepository
+        List<ModificationInfos> modifications = networkModificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
 
         assertEquals(2, modifications.size());
@@ -269,7 +269,7 @@ public abstract class AbstractNetworkModificationTest {
     /** Save a network modification into the repository and return its UUID. */
     protected UUID saveModification(ModificationInfos modificationInfos) {
         ModificationEntity entity = ModificationEntity.fromDTO(modificationInfos);
-        modificationRepository.saveModifications(TEST_GROUP_ID, List.of(entity));
+        networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(entity));
         return entity.getId();
     }
 
