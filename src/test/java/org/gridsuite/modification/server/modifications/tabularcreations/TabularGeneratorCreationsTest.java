@@ -7,20 +7,26 @@
 package org.gridsuite.modification.server.modifications.tabularcreations;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.SubstationCreationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.gridsuite.modification.dto.TabularPropertyInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
@@ -107,6 +113,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
             .creationType(ModificationType.GENERATOR_CREATION)
             .creations(creations)
+            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
     }
@@ -140,6 +147,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
                 .creationType(ModificationType.GENERATOR_CREATION)
                 .creations(creations)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
