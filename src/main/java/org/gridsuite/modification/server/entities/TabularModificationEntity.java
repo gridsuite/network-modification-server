@@ -41,6 +41,11 @@ public class TabularModificationEntity extends ModificationEntity {
         assignAttributes(tabularModificationInfos);
     }
 
+    public TabularModificationEntity(@NonNull LimitSetsTabularModificationInfos tabularModificationInfos) {
+        super(tabularModificationInfos);
+        assignAttributes(tabularModificationInfos);
+    }
+
     @Override
     public TabularModificationInfos toModificationInfos() {
         List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
