@@ -59,26 +59,32 @@ public class OperationalLimitsGroupModificationEntity {
     @Column(name = "side")
     private String side;
 
-    public static List<OperationalLimitsGroupEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupInfos> limitsGroups) {
+    public static List<OperationalLimitsGroupModificationEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModificationInfos> limitsGroups) {
         return limitsGroups.stream()
                 .filter(Objects::nonNull)
                 .map(limitsGroup ->
-                        new OperationalLimitsGroupEntity(
+                        new OperationalLimitsGroupModificationEntity(
                                 null,
                                 limitsGroup.getId(),
-                                new CurrentLimitsEntity(limitsGroup.getCurrentLimits())
+                                new CurrentLimitsModificationEntity(limitsGroup.getCurrentLimits()),
+                                limitsGroup.getModificationType(),
+                                limitsGroup.getTemporaryLimitsModificationType(),
+                                limitsGroup.getSide()
                         )
                 )
                 .toList();
     }
 
-    public static List<OperationalLimitsGroupInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupEntity> limitsGroupsEntities) {
+    public static List<OperationalLimitsGroupModificationInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupModificationEntity> limitsGroupsEntities) {
         return CollectionUtils.isEmpty(limitsGroupsEntities) ? null :
                 limitsGroupsEntities.stream()
                         .map(limitsGroupEntity ->
-                                OperationalLimitsGroupInfos.builder()
+                                OperationalLimitsGroupModificationInfos.builder()
                                         .id(limitsGroupEntity.getId())
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
+                                        .modificationType(limitsGroupEntity.getModificationType())
+                                        .temporaryLimitsModificationType(limitsGroupEntity.getTemporaryLimitsModificationType())
+                                        .side(limitsGroupEntity.getSide())
                                         .build()
                         )
                         .collect(Collectors.toList());
@@ -86,16 +92,5 @@ public class OperationalLimitsGroupModificationEntity {
 
     public OperationalLimitsGroupModificationEntity(OperationalLimitsGroupModificationInfos operationalLimitsGroupModificationInfos) {
         this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(), operationalLimitsGroupModificationInfos.getSide());
-    }
-
-    public OperationalLimitsGroupModificationInfos toOperationalLimitsGroupModificationInfos() {
-        return OperationalLimitsGroupModificationInfos
-                .builder()
-                .id(getId())
-                .side(getSide())
-                .modificationType(getModificationType())
-                .temporaryLimitsModificationType(getTemporaryLimitsModificationType())
-                .currentLimits(getCurrentLimits().toCurrentLimitsInfos())
-                .build();
     }
 }
