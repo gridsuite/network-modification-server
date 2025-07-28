@@ -11,9 +11,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.entities.equipment.creation.CurrentLimitsEntity;
-import org.gridsuite.modification.server.entities.equipment.creation.OperationalLimitsGroupEntity;
+import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
+import org.gridsuite.modification.dto.OperationalLimitsGroupModificationType;
+import org.gridsuite.modification.dto.TemporaryLimitModificationType;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
