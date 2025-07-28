@@ -278,6 +278,21 @@ public final class NetworkCreation {
 
         // create lines
         createLine(network, "line1", "line1", "v3", "v4", 8, 4, 1.0, 1.0, 1.0, 2.0, 1.0, 2.0, "cn1line1", 1, ConnectablePosition.Direction.TOP, "cn2line1", 1, ConnectablePosition.Direction.TOP);
+        Line l1 = network.getLine("line1");
+        l1.newOperationalLimitsGroup1("DEFAULT")
+                .newCurrentLimits()
+                .setPermanentLimit(100.)
+                .beginTemporaryLimit()
+                .setName("name32")
+                .setAcceptableDuration(32)
+                .setValue(15.0)
+                .endTemporaryLimit()
+                .beginTemporaryLimit()
+                .setName("name33")
+                .setAcceptableDuration(33)
+                .setValue(15.0)
+                .endTemporaryLimit()
+                .add();
         createSwitch(v3, "v3dl1", "v3dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 7);
         createSwitch(v3, "v3bl1", "v3bl1", SwitchKind.BREAKER, true, false, false, 7, 8);
         createSwitch(v4, "v4dl1", "v4dl1", SwitchKind.DISCONNECTOR, true, false, false, 0, 3);
