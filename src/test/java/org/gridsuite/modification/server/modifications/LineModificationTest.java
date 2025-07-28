@@ -107,6 +107,21 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 .build()))
                         .build())
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
+                .operationalLimitsGroup1(List.of(OperationalLimitsGroupModificationInfos.builder()
+                        .id("DEFAULT")
+                        .side("ONE")
+                        .modificationType(OperationalLimitsGroupModificationType.MODIFIED)
+                        .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACED)
+                        .currentLimits(CurrentLimitsModificationInfos.builder()
+                                .temporaryLimits(List.of(
+                                        CurrentTemporaryLimitModificationInfos.builder()
+                                                .modificationType(TemporaryLimitModificationType.REPLACED)
+                                                .name("test1")
+                                                .acceptableDuration(2)
+                                                .value(10.)
+                                                .build()
+                                )).build())
+                        .build()))
                 .build();
     }
 
@@ -138,6 +153,21 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 .value(42.1)
                                 .build()))
                         .build())
+                .operationalLimitsGroup1(List.of(OperationalLimitsGroupModificationInfos.builder()
+                        .id("DEFAULT")
+                        .side("ONE")
+                        .modificationType(OperationalLimitsGroupModificationType.MODIFIED)
+                        .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACED)
+                        .currentLimits(CurrentLimitsModificationInfos.builder()
+                                .temporaryLimits(List.of(
+                                        CurrentTemporaryLimitModificationInfos.builder()
+                                                .modificationType(TemporaryLimitModificationType.REPLACED)
+                                                .name("test2")
+                                                .acceptableDuration(2)
+                                                .value(10.)
+                                                .build()
+                                )).build())
+                        .build()))
                 .build();
     }
 
