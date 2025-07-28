@@ -65,36 +65,36 @@
         </createTable>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-54">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_op_limits_groups1" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_op_limits_groups1" constraintName="line_op1_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-55">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_op_limits_groups2" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_op_limits_groups2" constraintName="line_op2_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-56">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_op_limits_groups1" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_op_limits_groups1" constraintName="twt_op1_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-57">
-        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="twt_op2_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-60">
-        <addForeignKeyConstraint baseColumnNames="current_limits_id" baseTableName="operational_limits_group_modification" constraintName="current_limits_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="current_limits_id" baseTableName="operational_limits_group_modification" constraintName="current_limits_op_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-61">
-        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="two_windings_transformer_modification" constraintName="twt_mod_current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-62">
-        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="two_windings_transformer_modification" constraintName="current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="two_windings_transformer_modification" constraintName="twt_mod_current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-63">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_op_limits_groups1" constraintName="operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_op_limits_groups1" constraintName="line_mod_operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-64">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups1" constraintName="operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups1" constraintName="twt_mod_operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-65">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_op_limits_groups2" constraintName="operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_op_limits_groups2" constraintName="line_mod_operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
     <changeSet author="marcelinhug (generated)" id="1753286288227-66">
-        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="twt_mod_operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
