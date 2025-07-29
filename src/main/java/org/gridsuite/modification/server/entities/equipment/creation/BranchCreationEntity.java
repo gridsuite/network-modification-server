@@ -117,7 +117,6 @@ public class BranchCreationEntity extends EquipmentCreationEntity {
      * the point of this function is to avoid dereferencing operationalLimitsGroups if it already exists,
      * in order to prevent Hibernate from losing the reference during cascade cleaning
      */
-    //TODO basseche : change this function to extract correct operational limits
     private List<OperationalLimitsGroupEntity> assignOperationalLimitsGroups(
             List<OperationalLimitsGroupInfos> operationalLimitsGroupInfos,
             List<OperationalLimitsGroupEntity> operationalLimitsGroups
