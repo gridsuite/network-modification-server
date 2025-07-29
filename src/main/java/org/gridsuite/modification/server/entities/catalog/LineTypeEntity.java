@@ -9,10 +9,16 @@ package org.gridsuite.modification.server.entities.catalog;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 
+import org.gridsuite.modification.server.dto.DTOUtils;
+import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeEmbeddable;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 
 import jakarta.persistence.*;
+
+import java.util.List;
 import java.util.UUID;
+
+import static org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeEmbeddable.toEmbeddableLimits;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -50,6 +56,10 @@ public class LineTypeEntity {
     @Column(name = "linearCapacity")
     private Double linearCapacity;
 
+    @ElementCollection
+    @CollectionTable
+    private List<LimitsForLineTypeEmbeddable> limitsForLineType;
+
     protected LineTypeEntity(LineTypeInfos lineType) {
         assignAttributes(lineType);
     }
@@ -63,6 +73,7 @@ public class LineTypeEntity {
         linearResistance = lineType.getLinearResistance();
         linearReactance = lineType.getLinearReactance();
         linearCapacity = lineType.getLinearCapacity();
+        limitsForLineType = toEmbeddableLimits(lineType.getLimitsForLineType());
     }
 
     public LineTypeInfos toDto() {
@@ -75,6 +86,7 @@ public class LineTypeEntity {
                 .linearResistance(this.linearResistance)
                 .linearReactance(this.linearReactance)
                 .linearCapacity(this.linearCapacity)
+                .limitsForLineType(DTOUtils.toLimitsForLineTypeInfos(this.limitsForLineType))
                 .build();
     }
 }

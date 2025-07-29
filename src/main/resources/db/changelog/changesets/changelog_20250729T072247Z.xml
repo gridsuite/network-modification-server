@@ -1,0 +1,23 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1753773801590-1">
+        <createTable tableName="line_type_entity_limits_for_line_type">
+            <column name="line_type_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="limit_set_name" type="VARCHAR"/>
+            <column name="permanent_limit" type="FLOAT8"/>
+            <column name="temporary_limit" type="FLOAT8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753773801590-2">
+        <addForeignKeyConstraint baseColumnNames="line_type_entity_id"
+                                 baseTableName="line_type_entity_limits_for_line_type"
+                                 constraintName="line_type_entity_limits_for_line_type_id_fk"
+                                 deferrable="false"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="id"
+                                 referencedTableName="line_types_catalog"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>
