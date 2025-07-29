@@ -39,6 +39,7 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -52,6 +53,7 @@ class TabularVoltageLevelModificationsTest extends AbstractNetworkModificationTe
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.VOLTAGE_LEVEL_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
