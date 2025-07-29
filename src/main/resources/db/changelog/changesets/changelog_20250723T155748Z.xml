@@ -1,0 +1,100 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="marcelinhug (generated)" id="1753286288227-31">
+        <createTable tableName="line_modification_op_limits_groups1">
+            <column name="branch_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_modification_op_limits_groups1PK"/>
+            </column>
+            <column name="operational_limits_groups_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_operational_limits_groups" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_modification_op_limits_groups1PK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-32">
+        <createTable tableName="line_modification_op_limits_groups2">
+            <column name="branch_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_modification_op_limits_groups2PK"/>
+            </column>
+            <column name="operational_limits_groups_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_operational_limits_groups" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_modification_op_limits_groups2PK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-33">
+        <createTable tableName="operational_limits_group_modification">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="operational_limits_group_modificationPK"/>
+            </column>
+            <column name="id" type="VARCHAR(255)"/>
+            <column name="modification_type" type="VARCHAR(255)"/>
+            <column name="side" type="VARCHAR(255)"/>
+            <column name="temporary_limits_modification_type" type="VARCHAR(255)"/>
+            <column name="current_limits_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-34">
+        <createTable tableName="two_windings_transformer_modification_op_limits_groups1">
+            <column name="branch_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_op_limits_groups1PK"/>
+            </column>
+            <column name="operational_limits_groups_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_operational_limits_groups" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_op_limits_groups1PK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-35">
+        <createTable tableName="two_windings_transformer_modification_op_limits_groups2">
+            <column name="branch_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_op_limits_groups2PK"/>
+            </column>
+            <column name="operational_limits_groups_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_operational_limits_groups" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_op_limits_groups2PK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-54">
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_op_limits_groups1" constraintName="line_op1_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-55">
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_op_limits_groups2" constraintName="line_op2_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-56">
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_op_limits_groups1" constraintName="twt_op1_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-57">
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="twt_op2_branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-60">
+        <addForeignKeyConstraint baseColumnNames="current_limits_id" baseTableName="operational_limits_group_modification" constraintName="current_limits_op_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-61">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id1" baseTableName="two_windings_transformer_modification" constraintName="twt_mod_current_limits_modification_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-62">
+        <addForeignKeyConstraint baseColumnNames="current_limits_modification_id2" baseTableName="two_windings_transformer_modification" constraintName="twt_mod_current_limits_modification_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="current_limits_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-63">
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_op_limits_groups1" constraintName="line_mod_operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-64">
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups1" constraintName="twt_mod_operational_limits_groups_id1_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-65">
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_op_limits_groups2" constraintName="line_mod_operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="marcelinhug (generated)" id="1753286288227-66">
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="twt_mod_operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
