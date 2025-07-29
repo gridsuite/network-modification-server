@@ -7,6 +7,8 @@
 package org.gridsuite.modification.server.dto;
 
 import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
+import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeEmbeddable;
+import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeInfos;
 import org.gridsuite.modification.server.entities.equipment.creation.ReactiveCapabilityCurveCreationEmbeddable;
 import org.gridsuite.modification.server.entities.equipment.modification.ReactiveCapabilityCurveModificationEmbeddable;
 import org.springframework.util.CollectionUtils;
@@ -35,5 +37,13 @@ public final class DTOUtils {
                         point.getMaxQ(),
                         point.getP()))
                 .toList();
+    }
+
+    public static List<LimitsForLineTypeInfos> toLimitsForLineTypeInfos(List<LimitsForLineTypeEmbeddable> limits) {
+        return Objects.isNull(limits) || CollectionUtils.isEmpty(limits) ? null
+            : limits.stream().map(limit -> new LimitsForLineTypeInfos(limit.getLimitSetName(),
+                limit.getPermanentLimit(),
+                limit.getTemporaryLimit()))
+            .toList();
     }
 }
