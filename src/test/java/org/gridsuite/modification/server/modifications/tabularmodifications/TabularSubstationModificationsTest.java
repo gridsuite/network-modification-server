@@ -43,6 +43,7 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
         return TabularModificationInfos.builder()
                 .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -56,6 +57,7 @@ class TabularSubstationModificationsTest extends AbstractNetworkModificationTest
         return TabularModificationInfos.builder()
                 .modificationType(MOFIFICATION_TYPE)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

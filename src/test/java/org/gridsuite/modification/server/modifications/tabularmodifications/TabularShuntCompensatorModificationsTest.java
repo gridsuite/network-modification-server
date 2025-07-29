@@ -56,6 +56,7 @@ import static org.mockito.Mockito.when;
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -69,6 +70,7 @@ import static org.mockito.Mockito.when;
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.SHUNT_COMPENSATOR_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
