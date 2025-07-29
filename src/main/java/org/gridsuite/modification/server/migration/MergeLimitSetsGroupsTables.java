@@ -36,8 +36,8 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
         return "select * from " + tableName + " where branch_id = '" + id + "'";
     }
 
-    private String getLimitsGroupId(JdbcConnection connection, String id) throws DatabaseException, SQLException {
-        String query = "select id from operational_limits_group where uuid = '" + id + "'";
+    private String getLimitsGroupId(JdbcConnection connection, String uuid) throws DatabaseException, SQLException {
+        String query = "select id from operational_limits_group where uuid = '" + uuid + "'";
         ResultSet resultSetOp = connection.createStatement().executeQuery(query);
         if (resultSetOp.next()) {
             return resultSetOp.getString(ID_COL);
@@ -82,9 +82,7 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
             Statement statement2 = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
             ResultSet temporaryLimit = statement1.executeQuery(queryTemporary.replace("<id>", currentLimitsId1));
             ResultSet temporaryLimit2 = statement2.executeQuery(queryTemporary.replace("<id>", currentLimitsId2));
-            int temporaryLimitSize = getLength(temporaryLimit);
-            int temporaryLimit2Size = getLength(temporaryLimit2);
-            if (temporaryLimitSize != temporaryLimit2Size) {
+            if (getLength(temporaryLimit) != getLength(temporaryLimit2)) {
                 return false;
             }
 

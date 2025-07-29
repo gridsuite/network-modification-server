@@ -32,7 +32,7 @@
         </addColumn>
     </changeSet>
 
-    <!-- Drop constraints -->
+    <!-- Add and drop constraints -->
     <changeSet author="elcheikhbas (generated)" id="1752161859419-37">
         <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="uc_line_creation_operational_limits_groupsoperational_limits_gr" tableName="line_creation_operational_limits_groups"/>
     </changeSet>
