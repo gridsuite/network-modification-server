@@ -34,10 +34,10 @@
 
     <!-- Drop constraints -->
     <changeSet author="elcheikhbas (generated)" id="1752161859419-37">
-        <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="UC_LINE_CREATION_OPERATIONAL_LIMITS_GROUPSOPERATIONAL_LIMITS_GR" tableName="line_creation_operational_limits_groups"/>
+        <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="uc_line_creation_operational_limits_groupsoperational_limits_gr" tableName="line_creation_operational_limits_groups"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-41">
-        <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPSO" tableName="two_windings_transformer_creation_operational_limits_groups"/>
+        <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="uc_two_windings_transformer_creation_operational_limits_groupso" tableName="two_windings_transformer_creation_operational_limits_groups"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-49">
         <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_creation_operational_limits_groups" constraintName="branch_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
@@ -52,40 +52,40 @@
         <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_creation_operational_limits_groups" constraintName="operational_limits_groups_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-57">
-        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS1" constraintName="BRANCH_ID1_FK"/>
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation_operational_limits_groups1" constraintName="branch_id1_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-58">
-        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2" constraintName="BRANCH_ID2_FK"/>
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="branch_id2_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-60">
-        <dropForeignKeyConstraint baseTableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS1" constraintName="LINE_BRANCH_ID1_FK"/>
+        <dropForeignKeyConstraint baseTableName="line_creation_operational_limits_groups1" constraintName="line_branch_id1_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-61">
-        <dropForeignKeyConstraint baseTableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS2" constraintName="LINE_BRANCH_ID2_FK"/>
+        <dropForeignKeyConstraint baseTableName="line_creation_operational_limits_groups2" constraintName="line_branch_id2_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-62">
-        <dropForeignKeyConstraint baseTableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS1" constraintName="LINE_OPERATIONAL_LIMITS_GROUPS_ID1_FK"/>
+        <dropForeignKeyConstraint baseTableName="line_creation_operational_limits_groups1" constraintName="line_operational_limits_groups_id1_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-63">
-        <dropForeignKeyConstraint baseTableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS2" constraintName="LINE_OPERATIONAL_LIMITS_GROUPS_ID2_FK"/>
+        <dropForeignKeyConstraint baseTableName="line_creation_operational_limits_groups2" constraintName="line_operational_limits_groups_id2_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-64">
-        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS1" constraintName="OPERATIONAL_LIMITS_GROUPS_ID1_FK"/>
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation_operational_limits_groups1" constraintName="operational_limits_groups_id1_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-65">
-        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2" constraintName="OPERATIONAL_LIMITS_GROUPS_ID2_FK"/>
+        <dropForeignKeyConstraint baseTableName="two_windings_transformer_creation_operational_limits_groups2" constraintName="operational_limits_groups_id2_fk"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-66">
-        <dropUniqueConstraint constraintName="UC_LINE_CREATION_OPERATIONAL_LIMITS_GROUPS1OPERATIONAL_LIMITS_G" tableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS1"/>
+        <dropUniqueConstraint constraintName="uc_line_creation_operational_limits_groups1operational_limits_g" tableName="line_creation_operational_limits_groups1"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-67">
-        <dropUniqueConstraint constraintName="UC_LINE_CREATION_OPERATIONAL_LIMITS_GROUPS2OPERATIONAL_LIMITS_G" tableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS2"/>
+        <dropUniqueConstraint constraintName="uc_line_creation_operational_limits_groups2operational_limits_g" tableName="line_creation_operational_limits_groups2"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-68">
-        <dropUniqueConstraint constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS1" tableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS1"/>
+        <dropUniqueConstraint constraintName="uc_two_windings_transformer_creation_operational_limits_groups1" tableName="two_windings_transformer_creation_operational_limits_groups1"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-69">
-        <dropUniqueConstraint constraintName="UC_TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2" tableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2"/>
+        <dropUniqueConstraint constraintName="uc_two_windings_transformer_creation_operational_limits_groups2" tableName="two_windings_transformer_creation_operational_limits_groups2"/>
     </changeSet>
 
     <!-- migrate data -->
@@ -95,15 +95,15 @@
 
     <!-- drop tables -->
     <changeSet author="elcheikhbas (generated)" id="1752161859419-70">
-        <dropTable tableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS1"/>
+        <dropTable tableName="line_creation_operational_limits_groups1"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-71">
-        <dropTable tableName="LINE_CREATION_OPERATIONAL_LIMITS_GROUPS2"/>
+        <dropTable tableName="line_creation_operational_limits_groups2"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-72">
-        <dropTable tableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS1"/>
+        <dropTable tableName="two_windings_transformer_creation_operational_limits_groups1"/>
     </changeSet>
     <changeSet author="elcheikhbas (generated)" id="1752161859419-73">
-        <dropTable tableName="TWO_WINDINGS_TRANSFORMER_CREATION_OPERATIONAL_LIMITS_GROUPS2"/>
+        <dropTable tableName="two_windings_transformer_creation_operational_limits_groups2"/>
     </changeSet>
 </databaseChangeLog>
