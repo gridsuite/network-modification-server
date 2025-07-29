@@ -293,6 +293,7 @@ public class NetworkModificationRepository {
                             .map(TabularPropertyEntity::toInfos)
                             .toList())
                     .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                    .csvFilename(tabularModificationEntity.getCsvFilename())
                     .build();
             default:
                 break;
@@ -326,6 +327,7 @@ public class NetworkModificationRepository {
                         .properties(CollectionUtils.isEmpty(tabularCreationEntity.getProperties()) ? null : tabularCreationEntity.getProperties().stream()
                                 .map(TabularPropertyEntity::toInfos)
                                 .toList())
+                        .csvFilename(tabularCreationEntity.getCsvFilename())
                         .build();
             default:
                 break;
