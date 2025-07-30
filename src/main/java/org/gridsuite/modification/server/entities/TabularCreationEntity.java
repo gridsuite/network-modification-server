@@ -62,6 +62,7 @@ public class TabularCreationEntity extends TabularBaseEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
                         .map(TabularPropertyEntity::toInfos)
                         .toList())
+                .csvFilename(getCsvFilename())
                 .build();
     }
 

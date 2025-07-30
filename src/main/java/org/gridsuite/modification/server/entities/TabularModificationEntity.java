@@ -60,7 +60,8 @@ public class TabularModificationEntity extends TabularBaseEntity {
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
                         .map(TabularPropertyEntity::toInfos)
                         .toList())
-                .build();
+                .csvFilename(getCsvFilename())
+            .build();
     }
 
     @Override

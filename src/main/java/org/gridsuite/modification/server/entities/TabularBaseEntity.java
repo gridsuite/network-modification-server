@@ -32,6 +32,8 @@ public class TabularBaseEntity extends ModificationEntity {
     @OrderColumn(name = "insert_position")
     private List<TabularPropertyEntity> properties;
 
+    private String csvFilename;
+
     protected TabularBaseEntity(TabularBaseInfos tabularBaseInfos) {
         super(tabularBaseInfos);
         assignAttributes(tabularBaseInfos);
@@ -56,5 +58,6 @@ public class TabularBaseEntity extends ModificationEntity {
         } else {
             this.properties = newProperties;
         }
+        this.csvFilename = tabularBaseInfos.getCsvFilename();
     }
 }
