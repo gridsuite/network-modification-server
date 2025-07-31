@@ -41,6 +41,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -54,6 +55,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

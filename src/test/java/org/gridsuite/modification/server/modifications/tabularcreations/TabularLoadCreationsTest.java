@@ -15,6 +15,7 @@ import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.gridsuite.modification.dto.TabularPropertyInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -58,6 +59,7 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
             .creationType(ModificationType.LOAD_CREATION)
             .creations(creations)
+            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
     }
@@ -76,6 +78,7 @@ class TabularLoadCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
                 .creationType(ModificationType.LOAD_CREATION)
                 .creations(creations)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

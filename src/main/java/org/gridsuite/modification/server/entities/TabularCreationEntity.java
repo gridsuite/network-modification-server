@@ -21,6 +21,7 @@ import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 @Setter
 @Entity
 @Table(name = "tabular_creation")
-public class TabularCreationEntity extends ModificationEntity {
+public class TabularCreationEntity extends TabularBaseEntity {
 
     @Column(name = "creationType")
     @Enumerated(EnumType.STRING)
@@ -58,6 +59,9 @@ public class TabularCreationEntity extends ModificationEntity {
                 .activated(getActivated())
                 .creationType(creationType)
                 .creations(creationsInfos)
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
+                        .map(TabularPropertyEntity::toInfos)
+                        .toList())
                 .build();
     }
 
