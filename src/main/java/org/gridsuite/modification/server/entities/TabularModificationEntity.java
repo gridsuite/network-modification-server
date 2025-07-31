@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Etienne Homer <etienne.homer at rte-france.com>
@@ -26,7 +27,7 @@ import org.gridsuite.modification.dto.*;
 @Setter
 @Entity
 @Table(name = "tabular_modification")
-public class TabularModificationEntity extends ModificationEntity {
+public class TabularModificationEntity extends TabularBaseEntity {
 
     @Column(name = "modificationType")
     @Enumerated(EnumType.STRING)
@@ -41,6 +42,11 @@ public class TabularModificationEntity extends ModificationEntity {
         assignAttributes(tabularModificationInfos);
     }
 
+    public TabularModificationEntity(@NonNull LimitSetsTabularModificationInfos tabularModificationInfos) {
+        super(tabularModificationInfos);
+        assignAttributes(tabularModificationInfos);
+    }
+
     @Override
     public TabularModificationInfos toModificationInfos() {
         List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
@@ -51,6 +57,9 @@ public class TabularModificationEntity extends ModificationEntity {
                 .activated(getActivated())
                 .modificationType(modificationType)
                 .modifications(modificationsInfos)
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
+                        .map(TabularPropertyEntity::toInfos)
+                        .toList())
                 .build();
     }
 

@@ -12,7 +12,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.BranchModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -51,6 +55,20 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
             name = "current_limits_modification_id2_fk"
         ), nullable = true)
     private CurrentLimitsModificationEntity currentLimits2;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "branch_id"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id1_fk"))
+    @OrderColumn(name = "pos_operationalLimitsGroups")
+    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups1;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            joinColumns = @JoinColumn(name = "branch_id"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id2_fk"))
+    @OrderColumn(name = "pos_operationalLimitsGroups")
+    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups2;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -212,11 +230,13 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         } else {
             currentLimits1 = null;
         }
+        this.opLimitsGroups1 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup1(), opLimitsGroups1);
         if (branchModificationInfos.getCurrentLimits2() != null) {
             currentLimits2 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits2());
         } else {
             currentLimits2 = null;
         }
+        this.opLimitsGroups2 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup2(), opLimitsGroups2);
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;
@@ -237,5 +257,25 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         this.p2MeasurementValidity = branchModificationInfos.getP2MeasurementValidity() != null ? new BooleanModificationEmbedded(branchModificationInfos.getP2MeasurementValidity()) : null;
         this.q2MeasurementValue = branchModificationInfos.getQ2MeasurementValue() != null ? new DoubleModificationEmbedded(branchModificationInfos.getQ2MeasurementValue()) : null;
         this.q2MeasurementValidity = branchModificationInfos.getQ2MeasurementValidity() != null ? new BooleanModificationEmbedded(branchModificationInfos.getQ2MeasurementValidity()) : null;
+    }
+
+    /**
+     * the point of this function is to avoid dereferencing operationalLimitsGroups if it already exists,
+     * in order to prevent Hibernate from losing the reference during cascade cleaning
+     */
+    private List<OperationalLimitsGroupModificationEntity> assignOperationalLimitsGroups(
+            List<OperationalLimitsGroupModificationInfos> operationalLimitsGroupInfos,
+            List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups
+    ) {
+        List<OperationalLimitsGroupModificationEntity> updatedLimitsGroups = operationalLimitsGroups;
+        if (operationalLimitsGroups == null) {
+            updatedLimitsGroups = new ArrayList<>();
+        } else {
+            updatedLimitsGroups.clear();
+        }
+        if (operationalLimitsGroupInfos != null) {
+            updatedLimitsGroups.addAll(OperationalLimitsGroupModificationEntity.toOperationalLimitsGroupsEntities(operationalLimitsGroupInfos));
+        }
+        return updatedLimitsGroups;
     }
 }

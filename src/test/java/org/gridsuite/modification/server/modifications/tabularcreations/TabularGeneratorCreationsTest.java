@@ -15,6 +15,7 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.gridsuite.modification.dto.TabularPropertyInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -107,6 +108,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
             .creationType(ModificationType.GENERATOR_CREATION)
             .creations(creations)
+            .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
     }
@@ -140,6 +142,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         return TabularCreationInfos.builder()
                 .creationType(ModificationType.GENERATOR_CREATION)
                 .creations(creations)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }
@@ -178,7 +181,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(4);
+        assertSelectCount(5);
 
         List<ModificationInfos> creations = List.of(
             GeneratorCreationInfos.builder()
@@ -204,14 +207,14 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                         status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(4);
+        assertSelectCount(5);
         reset();
 
         // We get the modifications of the group (so the 2 tabular creations)
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
                 .andExpect(status().isOk());
         // We check that the request count is not dependent on the number of sub creations of the tabular creation (the JPA N+1 problem is correctly solved)
-        assertSelectCount(8);
+        assertSelectCount(10);
     }
 
     @Test

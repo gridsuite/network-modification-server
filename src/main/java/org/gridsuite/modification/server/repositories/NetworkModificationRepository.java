@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.entities.equipment.creation.GeneratorCr
 import org.gridsuite.modification.server.entities.equipment.modification.GeneratorModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -41,6 +42,8 @@ public class NetworkModificationRepository {
 
     private final GeneratorCreationRepository generatorCreationRepository;
 
+    private final TabularPropertyRepository tabularPropertyRepository;
+
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
@@ -49,11 +52,13 @@ public class NetworkModificationRepository {
                                          ModificationRepository modificationRepository,
                                          GeneratorModificationRepository generatorModificationRepository,
                                          GeneratorCreationRepository generatorCreationRepository,
+                                         TabularPropertyRepository tabularPropertyRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorModificationRepository = generatorModificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
+        this.tabularPropertyRepository = tabularPropertyRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
 
@@ -284,6 +289,9 @@ public class NetworkModificationRepository {
                     .stashed(tabularModificationEntity.getStashed())
                     .activated(tabularModificationEntity.getActivated())
                     .modificationType(tabularModificationEntity.getModificationType())
+                    .properties(CollectionUtils.isEmpty(tabularModificationEntity.getProperties()) ? null : tabularModificationEntity.getProperties().stream()
+                            .map(TabularPropertyEntity::toInfos)
+                            .toList())
                     .modifications(orderedGeneratorModifications.stream().map(GeneratorModificationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
                     .build();
             default:
@@ -315,6 +323,9 @@ public class NetworkModificationRepository {
                         .activated(tabularCreationEntity.getActivated())
                         .creationType(tabularCreationEntity.getCreationType())
                         .creations(orderedGeneratorCreation.stream().map(GeneratorCreationEntity::toModificationInfos).map(m -> (ModificationInfos) m).toList())
+                        .properties(CollectionUtils.isEmpty(tabularCreationEntity.getProperties()) ? null : tabularCreationEntity.getProperties().stream()
+                                .map(TabularPropertyEntity::toInfos)
+                                .toList())
                         .build();
             default:
                 break;
@@ -577,6 +588,7 @@ public class NetworkModificationRepository {
                 List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(tabularModificationEntity.getId());
                 modificationToCleanUuids.addAll(subModificationsIds);
                 modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
+                tabularPropertyRepository.deleteTabularProperties(tabularModificationEntity.getId());
                 generatorModificationRepository.deleteTabularModification(subModificationsIds, tabularModificationEntity.getId());
                 break;
             default:

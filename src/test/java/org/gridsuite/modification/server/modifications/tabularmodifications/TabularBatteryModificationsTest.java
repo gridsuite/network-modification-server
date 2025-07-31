@@ -42,6 +42,7 @@ class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.BATTERY_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
     }
@@ -56,6 +57,7 @@ class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.BATTERY_MODIFICATION)
                 .modifications(modifications)
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
     }

@@ -21,7 +21,7 @@
 
     <groupId>org.gridsuite</groupId>
     <artifactId>gridsuite-network-modification-server</artifactId>
-    <version>2.21.0-SNAPSHOT</version>
+    <version>2.22.0-SNAPSHOT</version>
 
     <packaging>jar</packaging>
     <name>Network modification server</name>
@@ -47,12 +47,12 @@
         <gridsuite-dependencies.version>42.0.0</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
-        <!-- TODO network-modification.version remove when migration powsybl -->
-        <network-modification.version>0.28.0-SNAPSHOT</network-modification.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
+        <!-- TODO network-modification.version remove when upgrading gridsuite dependencies -->
+        <network-modification.version>0.28.0</network-modification.version>
         <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
     </properties>
 
