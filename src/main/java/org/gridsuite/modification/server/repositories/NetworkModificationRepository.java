@@ -62,31 +62,32 @@ public class NetworkModificationRepository {
                                          ModificationRepository modificationRepository,
                                          GeneratorCreationRepository generatorCreationRepository,
                                          BatteryCreationRepository batteryCreationRepository,
+                                         LoadCreationRepository loadCreationRepository,
+                                         ShuntCompensatorCreationRepository shuntCompensatorCreationRepository,
                                          GeneratorModificationRepository generatorModificationRepository,
                                          BatteryModificationRepository batteryModificationRepository,
+                                         LoadModificationRepository loadModificationRepository,
+                                         ShuntCompensatorModificationRepository shuntCompensatorModificationRepository,
                                          LineModificationRepository lineModificationRepository,
                                          TwoWindingsTransformerModificationRepository twoWindingsTransformerModificationRepository,
                                          SubstationModificationRepository substationModificationRepository,
-                                         ShuntCompensatorCreationRepository shuntCompensatorCreationRepository,
-                                         ShuntCompensatorModificationRepository shuntCompensatorModificationRepository,
                                          VoltageLevelModificationRepository voltageLevelModificationRepository,
-                                         LoadModificationRepository loadModificationRepository,
-                                         LoadCreationRepository loadCreationRepository,
                                          TabularPropertyRepository tabularPropertyRepository,
                                          ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
         this.batteryCreationRepository = batteryCreationRepository;
+        this.loadCreationRepository = loadCreationRepository;
+        this.shuntCompensatorCreationRepository = shuntCompensatorCreationRepository;
+        this.generatorModificationRepository = generatorModificationRepository;
         this.batteryModificationRepository = batteryModificationRepository;
+        this.loadModificationRepository = loadModificationRepository;
+        this.shuntCompensatorModificationRepository = shuntCompensatorModificationRepository;
         this.lineModificationRepository = lineModificationRepository;
         this.twoWindingsTransformerModificationRepository = twoWindingsTransformerModificationRepository;
         this.substationModificationRepository = substationModificationRepository;
-        this.shuntCompensatorCreationRepository = shuntCompensatorCreationRepository;
-        this.shuntCompensatorModificationRepository = shuntCompensatorModificationRepository;
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
-        this.loadModificationRepository = loadModificationRepository;
-        this.loadCreationRepository = loadCreationRepository;
         this.tabularPropertyRepository = tabularPropertyRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
     }
