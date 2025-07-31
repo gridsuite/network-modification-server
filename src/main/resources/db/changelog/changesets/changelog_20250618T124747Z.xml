@@ -1,0 +1,26 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1750250902704-25">
+        <createTable tableName="create_voltage_level_topology">
+            <column name="section_count" type="INT"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="create_voltage_level_topologyPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1750250902704-26">
+        <createTable tableName="create_voltage_level_topology_entity_switch_kinds">
+            <column name="create_voltage_level_topology_entity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="switch_kinds" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1750250902704-39">
+        <addForeignKeyConstraint baseColumnNames="create_voltage_level_topology_entity_id" baseTableName="create_voltage_level_topology_entity_switch_kinds" constraintName="FK9ccqptbxvofo13cgl0c7cxukk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="create_voltage_level_topology" validate="true"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1750250902704-43">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="create_voltage_level_topology" constraintName="create_voltage_level_topology_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
