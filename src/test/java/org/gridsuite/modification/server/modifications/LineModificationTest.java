@@ -250,7 +250,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
     }
@@ -267,7 +267,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -279,7 +279,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -291,7 +291,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -303,7 +303,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -315,7 +315,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -327,7 +327,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(5);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -338,7 +338,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(6);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(6);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -355,7 +355,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true)
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true)
                         .get(7);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
@@ -413,7 +413,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos);
 
@@ -429,7 +429,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(lineModificationInfos1);
     }
@@ -511,7 +511,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         String modificationInfosJson = getJsonBody(lineModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(1, createdModification.getConnectionPosition1().getValue());
         assertEquals(1, createdModification.getConnectionPosition2().getValue());
     }
@@ -528,7 +528,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         String modificationInfosJson = getJsonBody(lineModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals("line3", createdModification.getConnectionName1().getValue());
         assertEquals("line3", createdModification.getConnectionName2().getValue());
 
@@ -565,7 +565,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         String modificationInfosJson = getJsonBody(lineModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        LineModificationInfos createdModification = (LineModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals("cnLine10", createdModification.getConnectionName1().getValue());
         assertEquals(2, createdModification.getConnectionPosition1().getValue());
         assertEquals(ConnectablePosition.Direction.TOP, createdModification.getConnectionDirection1().getValue());

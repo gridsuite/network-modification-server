@@ -49,19 +49,37 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder desc")
     List<ModificationEntity> findAllByIdInReverse(List<UUID> uuids);
 
+    @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid", nativeQuery = true)
+    List<UUID> findSubModificationIdsByTabularModificationId(UUID uuid);
+
     @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
 
+    @Query(value = "SELECT cast(creations_id AS VARCHAR) FROM tabular_creation_creations WHERE tabular_creation_entity_id = :uuid", nativeQuery = true)
+    List<UUID> findSubModificationIdsByTabularCreationId(UUID uuid);
+
     @Query(value = "SELECT cast(creations_id AS VARCHAR) FROM tabular_creation_creations WHERE tabular_creation_entity_id = :uuid ORDER BY creations_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(UUID uuid);
-
-    @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid", nativeQuery = true)
-    List<UUID> findSubModificationIdsByTabularModificationId(UUID uuid);
 
     @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
+
+    @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_op_limits_groups1 WHERE branch_id IN ?1", nativeQuery = true)
+    List<UUID> findLineModificationOpLimitsGroups1IdsByBranchIds(List<UUID> uuids);
+
+    @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_op_limits_groups2 WHERE branch_id IN ?1", nativeQuery = true)
+    List<UUID> findLineModificationOpLimitsGroups2IdsByBranchIds(List<UUID> uuids);
+
+    @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM two_windings_transformer_modification_op_limits_groups1 WHERE branch_id IN ?1", nativeQuery = true)
+    List<UUID> findTwtModificationOpLimitsGroups1IdsByBranchIds(List<UUID> uuids);
+
+    @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM two_windings_transformer_modification_op_limits_groups2 WHERE branch_id IN ?1", nativeQuery = true)
+    List<UUID> findTwtModificationOpLimitsGroups2IdsByBranchIds(List<UUID> uuids);
+
+    @Query(value = "SELECT cast(current_limits_id AS VARCHAR) FROM operational_limits_group_modification WHERE uuid IN ?1", nativeQuery = true)
+    List<UUID> findCurrentLimitsIdsByOpLimitsGroupsIds(List<UUID> uuids);
 
     void deleteAllByIdIn(List<UUID> ids);
 }

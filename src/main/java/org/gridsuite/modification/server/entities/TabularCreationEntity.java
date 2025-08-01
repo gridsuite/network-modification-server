@@ -40,7 +40,7 @@ public class TabularCreationEntity extends TabularBaseEntity {
     @Enumerated(EnumType.STRING)
     private ModificationType creationType;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL)
     @OrderColumn
     private List<ModificationEntity> creations;
 

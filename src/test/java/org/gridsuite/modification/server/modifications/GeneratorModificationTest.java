@@ -175,7 +175,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
@@ -187,7 +187,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
@@ -200,7 +200,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 3);
@@ -212,7 +212,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 4);
@@ -227,7 +227,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(4);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 5);
     }
@@ -243,7 +243,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
@@ -257,7 +257,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
@@ -274,7 +274,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 1);
@@ -286,7 +286,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(1);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 2);
@@ -298,7 +298,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(2);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 3);
@@ -314,7 +314,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(3);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 4);
     }
@@ -343,7 +343,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
 
@@ -354,7 +354,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        createdModification = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
         assertEquals(18f, createdModification.getDroop().getValue());
     }
@@ -463,7 +463,7 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         String generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        generatorModificationInfos = (GeneratorModificationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
+        generatorModificationInfos = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(1, generatorModificationInfos.getConnectionPosition().getValue());
     }
 
