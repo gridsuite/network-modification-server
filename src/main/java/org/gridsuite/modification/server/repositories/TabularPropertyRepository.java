@@ -7,7 +7,7 @@
 
 package org.gridsuite.modification.server.repositories;
 
-import org.gridsuite.modification.server.entities.TabularPropertyEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

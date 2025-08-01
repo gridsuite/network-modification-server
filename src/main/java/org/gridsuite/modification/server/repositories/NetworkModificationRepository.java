@@ -15,6 +15,9 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularCreationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 

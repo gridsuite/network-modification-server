@@ -4,7 +4,7 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.entities;
+package org.gridsuite.modification.server.entities.tabular;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,6 +21,7 @@ import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;

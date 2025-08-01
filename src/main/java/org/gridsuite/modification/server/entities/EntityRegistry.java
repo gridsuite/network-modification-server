@@ -20,6 +20,8 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.*;
+import org.gridsuite.modification.server.entities.tabular.TabularCreationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularModificationEntity;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
