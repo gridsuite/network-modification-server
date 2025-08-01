@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MergeLimitSetsGroupsTables implements CustomSqlChange {
 
@@ -73,7 +74,8 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
             if (haspermanentLimit != haspermanentLimit2) {
                 return false;
             }
-            if (haspermanentLimit && !permanentLimit.getString("permanent_limit").equals(permanentLimit2.getString("permanent_limit"))) {
+            if (haspermanentLimit && !Objects.equals(permanentLimit.getString("permanent_limit"),
+                permanentLimit2.getString("permanent_limit"))) {
                 return false;
             }
 
@@ -91,9 +93,9 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
                 boolean found = false;
                 temporaryLimit2.beforeFirst();
                 while (temporaryLimit2.next()) {
-                    if (temporaryLimit2.getString("name").equals(name)) {
-                        if (!temporaryLimit.getString("value_").equals(temporaryLimit2.getString("value_")) ||
-                            !temporaryLimit.getString("acceptable_duration").equals(temporaryLimit2.getString("acceptable_duration"))) {
+                    if (Objects.equals(temporaryLimit2.getString("name"), name)) {
+                        if (!Objects.equals(temporaryLimit.getString("value_"), temporaryLimit2.getString("value_")) ||
+                            !Objects.equals(temporaryLimit.getString("acceptable_duration"), temporaryLimit2.getString("acceptable_duration"))) {
                             return false;
                         }
                         found = true;
