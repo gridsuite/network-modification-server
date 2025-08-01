@@ -97,8 +97,7 @@ public class LineCreationEntity extends BranchCreationEntity {
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
                                 .toList())
-            .operationalLimitsGroups1(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups1()))
-            .operationalLimitsGroups2(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups2()));
+            .operationalLimitsGroups(OperationalLimitsGroupEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
 
         return builder;
     }
