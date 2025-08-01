@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.repositories;
 
 import lombok.NonNull;
+import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
@@ -16,7 +17,6 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 
 /**
@@ -321,18 +320,18 @@ public class NetworkModificationRepository {
                 batteryModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             case LINE_MODIFICATION -> {
-                // load line modifications with limitSets1
-                modifications = lineModificationRepository.findAllLimitSets1ByIdIn(subModificationsUuids);
-                // load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
-                lineModificationRepository.findAllLimitSets2ByIdIn(subModificationsUuids);
+                // load line modifications with opLimitsGroups1
+                modifications = lineModificationRepository.findAllOperationalLimitsGroups1ByIdIn(subModificationsUuids);
+                // load opLimitsGroups2 too, it uses hibernate first-level cache to fill them up directly in modifications
+                lineModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
                 // same with properties
                 lineModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
-                // load 2wt modifications with limitSets1
-                modifications = twoWindingsTransformerModificationRepository.findAllLimitSets1ByIdIn(subModificationsUuids);
-                // load limitSets2 too, it uses hibernate first-level cache to fill them up directly in modifications
-                twoWindingsTransformerModificationRepository.findAllLimitSets2ByIdIn(subModificationsUuids);
+                // load 2wt modifications with opLimitsGroups1
+                modifications = twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroups1ByIdIn(subModificationsUuids);
+                // load opLimitsGroups2 too, it uses hibernate first-level cache to fill them up directly in modifications
+                twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
                 // same with properties
                 twoWindingsTransformerModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
@@ -725,10 +724,20 @@ public class NetworkModificationRepository {
                 batteryModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case VOLTAGE_LEVEL_MODIFICATION ->
                 voltageLevelModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            case LINE_MODIFICATION ->
-                lineModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
-            case TWO_WINDINGS_TRANSFORMER_MODIFICATION ->
-                twoWindingsTransformerModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
+            case LINE_MODIFICATION -> {
+                List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroupsIds = CollectionUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids).stream().toList();
+                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
+                lineModificationRepository.deleteTabularModification(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationUuid);
+            }
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
+                List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroupsIds = CollectionUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids).stream().toList();
+                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
+                twoWindingsTransformerModificationRepository.deleteTabularModification(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationUuid);
+            }
             case SUBSTATION_MODIFICATION ->
                 substationModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             default ->
@@ -773,10 +782,20 @@ public class NetworkModificationRepository {
                 batteryModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case VOLTAGE_LEVEL_MODIFICATION ->
                 voltageLevelModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
-            case LINE_MODIFICATION ->
-                lineModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
-            case TWO_WINDINGS_TRANSFORMER_MODIFICATION ->
-                twoWindingsTransformerModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
+            case LINE_MODIFICATION -> {
+                List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroupsIds = CollectionUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids).stream().toList();
+                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
+                lineModificationRepository.deleteTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationId);
+            }
+            case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
+                List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
+                List<UUID> opLimitsGroupsIds = CollectionUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids).stream().toList();
+                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
+                twoWindingsTransformerModificationRepository.deleteTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationId);
+            }
             case SUBSTATION_MODIFICATION ->
                 substationModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             default ->

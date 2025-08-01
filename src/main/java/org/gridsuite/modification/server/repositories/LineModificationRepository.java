@@ -23,40 +23,42 @@ import java.util.UUID;
 @Repository
 public interface LineModificationRepository extends JpaRepository<LineModificationEntity, UUID> {
 
-    @EntityGraph(attributePaths = {"currentLimits1"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<LineModificationEntity> findAllLimitSets1ByIdIn(List<UUID> ids);
+    @EntityGraph(attributePaths = {"opLimitsGroups1"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<LineModificationEntity> findAllOperationalLimitsGroups1ByIdIn(List<UUID> ids);
 
-    @EntityGraph(attributePaths = {"currentLimits2"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<LineModificationEntity> findAllLimitSets2ByIdIn(List<UUID> ids);
+    @EntityGraph(attributePaths = {"opLimitsGroups2"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<LineModificationEntity> findAllOperationalLimitsGroups2ByIdIn(List<UUID> ids);
 
     @EntityGraph(attributePaths = {"properties"}, type = EntityGraph.EntityGraphType.LOAD)
     List<LineModificationEntity> findAllPropertiesByIdIn(List<UUID> ids);
 
     @Modifying
     @Query(value = "BEGIN;" +
-            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
-            "DELETE FROM line_modification WHERE id IN ?1 ;" +
-            "DELETE FROM current_temporary_limits_modification WHERE id IN (SELECT current_limits_modification_id1 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM current_temporary_limits_modification WHERE id IN (SELECT current_limits_modification_id2 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM current_limits_modification WHERE id IN (SELECT current_limits_modification_id1 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM current_limits_modification WHERE id IN (SELECT current_limits_modification_id2 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
-            "DELETE FROM modification WHERE id IN ?1 ;" +
+            "DELETE FROM line_modification_op_limits_groups1 lm WHERE lm.branch_id IN ?3 ;" +
+            "DELETE FROM line_modification_op_limits_groups2 lm WHERE lm.branch_id IN ?3 ;" +
+            "DELETE FROM operational_limits_group_modification ol WHERE ol.uuid IN ?2 ;" +
+            "DELETE FROM current_temporary_limits_modification cl WHERE cl.id IN ?1 ;" +
+            "DELETE FROM current_limits_modification cl WHERE cl.id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?3 ;" +
+            "DELETE FROM line_modification WHERE id IN ?3 ;" +
+            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?4 ;" +
+            "DELETE FROM modification WHERE id IN ?3 ;" +
             "COMMIT;", nativeQuery = true)
-    void deleteTabularSubModifications(List<UUID> subModificationIds, UUID tabularModificationId);
+    void deleteTabularSubModifications(List<UUID> currentLimitsIds, List<UUID> opLimitsGroupsIds, List<UUID> subModificationIds, UUID tabularModificationId);
 
     @Modifying
     @Query(value = "BEGIN;" +
-            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
-            "DELETE FROM line_modification WHERE id IN ?1 ;" +
-            "DELETE FROM current_temporary_limits_modification WHERE id IN (SELECT current_limits_modification_id1 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM current_temporary_limits_modification WHERE id IN (SELECT current_limits_modification_id2 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM current_limits_modification WHERE id IN (SELECT current_limits_modification_id1 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM current_limits_modification WHERE id IN (SELECT current_limits_modification_id2 FROM line_modification WHERE id IN ?1);" +
-            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?2 ;" +
-            "DELETE FROM modification WHERE id IN ?1 ;" +
-            "DELETE FROM tabular_modification WHERE id = ?2 ;" +
-            "DELETE FROM modification WHERE id = ?2 ;" +
+            "DELETE FROM line_modification_op_limits_groups1 lm WHERE lm.branch_id IN ?3 ;" +
+            "DELETE FROM line_modification_op_limits_groups2 lm WHERE lm.branch_id IN ?3 ;" +
+            "DELETE FROM operational_limits_group_modification ol WHERE ol.uuid IN ?2 ;" +
+            "DELETE FROM current_temporary_limits_modification cl WHERE cl.id IN ?1 ;" +
+            "DELETE FROM current_limits_modification cl WHERE cl.id IN ?1 ;" +
+            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?3 ;" +
+            "DELETE FROM line_modification WHERE id IN ?3 ;" +
+            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?4 ;" +
+            "DELETE FROM modification WHERE id IN ?3 ;" +
+            "DELETE FROM tabular_modification WHERE id = ?4 ;" +
+            "DELETE FROM modification WHERE id = ?4 ;" +
             "COMMIT;", nativeQuery = true)
-    void deleteTabularModification(List<UUID> subModificationIds, UUID tabularModificationId);
+    void deleteTabularModification(List<UUID> currentLimitsIds, List<UUID> opLimitsGroupsIds, List<UUID> subModificationIds, UUID tabularModificationId);
 }

@@ -11,12 +11,19 @@ import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
+import org.gridsuite.modification.server.utils.ApiUtils;
+import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Tag("IntegrationTest")
 class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModificationTest {
+    @Autowired
+    private ModificationRepository modificationRepository;
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -91,5 +101,47 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
         assertEquals(ModificationType.TABULAR_MODIFICATION.name(), modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION.name(), updatedValues.get("tabularModificationType"));
+    }
+
+    @Test
+    void testNoEntityLeftAfterCreationDeletion() throws Exception {
+        List<Pair<UUID, ModificationInfos>> infos = createFewTabularModifications();
+        // update first created tabular
+        networkModificationRepository.updateModification(infos.getFirst().getLeft(), buildModificationUpdate());
+        // delete
+        ApiUtils.deleteGroup(mockMvc, getGroupId());
+        assertEquals(0, modificationRepository.count());
+    }
+
+    private List<ModificationInfos> createTwtModificationList(int qty) {
+        return IntStream.range(0, qty)
+                .mapToObj(i ->
+                        (ModificationInfos) TwoWindingsTransformerModificationInfos.builder().equipmentId(UUID.randomUUID().toString())
+                                .x(new AttributeModification<>(1., OperationType.SET))
+                                .g(new AttributeModification<>(1., OperationType.SET))
+                                .operationalLimitsGroup1(TabularLineModificationsTest.buildOperationalLimitsGroupDefaultModification())
+                                .operationalLimitsGroup2(TabularLineModificationsTest.buildOperationalLimitsGroupDefaultModification())
+                                .properties(List.of(
+                                        ModificationCreation.getFreeProperty(),
+                                        ModificationCreation.getFreeProperty("test", "value")))
+                                .build())
+                .toList();
+    }
+
+    private List<Pair<UUID, ModificationInfos>> createFewTabularModifications() {
+        Pair<UUID, ModificationInfos> tabular1 = createTabularTwtModification(2);
+        Pair<UUID, ModificationInfos> tabular2 = createTabularTwtModification(1);
+        return List.of(tabular1, tabular2);
+    }
+
+    private Pair<UUID, ModificationInfos> createTabularTwtModification(int qty) {
+        ModificationInfos tabularModification = TabularModificationInfos.builder()
+                .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
+                .modifications(createTwtModificationList(qty))
+                .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
+                .build();
+        UUID uuid = saveModification(tabularModification);
+        tabularModification.setUuid(uuid);
+        return Pair.of(uuid, tabularModification);
     }
 }
