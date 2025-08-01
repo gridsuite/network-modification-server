@@ -40,22 +40,6 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     })
     private DoubleModificationEmbedded x;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_modification_id1",
-        referencedColumnName = "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_modification_id1_fk"
-        ), nullable = true)
-    private CurrentLimitsModificationEntity currentLimits1;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_modification_id2",
-        referencedColumnName = "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_modification_id2_fk"
-        ), nullable = true)
-    private CurrentLimitsModificationEntity currentLimits2;
-
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             joinColumns = @JoinColumn(name = "branch_id"),
@@ -225,17 +209,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
-        if (branchModificationInfos.getCurrentLimits1() != null) {
-            currentLimits1 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits1());
-        } else {
-            currentLimits1 = null;
-        }
         this.opLimitsGroups1 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup1(), opLimitsGroups1);
-        if (branchModificationInfos.getCurrentLimits2() != null) {
-            currentLimits2 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits2());
-        } else {
-            currentLimits2 = null;
-        }
         this.opLimitsGroups2 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup2(), opLimitsGroups2);
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
