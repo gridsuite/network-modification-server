@@ -622,7 +622,7 @@ public class NetworkModificationRepository {
         // Tabular modifications optimization:
         // Before updating/adding with new sub-modifications, we delete and clear existing sub-modifications manually
         // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
-        if (modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION) {
+        if (modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION || modificationInfos.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
             TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) entity;
             deleteTabularModificationSubModifications(tabularModificationEntity);
             tabularModificationEntity.update(modificationInfos);

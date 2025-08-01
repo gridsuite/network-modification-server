@@ -113,7 +113,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     }
 
     @Test
-    void testNoEntityLeftAfterCreationDeletion() throws Exception {
+    void testNoEntityLeftAfterCreationUpdateDeletion() throws Exception {
         List<Pair<UUID, ModificationInfos>> infos = createFewTabularModifications();
         // update first created tabular
         networkModificationRepository.updateModification(infos.getFirst().getLeft(), buildModificationUpdate());
