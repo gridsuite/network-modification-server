@@ -119,12 +119,6 @@ public class LineModificationEntity extends BranchModificationEntity {
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
                                 .toList());
-        if (getCurrentLimits1() != null) {
-            builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
-        }
-        if (getCurrentLimits2() != null) {
-            builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
-        }
         if (getOpLimitsGroups1() != null) {
             builder.operationalLimitsGroup1(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOpLimitsGroups1()));
         }
