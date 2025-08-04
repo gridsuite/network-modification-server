@@ -1,0 +1,21 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1754249918605-45">
+        <createTable tableName="create_voltage_level_section_entity">
+            <column name="busbar_count" type="INT"/>
+            <column name="busbar_section_id" type="VARCHAR(255)"/>
+            <column name="is_after_busbar_section_id" type="BOOLEAN"/>
+            <column name="is_all_busbars" type="BOOLEAN"/>
+            <column name="left_switch_kind" type="VARCHAR(255)"/>
+            <column name="right_switch_kind" type="VARCHAR(255)"/>
+            <column name="section_count" type="INT"/>
+            <column name="voltage_level_id" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="create_voltage_level_section_entityPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1754249918605-67">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="create_voltage_level_section_entity" constraintName="createVoltageLevelSection_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
