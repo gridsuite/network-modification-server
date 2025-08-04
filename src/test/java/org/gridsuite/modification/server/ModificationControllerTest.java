@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
@@ -1002,14 +1003,10 @@ class ModificationControllerTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .operationalLimitsGroups1(
+                .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(c1).build()
-                    )
-                )
-                .operationalLimitsGroups2(
-                    List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(c2).build()
+                        OperationalLimitsGroupInfos.builder().currentLimits(c1).applicability(SIDE1).build(),
+                        OperationalLimitsGroupInfos.builder().currentLimits(c2).applicability(SIDE2).build()
                     )
                 )
                 .build();

@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -110,13 +111,13 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .operationalLimitsGroups2(
+                .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupInfos.builder()
                             .currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()
                             )
-                            .id("limitSet1")
+                            .id("limitSet1").applicability(SIDE2)
                             .build()
                     )
                 )
@@ -144,21 +145,19 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .operationalLimitsGroups1(
+                .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
-                        ).build()
+                        ).applicability(SIDE1).build()
                     )
                 )
-                .operationalLimitsGroups2(null)
                 .build();
 
         String lineCreationInfosPermanentLimitOKJson = getJsonBody(lineCreationInfosPermanentLimitOK, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosPermanentLimitOKJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
 
-        lineCreationInfosPermanentLimitOK.setOperationalLimitsGroups2(null); // if permanentLimit is null then no currentLimit created
         LineCreationInfos createdModification = (LineCreationInfos) modificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertThat(createdModification).recursivelyEquals(lineCreationInfosPermanentLimitOK);
 
@@ -177,12 +176,12 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .operationalLimitsGroups1(
+                .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupInfos.builder()
                             .currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(-1.0).build())
-                            .build()
+                            .applicability(SIDE1).build()
                     )
                 )
                 .build();
@@ -204,11 +203,11 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus2")
-                .operationalLimitsGroups2(
+                .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(1.0).build())
-                            .build()
+                            .applicability(SIDE2).build()
                     )
                 )
                 .build();
@@ -240,18 +239,14 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
             .b2(20.0)
             .voltageLevelId1("v1")
             .busOrBusbarSectionId1("bus1")
-            .operationalLimitsGroups1(
+            .operationalLimitsGroups(
                 List.of(
                     OperationalLimitsGroupInfos.builder().currentLimits(
                         CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
-                        .build()
-                )
-            )
-            .operationalLimitsGroups2(
-                List.of(
+                        .applicability(SIDE1).build(),
                     OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
-                        .build()
+                        .applicability(SIDE2).build()
                 )
             )
             .voltageLevelId2("v2")

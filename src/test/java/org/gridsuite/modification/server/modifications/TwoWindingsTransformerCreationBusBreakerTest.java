@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.BUS_NOT_FOUND;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -60,18 +61,14 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .voltageLevelId2("v12")
                 .busOrBusbarSectionId2("bus12")
                 .connected2(true)
-                .operationalLimitsGroups1(
+                .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                        ).build()
-                    )
-                )
-                .operationalLimitsGroups2(
-                    List.of(
+                        ).applicability(SIDE1).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
-                                CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                        ).build()
+                            CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                        ).applicability(SIDE2).build()
                     )
                 )
                 .connectionName1("cn201")
@@ -180,18 +177,15 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .busOrBusbarSectionId1("bus1")
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("bus3")
-                .operationalLimitsGroups1(
+                .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                        ).build()
-                    )
-                )
-                .operationalLimitsGroups2(
-                    List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                        ).build()
+                        OperationalLimitsGroupInfos.builder().currentLimits(CurrentLimitsInfos.builder()
+                            .permanentLimit(3.)
+                            .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
+                        ).applicability(SIDE1).build(),
+                        OperationalLimitsGroupInfos.builder().currentLimits(CurrentLimitsInfos.builder()
+                            .permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
+                        ).applicability(SIDE2).build()
                     )
                 )
                 .connectionName1("cn2012")
