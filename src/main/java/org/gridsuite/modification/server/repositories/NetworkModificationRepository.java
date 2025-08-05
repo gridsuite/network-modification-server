@@ -16,6 +16,7 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularBaseEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
@@ -676,14 +677,14 @@ public class NetworkModificationRepository {
         // modifications. Nevertheless, for the volumes we are considering (max few hundreds) it is still very
         // efficient so no need to dig deeper about that for now.
 
-        // delete tabular modifications
+        // delete tabular modifications/creations
         List<TabularModificationEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationEntity.class::isInstance).map(TabularModificationEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
         List<TabularCreationEntity> tabularCreationsToDelete = modificationEntities.stream().filter(TabularCreationEntity.class::isInstance).map(TabularCreationEntity.class::cast).toList();
         tabularCreationsToDelete.forEach(this::deleteTabularCreation);
 
         // delete other modification types with "in" requests
-        List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationEntity.class::isInstance)).map(ModificationEntity::getId).toList();
+        List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularBaseEntity.class::isInstance)).map(ModificationEntity::getId).toList();
         if (!uuidsToDelete.isEmpty()) {
             modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
