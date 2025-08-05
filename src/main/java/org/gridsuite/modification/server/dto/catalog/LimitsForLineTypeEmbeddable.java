@@ -34,12 +34,21 @@ public class LimitsForLineTypeEmbeddable {
     @Column
     private Double temporaryLimit;
 
+    @Column
+    private String area;
+
+    @Column
+    private String temperature;
+
     public static List<LimitsForLineTypeEmbeddable> toEmbeddableLimits(
         List<LimitsForLineTypeInfos> lineTypeInfos) {
         return Objects.isNull(lineTypeInfos) || CollectionUtils.isEmpty(lineTypeInfos) ? null
             : lineTypeInfos.stream()
             .map(typeInfos -> new LimitsForLineTypeEmbeddable(typeInfos.getLimitSetName(),
-                typeInfos.getPermanentLimit(), typeInfos.getTemporaryLimit()))
+                typeInfos.getPermanentLimit(),
+                typeInfos.getTemporaryLimit(),
+                typeInfos.getArea(),
+                typeInfos.getTemperature()))
             .toList();
     }
 }

@@ -43,7 +43,9 @@ public final class DTOUtils {
         return Objects.isNull(limits) || CollectionUtils.isEmpty(limits) ? null
             : limits.stream().map(limit -> new LimitsForLineTypeInfos(limit.getLimitSetName(),
                 limit.getPermanentLimit(),
-                limit.getTemporaryLimit()))
+                limit.getTemporaryLimit(),
+                limit.getArea(),
+                limit.getTemperature()))
             .toList();
     }
 }

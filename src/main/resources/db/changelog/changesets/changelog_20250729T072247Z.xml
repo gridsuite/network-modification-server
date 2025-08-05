@@ -8,6 +8,8 @@
             <column name="limit_set_name" type="VARCHAR"/>
             <column name="permanent_limit" type="FLOAT8"/>
             <column name="temporary_limit" type="FLOAT8"/>
+            <column name="area" type="VARCHAR"/>
+            <column name="temperature" type="VARCHAR"/>
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753773801590-2">
@@ -20,4 +22,7 @@
                                  referencedTableName="line_types_catalog"
                                  validate="true"/>
     </changeSet>
+    <changeSet author="lesoteti (generated)" id="1753773801590-3">
+    </changeSet>
+
 </databaseChangeLog>

@@ -32,4 +32,10 @@ public class LimitsForLineTypeInfos {
 
     @Schema(description = "Temporary limit")
     private Double temporaryLimit;
+
+    @Schema(description = "Area")
+    private String area;
+
+    @Schema(description = "Temperature")
+    private String temperature;
 }
