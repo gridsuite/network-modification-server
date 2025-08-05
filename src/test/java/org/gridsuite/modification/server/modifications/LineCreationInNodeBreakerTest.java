@@ -141,7 +141,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         assertEquals(5., createdModification.getOperationalLimitsGroups().get(0).getCurrentLimits().getPermanentLimit(), 0.);
         assertEquals(6., createdModification.getOperationalLimitsGroups().get(1).getCurrentLimits().getPermanentLimit(), 0.);
         assertTrue(createdModification.getOperationalLimitsGroups().get(0).getCurrentLimits().getTemporaryLimits().isEmpty());
-        assertTrue(createdModification.getOperationalLimitsGroups().get(1).getCurrentLimits().getTemporaryLimits().isEmpty())
+        assertTrue(createdModification.getOperationalLimitsGroups().get(1).getCurrentLimits().getTemporaryLimits().isEmpty());
         testNetworkModificationsCount(getGroupId(), 1);
     }
 
