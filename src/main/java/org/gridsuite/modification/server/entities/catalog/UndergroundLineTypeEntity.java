@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities.catalog;
 
 import lombok.NoArgsConstructor;
 
+import org.gridsuite.modification.server.dto.DTOUtils;
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
 import jakarta.persistence.*;
@@ -50,6 +51,7 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
                 .linearResistance(this.getLinearResistance())
                 .linearReactance(this.getLinearReactance())
                 .linearCapacity(this.getLinearCapacity())
+                .limitsForLineType(DTOUtils.toLimitsForLineTypeInfos(this.getLimitsForLineType()))
                 .build();
     }
 }
