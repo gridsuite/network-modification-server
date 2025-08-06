@@ -60,8 +60,9 @@ public class ReportService {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
-    public void sendReport(UUID reportUuid, ReportNode reportNode) {
+    public void sendReport(UUID reportUuid, ReportNode reportNode, boolean isVariantBuild) {
         var path = UriComponentsBuilder.fromPath("{reportUuid}")
+            .queryParam("replace", isVariantBuild)
             .buildAndExpand(reportUuid)
             .toUriString();
         var headers = new HttpHeaders();

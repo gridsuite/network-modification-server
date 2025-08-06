@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -94,7 +95,7 @@ class VoltageInitReportTest {
             .extracting(NetworkModificationResult::getApplicationStatus)
             .isEqualTo(resultStatus);
 
-        Mockito.verify(reportService, Mockito.times(1)).sendReport(Mockito.eq(reportUuid), reporterCaptor.capture());
+        Mockito.verify(reportService, Mockito.times(1)).sendReport(Mockito.eq(reportUuid), reporterCaptor.capture(), anyBoolean());
         final ReportNode result = reporterCaptor.getValue();
         log.info("Result = {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result));
         JSONAssert.assertEquals("voltage-init plan logs aggregated",
