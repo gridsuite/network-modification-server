@@ -424,11 +424,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                                 .map(FreePropertyEntity::toInfos)
                                 .toList());
 
-        if (getOpLimitsGroups1() != null) {
-            builder.operationalLimitsGroup1(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOpLimitsGroups1()));
-        }
-        if (getOpLimitsGroups2() != null) {
-            builder.operationalLimitsGroup2(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOpLimitsGroups2()));
+        if (getOperationalLimitsGroups() != null) {
+            builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
         }
 
         List<TapChangerStepCreationInfos> ratioTapChangerStepCreationInfos = null;

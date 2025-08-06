@@ -42,17 +42,16 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
-            joinColumns = @JoinColumn(name = "branch_id"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id1_fk"))
+            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_modification_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups")
-    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups1;
+    private List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinTable(
-            joinColumns = @JoinColumn(name = "branch_id"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id2_fk"))
-    @OrderColumn(name = "pos_operationalLimitsGroups")
-    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups2;
+    @Column(name = "selectedOperationalLimitsGroupId1")
+    private String selectedOperationalLimitsGroupId1;
+
+    @Column(name = "selectedOperationalLimitsGroupId2")
+    private String selectedOperationalLimitsGroupId2;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -209,8 +208,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
-        this.opLimitsGroups1 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup1(), opLimitsGroups1);
-        this.opLimitsGroups2 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup2(), opLimitsGroups2);
+        this.operationalLimitsGroups = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroups(), operationalLimitsGroups);
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;
