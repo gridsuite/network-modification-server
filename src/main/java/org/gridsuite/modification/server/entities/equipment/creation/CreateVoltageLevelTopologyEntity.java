@@ -35,7 +35,8 @@ public class CreateVoltageLevelTopologyEntity extends ModificationEntity {
     private Integer sectionCount;
 
     @ElementCollection
-    @CollectionTable
+    @CollectionTable(name = "create_voltage_level_topology_switch_kinds",
+        joinColumns = @JoinColumn(name = "create_voltage_level_topology_id", foreignKey = @ForeignKey(name = "create_voltage_level_topology_switch_kinds")))
     private List<String> switchKinds;
 
     @Override

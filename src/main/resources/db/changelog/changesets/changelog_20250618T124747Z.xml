@@ -10,15 +10,15 @@
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1750250902704-26">
-        <createTable tableName="create_voltage_level_topology_entity_switch_kinds">
-            <column name="create_voltage_level_topology_entity_id" type="UUID">
+        <createTable tableName="create_voltage_level_topology_switch_kinds">
+            <column name="create_voltage_level_topology_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="switch_kinds" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1750250902704-39">
-        <addForeignKeyConstraint baseColumnNames="create_voltage_level_topology_entity_id" baseTableName="create_voltage_level_topology_entity_switch_kinds" constraintName="FK9ccqptbxvofo13cgl0c7cxukk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="create_voltage_level_topology" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="create_voltage_level_topology_id" baseTableName="create_voltage_level_topology_switch_kinds" constraintName="create_voltage_level_topology_switch_kinds_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="create_voltage_level_topology" validate="true"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1750250902704-43">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="create_voltage_level_topology" constraintName="create_voltage_level_topology_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
