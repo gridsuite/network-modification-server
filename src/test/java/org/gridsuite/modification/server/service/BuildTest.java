@@ -985,7 +985,7 @@ class BuildTest {
             new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s\\?replace=false", reportUuid))));
 
         // Incremental mode : No error send with exception
         ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
@@ -993,7 +993,7 @@ class BuildTest {
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
-        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s\\?replace=false", reportUuid))));
         testNetworkModificationsCount(groupUuid, 2);
 
         // Save mode only (variant does not exist) : No log and no error send with exception
@@ -1024,7 +1024,7 @@ class BuildTest {
         NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
-        assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
+        assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s\\?replace=true", reportUuid))));
     }
 
     @Test
