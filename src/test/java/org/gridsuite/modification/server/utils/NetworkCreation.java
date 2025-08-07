@@ -7,13 +7,13 @@
 package org.gridsuite.modification.server.utils;
 
 import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.BusbarSectionPositionAdder;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControlAdder;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import org.gridsuite.modification.utils.ModificationUtils;
 
 import java.util.UUID;
-
-import org.gridsuite.modification.utils.ModificationUtils;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.*;
 
@@ -42,13 +42,22 @@ public final class NetworkCreation {
                 .setName("b1")
                 .setNode(0)
                 .add();
-
+        vl1.getNodeBreakerView().getBusbarSection("b1")
+            .newExtension(BusbarSectionPositionAdder.class)
+            .withBusbarIndex(1)
+            .withSectionIndex(1)
+            .add();
         VoltageLevel vl2 = createVoltageLevel(s1, "vl2", "vl2", TopologyKind.NODE_BREAKER, 400.0);
         vl2.getNodeBreakerView().newBusbarSection()
                 .setId("b2")
                 .setName("b2")
                 .setNode(0)
                 .add();
+        vl2.getNodeBreakerView().getBusbarSection("b2")
+            .newExtension(BusbarSectionPositionAdder.class)
+            .withBusbarIndex(1)
+            .withSectionIndex(1)
+            .add();
 
         createSwitch(vl1, "b4", "b4", SwitchKind.DISCONNECTOR, false, false, false, 0, 1);
         createSwitch(vl1, "br11", "br11", SwitchKind.BREAKER, false, false, false, 1, 2);
