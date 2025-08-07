@@ -395,6 +395,8 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .busOrBusbarSectionId2(toAttributeModification(getBusOrBusbarSectionId2()))
                 .connectionName1(toAttributeModification(getConnectionName1()))
                 .connectionName2(toAttributeModification(getConnectionName2()))
+                .selectedOperationalLimitsGroup1(getSelectedOperationalLimitsGroupId1())
+                .selectedOperationalLimitsGroup2(getSelectedOperationalLimitsGroupId2())
                 .connectionDirection1(toAttributeModification(getConnectionDirection1()))
                 .connectionDirection2(toAttributeModification(getConnectionDirection2()))
                 .connectionPosition1(toAttributeModification(getConnectionPosition1()))
