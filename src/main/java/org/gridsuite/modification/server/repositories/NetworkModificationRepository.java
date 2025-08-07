@@ -367,8 +367,11 @@ public class NetworkModificationRepository {
         // re-order the list of entities based on the ordered list of IDs
         List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
         // then build DTOs
-        return TabularModificationInfos.builder()
-                .uuid(tabularModificationEntity.getId())
+        var builder = TabularModificationInfos.builder();
+        if (tabularModificationEntity.getType().equals(ModificationType.LIMIT_SETS_TABULAR_MODIFICATION.name())) {
+            builder = LimitSetsTabularModificationInfos.builder();
+        }
+        return builder.uuid(tabularModificationEntity.getId())
                 .date(tabularModificationEntity.getDate())
                 .stashed(tabularModificationEntity.getStashed())
                 .activated(tabularModificationEntity.getActivated())
