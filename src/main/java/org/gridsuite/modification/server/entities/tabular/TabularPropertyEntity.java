@@ -5,7 +5,7 @@
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.entities;
+package org.gridsuite.modification.server.entities.tabular;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
