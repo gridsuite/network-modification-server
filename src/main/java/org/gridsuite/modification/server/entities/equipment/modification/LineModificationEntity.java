@@ -94,6 +94,8 @@ public class LineModificationEntity extends BranchModificationEntity {
             .busOrBusbarSectionId2(toAttributeModification(getBusOrBusbarSectionId2()))
             .connectionName1(toAttributeModification(getConnectionName1()))
             .connectionName2(toAttributeModification(getConnectionName2()))
+            .selectedOperationalLimitsGroup1(toAttributeModification(getSelectedOperationalLimitsGroupId1()))
+            .selectedOperationalLimitsGroup2(toAttributeModification(getSelectedOperationalLimitsGroupId2()))
             .connectionDirection1(toAttributeModification(getConnectionDirection1()))
             .connectionDirection2(toAttributeModification(getConnectionDirection2()))
             .connectionPosition1(toAttributeModification(getConnectionPosition1()))
@@ -119,17 +121,8 @@ public class LineModificationEntity extends BranchModificationEntity {
                         getProperties().stream()
                                 .map(FreePropertyEntity::toInfos)
                                 .toList());
-        if (getCurrentLimits1() != null) {
-            builder.currentLimits1(getCurrentLimits1().toCurrentLimitsInfos());
-        }
-        if (getCurrentLimits2() != null) {
-            builder.currentLimits2(getCurrentLimits2().toCurrentLimitsInfos());
-        }
-        if (getOpLimitsGroups1() != null) {
-            builder.operationalLimitsGroup1(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOpLimitsGroups1()));
-        }
-        if (getOpLimitsGroups2() != null) {
-            builder.operationalLimitsGroup2(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOpLimitsGroups2()));
+        if (getOperationalLimitsGroups() != null) {
+            builder.operationalLimitsGroups(OperationalLimitsGroupModificationEntity.fromOperationalLimitsGroupsEntities(getOperationalLimitsGroups()));
         }
         return builder;
     }

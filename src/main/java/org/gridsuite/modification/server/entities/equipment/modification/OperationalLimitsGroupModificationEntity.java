@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
 import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
 import org.gridsuite.modification.dto.OperationalLimitsGroupModificationType;
 import org.gridsuite.modification.dto.TemporaryLimitModificationType;
@@ -56,8 +57,9 @@ public class OperationalLimitsGroupModificationEntity {
     @Enumerated(EnumType.STRING)
     private TemporaryLimitModificationType temporaryLimitsModificationType;
 
-    @Column(name = "side")
-    private String side;
+    @Column(name = "applicability")
+    @Enumerated(EnumType.STRING)
+    private OperationalLimitsGroupInfos.Applicability applicability;
 
     public static List<OperationalLimitsGroupModificationEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModificationInfos> limitsGroups) {
         return limitsGroups.stream()
@@ -69,7 +71,7 @@ public class OperationalLimitsGroupModificationEntity {
                                 new CurrentLimitsModificationEntity(limitsGroup.getCurrentLimits()),
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
-                                limitsGroup.getSide()
+                                limitsGroup.getApplicability()
                         )
                 )
                 .toList();
@@ -84,13 +86,19 @@ public class OperationalLimitsGroupModificationEntity {
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
                                         .modificationType(limitsGroupEntity.getModificationType())
                                         .temporaryLimitsModificationType(limitsGroupEntity.getTemporaryLimitsModificationType())
-                                        .side(limitsGroupEntity.getSide())
+                                        .applicability(limitsGroupEntity.getApplicability())
                                         .build()
                         )
                         .collect(Collectors.toList());
     }
 
     public OperationalLimitsGroupModificationEntity(OperationalLimitsGroupModificationInfos operationalLimitsGroupModificationInfos) {
-        this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(), operationalLimitsGroupModificationInfos.getSide());
+        this(null, operationalLimitsGroupModificationInfos.getId(),
+            new CurrentLimitsModificationEntity(
+                operationalLimitsGroupModificationInfos.getCurrentLimits()),
+                operationalLimitsGroupModificationInfos.getModificationType(),
+                operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(),
+                operationalLimitsGroupModificationInfos.getApplicability()
+        );
     }
 }
