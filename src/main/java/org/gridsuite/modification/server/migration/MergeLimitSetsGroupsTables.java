@@ -37,15 +37,6 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
         return "select * from " + tableName + " where branch_id = '" + id + "'";
     }
 
-    private String getLimitsGroupId(JdbcConnection connection, String uuid) throws DatabaseException, SQLException {
-        String query = "select id from operational_limits_group where uuid = '" + uuid + "'";
-        ResultSet resultSetOp = connection.createStatement().executeQuery(query);
-        if (resultSetOp.next()) {
-            return resultSetOp.getString(ID_COL);
-        }
-        return "";
-    }
-
     private String createQueryLineOpLimitsGroupsWithPos(String tableName, String id, String pos) {
         return "select * from " + tableName + " where branch_id = '" + id + "' and pos_operational_limits_groups = " + pos;
     }
@@ -139,8 +130,8 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
                 final String branchCreationOpLimitsGroupsTable = i == 0 ? "line_creation_operational_limits_groups"
                     : "two_windings_transformer_creation_operational_limits_groups";
 
-                String branchesToProcess = "Select id, selected_operational_limits_group_id1, selected_operational_limits_group_id2  from " + branchCreationTable;
-                try (ResultSet branches = connection.createStatement().executeQuery(branchesToProcess)) {
+                String branchesToProcess = "Select id, selected_operational_limits_group_id1, selected_operational_limits_group_id2  from <Table>";
+                try (ResultSet branches = connection.createStatement().executeQuery(branchesToProcess.replace("<Table>", branchCreationTable))) {
                     while (branches.next()) {
                         int position = 0;
                         //get operational limits groups1
@@ -159,10 +150,12 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
                             String branchCreationOpLimitsGroup2Id = branchCreationOpLimitsGroups2.getString(OPERATIONAL_LG_ID_COL);
 
                             // Compare Both limitsGroups 1 and 2 limits
-                            ResultSet operationalLimitsGroups1 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup1Id + "'");
+                            String query = "select * from operational_limits_group where uuid = '<id>'";
+                            ResultSet operationalLimitsGroups1 = connection.createStatement().executeQuery(query.replace("<id>", branchCreationOpLimitsGroup1Id));
 
                             if (compareOperationalLimitsInfos(connection, branchCreationOpLimitsGroup1Id, branchCreationOpLimitsGroup2Id)) {
-                                ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select current_limits_id from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup2Id + "'");
+                                String query2 = "select current_limits_id from operational_limits_group where uuid = '<id>'";
+                                ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery(query2.replace("<id>", branchCreationOpLimitsGroup2Id));
 
                                 // - remove line from operational_limits_group
                                 // - remove related permanent limit from current_limits
@@ -195,7 +188,8 @@ public class MergeLimitSetsGroupsTables implements CustomSqlChange {
                                     .addColumnValue(POS_OP_LG_COL, position++));
 
                                 // Change Applicability side 2
-                                ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery("select * from operational_limits_group where " + UUID_COL + " = '" + branchCreationOpLimitsGroup2Id + "'");
+                                String query3 = "select * from operational_limits_group where uuid = '<id>'";
+                                ResultSet operationalLimitsGroups2 = connection.createStatement().executeQuery(query3.replace("<id>", branchCreationOpLimitsGroup2Id));
                                 addOperationalLimitsGroupApplicability(database, operationalLimitsGroups2, statements, "SIDE2");
 
                                 // Add to merged table
