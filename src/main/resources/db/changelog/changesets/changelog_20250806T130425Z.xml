@@ -31,24 +31,44 @@
             <column name="applicability" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="deharbemat (generated)" id="1754485481069-34">
+    <changeSet author="deharbemat (generated)" id="1754577114048-34">
         <addColumn tableName="line_modification">
             <column name="selected_operational_limits_group_id1" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="deharbemat (generated)" id="1754485481069-35">
+    <changeSet author="deharbemat (generated)" id="1754577114048-35">
         <addColumn tableName="two_windings_transformer_modification">
             <column name="selected_operational_limits_group_id1" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="deharbemat (generated)" id="1754485481069-36">
+    <changeSet author="deharbemat (generated)" id="1754577114048-36">
+        <addColumn tableName="line_modification">
+            <column name="selected_operational_limits_group_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1754577114048-37">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="selected_operational_limits_group_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1754577114048-38">
         <addColumn tableName="line_modification">
             <column name="selected_operational_limits_group_id2" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="deharbemat (generated)" id="1754485481069-37">
+    <changeSet author="deharbemat (generated)" id="1754577114048-39">
         <addColumn tableName="two_windings_transformer_modification">
             <column name="selected_operational_limits_group_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1754577114048-40">
+        <addColumn tableName="line_modification">
+            <column name="selected_operational_limits_group_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1754577114048-41">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="selected_operational_limits_group_id2op" type="varchar(255)"/>
         </addColumn>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1754485481069-41">
