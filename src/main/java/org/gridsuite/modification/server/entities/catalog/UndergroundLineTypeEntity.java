@@ -6,12 +6,9 @@
  */
 package org.gridsuite.modification.server.entities.catalog;
 
-import lombok.NoArgsConstructor;
-
-import org.gridsuite.modification.server.dto.DTOUtils;
-import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
-
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -38,21 +35,30 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
         screen = undergroundLineType.getScreen();
     }
 
+    UndergroundLineTypeInfos.UndergroundLineTypeInfosBuilder<?, ?> toDtoBuilder() {
+        return UndergroundLineTypeInfos.builder()
+            .id(this.getId())
+            .type(this.getType())
+            .voltage(this.getVoltage())
+            .conductorType(this.getConductorType())
+            .section(this.getSection())
+            .insulator(this.insulator)
+            .screen(this.screen)
+            .linearResistance(this.getLinearResistance())
+            .linearReactance(this.getLinearReactance())
+            .linearCapacity(this.getLinearCapacity());
+    }
+
     @Override
     public UndergroundLineTypeInfos toDto() {
-        return UndergroundLineTypeInfos.builder()
-                .id(this.getId())
-                .type(this.getType())
-                .voltage(this.getVoltage())
-                .conductorType(this.getConductorType())
-                .section(this.getSection())
-                .insulator(this.insulator)
-                .screen(this.screen)
-                .linearResistance(this.getLinearResistance())
-                .linearReactance(this.getLinearReactance())
-                .linearCapacity(this.getLinearCapacity())
-                .limitsForLineType(DTOUtils.toLimitsForLineTypeInfos(this.getLimitsForLineType()))
-                .build();
+        return toDtoBuilder().build();
+    }
+
+    @Override
+    public UndergroundLineTypeInfos toDtoWithLimits() {
+        return toDtoBuilder()
+            .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .build();
     }
 }
 

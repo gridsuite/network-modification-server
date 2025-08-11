@@ -6,19 +6,13 @@
  */
 package org.gridsuite.modification.server.entities.catalog;
 
-import lombok.NoArgsConstructor;
-import lombok.Getter;
-
-import org.gridsuite.modification.server.dto.DTOUtils;
-import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeEmbeddable;
-import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
-
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 
 import java.util.List;
 import java.util.UUID;
-
-import static org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeEmbeddable.toEmbeddableLimits;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -56,9 +50,9 @@ public class LineTypeEntity {
     @Column(name = "linearCapacity")
     private Double linearCapacity;
 
-    @ElementCollection
-    @CollectionTable
-    private List<LimitsForLineTypeEmbeddable> limitsForLineType;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "line_type_id", nullable = false)
+    private List<LimitsForLineTypeEntity> limitsForLineType;
 
     protected LineTypeEntity(LineTypeInfos lineType) {
         assignAttributes(lineType);
@@ -73,21 +67,31 @@ public class LineTypeEntity {
         linearResistance = lineType.getLinearResistance();
         linearReactance = lineType.getLinearReactance();
         linearCapacity = lineType.getLinearCapacity();
-        limitsForLineType = toEmbeddableLimits(lineType.getLimitsForLineType());
+        if (lineType.getLimitsForLineType() != null) {
+            limitsForLineType = lineType.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::new).toList();
+        }
+    }
+
+    LineTypeInfos.LineTypeInfosBuilder<?, ?> toBuilder() {
+        return LineTypeInfos.builder()
+            .id(this.id)
+            .type(this.type)
+            .voltage(this.voltage)
+            .conductorType(this.conductorType)
+            .section(this.section)
+            .linearResistance(this.linearResistance)
+            .linearReactance(this.linearReactance)
+            .linearCapacity(this.linearCapacity);
     }
 
     public LineTypeInfos toDto() {
-        return LineTypeInfos.builder()
-                .id(this.id)
-                .type(this.type)
-                .voltage(this.voltage)
-                .conductorType(this.conductorType)
-                .section(this.section)
-                .linearResistance(this.linearResistance)
-                .linearReactance(this.linearReactance)
-                .linearCapacity(this.linearCapacity)
-                .limitsForLineType(DTOUtils.toLimitsForLineTypeInfos(this.limitsForLineType))
-                .build();
+        return toBuilder().build();
+    }
+
+    public LineTypeInfos toDtoWithLimits() {
+        return toBuilder()
+            .limitsForLineType(this.limitsForLineType.stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .build();
     }
 }
 
