@@ -4,14 +4,13 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
     <changeSet author="rehiligha (generated)" id="1754320722123-45">
         <createTable tableName="create_voltage_level_section_entity">
-            <column name="busbar_count" type="INT"/>
+            <column name="busbar_index" type="INT"/>
             <column name="busbar_section_id" type="VARCHAR(255)"/>
             <column name="is_after_busbar_section_id" type="BOOLEAN"/>
             <column name="is_all_busbars" type="BOOLEAN"/>
             <column name="is_switch_open" type="BOOLEAN"/>
             <column name="left_switch_kind" type="VARCHAR(255)"/>
             <column name="right_switch_kind" type="VARCHAR(255)"/>
-            <column name="section_count" type="INT"/>
             <column name="voltage_level_id" type="VARCHAR(255)"/>
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="create_voltage_level_section_entityPK"/>

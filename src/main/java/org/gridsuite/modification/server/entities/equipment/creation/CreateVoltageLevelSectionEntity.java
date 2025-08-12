@@ -34,10 +34,7 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
     private boolean isAfterBusbarSectionId;
 
     @Column
-    private int busbarCount;
-
-    @Column
-    private int sectionCount;
+    private int busbarIndex;
 
     @Column
     private String leftSwitchKind;
@@ -75,8 +72,7 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
                 .activated(getActivated())
                 .voltageLevelId(getVoltageLevelId())
                 .busbarSectionId(getBusbarSectionId())
-                .busbarCount(getBusbarCount())
-                .sectionCount(getSectionCount())
+                .busbarIndex(getBusbarIndex())
                 .isAllBusbars(isAllBusbars())
                 .isSwitchOpen(isSwitchOpen())
                 .rightSwitchKind(getRightSwitchKind())
@@ -93,8 +89,7 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
     private void assignAttributes(CreateVoltageLevelSectionInfos createVoltageLevelSectionInfos) {
         this.voltageLevelId = createVoltageLevelSectionInfos.getVoltageLevelId();
         this.busbarSectionId = createVoltageLevelSectionInfos.getBusbarSectionId();
-        this.busbarCount = createVoltageLevelSectionInfos.getBusbarCount();
-        this.sectionCount = createVoltageLevelSectionInfos.getSectionCount();
+        this.busbarIndex = createVoltageLevelSectionInfos.getBusbarIndex();
         this.isAllBusbars = createVoltageLevelSectionInfos.isAllBusbars();
         this.leftSwitchKind = createVoltageLevelSectionInfos.getLeftSwitchKind();
         this.rightSwitchKind = createVoltageLevelSectionInfos.getRightSwitchKind();
