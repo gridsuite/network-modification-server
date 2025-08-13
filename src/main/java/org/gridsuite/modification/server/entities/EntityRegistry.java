@@ -51,6 +51,7 @@ public final class EntityRegistry {
         register(LccCreationInfos.class, LccCreationEntity.class);
         register(LccConverterStationCreationInfos.class, LccConverterStationCreationEntity.class);
         register(TabularCreationInfos.class, TabularCreationEntity.class);
+        register(CreateVoltageLevelSectionInfos.class, CreateVoltageLevelSectionEntity.class);
 
         // // modification
         register(SubstationModificationInfos.class, SubstationModificationEntity.class);
