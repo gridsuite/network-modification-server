@@ -244,9 +244,9 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         //check impacts
         String resultAsString = mvcResult.getResponse().getContentAsString();
         NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, NetworkModificationsResult.class);
-        assertEquals(1, getNetworkImpacts(networkModificationsResult).size());
+        assertEquals(4, getNetworkImpacts(networkModificationsResult).size());
         assertEquals(1, getImpactedSubstationsIds(networkModificationsResult).size());
-        assertEquals("[s2]", getImpactedSubstationsIds(networkModificationsResult).toString());
+        assertEquals("[s1]", getImpactedSubstationsIds(networkModificationsResult).toString());
         //modify only participate
         batteryModificationInfos.setParticipate(new AttributeModification<>(false, OperationType.SET));
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
@@ -255,9 +255,9 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         //check impacts
         resultAsString = mvcResult.getResponse().getContentAsString();
         networkModificationsResult = mapper.readValue(resultAsString, NetworkModificationsResult.class);
-        assertEquals(1, getNetworkImpacts(networkModificationsResult).size());
+        assertEquals(4, getNetworkImpacts(networkModificationsResult).size());
         assertEquals(1, getImpactedSubstationsIds(networkModificationsResult).size());
-        assertEquals("[s2]", getImpactedSubstationsIds(networkModificationsResult).toString());
+        assertEquals("[s1]", getImpactedSubstationsIds(networkModificationsResult).toString());
 
     }
 
