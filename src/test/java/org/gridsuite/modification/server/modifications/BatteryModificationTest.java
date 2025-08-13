@@ -49,6 +49,8 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .stashed(false)
                 .equipmentId("v3Battery")
                 .equipmentName(new AttributeModification<>("newV1Battery", OperationType.SET))
+                .voltageLevelId(new AttributeModification<>("v3", OperationType.SET))
+                .busOrBusbarSectionId(new AttributeModification<>("3A", OperationType.SET))
                 .targetP(new AttributeModification<>(80.0, OperationType.SET))
                 .targetQ(new AttributeModification<>(40.0, OperationType.SET))
                 .minP(new AttributeModification<>(0., OperationType.SET))
@@ -244,7 +246,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         //check impacts
         String resultAsString = mvcResult.getResponse().getContentAsString();
         NetworkModificationsResult networkModificationsResult = mapper.readValue(resultAsString, NetworkModificationsResult.class);
-        assertEquals(1, getNetworkImpacts(networkModificationsResult).size());
+        assertEquals(3, getNetworkImpacts(networkModificationsResult).size());
         assertEquals(1, getImpactedSubstationsIds(networkModificationsResult).size());
         assertEquals("[s2]", getImpactedSubstationsIds(networkModificationsResult).toString());
         //modify only participate
@@ -255,7 +257,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         //check impacts
         resultAsString = mvcResult.getResponse().getContentAsString();
         networkModificationsResult = mapper.readValue(resultAsString, NetworkModificationsResult.class);
-        assertEquals(1, getNetworkImpacts(networkModificationsResult).size());
+        assertEquals(3, getNetworkImpacts(networkModificationsResult).size());
         assertEquals(1, getImpactedSubstationsIds(networkModificationsResult).size());
         assertEquals("[s2]", getImpactedSubstationsIds(networkModificationsResult).toString());
 
