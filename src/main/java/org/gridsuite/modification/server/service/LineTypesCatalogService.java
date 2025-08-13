@@ -33,6 +33,12 @@ public class LineTypesCatalogService {
             .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public LineTypeInfos getLineTypesWithLimits(UUID id) {
+        Optional<LineTypeEntity> lineTypeEntity = lineTypesCatalogRepository.findById(id);
+        return lineTypeEntity.map(LineTypeEntity::toDtoWithLimits).orElse(null);
+    }
+
     public void deleteLineTypesCatalog() {
         lineTypesCatalogRepository.deleteAll();
     }

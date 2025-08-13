@@ -6,15 +6,16 @@
  */
 package org.gridsuite.modification.server.dto.catalog;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -60,6 +61,9 @@ public class LineTypeInfos {
 
     @Schema(description = "Linear capacity")
     private Double linearCapacity;
+
+    @Schema(description = "Limits for line type")
+    private List<LimitsForLineTypeInfos> limitsForLineType;
 
     @JsonIgnore
     public LineTypeEntity toEntity() {
