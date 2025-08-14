@@ -56,6 +56,9 @@ public class OperationalLimitsGroupModificationEntity {
     @Enumerated(EnumType.STRING)
     private TemporaryLimitModificationType temporaryLimitsModificationType;
 
+    @Column(name = "selectedOperationalLimitsGroupId")
+    private String selectedOperationalLimitsGroupId;
+
     @Column(name = "side")
     private String side;
 
@@ -69,6 +72,7 @@ public class OperationalLimitsGroupModificationEntity {
                                 new CurrentLimitsModificationEntity(limitsGroup.getCurrentLimits()),
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
+                                limitsGroup.getSelectedOperationalLimitsGroupId(),
                                 limitsGroup.getSide()
                         )
                 )
@@ -84,6 +88,7 @@ public class OperationalLimitsGroupModificationEntity {
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
                                         .modificationType(limitsGroupEntity.getModificationType())
                                         .temporaryLimitsModificationType(limitsGroupEntity.getTemporaryLimitsModificationType())
+                                        .selectedOperationalLimitsGroupId(limitsGroupEntity.getSelectedOperationalLimitsGroupId())
                                         .side(limitsGroupEntity.getSide())
                                         .build()
                         )
@@ -91,6 +96,6 @@ public class OperationalLimitsGroupModificationEntity {
     }
 
     public OperationalLimitsGroupModificationEntity(OperationalLimitsGroupModificationInfos operationalLimitsGroupModificationInfos) {
-        this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(), operationalLimitsGroupModificationInfos.getSide());
+        this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(), operationalLimitsGroupModificationInfos.getSelectedOperationalLimitsGroupId(), operationalLimitsGroupModificationInfos.getSide());
     }
 }
