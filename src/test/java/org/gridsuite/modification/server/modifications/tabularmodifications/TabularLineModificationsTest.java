@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static com.powsybl.iidm.network.TwoSides.ONE;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,8 +50,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                 LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(40., OperationType.SET))
-                        .operationalLimitsGroup1(buildOperationalLimitsGroupDefaultModification())
-                        .operationalLimitsGroup2(buildOperationalLimitsGroupDefaultModification())
+                        .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
                         .build(),
                 LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET)).build()
         );
@@ -66,8 +66,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
                 LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(1., OperationType.SET))
-                        .operationalLimitsGroup1(buildOperationalLimitsGroupDefaultModification())
-                        .operationalLimitsGroup2(buildOperationalLimitsGroupDefaultModification())
+                        .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
                         .build(),
                 LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET)).build(),
                 LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET)).build(),
@@ -128,8 +127,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                 (ModificationInfos) LineModificationInfos.builder().equipmentId(UUID.randomUUID().toString())
                     .r(new AttributeModification<>(1., OperationType.SET))
                     .equipmentName(new AttributeModification<>("NAME", OperationType.SET))
-                    .operationalLimitsGroup1(buildOperationalLimitsGroupDefaultModification())
-                    .operationalLimitsGroup2(buildOperationalLimitsGroupDefaultModification())
+                    .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
                     .properties(List.of(
                             ModificationCreation.getFreeProperty(),
                             ModificationCreation.getFreeProperty("test", "value")))
@@ -155,13 +153,13 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     }
 
     public static List<OperationalLimitsGroupModificationInfos> buildOperationalLimitsGroupDefaultModification() {
-        return List.of(buildOperationalLimitsGroupDefaultModification(TwoSides.ONE), buildOperationalLimitsGroupDefaultModification(TwoSides.TWO));
+        return List.of(buildOperationalLimitsGroupDefaultModification(ONE), buildOperationalLimitsGroupDefaultModification(TwoSides.TWO));
     }
 
     public static OperationalLimitsGroupModificationInfos buildOperationalLimitsGroupDefaultModification(TwoSides side) {
         return OperationalLimitsGroupModificationInfos.builder()
                 .id("testName")
-                .side(side.name())
+                .applicability(side == ONE ? OperationalLimitsGroupInfos.Applicability.SIDE1 : OperationalLimitsGroupInfos.Applicability.SIDE2)
                 .modificationType(OperationalLimitsGroupModificationType.ADDED)
                 .temporaryLimitsModificationType(TemporaryLimitModificationType.ADDED)
                 .currentLimits(CurrentLimitsModificationInfos.builder()
