@@ -51,6 +51,7 @@ public final class EntityRegistry {
         register(LccCreationInfos.class, LccCreationEntity.class);
         register(LccConverterStationCreationInfos.class, LccConverterStationCreationEntity.class);
         register(TabularCreationInfos.class, TabularCreationEntity.class);
+        register(CreateVoltageLevelSectionInfos.class, CreateVoltageLevelSectionEntity.class);
 
         // // modification
         register(SubstationModificationInfos.class, SubstationModificationEntity.class);
@@ -72,6 +73,7 @@ public final class EntityRegistry {
         register(LccConverterStationModificationInfos.class, LccConverterStationModificationEntity.class);
         register(VoltageLevelTopologyModificationInfos.class, VoltageLevelTopologyModificationEntity.class);
         register(CreateCouplingDeviceInfos.class, CreateCouplingDeviceEntity.class);
+        register(CreateVoltageLevelTopologyInfos.class, CreateVoltageLevelTopologyEntity.class);
 
         // // attatching and splitting
         register(LineAttachToVoltageLevelInfos.class, LineAttachToVoltageLevelEntity.class);
