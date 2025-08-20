@@ -10,6 +10,8 @@ import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
+import java.util.List;
+
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
  */
@@ -18,6 +20,8 @@ import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 @Table(name = "undergroundLineTypesCatalog")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "undergroundLineType_id_fk_constraint"))
 public class UndergroundLineTypeEntity extends LineTypeEntity {
+
+    private static final List<Double> SHAPE_FACTORS = List.of(0.9d, 0.95d, 1d);
 
     @Column(name = "insulator")
     private String insulator;
@@ -57,6 +61,7 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
     @Override
     public UndergroundLineTypeInfos toDtoWithLimits() {
         return toDtoBuilder()
+            .shapeFactors(SHAPE_FACTORS)
             .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
             .build();
     }

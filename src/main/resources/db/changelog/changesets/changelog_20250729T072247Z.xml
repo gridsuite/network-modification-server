@@ -27,7 +27,4 @@
                                  referencedTableName="line_types_catalog"
                                  validate="true"/>
     </changeSet>
-    <changeSet author="lesoteti (generated)" id="1753773801590-3">
-    </changeSet>
-
 </databaseChangeLog>
