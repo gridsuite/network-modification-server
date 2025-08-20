@@ -66,6 +66,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -537,7 +538,7 @@ class BuildTest {
                 .connectionPosition(0)
                 .terminalConnected(true)
                 .build()));
-        entities2.add(ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").operationalLimitsGroups1(null).operationalLimitsGroups2(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
+        entities2.add(ModificationEntity.fromDTO(LineCreationInfos.builder().equipmentId("newLine").equipmentName("newLine").r(1.0).x(2.0).g1(3.0).b1(4.0).g2(5.0).b2(6.0).voltageLevelId1("v1").busOrBusbarSectionId1("1.1").voltageLevelId2("v2").busOrBusbarSectionId2("1B").operationalLimitsGroups(null).connectionName1("cn101").connectionDirection1(ConnectablePosition.Direction.TOP).connectionName2("cn102").connectionDirection2(ConnectablePosition.Direction.TOP).connected1(true).connected2(true).build()));
 
         List<TapChangerStepCreationEmbeddable> tapChangerStepCreationEmbeddables = new ArrayList<>();
         tapChangerStepCreationEmbeddables.add(new TapChangerStepCreationEmbeddable(TapChangerType.PHASE, 1, 1, 0, 0, 0, 0, 0.));
@@ -593,18 +594,14 @@ class BuildTest {
                 .voltageLevelId2("v2")
                 .busOrBusbarSectionId2("1A")
                 .connected2(true)
-                .operationalLimitsGroups1(
+                .operationalLimitsGroups(
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(3.).build())
-                        .build()
-                    )
-                )
-                .operationalLimitsGroups2(
-                    List.of(
+                            CurrentLimitsInfos.builder().permanentLimit(3.).build()).applicability(SIDE1)
+                        .build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
-                            CurrentLimitsInfos.builder().permanentLimit(2.).build())
-                        .build()
+                                CurrentLimitsInfos.builder().permanentLimit(2.).build()).applicability(SIDE2)
+                            .build()
                     )
                 )
                 .connectionName1("cn201")
