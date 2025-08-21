@@ -95,7 +95,4 @@ public class OperationalLimitsGroupModificationEntity {
                         .collect(Collectors.toList());
     }
 
-    public OperationalLimitsGroupModificationEntity(OperationalLimitsGroupModificationInfos operationalLimitsGroupModificationInfos) {
-        this(null, operationalLimitsGroupModificationInfos.getId(), new CurrentLimitsModificationEntity(operationalLimitsGroupModificationInfos.getCurrentLimits()), operationalLimitsGroupModificationInfos.getModificationType(), operationalLimitsGroupModificationInfos.getTemporaryLimitsModificationType(), operationalLimitsGroupModificationInfos.getSelectedOperationalLimitsGroupId(), operationalLimitsGroupModificationInfos.getSide());
-    }
 }
