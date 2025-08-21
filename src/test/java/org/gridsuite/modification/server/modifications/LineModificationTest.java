@@ -110,7 +110,6 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .operationalLimitsGroup1(List.of(OperationalLimitsGroupModificationInfos.builder()
                         .id("DEFAULT")
                         .side("ONE")
-                        .selectedOperationalLimitsGroupId("DEFAULT")
                         .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                         .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
                         .currentLimits(CurrentLimitsModificationInfos.builder()
@@ -245,8 +244,8 @@ class LineModificationTest extends AbstractNetworkModificationTest {
     void testPermanentLimitUnchanged() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
-        lineModificationInfos.getCurrentLimits1().setPermanentLimit(null);
-        lineModificationInfos.getCurrentLimits2().setPermanentLimit(null);
+        lineModificationInfos.getOperationalLimitsGroup1().getFirst().getCurrentLimits().setPermanentLimit(null);
+        lineModificationInfos.getOperationalLimitsGroup1().getFirst().getCurrentLimits().setPermanentLimit(null);
         String modificationToCreateJson = getJsonBody(lineModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
