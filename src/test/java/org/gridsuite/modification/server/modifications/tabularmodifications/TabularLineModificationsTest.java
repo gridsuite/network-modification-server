@@ -88,7 +88,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(20., getNetwork().getLine("line2").getX(), 0.001);
         assertEquals(30., getNetwork().getLine("line3").getG1(), 0.001);
         assertEquals(40., getNetwork().getLine("line3").getB1(), 0.001);
-        assertLogMessage("LINE_NOT_FOUND : Line 'unknownLine' : does not exist in network", "network.modification.tabular.modification.exception", reportService);
+        assertLogMessage("Cannot add testName operational limit group, one with the given name already exists", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override
@@ -162,13 +162,13 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         return OperationalLimitsGroupModificationInfos.builder()
                 .id("testName")
                 .side(side.name())
-                .modificationType(OperationalLimitsGroupModificationType.ADDED)
-                .temporaryLimitsModificationType(TemporaryLimitModificationType.ADDED)
+                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                .temporaryLimitsModificationType(TemporaryLimitModificationType.ADD)
                 .currentLimits(CurrentLimitsModificationInfos.builder()
                         .permanentLimit(1200.)
                         .temporaryLimits(List.of(
                                 CurrentTemporaryLimitModificationInfos.builder()
-                                        .modificationType(TemporaryLimitModificationType.ADDED)
+                                        .modificationType(TemporaryLimitModificationType.ADD)
                                         .name("testLimit")
                                         .acceptableDuration(2)
                                         .value(10.)
