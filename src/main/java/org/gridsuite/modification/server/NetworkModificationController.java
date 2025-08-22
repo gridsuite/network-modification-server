@@ -189,6 +189,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(lineTypesCatalogService.getAllLineTypes());
     }
 
+    @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line types catalog")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable("uuid") UUID uuid) {
+        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithLimits(uuid));
+    }
+
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")

@@ -6,11 +6,9 @@
  */
 package org.gridsuite.modification.server.entities.catalog;
 
-import lombok.NoArgsConstructor;
-
-import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
-
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -41,21 +39,31 @@ public class AerialLineTypeEntity extends LineTypeEntity {
         groundWiresNumber = aerialLineType.getGroundWiresNumber();
     }
 
+    AerialLineTypeInfos.AerialLineTypeInfosBuilder<?, ?> toDtoBuilder() {
+        return AerialLineTypeInfos.builder()
+            .id(this.getId())
+            .type(this.getType())
+            .voltage(this.getVoltage())
+            .conductorType(this.getConductorType())
+            .section(this.getSection())
+            .conductorsNumber(this.conductorsNumber)
+            .circuitsNumber(this.circuitsNumber)
+            .groundWiresNumber(this.groundWiresNumber)
+            .linearResistance(this.getLinearResistance())
+            .linearReactance(this.getLinearReactance())
+            .linearCapacity(this.getLinearCapacity());
+    }
+
     @Override
     public AerialLineTypeInfos toDto() {
-        return AerialLineTypeInfos.builder()
-                .id(this.getId())
-                .type(this.getType())
-                .voltage(this.getVoltage())
-                .conductorType(this.getConductorType())
-                .section(this.getSection())
-                .conductorsNumber(this.conductorsNumber)
-                .circuitsNumber(this.circuitsNumber)
-                .groundWiresNumber(this.groundWiresNumber)
-                .linearResistance(this.getLinearResistance())
-                .linearReactance(this.getLinearReactance())
-                .linearCapacity(this.getLinearCapacity())
-                .build();
+        return toDtoBuilder().build();
+    }
+
+    @Override
+    public AerialLineTypeInfos toDtoWithLimits() {
+        return toDtoBuilder()
+            .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .build();
     }
 }
 

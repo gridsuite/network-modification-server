@@ -6,11 +6,11 @@
  */
 package org.gridsuite.modification.server.entities.catalog;
 
+import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
-import jakarta.persistence.*;
+import java.util.List;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -20,6 +20,8 @@ import jakarta.persistence.*;
 @Table(name = "undergroundLineTypesCatalog")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "undergroundLineType_id_fk_constraint"))
 public class UndergroundLineTypeEntity extends LineTypeEntity {
+
+    private static final List<Double> SHAPE_FACTORS = List.of(0.9d, 0.95d, 1d);
 
     @Column(name = "insulator")
     private String insulator;
@@ -37,20 +39,31 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
         screen = undergroundLineType.getScreen();
     }
 
+    UndergroundLineTypeInfos.UndergroundLineTypeInfosBuilder<?, ?> toDtoBuilder() {
+        return UndergroundLineTypeInfos.builder()
+            .id(this.getId())
+            .type(this.getType())
+            .voltage(this.getVoltage())
+            .conductorType(this.getConductorType())
+            .section(this.getSection())
+            .insulator(this.insulator)
+            .screen(this.screen)
+            .linearResistance(this.getLinearResistance())
+            .linearReactance(this.getLinearReactance())
+            .linearCapacity(this.getLinearCapacity());
+    }
+
     @Override
     public UndergroundLineTypeInfos toDto() {
-        return UndergroundLineTypeInfos.builder()
-                .id(this.getId())
-                .type(this.getType())
-                .voltage(this.getVoltage())
-                .conductorType(this.getConductorType())
-                .section(this.getSection())
-                .insulator(this.insulator)
-                .screen(this.screen)
-                .linearResistance(this.getLinearResistance())
-                .linearReactance(this.getLinearReactance())
-                .linearCapacity(this.getLinearCapacity())
-                .build();
+        return toDtoBuilder().build();
+    }
+
+    @Override
+    public UndergroundLineTypeInfos toDtoWithLimits() {
+        return toDtoBuilder()
+            .shapeFactors(SHAPE_FACTORS)
+            .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .build();
     }
 }
 
