@@ -61,6 +61,12 @@ public class OperationalLimitsGroupModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationalLimitsGroupInfos.Applicability applicability;
 
+    /*@Column(name = "selectedOperationalLimitsGroupId")
+    private String selectedOperationalLimitsGroupId;
+
+    @Column(name = "side")
+    private String side;*/
+
     public static List<OperationalLimitsGroupModificationEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModificationInfos> limitsGroups) {
         return limitsGroups.stream()
                 .filter(Objects::nonNull)
@@ -72,6 +78,8 @@ public class OperationalLimitsGroupModificationEntity {
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
                                 limitsGroup.getApplicability()
+                                /*limitsGroup.getSelectedOperationalLimitsGroupId(),
+                                limitsGroup.getSide()*/
                         )
                 )
                 .toList();
@@ -87,6 +95,8 @@ public class OperationalLimitsGroupModificationEntity {
                                         .modificationType(limitsGroupEntity.getModificationType())
                                         .temporaryLimitsModificationType(limitsGroupEntity.getTemporaryLimitsModificationType())
                                         .applicability(limitsGroupEntity.getApplicability())
+                                        /*.selectedOperationalLimitsGroupId(limitsGroupEntity.getSelectedOperationalLimitsGroupId())
+                                        .side(limitsGroupEntity.getSide())*/
                                         .build()
                         )
                         .collect(Collectors.toList());

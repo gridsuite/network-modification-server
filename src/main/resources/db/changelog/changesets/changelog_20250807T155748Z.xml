@@ -1,0 +1,60 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd" logicalFilePath="db/changelog/changesets/changelog_2022-04-25T10:22:24Z.xml">
+    <changeSet id="add-column-selected_operational_limits_group_id" author="marcelinhug">
+        <addColumn tableName="operational_limits_group_modification">
+            <column name="selected_operational_limits_group_id" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="migrate-modification-types-20250807" author="marcelinhug">
+        <!-- current_temporary_limits_modification.modification_type -->
+        <update tableName="current_temporary_limits_modification">
+            <column name="modification_type" value="MODIFY"/>
+            <where>modification_type = 'MODIFIED'</where>
+        </update>
+        <update tableName="current_temporary_limits_modification">
+            <column name="modification_type" value="ADD"/>
+            <where>modification_type = 'ADDED'</where>
+        </update>
+        <update tableName="current_temporary_limits_modification">
+            <column name="modification_type" value="DELETE"/>
+            <where>modification_type = 'DELETED'</where>
+        </update>
+        <update tableName="current_temporary_limits_modification">
+            <column name="modification_type" value="REPLACE"/>
+            <where>modification_type = 'REPLACED'</where>
+        </update>
+
+        <!-- operational_limits_group_modification.modification_type -->
+        <update tableName="operational_limits_group_modification">
+            <column name="modification_type" value="MODIFY"/>
+            <where>modification_type = 'MODIFIED'</where>
+        </update>
+        <update tableName="operational_limits_group_modification">
+            <column name="modification_type" value="ADD"/>
+            <where>modification_type = 'ADDED'</where>
+        </update>
+        <update tableName="operational_limits_group_modification">
+            <column name="modification_type" value="REPLACE"/>
+            <where>modification_type = 'REPLACED'</where>
+        </update>
+
+        <!-- operational_limits_group_modification.temporary_limits_modification_type -->
+        <update tableName="operational_limits_group_modification">
+            <column name="temporary_limits_modification_type" value="MODIFY"/>
+            <where>temporary_limits_modification_type = 'MODIFIED'</where>
+        </update>
+        <update tableName="operational_limits_group_modification">
+            <column name="temporary_limits_modification_type" value="ADD"/>
+            <where>temporary_limits_modification_type = 'ADDED'</where>
+        </update>
+        <update tableName="operational_limits_group_modification">
+            <column name="temporary_limits_modification_type" value="DELETE"/>
+            <where>temporary_limits_modification_type = 'DELETED'</where>
+        </update>
+        <update tableName="operational_limits_group_modification">
+            <column name="temporary_limits_modification_type" value="REPLACE"/>
+            <where>temporary_limits_modification_type = 'REPLACED'</where>
+        </update>
+
+    </changeSet>
+</databaseChangeLog>
