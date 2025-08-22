@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -88,22 +90,58 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .q1MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
                 .q2MeasurementValue(new AttributeModification<>(MEASUREMENT_Q_VALUE, OperationType.SET))
                 .q2MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
+                .operationalLimitsGroups(List.of(
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("newOpLG1")
+                                .applicability(SIDE1)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(12.0)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(null)
+                                                                .name("name31")
+                                                                .value(null)
+                                                                .build())
+                                                ).build()
+                                ).build(),
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("newOpLG2")
+                                .applicability(SIDE2)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(22.0)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(32)
+                                                                .name("name32")
+                                                                .value(42.0)
+                                                                .build())
+                                                ).build()
+                                ).build(),
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .id("DEFAULT")
+                                .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                                .modificationType(OperationalLimitsGroupModificationType.MODIFY)
+                                .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
+                                .currentLimits(CurrentLimitsModificationInfos.builder()
+                                        .temporaryLimits(List.of(
+                                                CurrentTemporaryLimitModificationInfos.builder()
+                                                        .modificationType(TemporaryLimitModificationType.REPLACE)
+                                                        .name("test1")
+                                                        .acceptableDuration(2)
+                                                        .value(10.)
+                                                        .build()
+                                        )).build())
+                                .build()
+                ))
+                .selectedOperationalLimitsGroup1(new AttributeModification<String>("newOpLG1", OperationType.SET))
+                .selectedOperationalLimitsGroup2(new AttributeModification<String>("newOpLG2", OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
-                .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationInfos.builder()
-                        .id("DEFAULT")
-                        .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
-                        .modificationType(OperationalLimitsGroupModificationType.MODIFY)
-                        .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
-                        .currentLimits(CurrentLimitsModificationInfos.builder()
-                                .temporaryLimits(List.of(
-                                        CurrentTemporaryLimitModificationInfos.builder()
-                                                .modificationType(TemporaryLimitModificationType.REPLACE)
-                                                .name("test1")
-                                                .acceptableDuration(2)
-                                                .value(10.)
-                                                .build()
-                                )).build())
-                        .build()))
                 .build();
     }
 
