@@ -130,7 +130,7 @@ public final class TestUtils {
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), anyBoolean());
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
         assertTrue(message.isPresent());
@@ -143,7 +143,7 @@ public final class TestUtils {
 
     public static void assertLogMessageWithoutRank(String expectedMessage, String reportKey, ReportService reportService) {
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), anyBoolean());
         assertNotNull(reporterCaptor.getValue());
         assertTrue(assertMessageFoundFromReporter(expectedMessage, reportKey, reporterCaptor.getValue()));
     }

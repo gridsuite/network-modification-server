@@ -104,10 +104,10 @@ public class NetworkModificationApplicator {
         ApplicationStatus groupApplicationStatus;
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             groupApplicationStatus = largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosGroup, listener))
+                .supplyAsync(() -> apply(modificationInfosGroup, listener, false))
                 .join();
         } else {
-            groupApplicationStatus = apply(modificationInfosGroup, listener);
+            groupApplicationStatus = apply(modificationInfosGroup, listener, false);
         }
 
         return flushModificationApplications(groupApplicationStatus, listener);
@@ -157,7 +157,7 @@ public class NetworkModificationApplicator {
     // This method is used when building a variant
     private List<ApplicationStatus> apply(List<ModificationApplicationGroup> modificationInfosGroups, NetworkStoreListener listener) {
         return modificationInfosGroups.stream()
-            .map(g -> apply(g, listener))
+            .map(g -> apply(g, listener, true))
             .toList();
     }
 
@@ -171,7 +171,7 @@ public class NetworkModificationApplicator {
             .build();
     }
 
-    private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener) {
+    private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener, boolean isVariantBuild) {
         ReportNode reportNode;
         if (modificationGroupInfos.reportInfos().getNodeUuid() != null) {
             UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
@@ -192,7 +192,7 @@ public class NetworkModificationApplicator {
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         if (modificationGroupInfos.reportInfos().getReportUuid() != null) {
-            reportService.sendReport(modificationGroupInfos.reportInfos().getReportUuid(), reportNode);
+            reportService.sendReport(modificationGroupInfos.reportInfos().getReportUuid(), reportNode, isVariantBuild);
         }
         return groupApplicationStatus;
     }
