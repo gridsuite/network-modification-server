@@ -326,17 +326,15 @@ public class NetworkModificationRepository {
             }
             case LINE_MODIFICATION -> {
                 // load line modifications with opLimitsGroups1
-                modifications = lineModificationRepository.findAllOperationalLimitsGroups1ByIdIn(subModificationsUuids);
+                modifications = lineModificationRepository.findAllOperationalLimitsGroupsByIdIn(subModificationsUuids);
                 // load opLimitsGroups2 too, it uses hibernate first-level cache to fill them up directly in modifications
-                lineModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
+                // lineModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
                 // same with properties
                 lineModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
                 // load 2wt modifications with opLimitsGroups1
-                modifications = twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroups1ByIdIn(subModificationsUuids);
-                // load opLimitsGroups2 too, it uses hibernate first-level cache to fill them up directly in modifications
-                twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
+                modifications = twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroupsByIdIn(subModificationsUuids);
                 // same with properties
                 twoWindingsTransformerModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
@@ -735,16 +733,18 @@ public class NetworkModificationRepository {
             case VOLTAGE_LEVEL_MODIFICATION ->
                 voltageLevelModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case LINE_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                /*List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
                 List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
+                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);*/
+                List<UUID> opLimitsGroupsIds = modificationRepository.findLineModificationOpLimitsGroupsIdsByBranchIds(subModificationsIds);
                 List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
                 lineModificationRepository.deleteTabularModification(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationUuid);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                /*List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
                 List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
+                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);*/
+                List<UUID> opLimitsGroupsIds = modificationRepository.findTwtModificationOpLimitsGroupsIdsByBranchIds(subModificationsIds);
                 List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
                 twoWindingsTransformerModificationRepository.deleteTabularModification(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationUuid);
             }
@@ -793,16 +793,18 @@ public class NetworkModificationRepository {
             case VOLTAGE_LEVEL_MODIFICATION ->
                 voltageLevelModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case LINE_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                /*List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
                 List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
+                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);*/
+                List<UUID> opLimitsGroupsIds = modificationRepository.findLineModificationOpLimitsGroupsIdsByBranchIds(subModificationsIds);
                 List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
                 lineModificationRepository.deleteTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationId);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+                /*List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
                 List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
+                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);*/
+                List<UUID> opLimitsGroupsIds = modificationRepository.findTwtModificationOpLimitsGroupsIdsByBranchIds(subModificationsIds);
                 List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
                 twoWindingsTransformerModificationRepository.deleteTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationId);
             }
