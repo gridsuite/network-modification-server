@@ -24,7 +24,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.ModificationsSearchResult;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -58,7 +61,8 @@ import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
@@ -67,7 +71,8 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -99,6 +104,7 @@ class ModificationControllerTest {
     private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_3 = "/line_types_catalog_3.json";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
     @Autowired
@@ -1547,6 +1553,51 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(0, emptyLineTypes.size());
+    }
+
+    @Test
+    void testGetLineTypeWithLimitsCatalog() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+
+        // Check if the catalog is empty
+        mvcResult = mockMvc
+            .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(0, emptyLineTypes.size());
+
+        // Create the catalog with some line types
+        String lineTypesCatalogJson1 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_3);
+        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        mvcResult = mockMvc
+            .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, lineTypes.size());
+        // getting the whole catalog does not load the limits
+        assertNull(lineTypes.get(0).getLimitsForLineType());
+        assertNull(lineTypes.get(1).getLimitsForLineType());
+        mvcResult = mockMvc
+            .perform(get(URI_LINE_CATALOG + "/" + lineTypes.get(0).getId()).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, selectedLineType.getLimitsForLineType().size());
+        assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitAcceptableDuration());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
     }
 
     @Test
