@@ -6,6 +6,8 @@
  */
 package org.gridsuite.modification.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,8 +22,11 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -30,6 +35,8 @@ import java.util.*;
 @RequestMapping(value = "/" + NetworkModificationApi.API_VERSION + "/")
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
+
+    private static ObjectMapper MAPPER = new ObjectMapper();
 
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
@@ -196,10 +203,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithLimits(uuid));
     }
 
-    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
-    public ResponseEntity<Void> resetLineTypes(@RequestBody List<LineTypeInfos> lineTypes) {
+    public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) throws IOException {
+        GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream());
+        List<LineTypeInfos> lineTypes = MAPPER.readValue(gzipInputStream, new TypeReference<>() {
+        });
         lineTypesCatalogService.resetLineTypes(lineTypes);
         return ResponseEntity.ok().build();
     }
