@@ -53,9 +53,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -102,9 +105,9 @@ class ModificationControllerTest {
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modification/";
     private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_3 = "/line_types_catalog_3.json";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json.gz";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json.gz";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_3 = "/line_types_catalog_3.json.gz";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
     @Autowired
@@ -1514,9 +1517,9 @@ class ModificationControllerTest {
         assertEquals(0, emptyLineTypes.size());
 
         // Create the catalog with some line types
-        String lineTypesCatalogJson1 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_1);
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_1)))
+            .andExpect(status().isOk());
 
         // Check if the catalog is complete avoiding the duplicate entry
         mvcResult = mockMvc
@@ -1529,9 +1532,9 @@ class ModificationControllerTest {
         assertEquals(8, lineTypes.size());
 
         // Check if catalog is completely updated
-        String lineTypesCatalogJson2 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_2);
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson2).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_2)))
+            .andExpect(status().isOk());
 
         mvcResult = mockMvc
                 .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
@@ -1570,8 +1573,8 @@ class ModificationControllerTest {
         assertEquals(0, emptyLineTypes.size());
 
         // Create the catalog with some line types
-        String lineTypesCatalogJson1 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_3);
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_3)))
             .andExpect(status().isOk());
 
         mvcResult = mockMvc
@@ -1598,6 +1601,12 @@ class ModificationControllerTest {
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+    }
+
+    private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
+        try (InputStream inputStream = ModificationControllerTest.class.getResourceAsStream(fileName)) {
+            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
+        }
     }
 
     @Test
