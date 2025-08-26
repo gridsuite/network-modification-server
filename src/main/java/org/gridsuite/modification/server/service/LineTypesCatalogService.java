@@ -6,14 +6,19 @@
  */
 package org.gridsuite.modification.server.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -21,9 +26,11 @@ import java.util.stream.Collectors;
 @Service
 public class LineTypesCatalogService {
     private final LineTypesCatalogRepository lineTypesCatalogRepository;
+    private final ObjectMapper mapper;
 
-    public LineTypesCatalogService(LineTypesCatalogRepository lineTypesCatalogRepository) {
+    public LineTypesCatalogService(LineTypesCatalogRepository lineTypesCatalogRepository, ObjectMapper objectMapper) {
         this.lineTypesCatalogRepository = lineTypesCatalogRepository;
+        this.mapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -43,14 +50,18 @@ public class LineTypesCatalogService {
         lineTypesCatalogRepository.deleteAll();
     }
 
-    public void resetLineTypes(List<LineTypeInfos> lineTypes) {
-        deleteLineTypesCatalog();
-        // remove duplicates in file
-        Set<LineTypeInfos> lineTypesSet = lineTypes.stream().collect(Collectors.toSet());
+    public void resetLineTypes(MultipartFile file) throws IOException {
+        try (GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream())) {
+            List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<>() {
+            });
+            deleteLineTypesCatalog();
+            // remove duplicates in file
+            Set<LineTypeInfos> lineTypesSet = lineTypes.stream().collect(Collectors.toSet());
 
-        List<LineTypeEntity> lineTypesEntities = lineTypesSet.stream()
-            .map(LineTypeInfos::toEntity)
-            .collect(Collectors.toList());
-        lineTypesCatalogRepository.saveAll(lineTypesEntities);
+            List<LineTypeEntity> lineTypesEntities = lineTypesSet.stream()
+                .map(LineTypeInfos::toEntity)
+                .collect(Collectors.toList());
+            lineTypesCatalogRepository.saveAll(lineTypesEntities);
+        }
     }
 }

@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +37,7 @@ import java.util.zip.GZIPInputStream;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    private static ObjectMapper MAPPER = new ObjectMapper();
+    private final ObjectMapper mapper;
 
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
@@ -47,9 +48,10 @@ public class NetworkModificationController {
     private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-                                         LineTypesCatalogService lineTypesCatalogService) {
+                                         LineTypesCatalogService lineTypesCatalogService, ObjectMapper mapper) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
+        this.mapper = mapper;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -207,10 +209,7 @@ public class NetworkModificationController {
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
     public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) throws IOException {
-        GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream());
-        List<LineTypeInfos> lineTypes = MAPPER.readValue(gzipInputStream, new TypeReference<>() {
-        });
-        lineTypesCatalogService.resetLineTypes(lineTypes);
+        lineTypesCatalogService.resetLineTypes(file);
         return ResponseEntity.ok().build();
     }
 
