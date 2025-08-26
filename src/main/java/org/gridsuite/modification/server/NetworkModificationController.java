@@ -37,8 +37,6 @@ import java.util.UUID;
 @Tag(name = "network-modification-server")
 public class NetworkModificationController {
 
-    private final ObjectMapper mapper;
-
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
     }
@@ -48,10 +46,9 @@ public class NetworkModificationController {
     private final LineTypesCatalogService lineTypesCatalogService;
 
     public NetworkModificationController(NetworkModificationService networkModificationService,
-                                         LineTypesCatalogService lineTypesCatalogService, ObjectMapper mapper) {
+                                         LineTypesCatalogService lineTypesCatalogService) {
         this.networkModificationService = networkModificationService;
         this.lineTypesCatalogService = lineTypesCatalogService;
-        this.mapper = mapper;
     }
 
     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
