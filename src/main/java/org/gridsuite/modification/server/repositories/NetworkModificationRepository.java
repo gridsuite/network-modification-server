@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.repositories;
 
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
