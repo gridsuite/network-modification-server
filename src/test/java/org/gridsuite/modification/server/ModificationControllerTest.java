@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import jakarta.servlet.ServletException;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
@@ -56,6 +57,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -108,6 +110,7 @@ class ModificationControllerTest {
     private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json.gz";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json.gz";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_3 = "/line_types_catalog_3.json.gz";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_4 = "/line_types_catalog_4.json.gz";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
     @Autowired
@@ -1607,6 +1610,14 @@ class ModificationControllerTest {
         try (InputStream inputStream = ModificationControllerTest.class.getResourceAsStream(fileName)) {
             return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
         }
+    }
+
+    @Test
+    void testPostLineTypeWithLimitsCatalogError() throws IOException {
+        MockMultipartHttpServletRequestBuilder mockMultipartHttpServletRequestBuilder = multipart(URI_LINE_CATALOG)
+            .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_4));
+        String message = assertThrows(ServletException.class, () -> mockMvc.perform(mockMultipartHttpServletRequestBuilder)).getMessage();
+        assertEquals("Request processing failed: java.io.UncheckedIOException: reading gzip file error", message);
     }
 
     @Test
