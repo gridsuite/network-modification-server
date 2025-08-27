@@ -72,8 +72,6 @@ public class OperationalLimitsGroupModificationEntity {
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
                                 limitsGroup.getApplicability()
-                                /*limitsGroup.getSelectedOperationalLimitsGroupId(),
-                                limitsGroup.getSide()*/
                         )
                 )
                 .toList();
