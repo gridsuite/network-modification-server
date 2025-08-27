@@ -204,7 +204,7 @@ public class NetworkModificationController {
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
-    public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) {
         lineTypesCatalogService.resetLineTypes(file);
         return ResponseEntity.ok().build();
     }

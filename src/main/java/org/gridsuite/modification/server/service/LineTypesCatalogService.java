@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -50,7 +51,7 @@ public class LineTypesCatalogService {
         lineTypesCatalogRepository.deleteAll();
     }
 
-    public void resetLineTypes(MultipartFile file) throws IOException {
+    public void resetLineTypes(MultipartFile file) {
         try (GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream())) {
             List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<>() {
             });
@@ -62,6 +63,8 @@ public class LineTypesCatalogService {
                 .map(LineTypeInfos::toEntity)
                 .collect(Collectors.toList());
             lineTypesCatalogRepository.saveAll(lineTypesEntities);
+        } catch (IOException e) {
+            throw new UncheckedIOException("reading gzip file error", e);
         }
     }
 }
