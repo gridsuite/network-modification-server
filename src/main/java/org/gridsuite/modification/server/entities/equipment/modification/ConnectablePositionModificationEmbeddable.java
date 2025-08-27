@@ -53,7 +53,7 @@ public class ConnectablePositionModificationEmbeddable {
     }
 
     static ConnectablePositionModificationEmbeddable toConnectablePositionModificationEmbeddable(ConnectablePositionModificationInfos connectablePositionModificationInfos) {
-        return new  ConnectablePositionModificationEmbeddable(connectablePositionModificationInfos.getConnectableId(),
+        return new ConnectablePositionModificationEmbeddable(connectablePositionModificationInfos.getConnectableId(),
             connectablePositionModificationInfos.getBusBarSectionId(),
             connectablePositionModificationInfos.getTargetBusBarSectionId(),
             connectablePositionModificationInfos.getConnectionPosition(),
