@@ -110,7 +110,7 @@ class ModificationControllerTest {
     private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json.gz";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json.gz";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_3 = "/line_types_catalog_3.json.gz";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_4 = "/line_types_catalog_4.json.gz";
+    private static final String NOT_EXISTING_JSON_FILE = "/not_existing_file.json.gz";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
     @Autowired
@@ -1606,16 +1606,16 @@ class ModificationControllerTest {
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
     }
 
-    private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
-        try (InputStream inputStream = ModificationControllerTest.class.getResourceAsStream(fileName)) {
-            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
+    private MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream(fileName)) {
+            return new MockMultipartFile("file", fileName, MediaType.MULTIPART_FORM_DATA_VALUE, inputStream);
         }
     }
 
     @Test
     void testPostLineTypeWithLimitsCatalogError() throws IOException {
         MockMultipartHttpServletRequestBuilder mockMultipartHttpServletRequestBuilder = multipart(URI_LINE_CATALOG)
-            .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_4));
+            .file(createMockMultipartFile(NOT_EXISTING_JSON_FILE));
         String message = assertThrows(ServletException.class, () -> mockMvc.perform(mockMultipartHttpServletRequestBuilder)).getMessage();
         assertEquals("Request processing failed: java.io.UncheckedIOException: reading gzip file error", message);
     }
