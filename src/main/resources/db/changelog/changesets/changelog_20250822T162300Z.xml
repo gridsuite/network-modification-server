@@ -5,7 +5,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.1.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd"
                    logicalFilePath="db/changelog/changesets/changelog_2022-04-25T10:22:24Z.xml">
-    <changeSet id="Update field name from LOAD.ACTIVE_POWER to ACTIVE_POWER_SET_POINT 1/4" author="pirogigo">
+    <changeSet id="Update field name from LOAD.(RE)ACTIVE_POWER to (RE)ACTIVE_POWER_SET_POINT 1/4" author="pirogigo">
         <sql>
             with tmp as (
                 select assi.id
@@ -20,7 +20,7 @@
             where id in (select id from tmp)
         </sql>
     </changeSet>
-    <changeSet id="Update field name from LOAD.ACTIVE_POWER to ACTIVE_POWER_SET_POINT 2/4" author="pirogigo">
+    <changeSet id="Update field name from LOAD.(RE)ACTIVE_POWER to (RE)ACTIVE_POWER_SET_POINT 2/4" author="pirogigo">
         <sql>
             with tmp as (
                 select form.id
@@ -35,7 +35,7 @@
             where id in (select id from tmp)
         </sql>
     </changeSet>
-    <changeSet id="Update field name from LOAD.ACTIVE_POWER to ACTIVE_POWER_SET_POINT 3/4" author="pirogigo">
+    <changeSet id="Update field name from LOAD.(RE)ACTIVE_POWER to (RE)ACTIVE_POWER_SET_POINT 3/4" author="pirogigo">
         <sql>
             with tmp as (
                 select form.id
@@ -50,7 +50,7 @@
             where id in (select id from tmp)
         </sql>
     </changeSet>
-    <changeSet id="Update field name from LOAD.ACTIVE_POWER to ACTIVE_POWER_SET_POINT 4/4" author="pirogigo">
+    <changeSet id="Update field name from LOAD.(RE)ACTIVE_POWER to (RE)ACTIVE_POWER_SET_POINT 4/4" author="pirogigo">
         <sql>
             with tmp as (
                 select form.id
