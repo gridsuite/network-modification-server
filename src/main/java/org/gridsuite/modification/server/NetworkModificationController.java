@@ -20,8 +20,12 @@ import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -196,11 +200,11 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithLimits(uuid));
     }
 
-    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
-    public ResponseEntity<Void> resetLineTypes(@RequestBody List<LineTypeInfos> lineTypes) {
-        lineTypesCatalogService.resetLineTypes(lineTypes);
+    public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) {
+        lineTypesCatalogService.resetLineTypes(file);
         return ResponseEntity.ok().build();
     }
 
