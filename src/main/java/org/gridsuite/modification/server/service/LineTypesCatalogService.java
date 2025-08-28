@@ -67,7 +67,7 @@ public class LineTypesCatalogService {
                 .collect(Collectors.toList());
             lineTypesCatalogRepository.saveAll(lineTypesEntities);
         } catch (IOException e) {
-            throw new UncheckedIOException("reading gzip file error", e);
+            throw new UncheckedIOException(e);
         }
     }
 }

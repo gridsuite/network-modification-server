@@ -1617,7 +1617,7 @@ class ModificationControllerTest {
         MockMultipartHttpServletRequestBuilder mockMultipartHttpServletRequestBuilder = multipart(URI_LINE_CATALOG)
             .file(createMockMultipartFile(NOT_EXISTING_JSON_FILE));
         String message = assertThrows(ServletException.class, () -> mockMvc.perform(mockMultipartHttpServletRequestBuilder)).getMessage();
-        assertEquals("Request processing failed: java.io.UncheckedIOException: reading gzip file error", message);
+        assertEquals("Request processing failed: java.io.UncheckedIOException: java.io.EOFException", message);
     }
 
     @Test
