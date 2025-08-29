@@ -77,14 +77,8 @@
     <changeSet author="deharbemat (generated)" id="1755863608062-43">
         <addUniqueConstraint columnNames="line_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELLINE_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
     </changeSet>
-    <changeSet author="deharbemat (generated)" id="1755863608062-44">
-        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_COL" tableName="line_attach_to_voltage_level"/>
-    </changeSet>
     <changeSet author="deharbemat (generated)" id="1755863608062-45">
         <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="UC_LINE_MODIFICATION_OPERATIONAL_LIMITS_GROUPSOPERATIONAL_LIMIT" tableName="line_modification_operational_limits_groups"/>
-    </changeSet>
-    <changeSet author="deharbemat (generated)" id="1755863608062-46">
-        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="UC_LINE_SPLIT_WITH_VOLTAGE_LEVELMAY_VOLTAGE_LEVEL_CREATION_ID_C" tableName="line_split_with_voltage_level"/>
     </changeSet>
     <changeSet author="deharbemat (generated)" id="1755863608062-47">
         <addUniqueConstraint columnNames="current_limits_id" constraintName="UC_OPERATIONAL_LIMITS_GROUP_MODIFICATIONCURRENT_LIMITS_ID_COL" tableName="operational_limits_group_modification"/>
