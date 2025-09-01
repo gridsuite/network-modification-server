@@ -23,13 +23,6 @@ import java.util.UUID;
 @Repository
 public interface LineModificationRepository extends JpaRepository<LineModificationEntity, UUID> {
 
-    /* see with David and Hugo Marcellin ??
-    @EntityGraph(attributePaths = {"opLimitsGroups1"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<LineModificationEntity> findAllOperationalLimitsGroups1ByIdIn(List<UUID> ids);
-
-    @EntityGraph(attributePaths = {"opLimitsGroups2"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<LineModificationEntity> findAllOperationalLimitsGroups2ByIdIn(List<UUID> ids);*/
-
     @EntityGraph(attributePaths = {"operationalLimitsGroups"}, type = EntityGraph.EntityGraphType.LOAD)
     List<LineModificationEntity> findAllOperationalLimitsGroupsByIdIn(List<UUID> ids);
 
