@@ -59,17 +59,17 @@ class LoadByFormulaModificationTest extends AbstractByFormulaModificationTest {
 
     @Override
     protected List<FormulaInfos> getFormulaInfos() {
-        FormulaInfos formulaInfos1 = getFormulaInfo(LoadField.ACTIVE_POWER.name(),
+        FormulaInfos formulaInfos1 = getFormulaInfo(LoadField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1),
                 Operator.ADDITION,
-                ReferenceFieldOrValue.builder().equipmentField(LoadField.ACTIVE_POWER.name()).build(),
+                ReferenceFieldOrValue.builder().equipmentField(LoadField.ACTIVE_POWER_SET_POINT.name()).build(),
                 ReferenceFieldOrValue.builder().value(25.).build()
         );
 
-        FormulaInfos formulaInfos2 = getFormulaInfo(LoadField.REACTIVE_POWER.name(),
+        FormulaInfos formulaInfos2 = getFormulaInfo(LoadField.REACTIVE_POWER_SET_POINT.name(),
                 List.of(filter2),
                 Operator.MULTIPLICATION,
-                ReferenceFieldOrValue.builder().equipmentField(LoadField.REACTIVE_POWER.name()).build(),
+                ReferenceFieldOrValue.builder().equipmentField(LoadField.REACTIVE_POWER_SET_POINT.name()).build(),
                 ReferenceFieldOrValue.builder().value(2.5).build()
         );
         return List.of(formulaInfos1, formulaInfos2);
@@ -77,11 +77,11 @@ class LoadByFormulaModificationTest extends AbstractByFormulaModificationTest {
 
     @Override
     protected List<FormulaInfos> getUpdatedFormulaInfos() {
-        FormulaInfos formulaInfos1 = getFormulaInfo(LoadField.ACTIVE_POWER.name(),
+        FormulaInfos formulaInfos1 = getFormulaInfo(LoadField.ACTIVE_POWER_SET_POINT.name(),
                 List.of(filter1),
                 Operator.PERCENTAGE,
                 ReferenceFieldOrValue.builder().value(200.).build(),
-                ReferenceFieldOrValue.builder().equipmentField(LoadField.ACTIVE_POWER.name()).build()
+                ReferenceFieldOrValue.builder().equipmentField(LoadField.ACTIVE_POWER_SET_POINT.name()).build()
         );
 
         return List.of(formulaInfos1);
