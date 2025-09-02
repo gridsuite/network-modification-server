@@ -44,8 +44,8 @@ public class ConnectablePositionModificationEmbeddable {
     ConnectablePositionModificationInfos toConnectablePositionModificationInfos() {
         return ConnectablePositionModificationInfos.builder()
             .connectableId(connectableId)
-            .busBarSectionId(busbarSectionId)
-            .targetBusBarSectionId(targetBusbarSectionId)
+            .busbarSectionId(busbarSectionId)
+            .targetBusbarSectionId(targetBusbarSectionId)
             .connectionPosition(connectionPosition)
             .connectionName(connectionName)
             .connectionDirection(connectionDirection)
@@ -54,8 +54,8 @@ public class ConnectablePositionModificationEmbeddable {
 
     static ConnectablePositionModificationEmbeddable toConnectablePositionModificationEmbeddable(ConnectablePositionModificationInfos connectablePositionModificationInfos) {
         return new ConnectablePositionModificationEmbeddable(connectablePositionModificationInfos.getConnectableId(),
-            connectablePositionModificationInfos.getBusBarSectionId(),
-            connectablePositionModificationInfos.getTargetBusBarSectionId(),
+            connectablePositionModificationInfos.getBusbarSectionId(),
+            connectablePositionModificationInfos.getTargetBusbarSectionId(),
             connectablePositionModificationInfos.getConnectionPosition(),
             connectablePositionModificationInfos.getConnectionName(),
             connectablePositionModificationInfos.getConnectionDirection());
