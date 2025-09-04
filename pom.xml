@@ -127,6 +127,7 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
+            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
