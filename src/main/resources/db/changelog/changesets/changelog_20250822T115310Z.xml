@@ -16,7 +16,7 @@
     <changeSet author="deharbemat (generated)" id="1755863608062-32">
         <createTable tableName="two_windings_transformer_modification_operational_limits_groups">
             <column name="branch_id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_l_FD3A2CE4_PK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_limits_groupsPK"/>
             </column>
             <column name="operational_limits_groups_id" type="UUID">
                 <constraints nullable="false"/>
