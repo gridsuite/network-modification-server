@@ -22,7 +22,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="pos_operational_limits_groups" type="INT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_l_FD3A2CE4_PK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_limits_groupsPK"/>
             </column>
         </createTable>
     </changeSet>
