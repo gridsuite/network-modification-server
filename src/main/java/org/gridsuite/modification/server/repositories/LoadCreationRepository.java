@@ -30,19 +30,6 @@ public interface LoadCreationRepository extends JpaRepository<LoadCreationEntity
     @Query(value = "BEGIN;" +
             "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
             "DELETE FROM load_creation WHERE id IN ?1 ;" +
-            "DELETE FROM tabular_creation_creations WHERE tabular_creation_entity_id = ?2 ;" +
-            "DELETE FROM modification WHERE id IN ?1 ;" +
             "COMMIT;", nativeQuery = true)
-    void deleteTabularSubModifications(List<UUID> subModificationIds, UUID tabularModificationId);
-
-    @Modifying
-    @Query(value = "BEGIN;" +
-            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?1 ;" +
-            "DELETE FROM load_creation WHERE id IN ?1 ;" +
-            "DELETE FROM tabular_creation_creations WHERE tabular_creation_entity_id = ?2 ;" +
-            "DELETE FROM modification WHERE id IN ?1 ;" +
-            "DELETE FROM tabular_creation WHERE id = ?2 ;" +
-            "DELETE FROM modification WHERE id = ?2 ;" +
-            "COMMIT;", nativeQuery = true)
-    void deleteTabularModification(List<UUID> subModificationIds, UUID tabularModificationId);
+    void deleteSomeTabularSubModifications(List<UUID> subModificationIdsPart);
 }
