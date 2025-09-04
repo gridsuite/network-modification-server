@@ -41,24 +41,20 @@ public interface LineModificationRepository extends JpaRepository<LineModificati
             "DELETE FROM current_limits_modification cl WHERE cl.id IN ?1 ;" +
             "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?3 ;" +
             "DELETE FROM line_modification WHERE id IN ?3 ;" +
-            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?4 ;" +
-            "DELETE FROM modification WHERE id IN ?3 ;" +
             "COMMIT;", nativeQuery = true)
-    void deleteTabularSubModifications(List<UUID> currentLimitsIds, List<UUID> opLimitsGroupsIds, List<UUID> subModificationIds, UUID tabularModificationId);
+    void deleteSomeTabularSubModifications(List<UUID> currentLimitsIds, List<UUID> opLimitsGroupsIds, List<UUID> subModificationIdsPart);
 
     @Modifying
     @Query(value = "BEGIN;" +
-            "DELETE FROM line_modification_op_limits_groups1 lm WHERE lm.branch_id IN ?3 ;" +
-            "DELETE FROM line_modification_op_limits_groups2 lm WHERE lm.branch_id IN ?3 ;" +
-            "DELETE FROM operational_limits_group_modification ol WHERE ol.uuid IN ?2 ;" +
-            "DELETE FROM current_temporary_limits_modification cl WHERE cl.id IN ?1 ;" +
-            "DELETE FROM current_limits_modification cl WHERE cl.id IN ?1 ;" +
-            "DELETE FROM free_property fp WHERE fp.equipment_modification_id IN ?3 ;" +
-            "DELETE FROM line_modification WHERE id IN ?3 ;" +
-            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?4 ;" +
-            "DELETE FROM modification WHERE id IN ?3 ;" +
-            "DELETE FROM tabular_modification WHERE id = ?4 ;" +
-            "DELETE FROM modification WHERE id = ?4 ;" +
+            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?1 ;" +
+            "DELETE FROM modification WHERE id IN ?2 ;" +
             "COMMIT;", nativeQuery = true)
-    void deleteTabularModification(List<UUID> currentLimitsIds, List<UUID> opLimitsGroupsIds, List<UUID> subModificationIds, UUID tabularModificationId);
+    void deleteTabularModificationModifications(UUID tabularModificationId, List<UUID> subModificationIds);
+
+    @Modifying
+    @Query(value = "BEGIN;" +
+            "DELETE FROM tabular_modification WHERE id = ?1 ;" +
+            "DELETE FROM modification WHERE id = ?1 ;" +
+            "COMMIT;", nativeQuery = true)
+    void deleteTabularModificationItself(UUID tabularModificationId);
 }

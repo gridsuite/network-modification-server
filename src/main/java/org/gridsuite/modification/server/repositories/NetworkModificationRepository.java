@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server.repositories;
 
+import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
@@ -61,6 +62,8 @@ public class NetworkModificationRepository {
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
+
+    private static final int SQL_SUBMODIFICATION_DELETION_BATCH_SIZE = 2000;
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
@@ -704,6 +707,22 @@ public class NetworkModificationRepository {
         deleteTabular(tabularModificationEntity.getModificationType(), tabularModificationEntity);
     }
 
+    private void deleteSomeLineSubModifications(List<UUID> subModificationsIds) {
+        List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+        List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
+        List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
+        List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
+        lineModificationRepository.deleteSomeTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds);
+    }
+
+    private void deleteSomeTwtSubModifications(List<UUID> subModificationsIds) {
+        List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
+        List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
+        List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
+        List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
+        twoWindingsTransformerModificationRepository.deleteSomeTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds);
+    }
+
     private void deleteTabular(ModificationType tabularModificationType, ModificationEntity modificationEntity) {
         UUID modificationUuid = modificationEntity.getId();
         List<UUID> modificationToCleanUuids = new ArrayList<>();
@@ -735,18 +754,14 @@ public class NetworkModificationRepository {
             case VOLTAGE_LEVEL_MODIFICATION ->
                 voltageLevelModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
             case LINE_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
-                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
-                lineModificationRepository.deleteTabularModification(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationUuid);
+                Lists.partition(subModificationsIds, SQL_SUBMODIFICATION_DELETION_BATCH_SIZE).forEach(this::deleteSomeLineSubModifications);
+                lineModificationRepository.deleteTabularModificationModifications(modificationUuid, subModificationsIds);
+                lineModificationRepository.deleteTabularModificationItself(modificationUuid);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
-                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
-                twoWindingsTransformerModificationRepository.deleteTabularModification(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationUuid);
+                Lists.partition(subModificationsIds, SQL_SUBMODIFICATION_DELETION_BATCH_SIZE).forEach(this::deleteSomeTwtSubModifications);
+                lineModificationRepository.deleteTabularModificationModifications(modificationUuid, subModificationsIds); // line functions works for Twt too
+                lineModificationRepository.deleteTabularModificationItself(modificationUuid);
             }
             case SUBSTATION_MODIFICATION ->
                 substationModificationRepository.deleteTabularModification(subModificationsIds, modificationUuid);
@@ -793,18 +808,12 @@ public class NetworkModificationRepository {
             case VOLTAGE_LEVEL_MODIFICATION ->
                 voltageLevelModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
             case LINE_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
-                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
-                lineModificationRepository.deleteTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationId);
+                Lists.partition(subModificationsIds, SQL_SUBMODIFICATION_DELETION_BATCH_SIZE).forEach(this::deleteSomeLineSubModifications);
+                lineModificationRepository.deleteTabularModificationModifications(modificationId, subModificationsIds);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
-                List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
-                List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
-                List<UUID> currentLimitsIds = modificationRepository.findCurrentLimitsIdsByOpLimitsGroupsIds(opLimitsGroupsIds);
-                twoWindingsTransformerModificationRepository.deleteTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds, modificationId);
+                Lists.partition(subModificationsIds, SQL_SUBMODIFICATION_DELETION_BATCH_SIZE).forEach(this::deleteSomeTwtSubModifications);
+                lineModificationRepository.deleteTabularModificationModifications(modificationId, subModificationsIds); // line function works for Twt too
             }
             case SUBSTATION_MODIFICATION ->
                 substationModificationRepository.deleteTabularSubModifications(subModificationsIds, modificationId);
