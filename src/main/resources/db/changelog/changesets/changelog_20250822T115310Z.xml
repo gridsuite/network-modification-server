@@ -16,13 +16,13 @@
     <changeSet author="deharbemat (generated)" id="1755863608062-32">
         <createTable tableName="two_windings_transformer_modification_operational_limits_groups">
             <column name="branch_id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_limits_groupsPK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_PK"/>
             </column>
             <column name="operational_limits_groups_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="pos_operational_limits_groups" type="INT">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_limits_groupsPK"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_PK"/>
             </column>
         </createTable>
     </changeSet>
