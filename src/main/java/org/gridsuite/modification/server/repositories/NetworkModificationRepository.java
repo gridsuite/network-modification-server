@@ -63,7 +63,7 @@ public class NetworkModificationRepository {
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
-    private static final int SQL_LIMITSET_SUB_MODIFICATION_DELETION_BATCH_SIZE = 2000;
+    private static final int SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE = 2000;
     private static final int SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE = 5000;
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
@@ -708,7 +708,7 @@ public class NetworkModificationRepository {
         deleteTabular(tabularModificationEntity.getModificationType(), tabularModificationEntity);
     }
 
-    private void deleteSomeLineSubModifications(List<UUID> subModificationsIds) {
+    private void deleteSomeLineTabularSubModifications(List<UUID> subModificationsIds) {
         List<UUID> opLimitsGroups1Ids = modificationRepository.findLineModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
         List<UUID> opLimitsGroups2Ids = modificationRepository.findLineModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
         List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
@@ -716,7 +716,7 @@ public class NetworkModificationRepository {
         lineModificationRepository.deleteSomeTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds);
     }
 
-    private void deleteSomeTwtSubModifications(List<UUID> subModificationsIds) {
+    private void deleteSomeTwtTabularSubModifications(List<UUID> subModificationsIds) {
         List<UUID> opLimitsGroups1Ids = modificationRepository.findTwtModificationOpLimitsGroups1IdsByBranchIds(subModificationsIds);
         List<UUID> opLimitsGroups2Ids = modificationRepository.findTwtModificationOpLimitsGroups2IdsByBranchIds(subModificationsIds);
         List<UUID> opLimitsGroupsIds = ListUtils.union(opLimitsGroups1Ids, opLimitsGroups2Ids);
@@ -745,9 +745,9 @@ public class NetworkModificationRepository {
             case VOLTAGE_LEVEL_MODIFICATION ->
                     Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(voltageLevelModificationRepository::deleteSomeTabularSubModifications);
             case LINE_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_LIMITSET_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(this::deleteSomeLineSubModifications);
+                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE).forEach(this::deleteSomeLineTabularSubModifications);
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_LIMITSET_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(this::deleteSomeTwtSubModifications);
+                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE).forEach(this::deleteSomeTwtTabularSubModifications);
             case SUBSTATION_MODIFICATION ->
                     Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(substationModificationRepository::deleteSomeTabularSubModifications);
             default ->
