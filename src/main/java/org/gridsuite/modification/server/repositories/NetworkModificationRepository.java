@@ -724,7 +724,7 @@ public class NetworkModificationRepository {
         twoWindingsTransformerModificationRepository.deleteSomeTabularSubModifications(currentLimitsIds, opLimitsGroupsIds, subModificationsIds);
     }
 
-    private void deleteSomeTabularSubModifications(ModificationType tabularModificationType, List<UUID> subModificationsIds) {
+    private void deleteAllTabularSubModificationsUsingPartition(ModificationType tabularModificationType, List<UUID> subModificationsIds) {
         switch (tabularModificationType) {
             case GENERATOR_CREATION ->
                     Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(generatorCreationRepository::deleteSomeTabularSubModifications);
@@ -766,7 +766,7 @@ public class NetworkModificationRepository {
 
         modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
         tabularPropertyRepository.deleteTabularProperties(modificationUuid);
-        deleteSomeTabularSubModifications(tabularModificationType, subModificationsIds);
+        deleteAllTabularSubModificationsUsingPartition(tabularModificationType, subModificationsIds);
         if (modificationEntity instanceof TabularModificationEntity) {
             // line functions works for any modification case
             lineModificationRepository.deleteTabularModificationModifications(modificationUuid, subModificationsIds);
@@ -783,7 +783,7 @@ public class NetworkModificationRepository {
         List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularCreationId(modificationId);
         tabularCreationEntity.setCreations(null);
         modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
-        deleteSomeTabularSubModifications(tabularCreationEntity.getCreationType(), subModificationsIds);
+        deleteAllTabularSubModificationsUsingPartition(tabularCreationEntity.getCreationType(), subModificationsIds);
         // generator function works for any creation case
         generatorCreationRepository.deleteTabularCreationCreations(modificationId, subModificationsIds);
     }
@@ -793,7 +793,7 @@ public class NetworkModificationRepository {
         List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(modificationId);
         tabularModificationEntity.setModifications(null);
         modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
-        deleteSomeTabularSubModifications(tabularModificationEntity.getModificationType(), subModificationsIds);
+        deleteAllTabularSubModificationsUsingPartition(tabularModificationEntity.getModificationType(), subModificationsIds);
         // line function works for any modification case
         lineModificationRepository.deleteTabularModificationModifications(modificationId, subModificationsIds);
     }
