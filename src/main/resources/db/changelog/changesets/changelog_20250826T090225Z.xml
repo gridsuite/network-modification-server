@@ -6,11 +6,11 @@
                 <constraints nullable="false"/>
             </column>
             <column name="busbar_section_id" type="VARCHAR(255)"/>
-            <column name="connectable_id" type="VARCHAR(255)"/>
+            <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="connection_direction" type="SMALLINT"/>
             <column name="connection_name" type="VARCHAR(255)"/>
             <column name="connection_position" type="INT"/>
-            <column name="target_busbar_section_id" type="VARCHAR(255)"/>
+            <column name="connection_side" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1756198991898-50">

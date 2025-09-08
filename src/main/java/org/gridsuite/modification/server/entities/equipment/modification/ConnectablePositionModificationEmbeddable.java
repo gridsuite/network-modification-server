@@ -23,14 +23,14 @@ import org.gridsuite.modification.dto.ConnectablePositionModificationInfos;
 @Getter
 @Embeddable
 public class ConnectablePositionModificationEmbeddable {
-    @Column(name = "connectableId")
-    private String connectableId;
+    @Column(name = "equipmentId")
+    private String equipmentId;
 
     @Column(name = "busbarSectionId")
     private String busbarSectionId;
 
-    @Schema(description = "targetBusbarSectionId")
-    private String targetBusbarSectionId;
+    @Schema(description = "connectionSide")
+    private String connectionSide;
 
     @Schema(description = "connectionPosition")
     private Integer connectionPosition;
@@ -43,9 +43,9 @@ public class ConnectablePositionModificationEmbeddable {
 
     ConnectablePositionModificationInfos toConnectablePositionModificationInfos() {
         return ConnectablePositionModificationInfos.builder()
-            .connectableId(connectableId)
+            .equipmentId(equipmentId)
             .busbarSectionId(busbarSectionId)
-            .targetBusbarSectionId(targetBusbarSectionId)
+            .connectionSide(connectionSide)
             .connectionPosition(connectionPosition)
             .connectionName(connectionName)
             .connectionDirection(connectionDirection)
@@ -53,9 +53,9 @@ public class ConnectablePositionModificationEmbeddable {
     }
 
     static ConnectablePositionModificationEmbeddable toConnectablePositionModificationEmbeddable(ConnectablePositionModificationInfos connectablePositionModificationInfos) {
-        return new ConnectablePositionModificationEmbeddable(connectablePositionModificationInfos.getConnectableId(),
+        return new ConnectablePositionModificationEmbeddable(connectablePositionModificationInfos.getEquipmentId(),
             connectablePositionModificationInfos.getBusbarSectionId(),
-            connectablePositionModificationInfos.getTargetBusbarSectionId(),
+            connectablePositionModificationInfos.getConnectionSide(),
             connectablePositionModificationInfos.getConnectionPosition(),
             connectablePositionModificationInfos.getConnectionName(),
             connectablePositionModificationInfos.getConnectionDirection());
