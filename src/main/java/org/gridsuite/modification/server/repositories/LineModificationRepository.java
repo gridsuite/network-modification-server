@@ -23,19 +23,15 @@ import java.util.UUID;
 @Repository
 public interface LineModificationRepository extends JpaRepository<LineModificationEntity, UUID> {
 
-    @EntityGraph(attributePaths = {"opLimitsGroups1"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<LineModificationEntity> findAllOperationalLimitsGroups1ByIdIn(List<UUID> ids);
-
-    @EntityGraph(attributePaths = {"opLimitsGroups2"}, type = EntityGraph.EntityGraphType.LOAD)
-    List<LineModificationEntity> findAllOperationalLimitsGroups2ByIdIn(List<UUID> ids);
+    @EntityGraph(attributePaths = {"operationalLimitsGroups"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<LineModificationEntity> findAllOperationalLimitsGroupsByIdIn(List<UUID> ids);
 
     @EntityGraph(attributePaths = {"properties"}, type = EntityGraph.EntityGraphType.LOAD)
     List<LineModificationEntity> findAllPropertiesByIdIn(List<UUID> ids);
 
     @Modifying
     @Query(value = "BEGIN;" +
-            "DELETE FROM line_modification_op_limits_groups1 lm WHERE lm.branch_id IN ?3 ;" +
-            "DELETE FROM line_modification_op_limits_groups2 lm WHERE lm.branch_id IN ?3 ;" +
+            "DELETE FROM line_modification_operational_limits_groups lm WHERE lm.branch_id IN ?3 ;" +
             "DELETE FROM operational_limits_group_modification ol WHERE ol.uuid IN ?2 ;" +
             "DELETE FROM current_temporary_limits_modification cl WHERE cl.id IN ?1 ;" +
             "DELETE FROM current_limits_modification cl WHERE cl.id IN ?1 ;" +

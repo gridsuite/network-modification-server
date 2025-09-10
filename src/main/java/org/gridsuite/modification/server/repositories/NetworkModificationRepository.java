@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.repositories;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
@@ -329,19 +328,15 @@ public class NetworkModificationRepository {
                 batteryModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             case LINE_MODIFICATION -> {
-                // load line modifications with opLimitsGroups1
-                modifications = lineModificationRepository.findAllOperationalLimitsGroups1ByIdIn(subModificationsUuids);
-                // load opLimitsGroups2 too, it uses hibernate first-level cache to fill them up directly in modifications
-                lineModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
-                // same with properties
+                // load line modifications with opLimitsGroups
+                modifications = lineModificationRepository.findAllOperationalLimitsGroupsByIdIn(subModificationsUuids);
+                // same with properties, it uses hibernate first-level cache to fill them up directly in modifications
                 lineModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION -> {
-                // load 2wt modifications with opLimitsGroups1
-                modifications = twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroups1ByIdIn(subModificationsUuids);
-                // load opLimitsGroups2 too, it uses hibernate first-level cache to fill them up directly in modifications
-                twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroups2ByIdIn(subModificationsUuids);
-                // same with properties
+                // load 2wt modifications with opLimitsGroups
+                modifications = twoWindingsTransformerModificationRepository.findAllOperationalLimitsGroupsByIdIn(subModificationsUuids);
+                // same with properties, it uses hibernate first-level cache to fill them up directly in modifications
                 twoWindingsTransformerModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             }
             case LOAD_MODIFICATION ->
