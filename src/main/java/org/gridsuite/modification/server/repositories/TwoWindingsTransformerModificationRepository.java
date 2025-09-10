@@ -32,7 +32,6 @@ public interface TwoWindingsTransformerModificationRepository extends JpaReposit
     @Modifying
     @Query(value = "BEGIN;" +
             "DELETE FROM two_windings_transformer_modification_operational_limits_groups lm WHERE lm.branch_id IN ?3 ;" +
-            "DELETE FROM two_windings_transformer_modification_op_limits_groups2 lm WHERE lm.branch_id IN ?3 ;" +
             "DELETE FROM operational_limits_group_modification ol WHERE ol.uuid IN ?2 ;" +
             "DELETE FROM current_temporary_limits_modification cl WHERE cl.id IN ?1 ;" +
             "DELETE FROM current_limits_modification cl WHERE cl.id IN ?1 ;" +
