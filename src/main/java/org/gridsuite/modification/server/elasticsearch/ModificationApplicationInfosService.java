@@ -6,9 +6,11 @@
  */
 package org.gridsuite.modification.server.elasticsearch;
 
+import com.google.common.collect.Lists;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,10 @@ import java.util.UUID;
 public class ModificationApplicationInfosService {
     private final ModificationApplicationInfosRepository modificationApplicationInfosRepository;
     private final ModificationApplicationRepository modificationApplicationRepository;
+    @Value("${spring.data.elasticsearch.partition-size:10000}")
+    private int partitionSize;
+    @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
+    public int partitionSizeForDeletion;
 
     public ModificationApplicationInfosService(ModificationApplicationInfosRepository modificationApplicationInfosRepository,
                                                ModificationApplicationRepository modificationApplicationRepository) {
@@ -29,33 +35,45 @@ public class ModificationApplicationInfosService {
     }
 
     public void addAll(List<ModificationApplicationInfos> modificationApplicationInfos) {
-        modificationApplicationRepository.saveAll(modificationApplicationInfos.stream()
-            .map(modificationInfo -> {
-                ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity.builder()
-                    .networkUuid(modificationInfo.getNetworkUuid())
-                    .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
-                    .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
-                    .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
-                    .build();
-                newModificationApplicationEntity.setModification(modificationInfo.getModification());
-                return newModificationApplicationEntity;
-            }).toList());
-        modificationApplicationInfosRepository.saveAll(modificationApplicationInfos);
+        Lists.partition(modificationApplicationInfos, partitionSize)
+            .parallelStream()
+            .forEach(modificationApplicationInfosBatch ->
+                modificationApplicationRepository.saveAll(modificationApplicationInfos.stream()
+                    .map(modificationInfo -> {
+                        ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity
+                            .builder()
+                            .networkUuid(modificationInfo.getNetworkUuid())
+                            .createdEquipmentIds(modificationInfo.getCreatedEquipmentIds())
+                            .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
+                            .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
+                            .build();
+                        newModificationApplicationEntity.setModification(modificationInfo.getModification());
+                        return newModificationApplicationEntity;
+                    }).toList()));
+        Lists.partition(modificationApplicationInfos, partitionSize)
+            .parallelStream()
+            .forEach(modificationApplicationInfosRepository::saveAll);
     }
 
     public void deleteAllByGroupUuidsAndNetworkUuid(List<UUID> groupUuids, UUID networkUuid) {
-        modificationApplicationRepository.deleteAllByNetworkUuidAndModificationGroupIdIn(networkUuid, groupUuids);
-        modificationApplicationInfosRepository.deleteAllByNetworkUuidAndGroupUuidIn(networkUuid, groupUuids);
+        Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream().forEach(ids ->
+            modificationApplicationRepository.deleteAllByNetworkUuidAndModificationGroupIdIn(networkUuid, ids));
+        Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream().forEach(ids ->
+            modificationApplicationInfosRepository.deleteAllByNetworkUuidAndGroupUuidIn(networkUuid, ids));
     }
 
     public void deleteAllByGroupUuids(List<UUID> groupUuids) {
-        modificationApplicationRepository.deleteAllByModificationGroupIdIn(groupUuids);
-        modificationApplicationInfosRepository.deleteAllByGroupUuidIn(groupUuids);
+        Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream()
+            .forEach(modificationApplicationRepository::deleteAllByModificationGroupIdIn);
+        Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream()
+            .forEach(modificationApplicationInfosRepository::deleteAllByGroupUuidIn);
     }
 
     public void deleteAllByModificationIds(List<UUID> modificationIds) {
-        modificationApplicationRepository.deleteAllByModificationIdIn(modificationIds);
-        modificationApplicationInfosRepository.deleteAllByModificationUuidIn(modificationIds);
+        Lists.partition(modificationIds, partitionSizeForDeletion).parallelStream()
+            .forEach(modificationApplicationRepository::deleteAllByModificationIdIn);
+        Lists.partition(modificationIds, partitionSizeForDeletion).parallelStream()
+            .forEach(modificationApplicationInfosRepository::deleteAllByModificationUuidIn);
     }
 
     public void deleteAll() {
