@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
+import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_SAVE_BATCH_SIZE;
+
 /**
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
@@ -35,10 +38,10 @@ public class ModificationApplicationInfosService {
     }
 
     public void addAll(List<ModificationApplicationInfos> modificationApplicationInfos) {
-        Lists.partition(modificationApplicationInfos, partitionSize)
+        Lists.partition(modificationApplicationInfos, SQL_SUB_MODIFICATION_SAVE_BATCH_SIZE)
             .parallelStream()
             .forEach(modificationApplicationInfosBatch ->
-                modificationApplicationRepository.saveAll(modificationApplicationInfos.stream()
+                modificationApplicationRepository.saveAll(modificationApplicationInfosBatch.stream()
                     .map(modificationInfo -> {
                         ModificationApplicationEntity newModificationApplicationEntity = ModificationApplicationEntity
                             .builder()
@@ -56,21 +59,21 @@ public class ModificationApplicationInfosService {
     }
 
     public void deleteAllByGroupUuidsAndNetworkUuid(List<UUID> groupUuids, UUID networkUuid) {
-        Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream().forEach(ids ->
+        Lists.partition(groupUuids, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).parallelStream().forEach(ids ->
             modificationApplicationRepository.deleteAllByNetworkUuidAndModificationGroupIdIn(networkUuid, ids));
         Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream().forEach(ids ->
             modificationApplicationInfosRepository.deleteAllByNetworkUuidAndGroupUuidIn(networkUuid, ids));
     }
 
     public void deleteAllByGroupUuids(List<UUID> groupUuids) {
-        Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream()
+        Lists.partition(groupUuids, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).parallelStream()
             .forEach(modificationApplicationRepository::deleteAllByModificationGroupIdIn);
         Lists.partition(groupUuids, partitionSizeForDeletion).parallelStream()
             .forEach(modificationApplicationInfosRepository::deleteAllByGroupUuidIn);
     }
 
     public void deleteAllByModificationIds(List<UUID> modificationIds) {
-        Lists.partition(modificationIds, partitionSizeForDeletion).parallelStream()
+        Lists.partition(modificationIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).parallelStream()
             .forEach(modificationApplicationRepository::deleteAllByModificationIdIn);
         Lists.partition(modificationIds, partitionSizeForDeletion).parallelStream()
             .forEach(modificationApplicationInfosRepository::deleteAllByModificationUuidIn);
