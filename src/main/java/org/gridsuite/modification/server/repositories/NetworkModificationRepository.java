@@ -31,6 +31,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
+import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
+import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -61,9 +63,6 @@ public class NetworkModificationRepository {
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
-
-    private static final int SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE = 2000;
-    private static final int SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE = 5000;
 
     public NetworkModificationRepository(ModificationGroupRepository modificationGroupRepository,
                                          ModificationRepository modificationRepository,
