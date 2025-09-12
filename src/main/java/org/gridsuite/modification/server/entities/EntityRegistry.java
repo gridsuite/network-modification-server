@@ -74,6 +74,7 @@ public final class EntityRegistry {
         register(VoltageLevelTopologyModificationInfos.class, VoltageLevelTopologyModificationEntity.class);
         register(CreateCouplingDeviceInfos.class, CreateCouplingDeviceEntity.class);
         register(CreateVoltageLevelTopologyInfos.class, CreateVoltageLevelTopologyEntity.class);
+        register(MoveVoltageLevelFeederBaysInfos.class, MoveVoltageLevelFeederBaysEntity.class);
 
         // // attatching and splitting
         register(LineAttachToVoltageLevelInfos.class, LineAttachToVoltageLevelEntity.class);
