@@ -61,10 +61,10 @@ public class AssignmentEntity extends AbstractAssignmentEntity {
                 .value(Boolean.valueOf(value))
                 .build();
             case INTEGER -> IntegerAssignmentInfos.builder()
-                .value(Integer.valueOf(value))
+                .value(value != null ? Integer.valueOf(value) : null)
                 .build();
             case DOUBLE -> DoubleAssignmentInfos.builder()
-                .value(Double.valueOf(value))
+                .value(value != null ? Double.valueOf(value) : null)
                 .build();
             case ENUM -> EnumAssignmentInfos.builder()
                 .value(value)
