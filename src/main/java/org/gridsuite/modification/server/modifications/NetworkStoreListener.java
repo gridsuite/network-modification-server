@@ -123,16 +123,25 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
         addSimpleModificationImpact(identifiable);
+        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+            updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+        }
     }
 
     @Override
     public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
         addSimpleModificationImpact(identifiable);
+        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+            updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+        }
     }
 
     @Override
     public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
+        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+            updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+        }
     }
 
     @Override
