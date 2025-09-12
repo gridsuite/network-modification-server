@@ -7,14 +7,13 @@
 package org.gridsuite.modification.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.gridsuite.modification.server.BuildException;
 import org.gridsuite.modification.server.dto.BuildInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -34,6 +33,7 @@ import java.util.function.Consumer;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
+@RequiredArgsConstructor
 public class BuildWorkerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BuildWorkerService.class);
@@ -41,34 +41,19 @@ public class BuildWorkerService {
     public static final String CANCEL_MESSAGE = "Build was canceled";
     public static final String FAIL_MESSAGE = "Build has failed";
 
-    private final NetworkModificationService networkModificationService;
-
-    private final NetworkModificationObserver networkModificationObserver;
-
-    private final ObjectMapper objectMapper;
-
-    private final BuildStoppedPublisherService stoppedPublisherService;
+    @NonNull private final NetworkModificationService networkModificationService;
+    @NonNull private final NetworkModificationObserver networkModificationObserver;
+    @NonNull private final ObjectMapper objectMapper;
+    @NonNull private final BuildStoppedPublisherService stoppedPublisherService;
+    @NonNull private NotificationService notificationService;
 
     private final Map<String, CompletableFuture<NetworkModificationResult>> futures = new ConcurrentHashMap<>();
 
     private final Map<String, BuildCancelContext> cancelBuildRequests = new ConcurrentHashMap<>();
 
-    private final Set<String> buildRequests = Sets.newConcurrentHashSet();
+    private final Set<String> buildRequests = ConcurrentHashMap.newKeySet();
 
     private final Lock lockRunAndCancel = new ReentrantLock();
-
-    @Autowired
-    private NotificationService notificationService;
-
-    public BuildWorkerService(@NonNull NetworkModificationService networkModificationService,
-                              @NonNull NetworkModificationObserver networkModificationObserver,
-                              @NonNull ObjectMapper objectMapper,
-                              @NonNull BuildStoppedPublisherService stoppedPublisherService) {
-        this.networkModificationService = networkModificationService;
-        this.networkModificationObserver = networkModificationObserver;
-        this.objectMapper = objectMapper;
-        this.stoppedPublisherService = stoppedPublisherService;
-    }
 
     private CompletableFuture<NetworkModificationResult> execBuildVariant(BuildExecContext execContext, BuildInfos buildInfos) {
         lockRunAndCancel.lock();
@@ -83,10 +68,9 @@ public class BuildWorkerService {
             buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
             CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
-                    LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-                    return networkModificationService.buildVariant(networkUuid, buildInfos);
-                }
-            );
+                LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
+                return networkModificationObserver.observeBuild(execContext, () -> networkModificationService.buildVariant(networkUuid, buildInfos));
+            });
 
             futures.put(receiver, future);
 
@@ -98,7 +82,7 @@ public class BuildWorkerService {
 
     @Bean
     public Consumer<Message<String>> consumeBuild() {
-        return message -> networkModificationObserver.observeBuild(() -> {
+        return message -> networkModificationObserver.observeFullBuild(() -> {
             BuildExecContext execContext;
             try {
                 execContext = BuildExecContext.fromMessage(message, objectMapper);
@@ -117,7 +101,7 @@ public class BuildWorkerService {
             if (future != null && (result = future.join()) != null) {  // result available
                 notificationService.emitBuildResultMessage(result, execContext.getReceiver(), execContext.getWorkflowType(), execContext.getWorkflowInfos());
                 LOGGER.info("Build complete on node '{}'", execContext.getReceiver());
-            } else {  // result not available : stop build request
+            } else {  // result not available: stop build request
                 if (cancelBuildRequests.get(execContext.getReceiver()) != null) {
                     stoppedPublisherService.publishCancel(execContext.getReceiver(), CANCEL_MESSAGE, execContext.getWorkflowType(), execContext.getWorkflowInfos());
                 }
