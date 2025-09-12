@@ -11,6 +11,8 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
+import com.powsybl.iidm.modification.topology.DefaultNamingStrategy;
+import com.powsybl.iidm.modification.topology.NamingStrategiesServiceLoader;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
@@ -64,6 +66,9 @@ public class NetworkModificationApplicator {
     @Value("${impacts.collection-threshold:50}")
     @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
+
+    @Value("${naming-strategy:Default}")
+    private String namingStrategy;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
@@ -215,7 +220,7 @@ public class NetworkModificationApplicator {
         modification.initApplicationContext(this.filterService, this.loadFlowService);
 
         // apply all changes on the network
-        modification.apply(network, subReportNode);
+        modification.apply(network, new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategy).orElse(new DefaultNamingStrategy()), subReportNode);
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
