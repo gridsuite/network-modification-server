@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
-import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -123,7 +123,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
         addSimpleModificationImpact(identifiable);
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
@@ -131,7 +131,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
@@ -139,7 +139,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
@@ -147,7 +147,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
@@ -190,13 +190,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void updateEquipmentsLinkedToVoltageLevel(VoltageLevel voltageLevel) {
         voltageLevel.getConnectableStream()
-            .filter(connectable -> TYPES_FOR_INDEXING.contains(connectable.getType()))
+            .filter(connectable -> getIndexedEquipmentTypes().contains(connectable.getType()))
             .forEach(c -> updateImpactedEquipment(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION, true, false));
     }
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateImpactedEquipment(EquipmentInfos.builder()
                 .networkUuid(networkUuid)
                 .variantId(network.getVariantManager().getWorkingVariantId())
@@ -219,7 +219,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateImpactedEquipment(TombstonedEquipmentInfos.builder()
                 .networkUuid(networkUuid)
                 .variantId(network.getVariantManager().getWorkingVariantId())
@@ -390,7 +390,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
-        if (TYPES_FOR_INDEXING.contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
             updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION);
         }
         addSimpleModificationImpact(identifiable);

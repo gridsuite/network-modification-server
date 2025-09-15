@@ -19,6 +19,7 @@ import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -31,14 +32,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -419,21 +419,29 @@ class ModificationIndexationTest {
         assertEquals("s1", modificationApplicationInfos.getModifiedEquipmentIds().stream().findAny().get());
     }
 
+    private LoadCreationInfos createLoadCreationInfos(String loadId) {
+        return LoadCreationInfos.builder()
+            .stashed(false)
+            .loadType(LoadType.FICTITIOUS)
+            .p0(300.0)
+            .q0(50.0)
+            .connectionName("bottom")
+            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
+            .voltageLevelId("v1")
+            .equipmentId(loadId)
+            .busOrBusbarSectionId("1.1")
+            .build();
+    }
+
     @Test
     void testUpdateModificationProperties() {
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("load1")
-                .properties(List.of(FreePropertyInfos.builder().name("propertyName").value("propertyValue").build()))
-                .build();
-
-        EquipmentAttributeModificationInfos switchModification = EquipmentAttributeModificationInfos.builder()
-                .equipmentId("switchId")
-                .equipmentType(IdentifiableType.SWITCH)
-                .properties(List.of(FreePropertyInfos.builder().name("SwitchPropertyName").value("SwitchPropertyValue").build()))
+                .properties(List.of(FreePropertyInfos.builder().name("loadPropertyName").value("loadPropertyValue").build()))
                 .build();
 
         UUID groupUuid = UUID.randomUUID();
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos), ModificationEntity.fromDTO(switchModification)));
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
         NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
         assertNotNull(result);
 
@@ -456,17 +464,25 @@ class ModificationIndexationTest {
         assertEquals("load1", anyModifiedEquipmentIdEntity.get());
     }
 
-    private LoadCreationInfos createLoadCreationInfos(String loadId) {
-        return LoadCreationInfos.builder()
-            .stashed(false)
-            .loadType(LoadType.FICTITIOUS)
-            .p0(300.0)
-            .q0(50.0)
-            .connectionName("bottom")
-            .connectionDirection(ConnectablePosition.Direction.BOTTOM)
-            .voltageLevelId("v1")
-            .equipmentId(loadId)
-            .busOrBusbarSectionId("1.1")
-            .build();
+    @Test
+    void testUpdateModificationPropertiesWithNotIndexedEquipment() {
+        try (MockedStatic<EquipmentInfosService> mocked = Mockito.mockStatic(EquipmentInfosService.class)) {
+            mocked.when(EquipmentInfosService::getIndexedEquipmentTypes)
+                    .thenReturn(Set.of());
+
+            SubstationModificationInfos substationModificationInfos = SubstationModificationInfos.builder()
+                    .equipmentId("s1")
+                    .properties(List.of(FreePropertyInfos.builder().name("s1PropertyName").value("s1PropertyValue").build()))
+                    .build();
+
+            UUID groupUuid = UUID.randomUUID();
+            List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
+            NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+            assertNotNull(result);
+
+            assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());
+            assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
+            assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
+        }
     }
 }
