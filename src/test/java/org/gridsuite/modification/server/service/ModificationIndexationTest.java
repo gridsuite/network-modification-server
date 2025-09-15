@@ -420,12 +420,11 @@ class ModificationIndexationTest {
     }
 
     @Test
-    void testUpdateLoadProperties() {
+    void testUpdateModificationProperties() {
         LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
                 .equipmentId("load1")
                 .properties(List.of(FreePropertyInfos.builder().name("propertyName").value("propertyValue").build()))
                 .build();
-
 
         EquipmentAttributeModificationInfos switchModification = EquipmentAttributeModificationInfos.builder()
                 .equipmentId("switchId")
