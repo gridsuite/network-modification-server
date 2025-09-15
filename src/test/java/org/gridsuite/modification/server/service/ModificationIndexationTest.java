@@ -426,8 +426,15 @@ class ModificationIndexationTest {
                 .properties(List.of(FreePropertyInfos.builder().name("propertyName").value("propertyValue").build()))
                 .build();
 
+
+        EquipmentAttributeModificationInfos switchModification = EquipmentAttributeModificationInfos.builder()
+                .equipmentId("switchId")
+                .equipmentType(IdentifiableType.SWITCH)
+                .properties(List.of(FreePropertyInfos.builder().name("SwitchPropertyName").value("SwitchPropertyValue").build()))
+                .build();
+
         UUID groupUuid = UUID.randomUUID();
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos), ModificationEntity.fromDTO(switchModification)));
         NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
         assertNotNull(result);
 
