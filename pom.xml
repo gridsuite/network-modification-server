@@ -52,7 +52,7 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when upgrading gridsuite dependencies -->
-        <network-modification.version>0.36.0</network-modification.version>
+        <network-modification.version>0.37.0-SNAPSHOT</network-modification.version>
         <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
     </properties>
 
@@ -122,6 +122,12 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>com.rte-france.powsybl</groupId>
+            <artifactId>powsybl-iidm-rte-util</artifactId>
+            <version>4.12.0</version>
+            <scope>runtime</scope>
+        </dependency>
         <!-- Compilation dependencies -->
         <dependency>
             <groupId>org.gridsuite</groupId>

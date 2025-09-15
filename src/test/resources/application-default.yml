@@ -35,5 +35,5 @@ powsybl-ws:
 impacts:
     collection-threshold: 5
 
-
+naming-strategy: Dummy naming strategy
 
