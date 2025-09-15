@@ -336,9 +336,9 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.ratioTapChangerTapPosition = ratioTapChanger.getTapPosition() != null ? new IntegerModificationEmbedded(ratioTapChanger.getTapPosition()) : null;
         this.ratioTapChangerRegulating = ratioTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(ratioTapChanger.getRegulating()) : null;
         this.ratioTapChangerTargetDeadband = ratioTapChanger.getTargetDeadband() != null ? new DoubleModificationEmbedded(ratioTapChanger.getTargetDeadband()) : null;
-        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getRegulatingTerminalId() != null ? new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalId()) : null;
-        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalVlId()) : null;
-        this.ratioTapChangerTerminalRefType = ratioTapChanger.getRegulatingTerminalType() != null ? new StringModificationEmbedded(ratioTapChanger.getRegulatingTerminalType()) : null;
+        this.ratioTapChangerTerminalRefConnectableId = ratioTapChanger.getTerminalRefConnectableId() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableId()) : null;
+        this.ratioTapChangerTerminalRefVoltageLevelId = ratioTapChanger.getTerminalRefConnectableVlId() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableVlId()) : null;
+        this.ratioTapChangerTerminalRefType = ratioTapChanger.getTerminalRefConnectableType() != null ? new StringModificationEmbedded(ratioTapChanger.getTerminalRefConnectableType()) : null;
         this.ratioTapChangerLoadTapChangingCapabilities = ratioTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(ratioTapChanger.getLoadTapChangingCapabilities()) : null;
         this.ratioTapChangerTargetV = ratioTapChanger.getTargetV() != null ? new DoubleModificationEmbedded(ratioTapChanger.getTargetV()) : null;
         if (ratioTapChanger.getSteps() != null) {
@@ -355,9 +355,9 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
         this.phaseTapChangerLowTapPosition = phaseTapChanger.getLowTapPosition() != null ? new IntegerModificationEmbedded(phaseTapChanger.getLowTapPosition()) : null;
         this.phaseTapChangerTapPosition = phaseTapChanger.getTapPosition() != null ? new IntegerModificationEmbedded(phaseTapChanger.getTapPosition()) : null;
         this.phaseTapChangerTargetDeadband = phaseTapChanger.getTargetDeadband() != null ? new DoubleModificationEmbedded(phaseTapChanger.getTargetDeadband()) : null;
-        this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getRegulatingTerminalId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalId()) : null;
-        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getRegulatingTerminalVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalVlId()) : null;
-        this.phaseTapChangerTerminalRefType = phaseTapChanger.getRegulatingTerminalType() != null ? new StringModificationEmbedded(phaseTapChanger.getRegulatingTerminalType()) : null;
+        this.phaseTapChangerTerminalRefConnectableId = phaseTapChanger.getTerminalRefConnectableId() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableId()) : null;
+        this.phaseTapChangerTerminalRefVoltageLevelId = phaseTapChanger.getTerminalRefConnectableVlId() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableVlId()) : null;
+        this.phaseTapChangerTerminalRefType = phaseTapChanger.getTerminalRefConnectableType() != null ? new StringModificationEmbedded(phaseTapChanger.getTerminalRefConnectableType()) : null;
         this.phaseTapChangerRegulating = phaseTapChanger.getRegulating() != null ? new BooleanModificationEmbedded(phaseTapChanger.getRegulating()) : null;
         this.phaseTapChangerLoadTapChangingCapabilities = phaseTapChanger.getLoadTapChangingCapabilities() != null ? new BooleanModificationEmbedded(phaseTapChanger.getLoadTapChangingCapabilities()) : null;
         if (phaseTapChanger.getSteps() != null) {
@@ -444,9 +444,9 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
                 .regulating(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerRegulating()))
                 .loadTapChangingCapabilities(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerLoadTapChangingCapabilities()))
                 .targetV(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTargetV()))
-                .regulatingTerminalId(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefConnectableId()))
-                .regulatingTerminalVlId(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefVoltageLevelId()))
-                .regulatingTerminalType(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefType()))
+                .terminalRefConnectableId(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefConnectableId()))
+                .terminalRefConnectableVlId(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefVoltageLevelId()))
+                .terminalRefConnectableType(IAttributeModificationEmbeddable.toAttributeModification(getRatioTapChangerTerminalRefType()))
                 .steps(ratioTapChangerStepCreationInfos)
                 .build());
 
@@ -465,9 +465,9 @@ public class TwoWindingsTransformerModificationEntity extends BranchModification
             .regulationValue(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulationValue()))
             .regulating(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerRegulating()))
             .loadTapChangingCapabilities(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerLoadTapChangingCapabilities()))
-            .regulatingTerminalId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefConnectableId()))
-            .regulatingTerminalVlId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
-            .regulatingTerminalType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefType()))
+            .terminalRefConnectableId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefConnectableId()))
+            .terminalRefConnectableVlId(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefVoltageLevelId()))
+            .terminalRefConnectableType(IAttributeModificationEmbeddable.toAttributeModification(getPhaseTapChangerTerminalRefType()))
             .steps(phaseTapChangerStepCreationInfos)
             .build());
 
