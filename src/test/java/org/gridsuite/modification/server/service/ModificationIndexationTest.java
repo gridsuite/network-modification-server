@@ -37,6 +37,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
@@ -416,6 +417,37 @@ class ModificationIndexationTest {
 
         assertEquals("s1", modificationApplicationEntity.getModifiedEquipmentIds().stream().findAny().get());
         assertEquals("s1", modificationApplicationInfos.getModifiedEquipmentIds().stream().findAny().get());
+    }
+
+    @Test
+    void testUpdateLoadProperties() {
+        LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
+                .equipmentId("load1")
+                .properties(List.of(FreePropertyInfos.builder().name("propertyName").value("propertyValue").build()))
+                .build();
+
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
+        ModificationApplicationInfos modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll()).getFirst();
+
+        assertEquals(entities.getFirst().getId(), modificationApplicationEntity.getModification().getId());
+        assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getModificationUuid());
+        assertEquals(groupUuid, modificationApplicationInfos.getGroupUuid());
+
+        assertEquals(1, modificationApplicationEntity.getModifiedEquipmentIds().size());
+        assertEquals(1, modificationApplicationInfos.getModifiedEquipmentIds().size());
+
+        Optional<String> anyModifiedEquipmentIdEntity = modificationApplicationEntity.getModifiedEquipmentIds().stream().findAny();
+        assertTrue(anyModifiedEquipmentIdEntity.isPresent());
+        assertEquals("load1", anyModifiedEquipmentIdEntity.get());
+
+        Optional<String> anyModifiedEquipmentIdInfos = modificationApplicationInfos.getModifiedEquipmentIds().stream().findAny();
+        assertTrue(anyModifiedEquipmentIdInfos.isPresent());
+        assertEquals("load1", anyModifiedEquipmentIdEntity.get());
     }
 
     private LoadCreationInfos createLoadCreationInfos(String loadId) {
