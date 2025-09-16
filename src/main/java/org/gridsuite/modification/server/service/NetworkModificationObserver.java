@@ -3,14 +3,18 @@ package org.gridsuite.modification.server.service;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.Observation.CheckedCallable;
+import io.micrometer.observation.Observation.CheckedRunnable;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.gridsuite.modification.ModificationType;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
+@RequiredArgsConstructor
 public class NetworkModificationObserver {
     private static final String OBSERVATION_PREFIX = "app.network-modification.";
     private static final String MODIFICATION_TYPE_TAG_NAME = "modification_type";
@@ -20,20 +24,24 @@ public class NetworkModificationObserver {
     private static final String TASK_TYPE_TAG_VALUE_PENDING = "pending";
     private static final String TASK_POOL_METER_NAME_PREFIX = OBSERVATION_PREFIX + "tasks.pool.";
 
-    private final ObservationRegistry observationRegistry;
-    private final MeterRegistry meterRegistry;
+    @NonNull private final ObservationRegistry observationRegistry;
+    @NonNull private final MeterRegistry meterRegistry;
 
-    public NetworkModificationObserver(@NonNull ObservationRegistry observationRegistry, @NonNull MeterRegistry meterRegistry) {
-        this.observationRegistry = observationRegistry;
-        this.meterRegistry = meterRegistry;
+    public <E extends Throwable> void observeApply(final ModificationType modificationType, final CheckedRunnable<E> runnable) throws E {
+        this.createObservation("apply", modificationType).observeChecked(runnable);
     }
 
-    public <E extends Throwable> void observeApply(ModificationType modificationType, Observation.CheckedRunnable<E> runnable) throws E {
-        createObservation("apply", modificationType).observeChecked(runnable);
+    public <E extends Throwable> void observeFullBuild(final CheckedRunnable<E> runnable) throws E {
+        this.createObservation("consume_message").observeChecked(runnable);
     }
 
-    public <E extends Throwable> void observeBuild(Observation.CheckedRunnable<E> runnable) throws E {
-        createObservation("build").observeChecked(runnable);
+    public <T, E extends Throwable> T observeBuild(final BuildExecContext execContext, final CheckedCallable<T, E> callable) throws E {
+        return this.createObservation("build")
+            .highCardinalityKeyValue("network_uuid", execContext.getNetworkUuid().toString())
+            .highCardinalityKeyValue("variant_origin", execContext.getBuildInfos().getOriginVariantId())
+            .highCardinalityKeyValue("variant_destination", execContext.getBuildInfos().getDestinationVariantId())
+            //.highCardinalityKeyValue("receiver", execContext.getReceiver())
+            .observeChecked(callable);
     }
 
     private Observation createObservation(String name, ModificationType modificationType) {
