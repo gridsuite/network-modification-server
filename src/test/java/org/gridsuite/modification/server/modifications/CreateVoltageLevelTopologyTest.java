@@ -50,9 +50,9 @@ public class CreateVoltageLevelTopologyTest extends AbstractNetworkModificationT
         List<String> busBarIds = new ArrayList<>();
         getNetwork().getBusbarSections().forEach(busbarSection -> busBarIds.add(busbarSection.getId()));
         Assertions.assertEquals(5, busBarIds.size());
-        Assertions.assertTrue(busBarIds.containsAll(List.of("b1", "b2", "BUSBAR_2_1", "BUSBAR_2_2", "BUSBAR_2_3")));
+        Assertions.assertTrue(busBarIds.containsAll(List.of("b1", "b2", "vl1_2_1", "vl1_2_2", "vl1_2_3")));
         Set<String> switchIds = getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet());
-        Assertions.assertTrue(switchIds.containsAll(Set.of("DISCONNECTOR_4_5", "DISCONNECTOR_3_4")));
+        Assertions.assertTrue(switchIds.containsAll(Set.of("vl1_DISCONNECTOR_4_5", "vl1_DISCONNECTOR_3_4")));
     }
 
     @Override
