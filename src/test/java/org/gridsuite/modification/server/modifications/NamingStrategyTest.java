@@ -74,6 +74,7 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet())
+                // verify that the switches names follow the dummy naming strategy
                 .containsAll(Set.of("SWITCH_b1_b3", "DISCONNECTOR_22_15_0", "DISCONNECTOR_21_0_0")));
     }
 
