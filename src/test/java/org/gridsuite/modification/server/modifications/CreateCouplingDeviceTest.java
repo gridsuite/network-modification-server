@@ -71,7 +71,7 @@ class CreateCouplingDeviceTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationCreation() {
         assertTrue(getNetwork().getSwitchStream().map(Switch::getId).collect(Collectors.toSet())
-                .containsAll(Set.of("vl1_BREAKER", "vl1_DISCONNECTOR_22_15", "vl1_DISCONNECTOR_21_0")));
+            .containsAll(Set.of("vl1_BREAKER", "vl1_DISCONNECTOR_22_15", "vl1_DISCONNECTOR_21_0")));
     }
 
     @Override
