@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.ConnectablePositionModificationInfos;
+import org.gridsuite.modification.dto.MoveFeederBayInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.MoveVoltageLevelFeederBaysInfos;
 import org.gridsuite.modification.modifications.MoveVoltageLevelFeederBays;
@@ -42,8 +42,8 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
 
     @Override
     protected ModificationInfos buildModification() {
-        List<ConnectablePositionModificationInfos> connectablePositionModificationInfos = new ArrayList<>();
-        connectablePositionModificationInfos.add(ConnectablePositionModificationInfos.builder()
+        List<MoveFeederBayInfos> moveFeederBayInfos = new ArrayList<>();
+        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
             .equipmentId("v3load")
             .busbarSectionId("3A")
             .connectionSide(null)
@@ -51,7 +51,7 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
             .connectionPosition(4)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build());
-        connectablePositionModificationInfos.add(ConnectablePositionModificationInfos.builder()
+        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
             .equipmentId("line2")
             .busbarSectionId("3C")
             .connectionSide(ThreeSides.TWO.toString())
@@ -61,14 +61,14 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
             .build());
         return MoveVoltageLevelFeederBaysInfos.builder()
             .voltageLevelId("v3")
-            .feederBaysAttributeList(connectablePositionModificationInfos)
+            .feederBays(moveFeederBayInfos)
             .build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
-        List<ConnectablePositionModificationInfos> connectablePositionModificationInfos = new ArrayList<>();
-        connectablePositionModificationInfos.add(ConnectablePositionModificationInfos.builder()
+        List<MoveFeederBayInfos> moveFeederBayInfos = new ArrayList<>();
+        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
             .equipmentId("v3load")
             .busbarSectionId("3A")
             .connectionSide(null)
@@ -76,7 +76,7 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
             .connectionPosition(6)
             .connectionDirection(ConnectablePosition.Direction.BOTTOM)
             .build());
-        connectablePositionModificationInfos.add(ConnectablePositionModificationInfos.builder()
+        moveFeederBayInfos.add(MoveFeederBayInfos.builder()
             .equipmentId("line2")
             .busbarSectionId("3B")
             .connectionSide(ThreeSides.ONE.toString())
@@ -86,7 +86,7 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
             .build());
         return MoveVoltageLevelFeederBaysInfos.builder()
             .voltageLevelId("v3")
-            .feederBaysAttributeList(connectablePositionModificationInfos)
+            .feederBays(moveFeederBayInfos)
             .build();
     }
 
@@ -168,7 +168,7 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
     void testGetTerminal() {
         Network network = getNetwork();
         // is not an injection or a branch
-        ConnectablePositionModificationInfos connectablePositionModification = ConnectablePositionModificationInfos.builder()
+        MoveFeederBayInfos connectablePositionModification = MoveFeederBayInfos.builder()
             .equipmentId("trf6")
             .busbarSectionId("1A")
             .connectionSide("ONE")
@@ -178,14 +178,14 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
             .build();
         MoveVoltageLevelFeederBaysInfos moveVoltageLevelFeederBaysInfos = MoveVoltageLevelFeederBaysInfos.builder()
                 .voltageLevelId("v2")
-                .feederBaysAttributeList(List.of(connectablePositionModification))
+                .feederBays(List.of(connectablePositionModification))
                 .build();
         MoveVoltageLevelFeederBays moveVoltageLevelFeederBays = (MoveVoltageLevelFeederBays) moveVoltageLevelFeederBaysInfos.toModification();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", moveVoltageLevelFeederBays.getName());
         String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : ConnectablePositionModification is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
         // busbar not found on a branch
-        ConnectablePositionModificationInfos connectablePositionModification2 = ConnectablePositionModificationInfos.builder()
+        MoveFeederBayInfos connectablePositionModification2 = MoveFeederBayInfos.builder()
             .equipmentId("line1")
             .busbarSectionId("random")
             .connectionSide("THREE")
@@ -196,7 +196,7 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
         message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : Invalid connection side: THREE for branch line1", message);
         // injection with no error
-        ConnectablePositionModificationInfos connectablePositionModification3 = ConnectablePositionModificationInfos.builder()
+        MoveFeederBayInfos connectablePositionModification3 = MoveFeederBayInfos.builder()
             .equipmentId("v3Battery")
             .busbarSectionId("3B")
             .connectionSide(null)
@@ -208,7 +208,7 @@ public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationT
         assertEquals("v3", terminal.getVoltageLevel().getId());
         assertEquals("v3Battery", terminal.getConnectable().getId());
         // branch side 2 with no error
-        ConnectablePositionModificationInfos connectablePositionModification4 = ConnectablePositionModificationInfos.builder()
+        MoveFeederBayInfos connectablePositionModification4 = MoveFeederBayInfos.builder()
             .equipmentId("line1")
             .busbarSectionId("1.B")
             .connectionSide("TWO")

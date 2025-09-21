@@ -24,7 +24,6 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "move_voltage_level_feeder_bays")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = ""))
 public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
 
     @Column(name = "voltageLevelId")
@@ -32,10 +31,11 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
 
     @ElementCollection
     @CollectionTable(
-        name = "connectionPositionModification",
-        joinColumns = @JoinColumn(name = "modification_id")
+        name = "move_feeder_bay",
+        joinColumns = @JoinColumn(name = "modification_id"),
+            foreignKey = @ForeignKey(name = "move_feeder_bay_modification_id_fk_constraint")
     )
-    private List<ConnectablePositionModificationEmbeddable> connectablePositionModifications;
+    private List<MoveFeederBayEmbeddable> moveFeederBays;
 
     public MoveVoltageLevelFeederBaysEntity(MoveVoltageLevelFeederBaysInfos moveVoltageLevelFeederBaysInfos) {
         super(moveVoltageLevelFeederBaysInfos);
@@ -49,14 +49,14 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
     }
 
     private void assignAttributes(MoveVoltageLevelFeederBaysInfos moveVoltageLevelFeederBaysInfos) {
-        if (this.connectablePositionModifications == null) {
-            this.connectablePositionModifications = new ArrayList<>();
+        if (this.moveFeederBays == null) {
+            this.moveFeederBays = new ArrayList<>();
         } else {
-            this.connectablePositionModifications.clear();
+            this.moveFeederBays.clear();
         }
         this.voltageLevelId = moveVoltageLevelFeederBaysInfos.getVoltageLevelId();
-        this.connectablePositionModifications.addAll(moveVoltageLevelFeederBaysInfos.getFeederBaysAttributeList().stream()
-            .map(ConnectablePositionModificationEmbeddable::toConnectablePositionModificationEmbeddable)
+        this.moveFeederBays.addAll(moveVoltageLevelFeederBaysInfos.getFeederBays().stream()
+            .map(MoveFeederBayEmbeddable::toConnectablePositionModificationEmbeddable)
             .toList());
     }
 
@@ -72,7 +72,7 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
             .stashed(getStashed())
             .activated(getActivated())
             .voltageLevelId(voltageLevelId)
-            .feederBaysAttributeList(connectablePositionModifications.stream()
-                .map(ConnectablePositionModificationEmbeddable::toConnectablePositionModificationInfos).toList());
+            .feederBays(moveFeederBays.stream()
+                .map(MoveFeederBayEmbeddable::toConnectablePositionModificationInfos).toList());
     }
 }

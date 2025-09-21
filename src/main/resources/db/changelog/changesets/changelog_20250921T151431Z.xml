@@ -1,19 +1,19 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="lesoteti (generated)" id="1756198991898-49">
-        <createTable tableName="connection_position_modification">
+    <changeSet author="rehiligha (generated)" id="1758467689080-35">
+        <createTable tableName="move_feeder_bay">
             <column name="modification_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="busbar_section_id" type="VARCHAR(255)"/>
-            <column name="equipment_id" type="VARCHAR(255)"/>
             <column name="connection_direction" type="SMALLINT"/>
             <column name="connection_name" type="VARCHAR(255)"/>
             <column name="connection_position" type="INT"/>
             <column name="connection_side" type="VARCHAR(255)"/>
+            <column name="equipment_id" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="lesoteti (generated)" id="1756198991898-50">
+    <changeSet author="rehiligha (generated)" id="1758467689080-36">
         <createTable tableName="move_voltage_level_feeder_bays">
             <column name="voltage_level_id" type="VARCHAR(255)"/>
             <column name="id" type="UUID">
@@ -21,10 +21,10 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="lesoteti (generated)" id="1756198991898-51">
-        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="connection_position_modification" constraintName="connectionPositionModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="move_voltage_level_feeder_bays" validate="true"/>
+    <changeSet author="rehiligha (generated)" id="1758467689080-47">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="move_voltage_level_feeder_bays" constraintName="FKtf289igxme7ug0m01o7e1clqh" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <changeSet author="lesoteti (generated)" id="1756198991898-52">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="move_voltage_level_feeder_bays" constraintName="moveVoltageLevelFeederBays_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    <changeSet author="rehiligha (generated)" id="1758467689080-51">
+        <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="move_feeder_bay" constraintName="move_feeder_bay_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="move_voltage_level_feeder_bays" validate="true"/>
     </changeSet>
 </databaseChangeLog>

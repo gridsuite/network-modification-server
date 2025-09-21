@@ -13,7 +13,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.ConnectablePositionModificationInfos;
+import org.gridsuite.modification.dto.MoveFeederBayInfos;
 
 /**
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
@@ -22,7 +22,7 @@ import org.gridsuite.modification.dto.ConnectablePositionModificationInfos;
 @AllArgsConstructor
 @Getter
 @Embeddable
-public class ConnectablePositionModificationEmbeddable {
+public class MoveFeederBayEmbeddable {
     @Column(name = "equipmentId")
     private String equipmentId;
 
@@ -41,8 +41,8 @@ public class ConnectablePositionModificationEmbeddable {
     @Schema(description = "connectionDirection")
     private ConnectablePosition.Direction connectionDirection;
 
-    ConnectablePositionModificationInfos toConnectablePositionModificationInfos() {
-        return ConnectablePositionModificationInfos.builder()
+    MoveFeederBayInfos toConnectablePositionModificationInfos() {
+        return MoveFeederBayInfos.builder()
             .equipmentId(equipmentId)
             .busbarSectionId(busbarSectionId)
             .connectionSide(connectionSide)
@@ -52,12 +52,12 @@ public class ConnectablePositionModificationEmbeddable {
             .build();
     }
 
-    static ConnectablePositionModificationEmbeddable toConnectablePositionModificationEmbeddable(ConnectablePositionModificationInfos connectablePositionModificationInfos) {
-        return new ConnectablePositionModificationEmbeddable(connectablePositionModificationInfos.getEquipmentId(),
-            connectablePositionModificationInfos.getBusbarSectionId(),
-            connectablePositionModificationInfos.getConnectionSide(),
-            connectablePositionModificationInfos.getConnectionPosition(),
-            connectablePositionModificationInfos.getConnectionName(),
-            connectablePositionModificationInfos.getConnectionDirection());
+    static MoveFeederBayEmbeddable toConnectablePositionModificationEmbeddable(MoveFeederBayInfos moveFeederBayInfos) {
+        return new MoveFeederBayEmbeddable(moveFeederBayInfos.getEquipmentId(),
+            moveFeederBayInfos.getBusbarSectionId(),
+            moveFeederBayInfos.getConnectionSide(),
+            moveFeederBayInfos.getConnectionPosition(),
+            moveFeederBayInfos.getConnectionName(),
+            moveFeederBayInfos.getConnectionDirection());
     }
 }
