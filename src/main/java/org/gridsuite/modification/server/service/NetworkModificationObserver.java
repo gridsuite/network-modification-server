@@ -35,13 +35,17 @@ public class NetworkModificationObserver {
         this.createObservation("consume_build_message").observeChecked(runnable);
     }
 
-    public <T, E extends Throwable> T observeBuild(final BuildExecContext execContext, final CheckedCallable<T, E> callable) throws E {
-        return this.createObservation("build")
-            .highCardinalityKeyValue("network_uuid", execContext.getNetworkUuid().toString())
-            .highCardinalityKeyValue("variant_origin", execContext.getBuildInfos().getOriginVariantId())
-            .highCardinalityKeyValue("variant_destination", execContext.getBuildInfos().getDestinationVariantId())
-            //.highCardinalityKeyValue("receiver", execContext.getReceiver())
-            .observeChecked(callable);
+    public <R, E extends Throwable> R observeBuild(final BuildExecContext execContext, final CheckedCallable<R, E> callable) throws E {
+        Observation observation = this.createObservation("build")
+            .highCardinalityKeyValue("network_uuid", execContext.getNetworkUuid().toString());
+        //.highCardinalityKeyValue("receiver", execContext.getReceiver())
+        if (execContext.getBuildInfos().getOriginVariantId() != null) {
+            observation = observation.highCardinalityKeyValue("variant_origin", execContext.getBuildInfos().getOriginVariantId());
+        }
+        if (execContext.getBuildInfos().getDestinationVariantId() != null) {
+            observation = observation.highCardinalityKeyValue("variant_destination", execContext.getBuildInfos().getDestinationVariantId());
+        }
+        return observation.observeChecked(callable);
     }
 
     private Observation createObservation(String name, ModificationType modificationType) {
