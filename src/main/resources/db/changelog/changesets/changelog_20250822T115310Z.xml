@@ -1,0 +1,155 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="deharbemat (generated)" id="1755863608062-31">
+        <createTable tableName="line_modification_operational_limits_groups">
+            <column name="branch_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_modification_operational_limits_groupsPK"/>
+            </column>
+            <column name="operational_limits_groups_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_operational_limits_groups" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="line_modification_operational_limits_groupsPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-32">
+        <createTable tableName="two_windings_transformer_modification_operational_limits_groups">
+            <column name="branch_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_PK"/>
+            </column>
+            <column name="operational_limits_groups_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos_operational_limits_groups" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="two_windings_transformer_modification_operational_PK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-33">
+        <addColumn tableName="operational_limits_group_modification">
+            <column name="applicability" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-34">
+        <addColumn tableName="line_modification">
+            <column name="selected_operational_limits_group_id1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-35">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="selected_operational_limits_group_id1" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-36">
+        <addColumn tableName="line_modification">
+            <column name="selected_operational_limits_group_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-37">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="selected_operational_limits_group_id1op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-38">
+        <addColumn tableName="line_modification">
+            <column name="selected_operational_limits_group_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-39">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="selected_operational_limits_group_id2" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-40">
+        <addColumn tableName="line_modification">
+            <column name="selected_operational_limits_group_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-41">
+        <addColumn tableName="two_windings_transformer_modification">
+            <column name="selected_operational_limits_group_id2op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-45">
+        <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="UC_LINE_MODIFICATION_OPERATIONAL_LIMITS_GROUPSOPERATIONAL_LIMIT" tableName="line_modification_operational_limits_groups"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-47">
+        <addUniqueConstraint columnNames="current_limits_id" constraintName="UC_OPERATIONAL_LIMITS_GROUP_MODIFICATIONCURRENT_LIMITS_ID_COL" tableName="operational_limits_group_modification"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-48">
+        <addUniqueConstraint columnNames="operational_limits_groups_id" constraintName="UC_TWO_WINDINGS_TRANSFORMER_MODIFICATION_OPERATIONAL_LIMITS_GRO" tableName="two_windings_transformer_modification_operational_limits_groups"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-56">
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="line_modification_operational_limits_groups" constraintName="branch_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-57">
+        <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_operational_limits_groups" constraintName="branch_modification_id_fk_twt" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-62">
+        <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION" constraintName="CURRENT_LIMITS_MODIFICATION_ID1_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-63">
+        <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION" constraintName="CURRENT_LIMITS_MODIFICATION_ID2_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-66">
+        <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION_OP_LIMITS_GROUPS1" constraintName="LINE_MOD_OPERATIONAL_LIMITS_GROUPS_ID1_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-67">
+        <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION_OP_LIMITS_GROUPS2" constraintName="LINE_MOD_OPERATIONAL_LIMITS_GROUPS_ID2_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-68">
+        <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION_OP_LIMITS_GROUPS1" constraintName="LINE_OP1_BRANCH_ID_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-69">
+        <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION_OP_LIMITS_GROUPS2" constraintName="LINE_OP2_BRANCH_ID_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-70">
+        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION" constraintName="TWT_MOD_CURRENT_LIMITS_MODIFICATION_ID1_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-71">
+        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION" constraintName="TWT_MOD_CURRENT_LIMITS_MODIFICATION_ID2_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-72">
+        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION_OP_LIMITS_GROUPS1" constraintName="TWT_MOD_OPERATIONAL_LIMITS_GROUPS_ID1_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-73">
+        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION_OP_LIMITS_GROUPS2" constraintName="TWT_MOD_OPERATIONAL_LIMITS_GROUPS_ID2_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-74">
+        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION_OP_LIMITS_GROUPS1" constraintName="TWT_OP1_BRANCH_ID_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-75">
+        <dropForeignKeyConstraint baseTableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION_OP_LIMITS_GROUPS2" constraintName="TWT_OP2_BRANCH_ID_FK"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-76">
+        <dropTable tableName="LINE_MODIFICATION_OP_LIMITS_GROUPS1"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-77">
+        <dropTable tableName="LINE_MODIFICATION_OP_LIMITS_GROUPS2"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-78">
+        <dropTable tableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION_OP_LIMITS_GROUPS1"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-79">
+        <dropTable tableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION_OP_LIMITS_GROUPS2"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-80">
+        <dropColumn columnName="CURRENT_LIMITS_MODIFICATION_ID1" tableName="LINE_MODIFICATION"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-81">
+        <dropColumn columnName="CURRENT_LIMITS_MODIFICATION_ID1" tableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-82">
+        <dropColumn columnName="CURRENT_LIMITS_MODIFICATION_ID2" tableName="LINE_MODIFICATION"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-83">
+        <dropColumn columnName="CURRENT_LIMITS_MODIFICATION_ID2" tableName="TWO_WINDINGS_TRANSFORMER_MODIFICATION"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-85">
+        <dropColumn columnName="SELECTED_OPERATIONAL_LIMITS_GROUP_ID" tableName="OPERATIONAL_LIMITS_GROUP_MODIFICATION"/>
+    </changeSet>
+    <changeSet author="deharbemat (generated)" id="1755863608062-86">
+        <dropColumn columnName="SIDE" tableName="OPERATIONAL_LIMITS_GROUP_MODIFICATION"/>
+    </changeSet>
+</databaseChangeLog>

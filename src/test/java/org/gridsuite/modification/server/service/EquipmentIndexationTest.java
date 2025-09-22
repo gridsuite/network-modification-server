@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
-import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
@@ -139,7 +139,7 @@ class EquipmentIndexationTest {
         List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(11, equipmentsIndexedAfterVlModif.size());
         assertTrue(equipmentsIndexedAfterVlModif.stream()
-                .allMatch(equipmentInfos -> TYPES_FOR_INDEXING.contains(IdentifiableType.valueOf(equipmentInfos.getType()))));
+                .allMatch(equipmentInfos -> EquipmentInfosService.getIndexedEquipmentTypes().contains(IdentifiableType.valueOf(equipmentInfos.getType()))));
     }
 
     @Test
