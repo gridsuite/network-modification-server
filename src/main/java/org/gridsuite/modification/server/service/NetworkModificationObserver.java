@@ -32,7 +32,7 @@ public class NetworkModificationObserver {
     }
 
     public <E extends Throwable> void observeFullBuild(final CheckedRunnable<E> runnable) throws E {
-        this.createObservation("consume_message").observeChecked(runnable);
+        this.createObservation("consume_build_message").observeChecked(runnable);
     }
 
     public <T, E extends Throwable> T observeBuild(final BuildExecContext execContext, final CheckedCallable<T, E> callable) throws E {
