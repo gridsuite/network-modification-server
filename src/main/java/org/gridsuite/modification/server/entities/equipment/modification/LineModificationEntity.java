@@ -96,6 +96,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .connectionName2(toAttributeModification(getConnectionName2()))
             .selectedOperationalLimitsGroup1(toAttributeModification(getSelectedOperationalLimitsGroupId1()))
             .selectedOperationalLimitsGroup2(toAttributeModification(getSelectedOperationalLimitsGroupId2()))
+            .editedOperationalLimitsGroups(getEditedOperationalLimitsGroups())
             .connectionDirection1(toAttributeModification(getConnectionDirection1()))
             .connectionDirection2(toAttributeModification(getConnectionDirection2()))
             .connectionPosition1(toAttributeModification(getConnectionPosition1()))
