@@ -22,7 +22,7 @@
         </createTable>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1758467689080-47">
-        <addForeignKeyConstraint baseColumnNames="id" baseTableName="move_voltage_level_feeder_bays" constraintName="FKtf289igxme7ug0m01o7e1clqh" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="move_voltage_level_feeder_bays" constraintName="movefeederbayModification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1758467689080-51">
         <addForeignKeyConstraint baseColumnNames="modification_id" baseTableName="move_feeder_bay" constraintName="move_feeder_bay_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="move_voltage_level_feeder_bays" validate="true"/>
