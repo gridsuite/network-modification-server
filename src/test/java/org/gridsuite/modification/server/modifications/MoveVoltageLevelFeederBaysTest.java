@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Etienne Lesot <etienne.lesot at rte-france.com>
  */
 @Tag("IntegrationTest")
-public class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
+class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
