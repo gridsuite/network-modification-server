@@ -227,7 +227,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         IntegerAssignmentInfos assignmentInfos7 = IntegerAssignmentInfos.builder()
                 .filters(List.of(filter3))
                 .editedField(TwoWindingsTransformerField.PHASE_LOW_TAP_POSITION.name())
-                .value(2)
+                .value(null)
                 .build();
 
         DoubleAssignmentInfos assignmentInfos8 = DoubleAssignmentInfos.builder()
@@ -269,7 +269,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         DoubleAssignmentInfos assignmentInfos14 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter3, filter2))
                 .editedField(TwoWindingsTransformerField.RATED_U2.name())
-                .value(0.5)
+                .value(null)
                 .build();
 
         DoubleAssignmentInfos assignmentInfos15 = DoubleAssignmentInfos.builder()
