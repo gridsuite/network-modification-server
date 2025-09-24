@@ -86,7 +86,7 @@
     <changeSet author="deharbemat (generated)" id="1755863608062-57">
         <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_operational_limits_groups" constraintName="branch_modification_id_fk_twt" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
     </changeSet>
-    <changeSet author="deharbemat" id="migrationCurrentLimits_20250115T135946Z">
+    <changeSet author="deharbemat" id="migrationTabularCurrentLimits_20250822T115310Z">
         <sqlFile
                 encoding="UTF-8"
                 path="migrationTabularCurrentLimits_20250822T115310Z.sql"
