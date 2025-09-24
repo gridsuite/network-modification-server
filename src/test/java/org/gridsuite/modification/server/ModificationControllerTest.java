@@ -1532,7 +1532,7 @@ class ModificationControllerTest {
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(8, lineTypes.size());
+        assertEquals(10, lineTypes.size());
 
         // Check if catalog is completely updated
         mockMvc.perform(multipart(URI_LINE_CATALOG)
