@@ -23,22 +23,22 @@ import org.gridsuite.modification.dto.MoveFeederBayInfos;
 @Getter
 @Embeddable
 public class MoveFeederBayEmbeddable {
-    @Column(name = "equipmentId")
+    @Column(name = "equipment_id")
     private String equipmentId;
 
-    @Column(name = "busbarSectionId")
+    @Column(name = "busbar_section_id")
     private String busbarSectionId;
 
-    @Schema(description = "connectionSide")
+    @Schema(description = "connection_side")
     private String connectionSide;
 
-    @Schema(description = "connectionPosition")
+    @Schema(description = "connection_position")
     private Integer connectionPosition;
 
-    @Schema(description = "connectionName")
+    @Schema(description = "connection_name")
     private String connectionName;
 
-    @Schema(description = "connectionDirection")
+    @Schema(description = "connection_direction")
     private ConnectablePosition.Direction connectionDirection;
 
     MoveFeederBayInfos toConnectablePositionModificationInfos() {

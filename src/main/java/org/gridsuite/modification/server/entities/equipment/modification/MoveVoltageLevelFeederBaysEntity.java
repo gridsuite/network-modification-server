@@ -24,10 +24,10 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "move_voltage_level_feeder_bays")
-@PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "movefeederbayModification_id_fk_constraint"))
+@PrimaryKeyJoinColumn(name = "id", foreignKey = @ForeignKey(name = "move_voltage_level_feeder_bays_id_fk_constraint"))
 public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
 
-    @Column(name = "voltageLevelId")
+    @Column(name = "voltage_level_id")
     private String voltageLevelId;
 
     @ElementCollection
