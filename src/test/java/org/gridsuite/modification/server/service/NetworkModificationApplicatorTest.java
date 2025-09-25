@@ -94,7 +94,7 @@ class NetworkModificationApplicatorTest {
 
         when(modificationInfosGroups.get(0).modifications().get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
 
-        NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(modificationInfosGroups, networkInfos);
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());

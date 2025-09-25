@@ -84,8 +84,7 @@ public class BuildWorkerService {
 
             CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
                     LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
-                    // TODO avoid blocking the forkjoinpool commonpool when we are using our own executor
-                    return networkModificationService.buildVariantBlocking(networkUuid, buildInfos);
+                    return networkModificationService.buildVariant(networkUuid, buildInfos);
                 }
             );
 

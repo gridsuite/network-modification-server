@@ -138,7 +138,7 @@ public class NetworkModificationApplicator {
      * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModifications method
      * and no more builds can go through. If this causes problems we should put them in separate rabbitmq queues.
      */
-    public CompletableFuture<NetworkModificationResult> applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
+    public NetworkModificationResult applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
                 .map(ModificationApplicationGroup::modifications)
                 .flatMap(List::stream)
@@ -151,14 +151,11 @@ public class NetworkModificationApplicator {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener));
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener))
+                .join();
         } else {
-            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroups, listener));
+            return applyAndFlush(modificationInfosGroups, listener);
         }
-    }
-
-    public NetworkModificationResult applyModificationsBlocking(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
-        return this.applyModifications(modificationInfosGroups, networkInfos).join();
     }
 
     private NetworkModificationResult applyAndFlush(List<ModificationApplicationGroup> modificationInfosGroups,

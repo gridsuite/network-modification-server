@@ -250,7 +250,7 @@ public class NetworkModificationService {
         return network;
     }
 
-    public CompletableFuture<NetworkModificationResult> buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
+    public NetworkModificationResult buildVariant(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
         // Apply all modifications belonging to the modification groups uuids in buildInfos
         List<ModificationApplicationGroup> modificationGroupsInfos = new ArrayList<>();
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
@@ -284,10 +284,6 @@ public class NetworkModificationService {
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
 
         return modificationApplicator.applyModifications(modificationGroupsInfos, networkInfos);
-    }
-
-    public NetworkModificationResult buildVariantBlocking(@NonNull UUID networkUuid, @NonNull BuildInfos buildInfos) {
-        return buildVariant(networkUuid, buildInfos).join();
     }
 
     public void buildVariantRequest(UUID networkUuid, BuildInfos buildInfos, String receiver, WorkflowType workflowType, String workflowInfos) {

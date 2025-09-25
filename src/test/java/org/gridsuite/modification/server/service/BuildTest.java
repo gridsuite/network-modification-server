@@ -1023,7 +1023,7 @@ class BuildTest {
         );
 
         //Global application status should be in error and last application status should be OK
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModificationsBlocking(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
