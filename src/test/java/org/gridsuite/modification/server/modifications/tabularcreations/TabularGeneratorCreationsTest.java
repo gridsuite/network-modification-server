@@ -38,9 +38,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCollectionElementImpact;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -254,8 +256,10 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
             .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                 .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertLogMessage("Tabular creation: 2 generators have been created", "network.modification.tabular.creation", reportService);
     }
@@ -303,8 +307,10 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                         .andExpect(status().isOk()).andReturn();
         assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
     }
@@ -343,6 +349,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         // creation
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(result);
