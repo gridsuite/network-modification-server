@@ -88,13 +88,6 @@
     </changeSet>
     <changeSet author="deharbemat" id="1755863608062-58">
         <sqlFile
-                dbms="!postgresql"
-                encoding="UTF-8"
-                path="migrationTabularCurrentLimits_20250822T115310Z.sql"
-                relativeToChangelogFile="true"
-                splitStatements="true"
-                stripComments="true"/>
-        <sqlFile
                 dbms="postgresql"
                 encoding="UTF-8"
                 path="migrationTabularCurrentLimits_pg_20250822T115310Z.sql"
