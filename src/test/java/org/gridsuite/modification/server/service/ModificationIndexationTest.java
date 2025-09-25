@@ -392,7 +392,7 @@ class ModificationIndexationTest {
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, loadCreationInfosList.stream().map(ModificationEntity::fromDTO).toList());
 
         // apply modifications to index them
-        networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+        networkModificationApplicator.applyModificationsBlocking(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
 
         // assert they are both stored in ES and in postgres
         assertEquals(3, modificationApplicationRepository.findAll().size());
