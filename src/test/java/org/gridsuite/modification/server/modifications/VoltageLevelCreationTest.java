@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,9 @@ import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -169,8 +172,10 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setIpMin(25.0);
         vli.setIpMax(25.0);
         String vliJsonObject = getJsonBody(vli, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         // VL is created
         assertNotNull(getNetwork().getVoltageLevel("vl_ok"));
     }
@@ -195,8 +200,10 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vli.setIpMax(ipMax);
         String vliJsonObject = getJsonBody(vli, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         // VL could not have been created
         assertNull(getNetwork().getVoltageLevel("vl_ko"));
         assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), ERROR_MESSAGE_KEY, reportService);

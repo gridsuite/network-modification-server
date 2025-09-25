@@ -29,8 +29,10 @@ import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmpt
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
@@ -63,6 +65,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         // switch opening
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
@@ -70,6 +74,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentId("break1Variant");
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, NetworkCreation.VARIANT_ID);
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1Variant"));
     }
@@ -93,8 +99,10 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         // switch not existing
         switchStatusModificationInfos.setEquipmentId(switchNotFoundId);
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
-        mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -102,27 +110,36 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentId(switchId1);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         testEmptyImpacts(mapper, mvcResult.getResponse().getContentAsString());
 
         // switch opening
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch closing
         switchStatusModificationInfos.setEquipmentId(switchId2);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
         // switch opening on another substation
         switchStatusModificationInfos.setEquipmentId(switchId3);
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), otherSubstationsIds);
 
         testNetworkModificationsCount(getGroupId(), modificationsCount);

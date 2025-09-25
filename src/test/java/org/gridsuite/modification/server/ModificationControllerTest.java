@@ -79,8 +79,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -219,13 +218,15 @@ class ModificationControllerTest {
     @Test
     void testNetworkNotFound() throws Exception {
         String body = getJsonBody(LoadCreationInfos.builder().equipmentId("id").build(), NOT_FOUND_NETWORK_ID, NetworkCreation.VARIANT_ID);
-        mockMvc.perform(post(NETWORK_MODIFICATION_URI)
+        MvcResult mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI)
             .content(body)
             .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpectAll(
                 status().isNotFound(),
                 content().string(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage())
-            );
+            ).andReturn();
     }
 
     @Test
@@ -255,7 +256,10 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<UUID> bsicListResult = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(bsicListResult, List.of());
-        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
@@ -309,7 +313,9 @@ class ModificationControllerTest {
                 .build();
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
 
-        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
@@ -337,7 +343,9 @@ class ModificationControllerTest {
                 .build();
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
 
-        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
@@ -365,7 +373,9 @@ class ModificationControllerTest {
             .build();
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
 
-        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
@@ -392,7 +402,9 @@ class ModificationControllerTest {
                 .equipmentId("v1b1")
                 .build();
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
-        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
 
@@ -449,7 +461,9 @@ class ModificationControllerTest {
                 .build();
         String groovyScriptInfosJson = getJsonBody(groovyScriptInfos, TEST_NETWORK_WITH_FLUSH_ERROR_ID, NetworkCreation.VARIANT_ID);
 
-        mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
+        MvcResult mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().is5xxServerError()).andReturn();
 
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
     }
@@ -462,6 +476,8 @@ class ModificationControllerTest {
         String groovyScriptInfosJson = getJsonBody(groovyScriptInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         // apply groovy script without error
         MvcResult mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
@@ -492,6 +508,8 @@ class ModificationControllerTest {
             String bodyJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
             mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + groupId)
                             .content(bodyJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+            mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
             assertApplicationStatusOK(mvcResult);
         }
@@ -508,6 +526,8 @@ class ModificationControllerTest {
         String bodyJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         MvcResult mvcResult = mockMvc.perform(post(URI_NETWORK_MODIF_BASE + "?groupUuid=" + groupId)
                             .content(bodyJson).contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                     .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -531,6 +551,8 @@ class ModificationControllerTest {
                 put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY")
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -564,6 +586,8 @@ class ModificationControllerTest {
                 put("/v1/groups/" + otherGroupId + "?action=COPY")
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -582,6 +606,8 @@ class ModificationControllerTest {
                 put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -626,6 +652,8 @@ class ModificationControllerTest {
             put(url)
                 .content(bodyJson)
                 .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -661,6 +689,8 @@ class ModificationControllerTest {
                 put(copyUrl)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -679,6 +709,8 @@ class ModificationControllerTest {
                 put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
                     .content(bodyJson2)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -720,6 +752,8 @@ class ModificationControllerTest {
         String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
         MvcResult mvcResult;
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -731,6 +765,8 @@ class ModificationControllerTest {
         generatorCreationInfosJson = getJsonBody(generatorCreationInfosBusBreaker, TEST_NETWORK_BUS_BREAKER_ID, null);
 
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -743,6 +779,8 @@ class ModificationControllerTest {
         generatorCreationInfosJson = getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
 
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         generatorStartup = network.getGenerator("idGenerator21").getExtension(GeneratorStartup.class);
@@ -757,6 +795,8 @@ class ModificationControllerTest {
         generatorCreationInfosBusBreaker.setPlannedOutageRate(80.);
         generatorCreationInfosJson = getJsonBody(generatorCreationInfosBusBreaker, TEST_NETWORK_BUS_BREAKER_ID, null);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         generatorStartup = networkStoreService.getNetwork(TEST_NETWORK_BUS_BREAKER_ID, null).getGenerator("idGenerator3").getExtension(GeneratorStartup.class);
@@ -840,6 +880,8 @@ class ModificationControllerTest {
                 put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT")
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -900,6 +942,8 @@ class ModificationControllerTest {
                         put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT")
                                 .content(bodyJson)
                                 .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -931,6 +975,8 @@ class ModificationControllerTest {
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
         MvcResult mvcResult = mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -988,12 +1034,14 @@ class ModificationControllerTest {
         MvcResult mvcResult;
         VoltageLevelCreationInfos vl1 = ModificationCreation.getCreationVoltageLevel("s1", "vl1Id", "vl1Name");
         String bodyJson = getJsonBody(vl1, TEST_NETWORK_BUS_BREAKER_ID, null);
-        mockMvc.perform(
+        mvcResult = mockMvc.perform(
                 post(NETWORK_MODIFICATION_URI)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString();
+            .andReturn();
 
         // create new line in voltage levels with node/breaker topology
         // between voltage level "v1" and busbar section "bus1" and
@@ -1028,6 +1076,8 @@ class ModificationControllerTest {
             post(NETWORK_MODIFICATION_URI)
                 .content(bodyJson)
                 .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk())
             .andReturn();
         assertApplicationStatusOK(mvcResult);
@@ -1051,6 +1101,8 @@ class ModificationControllerTest {
                 post(NETWORK_MODIFICATION_URI)
                     .content(bodyJson2)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -1064,6 +1116,8 @@ class ModificationControllerTest {
                 post(NETWORK_MODIFICATION_URI)
                     .content(bodyJson2)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         //create a generator
@@ -1073,6 +1127,8 @@ class ModificationControllerTest {
                 post(NETWORK_MODIFICATION_URI)
                     .content(bodyJson2)
                     .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
@@ -1114,6 +1170,8 @@ class ModificationControllerTest {
         MvcResult mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI)
                                 .content(body)
                                 .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
@@ -1143,7 +1201,9 @@ class ModificationControllerTest {
                 .connectionName("bottom")
                 .build();
         String loadCreationInfosJson = getJsonBody(loadCreationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
-        MvcResult mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        MvcResult mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         assertNotNull(network.getLoad("idLoad1"));  // load was created
         testNetworkModificationsCount(TEST_GROUP_ID, 1);
@@ -1174,6 +1234,8 @@ class ModificationControllerTest {
 
         // delete load
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.LOAD, "v1load", "v1b1", "v1d1", "s1");
@@ -1185,6 +1247,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("v3load");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VARIANT_NOT_EXISTING_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationsResult.isPresent());
@@ -1199,6 +1263,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("v2shunt");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.SHUNT_COMPENSATOR, "v2shunt", "v2bshunt", "v2dshunt", "s1");
@@ -1209,6 +1275,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("idGenerator");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.GENERATOR, "idGenerator", "v2bgenerator", "v2dgenerator", "s1");
@@ -1219,7 +1287,9 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("line2");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-             .andExpect(status().isOk()).andReturn();
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+            .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testBranchDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.LINE, "line2", "v1bl2", "v1dl2", "s1", "v3bl2", "v3dl2", "s2");
         testNetworkModificationsCount(TEST_GROUP_ID, 5);
@@ -1229,6 +1299,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("trf1");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testBranchDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.TWO_WINDINGS_TRANSFORMER, "trf1", "v1btrf1", "v1dtrf1", "s1", "v2btrf1", "v2dtrf1", "s1");
@@ -1239,6 +1311,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("trf6");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         test3WTDeletionImpacts(mvcResult.getResponse().getContentAsString(), "trf6", "v1btrf6", "v1dtrf6", "v2btrf6", "v2dtrf6", "v4btrf6", "v4dtrf6", "s1");
@@ -1249,6 +1323,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("v3Compensator");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.STATIC_VAR_COMPENSATOR, "v3Compensator", "v3bCompensator", "v3dCompensator", "s2");
@@ -1259,6 +1335,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("v3Battery");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.BATTERY, "v3Battery", "v3bBattery", "v3dBattery", "s2");
@@ -1269,6 +1347,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("v2Dangling");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         testConnectableDeletionImpacts(mvcResult.getResponse().getContentAsString(), IdentifiableType.DANGLING_LINE, "v2Dangling", "v2bdangling", "v2ddangling", "s1");
@@ -1279,6 +1359,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("hvdcLine");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         List<AbstractBaseImpact> expectedImpacts = createMultipleDeletionImpacts(
@@ -1298,6 +1380,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("v5");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         expectedImpacts = createMultipleDeletionImpacts(
@@ -1316,6 +1400,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("s3");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         expectedImpacts = createMultipleDeletionImpacts(
@@ -1335,6 +1421,8 @@ class ModificationControllerTest {
         equipmentDeletionInfos.setEquipmentId("s2");
         equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID);
         mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
         expectedImpacts = new ArrayList<>();
@@ -1724,7 +1812,9 @@ class ModificationControllerTest {
                 .equipmentId("v1load")
                 .build();
         String loadModificationInfosJson = getJsonBody(loadModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
-        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        mvcResult = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(loadModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult);
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -1942,6 +2032,8 @@ class ModificationControllerTest {
                 .build();
         String substationModificationInfosJson = getJsonBody(substationModificationInfos, TEST_NETWORK_ID, null);
         MvcResult mvcResult1 = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(substationModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult1 = mockMvc.perform(asyncDispatch(mvcResult1))
                 .andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult1);
 
@@ -1949,6 +2041,8 @@ class ModificationControllerTest {
         GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
         String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
         MvcResult mvcResult2 = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult2 = mockMvc.perform(asyncDispatch(mvcResult2))
                 .andExpect(status().isOk()).andReturn();
         assertNotNull(network.getGenerator("idGenerator1"));
         assertApplicationStatusOK(mvcResult2);
@@ -1959,7 +2053,9 @@ class ModificationControllerTest {
                 .equipmentId("v5load")
                 .build();
         String equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, TEST_NETWORK_ID, null);
-        MvcResult mvcResult3 = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        MvcResult mvcResult3 = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult3 = mockMvc.perform(asyncDispatch(mvcResult3)).andExpect(status().isOk()).andReturn();
         assertApplicationStatusOK(mvcResult3);
 
         MvcResult mvcModificationResult;

@@ -82,7 +82,7 @@ class NetworkModificationApplicatorTest {
 
         when(modificationInfosList.get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
+        NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
@@ -94,7 +94,7 @@ class NetworkModificationApplicatorTest {
 
         when(modificationInfosGroups.get(0).modifications().get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
+        NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(modificationInfosGroups, networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());

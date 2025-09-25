@@ -21,6 +21,7 @@ import java.util.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -64,6 +65,8 @@ public final class ApiUtils {
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON)
             )
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpectAll(status().isOk())
             .andReturn();
         NetworkModificationsResult result = getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
@@ -80,6 +83,8 @@ public final class ApiUtils {
                     .contentType("application/json")
                     .content(body)
             )
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
             .andExpectAll(status().isOk())
             .andReturn();
         return getObjectMapper().readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });

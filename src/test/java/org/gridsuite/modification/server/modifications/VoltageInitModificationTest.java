@@ -13,6 +13,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +22,9 @@ import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerato
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -285,8 +288,10 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
             .build();
         String body = getJsonBody(modification, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+            .andExpect(status().isOk()).andReturn();
     }
 
     @Test

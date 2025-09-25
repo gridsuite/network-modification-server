@@ -126,7 +126,7 @@ class ModificationSearchTest {
                 )
         );
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(
+        NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(
                 new ModificationApplicationGroup(groupUuid, entities, reportInfos),
                 networkInfos
         );
@@ -166,7 +166,7 @@ class ModificationSearchTest {
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(
+        NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(
                 new ModificationApplicationGroup(groupUuid, entities, reportInfos),
                 networkInfos
         );

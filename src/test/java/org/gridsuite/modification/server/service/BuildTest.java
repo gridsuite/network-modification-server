@@ -982,7 +982,7 @@ class BuildTest {
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
         // Building mode : No error send with exception
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModificationsBlocking(
             new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, reporterId)),
             new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
@@ -991,7 +991,7 @@ class BuildTest {
 
         // Incremental mode : No error send with exception
         ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
-        NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
@@ -1000,7 +1000,7 @@ class BuildTest {
 
         // Save mode only (variant does not exist) : No log and no error send with exception
         applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
-        networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isEmpty());
         testNetworkModificationsCount(groupUuid, 3);
@@ -1023,7 +1023,7 @@ class BuildTest {
         );
 
         //Global application status should be in error and last application status should be OK
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModificationsBlocking(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));

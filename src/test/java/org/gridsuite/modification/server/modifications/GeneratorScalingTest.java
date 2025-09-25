@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -42,7 +43,9 @@ import static org.gridsuite.modification.server.impacts.TestImpactUtils.createCo
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -188,8 +191,10 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
 
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_2).getTargetP(), 0.01D);
         assertEquals(200, getNetwork().getGenerator(GENERATOR_ID_3).getTargetP(), 0.01D);
@@ -274,6 +279,8 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
         var response = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        response = mockMvc.perform(asyncDispatch(response))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -478,10 +485,12 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
-        mockMvc.perform(post(getNetworkModificationUri())
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
 
         // If we sum the targetP for all expected modified generators, we should have the requested variation value
         double connectedGeneratorsTargetP = modifiedGenerators

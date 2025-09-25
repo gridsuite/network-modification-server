@@ -12,9 +12,12 @@ import org.gridsuite.modification.dto.InjectionModificationInfos;
 import org.gridsuite.modification.dto.OperationType;
 import org.junit.jupiter.api.Tag;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -41,14 +44,18 @@ abstract class AbstractInjectionModificationTest extends AbstractNetworkModifica
         assertThat(existingEquipment.getTerminal().isConnected()).isNotEqualTo(expectedState);
 
         String modificationInfosJson = getJsonBody(modificationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         // connection state has changed as expected
         assertThat(existingEquipment.getTerminal().isConnected()).isEqualTo(expectedState);
 
         // try to modify again => no change on connection state
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         assertThat(existingEquipment.getTerminal().isConnected()).isEqualTo(expectedState);
     }
 }

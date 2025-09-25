@@ -75,12 +75,12 @@ class BuildWorkerServiceTest {
         headers.put(WORKFLOW_INFOS_HEADER, workflowInfos);
         MessageHeaders messageHeaders = new MessageHeaders(headers);
 
-        when(networkModificationService.buildVariant(eq(networkUuid), any(BuildInfos.class))).thenReturn(modificationResult);
+        when(networkModificationService.buildVariantBlocking(eq(networkUuid), any(BuildInfos.class))).thenReturn(modificationResult);
 
         buildWorkerService.consumeBuild().accept(MessageBuilder.createMessage(objectMapper.writeValueAsString(buildInfos), messageHeaders));
 
         ArgumentCaptor<BuildInfos> buildInfosArgumentCaptor = ArgumentCaptor.forClass(BuildInfos.class);
-        verify(networkModificationService, times(1)).buildVariant(eq(networkUuid), buildInfosArgumentCaptor.capture());
+        verify(networkModificationService, times(1)).buildVariantBlocking(eq(networkUuid), buildInfosArgumentCaptor.capture());
         assertThat(buildInfosArgumentCaptor.getValue()).usingRecursiveComparison().isEqualTo(buildInfos);
 
         ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);

@@ -16,6 +16,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,9 @@ import static org.gridsuite.modification.modifications.VscModification.ACTIVE_PO
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -301,8 +304,10 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setAngleDroopActivePowerControl(false);
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
@@ -319,8 +324,10 @@ class VscCreationTest extends AbstractNetworkModificationTest {
         vscCreationInfos.setDroop(null);
         vscCreationInfos.setP0(null);
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         HvdcLine hvdcLine = getNetwork().getHvdcLine("vsc1");
         assertThat(hvdcLine).isNotNull();
         HvdcAngleDroopActivePowerControl activePowerControlExt = hvdcLine.getExtension(HvdcAngleDroopActivePowerControl.class);
@@ -361,8 +368,10 @@ class VscCreationTest extends AbstractNetworkModificationTest {
 
     private void checkDroopWithAbsentInfos(VscCreationInfos vscCreationInfos) throws Exception {
         String vscCreationInfosJson = getJsonBody(vscCreationInfos, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(vscCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
         assertLogMessage(new NetworkModificationException(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL,
                         ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG).getMessage(),
                 ERROR_MESSAGE_KEY, reportService);

@@ -51,6 +51,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -135,6 +136,8 @@ public abstract class AbstractNetworkModificationTest {
         String bodyJson = getJsonBody(modificationToCreate, null);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
@@ -159,6 +162,8 @@ public abstract class AbstractNetworkModificationTest {
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
 
         mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk()).andReturn();
         networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
@@ -242,10 +247,12 @@ public abstract class AbstractNetworkModificationTest {
 
         UUID modificationUuid = saveModification(modificationToCopy);
         String body = TestUtils.getJsonBody(List.of(modificationUuid), AbstractNetworkModificationTest.TEST_NETWORK_ID, null);
-        mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
+        MvcResult mvcResult = mockMvc.perform(put(URI_NETWORK_MODIF_COPY)
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(request().asyncStarted()).andReturn();
+        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk()).andReturn();
 
         List<ModificationInfos> modifications = networkModificationRepository
                 .getModifications(TEST_GROUP_ID, false, true);
