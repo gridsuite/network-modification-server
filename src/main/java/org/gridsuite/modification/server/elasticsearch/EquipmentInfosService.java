@@ -38,7 +38,7 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
     public int partitionSizeForDeletion;
 
-    public static final Set<IdentifiableType> TYPES_FOR_INDEXING = Set.of(
+    private static final Set<IdentifiableType> TYPES_FOR_INDEXING = Set.of(
             IdentifiableType.SUBSTATION,
             IdentifiableType.VOLTAGE_LEVEL,
             IdentifiableType.HVDC_LINE,
@@ -52,6 +52,10 @@ public class EquipmentInfosService {
             IdentifiableType.DANGLING_LINE,
             IdentifiableType.STATIC_VAR_COMPENSATOR,
             IdentifiableType.HVDC_CONVERTER_STATION);
+
+    public static Set<IdentifiableType> getIndexedEquipmentTypes() {
+        return TYPES_FOR_INDEXING;
+    }
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;

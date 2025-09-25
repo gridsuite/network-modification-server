@@ -69,7 +69,7 @@ import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
-import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -1442,7 +1442,7 @@ class ModificationControllerTest {
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
                 // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for excluded types
-                if (TYPES_FOR_INDEXING.contains(simpleImpact.getElementType())) {
+                if (getIndexedEquipmentTypes().contains(simpleImpact.getElementType())) {
                     assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
                 } else {
                     assertFalse(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
@@ -1532,7 +1532,7 @@ class ModificationControllerTest {
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(8, lineTypes.size());
+        assertEquals(10, lineTypes.size());
 
         // Check if catalog is completely updated
         mockMvc.perform(multipart(URI_LINE_CATALOG)
