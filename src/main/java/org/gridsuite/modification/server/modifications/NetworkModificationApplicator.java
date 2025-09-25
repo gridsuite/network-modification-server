@@ -106,15 +106,18 @@ public class NetworkModificationApplicator {
             .orElse(PreloadingStrategy.NONE);
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
-        ApplicationStatus groupApplicationStatus;
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            groupApplicationStatus = largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosGroup, listener))
+            return largeNetworkModificationExecutionService
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener))
                 .join();
         } else {
-            groupApplicationStatus = apply(modificationInfosGroup, listener);
+            return applyAndFlush(modificationInfosGroup, listener);
         }
+    }
 
+    private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
+            NetworkStoreListener listener) {
+        ApplicationStatus groupApplicationStatus = apply(modificationInfosGroup, listener);
         return flushModificationApplications(groupApplicationStatus, listener);
     }
 
@@ -147,15 +150,18 @@ public class NetworkModificationApplicator {
                 .orElse(PreloadingStrategy.NONE);
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
-        List<ApplicationStatus> groupsApplicationStatuses;
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            groupsApplicationStatuses = largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosGroups, listener))
+            return largeNetworkModificationExecutionService
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener))
                 .join();
         } else {
-            groupsApplicationStatuses = apply(modificationInfosGroups, listener);
+            return applyAndFlush(modificationInfosGroups, listener);
         }
+    }
 
+    private NetworkModificationResult applyAndFlush(List<ModificationApplicationGroup> modificationInfosGroups,
+            NetworkStoreListener listener) {
+        List<ApplicationStatus> groupsApplicationStatuses = apply(modificationInfosGroups, listener);
         return flushModificationApplications(groupsApplicationStatuses, listener);
     }
 
