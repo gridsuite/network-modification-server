@@ -213,8 +213,8 @@ public class NetworkModificationService {
             // and schedule the next computation in the same thread as the task
             // The list is accessed from different threads but not concurrently and
             // with happens-before semantics.
-            chainedFutures = chainedFutures.thenCompose(accumulatingresults -> {
-                return applyModifications(
+            chainedFutures = chainedFutures.thenCompose(accumulatingresults ->
+                applyModifications(
                         modificationApplicationContext.networkUuid(),
                         modificationApplicationContext.variantId(),
                         new ModificationApplicationGroup(groupUuid,
@@ -223,8 +223,8 @@ public class NetworkModificationService {
                         )).thenApply(result -> {
                             accumulatingresults.add(result);
                             return accumulatingresults;
-                        });
-            });
+                        })
+            );
         }
         return chainedFutures;
     }
