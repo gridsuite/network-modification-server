@@ -86,6 +86,15 @@
     <changeSet author="deharbemat (generated)" id="1755863608062-57">
         <addForeignKeyConstraint baseColumnNames="branch_id" baseTableName="two_windings_transformer_modification_operational_limits_groups" constraintName="branch_modification_id_fk_twt" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="two_windings_transformer_modification" validate="true"/>
     </changeSet>
+    <changeSet author="deharbemat" id="1755863608062-58">
+        <sqlFile
+                dbms="postgresql"
+                encoding="UTF-8"
+                path="migrationTabularCurrentLimits_pg_20250822T115310Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+    </changeSet>
     <changeSet author="deharbemat (generated)" id="1755863608062-62">
         <dropForeignKeyConstraint baseTableName="LINE_MODIFICATION" constraintName="CURRENT_LIMITS_MODIFICATION_ID1_FK"/>
     </changeSet>
