@@ -275,7 +275,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         DoubleAssignmentInfos assignmentInfos15 = DoubleAssignmentInfos.builder()
                 .filters(List.of(filter1, filter2))
                 .editedField(TwoWindingsTransformerField.RATED_S.name())
-                .value(2.)
+                .value(null)
                 .build();
 
         StringAssignmentInfos assignmentInfos16 = StringAssignmentInfos.builder()
@@ -376,7 +376,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         assertEquals(25, twt1.getG(), 0);
         assertEquals(15, twt1.getRatedU1(), 0);
         assertEquals(0.5, twt1.getRatedU2(), 0);
-        assertEquals(2, twt1.getRatedS(), 0);
+        assertEquals(Double.NaN, twt1.getRatedS(), 0);
         assertTrue(twt1.getSelectedOperationalLimitsGroupId1().isPresent());
         assertEquals("group1", twt1.getSelectedOperationalLimitsGroupId1().get());
         assertTrue(twt1.getSelectedOperationalLimitsGroupId2().isPresent());
@@ -392,7 +392,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         assertEquals(20, twt2.getX(), 0);
         assertEquals(2.5, twt2.getB(), 0);
         assertEquals(15, twt2.getRatedU1(), 0);
-        assertEquals(2, twt2.getRatedS(), 0);
+        assertEquals(Double.NaN, twt2.getRatedS(), 0);
         assertTrue(twt2.getSelectedOperationalLimitsGroupId1().isPresent());
         assertEquals("group1", twt2.getSelectedOperationalLimitsGroupId1().get());
         assertTrue(twt2.getSelectedOperationalLimitsGroupId2().isPresent());
@@ -407,7 +407,7 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
         assertEquals(25, twt3.getG(), 0);
         assertEquals(15, twt3.getRatedU1(), 0);
         assertEquals(0.5, twt3.getRatedU2(), 0);
-        assertEquals(2, twt3.getRatedS(), 0);
+        assertEquals(Double.NaN, twt3.getRatedS(), 0);
         assertTrue(twt3.getSelectedOperationalLimitsGroupId1().isPresent());
         assertEquals("group0", twt3.getSelectedOperationalLimitsGroupId1().get());
         assertTrue(twt3.getSelectedOperationalLimitsGroupId2().isPresent());
