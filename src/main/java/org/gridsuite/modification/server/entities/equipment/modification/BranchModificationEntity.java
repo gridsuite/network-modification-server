@@ -47,7 +47,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     @OrderColumn(name = "pos_operationalLimitsGroups")
     private List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups;
 
-    @Column(name = "editedOperationalLimitsGroups", columnDefinition = "boolean default false")
+    @Column(name = "editedOperationalLimitsGroups", columnDefinition = "boolean default true")
     private Boolean editedOperationalLimitsGroups;
 
     @Embedded
