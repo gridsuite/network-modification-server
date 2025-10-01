@@ -46,66 +46,51 @@ public class TabularModificationsEntity extends ModificationEntity {
 
     public TabularModificationsEntity(@NonNull TabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
-        assignModificationAttributes(tabularModificationInfos);
+        assignAttributes(tabularModificationInfos);
     }
 
     public TabularModificationsEntity(@NonNull LimitSetsTabularModificationInfos tabularModificationInfos) {
         super(tabularModificationInfos);
-        assignModificationAttributes(tabularModificationInfos);
+        assignAttributes(tabularModificationInfos);
     }
 
     public TabularModificationsEntity(@NonNull TabularCreationInfos tabularCreationInfos) {
         super(tabularCreationInfos);
-        assignCreationAttributes(tabularCreationInfos);
+        assignAttributes(tabularCreationInfos);
     }
 
     @Override
     public void update(ModificationInfos modificationInfos) {
         super.update(modificationInfos);
-        if (modificationInfos.getType() == ModificationType.TABULAR_CREATION) {
-            assignCreationAttributes((TabularCreationInfos) modificationInfos);
-        } else {
-            assignModificationAttributes((TabularModificationInfos) modificationInfos);
-        }
+        assignAttributes((TabularBaseInfos) modificationInfos);
     }
 
     @Override
     public TabularBaseInfos toModificationInfos() {
-        //throw new UnsupportedOperationException("DTO from tabular entity is build with optimized loadTabularModification()");
-        // TODO DBR: should have no IF with a single DTO
-        if (modificationType == ModificationType.TABULAR_CREATION) {
-            List<ModificationInfos> creationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
-            return TabularCreationInfos.builder()
-                    .date(getDate())
-                    .uuid(getId())
-                    .stashed(getStashed())
-                    .activated(getActivated())
-                    .creationType(modificationType)
-                    .creations(creationsInfos)
-                    .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
-                            .map(TabularPropertyEntity::toInfos)
-                            .toList())
-                    .csvFilename(getCsvFilename())
-                    .build();
-        } else {
-            List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
-            return TabularModificationInfos.builder()
-                    .date(getDate())
-                    .uuid(getId())
-                    .stashed(getStashed())
-                    .activated(getActivated())
-                    .modificationType(modificationType)
-                    .modifications(modificationsInfos)
-                    .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
-                            .map(TabularPropertyEntity::toInfos)
-                            .toList())
-                    .csvFilename(getCsvFilename())
-                    .build();
-        }
+        var builder = switch (ModificationType.valueOf(getType())) {
+            case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
+            case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
+            default -> TabularModificationInfos.builder();
+        };
+        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
+        return builder
+                .date(getDate())
+                .uuid(getId())
+                .stashed(getStashed())
+                .activated(getActivated())
+                .modificationType(modificationType)
+                .modifications(modificationsInfos)
+                .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
+                        .map(TabularPropertyEntity::toInfos)
+                        .toList())
+                .csvFilename(getCsvFilename())
+                .build();
     }
 
-    // TODO DBR: should have a single assign function with a single DTO
-    private void assignCommonAttributes(TabularBaseInfos tabularBaseInfos) {
+    private void assignAttributes(TabularBaseInfos tabularBaseInfos) {
+        this.csvFilename = tabularBaseInfos.getCsvFilename();
+        modificationType = tabularBaseInfos.getModificationType();
+        // properties list
         List<TabularPropertyEntity> newProperties = tabularBaseInfos.getProperties() == null ? null :
                 tabularBaseInfos.getProperties().stream()
                         .map(TabularPropertyEntity::new)
@@ -118,34 +103,14 @@ public class TabularModificationsEntity extends ModificationEntity {
         } else {
             this.properties = newProperties;
         }
-        this.csvFilename = tabularBaseInfos.getCsvFilename();
-    }
-
-    private void assignModificationAttributes(TabularModificationInfos tabularModificationInfos) {
-        assignCommonAttributes(tabularModificationInfos);
-        modificationType = tabularModificationInfos.getModificationType();
+        // modifications list
         if (modifications == null) {
-            modifications = tabularModificationInfos.getModifications().stream()
+            modifications = tabularBaseInfos.getModifications().stream()
                     .map(ModificationEntity::fromDTO)
                     .collect(Collectors.toList());
         } else {
             modifications.clear();
-            modifications.addAll(tabularModificationInfos.getModifications().stream()
-                    .map(ModificationEntity::fromDTO)
-                    .toList());
-        }
-    }
-
-    private void assignCreationAttributes(TabularCreationInfos tabularCreationInfos) {
-        assignCommonAttributes(tabularCreationInfos);
-        modificationType = tabularCreationInfos.getCreationType();
-        if (modifications == null) {
-            modifications = tabularCreationInfos.getCreations().stream()
-                    .map(ModificationEntity::fromDTO)
-                    .toList();
-        } else {
-            modifications.clear();
-            modifications.addAll(tabularCreationInfos.getCreations().stream()
+            modifications.addAll(tabularBaseInfos.getModifications().stream()
                     .map(ModificationEntity::fromDTO)
                     .toList());
         }

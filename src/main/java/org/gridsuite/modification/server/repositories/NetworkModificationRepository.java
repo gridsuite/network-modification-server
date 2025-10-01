@@ -380,37 +380,22 @@ public class NetworkModificationRepository {
         List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularEntity.getModificationType());
         // re-order the list of entities based on the ordered list of IDs
         List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
-        // then build DTO TODO DBR should have a single DTO
-        if (ModificationType.TABULAR_CREATION.name().equalsIgnoreCase(tabularEntity.getType())) {
-            return TabularCreationInfos.builder()
-                    .uuid(tabularEntity.getId())
-                    .date(tabularEntity.getDate())
-                    .stashed(tabularEntity.getStashed())
-                    .activated(tabularEntity.getActivated())
-                    .creationType(tabularEntity.getModificationType())
-                    .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                    .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
-                            .map(TabularPropertyEntity::toInfos)
-                            .toList())
-                    .csvFilename(tabularEntity.getCsvFilename())
-                    .build();
-        } else {
-            var builder = TabularModificationInfos.builder();
-            if (tabularEntity.getType().equals(ModificationType.LIMIT_SETS_TABULAR_MODIFICATION.name())) {
-                builder = LimitSetsTabularModificationInfos.builder();
-            }
-            return builder.uuid(tabularEntity.getId())
-                            .date(tabularEntity.getDate())
-                            .stashed(tabularEntity.getStashed())
-                            .activated(tabularEntity.getActivated())
-                            .modificationType(tabularEntity.getModificationType())
-                            .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                            .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
-                                    .map(TabularPropertyEntity::toInfos)
-                                    .toList())
-                            .csvFilename(tabularEntity.getCsvFilename())
-                            .build();
-        }
+        var builder = switch (ModificationType.valueOf(tabularEntity.getType())) {
+            case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
+            case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
+            default -> TabularModificationInfos.builder();
+        };
+        return builder.uuid(tabularEntity.getId())
+                .date(tabularEntity.getDate())
+                .stashed(tabularEntity.getStashed())
+                .activated(tabularEntity.getActivated())
+                .modificationType(tabularEntity.getModificationType())
+                .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
+                .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
+                        .map(TabularPropertyEntity::toInfos)
+                        .toList())
+                .csvFilename(tabularEntity.getCsvFilename())
+                .build();
     }
 
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {

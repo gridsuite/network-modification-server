@@ -58,8 +58,8 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
                 .build()
         );
         return TabularCreationInfos.builder()
-            .creationType(ModificationType.BATTERY_CREATION)
-            .creations(creations)
+            .modificationType(ModificationType.BATTERY_CREATION)
+            .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
             .stashed(false)
             .build();
@@ -75,8 +75,8 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
                         .build()
         );
         return TabularCreationInfos.builder()
-                .creationType(ModificationType.BATTERY_CREATION)
-                .creations(creations)
+                .modificationType(ModificationType.BATTERY_CREATION)
+                .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();

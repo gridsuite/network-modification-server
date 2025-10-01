@@ -17,9 +17,8 @@ import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.GeneratorCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.SubstationCreationInfos;
-import org.gridsuite.modification.dto.TabularCreationInfos;
+import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
-import org.gridsuite.modification.dto.TabularPropertyInfos;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -111,8 +110,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build()
         );
         return TabularCreationInfos.builder()
-            .creationType(ModificationType.GENERATOR_CREATION)
-            .creations(creations)
+            .modificationType(ModificationType.GENERATOR_CREATION)
+            .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
             .stashed(false)
             .build();
@@ -145,8 +144,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build()
         );
         return TabularCreationInfos.builder()
-                .creationType(ModificationType.GENERATOR_CREATION)
-                .creations(creations)
+                .modificationType(ModificationType.GENERATOR_CREATION)
+                .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
                 .stashed(false)
                 .build();
@@ -202,8 +201,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build()
         );
         TabularCreationInfos creationInfos = TabularCreationInfos.builder()
-                .creationType(ModificationType.GENERATOR_CREATION)
-                .creations(creations)
+                .modificationType(ModificationType.GENERATOR_CREATION)
+                .modifications(creations)
                 .build();
         modificationUuid = saveModification(creationInfos);
         reset();
@@ -249,8 +248,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         );
 
         ModificationInfos creationInfos = TabularCreationInfos.builder()
-            .creationType(ModificationType.GENERATOR_CREATION)
-            .creations(creations)
+            .modificationType(ModificationType.GENERATOR_CREATION)
+            .modifications(creations)
             .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
@@ -298,8 +297,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build()
         );
         ModificationInfos creationInfos = TabularCreationInfos.builder()
-                .creationType(ModificationType.GENERATOR_CREATION)
-                .creations(creations)
+                .modificationType(ModificationType.GENERATOR_CREATION)
+                .modifications(creations)
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
@@ -335,8 +334,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                         .build()
         );
         ModificationInfos creationInfos = TabularCreationInfos.builder()
-                .creationType(ModificationType.SUBSTATION_CREATION)
-                .creations(creations)
+                .modificationType(ModificationType.SUBSTATION_CREATION)
+                .modifications(creations)
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
