@@ -353,14 +353,14 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 UnsupportedOperationException.class,
             () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
         );
-        assertEquals("No sub-modifications loading for creation type: SUBSTATION_CREATION", exception.getMessage());
+        assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
 
         // try to get via id
         exception = assertThrows(
                 UnsupportedOperationException.class,
                 () -> networkModificationRepository.getModificationInfo(modifId)
         );
-        assertEquals("No sub-modifications loading for creation type: SUBSTATION_CREATION", exception.getMessage());
+        assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
 
         // try to update
         exception = assertThrows(
