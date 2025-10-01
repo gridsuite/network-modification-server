@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.*;
 import org.gridsuite.modification.server.entities.equipment.modification.*;
