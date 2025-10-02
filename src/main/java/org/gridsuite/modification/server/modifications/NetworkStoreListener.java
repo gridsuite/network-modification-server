@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedModificationTypes;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -147,19 +148,29 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
+        if (getIndexedModificationTypes().contains(identifiable.getType())) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
 
     private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
         // Equipments should be indexed in equipment index only if equipment name has been updated
-        boolean shouldIndexEquipments = attribute.equals("name");
-        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, variantId), SimpleImpactType.MODIFICATION, shouldIndexEquipments, true);
+        boolean indexEquipments = getIndexedEquipmentTypes().contains(identifiable.getType()) && "name".equals(attribute);
+        boolean indexModification = getIndexedModificationTypes().contains(identifiable.getType());
+
+        updateImpactedEquipment(
+                toEquipmentInfos(identifiable, networkUuid, variantId),
+                SimpleImpactType.MODIFICATION,
+                indexEquipments,
+                indexModification
+        );
+
         // If the updated attribute is "name" and the identifiable is a VOLTAGE_LEVEL or SUBSTATION,
         // we must update all linked equipment in equipment index to reflect the name change
         // modification index is not updated here
-        if (shouldIndexEquipments && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL) || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
+        if (indexEquipments
+                && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)
+                || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
             updateLinkedEquipments(identifiable);
         }
     }
