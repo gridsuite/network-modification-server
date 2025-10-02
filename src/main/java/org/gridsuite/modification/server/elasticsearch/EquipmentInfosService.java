@@ -53,13 +53,10 @@ public class EquipmentInfosService {
             IdentifiableType.STATIC_VAR_COMPENSATOR,
             IdentifiableType.HVDC_CONVERTER_STATION);
 
-    private static final Set<IdentifiableType> TYPES_FOR_INDEXING1 = Set.of(
+    private static final Set<IdentifiableType> TYPES_FOR_INDEXING_MODIFICATIONS = Set.of(
             IdentifiableType.SUBSTATION,
             IdentifiableType.VOLTAGE_LEVEL,
             IdentifiableType.HVDC_LINE,
-            IdentifiableType.SWITCH,
-            IdentifiableType.BUS,
-            IdentifiableType.BUSBAR_SECTION,
             IdentifiableType.LINE,
             IdentifiableType.TWO_WINDINGS_TRANSFORMER,
             IdentifiableType.THREE_WINDINGS_TRANSFORMER,
@@ -69,14 +66,16 @@ public class EquipmentInfosService {
             IdentifiableType.SHUNT_COMPENSATOR,
             IdentifiableType.DANGLING_LINE,
             IdentifiableType.STATIC_VAR_COMPENSATOR,
-            IdentifiableType.HVDC_CONVERTER_STATION);
+            IdentifiableType.HVDC_CONVERTER_STATION,
+            IdentifiableType.SWITCH,
+            IdentifiableType.BUSBAR_SECTION);
 
     public static Set<IdentifiableType> getIndexedEquipmentTypes() {
         return TYPES_FOR_INDEXING;
     }
 
-    public static Set<IdentifiableType> getIndexedModificationTypes() {
-        return TYPES_FOR_INDEXING1;
+    public static Set<IdentifiableType> getIndexedEquipmentTypesForModification() {
+        return TYPES_FOR_INDEXING_MODIFICATIONS;
     }
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {

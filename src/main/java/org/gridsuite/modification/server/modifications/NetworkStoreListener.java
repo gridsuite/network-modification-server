@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
-import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedModificationTypes;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypesForModification;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -148,7 +148,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        if (getIndexedModificationTypes().contains(identifiable.getType())) {
+        if (getIndexedEquipmentTypesForModification().contains(identifiable.getType())) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
@@ -156,7 +156,7 @@ public class NetworkStoreListener implements NetworkListener {
     private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
         // Equipments should be indexed in equipment index only if equipment name has been updated
         boolean indexEquipments = getIndexedEquipmentTypes().contains(identifiable.getType()) && "name".equals(attribute);
-        boolean indexModification = getIndexedModificationTypes().contains(identifiable.getType());
+        boolean indexModification = getIndexedEquipmentTypesForModification().contains(identifiable.getType());
 
         updateImpactedEquipment(
                 toEquipmentInfos(identifiable, networkUuid, variantId),
