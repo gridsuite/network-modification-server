@@ -1946,11 +1946,11 @@ class ModificationControllerTest {
         assertApplicationStatusOK(mvcResult1);
 
         // Generator Creation ID : v2
-        GeneratorCreationInfos generatorCreationInfos = ModificationCreation.getCreationGenerator("v2", "idGenerator1", "nameGenerator1", "1B", "v2load", "LOAD", "v1");
-        String generatorCreationInfosJson = getJsonBody(generatorCreationInfos, TEST_NETWORK_ID, null);
+        VoltageLevelCreationInfos voltageLevelCreationInfos = ModificationCreation.getCreationVoltageLevel("s1", "idVl1", "nalev1");
+        String generatorCreationInfosJson = getJsonBody(voltageLevelCreationInfos, TEST_NETWORK_ID, null);
         MvcResult mvcResult2 = mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()).andReturn();
-        assertNotNull(network.getGenerator("idGenerator1"));
+        assertNotNull(network.getVoltageLevel("idVl1"));
         assertApplicationStatusOK(mvcResult2);
 
         // Load deletion ID : v5load
@@ -1980,8 +1980,8 @@ class ModificationControllerTest {
         assertEquals(1, networkModificationsResult.size());
         modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
         assertEquals(1, modificationsSearchResult.size());
-        assertEquals("GENERATOR_CREATION", modificationsSearchResult.getFirst().getMessageType());
-        assertEquals("{\"equipmentId\":\"idGenerator1\"}", modificationsSearchResult.getFirst().getMessageValues());
+        assertEquals("VOLTAGE_LEVEL_CREATION", modificationsSearchResult.getFirst().getMessageType());
+        assertEquals("{\"equipmentId\":\"idVl1\"}", modificationsSearchResult.getFirst().getMessageValues());
 
         // search modifications by equipment id containing userInput "v"
         mvcModificationResult = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/indexation-infos?networkUuid={networkUuid}&userInput={userInput}",
