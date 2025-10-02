@@ -67,14 +67,13 @@ public class EquipmentInfosService {
             IdentifiableType.DANGLING_LINE,
             IdentifiableType.STATIC_VAR_COMPENSATOR,
             IdentifiableType.HVDC_CONVERTER_STATION,
-            IdentifiableType.SWITCH,
-            IdentifiableType.BUSBAR_SECTION);
+            IdentifiableType.SWITCH);
 
     public static Set<IdentifiableType> getIndexedEquipmentTypes() {
         return TYPES_FOR_INDEXING;
     }
 
-    public static Set<IdentifiableType> getIndexedEquipmentTypesForModification() {
+    public static Set<IdentifiableType> getIndexedEquipmentTypesInModification() {
         return TYPES_FOR_INDEXING_MODIFICATIONS;
     }
 
