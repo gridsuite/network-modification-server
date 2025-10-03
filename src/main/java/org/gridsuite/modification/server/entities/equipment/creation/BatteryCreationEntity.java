@@ -61,6 +61,12 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
     @Column(name = "droop")
     private Float droop;
 
+    @Column(name = "directTransX")
+    private Double directTransX;
+
+    @Column(name = "stepUpTransformerX")
+    private Double stepUpTransformerX;
+
     public BatteryCreationEntity(@NonNull BatteryCreationInfos batteryCreationInfos) {
         super(batteryCreationInfos);
         assignAttributes(batteryCreationInfos);
@@ -83,6 +89,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
         this.targetQ = batteryCreationInfos.getTargetQ();
         this.participate = batteryCreationInfos.getParticipate();
         this.droop = batteryCreationInfos.getDroop();
+        this.directTransX = batteryCreationInfos.getDirectTransX();
+        this.stepUpTransformerX = batteryCreationInfos.getStepUpTransformerX();
     }
 
     @Override
@@ -117,6 +125,8 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .targetQ(getTargetQ())
                 .participate(getParticipate())
                 .droop(getDroop())
+                .directTransX(getDirectTransX())
+                .stepUpTransformerX(getStepUpTransformerX())
                 // properties
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null :
                         getProperties().stream()

@@ -10,7 +10,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.BatteryCreationInfos;
+import org.gridsuite.modification.dto.FreePropertyInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -18,7 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -53,6 +59,8 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .minQ(20.0)
                 .maxQ(25.0)
                 .droop(5f)
+                .stepUpTransformerX(60.0)
+                .directTransX(61.0)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
                 .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(2.0, 3.0, 3.1),
@@ -78,6 +86,8 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                 .minQ(23.0)
                 .maxQ(26.0)
                 .droop(6f)
+                .stepUpTransformerX(61.0)
+                .directTransX(62.0)
                 .participate(true)
                 .reactiveCapabilityCurve(true)
                 .reactiveCapabilityCurvePoints(Arrays.asList(new ReactiveCapabilityCurvePointsInfos(1.0, 2.0, 2.1),
@@ -218,5 +228,17 @@ class BatteryCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         assertEquals("BATTERY_CREATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
         assertEquals("idBattery2Edited", updatedValues.get("equipmentId"));
+    }
+
+    @Test
+    void testCreateWithShortCircuitErrors() throws Exception {
+        // invalid short circuit transient reactance
+        BatteryCreationInfos batteryCreationInfos = (BatteryCreationInfos) buildModification();
+        batteryCreationInfos.setDirectTransX(Double.NaN);
+
+        String batteryCreationInfosJson = getJsonBody(batteryCreationInfos, null);
+        mockMvc.perform(post(getNetworkModificationUri()).content(batteryCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        assertLogMessage("cannot add short-circuit extension on battery with id=idBattery1 : Undefined directTransX", "network.modification.ShortCircuitExtensionAddError", reportService);
     }
 }
