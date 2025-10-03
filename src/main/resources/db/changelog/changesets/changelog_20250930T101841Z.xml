@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!-- new common tables for both tabular creation and modification -->
+    <changeSet author="braquartdav (generated)" id="1759227570668-35">
+        <createTable tableName="tabular_modifications">
+            <column name="csv_filename" type="VARCHAR(255)"/>
+            <column name="modification_type" type="VARCHAR(255)"/>
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modificationsPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1759227570668-36">
+        <createTable tableName="tabular_modifications_modifications">
+            <column name="tabular_modifications_entity_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modifications_modificationsPK"/>
+            </column>
+            <column name="modifications_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifications_order" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="tabular_modifications_modificationsPK"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <!-- constraints added in next changelog after migration -->
+</databaseChangeLog>

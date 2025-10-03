@@ -18,7 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.gridsuite.modification.dto.TabularPropertyInfos;
+import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
 
 import java.util.UUID;
 

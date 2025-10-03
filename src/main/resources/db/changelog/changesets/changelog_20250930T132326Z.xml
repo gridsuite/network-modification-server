@@ -1,0 +1,42 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="braquartdav" id="1759238651864-38">
+        <sqlFile
+                dbms="postgresql"
+                encoding="UTF-8"
+                path="migrationTabularModifications_20250930T132326Z.sql"
+                relativeToChangelogFile="true"
+                splitStatements="true"
+                stripComments="true"/>
+    </changeSet>
+    <!-- constraints added after migration inserts  -->
+    <changeSet author="braquartdav (generated)" id="1759238651864-39">
+        <addUniqueConstraint columnNames="modifications_id" constraintName="UC_TABULAR_MODIFICATIONS_MODIFICATIONSMODIFICATIONS_ID_COL" tableName="tabular_modifications_modifications"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1759238651864-40">
+        <addForeignKeyConstraint baseColumnNames="modifications_id" baseTableName="tabular_modifications_modifications" constraintName="FKcrr3art51mjqqmgry40rrjnho" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1759238651864-41">
+        <addForeignKeyConstraint baseColumnNames="tabular_modifications_entity_id" baseTableName="tabular_modifications_modifications" constraintName="FKf95xme3cnekfnjaurwy6x1iuu" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tabular_modifications" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1759238651864-42">
+        <addForeignKeyConstraint baseColumnNames="tabular_modification_id" baseTableName="tabular_property" constraintName="FKkpl843xtup0mhioj7668ha98t" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="tabular_modifications" validate="true"/>
+    </changeSet>
+    <changeSet author="braquartdav (generated)" id="1759238651864-43">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="tabular_modifications" constraintName="FKqnbfbngtamgdvtqlank26bsej" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <!-- now we can remove former tables TODO DBR uncomment -->
+    <!--changeSet author="braquartdav" id="1759238651864-44">
+        <dropTable tableName="tabular_modification_modifications"/>
+    </changeSet>
+    <changeSet author="braquartdav" id="1759238651864-45">
+        <dropTable tableName="tabular_modification"/>
+    </changeSet>
+    <changeSet author="braquartdav" id="1759238651864-46">
+        <dropTable tableName="tabular_creation_creations"/>
+    </changeSet>
+    <changeSet author="braquartdav" id="1759238651864-47">
+        <dropTable tableName="tabular_creation"/>
+    </changeSet-->
+
+</databaseChangeLog>

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.equipment.creation.*;
 import org.gridsuite.modification.server.entities.equipment.deletion.*;
 import org.gridsuite.modification.server.entities.equipment.modification.*;
@@ -20,8 +21,7 @@ import org.gridsuite.modification.server.entities.equipment.modification.attribu
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringEquipmentAttributeModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.byfilter.*;
-import org.gridsuite.modification.server.entities.tabular.TabularCreationEntity;
-import org.gridsuite.modification.server.entities.tabular.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -50,7 +50,6 @@ public final class EntityRegistry {
         register(ConverterStationCreationInfos.class, ConverterStationCreationEntity.class);
         register(LccCreationInfos.class, LccCreationEntity.class);
         register(LccConverterStationCreationInfos.class, LccConverterStationCreationEntity.class);
-        register(TabularCreationInfos.class, TabularCreationEntity.class);
         register(CreateVoltageLevelSectionInfos.class, CreateVoltageLevelSectionEntity.class);
 
         // // modification
@@ -64,8 +63,6 @@ public final class EntityRegistry {
         register(ShuntCompensatorModificationInfos.class, ShuntCompensatorModificationEntity.class);
         register(VscModificationInfos.class, VscModificationEntity.class);
         register(ConverterStationModificationInfos.class, ConverterStationModificationEntity.class);
-        register(TabularModificationInfos.class, TabularModificationEntity.class);
-        register(LimitSetsTabularModificationInfos.class, TabularModificationEntity.class);
         register(ByFormulaModificationInfos.class, ByFormulaModificationEntity.class);
         register(ModificationByAssignmentInfos.class, ModificationByAssignmentEntity.class);
         register(EquipmentAttributeModificationInfos.class, EquipmentAttributeModificationEntity.class);
@@ -75,6 +72,11 @@ public final class EntityRegistry {
         register(CreateCouplingDeviceInfos.class, CreateCouplingDeviceEntity.class);
         register(CreateVoltageLevelTopologyInfos.class, CreateVoltageLevelTopologyEntity.class);
         register(MoveVoltageLevelFeederBaysInfos.class, MoveVoltageLevelFeederBaysEntity.class);
+
+        // tabular
+        register(TabularCreationInfos.class, TabularModificationsEntity.class);
+        register(TabularModificationInfos.class, TabularModificationsEntity.class);
+        register(LimitSetsTabularModificationInfos.class, TabularModificationsEntity.class);
 
         // // attatching and splitting
         register(LineAttachToVoltageLevelInfos.class, LineAttachToVoltageLevelEntity.class);
