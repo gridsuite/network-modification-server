@@ -25,8 +25,8 @@
     <changeSet author="braquartdav (generated)" id="1759238651864-43">
         <addForeignKeyConstraint baseColumnNames="id" baseTableName="tabular_modifications" constraintName="FKqnbfbngtamgdvtqlank26bsej" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
-    <!-- now we can remove former tables TODO DBR uncomment -->
-    <!--changeSet author="braquartdav" id="1759238651864-44">
+    <!-- now we can remove former tables -->
+    <changeSet author="braquartdav" id="1759238651864-44">
         <dropTable tableName="tabular_modification_modifications"/>
     </changeSet>
     <changeSet author="braquartdav" id="1759238651864-45">
@@ -37,6 +37,5 @@
     </changeSet>
     <changeSet author="braquartdav" id="1759238651864-47">
         <dropTable tableName="tabular_creation"/>
-    </changeSet-->
-
+    </changeSet>
 </databaseChangeLog>
