@@ -67,6 +67,6 @@ public class LineTypeInfos {
 
     @JsonIgnore
     public LineTypeEntity toEntity() {
-        throw new UnsupportedOperationException("toEntity must be implemented in subclasses");
+        throw new UnsupportedOperationException("toEntity() should be implemented in subclasses");
     }
 }
