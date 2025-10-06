@@ -65,20 +65,15 @@ public class NetworkStoreListener implements NetworkListener {
         this.collectionThreshold = collectionThreshold;
     }
 
-    private void updateImpactedEquipment(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType) {
-        updateImpactedEquipment(impactedEquipment, impactType, true, true);
-    }
-
-    private void updateImpactedEquipment2(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType, boolean indexEquipment, boolean indexInModification) {
-        updateImpactedEquipment(impactedEquipment, impactType, indexEquipment, indexInModification);
-    }
-
     private void updateImpactedEquipment(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType, boolean indexEquipment, boolean indexInModification) {
         ImpactedEquipmentsInfos infosToUpdate = modificationApplicationInfosList.getLast().getImpactedEquipmentsInfos();
         switch (impactType) {
-            case CREATION -> infosToUpdate.getCreatedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
-            case MODIFICATION -> infosToUpdate.getModifiedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
-            case DELETION -> infosToUpdate.getTombstonedEquipments().add(new IndexedImpactedEquipmentInfos<>((TombstonedEquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
+            case CREATION ->
+                    infosToUpdate.getCreatedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
+            case MODIFICATION ->
+                    infosToUpdate.getModifiedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
+            case DELETION ->
+                    infosToUpdate.getTombstonedEquipments().add(new IndexedImpactedEquipmentInfos<>((TombstonedEquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
         }
     }
 
@@ -144,7 +139,9 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable);
-        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
+        boolean indexEquipments = getIndexedEquipmentTypes().contains(identifiable.getType());
+        boolean indexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
+        if (indexEquipments || indexModification) {
             updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
         }
     }
@@ -211,10 +208,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        if (getIndexedEquipmentTypesInModification().contains(identifiable.getType())) {
-            boolean indexEquipments = getIndexedEquipmentTypes().contains(identifiable.getType());
-            boolean indexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
-            updateImpactedEquipment2(EquipmentInfos.builder()
+        boolean indexEquipments = getIndexedEquipmentTypes().contains(identifiable.getType());
+        boolean indexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
+        if (indexEquipments || indexModification) {
+            updateImpactedEquipment(EquipmentInfos.builder()
                     .networkUuid(networkUuid)
                     .variantId(network.getVariantManager().getWorkingVariantId())
                     .id(identifiable.getId())
@@ -241,7 +238,7 @@ public class NetworkStoreListener implements NetworkListener {
                 .networkUuid(networkUuid)
                 .variantId(network.getVariantManager().getWorkingVariantId())
                 .id(identifiable.getId())
-                .build(), SimpleImpactType.DELETION);
+                .build(), SimpleImpactType.DELETION, true, true);
         }
         simpleImpacts.add(
             SimpleElementImpact.builder()
@@ -408,7 +405,7 @@ public class NetworkStoreListener implements NetworkListener {
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
         if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
-            updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION);
+            updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION, true, true);
         }
         addSimpleModificationImpact(identifiable);
     }
