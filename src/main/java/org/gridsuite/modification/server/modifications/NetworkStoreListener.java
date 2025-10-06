@@ -69,6 +69,10 @@ public class NetworkStoreListener implements NetworkListener {
         updateImpactedEquipment(impactedEquipment, impactType, true, true);
     }
 
+    private void updateImpactedEquipment2(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType, boolean indexEquipment, boolean indexInModification) {
+        updateImpactedEquipment(impactedEquipment, impactType, indexEquipment, indexInModification);
+    }
+
     private void updateImpactedEquipment(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType, boolean indexEquipment, boolean indexInModification) {
         ImpactedEquipmentsInfos infosToUpdate = modificationApplicationInfosList.getLast().getImpactedEquipmentsInfos();
         switch (impactType) {
@@ -207,24 +211,26 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        if (getIndexedEquipmentTypes().contains(identifiable.getType())) {
-            updateImpactedEquipment(EquipmentInfos.builder()
-                .networkUuid(networkUuid)
-                .variantId(network.getVariantManager().getWorkingVariantId())
-                .id(identifiable.getId())
-                .name(identifiable.getNameOrId())
-                .type(EquipmentInfos.getEquipmentTypeName(identifiable))
-                .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
-                .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-                .build(), SimpleImpactType.CREATION);
+        if (getIndexedEquipmentTypesInModification().contains(identifiable.getType())) {
+            boolean indexEquipments = getIndexedEquipmentTypes().contains(identifiable.getType());
+            boolean indexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
+            updateImpactedEquipment2(EquipmentInfos.builder()
+                    .networkUuid(networkUuid)
+                    .variantId(network.getVariantManager().getWorkingVariantId())
+                    .id(identifiable.getId())
+                    .name(identifiable.getNameOrId())
+                    .type(EquipmentInfos.getEquipmentTypeName(identifiable))
+                    .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
+                    .substations(EquipmentInfos.getSubstationsInfos(identifiable))
+                    .build(), SimpleImpactType.CREATION, indexEquipments, indexModification);
         }
         simpleImpacts.add(
-            SimpleElementImpact.builder()
-                .simpleImpactType(SimpleImpactType.CREATION)
-                .elementType(identifiable.getType())
-                .elementId(identifiable.getId())
-                .substationIds(getSubstationIds(identifiable))
-                .build()
+                SimpleElementImpact.builder()
+                        .simpleImpactType(SimpleImpactType.CREATION)
+                        .elementType(identifiable.getType())
+                        .elementId(identifiable.getId())
+                        .substationIds(getSubstationIds(identifiable))
+                        .build()
         );
     }
 
