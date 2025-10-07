@@ -1,0 +1,35 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="elcheikhbas (generated)" id="1759761318366-35">
+        <createTable tableName="limits_property">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="limits_propertyPK"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1759761318366-36">
+        <createTable tableName="operational_limits_group_properties">
+            <column name="op_limits_group_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="limits_property_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1759761318366-41">
+        <addUniqueConstraint columnNames="limits_property_id" constraintName="operational_limits_group_properties_id_uc" tableName="operational_limits_group_properties"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1759761318366-51">
+        <addForeignKeyConstraint baseColumnNames="limits_property_id" baseTableName="operational_limits_group_properties" constraintName="limits_property_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="limits_property" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1759761318366-52">
+        <addForeignKeyConstraint baseColumnNames="op_limits_group_id" baseTableName="operational_limits_group_properties" constraintName="operationalLimitsGroups_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
