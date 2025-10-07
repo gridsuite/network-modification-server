@@ -174,7 +174,7 @@ class ModificationIndexationTest {
         assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
         assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
         assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
-        assertEquals(deletedEquipmentId, modificationApplicationInfos.getFirst().getDeletedEquipmentIds().iterator().next());
+        assertTrue(modificationApplicationInfos.getFirst().getDeletedEquipmentIds().contains(deletedEquipmentId));
     }
 
     @Test
