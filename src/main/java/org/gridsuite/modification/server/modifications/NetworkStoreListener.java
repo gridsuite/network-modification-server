@@ -68,12 +68,9 @@ public class NetworkStoreListener implements NetworkListener {
     private void updateImpactedEquipment(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType, boolean indexEquipment, boolean indexInModification) {
         ImpactedEquipmentsInfos infosToUpdate = modificationApplicationInfosList.getLast().getImpactedEquipmentsInfos();
         switch (impactType) {
-            case CREATION ->
-                    infosToUpdate.getCreatedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
-            case MODIFICATION ->
-                    infosToUpdate.getModifiedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
-            case DELETION ->
-                    infosToUpdate.getTombstonedEquipments().add(new IndexedImpactedEquipmentInfos<>((TombstonedEquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
+            case CREATION -> infosToUpdate.getCreatedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
+            case MODIFICATION -> infosToUpdate.getModifiedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
+            case DELETION -> infosToUpdate.getTombstonedEquipments().add(new IndexedImpactedEquipmentInfos<>((TombstonedEquipmentInfos) impactedEquipment, indexEquipment, indexInModification));
         }
     }
 
@@ -212,22 +209,22 @@ public class NetworkStoreListener implements NetworkListener {
         boolean indexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
         if (indexEquipments || indexModification) {
             updateImpactedEquipment(EquipmentInfos.builder()
-                    .networkUuid(networkUuid)
-                    .variantId(network.getVariantManager().getWorkingVariantId())
-                    .id(identifiable.getId())
-                    .name(identifiable.getNameOrId())
-                    .type(EquipmentInfos.getEquipmentTypeName(identifiable))
-                    .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
-                    .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-                    .build(), SimpleImpactType.CREATION, indexEquipments, indexModification);
+                .networkUuid(networkUuid)
+                .variantId(network.getVariantManager().getWorkingVariantId())
+                .id(identifiable.getId())
+                .name(identifiable.getNameOrId())
+                .type(EquipmentInfos.getEquipmentTypeName(identifiable))
+                .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
+                .substations(EquipmentInfos.getSubstationsInfos(identifiable))
+                .build(), SimpleImpactType.CREATION, indexEquipments, indexModification);
         }
         simpleImpacts.add(
-                SimpleElementImpact.builder()
-                        .simpleImpactType(SimpleImpactType.CREATION)
-                        .elementType(identifiable.getType())
-                        .elementId(identifiable.getId())
-                        .substationIds(getSubstationIds(identifiable))
-                        .build()
+            SimpleElementImpact.builder()
+                .simpleImpactType(SimpleImpactType.CREATION)
+                .elementType(identifiable.getType())
+                .elementId(identifiable.getId())
+                .substationIds(getSubstationIds(identifiable))
+                .build()
         );
     }
 
