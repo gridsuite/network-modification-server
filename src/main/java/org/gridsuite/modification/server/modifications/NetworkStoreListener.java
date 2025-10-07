@@ -153,8 +153,8 @@ public class NetworkStoreListener implements NetworkListener {
         boolean shouldIndexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
 
         updateImpactedEquipment(
-                toEquipmentInfos(identifiable, networkUuid, variantId),
-                SimpleImpactType.MODIFICATION,
+            toEquipmentInfos(identifiable, networkUuid, variantId),
+            SimpleImpactType.MODIFICATION,
             shouldIndexEquipment,
             shouldIndexModification
         );
