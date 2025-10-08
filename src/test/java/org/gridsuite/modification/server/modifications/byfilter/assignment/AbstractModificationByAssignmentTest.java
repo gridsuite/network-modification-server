@@ -17,6 +17,7 @@ import org.gridsuite.filter.identifierlistfilter.IdentifierListFilterEquipmentAt
 import org.gridsuite.filter.utils.EquipmentType;
 import org.gridsuite.modification.dto.FilterInfos;
 import org.gridsuite.modification.dto.ModificationByAssignmentInfos;
+import org.gridsuite.modification.dto.byfilter.equipmentfield.PropertyField;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.dto.byfilter.DataType;
 import org.gridsuite.modification.dto.byfilter.assignment.AssignmentInfos;
@@ -249,7 +250,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
 
     protected List<AssignmentInfos<?>> getAssignmentInfos() {
         PropertyAssignmentInfos spyAssignmentInfos = spy(PropertyAssignmentInfos.builder()
-                .editedField(DataType.PROPERTY.name())
+                .editedField(PropertyField.FREE_PROPERTIES.name())
                 .propertyName("propertyName")
                 .value("propertyValue")
                 .filters(List.of(filter1))

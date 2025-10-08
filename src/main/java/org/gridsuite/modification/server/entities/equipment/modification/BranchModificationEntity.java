@@ -47,6 +47,9 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     @OrderColumn(name = "pos_operationalLimitsGroups")
     private List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups;
 
+    @Column(name = "enable_olg_modification", columnDefinition = "boolean default true")
+    private Boolean enableOLGModification;
+
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "selectedOperationalLimitsGroupId1")),
@@ -217,6 +220,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
         this.operationalLimitsGroups = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroups(), operationalLimitsGroups);
+        this.enableOLGModification = branchModificationInfos.getEnableOLGModification() == null || branchModificationInfos.getEnableOLGModification();
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;

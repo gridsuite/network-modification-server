@@ -64,6 +64,16 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
     private FloatModificationEmbedded droop;
 
     @Embedded
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "directTransX")), @AttributeOverride(name = "opType", column = @Column(name = "directTransxOp"))
+    })
+    private DoubleModificationEmbedded directTransX;
+
+    @Embedded
+    @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "stepUpTransformerX")), @AttributeOverride(name = "opType", column = @Column(name = "stepUpTransformerxOp"))
+    })
+    private DoubleModificationEmbedded stepUpTransformerX;
+
+    @Embedded
     @AttributeOverrides(value = {@AttributeOverride(name = "value", column = @Column(name = "minQ")), @AttributeOverride(name = "opType", column = @Column(name = "minqOp"))
     })
     private DoubleModificationEmbedded minQ;
@@ -102,6 +112,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
         this.maxQ = batteryModificationInfos.getMaxQ() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getMaxQ()) : null;
         this.participate = batteryModificationInfos.getParticipate() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getParticipate()) : null;
         this.droop = batteryModificationInfos.getDroop() != null ? new FloatModificationEmbedded(batteryModificationInfos.getDroop()) : null;
+        this.directTransX = batteryModificationInfos.getDirectTransX() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getDirectTransX()) : null;
+        this.stepUpTransformerX = batteryModificationInfos.getStepUpTransformerX() != null ? new DoubleModificationEmbedded(batteryModificationInfos.getStepUpTransformerX()) : null;
         this.reactiveCapabilityCurve = batteryModificationInfos.getReactiveCapabilityCurve() != null ? new BooleanModificationEmbedded(batteryModificationInfos.getReactiveCapabilityCurve()) : null;
         this.reactiveCapabilityCurvePoints = toEmbeddablePoints(batteryModificationInfos.getReactiveCapabilityCurvePoints());
     }
@@ -134,6 +146,8 @@ public class BatteryModificationEntity extends InjectionModificationEntity {
                 .maxQ(toAttributeModification(getMaxQ()))
                 .participate(toAttributeModification(getParticipate()))
                 .droop(toAttributeModification(getDroop()))
+                .directTransX(toAttributeModification(getDirectTransX()))
+                .stepUpTransformerX(toAttributeModification(getStepUpTransformerX()))
                 .reactiveCapabilityCurve(toAttributeModification(getReactiveCapabilityCurve()))
                 .reactiveCapabilityCurvePoints(DTOUtils.toReactiveCapabilityCurvePointsModificationInfos(getReactiveCapabilityCurvePoints()))
                 // properties
