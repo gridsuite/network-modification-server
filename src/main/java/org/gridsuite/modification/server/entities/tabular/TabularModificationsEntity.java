@@ -15,7 +15,6 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,24 +66,7 @@ public class TabularModificationsEntity extends ModificationEntity {
 
     @Override
     public TabularBaseInfos toModificationInfos() {
-        var builder = switch (ModificationType.valueOf(getType())) {
-            case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
-            case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
-            default -> TabularModificationInfos.builder();
-        };
-        List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).collect(Collectors.toList());
-        return builder
-                .date(getDate())
-                .uuid(getId())
-                .stashed(getStashed())
-                .activated(getActivated())
-                .modificationType(modificationType)
-                .modifications(modificationsInfos)
-                .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()
-                        .map(TabularPropertyEntity::toInfos)
-                        .toList())
-                .csvFilename(getCsvFilename())
-                .build();
+        throw new UnsupportedOperationException("Tabular DTO must be retrieved with NetworkModificationRepository::getModificationInfos");
     }
 
     private void assignAttributes(TabularBaseInfos tabularBaseInfos) {
