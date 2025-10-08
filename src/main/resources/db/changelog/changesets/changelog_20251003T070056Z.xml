@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1759474876222-35">
+        <addColumn tableName="battery_creation">
+            <column name="direct_transx" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1759474876222-36">
+        <addColumn tableName="battery_modification">
+            <column name="direct_transx" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1759474876222-37">
+        <addColumn tableName="battery_modification">
+            <column name="direct_transx_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1759474876222-38">
+        <addColumn tableName="battery_creation">
+            <column name="step_up_transformerx" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1759474876222-39">
+        <addColumn tableName="battery_modification">
+            <column name="step_up_transformerx" type="float(53)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1759474876222-40">
+        <addColumn tableName="battery_modification">
+            <column name="step_up_transformerx_op" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
