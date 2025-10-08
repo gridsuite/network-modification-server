@@ -410,6 +410,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("ModifiedName", OperationType.SET))
+                .enableOLGModification(true)
                 .build();
         modificationToCreateJson = getJsonBody(lineModificationInfos1, null);
 
