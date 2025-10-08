@@ -90,6 +90,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .q1MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
                 .q2MeasurementValue(new AttributeModification<>(MEASUREMENT_Q_VALUE, OperationType.SET))
                 .q2MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
+                .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(
                         OperationalLimitsGroupModificationInfos.builder()
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
@@ -157,6 +158,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .b1(new AttributeModification<>(12.1, OperationType.SET))
                 .g2(new AttributeModification<>(13.1, OperationType.SET))
                 .b2(new AttributeModification<>(14.1, OperationType.SET))
+                .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationInfos.builder()
                         .id("DEFAULT")
                         .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
@@ -391,6 +393,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
+                .enableOLGModification(true)
                 .build();
         String modificationToCreateJson = getJsonBody(lineModificationInfos, null);
 
