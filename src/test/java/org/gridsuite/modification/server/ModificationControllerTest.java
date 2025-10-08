@@ -451,7 +451,7 @@ class ModificationControllerTest {
 
         mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
 
-        assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
+        assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
     }
 
     @Test

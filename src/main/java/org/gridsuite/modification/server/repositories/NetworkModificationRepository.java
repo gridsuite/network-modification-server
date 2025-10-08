@@ -113,8 +113,6 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, modifications);
     }
 
-    @Transactional // To have all create in the same transaction (atomic)
-    // TODO Remove transaction when errors will no longer be sent to the front
     public List<ModificationEntity> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
 

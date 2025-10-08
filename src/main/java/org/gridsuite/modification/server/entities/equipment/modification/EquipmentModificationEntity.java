@@ -43,16 +43,14 @@ public class EquipmentModificationEntity extends ModificationEntity {
 
     private void assignAttributes(EquipmentModificationInfos equipmentModificationInfos) {
         equipmentId = equipmentModificationInfos.getEquipmentId();
-        List<FreePropertyEntity> newProperties = equipmentModificationInfos.getProperties() == null ? null :
+        List<FreePropertyEntity> newProperties = equipmentModificationInfos.getProperties() == null ? List.of() :
             equipmentModificationInfos.getProperties().stream()
                 .map(FreePropertyEntity::new)
                 .toList();
         if (this.properties != null) {
             // update using the same reference with clear/add (to avoid JPA exception)
             this.properties.clear();
-            if (newProperties != null) {
-                this.properties.addAll(newProperties);
-            }
+            this.properties.addAll(newProperties);
         } else {
             this.properties = newProperties;
         }
