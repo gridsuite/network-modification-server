@@ -52,7 +52,7 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when upgrading gridsuite dependencies -->
-        <network-modification.version>0.41.0-SNAPSHOT</network-modification.version>
+        <network-modification.version>0.42.0-SNAPSHOT</network-modification.version>
         <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
     </properties>
 
@@ -205,11 +205,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-open-loadflow</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-config-classic</artifactId>
             <scope>runtime</scope>
         </dependency>
 

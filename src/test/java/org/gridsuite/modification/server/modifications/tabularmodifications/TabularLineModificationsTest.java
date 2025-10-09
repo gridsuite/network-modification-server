@@ -48,13 +48,18 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET))
+                    .enableOLGModification(true).build(),
                 LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(40., OperationType.SET))
-                        .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
-                        .build(),
-                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET)).build()
+                    .enableOLGModification(true)
+                    .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
+                    .build(),
+                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET))
+                    .enableOLGModification(true).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
@@ -68,12 +73,17 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
                 LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(1., OperationType.SET))
+                        .enableOLGModification(true)
                         .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
                         .build(),
-                LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET)).build()
+                LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET))
+                    .enableOLGModification(true).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
