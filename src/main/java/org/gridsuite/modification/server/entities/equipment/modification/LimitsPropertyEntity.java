@@ -28,7 +28,7 @@ public class LimitsPropertyEntity {
     private String value;
 
     public static LimitsPropertyEntity fromLimitsPropertyInfos(LimitsPropertyInfos propertyInfos) {
-        return new LimitsPropertyEntity(UUID.randomUUID(), propertyInfos.name(), propertyInfos.value());
+        return new LimitsPropertyEntity(null, propertyInfos.name(), propertyInfos.value());
     }
 
     public LimitsPropertyInfos toCurrentLimitsInfos() {

@@ -42,10 +42,7 @@ public class OperationalLimitsGroupEntity {
     private OperationalLimitsGroupInfos.Applicability applicability;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinTable(
-        name = "operational_limits_group_properties",
-        joinColumns = @JoinColumn(name = "op_limits_group_id", referencedColumnName = "uuid"), foreignKey = @ForeignKey(name = "operationalLimitsGroups_id_fk"),
-        inverseJoinColumns = @JoinColumn(name = "limits_property_id", referencedColumnName = "id"), inverseForeignKey = @ForeignKey(name = "limits_property_fk"))
+    @JoinColumn(name = "operational_limit_group_id", foreignKey = @ForeignKey(name = "operational_limit_group_id_fk"))
     private List<LimitsPropertyEntity> limitsProperties;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
