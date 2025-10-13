@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.utils.NetworkWithTeePoint;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.Map;
@@ -92,10 +92,10 @@ class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
                 .build();
         var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = getJsonBody(deleteAttachingLineInfos, null);
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "ll").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -112,10 +112,10 @@ class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         var objectWriter = mapper.writer().withDefaultPrettyPrinter();
         String json = getJsonBody(deleteAttachingLineInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(MockMvcRequestBuilders.post(getNetworkModificationUri()).content(json).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         assertLogMessage("Unable to find the attachment point and the tapped voltage level from lines l1, l3 and l1",
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -127,10 +127,10 @@ class DeleteAttachingLineTest extends AbstractNetworkModificationTest {
         deleteAttachingLineInfos.setReplacingLine1Id("l2");
         String lineAttachToAbsentLineJson = getJsonBody(deleteAttachingLineInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(lineAttachToAbsentLineJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "l2").getMessage(),
                 ERROR_MESSAGE_KEY, reportService);
     }

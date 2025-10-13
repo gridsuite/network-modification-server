@@ -21,7 +21,7 @@ import org.gridsuite.modification.server.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Map;
 import java.util.UUID;
@@ -104,10 +104,10 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         String modificationJson = getJsonBody(modificationInfos, null);
         assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
     }
 

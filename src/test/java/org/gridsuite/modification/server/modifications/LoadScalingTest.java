@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -186,10 +186,10 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
             .build();
         String body = getJsonBody(modificationToCreate, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-            .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk());
 
         wireMockUtils.verifyGetRequest(stubNonDistributionKey, PATH, handleQueryParams(FILTER_NO_DK), false);
 
@@ -275,15 +275,15 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         String body = getJsonBody(loadScalingInfo, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri())
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpectAll(
                 status().isOk(),
                 content().string(IsNull.notNullValue())
-            ).andReturn();
+            );
 
         wireMockUtils.verifyGetRequest(stubMultipleWrongIds, PATH, Map.of("ids", WireMock.matching(".*")), false);
         assertEquals(600, getNetwork().getLoad(LOAD_ID_9).getP0(), 0.01D);
@@ -494,12 +494,12 @@ class LoadScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(loadScalingInfo, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri())
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         // If we sum the P0 for all expected modified loads, we should have the requested variation value
         double connectedLoadsConstantP = modifiedLoads

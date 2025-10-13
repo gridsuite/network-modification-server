@@ -15,7 +15,7 @@ import org.gridsuite.modification.server.modifications.AbstractNetworkModificati
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Date;
 import java.util.List;
@@ -129,9 +129,9 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
         String body = getJsonBody(byFilterDeletionInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage(byFilterDeletionInfos.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
             "network.modification.invalidFilters", reportService);

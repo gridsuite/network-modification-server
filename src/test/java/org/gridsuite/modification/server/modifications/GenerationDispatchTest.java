@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -170,10 +171,10 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         setNetwork(Network.read("testGenerationDispatchWithMultipleEnergySource.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithMultipleEnergySource.xiidm")));
 
         String modificationJson = getJsonBody(modification, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         assertLogMessageWithoutRank("The total demand is : 768.0 MW", "network.modification.TotalDemand", reportService);
         assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
@@ -495,10 +496,10 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         setNetwork(Network.read("ieee118cdf_testDemGroupe.xiidm", getClass().getResourceAsStream("/ieee118cdf_testDemGroupe.xiidm")));
 
         String modificationJson = getJsonBody(modification, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-            .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk());
 
         // generators modified
         assertEquals(264, getNetwork().getGenerator("B4-G").getTargetP(), 0.001);

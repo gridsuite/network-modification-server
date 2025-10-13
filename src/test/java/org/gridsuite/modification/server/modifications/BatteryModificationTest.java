@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -146,10 +147,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .add();
         String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -160,10 +161,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.setMinQ(new AttributeModification<>(-200., OperationType.SET));
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -175,10 +176,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.setMaxQ(new AttributeModification<>(200., OperationType.SET));
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
@@ -189,10 +190,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.setMinQ(new AttributeModification<>(-1.1, OperationType.SET));
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
 
@@ -205,10 +206,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.setMinP(null);
         batteryModificationInfos.setMaxP(null);
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
         assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
         testNetworkModificationsCount(getGroupId(), 5);
@@ -221,10 +222,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.getDroop().setValue(18f);
         String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -234,10 +235,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         batteryModificationInfos.setDroop(null);
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -249,19 +250,19 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
         String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         Battery battery = getNetwork().getBattery("v3Battery");
         assertEquals(0.1f, battery.getExtension(ActivePowerControl.class).getDroop());
         assertTrue(battery.getExtension(ActivePowerControl.class).isParticipate());
         //modify only droop
         batteryModificationInfos.setDroop(new AttributeModification<>(0.5f, OperationType.SET));
         modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         //check impacts
         String resultAsString = mvcResult.getResponse().getContentAsString();
@@ -299,10 +300,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
         Double activePower = batteryModificationInfos.getTargetP() != null ? batteryModificationInfos.getTargetP().getValue() : battery.getTargetP();
 
         String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -346,9 +347,9 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                     });
         }
         String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 ERROR_MESSAGE_KEY, reportService);

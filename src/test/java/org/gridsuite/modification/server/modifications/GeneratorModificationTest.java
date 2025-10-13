@@ -17,7 +17,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -175,10 +175,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .add();
         String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -189,10 +189,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setMinQ(new AttributeModification<>(-200., OperationType.SET));
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -204,10 +204,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setMaxQ(new AttributeModification<>(200., OperationType.SET));
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
@@ -218,10 +218,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setMinQ(new AttributeModification<>(-1.1, OperationType.SET));
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
 
@@ -236,10 +236,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setMaxP(null);
         generatorModificationInfos.setRatedS(null);
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
         testNetworkModificationsCount(getGroupId(), 5);
@@ -253,10 +253,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setDirectTransX(null);
         String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -269,10 +269,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -288,10 +288,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setVoltageRegulationOn(new AttributeModification<>(true, OperationType.SET));
         String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         GeneratorModificationInfos createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -302,10 +302,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setVoltageRegulationOn(null);
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -316,10 +316,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setVoltageRegulationType(new AttributeModification<>(VoltageRegulationType.LOCAL, OperationType.SET));
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
 
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
@@ -334,10 +334,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setParticipate(null);
 
         modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
 
         createdModification = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
         assertThat(createdModification).recursivelyEquals(generatorModificationInfos);
@@ -422,10 +422,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                     });
         }
         String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 ERROR_MESSAGE_KEY, reportService);
     }
@@ -445,10 +445,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         Double activePower = generatorModificationInfos.getTargetP() != null ? generatorModificationInfos.getTargetP().getValue() : generator.getTargetP();
 
         String modificationToCreateJson = getJsonBody(generatorModificationInfos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         assertLogMessage("MODIFY_GENERATOR_ERROR : Generator '" + "idGenerator" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
                 ERROR_MESSAGE_KEY, reportService);
 
@@ -463,10 +463,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
 
         String generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-            .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetV());
 
         //Unset TargetQ (voltage regulation needs to be turned on and voltage setpoint to have a value)
@@ -474,10 +474,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
         generatorModificationInfos.setTargetV(new AttributeModification<>(44.0, OperationType.SET));
         generatorModificationInfos.setTargetQ(new AttributeModification<>(null, OperationType.UNSET));
         generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-            .andExpect(status().isOk()).andReturn();
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk());
         assertEquals(Double.NaN, getNetwork().getGenerator("idGenerator").getTargetQ());
 
     }
@@ -494,10 +494,10 @@ class GeneratorModificationTest extends AbstractInjectionModificationTest {
                 .connectionPosition(new AttributeModification<>(1, OperationType.SET))
                 .build();
         String generatorModificationInfosJson = getJsonBody(generatorModificationInfos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(generatorModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
         generatorModificationInfos = (GeneratorModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
         assertEquals(1, generatorModificationInfos.getConnectionPosition().getValue());
     }

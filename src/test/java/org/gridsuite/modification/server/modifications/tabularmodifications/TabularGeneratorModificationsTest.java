@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -562,11 +563,11 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
         String modificationToCreateJson = getJsonBody(modificationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                        .andExpect(status().isOk()).andReturn();
+                        .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                        .andExpect(status().isOk());
         assertLogMessage("Tabular modification: No generators have been modified", "network.modification.tabular.modification.error", reportService);
     }
 

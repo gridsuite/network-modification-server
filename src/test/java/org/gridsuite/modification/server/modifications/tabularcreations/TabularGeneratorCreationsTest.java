@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -256,11 +257,11 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
             .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                 .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-            .andExpect(status().isOk()).andReturn();
+            .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpect(status().isOk());
         assertLogMessage("Tabular creation: 2 generators have been created", "network.modification.tabular.creation", reportService);
     }
 
@@ -307,11 +308,11 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+        org.springframework.test.web.servlet.ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                        .andExpect(status().isOk()).andReturn();
+                        .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                        .andExpect(status().isOk());
         assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
     }
 

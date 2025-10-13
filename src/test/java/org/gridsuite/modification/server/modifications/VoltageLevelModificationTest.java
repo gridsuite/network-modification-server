@@ -17,7 +17,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -245,12 +245,12 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
 
     private void applyModification(VoltageLevelModificationInfos infos) throws Exception {
         String body = getJsonBody(infos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri())
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+                .andExpect(status().isOk());
     }
 
     @Override
