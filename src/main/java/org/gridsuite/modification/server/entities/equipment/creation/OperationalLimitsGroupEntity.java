@@ -85,7 +85,7 @@ public class OperationalLimitsGroupEntity {
                                         .applicability(limitsGroupEntity.getApplicability())
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
                                         .limitsProperties(limitsGroupEntity.getLimitsProperties()
-                                            .stream().map(LimitsPropertyEntity::toCurrentLimitsInfos).toList())
+                                            .stream().map(LimitsPropertyEntity::toLimitsPropertyInfos).toList())
                                         .build()
                         )
                         .collect(Collectors.toList());

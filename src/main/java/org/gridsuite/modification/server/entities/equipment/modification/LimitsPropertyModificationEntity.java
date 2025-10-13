@@ -1,6 +1,11 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,8 +19,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "limits_property")
-public class LimitsPropertyEntity {
+@Table(name = "limits_property_modification")
+public class LimitsPropertyModificationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
@@ -27,11 +32,12 @@ public class LimitsPropertyEntity {
     @Column(name = "value", nullable = false)
     private String value;
 
-    public static LimitsPropertyEntity fromLimitsPropertyInfos(LimitsPropertyInfos propertyInfos) {
-        return new LimitsPropertyEntity(null, propertyInfos.name(), propertyInfos.value());
+    public static LimitsPropertyModificationEntity fromLimitsPropertyInfos(LimitsPropertyInfos propertyInfos) {
+        return new LimitsPropertyModificationEntity(null, propertyInfos.name(), propertyInfos.value());
     }
 
     public LimitsPropertyInfos toLimitsPropertyInfos() {
         return new LimitsPropertyInfos(name, value);
     }
+
 }

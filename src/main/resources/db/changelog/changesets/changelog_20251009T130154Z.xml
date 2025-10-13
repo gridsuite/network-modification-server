@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="elcheikhbas (generated)" id="1760014971491-35">
+    <changeSet author="elcheikhbas (generated)" id="1760014971491-1">
         <createTable tableName="limits_property">
             <column name="id" type="UUID">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="limits_propertyPK"/>
@@ -14,7 +14,24 @@
             <column name="operational_limit_group_id" type="UUID"/>
         </createTable>
     </changeSet>
-    <changeSet author="elcheikhbas (generated)" id="1760014971491-49">
+    <changeSet author="elcheikhbas (generated)" id="1760014971491-2">
         <addForeignKeyConstraint baseColumnNames="operational_limit_group_id" baseTableName="limits_property" constraintName="operational_limit_group_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group" validate="true"/>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1760357420884-3">
+        <createTable tableName="limits_property_modification">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="limits_property_modificationPK"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="operational_limit_group_id" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="elcheikhbas (generated)" id="1760014971491-4">
+        <addForeignKeyConstraint baseColumnNames="operational_limit_group_id" baseTableName="limits_property_modification" constraintName="operational_limit_group_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
 </databaseChangeLog>
