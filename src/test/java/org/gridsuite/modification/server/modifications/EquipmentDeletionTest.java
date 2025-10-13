@@ -93,7 +93,8 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
         var v5 = getNetwork().getVoltageLevel("v5");
         assertNull(v5.getNodeBreakerView().getTerminal(2));
@@ -133,9 +134,9 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
                 .build();
         String equipmentDeletionInfosJson = getJsonBody(equipmentDeletionInfos, null);
 
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(equipmentDeletionInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk())
                 .andReturn();
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });

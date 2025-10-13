@@ -261,7 +261,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk()).andReturn();
         assertLogMessage("Tabular creation: 2 generators have been created", "network.modification.tabular.creation", reportService);
     }
 
@@ -308,11 +308,11 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        org.springframework.test.web.servlet.ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                        .andExpect(status().isOk());
+                        .andExpect(status().isOk()).andReturn();
         assertLogMessage("Tabular creation: No generators have been created", "network.modification.tabular.creation.error", reportService);
     }
 
@@ -348,10 +348,10 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
         // creation
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(result);

@@ -47,7 +47,7 @@ abstract class AbstractInjectionModificationTest extends AbstractNetworkModifica
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk());
         // connection state has changed as expected
         assertThat(existingEquipment.getTerminal().isConnected()).isEqualTo(expectedState);
 
@@ -55,7 +55,7 @@ abstract class AbstractInjectionModificationTest extends AbstractNetworkModifica
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk());
         assertThat(existingEquipment.getTerminal().isConnected()).isEqualTo(expectedState);
     }
 }

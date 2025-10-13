@@ -161,8 +161,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
     }
 
     @Test
@@ -206,8 +205,7 @@ class VoltageLevelTopologyModificationTest extends AbstractNetworkModificationTe
                 .content(body)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
     }
 
     @Override

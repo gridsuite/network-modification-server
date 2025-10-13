@@ -250,7 +250,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
     }
 
     @Override

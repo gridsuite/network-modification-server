@@ -254,7 +254,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -273,7 +273,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -287,7 +287,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -301,7 +301,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
@@ -315,7 +315,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
 
@@ -329,7 +329,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
 
@@ -343,7 +343,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
 
@@ -375,7 +375,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                        .andExpect(status().isOk());
+                        .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true)
                         .get(7);
@@ -435,7 +435,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         LineModificationInfos createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -453,7 +453,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (LineModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -634,9 +634,9 @@ class LineModificationTest extends AbstractNetworkModificationTest {
             .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.BOTTOM, OperationType.SET))
             .build();
         String modificationInfosJson = getJsonBody(lineModificationInfos, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk()).andReturn();
         Optional<NetworkModificationsResult> networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationsResult.isPresent());
@@ -652,9 +652,9 @@ class LineModificationTest extends AbstractNetworkModificationTest {
             .connectionPosition1(new AttributeModification<>(2, OperationType.SET))
             .build();
         modificationInfosJson = getJsonBody(lineModificationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(request().asyncStarted()).andReturn();
-        mvcResult = mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationInfosJson).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
+        mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk()).andReturn();
         networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertTrue(networkModificationsResult.isPresent());

@@ -276,11 +276,11 @@ class GeneratorScalingTest extends AbstractNetworkModificationTest {
 
         String modificationToCreateJson = getJsonBody(generatorScalingInfo, null);
 
-        var response = mockMvc.perform(post(getNetworkModificationUri())
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
                         .content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted()).andReturn();
-        response = mockMvc.perform(asyncDispatch(response))
+                .andExpect(request().asyncStarted());
+        var response = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk())
                 .andReturn();
 

@@ -341,7 +341,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -360,7 +360,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -376,7 +376,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
@@ -406,7 +406,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
 
@@ -437,7 +437,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
 
@@ -451,7 +451,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(6);
 
@@ -479,7 +479,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         TwoWindingsTransformerModificationInfos createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
 
@@ -494,7 +494,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
 
@@ -509,7 +509,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(2);
 
@@ -524,7 +524,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(3);
 
@@ -539,7 +539,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(4);
 
@@ -571,7 +571,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(5);
 
@@ -587,7 +587,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(6);
 
@@ -602,7 +602,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(7);
 
@@ -615,8 +615,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(request().asyncStarted());
-        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
 
         createdModification = (TwoWindingsTransformerModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(8);
 
