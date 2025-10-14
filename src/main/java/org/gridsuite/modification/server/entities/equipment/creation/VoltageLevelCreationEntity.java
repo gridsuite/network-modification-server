@@ -67,9 +67,7 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
     @JoinColumn(
             name = "substation_creation_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(
-                    name = "voltageLevel_substationCreation_fk"
-            ))
+            foreignKey = @ForeignKey(name = "voltageLevel_substationCreation_fk"))
     private SubstationCreationEntity substationCreation;
 
     public VoltageLevelCreationEntity(VoltageLevelCreationInfos voltageLevelCreationInfos) {

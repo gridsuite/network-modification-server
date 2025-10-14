@@ -8,13 +8,13 @@
             <column name="line_type_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
-            <column name="limit_set_name" type="VARCHAR"/>
+            <column name="limit_set_name" type="varchar(255)"/>
             <column name="permanent_limit" type="FLOAT8"/>
             <column name="temporary_limit_value" type="FLOAT8"/>
             <column name="temporary_limit_acceptable_duration" type="INTEGER"/>
-            <column name="temporary_limit_name" type="VARCHAR"/>
-            <column name="area" type="VARCHAR"/>
-            <column name="temperature" type="VARCHAR"/>
+            <column name="temporary_limit_name" type="varchar(255)"/>
+            <column name="area" type="varchar(255)"/>
+            <column name="temperature" type="varchar(255)"/>
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1753773801590-2">

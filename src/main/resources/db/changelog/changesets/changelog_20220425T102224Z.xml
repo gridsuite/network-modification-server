@@ -22,7 +22,10 @@
     <changeSet author="garnierlar (generated)" id="1650882159368-10">
         <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_split_with_voltage_level" constraintName="FKgbmxhyxsvkreq7mpimshlj2fl" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
     </changeSet>
-    <changeSet author="garnierlar (generated)" id="1650882159368-5">
+    <changeSet author="rehiligha (generated)" id="1650882159368-11">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="uc_line_split_with_voltage_level_may_voltage_level_creation_id_col" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="garnierlar (generated)" id="1650882159368-12">
         <dropNotNullConstraint columnDataType="uuid" columnName="group_id" tableName="modification"/>
     </changeSet>
 </databaseChangeLog>

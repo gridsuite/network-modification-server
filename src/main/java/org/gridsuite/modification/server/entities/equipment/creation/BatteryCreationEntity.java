@@ -26,7 +26,7 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Reac
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "batteryCreation")
+@Table(name = "battery_creation")
 @PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "batteryCreation_id_fk_constraint"))
 public class BatteryCreationEntity extends InjectionCreationEntity {
 

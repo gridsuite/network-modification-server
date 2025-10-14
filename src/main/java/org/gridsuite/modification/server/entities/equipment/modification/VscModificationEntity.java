@@ -27,26 +27,26 @@ import static org.gridsuite.modification.dto.AttributeModification.toAttributeMo
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "vscModification")
+@Table(name = "vsc_modification")
 public class VscModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "nominalv")),
-        @AttributeOverride(name = "opType", column = @Column(name = "nominalvOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "nominalv_Op"))
     })
     private DoubleModificationEmbedded nominalV;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "r")),
-        @AttributeOverride(name = "opType", column = @Column(name = "rOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "r_Op"))
     })
     private DoubleModificationEmbedded r;
 
     @Embedded
     @AttributeOverrides(value = {
         @AttributeOverride(name = "value", column = @Column(name = "maxp")),
-        @AttributeOverride(name = "opType", column = @Column(name = "maxpOp"))
+        @AttributeOverride(name = "opType", column = @Column(name = "maxp_Op"))
     })
     private DoubleModificationEmbedded maxP;
 

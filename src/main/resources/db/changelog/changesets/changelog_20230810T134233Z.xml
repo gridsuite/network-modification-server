@@ -8,7 +8,7 @@
             <column name="generators_ordering_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
-            <column name="pos_generators_ordering" type="INT">
+            <column name="pos_generators_ordering" type="int4" defaultValue="0">
                 <constraints nullable="false" primaryKey="true"/>
             </column>
         </createTable>

@@ -46,7 +46,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Enumerated(EnumType.STRING)
     private LoadFlowParameters.BalanceType balanceType = DEFAULT_BALANCE_TYPE;
 
-    @Column(name = "with_load_flow", columnDefinition = "boolean default " + DEFAULT_WITH_LOAD_FLOW)
+    @Column(name = "with_load_flow", nullable = false, columnDefinition = "boolean default " + DEFAULT_WITH_LOAD_FLOW)
     private boolean withLoadFlow = DEFAULT_WITH_LOAD_FLOW;
 
     @Column(name = "load_flow_parameters_id")
