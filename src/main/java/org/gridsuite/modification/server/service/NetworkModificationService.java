@@ -203,30 +203,47 @@ public class NetworkModificationService {
      * Apply modifications on several networks
      */
     private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationEntity> modifications, List<ModificationApplicationContext> applicationContexts) {
-        // Do we want to do these in parallel (CompletableFuture.allOf) or sequential (sometimes called "Waterfall")  ?
+        // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
-        // Is there a library or something to simplify this code ?
-        List<Optional<NetworkModificationResult>> results = new ArrayList<>(applicationContexts.size());
-        CompletableFuture<List<Optional<NetworkModificationResult>>> chainedFutures = CompletableFuture.completedFuture(results);
-        for (ModificationApplicationContext modificationApplicationContext : applicationContexts) {
-            // thencompose, this should add the computation result to the list and
-            // and schedule the next computation in the same thread as the task
-            // The list is accessed from different threads but not concurrently and
-            // with happens-before semantics.
-            chainedFutures = chainedFutures.thenCompose(accumulatingresults ->
+        List<CompletableFuture<Optional<NetworkModificationResult>>> results = new ArrayList<>(applicationContexts.size());
+        return scheduleApplyModifications(
+            modificationApplicationContext ->
                 applyModifications(
-                        modificationApplicationContext.networkUuid(),
-                        modificationApplicationContext.variantId(),
-                        new ModificationApplicationGroup(groupUuid,
-                            modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getId())).toList(),
-                            new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
-                        )).thenApply(result -> {
-                            accumulatingresults.add(result);
-                            return accumulatingresults;
-                        })
-            );
+                    modificationApplicationContext.networkUuid(),
+                    modificationApplicationContext.variantId(),
+                    new ModificationApplicationGroup(groupUuid,
+                        modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getId())).toList(),
+                        new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
+                    )
+                ),
+            applicationContexts, results
+        ).thenApply(unused ->
+            results.stream().map(CompletableFuture::resultNow).toList());
+    }
+
+    /**
+     * @param results should pass an empty list to be filled with the results
+     */
+    // The signature of this method is chosen so that we can implement easily sequential or parallel schedule
+    // If we change it (for example to parallel scheduling), we should keep the exceptional behavior consistent,
+    // call the apply function inside a thenCompose anyway to wrap its exceptions in exceptional future completions.
+    private static CompletableFuture<Void> scheduleApplyModifications(
+            Function<ModificationApplicationContext, CompletableFuture<Optional<NetworkModificationResult>>> func,
+            List<ModificationApplicationContext> applicationContexts,
+            List<CompletableFuture<Optional<NetworkModificationResult>>> results) {
+        CompletableFuture<?> chainedFutures = CompletableFuture.completedFuture(null);
+        for (ModificationApplicationContext applicationContext : applicationContexts) {
+            chainedFutures = chainedFutures.thenCompose(unused -> {
+                var cf = func.apply(applicationContext);
+                // thencompose, this should add the computation result to the list and
+                // and schedule the next computation in the same thread as the task
+                // The list is accessed from different threads but not concurrently and
+                // with happens-before semantics.
+                results.add(cf);
+                return cf;
+            });
         }
-        return chainedFutures;
+        return chainedFutures.thenCompose(unused -> CompletableFuture.completedFuture(null));
     }
 
     public Network cloneNetworkVariant(UUID networkUuid,
