@@ -450,7 +450,8 @@ class ModificationControllerTest {
         String groovyScriptInfosJson = getJsonBody(groovyScriptInfos, TEST_NETWORK_WITH_FLUSH_ERROR_ID, NetworkCreation.VARIANT_ID);
 
         mockMvc.perform(post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().is5xxServerError());
-
+        // TODO because creating a modification is now a unique Tx, and because network.flush() is not covered by the apply() exception catch,
+        // this test result has changed : the modification save is not committed because of the flush exception.
         assertEquals(0, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
     }
 

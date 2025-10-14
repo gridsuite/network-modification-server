@@ -338,7 +338,7 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .build();
         String tabularCreationJson = getJsonBody(creationInfos, null);
 
-        // try to create something impossible
+        // try to create+apply a tabular creation with an unsupported type
         ServletException exception = assertThrows(
                 ServletException.class,
                 () -> mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson).contentType(MediaType.APPLICATION_JSON))
