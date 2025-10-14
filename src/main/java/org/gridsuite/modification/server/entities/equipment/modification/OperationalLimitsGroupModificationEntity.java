@@ -11,14 +11,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import org.gridsuite.modification.dto.LimitsPropertyInfos;
 import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
 import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
 import org.gridsuite.modification.dto.OperationalLimitsGroupModificationType;
 import org.gridsuite.modification.dto.TemporaryLimitModificationType;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -63,18 +61,6 @@ public class OperationalLimitsGroupModificationEntity {
     @Enumerated(EnumType.STRING)
     private OperationalLimitsGroupInfos.Applicability applicability;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "operational_limit_group_id", foreignKey = @ForeignKey(name = "operational_limit_group_modification_id_fk"))
-    private List<LimitsPropertyModificationEntity> limitsProperties;
-
-    private static List<LimitsPropertyModificationEntity> toLimitPropertyEntities(List<LimitsPropertyInfos> properties) {
-        List<LimitsPropertyModificationEntity> result = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(properties)) {
-            result = properties.stream().map(LimitsPropertyModificationEntity::fromLimitsPropertyInfos).toList();
-        }
-        return result;
-    }
-
     public static List<OperationalLimitsGroupModificationEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupModificationInfos> limitsGroups) {
         return limitsGroups.stream()
                 .filter(Objects::nonNull)
@@ -85,9 +71,8 @@ public class OperationalLimitsGroupModificationEntity {
                                 new CurrentLimitsModificationEntity(limitsGroup.getCurrentLimits()),
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
-                                limitsGroup.getApplicability(),
-                                toLimitPropertyEntities(limitsGroup.getLimitsProperties()))
-                ).toList();
+                                limitsGroup.getApplicability()
+                )).toList();
     }
 
     public static List<OperationalLimitsGroupModificationInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupModificationEntity> limitsGroupsEntities) {
@@ -100,8 +85,6 @@ public class OperationalLimitsGroupModificationEntity {
                                         .modificationType(limitsGroupEntity.getModificationType())
                                         .temporaryLimitsModificationType(limitsGroupEntity.getTemporaryLimitsModificationType())
                                         .applicability(limitsGroupEntity.getApplicability())
-                                        .limitsProperties(limitsGroupEntity.getLimitsProperties().stream().map(
-                                        LimitsPropertyModificationEntity::toLimitsPropertyInfos).toList())
                                         .build()
                         )
                         .collect(Collectors.toList());
