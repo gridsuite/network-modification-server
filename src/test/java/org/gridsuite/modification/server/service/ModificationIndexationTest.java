@@ -505,7 +505,7 @@ class ModificationIndexationTest {
 
         UUID groupUuid = UUID.randomUUID();
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+        NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
         assertNotNull(result);
 
         ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
@@ -540,7 +540,7 @@ class ModificationIndexationTest {
 
             UUID groupUuid = UUID.randomUUID();
             List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
-            NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+            NetworkModificationResult result = networkModificationApplicator.applyModificationsBlocking(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
             assertNotNull(result);
 
             assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());
