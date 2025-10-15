@@ -164,8 +164,7 @@ public class NetworkModificationApplicator {
 
     private NetworkModificationResult applyAndFlush(List<ModificationApplicationGroup> modificationInfosGroups,
             NetworkStoreListener listener) {
-        List<ApplicationStatus> groupsApplicationStatuses = apply(modificationInfosGroups, listener);
-        return flushModificationApplications(groupsApplicationStatuses, listener);
+        return flushModificationApplications(apply(modificationInfosGroups, listener), listener);
     }
 
     // This method is used when building a variant

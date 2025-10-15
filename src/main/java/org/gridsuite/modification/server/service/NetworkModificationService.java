@@ -276,7 +276,7 @@ public class NetworkModificationService {
                 List<ModificationEntity> modifications = List.of();
                 try {
                     // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getModificationsEntitiesFullDto(List.of(groupUuid), false)
+                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
                         .stream()
                         .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
                         .filter(m -> !m.getStashed())
@@ -322,7 +322,7 @@ public class NetworkModificationService {
                                                                        boolean applyModifications) {
         // update origin/destinations groups to cut and paste all modificationsToMove
         // FullDto needed for toModificationInfos() after the modifications have been applied
-        List<ModificationEntity> modificationEntities = networkModificationRepository.moveModificationsFullDto(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+        List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
         CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modificationEntities.isEmpty() ? applyModifications(destinationGroupUuid, modificationEntities, applicationContexts) : CompletableFuture.completedFuture(List.of());
         return futureResult.thenApply(result -> new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), result));

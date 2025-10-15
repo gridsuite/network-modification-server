@@ -106,7 +106,6 @@ public class NetworkModificationRepository {
     }
 
     @Transactional // To have all create in the same transaction (atomic)
-    // TODO Remove transaction when errors will no longer be sent to the front
     // This method should be package-private and not used as API of the service as it uses ModificationEntity and
     // we want to encapsulate the use of Entity related objects to this service.
     // Nevertheless We have to keep it public for transactional annotation.
@@ -114,8 +113,7 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, modifications);
     }
 
-    @Transactional // To have all create in the same transaction (atomic)
-    // TODO Remove transaction when errors will no longer be sent to the front
+    @Transactional
     public List<ModificationEntity> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
         return saveModificationInfosNonTransactional(groupUuid, modifications);
     }
@@ -170,18 +168,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    // TODO Remove transaction when errors will no longer be sent to the front
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
-        return moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-    }
-
-    @Transactional
-    public List<ModificationEntity> moveModificationsFullDto(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        // Force load subentities/collections, needed later when the transaction is closed
-        // to avoid LazyInitialisationException. Maybe better to refactor to return the dto ?
-        // And refactor to more efficiently load the data (avoid 1+N) ?
-        movedModifications.forEach(ModificationEntity::toModificationInfos);
+        loadFullModificationsEntities(movedModifications);
         return movedModifications;
     }
 
@@ -292,7 +281,7 @@ public class NetworkModificationRepository {
 
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
-            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsEntities(List.of(groupUuid), onlyStashed).stream().map(this::getModificationInfos).toList();
+            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
         } catch (NetworkModificationException e) {
             if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
                 return List.of();
@@ -451,7 +440,7 @@ public class NetworkModificationRepository {
             .build();
     }
 
-    public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
+    private ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
             return loadTabularModification(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
@@ -469,19 +458,24 @@ public class NetworkModificationRepository {
         }
     }
 
-    //TODO ? should be @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
-        return getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+        loadFullModificationsEntities(modificationsEntities);
+        return modificationsEntities;
     }
 
-    @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntitiesFullDto(List<UUID> groupUuids, boolean onlyStashed) {
-        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+    private void loadFullModificationsEntities(List<ModificationEntity> modificationsEntities) {
         // Force load subentities/collections, needed later when the transaction is closed
+        // Necessary for applying network modifications
         // to avoid LazyInitialisationException. Maybe better to refactor to return the dto ?
         // And refactor to more efficiently load the data (avoid 1+N) ?
-        modificationsEntities.forEach(ModificationEntity::toModificationInfos);
-        return modificationsEntities;
+        modificationsEntities.forEach(this::getModificationInfos);
+    }
+
+    private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
+        return getModificationsEntitiesNonTransactional(groupUuids, onlyStashed).stream()
+            .map(this::getModificationInfos).toList();
     }
 
     @Transactional(readOnly = true)
