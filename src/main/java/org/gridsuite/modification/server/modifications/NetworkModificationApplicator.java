@@ -117,8 +117,7 @@ public class NetworkModificationApplicator {
 
     private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
             NetworkStoreListener listener) {
-        ApplicationStatus groupApplicationStatus = apply(modificationInfosGroup, listener);
-        return flushModificationApplications(groupApplicationStatus, listener);
+        return flushModificationApplications(apply(modificationInfosGroup, listener), listener);
     }
 
     private NetworkModificationResult flushModificationApplications(ApplicationStatus groupApplicationStatus, NetworkStoreListener listener) {
