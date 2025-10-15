@@ -124,7 +124,7 @@ class ModificationIndexationTest {
         assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
         assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
         assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
-        assertEquals(newEquipmentId, modificationApplicationInfos.getFirst().getCreatedEquipmentIds().iterator().next());
+        assertTrue(modificationApplicationInfos.getFirst().getCreatedEquipmentIds().contains(newEquipmentId));
     }
 
     @Test
@@ -174,7 +174,7 @@ class ModificationIndexationTest {
         assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
         assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
         assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
-        assertEquals(deletedEquipmentId, modificationApplicationInfos.getFirst().getDeletedEquipmentIds().iterator().next());
+        assertTrue(modificationApplicationInfos.getFirst().getDeletedEquipmentIds().contains(deletedEquipmentId));
     }
 
     @Test
@@ -222,7 +222,9 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().iterator().next()));
+        modificationApplicationInfos.forEach(applicationInfo ->
+                assertTrue(applicationInfo.getCreatedEquipmentIds().contains(newEquipmentId))
+        );
     }
 
     @Test
@@ -271,7 +273,7 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().iterator().next()));
+        modificationApplicationInfos.forEach(applicationInfo -> assertTrue(applicationInfo.getCreatedEquipmentIds().contains(newEquipmentId)));
     }
 
     @Test
