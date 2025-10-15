@@ -40,35 +40,29 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     })
     private DoubleModificationEmbedded x;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_modification_id1",
-        referencedColumnName = "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_modification_id1_fk"
-        ), nullable = true)
-    private CurrentLimitsModificationEntity currentLimits1;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_limits_modification_id2",
-        referencedColumnName = "id",
-        foreignKey = @ForeignKey(
-            name = "current_limits_modification_id2_fk"
-        ), nullable = true)
-    private CurrentLimitsModificationEntity currentLimits2;
-
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
-            joinColumns = @JoinColumn(name = "branch_id"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id1_fk"))
+            joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_modification_id_fk"),
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups")
-    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups1;
+    private List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinTable(
-            joinColumns = @JoinColumn(name = "branch_id"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id2_fk"))
-    @OrderColumn(name = "pos_operationalLimitsGroups")
-    private List<OperationalLimitsGroupModificationEntity> opLimitsGroups2;
+    @Column(name = "enable_olg_modification", columnDefinition = "boolean default true")
+    private Boolean enableOLGModification;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "selectedOperationalLimitsGroupId1")),
+        @AttributeOverride(name = "opType", column = @Column(name = "selectedOperationalLimitsGroupId1Op"))
+    })
+    private StringModificationEmbedded selectedOperationalLimitsGroupId1;
+
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "selectedOperationalLimitsGroupId2")),
+        @AttributeOverride(name = "opType", column = @Column(name = "selectedOperationalLimitsGroupId2Op"))
+    })
+    private StringModificationEmbedded selectedOperationalLimitsGroupId2;
 
     @Embedded
     @AttributeOverrides(value = {
@@ -225,24 +219,16 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     private void assignAttributes(BranchModificationInfos branchModificationInfos) {
         x = new DoubleModificationEmbedded(branchModificationInfos.getX());
         r = new DoubleModificationEmbedded(branchModificationInfos.getR());
-        if (branchModificationInfos.getCurrentLimits1() != null) {
-            currentLimits1 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits1());
-        } else {
-            currentLimits1 = null;
-        }
-        this.opLimitsGroups1 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup1(), opLimitsGroups1);
-        if (branchModificationInfos.getCurrentLimits2() != null) {
-            currentLimits2 = new CurrentLimitsModificationEntity(branchModificationInfos.getCurrentLimits2());
-        } else {
-            currentLimits2 = null;
-        }
-        this.opLimitsGroups2 = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroup2(), opLimitsGroups2);
+        this.operationalLimitsGroups = assignOperationalLimitsGroups(branchModificationInfos.getOperationalLimitsGroups(), operationalLimitsGroups);
+        this.enableOLGModification = branchModificationInfos.getEnableOLGModification() == null || branchModificationInfos.getEnableOLGModification();
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;
         this.busOrBusbarSectionId2 = branchModificationInfos.getBusOrBusbarSectionId2() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId2()) : null;
         this.connectionName1 = branchModificationInfos.getConnectionName1() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName1()) : null;
         this.connectionName2 = branchModificationInfos.getConnectionName2() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName2()) : null;
+        this.selectedOperationalLimitsGroupId1 = branchModificationInfos.getSelectedOperationalLimitsGroup1() != null ? new StringModificationEmbedded(branchModificationInfos.getSelectedOperationalLimitsGroup1()) : null;
+        this.selectedOperationalLimitsGroupId2 = branchModificationInfos.getSelectedOperationalLimitsGroup2() != null ? new StringModificationEmbedded(branchModificationInfos.getSelectedOperationalLimitsGroup2()) : null;
         this.connectionDirection1 = branchModificationInfos.getConnectionDirection1() != null ? new EnumModificationEmbedded<>(branchModificationInfos.getConnectionDirection1()) : null;
         this.connectionDirection2 = branchModificationInfos.getConnectionDirection2() != null ? new EnumModificationEmbedded<>(branchModificationInfos.getConnectionDirection2()) : null;
         this.connectionPosition1 = branchModificationInfos.getConnectionPosition1() != null ? new IntegerModificationEmbedded(branchModificationInfos.getConnectionPosition1()) : null;

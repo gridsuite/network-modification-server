@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.modifications.tabularmodifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.TwoSides;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
@@ -26,6 +25,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -45,14 +46,18 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     @Override
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
-                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET)).build(),
+                LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(10., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line2").x(new AttributeModification<>(20., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(30., OperationType.SET))
+                    .enableOLGModification(true).build(),
                 LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(40., OperationType.SET))
-                        .operationalLimitsGroup1(buildOperationalLimitsGroupDefaultModification())
-                        .operationalLimitsGroup2(buildOperationalLimitsGroupDefaultModification())
-                        .build(),
-                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET)).build()
+                    .enableOLGModification(true)
+                    .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
+                    .build(),
+                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET))
+                    .enableOLGModification(true).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
@@ -66,13 +71,17 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     protected ModificationInfos buildModificationUpdate() {
         List<ModificationInfos> modifications = List.of(
                 LineModificationInfos.builder().equipmentId("line1").r(new AttributeModification<>(1., OperationType.SET))
-                        .operationalLimitsGroup1(buildOperationalLimitsGroupDefaultModification())
-                        .operationalLimitsGroup2(buildOperationalLimitsGroupDefaultModification())
+                        .enableOLGModification(true)
+                        .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
                         .build(),
-                LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET)).build(),
-                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET)).build()
+                LineModificationInfos.builder().equipmentId("line2").r(new AttributeModification<>(2., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET))
+                    .enableOLGModification(true).build(),
+                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET))
+                    .enableOLGModification(true).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
@@ -88,7 +97,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(20., getNetwork().getLine("line2").getX(), 0.001);
         assertEquals(30., getNetwork().getLine("line3").getG1(), 0.001);
         assertEquals(40., getNetwork().getLine("line3").getB1(), 0.001);
-        assertLogMessage("Cannot add testName operational limit group, one with the given name already exists", "network.modification.tabular.modification.exception", reportService);
+        assertLogMessage("LINE_NOT_FOUND : Line 'unknownLine' : does not exist in network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override
@@ -128,8 +137,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                 (ModificationInfos) LineModificationInfos.builder().equipmentId(UUID.randomUUID().toString())
                     .r(new AttributeModification<>(1., OperationType.SET))
                     .equipmentName(new AttributeModification<>("NAME", OperationType.SET))
-                    .operationalLimitsGroup1(buildOperationalLimitsGroupDefaultModification())
-                    .operationalLimitsGroup2(buildOperationalLimitsGroupDefaultModification())
+                    .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
                     .properties(List.of(
                             ModificationCreation.getFreeProperty(),
                             ModificationCreation.getFreeProperty("test", "value")))
@@ -155,13 +163,16 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
     }
 
     public static List<OperationalLimitsGroupModificationInfos> buildOperationalLimitsGroupDefaultModification() {
-        return List.of(buildOperationalLimitsGroupDefaultModification(TwoSides.ONE), buildOperationalLimitsGroupDefaultModification(TwoSides.TWO));
+        return List.of(
+                buildOperationalLimitsGroupDefaultModification(SIDE1),
+                buildOperationalLimitsGroupDefaultModification(SIDE2)
+        );
     }
 
-    public static OperationalLimitsGroupModificationInfos buildOperationalLimitsGroupDefaultModification(TwoSides side) {
+    public static OperationalLimitsGroupModificationInfos buildOperationalLimitsGroupDefaultModification(OperationalLimitsGroupInfos.Applicability applicability) {
         return OperationalLimitsGroupModificationInfos.builder()
                 .id("testName")
-                .side(side.name())
+                .applicability(applicability)
                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                 .temporaryLimitsModificationType(TemporaryLimitModificationType.ADD)
                 .currentLimits(CurrentLimitsModificationInfos.builder()

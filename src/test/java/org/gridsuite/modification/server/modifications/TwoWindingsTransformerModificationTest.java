@@ -34,6 +34,8 @@ import java.util.*;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR;
 import static org.gridsuite.modification.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.modifications.TwoWindingsTransformerModification.processPhaseTapRegulation;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createTwoWindingsTransformer;
@@ -71,24 +73,43 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedS(new AttributeModification<>(7., OperationType.SET))
                 .ratioTapChangerToBeEstimated(new AttributeModification<>(true, OperationType.SET))
                 .phaseTapChangerToBeEstimated(new AttributeModification<>(false, OperationType.SET))
-                .currentLimits1(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(12.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(null)
-                                .name("name31")
-                                .value(null)
-                                .modificationType(TemporaryLimitModificationType.ADD)
-                                .build()))
-                        .build())
-                .currentLimits2(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(22.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(32)
-                                .name("name32")
-                                .value(42.0)
-                                .modificationType(TemporaryLimitModificationType.ADD)
-                                .build()))
-                        .build())
+                .enableOLGModification(true)
+                .operationalLimitsGroups(List.of(
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("DEFAULT")
+                                .applicability(SIDE1)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(12.0)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(null)
+                                                                .name("name31")
+                                                                .value(null)
+                                                                .build())
+                                                ).build()
+                                ).build(),
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("DEFAULT")
+                                .applicability(SIDE2)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(22.0)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(32)
+                                                                .name("name32")
+                                                                .value(42.0)
+                                                                .build())
+                                                ).build()
+                                ).build()
+                ))
+                .selectedOperationalLimitsGroup1(new AttributeModification<String>("DEFAULT", OperationType.SET))
+                .selectedOperationalLimitsGroup2(new AttributeModification<String>("DEFAULT", OperationType.SET))
                 .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
                 .voltageLevelId2(new AttributeModification<>("v2", OperationType.SET))
                 .busOrBusbarSectionId1(new AttributeModification<>("1.1", OperationType.SET))
@@ -107,9 +128,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .targetDeadband(new AttributeModification<>(100., OperationType.SET))
                         .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
                         .tapPosition(new AttributeModification<>(1, OperationType.SET))
-                        .regulatingTerminalId(new AttributeModification<>("trf1", OperationType.SET))
-                        .regulatingTerminalType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
-                        .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
+                        .terminalRefConnectableId(new AttributeModification<>("trf1", OperationType.SET))
+                        .terminalRefConnectableType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
+                        .terminalRefConnectableVlId(new AttributeModification<>("v1", OperationType.SET))
                         .steps(List.of(TapChangerStepCreationInfos.builder()
                                 .index(0)
                                 .r(0)
@@ -135,9 +156,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                     .targetDeadband(new AttributeModification<>(100., OperationType.SET))
                     .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
                     .tapPosition(new AttributeModification<>(1, OperationType.SET))
-                    .regulatingTerminalId(new AttributeModification<>("trf1", OperationType.SET))
-                    .regulatingTerminalType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
-                    .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
+                    .terminalRefConnectableId(new AttributeModification<>("trf1", OperationType.SET))
+                    .terminalRefConnectableType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
+                    .terminalRefConnectableVlId(new AttributeModification<>("v1", OperationType.SET))
                     .steps(List.of(TapChangerStepCreationInfos.builder()
                         .index(0)
                         .r(0)
@@ -175,22 +196,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedU1(new AttributeModification<>(5.1, OperationType.SET))
                 .ratedU2(new AttributeModification<>(6.1, OperationType.SET))
                 .ratedS(new AttributeModification<>(7.1, OperationType.SET))
-                .currentLimits1(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(21.1)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(33)
-                                .name("name33")
-                                .value(41.1)
-                                .build()))
-                        .build())
-                .currentLimits2(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(22.1)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(35)
-                                .name("name35")
-                                .value(42.1)
-                                .build()))
-                        .build())
+                .enableOLGModification(true)
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
@@ -199,9 +205,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .targetDeadband(new AttributeModification<>(100., OperationType.SET))
                         .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
                         .tapPosition(new AttributeModification<>(1, OperationType.SET))
-                        .regulatingTerminalId(new AttributeModification<>("trf1", OperationType.SET))
-                        .regulatingTerminalType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
-                        .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
+                        .terminalRefConnectableId(new AttributeModification<>("trf1", OperationType.SET))
+                        .terminalRefConnectableType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
+                        .terminalRefConnectableVlId(new AttributeModification<>("v1", OperationType.SET))
                         .steps(List.of(TapChangerStepCreationInfos.builder()
                                 .index(0)
                                 .r(0)
@@ -227,9 +233,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                     .targetDeadband(new AttributeModification<>(100.1, OperationType.SET))
                     .lowTapPosition(new AttributeModification<>(1, OperationType.SET))
                     .tapPosition(new AttributeModification<>(1, OperationType.SET))
-                    .regulatingTerminalId(new AttributeModification<>("trf1", OperationType.SET))
-                    .regulatingTerminalType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
-                    .regulatingTerminalVlId(new AttributeModification<>("v1", OperationType.SET))
+                    .terminalRefConnectableId(new AttributeModification<>("trf1", OperationType.SET))
+                    .terminalRefConnectableType(new AttributeModification<>("TWO_WINDINGS_TRANSFORMER", OperationType.SET))
+                    .terminalRefConnectableVlId(new AttributeModification<>("v1", OperationType.SET))
                     .steps(List.of(TapChangerStepCreationInfos.builder()
                             .index(0)
                             .r(0)
@@ -330,6 +336,43 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .equipmentId("trf1")
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .build())
+                .enableOLGModification(true)
+                .operationalLimitsGroups(List.of(
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("DEFAULT")
+                                .applicability(SIDE1)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(21.1)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(33)
+                                                                .name("name33")
+                                                                .value(41.1)
+                                                                .build())
+                                                ).build()
+                                ).build(),
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("DEFAULT")
+                                .applicability(SIDE2)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(22.1)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(35)
+                                                                .name("name35")
+                                                                .value(42.1)
+                                                                .build())
+                                                ).build()
+                                ).build()
+                ))
+                .selectedOperationalLimitsGroup1(new AttributeModification<String>("DEFAULT", OperationType.SET))
+                .selectedOperationalLimitsGroup2(new AttributeModification<String>("DEFAULT", OperationType.SET))
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<Boolean>(true, OperationType.SET))
                         .regulating(new AttributeModification<Boolean>(true, OperationType.SET))
@@ -369,7 +412,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         //unset target voltage and modify regulating terminal
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulating(new AttributeModification<>(true, OperationType.SET));
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetV(null);
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setTerminalRefConnectableId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
 
@@ -383,7 +426,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
         //unset regulating terminal and modify deadband
-        twoWindingsTransformerModificationInfos.getRatioTapChanger().setRegulatingTerminalId(null);
+        twoWindingsTransformerModificationInfos.getRatioTapChanger().setTerminalRefConnectableId(null);
         twoWindingsTransformerModificationInfos.getRatioTapChanger().setTargetDeadband(new AttributeModification<>(22.0, OperationType.SET));
 
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
@@ -466,6 +509,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .equipmentId("trf2")
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .build())
+                .enableOLGModification(true)
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
@@ -502,7 +546,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         //unset target voltage and modify regulating terminal
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulationValue(null);
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulatingTerminalId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTerminalRefConnectableId(new AttributeModification<>("trf1_terminal1", OperationType.SET));
 
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
 
@@ -516,7 +560,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         assertThat(createdModification).recursivelyEquals(twoWindingsTransformerModificationInfos);
 
         //unset regulating terminal and modify deadband
-        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setRegulatingTerminalId(null);
+        twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTerminalRefConnectableId(null);
         twoWindingsTransformerModificationInfos.getPhaseTapChanger().setTargetDeadband(new AttributeModification<>(22.0, OperationType.SET));
 
         modificationToCreateJson = getJsonBody(twoWindingsTransformerModificationInfos, null);
@@ -957,9 +1001,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .regulationValue(new AttributeModification<>(10.0, OperationType.SET))
                 .lowTapPosition(new AttributeModification<>(0, OperationType.SET))
                 .tapPosition(new AttributeModification<>(1, OperationType.SET))
-                .regulatingTerminalId(new AttributeModification<>("v3load", OperationType.SET))
-                .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
-                .regulatingTerminalVlId(new AttributeModification<>("v3", OperationType.SET))
+                .terminalRefConnectableId(new AttributeModification<>("v3load", OperationType.SET))
+                .terminalRefConnectableType(new AttributeModification<>("LOAD", OperationType.SET))
+                .terminalRefConnectableVlId(new AttributeModification<>("v3", OperationType.SET))
                 .steps(List.of(TapChangerStepCreationInfos.builder()
                         .index(0)
                         .r(0)
@@ -1007,9 +1051,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
                 .lowTapPosition(new AttributeModification<>(0, OperationType.SET))
                 .tapPosition(new AttributeModification<>(1, OperationType.SET))
-                .regulatingTerminalId(new AttributeModification<>("v3load", OperationType.SET))
-                .regulatingTerminalType(new AttributeModification<>("LOAD", OperationType.SET))
-                .regulatingTerminalVlId(new AttributeModification<>("v3", OperationType.SET))
+                .terminalRefConnectableId(new AttributeModification<>("v3load", OperationType.SET))
+                .terminalRefConnectableType(new AttributeModification<>("LOAD", OperationType.SET))
+                .terminalRefConnectableVlId(new AttributeModification<>("v3", OperationType.SET))
                 .steps(List.of(TapChangerStepCreationInfos.builder()
                         .index(0)
                         .r(0)

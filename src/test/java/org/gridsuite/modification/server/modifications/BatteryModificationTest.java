@@ -12,6 +12,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ReactiveCapabilityCurve;
 import com.powsybl.iidm.network.ReactiveLimitsKind;
 import com.powsybl.iidm.network.extensions.ActivePowerControl;
+import com.powsybl.iidm.network.extensions.BatteryShortCircuit;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -29,8 +30,7 @@ import java.util.stream.IntStream;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -64,6 +64,8 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                         new ReactiveCapabilityCurvePointsInfos(100., 100., 0.1),
                         new ReactiveCapabilityCurvePointsInfos(100., 100., 150.)))
                 .droop(new AttributeModification<>(0.1f, OperationType.SET))
+                .directTransX(new AttributeModification<>(0.1, OperationType.SET))
+                .stepUpTransformerX(new AttributeModification<>(0.2, OperationType.SET))
                 .participate(new AttributeModification<>(true, OperationType.SET))
                 .reactiveCapabilityCurve(new AttributeModification<>(true, OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
@@ -110,6 +112,10 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                     });
         }
         assertEquals(PROPERTY_VALUE, getNetwork().getBattery("v3Battery").getProperty(PROPERTY_NAME));
+        BatteryShortCircuit batteryShortCircuit = modifiedBattery.getExtension(BatteryShortCircuit.class);
+        assertNotNull(batteryShortCircuit);
+        assertEquals(0.1, batteryShortCircuit.getDirectTransX());
+        assertEquals(0.2, batteryShortCircuit.getStepUpTransformerX());
     }
 
     @Override
@@ -377,5 +383,36 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
     @Test
     void testConnection() throws Exception {
         assertChangeConnectionState(getNetwork().getBattery("v3Battery"), true);
+    }
+
+    @Test
+    void testBatteryShortCircuitAttributesModification() throws Exception {
+        BatteryModificationInfos batteryModificationInfos = (BatteryModificationInfos) buildModification();
+
+        // setting transient reactance to null, modifying only step up transformer reactance
+        batteryModificationInfos.setDirectTransX(null);
+        String modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        BatteryModificationInfos createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(0);
+
+        assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
+        testNetworkModificationsCount(getGroupId(), 1);
+
+        // setting step up transformer reactance to null, modifying only transient reactance
+        batteryModificationInfos.setDirectTransX(new AttributeModification<>(1.1, OperationType.SET));
+        batteryModificationInfos.setStepUpTransformerX(null);
+
+        modificationToCreateJson = getJsonBody(batteryModificationInfos, null);
+
+        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()).andReturn();
+
+        createdModification = (BatteryModificationInfos) networkModificationRepository.getModifications(getGroupId(), false, true).get(1);
+
+        assertThat(createdModification).recursivelyEquals(batteryModificationInfos);
+        testNetworkModificationsCount(getGroupId(), 2);
     }
 }

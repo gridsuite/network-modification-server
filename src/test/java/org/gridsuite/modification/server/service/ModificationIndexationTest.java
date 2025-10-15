@@ -19,6 +19,7 @@ import org.apache.commons.collections4.IterableUtils;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
+import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosRepository;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -31,13 +32,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,7 +124,7 @@ class ModificationIndexationTest {
         assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
         assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
         assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
-        assertEquals(newEquipmentId, modificationApplicationInfos.getFirst().getCreatedEquipmentIds().iterator().next());
+        assertTrue(modificationApplicationInfos.getFirst().getCreatedEquipmentIds().contains(newEquipmentId));
     }
 
     @Test
@@ -173,7 +174,7 @@ class ModificationIndexationTest {
         assertEquals(entities.getFirst().getId(), modificationApplicationEntities.getFirst().getModification().getId());
         assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getFirst().getModificationUuid());
         assertEquals(groupUuid, modificationApplicationInfos.getFirst().getGroupUuid());
-        assertEquals(deletedEquipmentId, modificationApplicationInfos.getFirst().getDeletedEquipmentIds().iterator().next());
+        assertTrue(modificationApplicationInfos.getFirst().getDeletedEquipmentIds().contains(deletedEquipmentId));
     }
 
     @Test
@@ -221,7 +222,9 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().iterator().next()));
+        modificationApplicationInfos.forEach(applicationInfo ->
+                assertTrue(applicationInfo.getCreatedEquipmentIds().contains(newEquipmentId))
+        );
     }
 
     @Test
@@ -270,7 +273,7 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().iterator().next()));
+        modificationApplicationInfos.forEach(applicationInfo -> assertTrue(applicationInfo.getCreatedEquipmentIds().contains(newEquipmentId)));
     }
 
     @Test
@@ -322,7 +325,7 @@ class ModificationIndexationTest {
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
 
         assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
-        modificationApplicationInfos.forEach(applicationInfo -> assertEquals(newEquipmentId, applicationInfo.getCreatedEquipmentIds().iterator().next()));
+        modificationApplicationInfos.forEach(applicationInfo -> assertTrue(applicationInfo.getCreatedEquipmentIds().contains(newEquipmentId)));
     }
 
     @Test
@@ -491,5 +494,58 @@ class ModificationIndexationTest {
             .equipmentId(loadId)
             .busOrBusbarSectionId("1.1")
             .build();
+    }
+
+    @Test
+    void testUpdateModificationProperties() {
+        LoadModificationInfos loadModificationInfos = LoadModificationInfos.builder()
+                .equipmentId("load1")
+                .properties(List.of(FreePropertyInfos.builder().name("loadPropertyName").value("loadPropertyValue").build()))
+                .build();
+
+        UUID groupUuid = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadModificationInfos)));
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        ModificationApplicationEntity modificationApplicationEntity = modificationApplicationRepository.findAll().getFirst();
+        ModificationApplicationInfos modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll()).getFirst();
+
+        assertEquals(entities.getFirst().getId(), modificationApplicationEntity.getModification().getId());
+        assertEquals(entities.getFirst().getId(), modificationApplicationInfos.getModificationUuid());
+        assertEquals(groupUuid, modificationApplicationInfos.getGroupUuid());
+
+        assertEquals(1, modificationApplicationEntity.getModifiedEquipmentIds().size());
+        assertEquals(1, modificationApplicationInfos.getModifiedEquipmentIds().size());
+
+        Optional<String> anyModifiedEquipmentIdEntity = modificationApplicationEntity.getModifiedEquipmentIds().stream().findAny();
+        assertTrue(anyModifiedEquipmentIdEntity.isPresent());
+        assertEquals("load1", anyModifiedEquipmentIdEntity.get());
+
+        Optional<String> anyModifiedEquipmentIdInfos = modificationApplicationInfos.getModifiedEquipmentIds().stream().findAny();
+        assertTrue(anyModifiedEquipmentIdInfos.isPresent());
+        assertEquals("load1", anyModifiedEquipmentIdEntity.get());
+    }
+
+    @Test
+    void testUpdateModificationPropertiesWithNotIndexedEquipment() {
+        try (MockedStatic<EquipmentInfosService> mocked = Mockito.mockStatic(EquipmentInfosService.class)) {
+            mocked.when(EquipmentInfosService::getIndexedEquipmentTypes)
+                    .thenReturn(Set.of());
+
+            SubstationModificationInfos substationModificationInfos = SubstationModificationInfos.builder()
+                    .equipmentId("s1")
+                    .properties(List.of(FreePropertyInfos.builder().name("s1PropertyName").value("s1PropertyValue").build()))
+                    .build();
+
+            UUID groupUuid = UUID.randomUUID();
+            List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationModificationInfos)));
+            NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid, entities, reportInfos), networkInfos);
+            assertNotNull(result);
+
+            assertEquals(1, modificationRepository.getModifications(groupUuid, true, true).size());
+            assertEquals(Collections.emptyList(), modificationApplicationRepository.findAll());
+            assertEquals(Collections.emptyList(), IterableUtils.toList(modificationApplicationInfosRepository.findAll()));
+        }
     }
 }
