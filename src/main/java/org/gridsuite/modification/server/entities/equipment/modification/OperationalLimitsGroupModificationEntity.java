@@ -49,11 +49,11 @@ public class OperationalLimitsGroupModificationEntity {
             ))
     private CurrentLimitsModificationEntity currentLimits;
 
-    @Column(name = "modificationType")
+    @Column(name = "modification_type")
     @Enumerated(EnumType.STRING)
     private OperationalLimitsGroupModificationType modificationType;
 
-    @Column(name = "temporaryLimitsModificationType")
+    @Column(name = "temporary_limits_modification_type")
     @Enumerated(EnumType.STRING)
     private TemporaryLimitModificationType temporaryLimitsModificationType;
 
@@ -72,9 +72,7 @@ public class OperationalLimitsGroupModificationEntity {
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
                                 limitsGroup.getApplicability()
-                        )
-                )
-                .toList();
+                )).toList();
     }
 
     public static List<OperationalLimitsGroupModificationInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupModificationEntity> limitsGroupsEntities) {
