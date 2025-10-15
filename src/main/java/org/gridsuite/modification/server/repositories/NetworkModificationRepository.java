@@ -104,20 +104,16 @@ public class NetworkModificationRepository {
         modificationGroupRepository.deleteAll();
     }
 
-    @Transactional // To have all create in the same transaction (atomic)
-    // TODO Remove transaction when errors will no longer be sent to the front
-    // This method should be package-private and not used as API of the service as it uses ModificationEntity and
-    // we want to encapsulate the use of Entity related objects to this service.
-    // Nevertheless We have to keep it public for transactional annotation.
+    @Transactional
+    // TODO Rather than calling saveModificationsNonTransactional(), we should call saveModificationInfos() below.
+    // In this case, we could change this method signature to use DTOs instead of Entities.
+    // Note: This current method is used only by the tests.
     public List<ModificationEntity> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
         return saveModificationsNonTransactional(groupUuid, modifications);
     }
 
-    @Transactional // To have all create in the same transaction (atomic)
-    // TODO Remove transaction when errors will no longer be sent to the front
     public List<ModificationEntity> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
-
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 

@@ -17,7 +17,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
-import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -29,6 +28,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +63,9 @@ public class NetworkModificationApplicator {
 
     private final NetworkModificationObserver networkModificationObserver;
 
+    private final NetworkModificationRepository networkModificationRepository;
+
     @Value("${impacts.collection-threshold:50}")
-    @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     @Value("${naming-strategy:Default}")
@@ -75,6 +76,7 @@ public class NetworkModificationApplicator {
                                          ReportService reportService, FilterService filterService,
                                          LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
+                                         NetworkModificationRepository networkModificationRepository,
                                          LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
@@ -83,6 +85,7 @@ public class NetworkModificationApplicator {
         this.filterService = filterService;
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
+        this.networkModificationRepository = networkModificationRepository;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
     }
 
@@ -192,7 +195,7 @@ public class NetworkModificationApplicator {
                 .filter(ModificationEntity::getActivated)
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m.toModificationInfos(), listener.getNetwork(), reportNode);
+                    return apply(networkModificationRepository.getModificationInfos(m), listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);

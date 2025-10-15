@@ -191,9 +191,7 @@ public class NetworkModificationService {
             networkModificationRepository.getModificationsCount(groupUuid, false));
     }
 
-    // No transactional because we need to save modification in DB also in case of error
-    // Transaction made in 'saveModifications' method
-    // TODO Add transaction when errors will no longer be sent to the front
+    @Transactional
     public NetworkModificationsResult createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
 
