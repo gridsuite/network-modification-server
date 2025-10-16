@@ -183,6 +183,11 @@ class ModificationIndexationTest {
         Create first modification then apply it on group 1
          */
         String newEquipmentId = "newLoad";
+        // Need an entity with a lazyloaded subentity/collection to test that all required
+        // data has been loaded during the completed transaction before applying modifications:
+        // LoadCreationInfos does the job because it has the free properties Collection.
+        // Is there a good way to add in this test that we have 2 short transactions
+        // instead of one long idle transaction ?
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
@@ -228,10 +233,14 @@ class ModificationIndexationTest {
         Create first modification then apply it on group 1
          */
         String newEquipmentId = "newLoad";
+        // Need an entity with a lazyloaded subentity/collection to test that all required
+        // data has been loaded during the completed transaction before applying modifications:
+        // LoadCreationInfos does the job because it has the free properties Collection.
+        // Is there a good way to add in this test that we have 2 short transactions
+        // instead of one long idle transaction ?
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
         UUID groupUuid1 = UUID.randomUUID();
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
-
         NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
         assertNotNull(result);
 
@@ -256,6 +265,58 @@ class ModificationIndexationTest {
          */
         List<UUID> expectedModificationUuids = List.of(modificationsResult.modificationUuids().getFirst());
         List<UUID> expectedGroupUuids = List.of(groupUuid2);
+
+        List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
+        List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
+
+        assertThat(modificationApplicationEntities.stream().map(m -> m.getModification().getId()).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
+        assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getModificationUuid).toList()).usingRecursiveComparison().isEqualTo(expectedModificationUuids);
+
+        assertThat(modificationApplicationInfos.stream().map(ModificationApplicationInfos::getGroupUuid).toList()).usingRecursiveComparison().isEqualTo(expectedGroupUuids);
+        modificationApplicationInfos.forEach(applicationInfo -> assertTrue(applicationInfo.getCreatedEquipmentIds().contains(newEquipmentId)));
+    }
+
+    @Test
+    void testInsertCompositeModifications() {
+        /*
+        Create first modification then apply it on group 1
+         */
+        String newEquipmentId = "newLoad";
+        // Need an entity with a lazyloaded subentity/collection to test that all required
+        // data has been loaded during the completed transaction before applying modifications:
+        // LoadCreationInfos does the job because it has the free properties Collection.
+        // Is there a good way to add in this test that we have 2 short transactions
+        // instead of one long idle transaction ?
+        LoadCreationInfos loadCreationInfos = createLoadCreationInfos(newEquipmentId);
+        UUID groupUuid1 = UUID.randomUUID();
+        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid1, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(groupUuid1, entities, reportInfos), networkInfos);
+        assertNotNull(result);
+
+        // Create the composite modification to pass later to ?action=insert
+        UUID compositeUuid = networkModificationService.createNetworkCompositeModification(
+                entities.stream().map(ModificationEntity::getId).toList()
+        );
+
+        // Need to remove the listener created in the last modifications application
+        ((NetworkImpl) networkInfos.getNetwork()).getListeners().clear();
+
+        /*
+        Insert as composite this modification to group 2, variant 2
+         */
+        UUID groupUuid2 = UUID.randomUUID();
+        NetworkModificationsResult modificationsResult = networkModificationService.insertCompositeModifications(
+            groupUuid2,
+            List.of(compositeUuid),
+            List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))
+        );
+
+        /*
+        check results in database and in elasticsearch
+         */
+        List<UUID> expectedModificationUuids = List.of(entities.getFirst().getId(), modificationsResult.modificationUuids().getFirst());
+        List<UUID> expectedGroupUuids = List.of(groupUuid1, groupUuid2);
 
         List<ModificationApplicationEntity> modificationApplicationEntities = modificationApplicationRepository.findAll();
         List<ModificationApplicationInfos> modificationApplicationInfos = IterableUtils.toList(modificationApplicationInfosRepository.findAll());
