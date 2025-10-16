@@ -70,6 +70,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedS(new AttributeModification<>(7., OperationType.SET))
                 .ratioTapChangerToBeEstimated(new AttributeModification<>(true, OperationType.SET))
                 .phaseTapChangerToBeEstimated(new AttributeModification<>(false, OperationType.SET))
+                .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(
                         OperationalLimitsGroupModificationInfos.builder()
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
@@ -192,6 +193,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .ratedU1(new AttributeModification<>(5.1, OperationType.SET))
                 .ratedU2(new AttributeModification<>(6.1, OperationType.SET))
                 .ratedS(new AttributeModification<>(7.1, OperationType.SET))
+                .enableOLGModification(true)
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .loadTapChangingCapabilities(new AttributeModification<>(true, OperationType.SET))
@@ -331,6 +333,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .equipmentId("trf1")
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .build())
+                .enableOLGModification(true)
                 .operationalLimitsGroups(List.of(
                         OperationalLimitsGroupModificationInfos.builder()
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
@@ -489,6 +492,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                 .equipmentId("trf2")
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .build())
+                .enableOLGModification(true)
                 .phaseTapChanger(PhaseTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<>(true, OperationType.SET))
                         .regulationMode(new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET))
