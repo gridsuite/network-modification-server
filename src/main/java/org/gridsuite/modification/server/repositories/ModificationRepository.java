@@ -49,17 +49,11 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder desc")
     List<ModificationEntity> findAllByIdInReverse(List<UUID> uuids);
 
-    @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid", nativeQuery = true)
+    @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modifications_modifications WHERE tabular_modifications_entity_id = :uuid", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationId(UUID uuid);
 
-    @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modification_modifications WHERE tabular_modification_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
+    @Query(value = "SELECT cast(modifications_id AS VARCHAR) FROM tabular_modifications_modifications WHERE tabular_modifications_entity_id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(UUID uuid);
-
-    @Query(value = "SELECT cast(creations_id AS VARCHAR) FROM tabular_creation_creations WHERE tabular_creation_entity_id = :uuid", nativeQuery = true)
-    List<UUID> findSubModificationIdsByTabularCreationId(UUID uuid);
-
-    @Query(value = "SELECT cast(creations_id AS VARCHAR) FROM tabular_creation_creations WHERE tabular_creation_entity_id = :uuid ORDER BY creations_order", nativeQuery = true)
-    List<UUID> findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(UUID uuid);
 
     @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);

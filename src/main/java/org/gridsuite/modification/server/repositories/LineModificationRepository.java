@@ -42,17 +42,17 @@ public interface LineModificationRepository extends JpaRepository<LineModificati
 
     @Modifying
     @Query(value = "BEGIN;" +
-            "DELETE FROM tabular_modification_modifications WHERE tabular_modification_entity_id = ?1 ;" +
+            "DELETE FROM tabular_modifications_modifications WHERE tabular_modifications_entity_id = ?1 ;" +
             "DELETE FROM modification WHERE id IN ?2 ;" +
             "COMMIT;", nativeQuery = true)
-    // This function is generic and can work on any modification
+    // This function is generic and can work on any tabular modification/creation
     void deleteTabularModificationModifications(UUID tabularModificationId, List<UUID> subModificationIds);
 
     @Modifying
     @Query(value = "BEGIN;" +
-            "DELETE FROM tabular_modification WHERE id = ?1 ;" +
+            "DELETE FROM tabular_modifications WHERE id = ?1 ;" +
             "DELETE FROM modification WHERE id = ?1 ;" +
             "COMMIT;", nativeQuery = true)
-    // This function is generic and can work on any modification
+    // This function is generic and can work on any tabular modification/creation
     void deleteTabularModificationItself(UUID tabularModificationId);
 }
