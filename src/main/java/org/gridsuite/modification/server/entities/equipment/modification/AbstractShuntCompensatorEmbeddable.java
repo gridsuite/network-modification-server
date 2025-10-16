@@ -8,7 +8,6 @@
 package org.gridsuite.modification.server.entities.equipment.modification;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.MappedSuperclass;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,7 +16,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Embeddable
 @MappedSuperclass
 public abstract class AbstractShuntCompensatorEmbeddable {
     @Column(name = "shunt_compensator_id")

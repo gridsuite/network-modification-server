@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,7 +57,7 @@ class ModificationSearchTest {
     @Mock
     private NetworkInfos networkInfos;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
     @Mock

@@ -16,13 +16,14 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.NetworkModificationServerException;
+import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.client.HttpStatusCodeException;
 
@@ -40,12 +41,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @Tag("IntegrationTest")
+@DisableElasticsearch
 class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
     private static final UUID LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID NON_EXISTENT_LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
     private static final UUID ERROR_LOADFLOW_PARAMETERS_UUID = UUID.randomUUID();
 
-    @MockBean
+    @MockitoBean
     private LoadFlowService loadFlowService;
 
     @BeforeEach
