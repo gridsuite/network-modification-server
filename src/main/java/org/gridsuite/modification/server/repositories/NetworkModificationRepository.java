@@ -458,9 +458,17 @@ public class NetworkModificationRepository {
         }
     }
 
+    private List<ModificationEntity> getActiveModificationsEntities(List<UUID> groupUuids, Set<UUID> modificationsToExclude) {
+        Stream<ModificationEntity> entityStream = groupUuids.stream().flatMap(this::getModificationEntityStream);
+        return entityStream
+            .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
+            .filter(m -> !m.getStashed() && m.getActivated())
+            .toList();
+    }
+
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
-        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, Set<UUID> modificationsToExclude) {
+        List<ModificationEntity> modificationsEntities = getActiveModificationsEntities(groupUuids, modificationsToExclude);
         loadFullModificationsEntities(modificationsEntities);
         return modificationsEntities;
     }

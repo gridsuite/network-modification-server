@@ -243,10 +243,8 @@ public class NetworkModificationService {
                 List<ModificationEntity> modifications = List.of();
                 try {
                     // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
+                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), modificationsToExclude)
                         .stream()
-                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
-                        .filter(m -> !m.getStashed())
                         .toList();
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
