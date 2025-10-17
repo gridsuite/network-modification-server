@@ -25,7 +25,10 @@ import org.springframework.util.CollectionUtils;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "vscCreation")
+@Table(name = "vsc_creation", uniqueConstraints = {
+    @UniqueConstraint(name = "vsc_creation_converter_station_1_id_uc", columnNames = "converter_station_1_id"),
+    @UniqueConstraint(name = "vsc_creation_converter_station_2_id_uc", columnNames = "converter_station_2_id")
+})
 public class VscCreationEntity extends EquipmentCreationEntity {
     private Double nominalV;
 

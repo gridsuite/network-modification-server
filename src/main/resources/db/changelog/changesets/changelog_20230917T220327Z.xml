@@ -67,4 +67,10 @@
     <changeSet author="yenguised (generated)" id="1694988227382-16">
         <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_creation" constraintName="converter_station_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
     </changeSet>
+    <changeSet author="jamalk (generated)" id="1709822847235-35">
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="uc_vsc_creation_converter_station_1_id_col" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="jamalk (generated)" id="1709822847235-36">
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="uc_vsc_creation_converter_station_2_id_col" tableName="vsc_creation"/>
+    </changeSet>
 </databaseChangeLog>

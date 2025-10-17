@@ -6,12 +6,7 @@
  */
 package org.gridsuite.modification.server.entities.tabular;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -29,7 +24,10 @@ import java.util.List;
 public class TabularBaseEntity extends ModificationEntity {
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "tabular_modification_id")
+    @JoinColumn(name = "tabular_modification_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = "tabular_modification_id_fk_constraint")
+    )
     @OrderColumn(name = "insert_position")
     private List<TabularPropertyEntity> properties;
 

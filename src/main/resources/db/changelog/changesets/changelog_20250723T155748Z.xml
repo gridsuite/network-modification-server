@@ -97,4 +97,7 @@
     <changeSet author="marcelinhug (generated)" id="1753286288227-66">
         <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_op_limits_groups2" constraintName="twt_mod_operational_limits_groups_id2_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1753286288227-67">
+        <addUniqueConstraint columnNames="current_limits_id" constraintName="uc_operational_limits_group_modification_current_limits_id_col" tableName="operational_limits_group_modification"/>
+    </changeSet>
 </databaseChangeLog>

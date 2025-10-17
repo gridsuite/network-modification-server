@@ -8,4 +8,7 @@
     <changeSet author="rehiligha (generated)" id="1733351295028-52">
         <addForeignKeyConstraint baseColumnNames="substation_creation_id" baseTableName="voltage_level_creation_entity" constraintName="voltageLevel_substationCreation_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="substation_creation" validate="true"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1760450442963-22">
+        <addUniqueConstraint columnNames="substation_creation_id" constraintName="uc_voltage_level_creation_substation_creation_id_col" tableName="voltage_level_creation_entity"/>
+    </changeSet>
 </databaseChangeLog>

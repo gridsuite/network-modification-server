@@ -25,7 +25,13 @@
     <changeSet author="noirnic (generated)" id="1652702525594-9">
         <addForeignKeyConstraint baseColumnNames="line_creation_id" baseTableName="line_attach_to_voltage_level" constraintName="FKkpdxmfp4c2gioson9tn9u1fif" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="line_creation" validate="true"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1760450442963-24">
+        <addUniqueConstraint columnNames="line_creation_id" constraintName="uc_line_attach_to_voltage_level_line_creation_id_col" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
     <changeSet author="noirnic (generated)" id="1652702525594-10">
         <addForeignKeyConstraint baseColumnNames="may_voltage_level_creation_id" baseTableName="line_attach_to_voltage_level" constraintName="FKrxscr945pnmtx9x95kjpxtrlf" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1652702525594-11">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="uc_line_attach_to_voltage_level_may_voltage_level_creation_id_col" tableName="line_attach_to_voltage_level"/>
     </changeSet>
 </databaseChangeLog>
