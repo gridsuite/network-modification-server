@@ -31,8 +31,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,19 +47,19 @@ import static org.mockito.Mockito.*;
 @Tag("UnitTest")
 class NetworkModificationApplicatorTest {
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
-    @MockBean
+    @MockitoBean
     private ReportService reportService;
 
-    @MockBean
+    @MockitoBean
     private FilterService filterService;
 
-    @MockBean
+    @MockitoBean
     private NetworkModificationObserver networkModificationObserver;
 
-    @SpyBean
+    @MockitoSpyBean
     private LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     @Autowired

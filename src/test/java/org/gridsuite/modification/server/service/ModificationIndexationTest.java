@@ -36,7 +36,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.*;
 
@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 class ModificationIndexationTest {
 
     // Need to mock the send reports
-    @MockBean
+    @MockitoBean
     private ReportService reportService;
 
     @Autowired
@@ -64,7 +64,7 @@ class ModificationIndexationTest {
     @Mock
     private NetworkInfos networkInfos;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
     @Mock

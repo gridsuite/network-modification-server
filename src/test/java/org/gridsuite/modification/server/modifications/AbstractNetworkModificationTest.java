@@ -35,8 +35,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -70,7 +70,6 @@ public abstract class AbstractNetworkModificationTest {
     private static final UUID TEST_NETWORK_ID = UUID.randomUUID();
     private static final UUID NOT_FOUND_NETWORK_ID = UUID.randomUUID();
     protected static final UUID TEST_GROUP_ID = UUID.randomUUID();
-    private static final UUID TEST_REPORT_ID = UUID.randomUUID();
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_NETWORK_MODIF_GET_PUT = URI_NETWORK_MODIF_BASE + "/";
@@ -83,10 +82,10 @@ public abstract class AbstractNetworkModificationTest {
 
     protected WireMockUtils wireMockUtils;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
-    @MockBean
+    @MockitoBean
     protected ReportService reportService;
 
     @Autowired

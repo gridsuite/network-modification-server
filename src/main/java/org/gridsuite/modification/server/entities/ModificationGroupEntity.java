@@ -29,7 +29,8 @@ public class ModificationGroupEntity extends AbstractManuallyAssignedIdentifierE
 
     @OneToMany(
             mappedBy = "group",
-            cascade = CascadeType.ALL
+            //Remove is not here because we handle the deletion manually
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}
     )
     @OrderBy("modificationsOrder asc")
     private List<ModificationEntity> modifications = new ArrayList<>();
