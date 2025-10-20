@@ -425,7 +425,8 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
         List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
-        loadFullModificationsEntities(modificationsEntities);
+        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
+        modificationsEntities.forEach(m -> m.toModificationInfos());
         return modificationsEntities;
     }
 
