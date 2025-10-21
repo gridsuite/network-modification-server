@@ -423,10 +423,13 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
-        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+    public List<ModificationEntity> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
+        List<ModificationEntity> modificationsEntities = getModificationEntityStream(groupUuid)
+                .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
+                .filter(m -> !m.getStashed() && m.getActivated())
+                .toList();
         // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        modificationsEntities.forEach(m -> m.toModificationInfos());
+        modificationsEntities.forEach(ModificationEntity::toModificationInfos);
         return modificationsEntities;
     }
 
