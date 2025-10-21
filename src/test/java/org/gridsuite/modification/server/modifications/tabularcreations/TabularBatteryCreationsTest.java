@@ -13,8 +13,8 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.BatteryCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ReactiveCapabilityCurvePointsInfos;
-import org.gridsuite.modification.dto.TabularCreationInfos;
-import org.gridsuite.modification.dto.TabularPropertyInfos;
+import org.gridsuite.modification.dto.tabular.TabularCreationInfos;
+import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -58,8 +58,8 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
                 .build()
         );
         return TabularCreationInfos.builder()
-            .creationType(ModificationType.BATTERY_CREATION)
-            .creations(creations)
+            .modificationType(ModificationType.BATTERY_CREATION)
+            .modifications(creations)
             .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(false).build()))
             .stashed(false)
             .build();
@@ -75,8 +75,8 @@ class TabularBatteryCreationsTest extends AbstractNetworkModificationTest {
                         .build()
         );
         return TabularCreationInfos.builder()
-                .creationType(ModificationType.BATTERY_CREATION)
-                .creations(creations)
+                .modificationType(ModificationType.BATTERY_CREATION)
+                .modifications(creations)
                 .properties(List.of(TabularPropertyInfos.builder().name("P1").predefined(true).selected(true).build()))
                 .stashed(false)
                 .build();
