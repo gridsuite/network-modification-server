@@ -43,7 +43,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             joinColumns = @JoinColumn(name = "branch_id"), foreignKey = @ForeignKey(name = "branch_modification_id_fk"),
-            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
+            inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_modification_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups")
     private List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups;
 

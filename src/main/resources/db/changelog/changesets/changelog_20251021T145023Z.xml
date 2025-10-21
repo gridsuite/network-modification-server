@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1761058240544-38">
+        <addForeignKeyConstraint baseColumnNames="equipment_modification_id" baseTableName="free_property" constraintName="equipment_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="string_equipment_attribute_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-39">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="battery_creation" constraintName="batteryCreation_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-40">
+        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_modification" constraintName="converter_station_modification_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-41">
+        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_modification" constraintName="converter_station_modification_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-42">
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="line_modification_operational_limits_groups" constraintName="operational_limits_groups_line_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-43">
+        <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_operational_limits_groups" constraintName="operational_limits_groups_twt_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-44">
+        <dropForeignKeyConstraint baseTableName="TABULAR_PROPERTY" constraintName="FK1T4R9ETM29SNITYOPHIVGNKCE"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-45">
+        <dropForeignKeyConstraint baseTableName="FREE_PROPERTY" constraintName="FK3WBC92CP7WLVBA202QX7LDY6N"/>
+    </changeSet>
+</databaseChangeLog>

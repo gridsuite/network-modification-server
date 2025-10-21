@@ -60,7 +60,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
             name = "converter_station_1_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
-                    name = "converter_station_1_id_fk"
+                    name = "converter_station_creation_1_id_fk"
             ))
     private ConverterStationCreationEntity converterStation1;
 
@@ -69,7 +69,7 @@ public class VscCreationEntity extends EquipmentCreationEntity {
             name = "converter_station_2_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
-                    name = "converter_station_2_id_fk"
+                    name = "converter_station_creation_2_id_fk"
             ))
     private ConverterStationCreationEntity converterStation2;
 
