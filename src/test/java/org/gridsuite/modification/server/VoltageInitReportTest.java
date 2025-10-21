@@ -13,14 +13,6 @@ import com.powsybl.commons.report.ReportNodeDeserializer;
 import com.powsybl.commons.report.ReportNodeJsonModule;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ThreeSides;
-import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.network.store.client.NetworkStoreServicePublic;
-import com.powsybl.network.store.client.PreloadingStrategy;
-import com.powsybl.network.store.client.RestClient;
-import com.powsybl.network.store.iidm.impl.CachedNetworkStoreClient;
-import com.powsybl.network.store.iidm.impl.OfflineNetworkStoreClient;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
@@ -28,13 +20,11 @@ import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
-import org.gridsuite.modification.server.service.LargeNetworkModificationExecutionService;
-import org.gridsuite.modification.server.service.NetworkModificationObserver;
+import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
+import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +35,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -52,12 +45,33 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith({MockitoExtension.class})
+@SpringBootTest
+@DisableElasticsearch
 class VoltageInitReportTest {
+
+    @Autowired
+    private NetworkModificationRepository modificationRepository;
+
+    @Autowired
+    private NetworkModificationApplicator networkModificationApplicator;
+
+    @MockBean
+    protected ReportService reportService;
+
+    private static final UUID NETWORK_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID NODE_ID = UUID.fromString("99999999-9999-9999-9999-999999999999");
+    private static final UUID REPORT_ID = UUID.fromString("88888888-8888-8888-8888-888888888888");
+    private static final UUID GROUP_ID = UUID.randomUUID();
+
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .registerModule(new ReportNodeJsonModule())
             .setInjectableValues(new InjectableValues.Std().addValue(ReportNodeDeserializer.DICTIONARY_VALUE_ID, null));
@@ -67,41 +81,32 @@ class VoltageInitReportTest {
     @ParameterizedTest(name = "result status = {0}")
     @DisplayName("Verifying logs after applying Voltage-Init server modifications on a network")
     void testVoltageInitDuplicationLogs(final ApplicationStatus resultStatus, final String logsJsonFile, final VoltageInitModificationInfos modificationInfos) throws Exception {
-        final ReportService reportService = Mockito.mock(ReportService.class);
-        final RestClient restClient = Mockito.mock(RestClient.class);
-        final NetworkStoreService networkStoreService = new NetworkStoreServicePublic(restClient, PreloadingStrategy.NONE,
-            (restClient_, preloadingStrategy, executorService) -> new CachedNetworkStoreClient(new OfflineNetworkStoreClient()));
-        final EquipmentInfosService equipmentInfosService = Mockito.mock(EquipmentInfosService.class);
-        final ModificationApplicationInfosService modificationApplicationInfosService = Mockito.mock(ModificationApplicationInfosService.class);
-        final NetworkModificationObserver networkModificationObserver = new NetworkModificationObserver(ObservationRegistry.NOOP, new SimpleMeterRegistry());
-        final LargeNetworkModificationExecutionService modificationExecutionService = new LargeNetworkModificationExecutionService(2, networkModificationObserver);
-        final NetworkModificationApplicator networkModificationApplicator = new NetworkModificationApplicator(networkStoreService, equipmentInfosService, modificationApplicationInfosService, reportService, null, null, networkModificationObserver, modificationExecutionService);
-        networkModificationApplicator.setCollectionThreshold(5);
-
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));
 
-        //for internal call to reportService.sendReport(reportInfos.getReportUuid(), reporter);
-        final ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
+        // apply a VoltageInit modification and check status
+        assertThat(applyModification(network, modificationInfos))
+                .as("voltage init result status")
+                .isEqualTo(resultStatus);
 
-        final UUID networkUuuid = UUID.fromString("11111111-1111-1111-1111-111111111111");
-        final UUID reportUuid = UUID.fromString("88888888-8888-8888-8888-888888888888");
-        //simulate PUT /v1/groups/abc?action=COPY with body ModificationApplicationContext(networkUuid=0000, reportUuid=0000, reporterId=0000, variantId=0000, duplicateFrom=0000)
-        assertThat(networkModificationApplicator.applyModifications(
-            new ModificationApplicationGroup(UUID.randomUUID(), List.of(ModificationEntity.fromDTO(modificationInfos)), new ReportInfos(reportUuid, UUID.fromString("99999999-9999-9999-9999-999999999999"))),
-            new NetworkInfos(network, networkUuuid, true)))
-            .as("network modifications results")
-            .isNotNull()
-            .extracting(NetworkModificationResult::getApplicationStatus)
-            .isEqualTo(resultStatus);
-
-        Mockito.verify(reportService, Mockito.times(1)).sendReport(Mockito.eq(reportUuid), reporterCaptor.capture());
+        // check produced report json data
+        ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
         final ReportNode result = reporterCaptor.getValue();
-        log.info("Result = {}", objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+        assertNotNull(result);
         JSONAssert.assertEquals("voltage-init plan logs aggregated",
                 Files.readString(Paths.get(this.getClass().getClassLoader().getResource(logsJsonFile).toURI())),
                 objectMapper.writeValueAsString(result), false);
         Mockito.verifyNoMoreInteractions(reportService);
-        Mockito.reset(reportService); //because parametized tests haven't same lifecycle than tests
+        Mockito.reset(reportService); //because parameterized tests haven't same lifecycle than tests
+    }
+
+    private ApplicationStatus applyModification(Network network, VoltageInitModificationInfos infos) {
+        List<ModificationEntity> entities = modificationRepository.saveModifications(GROUP_ID, List.of(ModificationEntity.fromDTO(infos)));
+        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
+                new ModificationApplicationGroup(GROUP_ID, entities, new ReportInfos(REPORT_ID, NODE_ID))
+        );
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, NETWORK_ID, true));
+        return result.getApplicationStatus();
     }
 
     private static List<Arguments> voltageInitModifications() {

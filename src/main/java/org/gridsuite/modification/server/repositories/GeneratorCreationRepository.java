@@ -34,20 +34,4 @@ public interface GeneratorCreationRepository extends JpaRepository<GeneratorCrea
             "DELETE FROM generator_creation WHERE id IN ?1 ;" +
             "COMMIT;", nativeQuery = true)
     void deleteSomeTabularSubModifications(List<UUID> subModificationIdsPart);
-
-    @Modifying
-    @Query(value = "BEGIN;" +
-            "DELETE FROM tabular_creation_creations WHERE tabular_creation_entity_id = ?1 ;" +
-            "DELETE FROM modification WHERE id IN ?2 ;" +
-            "COMMIT;", nativeQuery = true)
-    // This function is generic and can work on any creation
-    void deleteTabularCreationCreations(UUID tabularModificationId, List<UUID> subModificationIds);
-
-    @Modifying
-    @Query(value = "BEGIN;" +
-            "DELETE FROM tabular_creation WHERE id = ?1 ;" +
-            "DELETE FROM modification WHERE id = ?1 ;" +
-            "COMMIT;", nativeQuery = true)
-    // This function is generic and can work on any creation
-    void deleteTabularCreationItself(UUID tabularModificationId);
 }
