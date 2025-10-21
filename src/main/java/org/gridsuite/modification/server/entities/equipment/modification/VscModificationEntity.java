@@ -28,6 +28,7 @@ import static org.gridsuite.modification.dto.AttributeModification.toAttributeMo
 @Getter
 @Entity
 @Table(name = "vscModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "vscModification_id_fk_constraint"))
 public class VscModificationEntity extends BasicEquipmentModificationEntity {
     @Embedded
     @AttributeOverrides(value = {

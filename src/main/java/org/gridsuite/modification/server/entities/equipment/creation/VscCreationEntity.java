@@ -26,6 +26,7 @@ import org.springframework.util.CollectionUtils;
 @Getter
 @Entity
 @Table(name = "vscCreation")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "vscCreation_id_fk_constraint"))
 public class VscCreationEntity extends EquipmentCreationEntity {
     private Double nominalV;
 

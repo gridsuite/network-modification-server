@@ -33,6 +33,7 @@ import static org.gridsuite.modification.server.entities.equipment.modification.
 @Getter
 @Entity
 @Table(name = "converterStationModification")
+@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "converterStationModification_id_fk_constraint"))
 public class ConverterStationModificationEntity extends InjectionModificationEntity {
 
     @Embedded
