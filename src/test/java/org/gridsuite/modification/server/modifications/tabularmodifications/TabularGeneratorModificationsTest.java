@@ -12,6 +12,8 @@ import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -624,7 +626,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 () -> networkModificationRepository.updateModification(modifId, tabularInfos)
         );
         // deletion error because we try to remove the sub-modifications before updating them
-        assertEquals("No sub-modifications deletion for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+        assertEquals("No sub-modifications deletion method for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
 
         // try to delete
         List<UUID> ids = List.of(modifId);
@@ -632,7 +634,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 UnsupportedOperationException.class,
                 () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
         );
-        assertEquals("No modification full deletion for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+        assertEquals("No sub-modifications deletion method for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
     }
 
     @Override

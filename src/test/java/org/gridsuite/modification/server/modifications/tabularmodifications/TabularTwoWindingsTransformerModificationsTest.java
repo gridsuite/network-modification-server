@@ -10,6 +10,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.utils.ApiUtils;
@@ -73,6 +75,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
     protected TwoWindingsTransformerModificationInfos buildOneModification(String equipmentId, Double seriesResistance) {
         return TwoWindingsTransformerModificationInfos.builder().equipmentId(equipmentId)
                 .r(new AttributeModification<>(seriesResistance, OperationType.SET))
+                .enableOLGModification(true)
                 .build();
     }
 
@@ -119,8 +122,8 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
                         (ModificationInfos) TwoWindingsTransformerModificationInfos.builder().equipmentId(UUID.randomUUID().toString())
                                 .x(new AttributeModification<>(1., OperationType.SET))
                                 .g(new AttributeModification<>(1., OperationType.SET))
-                                .operationalLimitsGroup1(TabularLineModificationsTest.buildOperationalLimitsGroupDefaultModification())
-                                .operationalLimitsGroup2(TabularLineModificationsTest.buildOperationalLimitsGroupDefaultModification())
+                                .enableOLGModification(true)
+                                .operationalLimitsGroups(TabularLineModificationsTest.buildOperationalLimitsGroupDefaultModification())
                                 .properties(List.of(
                                         ModificationCreation.getFreeProperty(),
                                         ModificationCreation.getFreeProperty("test", "value")))

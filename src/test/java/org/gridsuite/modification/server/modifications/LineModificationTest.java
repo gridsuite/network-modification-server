@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -72,8 +74,8 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
                 .voltageLevelId2(new AttributeModification<>("v4", OperationType.SET))
-                .busOrBusbarSectionId1(new AttributeModification<>("1B", OperationType.SET))
-                .busOrBusbarSectionId2(new AttributeModification<>("2B", OperationType.SET))
+                .busOrBusbarSectionId1(new AttributeModification<>("1.1", OperationType.SET))
+                .busOrBusbarSectionId2(new AttributeModification<>("1.A", OperationType.SET))
                 .connectionName1(new AttributeModification<>("cn1Line1", OperationType.SET))
                 .connectionName2(new AttributeModification<>("cn2Line1", OperationType.SET))
                 .connectionDirection1(new AttributeModification<>(ConnectablePosition.Direction.TOP, OperationType.SET))
@@ -88,40 +90,59 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .q1MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
                 .q2MeasurementValue(new AttributeModification<>(MEASUREMENT_Q_VALUE, OperationType.SET))
                 .q2MeasurementValidity(new AttributeModification<>(MEASUREMENT_Q_VALID, OperationType.SET))
-                .currentLimits1(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(12.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(null)
-                                .name("name31")
-                                .value(null)
-                                .modificationType(TemporaryLimitModificationType.ADDED)
-                                .build()))
-                        .build())
-                .currentLimits2(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(22.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(32)
-                                .name("name32")
-                                .value(42.0)
-                                .modificationType(TemporaryLimitModificationType.ADDED)
-                                .build()))
-                        .build())
+                .enableOLGModification(true)
+                .operationalLimitsGroups(List.of(
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("newOpLG1")
+                                .applicability(SIDE1)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(12.0)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(null)
+                                                                .name("name31")
+                                                                .value(null)
+                                                                .build())
+                                                ).build()
+                                ).build(),
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .modificationType(OperationalLimitsGroupModificationType.ADD)
+                                .id("newOpLG2")
+                                .applicability(SIDE2)
+                                .currentLimits(
+                                        CurrentLimitsModificationInfos.builder()
+                                                .permanentLimit(22.0)
+                                                .temporaryLimits(
+                                                        List.of(CurrentTemporaryLimitModificationInfos.builder()
+                                                                .modificationType(TemporaryLimitModificationType.ADD)
+                                                                .acceptableDuration(32)
+                                                                .name("name32")
+                                                                .value(42.0)
+                                                                .build())
+                                                ).build()
+                                ).build(),
+                        OperationalLimitsGroupModificationInfos.builder()
+                                .id("DEFAULT")
+                                .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                                .modificationType(OperationalLimitsGroupModificationType.MODIFY)
+                                .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
+                                .currentLimits(CurrentLimitsModificationInfos.builder()
+                                        .temporaryLimits(List.of(
+                                                CurrentTemporaryLimitModificationInfos.builder()
+                                                        .modificationType(TemporaryLimitModificationType.REPLACE)
+                                                        .name("test1")
+                                                        .acceptableDuration(2)
+                                                        .value(10.)
+                                                        .build()
+                                        )).build())
+                                .build()
+                ))
+                .selectedOperationalLimitsGroup1(new AttributeModification<String>("newOpLG1", OperationType.SET))
+                .selectedOperationalLimitsGroup2(new AttributeModification<String>("newOpLG2", OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
-                .operationalLimitsGroup1(List.of(OperationalLimitsGroupModificationInfos.builder()
-                        .id("DEFAULT")
-                        .side("ONE")
-                        .modificationType(OperationalLimitsGroupModificationType.MODIFIED)
-                        .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACED)
-                        .currentLimits(CurrentLimitsModificationInfos.builder()
-                                .temporaryLimits(List.of(
-                                        CurrentTemporaryLimitModificationInfos.builder()
-                                                .modificationType(TemporaryLimitModificationType.REPLACED)
-                                                .name("test1")
-                                                .acceptableDuration(2)
-                                                .value(10.)
-                                                .build()
-                                )).build())
-                        .build()))
                 .build();
     }
 
@@ -137,31 +158,16 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .b1(new AttributeModification<>(12.1, OperationType.SET))
                 .g2(new AttributeModification<>(13.1, OperationType.SET))
                 .b2(new AttributeModification<>(14.1, OperationType.SET))
-                .currentLimits1(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(21.1)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(33)
-                                .name("name33")
-                                .value(41.1)
-                                .build()))
-                        .build())
-                .currentLimits2(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(22.1)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(35)
-                                .name("name35")
-                                .value(42.1)
-                                .build()))
-                        .build())
-                .operationalLimitsGroup1(List.of(OperationalLimitsGroupModificationInfos.builder()
+                .enableOLGModification(true)
+                .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationInfos.builder()
                         .id("DEFAULT")
-                        .side("ONE")
-                        .modificationType(OperationalLimitsGroupModificationType.MODIFIED)
-                        .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACED)
+                        .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                        .modificationType(OperationalLimitsGroupModificationType.MODIFY)
+                        .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
                         .currentLimits(CurrentLimitsModificationInfos.builder()
                                 .temporaryLimits(List.of(
                                         CurrentTemporaryLimitModificationInfos.builder()
-                                                .modificationType(TemporaryLimitModificationType.REPLACED)
+                                                .modificationType(TemporaryLimitModificationType.REPLACE)
                                                 .name("test2")
                                                 .acceptableDuration(2)
                                                 .value(10.)
@@ -243,8 +249,6 @@ class LineModificationTest extends AbstractNetworkModificationTest {
     void testPermanentLimitUnchanged() throws Exception {
         LineModificationInfos lineModificationInfos = (LineModificationInfos) buildModification();
 
-        lineModificationInfos.getCurrentLimits1().setPermanentLimit(null);
-        lineModificationInfos.getCurrentLimits2().setPermanentLimit(null);
         String modificationToCreateJson = getJsonBody(lineModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
@@ -389,24 +393,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
-                .currentLimits1(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(12.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(null)
-                                .name("name31")
-                                .value(22.0)
-                                .modificationType(TemporaryLimitModificationType.MODIFIED)
-                                .build()))
-                        .build())
-                .currentLimits2(CurrentLimitsModificationInfos.builder()
-                        .permanentLimit(22.0)
-                        .temporaryLimits(List.of(CurrentTemporaryLimitModificationInfos.builder()
-                                .acceptableDuration(33)
-                                .name("name33")
-                                .value(15.0)
-                                .modificationType(TemporaryLimitModificationType.DELETED)
-                                .build()))
-                        .build())
+                .enableOLGModification(true)
                 .build();
         String modificationToCreateJson = getJsonBody(lineModificationInfos, null);
 
@@ -423,6 +410,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .stashed(false)
                 .equipmentId("line1")
                 .equipmentName(new AttributeModification<>("ModifiedName", OperationType.SET))
+                .enableOLGModification(true)
                 .build();
         modificationToCreateJson = getJsonBody(lineModificationInfos1, null);
 
@@ -503,8 +491,8 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .equipmentName(new AttributeModification<>("LineModified", OperationType.SET))
                 .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
                 .voltageLevelId2(new AttributeModification<>("v3", OperationType.SET))
-                .busOrBusbarSectionId1(new AttributeModification<>("1B", OperationType.SET))
-                .busOrBusbarSectionId2(new AttributeModification<>("2B", OperationType.SET))
+                .busOrBusbarSectionId1(new AttributeModification<>("1.1", OperationType.SET))
+                .busOrBusbarSectionId2(new AttributeModification<>("3A", OperationType.SET))
                 .connectionPosition1(new AttributeModification<>(1, OperationType.SET))
                 .connectionPosition2(new AttributeModification<>(1, OperationType.SET))
                 .build();

@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.elasticsearch;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.powsybl.iidm.network.IdentifiableType;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
@@ -38,7 +39,7 @@ public class EquipmentInfosService {
     @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
     public int partitionSizeForDeletion;
 
-    public static final Set<IdentifiableType> TYPES_FOR_INDEXING = Set.of(
+    private static final Set<IdentifiableType> TYPES_FOR_EQUIPMENT_INDEXING = Set.of(
             IdentifiableType.SUBSTATION,
             IdentifiableType.VOLTAGE_LEVEL,
             IdentifiableType.HVDC_LINE,
@@ -52,6 +53,18 @@ public class EquipmentInfosService {
             IdentifiableType.DANGLING_LINE,
             IdentifiableType.STATIC_VAR_COMPENSATOR,
             IdentifiableType.HVDC_CONVERTER_STATION);
+
+    private static final Set<IdentifiableType> TYPES_FOR_MODIFICATION_INDEXING = Sets.union(
+        TYPES_FOR_EQUIPMENT_INDEXING,
+        Set.of(IdentifiableType.SWITCH, IdentifiableType.BUSBAR_SECTION));
+
+    public static Set<IdentifiableType> getIndexedEquipmentTypes() {
+        return TYPES_FOR_EQUIPMENT_INDEXING;
+    }
+
+    public static Set<IdentifiableType> getIndexedEquipmentTypesInModification() {
+        return TYPES_FOR_MODIFICATION_INDEXING;
+    }
 
     public EquipmentInfosService(EquipmentInfosRepository equipmentInfosRepository, TombstonedEquipmentInfosRepository tombstonedEquipmentInfosRepository) {
         this.equipmentInfosRepository = equipmentInfosRepository;

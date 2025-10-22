@@ -19,12 +19,16 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import jakarta.servlet.ServletException;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
-import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.dto.ModificationMetadata;
+import org.gridsuite.modification.server.dto.ModificationsSearchResult;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -50,24 +54,30 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
+import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
-import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.TYPES_FOR_INDEXING;
+import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -97,8 +107,10 @@ class ModificationControllerTest {
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
     private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modification/";
     private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json";
-    private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json.gz";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json.gz";
+    private static final String LINE_TYPES_CATALOG_JSON_FILE_3 = "/line_types_catalog_3.json.gz";
+    private static final String NOT_EXISTING_JSON_FILE = "/not_existing_file.json.gz";
     private static final String NETWORK_MODIFICATION_URI = URI_NETWORK_MODIF_BASE + "?groupUuid=" + TEST_GROUP_ID;
 
     @Autowired
@@ -1430,7 +1442,7 @@ class ModificationControllerTest {
                 assertNull(network.getIdentifiable(simpleImpact.getElementId()));
 
                 // Equipment has been added as TombstonedEquipmentInfos in ElasticSearch except for excluded types
-                if (TYPES_FOR_INDEXING.contains(simpleImpact.getElementType())) {
+                if (getIndexedEquipmentTypes().contains(simpleImpact.getElementType())) {
                     assertTrue(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
                 } else {
                     assertFalse(existTombstonedEquipmentInfos(simpleImpact.getElementId(), TEST_NETWORK_ID, VariantManagerConstants.INITIAL_VARIANT_ID));
@@ -1508,9 +1520,9 @@ class ModificationControllerTest {
         assertEquals(0, emptyLineTypes.size());
 
         // Create the catalog with some line types
-        String lineTypesCatalogJson1 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_1);
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson1).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_1)))
+            .andExpect(status().isOk());
 
         // Check if the catalog is complete avoiding the duplicate entry
         mvcResult = mockMvc
@@ -1520,12 +1532,12 @@ class ModificationControllerTest {
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(8, lineTypes.size());
+        assertEquals(10, lineTypes.size());
 
         // Check if catalog is completely updated
-        String lineTypesCatalogJson2 = TestUtils.resourceToString(LINE_TYPES_CATALOG_JSON_FILE_2);
-        mockMvc.perform(post(URI_LINE_CATALOG).content(lineTypesCatalogJson2).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_2)))
+            .andExpect(status().isOk());
 
         mvcResult = mockMvc
                 .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
@@ -1547,6 +1559,65 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(0, emptyLineTypes.size());
+    }
+
+    @Test
+    void testGetLineTypeWithLimitsCatalog() throws Exception {
+        MvcResult mvcResult;
+        String resultAsString;
+
+        // Check if the catalog is empty
+        mvcResult = mockMvc
+            .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(0, emptyLineTypes.size());
+
+        // Create the catalog with some line types
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_3)))
+            .andExpect(status().isOk());
+
+        mvcResult = mockMvc
+            .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, lineTypes.size());
+        // getting the whole catalog does not load the limits
+        assertNull(lineTypes.get(0).getLimitsForLineType());
+        assertNull(lineTypes.get(1).getLimitsForLineType());
+        mvcResult = mockMvc
+            .perform(get(URI_LINE_CATALOG + "/" + lineTypes.get(0).getId()).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, selectedLineType.getLimitsForLineType().size());
+        assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitAcceptableDuration());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+    }
+
+    private MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream(fileName)) {
+            return new MockMultipartFile("file", fileName, MediaType.MULTIPART_FORM_DATA_VALUE, inputStream);
+        }
+    }
+
+    @Test
+    void testPostLineTypeWithLimitsCatalogError() throws IOException {
+        MockMultipartHttpServletRequestBuilder mockMultipartHttpServletRequestBuilder = multipart(URI_LINE_CATALOG)
+            .file(createMockMultipartFile(NOT_EXISTING_JSON_FILE));
+        String message = assertThrows(ServletException.class, () -> mockMvc.perform(mockMultipartHttpServletRequestBuilder)).getMessage();
+        assertEquals("Request processing failed: java.io.UncheckedIOException: java.io.EOFException", message);
     }
 
     @Test
@@ -1908,7 +1979,7 @@ class ModificationControllerTest {
                 });
         assertEquals(1, networkModificationsResult.size());
         modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
-        assertEquals(1, modificationsSearchResult.size());
+        assertEquals(4, modificationsSearchResult.size());
         assertEquals("GENERATOR_CREATION", modificationsSearchResult.getFirst().getMessageType());
         assertEquals("{\"equipmentId\":\"idGenerator1\"}", modificationsSearchResult.getFirst().getMessageValues());
 

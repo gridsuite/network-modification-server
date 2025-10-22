@@ -9,8 +9,9 @@ package org.gridsuite.modification.server.dto.catalog;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
 import org.gridsuite.modification.server.entities.catalog.UndergroundLineTypeEntity;
+
+import java.util.List;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -29,6 +30,9 @@ public class UndergroundLineTypeInfos extends LineTypeInfos {
 
     @Schema(description = "Screen")
     private String screen;
+
+    @Schema(description = "shapeFactors")
+    private List<Double> shapeFactors;
 
     @Override
     public UndergroundLineTypeEntity toEntity() {

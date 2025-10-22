@@ -362,6 +362,11 @@ class BuildTest {
                 .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("vl9_1_1").busbarSectionId2("vl9_2_1").build()))
                 .build()));
         // add new Load
+        // Need an entity with a lazyloaded subentity/collection to test that all required
+        // data has been loaded during the initial completed transaction before applying modifications:
+        // LoadCreationInfos and other modifications in this test do the job because it has the free properties Collection.
+        // Is there a good way to add in this test that we have 2 short transactions
+        // instead of one long idle transaction ?
         equipmentsToAdd.add(ModificationEntity.fromDTO(LoadCreationInfos.builder()
                 .equipmentId("newLoad")
                 .equipmentName("newLoad")
@@ -611,10 +616,10 @@ class BuildTest {
                 .phaseTapChanger(PhaseTapChangerCreationInfos.builder()
                         .lowTapPosition(1)
                         .tapPosition(2)
-                        .regulatingTerminalId("v1load")
-                        .regulatingTerminalVlId("v1")
+                        .terminalRefConnectableId("v1load")
+                        .terminalRefConnectableVlId("v1")
                         .regulating(false)
-                        .regulatingTerminalType("LOAD")
+                        .terminalRefConnectableType("LOAD")
                         .regulationMode(PhaseTapChanger.RegulationMode.CURRENT_LIMITER)
                         .steps(List.of(TapChangerStepCreationInfos.builder()
                                         .index(1)
@@ -649,9 +654,9 @@ class BuildTest {
                         .tapPosition(6)
                         .regulating(true)
                         .targetDeadband(1.)
-                        .regulatingTerminalId("v2load")
-                        .regulatingTerminalVlId("v2")
-                        .regulatingTerminalType("LOAD")
+                        .terminalRefConnectableId("v2load")
+                        .terminalRefConnectableVlId("v2")
+                        .terminalRefConnectableType("LOAD")
                         .loadTapChangingCapabilities(true)
                         .targetV(5.)
                         .steps(List.of(TapChangerStepCreationInfos.builder()
