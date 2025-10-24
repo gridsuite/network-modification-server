@@ -72,7 +72,9 @@ public class OperationalLimitsGroupModificationEntity {
                                 limitsGroup.getModificationType(),
                                 limitsGroup.getTemporaryLimitsModificationType(),
                                 limitsGroup.getApplicability()
-                )).toList();
+                        )
+                )
+                .toList();
     }
 
     public static List<OperationalLimitsGroupModificationInfos> fromOperationalLimitsGroupsEntities(List<OperationalLimitsGroupModificationEntity> limitsGroupsEntities) {
