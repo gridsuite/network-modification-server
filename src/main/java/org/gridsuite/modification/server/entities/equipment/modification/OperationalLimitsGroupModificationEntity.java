@@ -49,11 +49,11 @@ public class OperationalLimitsGroupModificationEntity {
             ))
     private CurrentLimitsModificationEntity currentLimits;
 
-    @Column(name = "modification_type")
+    @Column(name = "modificationType")
     @Enumerated(EnumType.STRING)
     private OperationalLimitsGroupModificationType modificationType;
 
-    @Column(name = "temporary_limits_modification_type")
+    @Column(name = "temporaryLimitsModificationType")
     @Enumerated(EnumType.STRING)
     private TemporaryLimitModificationType temporaryLimitsModificationType;
 

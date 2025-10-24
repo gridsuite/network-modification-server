@@ -25,7 +25,7 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "current_limits")
+@Table(name = "currentLimits")
 public class CurrentLimitsEntity {
 
     @Id
@@ -33,12 +33,12 @@ public class CurrentLimitsEntity {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "permanent_limit")
+    @Column(name = "permanentLimit")
     private Double permanentLimit;
 
     @ElementCollection
     @CollectionTable(
-            name = "current_temporary_limits",
+            name = "currentTemporaryLimits",
             joinColumns = @JoinColumn(name = "id", foreignKey = @ForeignKey(name = "temporaryLimits_fk_constraint"))
     )
     private List<CurrentTemporaryLimitCreationEmbeddable> temporaryLimits;
