@@ -8,9 +8,12 @@ package org.gridsuite.modification.server.entities.equipment.creation;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.gridsuite.modification.dto.LimitsPropertyInfos;
 import org.gridsuite.modification.dto.OperationalLimitsGroupInfos;
+import org.gridsuite.modification.server.entities.equipment.modification.LimitsPropertyEntity;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -38,6 +41,10 @@ public class OperationalLimitsGroupEntity {
     @Enumerated(EnumType.STRING)
     private OperationalLimitsGroupInfos.Applicability applicability;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "operational_limit_group_id", foreignKey = @ForeignKey(name = "operational_limit_group_id_fk"))
+    private List<LimitsPropertyEntity> limitsProperties;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "current_limits_id",
             referencedColumnName = "id",
@@ -45,6 +52,14 @@ public class OperationalLimitsGroupEntity {
                     name = "current_limits_id_fk"
             ))
     private CurrentLimitsEntity currentLimits;
+
+    private static List<LimitsPropertyEntity> toLimitPropertyEntities(List<LimitsPropertyInfos> properties) {
+        List<LimitsPropertyEntity> result = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(properties)) {
+            result = properties.stream().map(LimitsPropertyEntity::fromLimitsPropertyInfos).toList();
+        }
+        return result;
+    }
 
     public static List<OperationalLimitsGroupEntity> toOperationalLimitsGroupsEntities(@NonNull List<OperationalLimitsGroupInfos> limitsGroups) {
         return limitsGroups.stream()
@@ -54,6 +69,7 @@ public class OperationalLimitsGroupEntity {
                                 null,
                                 limitsGroup.getId(),
                                 limitsGroup.getApplicability(),
+                                toLimitPropertyEntities(limitsGroup.getLimitsProperties()),
                                 new CurrentLimitsEntity(limitsGroup.getCurrentLimits())
                         )
                 )
@@ -68,6 +84,8 @@ public class OperationalLimitsGroupEntity {
                                         .id(limitsGroupEntity.getId())
                                         .applicability(limitsGroupEntity.getApplicability())
                                         .currentLimits(limitsGroupEntity.getCurrentLimits().toCurrentLimitsInfos())
+                                        .limitsProperties(limitsGroupEntity.getLimitsProperties()
+                                            .stream().map(LimitsPropertyEntity::toLimitsPropertyInfos).toList())
                                         .build()
                         )
                         .collect(Collectors.toList());
