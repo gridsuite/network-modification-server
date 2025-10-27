@@ -17,7 +17,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
-import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -64,7 +63,6 @@ public class NetworkModificationApplicator {
     private final NetworkModificationObserver networkModificationObserver;
 
     @Value("${impacts.collection-threshold:50}")
-    @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     @Value("${naming-strategy:Default}")
@@ -106,16 +104,18 @@ public class NetworkModificationApplicator {
             .orElse(PreloadingStrategy.NONE);
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
-        ApplicationStatus groupApplicationStatus;
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            groupApplicationStatus = largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosGroup, listener))
+            return largeNetworkModificationExecutionService
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener))
                 .join();
         } else {
-            groupApplicationStatus = apply(modificationInfosGroup, listener);
+            return applyAndFlush(modificationInfosGroup, listener);
         }
+    }
 
-        return flushModificationApplications(groupApplicationStatus, listener);
+    private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
+            NetworkStoreListener listener) {
+        return flushModificationApplications(apply(modificationInfosGroup, listener), listener);
     }
 
     private NetworkModificationResult flushModificationApplications(ApplicationStatus groupApplicationStatus, NetworkStoreListener listener) {
@@ -147,16 +147,18 @@ public class NetworkModificationApplicator {
                 .orElse(PreloadingStrategy.NONE);
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
-        List<ApplicationStatus> groupsApplicationStatuses;
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            groupsApplicationStatuses = largeNetworkModificationExecutionService
-                .supplyAsync(() -> apply(modificationInfosGroups, listener))
+            return largeNetworkModificationExecutionService
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener))
                 .join();
         } else {
-            groupsApplicationStatuses = apply(modificationInfosGroups, listener);
+            return applyAndFlush(modificationInfosGroups, listener);
         }
+    }
 
-        return flushModificationApplications(groupsApplicationStatuses, listener);
+    private NetworkModificationResult applyAndFlush(List<ModificationApplicationGroup> modificationInfosGroups,
+            NetworkStoreListener listener) {
+        return flushModificationApplications(apply(modificationInfosGroups, listener), listener);
     }
 
     // This method is used when building a variant
