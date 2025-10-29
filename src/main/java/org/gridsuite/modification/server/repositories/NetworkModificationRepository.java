@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.repositories;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
+import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
@@ -16,10 +17,12 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.GenerationDispatchEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularBaseEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularCreationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +64,7 @@ public class NetworkModificationRepository {
     private final TabularPropertyRepository tabularPropertyRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
+    private final FilterService filterService;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
@@ -79,7 +83,8 @@ public class NetworkModificationRepository {
                                          SubstationModificationRepository substationModificationRepository,
                                          VoltageLevelModificationRepository voltageLevelModificationRepository,
                                          TabularPropertyRepository tabularPropertyRepository,
-                                         ModificationApplicationInfosService modificationApplicationInfosService) {
+                                         ModificationApplicationInfosService modificationApplicationInfosService,
+                                         FilterService filterService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
@@ -96,6 +101,7 @@ public class NetworkModificationRepository {
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
         this.tabularPropertyRepository = tabularPropertyRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
+        this.filterService = filterService;
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -440,11 +446,35 @@ public class NetworkModificationRepository {
             .build();
     }
 
+    private GenerationDispatchInfos loadGenerationDispatch(ModificationEntity modificationEntity) {
+        GenerationDispatchEntity generationDispatchEntity = (GenerationDispatchEntity) modificationEntity;
+
+        // get validity of all filters in the generation dispatch modification
+        GenerationDispatchInfos generationDispatchInfos = generationDispatchEntity.toModificationInfos();
+        Map<UUID, String> filterNamesByUuid = new LinkedHashMap<>();
+        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
+        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
+        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
+            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()))
+        );
+        List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
+        Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
+        List<UUID> missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).toList();
+        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterInfos.setValid(missingFilters.contains(filterInfos.getId())));
+        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterInfos.setValid(missingFilters.contains(filterInfos.getId())));
+        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
+            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterInfos.setValid(missingFilters.contains(filterInfos.getId()))));
+
+        return generationDispatchInfos;
+    }
+
     private ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationEntity) {
             return loadTabularModification(modificationEntity);
         } else if (modificationEntity instanceof TabularCreationEntity) {
             return loadTabularCreation(modificationEntity);
+        } else if (modificationEntity instanceof GenerationDispatchEntity) {
+            return loadGenerationDispatch(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }
@@ -757,31 +787,31 @@ public class NetworkModificationRepository {
     private void deleteAllTabularSubModificationsUsingPartition(ModificationType tabularModificationType, List<UUID> subModificationsIds) {
         switch (tabularModificationType) {
             case GENERATOR_CREATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(generatorCreationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(generatorCreationRepository::deleteSomeTabularSubModifications);
             case LOAD_CREATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(loadCreationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(loadCreationRepository::deleteSomeTabularSubModifications);
             case SHUNT_COMPENSATOR_CREATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(shuntCompensatorCreationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(shuntCompensatorCreationRepository::deleteSomeTabularSubModifications);
             case BATTERY_CREATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(batteryCreationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(batteryCreationRepository::deleteSomeTabularSubModifications);
             case GENERATOR_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(generatorModificationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(generatorModificationRepository::deleteSomeTabularSubModifications);
             case LOAD_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(loadModificationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(loadModificationRepository::deleteSomeTabularSubModifications);
             case SHUNT_COMPENSATOR_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(shuntCompensatorModificationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(shuntCompensatorModificationRepository::deleteSomeTabularSubModifications);
             case BATTERY_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(batteryModificationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(batteryModificationRepository::deleteSomeTabularSubModifications);
             case VOLTAGE_LEVEL_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(voltageLevelModificationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(voltageLevelModificationRepository::deleteSomeTabularSubModifications);
             case LINE_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE).forEach(this::deleteSomeLineTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE).forEach(this::deleteSomeLineTabularSubModifications);
             case TWO_WINDINGS_TRANSFORMER_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE).forEach(this::deleteSomeTwtTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE).forEach(this::deleteSomeTwtTabularSubModifications);
             case SUBSTATION_MODIFICATION ->
-                    Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(substationModificationRepository::deleteSomeTabularSubModifications);
+                Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(substationModificationRepository::deleteSomeTabularSubModifications);
             default ->
-                    throw new UnsupportedOperationException(String.format("No sub-modifications deletion method for type: %s", tabularModificationType));
+                throw new UnsupportedOperationException(String.format("No sub-modifications deletion method for type: %s", tabularModificationType));
         }
     }
 
