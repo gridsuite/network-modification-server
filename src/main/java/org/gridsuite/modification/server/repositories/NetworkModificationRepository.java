@@ -13,14 +13,13 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.GenerationDispatchEntity;
-import org.gridsuite.modification.server.entities.tabular.TabularBaseEntity;
-import org.gridsuite.modification.server.entities.tabular.TabularCreationEntity;
-import org.gridsuite.modification.server.entities.tabular.TabularModificationEntity;
+import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
 import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.stereotype.Repository;
@@ -176,7 +175,8 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        loadFullModificationsEntities(movedModifications);
+        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
+        movedModifications.forEach(ModificationEntity::toModificationInfos);
         return movedModifications;
     }
 
@@ -328,6 +328,24 @@ public class NetworkModificationRepository {
     private List<? extends EquipmentModificationEntity> loadTabularModificationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
         List<? extends EquipmentModificationEntity> modifications;
         switch (modificationType) {
+            case GENERATOR_CREATION -> {
+                // load generator modifications with curvePoints
+                modifications = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            case BATTERY_CREATION -> {
+                // load battery modifications with curvePoints
+                modifications = batteryCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
+                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
+                batteryCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            }
+            case LOAD_CREATION ->
+                // load Load modifications with properties
+                modifications = loadCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
+            case SHUNT_COMPENSATOR_CREATION ->
+                // load MCS modifications with properties
+                modifications = shuntCompensatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             case GENERATOR_MODIFICATION -> {
                 // load generator modifications with curvePoints
                 modifications = generatorModificationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
@@ -370,80 +388,29 @@ public class NetworkModificationRepository {
         return modifications;
     }
 
-    private TabularModificationInfos loadTabularModification(ModificationEntity modificationEntity) {
-        TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) modificationEntity;
+    private TabularBaseInfos loadTabularModification(TabularModificationsEntity tabularEntity) {
         // fetch embedded modifications uuids only
-        List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(modificationEntity.getId());
+        List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularModificationIdOrderByModificationsOrder(tabularEntity.getId());
         // optimized entities full loading, per type
-        List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularModificationEntity.getModificationType());
+        List<? extends EquipmentModificationEntity> modifications = loadTabularModificationSubEntities(subModificationsUuids, tabularEntity.getModificationType());
         // re-order the list of entities based on the ordered list of IDs
         List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
-        // then build DTOs
-        var builder = TabularModificationInfos.builder();
-        if (tabularModificationEntity.getType().equals(ModificationType.LIMIT_SETS_TABULAR_MODIFICATION.name())) {
-            builder = LimitSetsTabularModificationInfos.builder();
-        }
-        return builder.uuid(tabularModificationEntity.getId())
-                .date(tabularModificationEntity.getDate())
-                .stashed(tabularModificationEntity.getStashed())
-                .activated(tabularModificationEntity.getActivated())
-                .modificationType(tabularModificationEntity.getModificationType())
+        var builder = switch (ModificationType.valueOf(tabularEntity.getType())) {
+            case ModificationType.TABULAR_CREATION -> TabularCreationInfos.builder();
+            case ModificationType.LIMIT_SETS_TABULAR_MODIFICATION -> LimitSetsTabularModificationInfos.builder();
+            default -> TabularModificationInfos.builder();
+        };
+        return builder.uuid(tabularEntity.getId())
+                .date(tabularEntity.getDate())
+                .stashed(tabularEntity.getStashed())
+                .activated(tabularEntity.getActivated())
+                .modificationType(tabularEntity.getModificationType())
                 .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                .properties(CollectionUtils.isEmpty(tabularModificationEntity.getProperties()) ? null : tabularModificationEntity.getProperties().stream()
+                .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
                         .map(TabularPropertyEntity::toInfos)
                         .toList())
-                .csvFilename(tabularModificationEntity.getCsvFilename())
+                .csvFilename(tabularEntity.getCsvFilename())
                 .build();
-    }
-
-    private List<? extends EquipmentModificationEntity> loadTabularCreationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
-        List<? extends EquipmentModificationEntity> modifications;
-        switch (modificationType) {
-            case GENERATOR_CREATION -> {
-                // load generator modifications with curvePoints
-                modifications = generatorCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
-                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
-                generatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-            }
-            case BATTERY_CREATION -> {
-                // load battery modifications with curvePoints
-                modifications = batteryCreationRepository.findAllReactiveCapabilityCurvePointsByIdIn(subModificationsUuids).stream().toList();
-                // load properties too, it uses hibernate first-level cache to fill them up directly in modifications
-                batteryCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-            }
-            case LOAD_CREATION ->
-                // load Load modifications with properties
-                modifications = loadCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-            case SHUNT_COMPENSATOR_CREATION ->
-                // load MCS modifications with properties
-                modifications = shuntCompensatorCreationRepository.findAllPropertiesByIdIn(subModificationsUuids);
-            default ->
-                throw new UnsupportedOperationException(String.format("No sub-modifications loading for creation type: %s", modificationType));
-        }
-        return modifications;
-    }
-
-    private TabularCreationInfos loadTabularCreation(ModificationEntity modificationEntity) {
-        TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) modificationEntity;
-        // fetch embedded modifications uuids only
-        List<UUID> subModificationsUuids = modificationRepository.findSubModificationIdsByTabularCreationIdOrderByModificationsOrder(modificationEntity.getId());
-        // optimized entities full loading, per type
-        List<? extends EquipmentModificationEntity> modifications = loadTabularCreationSubEntities(subModificationsUuids, tabularCreationEntity.getCreationType());
-        // re-order the list of entities based on the ordered list of IDs
-        List<EquipmentModificationEntity> orderedModifications = reorderModifications(modifications, subModificationsUuids);
-        // then build DTOs
-        return TabularCreationInfos.builder()
-                .uuid(tabularCreationEntity.getId())
-                .date(tabularCreationEntity.getDate())
-                .stashed(tabularCreationEntity.getStashed())
-                .activated(tabularCreationEntity.getActivated())
-                .creationType(tabularCreationEntity.getCreationType())
-                .creations(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                .properties(CollectionUtils.isEmpty(tabularCreationEntity.getProperties()) ? null : tabularCreationEntity.getProperties().stream()
-                        .map(TabularPropertyEntity::toInfos)
-                        .toList())
-                .csvFilename(tabularCreationEntity.getCsvFilename())
-            .build();
     }
 
     private GenerationDispatchInfos loadGenerationDispatch(ModificationEntity modificationEntity) {
@@ -468,11 +435,9 @@ public class NetworkModificationRepository {
         return generationDispatchInfos;
     }
 
-    private ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
-        if (modificationEntity instanceof TabularModificationEntity) {
-            return loadTabularModification(modificationEntity);
-        } else if (modificationEntity instanceof TabularCreationEntity) {
-            return loadTabularCreation(modificationEntity);
+    public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
+        if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
+            return loadTabularModification(tabularEntity);
         } else if (modificationEntity instanceof GenerationDispatchEntity) {
             return loadGenerationDispatch(modificationEntity);
         }
@@ -491,7 +456,8 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
         List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
-        loadFullModificationsEntities(modificationsEntities);
+        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
+        modificationsEntities.forEach(m -> m.toModificationInfos());
         return modificationsEntities;
     }
 
@@ -700,14 +666,12 @@ public class NetworkModificationRepository {
         // Tabular modifications optimization:
         // Before updating/adding with new sub-modifications, we delete and clear existing sub-modifications manually
         // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
-        if (modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION || modificationInfos.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
-            TabularModificationEntity tabularModificationEntity = (TabularModificationEntity) entity;
-            deleteTabularModificationSubModifications(tabularModificationEntity);
-            tabularModificationEntity.update(modificationInfos);
-        } else if (modificationInfos.getType() == ModificationType.TABULAR_CREATION) {
-            TabularCreationEntity tabularCreationEntity = (TabularCreationEntity) entity;
-            deleteTabularCreationSubModifications(tabularCreationEntity);
-            tabularCreationEntity.update(modificationInfos);
+        if (modificationInfos.getType() == ModificationType.TABULAR_CREATION
+                || modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION
+                || modificationInfos.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
+            TabularModificationsEntity tabularEntity = (TabularModificationsEntity) entity;
+            deleteTabularModificationSubModifications(tabularEntity);
+            tabularEntity.update(modificationInfos);
         } else {
             entity.update(modificationInfos);
         }
@@ -751,25 +715,15 @@ public class NetworkModificationRepository {
         // efficient so no need to dig deeper about that for now.
 
         // delete tabular modifications/creations
-        List<TabularModificationEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationEntity.class::isInstance).map(TabularModificationEntity.class::cast).toList();
+        List<TabularModificationsEntity> tabularModificationsToDelete = modificationEntities.stream().filter(TabularModificationsEntity.class::isInstance).map(TabularModificationsEntity.class::cast).toList();
         tabularModificationsToDelete.forEach(this::deleteTabularModification);
-        List<TabularCreationEntity> tabularCreationsToDelete = modificationEntities.stream().filter(TabularCreationEntity.class::isInstance).map(TabularCreationEntity.class::cast).toList();
-        tabularCreationsToDelete.forEach(this::deleteTabularCreation);
 
         // delete other modification types with "in" requests
-        List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularBaseEntity.class::isInstance)).map(ModificationEntity::getId).toList();
+        List<UUID> uuidsToDelete = modificationEntities.stream().filter(Predicate.not(TabularModificationsEntity.class::isInstance)).map(ModificationEntity::getId).toList();
         if (!uuidsToDelete.isEmpty()) {
             modificationApplicationInfosService.deleteAllByModificationIds(uuidsToDelete);
             modificationRepository.deleteAllByIdIn(uuidsToDelete);
         }
-    }
-
-    private void deleteTabularCreation(TabularCreationEntity tabularCreationEntity) {
-        deleteTabular(tabularCreationEntity.getCreationType(), tabularCreationEntity);
-    }
-
-    private void deleteTabularModification(TabularModificationEntity tabularModificationEntity) {
-        deleteTabular(tabularModificationEntity.getModificationType(), tabularModificationEntity);
     }
 
     private void deleteSomeLineTabularSubModifications(List<UUID> subModificationsIds) {
@@ -815,46 +769,27 @@ public class NetworkModificationRepository {
         }
     }
 
-    private void deleteTabular(ModificationType tabularModificationType, ModificationEntity modificationEntity) {
-        UUID modificationUuid = modificationEntity.getId();
+    private void deleteTabularModification(TabularModificationsEntity tabularEntity) {
+        UUID modificationUuid = tabularEntity.getId();
         List<UUID> modificationToCleanUuids = new ArrayList<>();
         modificationToCleanUuids.add(modificationUuid);
-        List<UUID> subModificationsIds = modificationEntity instanceof TabularModificationEntity ?
-                modificationRepository.findSubModificationIdsByTabularModificationId(modificationUuid) :
-                modificationRepository.findSubModificationIdsByTabularCreationId(modificationUuid);
+        List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(modificationUuid);
         modificationToCleanUuids.addAll(subModificationsIds);
-
         modificationApplicationInfosService.deleteAllByModificationIds(modificationToCleanUuids);
         tabularPropertyRepository.deleteTabularProperties(modificationUuid);
-        deleteAllTabularSubModificationsUsingPartition(tabularModificationType, subModificationsIds);
-        if (modificationEntity instanceof TabularModificationEntity) {
-            // line functions works for any modification case
-            lineModificationRepository.deleteTabularModificationModifications(modificationUuid, subModificationsIds);
-            lineModificationRepository.deleteTabularModificationItself(modificationUuid);
-        } else {
-            // generator functions works for any creation case
-            generatorCreationRepository.deleteTabularCreationCreations(modificationUuid, subModificationsIds);
-            generatorCreationRepository.deleteTabularCreationItself(modificationUuid);
-        }
+        deleteAllTabularSubModificationsUsingPartition(tabularEntity.getModificationType(), subModificationsIds);
+        // line functions work for any type
+        lineModificationRepository.deleteTabularModificationModifications(modificationUuid, subModificationsIds);
+        lineModificationRepository.deleteTabularModificationItself(modificationUuid);
     }
 
-    private void deleteTabularCreationSubModifications(TabularCreationEntity tabularCreationEntity) {
-        UUID modificationId = tabularCreationEntity.getId();
-        List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularCreationId(modificationId);
-        tabularCreationEntity.setCreations(null);
-        modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
-        deleteAllTabularSubModificationsUsingPartition(tabularCreationEntity.getCreationType(), subModificationsIds);
-        // generator function works for any creation case
-        generatorCreationRepository.deleteTabularCreationCreations(modificationId, subModificationsIds);
-    }
-
-    private void deleteTabularModificationSubModifications(TabularModificationEntity tabularModificationEntity) {
+    private void deleteTabularModificationSubModifications(TabularModificationsEntity tabularModificationEntity) {
         UUID modificationId = tabularModificationEntity.getId();
         List<UUID> subModificationsIds = modificationRepository.findSubModificationIdsByTabularModificationId(modificationId);
         tabularModificationEntity.setModifications(null);
         modificationApplicationInfosService.deleteAllByModificationIds(subModificationsIds);
         deleteAllTabularSubModificationsUsingPartition(tabularModificationEntity.getModificationType(), subModificationsIds);
-        // line function works for any modification case
+        // line function works for any type
         lineModificationRepository.deleteTabularModificationModifications(modificationId, subModificationsIds);
     }
 
