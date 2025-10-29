@@ -424,13 +424,18 @@ public class NetworkModificationRepository {
         generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
             frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()))
         );
-        List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
-        Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
-        List<UUID> missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).toList();
-        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterInfos.setValid(missingFilters.contains(filterInfos.getId())));
-        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterInfos.setValid(missingFilters.contains(filterInfos.getId())));
+        Set<UUID> missingFilters;
+        if (!filterNamesByUuid.isEmpty()) {
+            List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
+            Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
+            missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).collect(Collectors.toSet());
+        } else {
+            missingFilters = Set.of();
+        }
+        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterInfos.setValid(!missingFilters.contains(filterInfos.getId())));
+        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterInfos.setValid(!missingFilters.contains(filterInfos.getId())));
         generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
-            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterInfos.setValid(missingFilters.contains(filterInfos.getId()))));
+            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterInfos.setValid(!missingFilters.contains(filterInfos.getId()))));
 
         return generationDispatchInfos;
     }
