@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1761038945016-3">
+        <modifyDataType columnName="area" newDataType="varchar(255)" tableName="limits_for_line_type"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761038945016-4">
+        <modifyDataType columnName="limit_set_name" newDataType="varchar(255)" tableName="limits_for_line_type"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761038945016-9">
+        <modifyDataType columnName="temperature" newDataType="varchar(255)" tableName="limits_for_line_type"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761038945016-10">
+        <modifyDataType columnName="temporary_limit_name" newDataType="varchar(255)" tableName="limits_for_line_type"/>
+    </changeSet>
+</databaseChangeLog>
