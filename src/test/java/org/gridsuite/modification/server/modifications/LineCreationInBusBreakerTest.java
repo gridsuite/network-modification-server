@@ -117,7 +117,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                             .currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(1.0).temporaryLimits(Collections.emptyList()).build()
                             )
-                            .id("limitSet1").applicability(SIDE2)
+                            .id("limitSet1").applicability(SIDE2).limitsProperties(Collections.emptyList())
                             .build()
                     )
                 )
@@ -149,7 +149,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE1).build()
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .build();
@@ -243,10 +243,10 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                 List.of(
                     OperationalLimitsGroupInfos.builder().currentLimits(
                         CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
-                        .applicability(SIDE1).build(),
+                        .applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                     OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
-                        .applicability(SIDE2).build()
+                        .applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                 )
             )
             .voltageLevelId2("v2")

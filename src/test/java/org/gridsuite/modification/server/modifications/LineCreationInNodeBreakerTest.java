@@ -340,10 +340,10 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE1).build(),
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE2).build()
+                        ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .connectionName1("cn1LineEdited")
