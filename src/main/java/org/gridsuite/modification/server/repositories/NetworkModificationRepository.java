@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.repositories;
 import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
-import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
@@ -18,10 +17,8 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.GenerationDispatchEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
-import org.gridsuite.modification.server.service.FilterService;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +60,6 @@ public class NetworkModificationRepository {
     private final TabularPropertyRepository tabularPropertyRepository;
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
-    private final FilterService filterService;
 
     private static final String MODIFICATION_NOT_FOUND_MESSAGE = "Modification (%s) not found";
 
@@ -82,8 +78,7 @@ public class NetworkModificationRepository {
                                          SubstationModificationRepository substationModificationRepository,
                                          VoltageLevelModificationRepository voltageLevelModificationRepository,
                                          TabularPropertyRepository tabularPropertyRepository,
-                                         ModificationApplicationInfosService modificationApplicationInfosService,
-                                         FilterService filterService) {
+                                         ModificationApplicationInfosService modificationApplicationInfosService) {
         this.modificationGroupRepository = modificationGroupRepository;
         this.modificationRepository = modificationRepository;
         this.generatorCreationRepository = generatorCreationRepository;
@@ -100,7 +95,6 @@ public class NetworkModificationRepository {
         this.voltageLevelModificationRepository = voltageLevelModificationRepository;
         this.tabularPropertyRepository = tabularPropertyRepository;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
-        this.filterService = filterService;
     }
 
     @Transactional // To have all the delete in the same transaction (atomic)
@@ -413,38 +407,9 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    private GenerationDispatchInfos loadGenerationDispatch(ModificationEntity modificationEntity) {
-        GenerationDispatchEntity generationDispatchEntity = (GenerationDispatchEntity) modificationEntity;
-
-        // get validity of all filters in the generation dispatch modification
-        GenerationDispatchInfos generationDispatchInfos = generationDispatchEntity.toModificationInfos();
-        Map<UUID, String> filterNamesByUuid = new LinkedHashMap<>();
-        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
-        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
-        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
-            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()))
-        );
-        Set<UUID> missingFilters;
-        if (!filterNamesByUuid.isEmpty()) {
-            List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
-            Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
-            missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).collect(Collectors.toSet());
-        } else {
-            missingFilters = Set.of();
-        }
-        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterInfos.setValid(!missingFilters.contains(filterInfos.getId())));
-        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterInfos.setValid(!missingFilters.contains(filterInfos.getId())));
-        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
-            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterInfos.setValid(!missingFilters.contains(filterInfos.getId()))));
-
-        return generationDispatchInfos;
-    }
-
     public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
-        } else if (modificationEntity instanceof GenerationDispatchEntity) {
-            return loadGenerationDispatch(modificationEntity);
         }
         return modificationEntity.toModificationInfos();
     }

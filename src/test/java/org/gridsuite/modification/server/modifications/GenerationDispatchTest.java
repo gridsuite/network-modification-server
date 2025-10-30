@@ -308,7 +308,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessageWithoutRank("Marginal cost: 150.0", "network.modification.MaxUsedMarginalCost", reportService);
         assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
         assertLogMessageWithoutRank("Sum of generator active power setpoints in WEST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
-        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
+        wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false, 2);
     }
 
     @Test
@@ -339,6 +339,11 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForFixedSupply = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_4)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(filtersForFixedSupply))
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+
+        UUID stubIdForGetFilters = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3 + "," + FILTER_ID_4)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(getFilters1234()))
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = getJsonBody(modification, null);
@@ -380,6 +385,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
         assertLogMessageWithoutRank("Sum of generator active power setpoints in EAST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
 
+        wireMockUtils.verifyGetRequest(stubIdForGetFilters, PATH, handleQueryParams(getFilters1234().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(filtersForPmaxReduction.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFixedSupply, PATH, handleQueryParams(filtersForFixedSupply.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }
@@ -413,6 +419,16 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         return List.of(getFilter(FILTER_ID_6, List.of(getIdentifiableAttributes(TEST1_ID))));
     }
 
+    private static List<AbstractFilter> getFilters1234() {
+        return List.of(getFilter(FILTER_ID_1, List.of()), getFilter(FILTER_ID_2, List.of()), getFilter(FILTER_ID_3, List.of()),
+            getFilter(FILTER_ID_4, List.of()));
+    }
+
+    private static List<AbstractFilter> getFilters123456() {
+        return List.of(getFilter(FILTER_ID_1, List.of()), getFilter(FILTER_ID_2, List.of()), getFilter(FILTER_ID_3, List.of()),
+            getFilter(FILTER_ID_4, List.of()), getFilter(FILTER_ID_5, List.of()), getFilter(FILTER_ID_6, List.of()));
+    }
+
     @Test
     void testGenerationDispatchWithFrequencyReserve() throws Exception {
         ModificationInfos modification = buildModification();
@@ -436,6 +452,10 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         UUID stubIdForFrequencyReserve2 = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_6)
             .willReturn(WireMock.ok()
                 .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        UUID stubIdForGetFilters = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3 + "," + FILTER_ID_4 + "," + FILTER_ID_5 + "," + FILTER_ID_6)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(getFilters123456()))
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = getJsonBody(modification, null);
@@ -472,6 +492,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
         assertLogMessageWithoutRank("Sum of generator active power setpoints in WEST region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
 
+        wireMockUtils.verifyGetRequest(stubIdForGetFilters, PATH, handleQueryParams(getFilters123456().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getGeneratorsWithoutOutageFilters123().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilters45().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve2, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilter6().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
@@ -597,6 +618,10 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .willReturn(WireMock.ok()
                         .withBody(mapper.writeValueAsString(getGeneratorsFrequencyReserveFilter6()))
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+        UUID stubIdForGetFilters = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3 + "," + FILTER_ID_4 + "," + FILTER_ID_5 + "," + FILTER_ID_6)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(getFilters123456()))
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = getJsonBody(modification, null);
         MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
@@ -628,6 +653,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         assertLogMessageWithoutRank("The supply-demand balance could be met", "network.modification.SupplyDemandBalanceCouldBeMet", reportService);
         assertLogMessageWithoutRank("Sum of generator active power setpoints in NORTH region: 330.0 MW (NUCLEAR: 0.0 MW, THERMAL: 0.0 MW, HYDRO: 330.0 MW, WIND AND SOLAR: 0.0 MW, OTHER: 0.0 MW).", "network.modification.SumGeneratorActivePower", reportService);
 
+        wireMockUtils.verifyGetRequest(stubIdForGetFilters, PATH, handleQueryParams(getFilters123456().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getGeneratorsWithoutOutageFilters123().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilters45().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve2, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilter6().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
