@@ -149,7 +149,7 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.0).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build()
+                        ).applicability(SIDE1).limitsProperties(List.of(new LimitsPropertyInfos(PROPERTY_NAME, PROPERTY_VALUE))).build()
                     )
                 )
                 .build();
