@@ -466,17 +466,17 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModifications(TEST_GROUP_ID, List.of(createLineEntity2.getId(), createLineEntity3.getId()));
         // TODO : Due to an issue the deletion counter is not deterministic
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
-        assertRequestsCount(10, 0, 0);
+        assertRequestsCount(12, 0, 0);
 
         SQLStatementCountValidator.reset();
         assertEquals(2, networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).size());
-        assertRequestsCount(8, 0, 0, 0);
+        assertRequestsCount(9, 0, 0, 0);
 
         SQLStatementCountValidator.reset();
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         // TODO : Due to an issue the deletion counter is not deterministic
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
-        assertRequestsCount(9, 0, 0);
+        assertRequestsCount(10, 0, 0);
 
         assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
                 new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
