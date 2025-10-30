@@ -56,7 +56,7 @@
         <!-- FIXME: powsybl-network-store modules'version is overloaded in the dependencies section.The overloads and this property below have to be removed at next powsybl-ws-dependencies.version upgrade -->
         <powsybl-network-store.version>1.31.0</powsybl-network-store.version>
         <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
-        <gridsuite-filter.version>1.6.0</gridsuite-filter.version>
+        <gridsuite-filter.version>1.7.0</gridsuite-filter.version>
     </properties>
 
     <build>
