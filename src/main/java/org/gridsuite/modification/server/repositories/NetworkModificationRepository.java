@@ -169,7 +169,8 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        loadFullModificationsEntities(movedModifications);
+        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
+        movedModifications.forEach(ModificationEntity::toModificationInfos);
         return movedModifications;
     }
 
