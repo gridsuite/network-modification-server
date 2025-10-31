@@ -1983,7 +1983,8 @@ class ModificationControllerTest {
                 });
         assertEquals(1, networkModificationsResult.size());
         modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
-        assertEquals(4, modificationsSearchResult.size());
+        assertEquals(1, modificationsSearchResult.size());
+        assertEquals(4, modificationsSearchResult.getFirst().getImpactedEquipmentIds().size());
         assertEquals("GENERATOR_CREATION", modificationsSearchResult.getFirst().getMessageType());
         assertEquals("{\"equipmentId\":\"idGenerator1\"}", modificationsSearchResult.getFirst().getMessageValues());
 
