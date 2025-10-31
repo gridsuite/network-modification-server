@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,10 +66,10 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                        ).applicability(SIDE1).build(),
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                        ).applicability(SIDE2).build()
+                        ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .connectionName1("cn201")
@@ -182,10 +183,10 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                         OperationalLimitsGroupInfos.builder().currentLimits(CurrentLimitsInfos.builder()
                             .permanentLimit(3.)
                             .temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                        ).applicability(SIDE1).build(),
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(CurrentLimitsInfos.builder()
                             .permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                        ).applicability(SIDE2).build()
+                        ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .connectionName1("cn2012")
