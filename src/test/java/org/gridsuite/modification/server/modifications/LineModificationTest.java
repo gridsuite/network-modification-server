@@ -29,6 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,6 +97,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("newOpLG1")
                                 .applicability(SIDE1)
+                                .limitsProperties(Collections.emptyList())
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(12.0)
@@ -112,6 +114,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("newOpLG2")
                                 .applicability(SIDE2)
+                                .limitsProperties(Collections.emptyList())
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(22.0)
@@ -127,6 +130,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                         OperationalLimitsGroupModificationInfos.builder()
                                 .id("DEFAULT")
                                 .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                                .limitsProperties(Collections.emptyList())
                                 .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                                 .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
                                 .currentLimits(CurrentLimitsModificationInfos.builder()
@@ -162,6 +166,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .operationalLimitsGroups(List.of(OperationalLimitsGroupModificationInfos.builder()
                         .id("DEFAULT")
                         .applicability(OperationalLimitsGroupInfos.Applicability.SIDE1)
+                        .limitsProperties(Collections.emptyList())
                         .modificationType(OperationalLimitsGroupModificationType.MODIFY)
                         .temporaryLimitsModificationType(TemporaryLimitModificationType.REPLACE)
                         .currentLimits(CurrentLimitsModificationInfos.builder()

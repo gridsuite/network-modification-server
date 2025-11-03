@@ -76,6 +76,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("DEFAULT")
                                 .applicability(SIDE1)
+                                .limitsProperties(Collections.emptyList())
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(12.0)
@@ -92,6 +93,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("DEFAULT")
                                 .applicability(SIDE2)
+                                .limitsProperties(Collections.emptyList())
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(22.0)
@@ -339,6 +341,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("DEFAULT")
                                 .applicability(SIDE1)
+                                .limitsProperties(Collections.emptyList())
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(21.1)
@@ -355,6 +358,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("DEFAULT")
                                 .applicability(SIDE2)
+                                .limitsProperties(Collections.emptyList())
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(22.1)
