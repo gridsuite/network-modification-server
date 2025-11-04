@@ -13,10 +13,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
  * @author Souissi Maissa <souissi.maissa at rte-france.com>
+ * @author Caroline Jeandat <caroline.jeandat at rte-france.com>
  */
 @Getter
 @NoArgsConstructor
@@ -27,20 +29,14 @@ public class ModificationsSearchResult {
     @Schema(description = "Modification id")
     private UUID modificationUuid;
 
-    @Schema(
-            description = "Message type"
-    )
+    @Schema(description = "Message type")
     private String messageType;
 
-    @Schema(
-            description = "Impacted equipment ID"
-    )
-
-    private String impactedEquipmentId;
-    @Schema(
-            description = "Message values"
-    )
+    @Schema(description = "Message values")
     private String messageValues;
+
+    @Schema(description = "List of impacted equipment IDs")
+    private List<String> impactedEquipmentIds;
 
     public static ModificationsSearchResult.ModificationsSearchResultBuilder fromModificationEntity(ModificationEntity modificationEntity) {
         return ModificationsSearchResult.builder()
