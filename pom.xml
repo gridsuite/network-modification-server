@@ -54,6 +54,7 @@
         <!-- TODO network-modification.version remove when upgrading gridsuite dependencies -->
         <network-modification.version>0.45.0</network-modification.version>
         <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
+        <gridsuite-filter.version>1.7.0</gridsuite-filter.version>
     </properties>
 
     <build>
@@ -119,6 +120,13 @@
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-balances-adjustment</artifactId>
                 <version>${powsybl-balances-adjustment.version}</version>
+            </dependency>
+
+            <!-- todo: delete gridsuite-filter from dependencyManagement when this server supports the newer version -->
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-filter</artifactId>
+                <version>${gridsuite-filter.version}</version>
             </dependency>
 
             <!-- imports -->
