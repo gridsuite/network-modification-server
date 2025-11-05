@@ -19,12 +19,12 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.stubbing.Answer;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,13 +46,13 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
     @BeforeEach
     void specificSetUp() {
         // Currently we never apply composite modifications (apply mocked)
-        NetworkModificationResult networkModificationResultMock = NetworkModificationResult.builder()
+        CompletableFuture<NetworkModificationResult> networkModificationResultMock = CompletableFuture.completedFuture(NetworkModificationResult.builder()
                 .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
                 .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
                 .networkImpacts(List.of())
-                .build();
+                .build());
         when(networkModificationApplicator.applyModifications(any(ModificationApplicationGroup.class), any()))
-                .then((Answer<NetworkModificationResult>) invocation -> networkModificationResultMock);
+                .then(invocation -> networkModificationResultMock);
     }
 
     @Override

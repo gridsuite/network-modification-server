@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult.Applicati
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -82,7 +83,7 @@ class NetworkModificationApplicatorTest {
 
         when(modificationInfosList.get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
