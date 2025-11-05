@@ -28,13 +28,13 @@ public final class AsyncUtils {
     // If we change it (for example to parallel scheduling), we should keep the exceptional behavior consistent,
     // call the apply function inside a thenCompose anyway to wrap its exceptions in exceptional future completions.
     public static CompletableFuture<List<Optional<NetworkModificationResult>>> scheduleApplyModifications(
-        Function<ModificationApplicationContext, Optional<NetworkModificationResult>> func,
+        Function<ModificationApplicationContext, CompletableFuture<Optional<NetworkModificationResult>>> func,
         List<ModificationApplicationContext> applicationContexts) {
         List<CompletableFuture<Optional<NetworkModificationResult>>> results = new ArrayList<>(applicationContexts.size());
         CompletableFuture<?> chainedFutures = CompletableFuture.completedFuture(null);
         for (ModificationApplicationContext applicationContext : applicationContexts) {
             chainedFutures = chainedFutures.thenCompose(unused -> {
-                var cf = CompletableFuture.completedFuture(func.apply(applicationContext));
+                var cf = func.apply(applicationContext);
                 // thencompose, this should add the computation result to the list and
                 // and schedule the next computation in the same thread as the task
                 // The list is accessed from different threads but not concurrently and

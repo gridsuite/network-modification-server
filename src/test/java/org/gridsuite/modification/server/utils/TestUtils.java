@@ -22,6 +22,10 @@ import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
+import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
+import org.gridsuite.modification.server.dto.NetworkInfos;
+import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
@@ -227,5 +231,9 @@ public final class TestUtils {
 
     private static ObjectMapper getObjectMapper() {
         return new ObjectMapper().registerModule(new JavaTimeModule());
+    }
+
+    public static NetworkModificationResult applyModificationsBlocking(NetworkModificationApplicator applicator, ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
+        return applicator.applyModifications(modificationInfosGroup, networkInfos).join();
     }
 }
