@@ -47,6 +47,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -205,7 +206,6 @@ public class NetworkModificationService {
     private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationEntity> modifications, List<ModificationApplicationContext> applicationContexts) {
         // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
-        List<CompletableFuture<Optional<NetworkModificationResult>>> results = new ArrayList<>(applicationContexts.size());
         return scheduleApplyModifications(
             modificationApplicationContext ->
                 applyModifications(
@@ -216,34 +216,8 @@ public class NetworkModificationService {
                         new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
                     )
                 ),
-            applicationContexts, results
-        ).thenApply(unused ->
-            results.stream().map(CompletableFuture::resultNow).toList());
-    }
-
-    /**
-     * @param results should pass an empty list to be filled with the results
-     */
-    // The signature of this method is chosen so that we can implement easily sequential or parallel schedule
-    // If we change it (for example to parallel scheduling), we should keep the exceptional behavior consistent,
-    // call the apply function inside a thenCompose anyway to wrap its exceptions in exceptional future completions.
-    private static CompletableFuture<Void> scheduleApplyModifications(
-            Function<ModificationApplicationContext, CompletableFuture<Optional<NetworkModificationResult>>> func,
-            List<ModificationApplicationContext> applicationContexts,
-            List<CompletableFuture<Optional<NetworkModificationResult>>> results) {
-        CompletableFuture<?> chainedFutures = CompletableFuture.completedFuture(null);
-        for (ModificationApplicationContext applicationContext : applicationContexts) {
-            chainedFutures = chainedFutures.thenCompose(unused -> {
-                var cf = func.apply(applicationContext);
-                // thencompose, this should add the computation result to the list and
-                // and schedule the next computation in the same thread as the task
-                // The list is accessed from different threads but not concurrently and
-                // with happens-before semantics.
-                results.add(cf);
-                return cf;
-            });
-        }
-        return chainedFutures.thenCompose(unused -> CompletableFuture.completedFuture(null));
+            applicationContexts
+        );
     }
 
     public Network cloneNetworkVariant(UUID networkUuid,
@@ -347,7 +321,7 @@ public class NetworkModificationService {
         }
     }
 
-    private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
                 .map(ModificationEntity::getType)
@@ -357,10 +331,10 @@ public class NetworkModificationService {
 
             // try to apply the duplicated modifications (incremental mode)
             if (networkInfos.isVariantPresent()) {
-                return modificationApplicator.applyModifications(modificationGroupInfos, networkInfos).thenApply(Optional::of);
+                return Optional.of(modificationApplicator.applyModifications(modificationGroupInfos, networkInfos));
             }
         }
-        return CompletableFuture.completedFuture(Optional.empty());
+        return Optional.empty();
     }
 
     public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {

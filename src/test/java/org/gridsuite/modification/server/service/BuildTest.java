@@ -982,7 +982,7 @@ class BuildTest {
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
         // Building mode : No error send with exception
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModificationsBlocking(
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(
             new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, reporterId)),
             new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);

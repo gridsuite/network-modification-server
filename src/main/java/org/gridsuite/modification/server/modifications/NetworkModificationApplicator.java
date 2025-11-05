@@ -36,7 +36,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 
@@ -96,7 +95,7 @@ public class NetworkModificationApplicator {
      * medium : preloadingStrategy = COLLECTION
      * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
      */
-    public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
+    public NetworkModificationResult applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
             .map(ModificationEntity::getType)
             .map(ModificationType::valueOf)
@@ -107,14 +106,10 @@ public class NetworkModificationApplicator {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener));
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener)).join();
         } else {
-            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener));
+            return applyAndFlush(modificationInfosGroup, listener);
         }
-    }
-
-    public NetworkModificationResult applyModificationsBlocking(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
-        return this.applyModifications(modificationInfosGroup, networkInfos).join();
     }
 
     private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
