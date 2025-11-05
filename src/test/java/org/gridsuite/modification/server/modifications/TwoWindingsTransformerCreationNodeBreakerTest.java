@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -73,10 +74,10 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
                                     CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(2147483647).value(671.).build()
                                 )
                             ).build()
-                        ).applicability(SIDE1).build(),
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                        ).applicability(SIDE2).build()
+                        ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .connectionName1("cn201")
@@ -191,10 +192,10 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
-                        ).applicability(SIDE1).build(),
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
-                        ).applicability(SIDE2).build()
+                        ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .connectionName1("cn2012")

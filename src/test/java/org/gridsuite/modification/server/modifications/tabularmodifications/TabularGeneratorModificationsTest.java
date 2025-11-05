@@ -12,6 +12,8 @@ import com.powsybl.iidm.network.StaticVarCompensator;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
+import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
+import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -368,7 +370,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (8, 0, 0, 15) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 0, 1);
+        TestUtils.assertRequestsCount(7, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
         assertEquals(0, tabularPropertyRepository.count());
     }
@@ -380,7 +382,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (12, 0, 0, 29) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(12, 0, 0, 1);
+        TestUtils.assertRequestsCount(11, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
     }
 

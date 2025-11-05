@@ -437,7 +437,6 @@ public class NetworkModificationService {
 
         List<ModificationsSearchResult> filteredSearchModificationsResult = rawSearchModificationInfos.stream()
                 .map(result -> findMatchingEquipmentResults(modificationEntitiesById.get(result.getModificationUuid()), result, userInput))
-                .flatMap(List::stream)
                 .toList();
 
         return groupSearchResultsByGroupUuid(filteredSearchModificationsResult, rawSearchModificationInfos);
@@ -465,14 +464,13 @@ public class NetworkModificationService {
                 .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
     }
 
-    private List<ModificationsSearchResult> findMatchingEquipmentResults(
+    private ModificationsSearchResult findMatchingEquipmentResults(
             ModificationEntity modificationEntity,
             ModificationApplicationInfos matchedModification,
             String userInput) {
         Pattern pattern = Pattern.compile(Pattern.quote(stripAccents(userInput)), Pattern.CASE_INSENSITIVE);
 
-        List<ModificationsSearchResult> modificationSearchResults = new ArrayList<>();
-        Stream.of(
+        List<String> impactedEquipmentIds = Stream.of(
                         matchedModification.getCreatedEquipmentIds(),
                         matchedModification.getModifiedEquipmentIds(),
                         matchedModification.getDeletedEquipmentIds()
@@ -481,12 +479,11 @@ public class NetworkModificationService {
                 .flatMap(Collection::stream)
                 .distinct()
                 .filter(id -> pattern.matcher(stripAccents(id)).find())
-                .map(id -> ModificationsSearchResult.fromModificationEntity(modificationEntity)
-                        .impactedEquipmentId(id)
-                        .build())
-                .forEach(modificationSearchResults::add);
+                .toList();
 
-        return modificationSearchResults;
+        return ModificationsSearchResult.fromModificationEntity(modificationEntity)
+                        .impactedEquipmentIds(impactedEquipmentIds)
+                        .build();
     }
 
     private static String stripAccents(String input) {

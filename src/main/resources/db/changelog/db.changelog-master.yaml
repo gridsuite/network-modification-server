@@ -417,3 +417,12 @@ databaseChangeLog:
   - include:
       file: changesets/changelog_20250923T141508Z.xml
       relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20250930T101841Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20250930T132326Z.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/changelog_20251009T130154Z.xml
+      relativeToChangelogFile: true

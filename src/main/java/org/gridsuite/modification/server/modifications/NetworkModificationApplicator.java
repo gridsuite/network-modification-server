@@ -17,7 +17,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
-import lombok.Setter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
@@ -65,7 +64,6 @@ public class NetworkModificationApplicator {
     private final NetworkModificationObserver networkModificationObserver;
 
     @Value("${impacts.collection-threshold:50}")
-    @Setter // TODO REMOVE when VoltageInitReportTest will no longer use NetworkModificationApplicator
     private Integer collectionThreshold;
 
     @Value("${naming-strategy:Default}")

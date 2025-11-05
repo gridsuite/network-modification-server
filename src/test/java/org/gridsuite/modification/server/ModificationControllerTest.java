@@ -19,7 +19,6 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import jakarta.servlet.ServletException;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
@@ -52,9 +51,9 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -118,13 +117,13 @@ class ModificationControllerTest {
 
     @Autowired
     private ObjectMapper mapper;
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
 
-    @MockBean
+    @MockitoBean
     private ReportService reportService;
 
     @Autowired
@@ -1701,11 +1700,16 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testPostLineTypeWithLimitsCatalogError() throws IOException {
+    void testPostLineTypeWithLimitsCatalogError() throws Exception {
         MockMultipartHttpServletRequestBuilder mockMultipartHttpServletRequestBuilder = multipart(URI_LINE_CATALOG)
             .file(createMockMultipartFile(NOT_EXISTING_JSON_FILE));
-        String message = assertThrows(ServletException.class, () -> mockMvc.perform(mockMultipartHttpServletRequestBuilder)).getMessage();
-        assertEquals("Request processing failed: java.io.UncheckedIOException: java.io.EOFException", message);
+
+        mockMvc.perform(mockMultipartHttpServletRequestBuilder)
+                .andExpect(result -> {
+                    assertNotNull(result.getResolvedException());
+                    assertEquals("java.io.EOFException",
+                            result.getResolvedException().getMessage());
+                });
     }
 
     @Test
@@ -2075,7 +2079,8 @@ class ModificationControllerTest {
                 });
         assertEquals(1, networkModificationsResult.size());
         modificationsSearchResult = networkModificationsResult.get(TEST_GROUP_ID);
-        assertEquals(4, modificationsSearchResult.size());
+        assertEquals(1, modificationsSearchResult.size());
+        assertEquals(4, modificationsSearchResult.getFirst().getImpactedEquipmentIds().size());
         assertEquals("GENERATOR_CREATION", modificationsSearchResult.getFirst().getMessageType());
         assertEquals("{\"equipmentId\":\"idGenerator1\"}", modificationsSearchResult.getFirst().getMessageValues());
 
