@@ -24,13 +24,16 @@ public final class AsyncUtils {
         // Should not be instantiated
     }
 
+    /**
+    * @param results should pass an empty list to be filled with the results
+    */
     // The signature of this method is chosen so that we can implement easily sequential or parallel schedule
     // If we change it (for example to parallel scheduling), we should keep the exceptional behavior consistent,
     // call the apply function inside a thenCompose anyway to wrap its exceptions in exceptional future completions.
-    public static CompletableFuture<List<Optional<NetworkModificationResult>>> scheduleApplyModifications(
+    public static CompletableFuture<Void> scheduleApplyModificationsSequential(
         Function<ModificationApplicationContext, CompletableFuture<Optional<NetworkModificationResult>>> func,
-        List<ModificationApplicationContext> applicationContexts) {
-        List<CompletableFuture<Optional<NetworkModificationResult>>> results = new ArrayList<>(applicationContexts.size());
+        List<ModificationApplicationContext> applicationContexts,
+        List<CompletableFuture<Optional<NetworkModificationResult>>> results) {
         CompletableFuture<?> chainedFutures = CompletableFuture.completedFuture(null);
         for (ModificationApplicationContext applicationContext : applicationContexts) {
             chainedFutures = chainedFutures.thenCompose(unused -> {
@@ -43,7 +46,16 @@ public final class AsyncUtils {
                 return cf;
             });
         }
-        return chainedFutures.thenApply(unused ->
-            results.stream().map(CompletableFuture::resultNow).toList());
+        return chainedFutures.thenCompose(unused -> CompletableFuture.completedFuture(null));
+    }
+
+    public static CompletableFuture<List<Optional<NetworkModificationResult>>> scheduleApplyModifications(
+            Function<ModificationApplicationContext, CompletableFuture<Optional<NetworkModificationResult>>> func,
+            List<ModificationApplicationContext> applicationContexts) {
+        List<CompletableFuture<Optional<NetworkModificationResult>>> results = new ArrayList<>(applicationContexts.size());
+        // sequentially like before for now
+        return scheduleApplyModificationsSequential(func, applicationContexts, results)
+            .thenApply(unused ->
+                results.stream().map(CompletableFuture::resultNow).toList());
     }
 }
