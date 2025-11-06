@@ -17,8 +17,10 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
@@ -71,6 +73,8 @@ public class NetworkModificationService {
 
     private final ModificationApplicationInfosService applicationInfosService;
 
+    private final FilterService filterService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -78,9 +82,16 @@ public class NetworkModificationService {
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
-    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService,
-                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper, ModificationApplicationInfosService applicationInfosService, ElasticsearchOperations elasticsearchOperations, ModificationRepository modificationRepository) {
+    public NetworkModificationService(NetworkStoreService networkStoreService,
+                                      NetworkModificationRepository networkModificationRepository,
+                                      EquipmentInfosService equipmentInfosService,
+                                      NotificationService notificationService,
+                                      NetworkModificationApplicator applicationService,
+                                      ObjectMapper objectMapper,
+                                      ModificationApplicationInfosService applicationInfosService,
+                                      ElasticsearchOperations elasticsearchOperations,
+                                      ModificationRepository modificationRepository,
+                                      FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -90,6 +101,7 @@ public class NetworkModificationService {
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
+        this.filterService = filterService;
     }
 
     public List<UUID> getModificationGroups() {
@@ -125,9 +137,44 @@ public class NetworkModificationService {
         }
     }
 
+    private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
+        // set filter name to null for non existing filters
+        Map<UUID, String> filterNamesByUuid = new LinkedHashMap<>();
+        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
+        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
+        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
+            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()))
+        );
+        if (!filterNamesByUuid.isEmpty()) {
+            List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
+            Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
+            Set<UUID> missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).collect(Collectors.toSet());
+            generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> {
+                if (missingFilters.contains(filterInfos.getId())) {
+                    filterInfos.setName(null);
+                }
+            });
+            generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> {
+                if (missingFilters.contains(filterInfos.getId())) {
+                    filterInfos.setName(null);
+                }
+            });
+            generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
+                frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> {
+                    if (missingFilters.contains(filterInfos.getId())) {
+                        filterInfos.setName(null);
+                    }
+                }));
+        }
+    }
+
     @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getModificationInfo(networkModificationUuid);
+        ModificationInfos modificationInfos = networkModificationRepository.getModificationInfo(networkModificationUuid);
+        if (modificationInfos instanceof GenerationDispatchInfos generationDispatchInfos) {
+            checkGenerationDispatchFilters(generationDispatchInfos);
+        }
+        return modificationInfos;
     }
 
     public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashed) {
