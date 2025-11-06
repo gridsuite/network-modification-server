@@ -171,8 +171,8 @@ public class NetworkModificationService {
     @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
         ModificationInfos modificationInfos = networkModificationRepository.getModificationInfo(networkModificationUuid);
-        if (modificationInfos instanceof GenerationDispatchInfos) {
-            checkGenerationDispatchFilters((GenerationDispatchInfos) modificationInfos);
+        if (modificationInfos instanceof GenerationDispatchInfos generationDispatchInfos) {
+            checkGenerationDispatchFilters(generationDispatchInfos);
         }
         return modificationInfos;
     }
