@@ -37,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
@@ -65,6 +67,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
     private static final UUID FILTER_ID_4 = UUID.randomUUID();
     private static final UUID FILTER_ID_5 = UUID.randomUUID();
     private static final UUID FILTER_ID_6 = UUID.randomUUID();
+    private static final UUID FILTER_ID_NOT_FOUND = UUID.randomUUID();
     private static final String PATH = "/v1/filters/metadata";
 
     @BeforeEach
@@ -654,6 +657,53 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         wireMockUtils.verifyGetRequest(stubIdForPmaxReduction, PATH, handleQueryParams(getGeneratorsWithoutOutageFilters123().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve1, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilters45().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
         wireMockUtils.verifyGetRequest(stubIdForFrequencyReserve2, PATH, handleQueryParams(getGeneratorsFrequencyReserveFilter6().stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
+    }
+
+    @Test
+    void testGetGenerationDispatchWithCheckFiltersExistence() throws Exception {
+        ModificationInfos modification = GenerationDispatchInfos.builder()
+            .stashed(false)
+            .lossCoefficient(20.)
+            .defaultOutageRate(0.)
+            .generatorsWithoutOutage(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_1).name("filter1").build(),
+                    GeneratorsFilterInfos.builder().id(FILTER_ID_2).name("filter2").build(),
+                    GeneratorsFilterInfos.builder().id(FILTER_ID_3).name("filter3").build(),
+                    GeneratorsFilterInfos.builder().id(FILTER_ID_NOT_FOUND).name("filterNotFound").build()))
+            .generatorsWithFixedSupply(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_1).name("filter1").build(),
+                GeneratorsFilterInfos.builder().id(FILTER_ID_4).name("filter4").build(),
+                GeneratorsFilterInfos.builder().id(FILTER_ID_NOT_FOUND).name("filterNotFound").build()))
+            .generatorsFrequencyReserve(List.of(GeneratorsFrequencyReserveInfos.builder().frequencyReserve(3.)
+                        .generatorsFilters(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_4).name("filter4").build(),
+                                GeneratorsFilterInfos.builder().id(FILTER_ID_5).name("filter5").build(),
+                                GeneratorsFilterInfos.builder().id(FILTER_ID_NOT_FOUND).name("filterNotFound").build())).build(),
+                GeneratorsFrequencyReserveInfos.builder().frequencyReserve(5.)
+                        .generatorsFilters(List.of(GeneratorsFilterInfos.builder().id(FILTER_ID_6).name("filter6").build())).build()))
+            .substationsGeneratorsOrdering(List.of())
+            .build();
+
+        UUID modificationUuid = saveModification(modification);
+
+        UUID stubIdForGetFilters = wireMockServer.stubFor(WireMock.get(getPath(false) + FILTER_ID_1 + "," + FILTER_ID_2 + "," + FILTER_ID_3 + "," + FILTER_ID_NOT_FOUND + "," + FILTER_ID_4 + "," + FILTER_ID_5 + "," + FILTER_ID_6)
+            .willReturn(WireMock.ok()
+                .withBody(mapper.writeValueAsString(getFilters123456()))
+                .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
+
+        MvcResult mvcResult = mockMvc.perform(get("/v1/network-modifications/" + modificationUuid))
+                .andExpect(status().isOk()).andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        ModificationInfos receivedModification = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertInstanceOf(GenerationDispatchInfos.class, receivedModification);
+        GenerationDispatchInfos receivedGenerationDispatch = (GenerationDispatchInfos) receivedModification;
+        assertEquals(4, receivedGenerationDispatch.getGeneratorsWithoutOutage().size());
+        assertEquals(3, receivedGenerationDispatch.getGeneratorsWithFixedSupply().size());
+        assertEquals(2, receivedGenerationDispatch.getGeneratorsFrequencyReserve().size());
+        assertEquals(3, receivedGenerationDispatch.getGeneratorsFrequencyReserve().getFirst().getGeneratorsFilters().size());
+
+        assertNull(receivedGenerationDispatch.getGeneratorsWithoutOutage().get(3).getName());
+        assertNull(receivedGenerationDispatch.getGeneratorsWithFixedSupply().get(2).getName());
+        assertNull(receivedGenerationDispatch.getGeneratorsFrequencyReserve().getFirst().getGeneratorsFilters().get(2).getName());
+
+        wireMockUtils.verifyGetRequest(stubIdForGetFilters, PATH, handleQueryParams(List.of(FILTER_ID_1, FILTER_ID_2, FILTER_ID_3, FILTER_ID_NOT_FOUND, FILTER_ID_4, FILTER_ID_5, FILTER_ID_6)), false);
     }
 
     @Override
