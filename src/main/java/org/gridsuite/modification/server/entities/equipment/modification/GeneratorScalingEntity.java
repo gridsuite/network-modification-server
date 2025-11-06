@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Entity
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "GeneratorScaling")
 public class GeneratorScalingEntity extends ScalingEntity {
 
