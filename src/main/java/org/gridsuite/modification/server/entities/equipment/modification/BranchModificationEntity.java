@@ -10,9 +10,7 @@ import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.dto.BranchModificationInfos;
-import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.OperationalLimitsGroupModificationInfos;
+import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.*;
 
 import java.util.ArrayList;
@@ -46,6 +44,10 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
             inverseJoinColumns = @JoinColumn(name = "operational_limits_groups_id"), inverseForeignKey = @ForeignKey(name = "operational_limits_groups_id_fk"))
     @OrderColumn(name = "pos_operationalLimitsGroups")
     private List<OperationalLimitsGroupModificationEntity> operationalLimitsGroups;
+
+    @Column(name = "all_olg_modif_type")
+    @Enumerated(EnumType.STRING)
+    private AllOperationalLimitsGroupsModificationType allOperationalLimitsGroupsModificationType;
 
     @Column(name = "enable_olg_modification", columnDefinition = "boolean default true")
     private Boolean enableOLGModification;
@@ -223,6 +225,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         this.enableOLGModification = branchModificationInfos.getEnableOLGModification() == null || branchModificationInfos.getEnableOLGModification();
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
+        this.allOperationalLimitsGroupsModificationType = branchModificationInfos.getAllOperationalLimitsGroupsModificationType();
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;
         this.busOrBusbarSectionId2 = branchModificationInfos.getBusOrBusbarSectionId2() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId2()) : null;
         this.connectionName1 = branchModificationInfos.getConnectionName1() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName1()) : null;
