@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -44,7 +45,9 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -367,7 +370,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (8, 0, 0, 15) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(8, 0, 0, 1);
+        TestUtils.assertRequestsCount(7, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
         assertEquals(0, tabularPropertyRepository.count());
     }
@@ -379,7 +382,7 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         reset();
         ApiUtils.deleteGroup(mockMvc, getGroupId());
         // It is actually (12, 0, 0, 29) because deletes made in the native query are not counted
-        TestUtils.assertRequestsCount(12, 0, 0, 1);
+        TestUtils.assertRequestsCount(11, 0, 1, 1);
         assertEquals(0, modificationRepository.count());
     }
 
@@ -562,8 +565,10 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
                 .build();
         String modificationToCreateJson = getJsonBody(modificationInfos, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson)
                         .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                         .andExpect(status().isOk()).andReturn();
         assertLogMessage("Tabular modification: No generators have been modified", "network.modification.tabular.modification.error", reportService);
     }
@@ -598,8 +603,10 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         String tabularModificationJson = getJsonBody(tabularInfos, null);
 
         // creation
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(tabularModificationJson)
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularModificationJson)
                         .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(result);

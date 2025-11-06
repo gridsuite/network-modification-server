@@ -168,8 +168,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         setNetwork(Network.read("testGenerationDispatchWithMultipleEnergySource.xiidm", getClass().getResourceAsStream("/testGenerationDispatchWithMultipleEnergySource.xiidm")));
 
         String modificationJson = getJsonBody(modification, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         assertLogMessageWithoutRank("The total demand is : 768.0 MW", "network.modification.TotalDemand", reportService);
         assertLogMessageWithoutRank("The total amount of fixed supply is : 0.0 MW", "network.modification.TotalAmountFixedSupply", reportService);
@@ -512,8 +511,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
         setNetwork(Network.read("ieee118cdf_testDemGroupe.xiidm", getClass().getResourceAsStream("/ieee118cdf_testDemGroupe.xiidm")));
 
         String modificationJson = getJsonBody(modification, null);
-        mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+        runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         // generators modified
         assertEquals(264, getNetwork().getGenerator("B4-G").getTargetP(), 0.001);
@@ -624,8 +622,7 @@ class GenerationDispatchTest extends AbstractNetworkModificationTest {
                 .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))).getId();
 
         String modificationJson = getJsonBody(modification, null);
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()).andReturn();
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
         assertEquals(NetworkModificationResult.ApplicationStatus.WITH_WARNINGS, extractApplicationStatus(networkModificationsResult).getFirst());

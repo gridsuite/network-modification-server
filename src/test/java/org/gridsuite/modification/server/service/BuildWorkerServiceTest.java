@@ -17,11 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,9 +41,9 @@ class BuildWorkerServiceTest {
     private BuildWorkerService buildWorkerService;
     @Autowired
     private ObjectMapper objectMapper;
-    @MockBean
+    @MockitoBean
     private NetworkModificationService networkModificationService;
-    @MockBean
+    @MockitoBean
     private StreamBridge publisher;
 
     @Test
