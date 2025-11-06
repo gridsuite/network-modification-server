@@ -100,7 +100,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                                 .id("newOpLG1")
                                 .applicability(SIDE1)
-                                .limitsProperties(Collections.emptyList())
+                                .limitsProperties(List.of(new LimitsPropertyInfos(PROPERTY_NAME, PROPERTY_VALUE)))
                                 .currentLimits(
                                         CurrentLimitsModificationInfos.builder()
                                                 .permanentLimit(12.0)
