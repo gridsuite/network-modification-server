@@ -47,7 +47,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
 
     @Column(name = "all_olg_modif_type")
     @Enumerated(EnumType.STRING)
-    private AllOperationalLimitsGroupsModificationType allOperationalLimitsGroupsModificationType;
+    private OperationalLimitsGroupsModificationType operationalLimitsGroupsModificationType;
 
     @Column(name = "enable_olg_modification", columnDefinition = "boolean default true")
     private Boolean enableOLGModification;
@@ -225,7 +225,7 @@ public class BranchModificationEntity extends BasicEquipmentModificationEntity {
         this.enableOLGModification = branchModificationInfos.getEnableOLGModification() == null || branchModificationInfos.getEnableOLGModification();
         this.voltageLevelId1 = branchModificationInfos.getVoltageLevelId1() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId1()) : null;
         this.voltageLevelId2 = branchModificationInfos.getVoltageLevelId2() != null ? new StringModificationEmbedded(branchModificationInfos.getVoltageLevelId2()) : null;
-        this.allOperationalLimitsGroupsModificationType = branchModificationInfos.getAllOperationalLimitsGroupsModificationType();
+        this.operationalLimitsGroupsModificationType = branchModificationInfos.getOperationalLimitsGroupsModificationType();
         this.busOrBusbarSectionId1 = branchModificationInfos.getBusOrBusbarSectionId1() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId1()) : null;
         this.busOrBusbarSectionId2 = branchModificationInfos.getBusOrBusbarSectionId2() != null ? new StringModificationEmbedded(branchModificationInfos.getBusOrBusbarSectionId2()) : null;
         this.connectionName1 = branchModificationInfos.getConnectionName1() != null ? new StringModificationEmbedded(branchModificationInfos.getConnectionName1()) : null;
