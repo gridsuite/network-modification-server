@@ -7,7 +7,9 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
@@ -25,13 +28,19 @@ import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applica
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
 class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
     private static final String PROPERTY_NAME = "property-name";
     private static final String PROPERTY_VALUE = "property-value";
+    private static final String PROP1_NAME = "prop1";
+    private static final String PROP2_NAME = "prop2";
+    private static final String PROP1_VALUE = "value1";
+    private static final String PROP2_VALUE = "value2";
 
     @Test
     void testCreateWithBadVariant() throws Exception {
@@ -41,7 +50,9 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         modificationToCreate.setEquipmentId("idLine2");
         modificationToCreate.setEquipmentName("nameLine2");
         String modificationToCreateJson = getJsonBody(modificationToCreate, "variant_not_existing");
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(networkModificationsResult);
@@ -252,9 +263,35 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         testNetworkModificationsCount(getGroupId(), 1);
 
         assertEquals(
-            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=true), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1), OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), applicability=SIDE2)], selectedOperationalLimitsGroup1=null, selectedOperationalLimitsGroup2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
+            "LineCreationInfos(super=BranchCreationInfos(super=EquipmentCreationInfos(super=EquipmentModificationInfos(super=ModificationInfos(uuid=null, type=LINE_CREATION, date=null, stashed=false, messageType=null, messageValues=null, activated=true), equipmentId=idLineEdited, properties=null), equipmentName=nameLineEdited), r=110.0, x=110.0, voltageLevelId1=v2, voltageLevelId2=v1, busOrBusbarSectionId1=1A, busOrBusbarSectionId2=1.1, operationalLimitsGroups=[OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=200.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT10, value=200.0, acceptableDuration=600)]), applicability=SIDE1, limitsProperties=null), OperationalLimitsGroupInfos(id=null, currentLimits=CurrentLimitsInfos(permanentLimit=100.0, temporaryLimits=[CurrentTemporaryLimitCreationInfos(name=IT20, value=600.0, acceptableDuration=1200)]), applicability=SIDE2, limitsProperties=null)], selectedOperationalLimitsGroup1=null, selectedOperationalLimitsGroup2=null, connectionName1=cn1LineEdited, connectionDirection1=BOTTOM, connectionName2=cn2LineEdited, connectionDirection2=TOP, connectionPosition1=0, connectionPosition2=0, connected1=true, connected2=false), g1=15.0, b1=15.0, g2=25.0, b2=25.0)",
             lineCreation.toString()
         );
+    }
+
+    @Test
+    void testCreateLimitsProperties() {
+        LineCreationInfos modificationInfos = (LineCreationInfos) buildModification();
+        modificationInfos.setOperationalLimitsGroups(List.of(
+            OperationalLimitsGroupInfos.builder()
+                .id("newLimit")
+                .applicability(SIDE1)
+                .limitsProperties(List.of(new LimitsPropertyInfos(PROP1_NAME, PROP1_VALUE),
+                    new LimitsPropertyInfos(PROP2_NAME, PROP2_VALUE)))
+                .currentLimits(CurrentLimitsInfos.builder().permanentLimit(10.0)
+                    .build())
+                .build()));
+
+        modificationInfos.toModification().apply(getNetwork());
+        Line line = getNetwork().getLine("idLine");
+        assertNotNull(line);
+        Optional<OperationalLimitsGroup> limitSet = line.getOperationalLimitsGroup1("newLimit");
+        assertTrue(limitSet.isPresent());
+        Set<String> propertiesName = limitSet.get().getPropertyNames();
+        assertEquals(2, propertiesName.size());
+        assertTrue(propertiesName.contains(PROP1_NAME));
+        assertTrue(propertiesName.contains(PROP2_NAME));
+        assertEquals(PROP1_VALUE, limitSet.get().getProperty(PROP1_NAME));
+        assertEquals(PROP2_VALUE, limitSet.get().getProperty(PROP2_NAME));
     }
 
     @Override
@@ -308,10 +345,10 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
                     List.of(
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE1).build(),
+                        ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
                         OperationalLimitsGroupInfos.builder().currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build()
-                        ).applicability(SIDE2).build()
+                        ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
                 )
                 .connectionName1("cn1LineEdited")
