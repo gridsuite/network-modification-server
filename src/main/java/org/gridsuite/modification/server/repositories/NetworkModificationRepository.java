@@ -169,7 +169,8 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        loadFullModificationsEntities(movedModifications);
+        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
+        movedModifications.forEach(ModificationEntity::toModificationInfos);
         return movedModifications;
     }
 
@@ -459,8 +460,10 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                deleteModifications(groupEntity.getModifications().stream().filter(Objects::nonNull).toList());
-                groupEntity.getModifications().clear();
+                //TODO: is there a way to avoid doing this setGroup(null) that triggers a useless update since the entity will be deleted right after
+                groupEntity.getModifications().forEach(modif -> modif.setGroup(null));
+                List<ModificationEntity> modifications = groupEntity.getModifications();
+                deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
             }
             modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
@@ -512,11 +515,6 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public Integer getModificationsCount(@NonNull UUID groupUuid, boolean stashed) {
         return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getModificationsInfos(@NonNull List<UUID> uuids) {
-        return getModificationsInfosNonTransactional(uuids);
     }
 
     private List<ModificationInfos> getModificationsInfosNonTransactional(List<UUID> uuids) {

@@ -21,6 +21,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult.Applicati
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -31,8 +32,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,19 +48,19 @@ import static org.mockito.Mockito.*;
 @Tag("UnitTest")
 class NetworkModificationApplicatorTest {
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
-    @MockBean
+    @MockitoBean
     private ReportService reportService;
 
-    @MockBean
+    @MockitoBean
     private FilterService filterService;
 
-    @MockBean
+    @MockitoBean
     private NetworkModificationObserver networkModificationObserver;
 
-    @SpyBean
+    @MockitoSpyBean
     private LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     @Autowired
@@ -82,7 +83,7 @@ class NetworkModificationApplicatorTest {
 
         when(modificationInfosList.get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator, new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());

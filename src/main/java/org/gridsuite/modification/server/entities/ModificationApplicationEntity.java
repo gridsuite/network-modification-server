@@ -18,7 +18,6 @@ import java.util.UUID;
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
  */
 @Builder
-@Embeddable
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
