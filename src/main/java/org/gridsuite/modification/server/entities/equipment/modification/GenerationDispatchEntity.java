@@ -56,7 +56,7 @@ public class GenerationDispatchEntity extends ModificationEntity {
     private List<GeneratorsFilterEmbeddable> generatorsWithFixedSupply;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderColumn(name = "pos_generators_frequency")
+    @OrderColumn(name = "pos_generators_frequency", nullable = false, columnDefinition = "integer default 0")
     private List<GeneratorsFrequencyReserveEntity> generatorsFrequencyReserve;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
