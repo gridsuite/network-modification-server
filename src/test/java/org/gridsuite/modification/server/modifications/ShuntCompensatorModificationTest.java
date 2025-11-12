@@ -16,6 +16,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,9 @@ import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCom
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -67,7 +70,9 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .build();
         String body = getJsonBody(shuntCompensator, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         String.format("Maximum section count should be greater or equal to 1")).getMessage(),
@@ -83,7 +88,9 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .build();
         String body = getJsonBody(shuntCompensator, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
@@ -105,7 +112,9 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .build();
         String body = getJsonBody(shuntCompensatorModifications, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
@@ -127,7 +136,9 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .build();
         String body = getJsonBody(shuntCompensatorModifications, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                          "Section count should be between 0 and Maximum section count (1), actual : -1").getMessage(),
@@ -143,7 +154,9 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .build();
         String body = getJsonBody(shuntCompensator, null);
 
-        mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
         assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
                         "Qmax at nominal voltage should be greater or equal to 0").getMessage(),

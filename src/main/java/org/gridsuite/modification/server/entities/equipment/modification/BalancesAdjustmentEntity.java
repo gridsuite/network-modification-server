@@ -46,16 +46,16 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
     @Enumerated(EnumType.STRING)
     private LoadFlowParameters.BalanceType balanceType = DEFAULT_BALANCE_TYPE;
 
-    @Column(name = "with_load_flow")
+    @Column(name = "with_load_flow", columnDefinition = "boolean default " + DEFAULT_WITH_LOAD_FLOW)
     private boolean withLoadFlow = DEFAULT_WITH_LOAD_FLOW;
 
     @Column(name = "load_flow_parameters_id")
     private UUID loadFlowParametersId;
 
-    @Column(name = "with_ratio_tap_changers")
+    @Column(name = "with_ratio_tap_changers", columnDefinition = "boolean default " + DEFAULT_WITH_RATIO_TAP_CHANGERS)
     private boolean withRatioTapChangers = DEFAULT_WITH_RATIO_TAP_CHANGERS;
 
-    @Column(name = "subtract_load_flow_balancing")
+    @Column(name = "subtract_load_flow_balancing", columnDefinition = "boolean default " + DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING)
     private boolean subtractLoadFlowBalancing = DEFAULT_SUBTRACT_LOAD_FLOW_BALANCING;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

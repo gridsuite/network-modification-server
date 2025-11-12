@@ -24,6 +24,7 @@ import org.gridsuite.modification.server.modifications.NetworkModificationApplic
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.assertions.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ class ModificationSearchTest {
     @Mock
     private NetworkInfos networkInfos;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
     @Mock
@@ -126,7 +127,7 @@ class ModificationSearchTest {
                 )
         );
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
                 new ModificationApplicationGroup(groupUuid, entities, reportInfos),
                 networkInfos
         );
@@ -166,7 +167,7 @@ class ModificationSearchTest {
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
                 new ModificationApplicationGroup(groupUuid, entities, reportInfos),
                 networkInfos
         );
