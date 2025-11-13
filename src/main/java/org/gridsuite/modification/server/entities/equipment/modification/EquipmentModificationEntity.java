@@ -13,6 +13,7 @@ import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,10 +26,9 @@ public class EquipmentModificationEntity extends ModificationEntity {
     @Column(name = "equipmentId")
     private String equipmentId;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "equipment_modification_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
+    @OneToMany(mappedBy = "modification", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderColumn(name = "insert_position")
-    private List<FreePropertyEntity> properties;
+    private List<FreePropertyEntity> properties = new ArrayList<>();
 
     protected EquipmentModificationEntity(EquipmentModificationInfos equipmentModificationInfos) {
         super(equipmentModificationInfos);
@@ -45,8 +45,11 @@ public class EquipmentModificationEntity extends ModificationEntity {
         equipmentId = equipmentModificationInfos.getEquipmentId();
         List<FreePropertyEntity> newProperties = equipmentModificationInfos.getProperties() == null ? null :
             equipmentModificationInfos.getProperties().stream()
-                .map(FreePropertyEntity::new)
-                .toList();
+                    .map(info -> {
+                        FreePropertyEntity entity = new FreePropertyEntity(info);
+                        entity.setModification(this);
+                        return entity;
+                    }).toList();
         if (this.properties != null) {
             // update using the same reference with clear/add (to avoid JPA exception)
             this.properties.clear();
@@ -54,7 +57,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
                 this.properties.addAll(newProperties);
             }
         } else {
-            this.properties = newProperties;
+            this.properties = (newProperties != null) ? new ArrayList<>(newProperties) : new ArrayList<>();
         }
     }
 }

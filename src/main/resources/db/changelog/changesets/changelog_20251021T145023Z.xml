@@ -21,4 +21,7 @@
     <changeSet author="rehiligha (generated)" id="1761058240544-45">
         <dropForeignKeyConstraint baseTableName="FREE_PROPERTY" constraintName="FK3wbc92cp7wlvba202qx7ldy6n"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-46">
+        <addForeignKeyConstraint baseColumnNames="equipment_modification_id" baseTableName="free_property" constraintName="free_property_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
+    </changeSet>
 </databaseChangeLog>
