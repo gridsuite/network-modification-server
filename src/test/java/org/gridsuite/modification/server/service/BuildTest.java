@@ -52,13 +52,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.messaging.Message;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.IOException;
@@ -125,7 +125,7 @@ class BuildTest {
     @Autowired
     private OutputDestination output;
 
-    @MockBean
+    @MockitoBean
     private NetworkStoreService networkStoreService;
 
     @Autowired
@@ -152,7 +152,7 @@ class BuildTest {
     @Autowired
     private EquipmentInfosRepository equipmentInfosRepository;
 
-    @SpyBean
+    @MockitoSpyBean
     private NotificationService notificationService;
 
     @Autowired
@@ -982,7 +982,7 @@ class BuildTest {
         List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
         // Building mode : No error send with exception
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(
+        NetworkModificationResult networkModificationResult = TestUtils.applyModificationsBlocking(networkModificationApplicator,
             new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, reporterId)),
             new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
@@ -991,7 +991,7 @@ class BuildTest {
 
         // Incremental mode : No error send with exception
         ModificationApplicationContext applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, variantId, reportUuid, reporterId);
-        NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        NetworkModificationsResult networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isPresent());
         testEmptyImpactsWithErrors(networkModificationResult);
@@ -1000,7 +1000,7 @@ class BuildTest {
 
         // Save mode only (variant does not exist) : No log and no error send with exception
         applicationContext = new ModificationApplicationContext(TEST_NETWORK_ID, UUID.randomUUID().toString(), reportUuid, reporterId);
-        networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext));
+        networkModificationsResult = networkModificationService.createNetworkModification(groupUuid, loadCreationInfos, List.of(applicationContext)).join();
         assertEquals(1, networkModificationsResult.modificationResults().size());
         assertTrue(networkModificationsResult.modificationResults().get(0).isEmpty());
         testNetworkModificationsCount(groupUuid, 3);
