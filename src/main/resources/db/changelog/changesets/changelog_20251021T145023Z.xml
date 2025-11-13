@@ -16,9 +16,9 @@
         <addForeignKeyConstraint baseColumnNames="operational_limits_groups_id" baseTableName="two_windings_transformer_modification_operational_limits_groups" constraintName="operational_limits_groups_2wt_modification_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="uuid" referencedTableName="operational_limits_group_modification" validate="true"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1761058240544-44">
-        <dropForeignKeyConstraint baseTableName="TABULAR_PROPERTY" constraintName="FK1T4R9ETM29SNITYOPHIVGNKCE"/>
+        <dropForeignKeyConstraint baseTableName="TABULAR_PROPERTY" constraintName="FK1t4r9etm29snityophivgnkce"/>
     </changeSet>
     <changeSet author="rehiligha (generated)" id="1761058240544-45">
-        <dropForeignKeyConstraint baseTableName="FREE_PROPERTY" constraintName="FK3WBC92CP7WLVBA202QX7LDY6N"/>
+        <dropForeignKeyConstraint baseTableName="FREE_PROPERTY" constraintName="FK3wbc92cp7wlvba202qx7ldy6n"/>
     </changeSet>
 </databaseChangeLog>
