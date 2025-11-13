@@ -43,10 +43,12 @@ public class FilterService implements IFilterService {
 
     private static String filterServerBaseUri;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
-    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri) {
+    public FilterService(@Value("${gridsuite.services.filter-server.base-uri:http://filter-server/}") String filterServerBaseUri,
+                         RestTemplate restTemplate) {
         setFilterServerBaseUri(filterServerBaseUri);
+        this.restTemplate = restTemplate;
     }
 
     public static void setFilterServerBaseUri(String filterServerBaseUri) {
