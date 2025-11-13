@@ -314,6 +314,7 @@ public class NetworkModificationService {
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
+            .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationEntity::getType)
             .map(ModificationType::valueOf)
             .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
@@ -371,6 +372,7 @@ public class NetworkModificationService {
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
+                .filter(m -> m.getActivated() && !m.getStashed())
                 .map(ModificationEntity::getType)
                 .map(ModificationType::valueOf)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);

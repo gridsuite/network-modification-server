@@ -98,6 +98,7 @@ public class NetworkModificationApplicator {
      */
     public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
+            .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationEntity::getType)
             .map(ModificationType::valueOf)
             .reduce(ModificationType::maxStrategy)
@@ -140,6 +141,7 @@ public class NetworkModificationApplicator {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
                 .map(ModificationApplicationGroup::modifications)
                 .flatMap(List::stream)
+                .filter(m -> m.getActivated() && !m.getStashed())
                 .map(ModificationEntity::getType)
                 .map(ModificationType::valueOf)
                 .reduce(ModificationType::maxStrategy)
