@@ -13,6 +13,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.ReportNodeDeserializer;
 import com.powsybl.commons.report.ReportNodeJsonModule;
+import org.gridsuite.modification.server.dto.ReportMode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -60,8 +61,9 @@ public class ReportService {
         this.reportServerRest = Objects.requireNonNull(reportServerRest, "reportServerRest can't be null");
     }
 
-    public void sendReport(UUID reportUuid, ReportNode reportNode) {
-        var path = UriComponentsBuilder.fromPath("{reportUuid}")
+    public void sendReport(UUID reportUuid, ReportNode reportNode, ReportMode reportMode) {
+        String endpoint = reportMode == ReportMode.REPLACE ? "replace" : "";
+        var path = UriComponentsBuilder.fromPath("{reportUuid}" + (endpoint.isEmpty() ? "" : "/" + endpoint))
             .buildAndExpand(reportUuid)
             .toUriString();
         var headers = new HttpHeaders();
@@ -71,5 +73,9 @@ public class ReportService {
         } catch (JsonProcessingException error) {
             throw new PowsyblException("error creating report", error);
         }
+    }
+
+    public void sendReport(UUID reportUuid, ReportNode reportNode) {
+        sendReport(reportUuid, reportNode, ReportMode.APPEND);
     }
 }
