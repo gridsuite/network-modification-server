@@ -26,10 +26,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
     private String equipmentId;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinTable(
-            joinColumns = @JoinColumn(name = "equipment_modification_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "id")
-    )
+    @JoinColumn(name = "equipment_modification_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
     @OrderColumn(name = "insert_position")
     private List<FreePropertyEntity> properties;
 
