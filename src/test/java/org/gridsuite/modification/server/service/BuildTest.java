@@ -66,6 +66,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.powsybl.iidm.network.ReactiveLimitsKind.MIN_MAX;
+import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.service.BuildWorkerService.CANCEL_MESSAGE;
@@ -187,7 +188,7 @@ class BuildTest {
     @AfterEach
     void cleanDB() {
         modificationRepository.deleteAll();
-        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(VariantManagerConstants.INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
+        equipmentInfosService.deleteVariants(TEST_NETWORK_ID, List.of(INITIAL_VARIANT_ID, NetworkCreation.VARIANT_ID, VARIANT_ID_2));
     }
 
     private void initMockWebServer(final MockWebServer server) {
@@ -270,7 +271,7 @@ class BuildTest {
 
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)))
@@ -313,7 +314,7 @@ class BuildTest {
     @Test
     void runBuildWithEmptyGroupTest(final MockWebServer server) throws Exception {
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
@@ -424,7 +425,7 @@ class BuildTest {
 
         // Create build infos
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
@@ -712,7 +713,7 @@ class BuildTest {
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)))
@@ -789,7 +790,7 @@ class BuildTest {
         assertNotNull(network.getShuntCompensator("shunt9"));
 
         // Test that no modifications have been made on initial variant
-        network.getVariantManager().setWorkingVariant(VariantManagerConstants.INITIAL_VARIANT_ID);
+        network.getVariantManager().setWorkingVariant(INITIAL_VARIANT_ID);
         assertFalse(network.getSwitch("v1d1").isOpen());
         assertNull(network.getLine("line1").getExtension(OperatingStatus.class));
         assertNull(network.getLine("line2").getExtension(OperatingStatus.class));
@@ -855,7 +856,7 @@ class BuildTest {
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
 
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
@@ -882,7 +883,7 @@ class BuildTest {
 
         // build node with excluded modification
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
@@ -910,7 +911,7 @@ class BuildTest {
         // Build VARIANT_ID by cloning network initial variant and applying all modifications in group uuid TEST_GROUP_ID
         // Because TestChannelBinder implementation is synchronous the build is made in a different thread
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
@@ -952,7 +953,7 @@ class BuildTest {
         // build VARIANT_ID by cloning network initial variant and applying all modifications in all groups
         String uriString = "/v1/networks/{networkUuid}/build?receiver=me";
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(TEST_ERROR_REPORT_ID, TEST_SUB_REPORTER_ID_1)))
@@ -984,7 +985,8 @@ class BuildTest {
         // Building mode : No error send with exception
         NetworkModificationResult networkModificationResult = TestUtils.applyModificationsBlocking(networkModificationApplicator,
             new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, reporterId)),
-            new NetworkInfos(network, TEST_NETWORK_ID, true));
+            TEST_NETWORK_ID,
+            INITIAL_VARIANT_ID);
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(1, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
@@ -1023,7 +1025,7 @@ class BuildTest {
         );
 
         //Global application status should be in error and last application status should be OK
-        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, TEST_NETWORK_ID, true));
+        NetworkModificationResult networkModificationResult = networkModificationApplicator.applyModificationGroups(modificationInfosGroups, TEST_NETWORK_ID, null, VARIANT_ID_2);
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrorsLastOK(networkModificationResult);
         assertTrue(TestUtils.getRequestsDone(2, server).stream().anyMatch(r -> r.matches(String.format("/v1/reports/%s", reportUuid))));
@@ -1037,7 +1039,7 @@ class BuildTest {
         String receiver = "me";
         String uriString = "/v1/networks/{networkUuid}/build?receiver=" + receiver;
         BuildInfos buildInfos = BuildInfos.builder()
-            .originVariantId(VariantManagerConstants.INITIAL_VARIANT_ID)
+            .originVariantId(INITIAL_VARIANT_ID)
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID, TEST_GROUP_ID_2))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1), new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_2)))

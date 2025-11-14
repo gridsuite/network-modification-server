@@ -16,11 +16,12 @@ import com.powsybl.iidm.network.ThreeSides;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.modifications.ModificationNetwork;
+import org.gridsuite.modification.server.modifications.ModificationNetworkService;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.service.ReportService;
@@ -38,6 +39,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -45,11 +47,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -57,6 +60,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @DisableElasticsearch
 class VoltageInitReportTest {
+
+    @MockitoBean
+    private ModificationNetworkService modificationNetworkService;
 
     @Autowired
     private NetworkModificationRepository modificationRepository;
@@ -83,6 +89,10 @@ class VoltageInitReportTest {
     void testVoltageInitDuplicationLogs(final ApplicationStatus resultStatus, final String logsJsonFile, final VoltageInitModificationInfos modificationInfos) throws Exception {
         final Network network = Network.read(Paths.get(this.getClass().getClassLoader().getResource("fourSubstations_testsOpenReac.xiidm").toURI()));
 
+        ModificationNetwork modificationNetwork = mock(ModificationNetwork.class);
+        when(modificationNetwork.network()).thenReturn(network);
+        when(modificationNetworkService.getNetwork(eq(NETWORK_ID), any())).thenReturn(modificationNetwork);
+
         // apply a VoltageInit modification and check status
         assertThat(applyModification(network, modificationInfos))
                 .as("voltage init result status")
@@ -105,7 +115,7 @@ class VoltageInitReportTest {
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
                 new ModificationApplicationGroup(GROUP_ID, entities, new ReportInfos(REPORT_ID, NODE_ID))
         );
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, NETWORK_ID, true));
+        NetworkModificationResult result = networkModificationApplicator.applyModificationGroups(modificationInfosGroups, NETWORK_ID, INITIAL_VARIANT_ID, "variant");
         return result.getApplicationStatus();
     }
 

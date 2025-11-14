@@ -11,33 +11,29 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.iidm.modification.topology.DefaultNamingStrategy;
-import com.powsybl.iidm.modification.topology.NamingStrategiesServiceLoader;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.network.store.client.NetworkStoreService;
+import com.powsybl.iidm.modification.topology.NamingStrategy;
 import com.powsybl.network.store.client.PreloadingStrategy;
-import lombok.Getter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
-import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
+import static org.gridsuite.modification.server.modifications.NetworkUtils.switchOnExistingVariant;
+import static org.gridsuite.modification.server.modifications.NetworkUtils.switchOnNewVariant;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 
 /**
@@ -47,184 +43,154 @@ import static org.gridsuite.modification.server.report.NetworkModificationServer
 public class NetworkModificationApplicator {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationApplicator.class);
 
-    private final NetworkStoreService networkStoreService;
-
-    private final EquipmentInfosService equipmentInfosService;
-
-    private final ModificationApplicationInfosService applicationInfosService;
-
     private final ReportService reportService;
 
-    @Getter private final FilterService filterService;
+    private final FilterService filterService;
 
-    @Getter private final LoadFlowService loadFlowService;
+    private final LoadFlowService loadFlowService;
 
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
 
     private final NetworkModificationObserver networkModificationObserver;
 
-    @Value("${impacts.collection-threshold:50}")
-    private Integer collectionThreshold;
+    private final NamingStrategy namingStrategy;
 
-    @Value("${naming-strategy:Default}")
-    private String namingStrategy;
+    private final ModificationNetworkService modificationNetworkService;
 
-    public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
-                                         ModificationApplicationInfosService applicationInfosService,
-                                         ReportService reportService, FilterService filterService,
+    public NetworkModificationApplicator(ReportService reportService,
+                                         FilterService filterService,
                                          LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
-                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
-        this.networkStoreService = networkStoreService;
-        this.equipmentInfosService = equipmentInfosService;
-        this.applicationInfosService = applicationInfosService;
+                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService,
+                                         NamingStrategy namingStrategy, ModificationNetworkService modificationNetworkService) {
         this.reportService = reportService;
         this.filterService = filterService;
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
+        this.namingStrategy = namingStrategy;
+        this.modificationNetworkService = modificationNetworkService;
     }
 
-    /* This method is used for incremental modifications
-     * Since there is no queue for these operations and they can be memory consuming when the preloading strategy is large
-     * (for example for VOLTAGE_INIT_MODIFICATION),
-     * we limit the number of concurrent applications of these modifications to avoid out of memory issues.
-     * We keep the possibility to apply small or medium modifications immediately in parallel without limits.
-     * And if in the future we also need to limit the memory consumption of medium modifications we can add more code here.
-     * Note : we currently have 3 sizes of modifications :
-     * small : preloadingStrategy = NONE
-     * medium : preloadingStrategy = COLLECTION
-     * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
-     */
-    public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
-        PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
-            .filter(m -> m.getActivated() && !m.getStashed())
-            .map(ModificationEntity::getType)
-            .map(ModificationType::valueOf)
-            .reduce(ModificationType::maxStrategy)
-            .map(ModificationType::getStrategy)
-            .orElse(PreloadingStrategy.NONE);
-
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
-        if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener));
-        } else {
-            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener));
+    public CompletableFuture<NetworkModificationResult> applyModificationGroupIncremental(
+        ModificationApplicationGroup modificationApplicationGroup,
+        UUID networkUuid,
+        String variantId
+    ) {
+        if (!modificationApplicationGroup.modifications().isEmpty()) {
+            PreloadingStrategy preloadingStrategy = getPreloadingStrategy(modificationApplicationGroup.modifications());
+            ModificationNetwork modificationNetwork = modificationNetworkService.getNetwork(
+                networkUuid,
+                preloadingStrategy
+            );
+            if (switchOnExistingVariant(modificationNetwork.network(), variantId)) {
+                return executeApplications(
+                    () -> applyModificationGroups(List.of(modificationApplicationGroup), modificationNetwork),
+                    preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
+                );
+            }
         }
-    }
-
-    private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
-            NetworkStoreListener listener) {
-        return flushModificationApplications(apply(modificationInfosGroup, listener), listener);
-    }
-
-    private NetworkModificationResult flushModificationApplications(ApplicationStatus groupApplicationStatus, NetworkStoreListener listener) {
-        List<AbstractBaseImpact> networkImpacts = listener.flushModificationApplications();
-        return NetworkModificationResult.builder()
-            .applicationStatus(groupApplicationStatus)
-            .lastGroupApplicationStatus(groupApplicationStatus)
-            .networkImpacts(networkImpacts)
-            .build();
+        // In case there are no modifications to apply or that the variant does not exist i.e. the node is not built
+        return CompletableFuture.completedFuture(
+            NetworkModificationResult.builder()
+                .applicationStatus(ApplicationStatus.ALL_OK)
+                .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
+                .build()
+        );
     }
 
     /* This method is used when building a variant
-     * building a variant is limited to ${consumer.concurrency} (typically 2) concurrent builds thanks to rabbitmq queue
-     * but since the other operations (create, insert, move, duplicate) are not inserted in the same rabbitmq queue
-     * we use the same ExecutorService to globally limit the number of concurrent large modifications in order to avoid out of memory issues
-     * We keep the possibility to apply small or medium modifications immediately.
-     * And if in the future we also need to limit the memory consumption of medium modifications we can add more code here.
-     * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModifications method
+     * building a variant is limited to ${consumer.concurrency} (typically 2) concurrent builds thanks to rabbitmq queue.
+     * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModificationGroupIncremental method
      * and no more builds can go through. If this causes problems we should put them in separate rabbitmq queues.
      */
-    public NetworkModificationResult applyModifications(List<ModificationApplicationGroup> modificationInfosGroups, NetworkInfos networkInfos) {
-        PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
-                .map(ModificationApplicationGroup::modifications)
-                .flatMap(List::stream)
-                .filter(m -> m.getActivated() && !m.getStashed())
-                .map(ModificationEntity::getType)
-                .map(ModificationType::valueOf)
-                .reduce(ModificationType::maxStrategy)
-                .map(ModificationType::getStrategy)
-                .orElse(PreloadingStrategy.NONE);
-
-        NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
-        if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
-            return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener))
-                .join();
-        } else {
-            return applyAndFlush(modificationInfosGroups, listener);
-        }
-    }
-
-    private NetworkModificationResult applyAndFlush(List<ModificationApplicationGroup> modificationInfosGroups,
-            NetworkStoreListener listener) {
-        return flushModificationApplications(apply(modificationInfosGroups, listener), listener);
-    }
-
-    // This method is used when building a variant
-    private List<ApplicationStatus> apply(List<ModificationApplicationGroup> modificationInfosGroups, NetworkStoreListener listener) {
-        return modificationInfosGroups.stream()
-            .map(g -> apply(g, listener))
+    public NetworkModificationResult applyModificationGroups(
+        List<ModificationApplicationGroup> modificationApplicationGroups,
+        UUID networkUuid,
+        String originVariantId,
+        String destinationVariantId
+    ) {
+        var modifications = modificationApplicationGroups.stream()
+            .map(ModificationApplicationGroup::modifications)
+            .flatMap(Collection::stream)
             .toList();
+        PreloadingStrategy preloadingStrategy = getPreloadingStrategy(modifications);
+        ModificationNetwork modificationNetwork = modificationNetworkService.getNetwork(networkUuid, preloadingStrategy);
+        switchOnNewVariant(modificationNetwork.network(), originVariantId, destinationVariantId);
+        return executeApplications(
+            () -> applyModificationGroups(modificationApplicationGroups, modificationNetwork),
+            preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
+        ).join();
     }
 
-    // This method is used when building a variant
-    private NetworkModificationResult flushModificationApplications(List<ApplicationStatus> groupsApplicationStatuses, NetworkStoreListener listener) {
-        List<AbstractBaseImpact> networkImpacts = listener.flushModificationApplications();
+    private NetworkModificationResult applyModificationGroups(
+        List<ModificationApplicationGroup> modificationApplicationGroups,
+        ModificationNetwork modificationNetwork
+    ) {
+        List<ApplicationStatus> statuses = modificationApplicationGroups.stream()
+            .map(g -> applyModificationGroup(g, modificationNetwork))
+            .toList();
+        List<AbstractBaseImpact> networkImpacts = modificationNetwork.flush();
         return NetworkModificationResult.builder()
-            .applicationStatus(groupsApplicationStatuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
-            .lastGroupApplicationStatus(Streams.findLast(groupsApplicationStatuses.stream()).orElse(ApplicationStatus.ALL_OK))
+            .applicationStatus(statuses.stream().reduce(ApplicationStatus::max).orElse(ApplicationStatus.ALL_OK))
+            .lastGroupApplicationStatus(Streams.findLast(statuses.stream()).orElse(ApplicationStatus.ALL_OK))
             .networkImpacts(networkImpacts)
             .build();
     }
 
-    private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener) {
-        ReportNode reportNode;
-        if (modificationGroupInfos.reportInfos().getNodeUuid() != null) {
-            UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
-            reportNode = ReportNode.newRootReportNode()
-                    .withAllResourceBundlesFromClasspath()
-                    .withMessageTemplate("network.modification.server.nodeUuid")
-                    .withUntypedValue("nodeUuid", reporterId.toString())
-                    .build();
-        } else {
-            reportNode = ReportNode.NO_OP;
-        }
+    private ApplicationStatus applyModificationGroup(
+        ModificationApplicationGroup modificationGroupInfos,
+        ModificationNetwork modificationNetwork
+    ) {
+        ReportNode reportNode = createModificationApplicationGroupReportNode(modificationGroupInfos);
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(ModificationEntity::getActivated)
-                .map(m -> {
-                    listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m.toModificationInfos(), listener.getNetwork(), reportNode);
-                })
-                .reduce(ApplicationStatus::max)
-                .orElse(ApplicationStatus.ALL_OK);
+            .filter(m -> m.getActivated() && !m.getStashed())
+            .map(m -> {
+                modificationNetwork.initModificationApplication(modificationGroupInfos.groupUuid(), m);
+                return applyModification(m.toModificationInfos(), modificationNetwork, reportNode);
+            })
+            .reduce(ApplicationStatus::max)
+            .orElse(ApplicationStatus.ALL_OK);
         if (modificationGroupInfos.reportInfos().getReportUuid() != null) {
             reportService.sendReport(modificationGroupInfos.reportInfos().getReportUuid(), reportNode);
         }
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
+    private ApplicationStatus applyModification(
+        ModificationInfos modificationInfos,
+        ModificationNetwork modificationNetwork,
+        ReportNode reportNode
+    ) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> {
+                AbstractModification modification = modificationInfos.toModification();
+                modification.check(modificationNetwork.network()); // check input data but don't change the network
+                modification.initApplicationContext(filterService, loadFlowService);
+                modification.apply(modificationNetwork.network(), namingStrategy, subReportNode);
+            });
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
         return getApplicationStatus(reportNode);
     }
 
-    private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
-        // check input data but don't change the network
-        modification.check(network);
-
-        // init application context
-        modification.initApplicationContext(this.filterService, this.loadFlowService);
-
-        // apply all changes on the network
-        modification.apply(network, new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategy).orElse(new DefaultNamingStrategy()), subReportNode);
+    /* For all memory intensive applications we want to use the same ExecutorService to globally limit the number
+     * of concurrent large modifications in order to avoid out of memory issues.
+     * We keep the possibility to applyModification small or medium modifications immediately.
+     * And if in the future we also need to limit the memory consumption of medium modifications we can add more code here.
+     * Note : we currently have 3 sizes of modifications :
+     * small : preloadingStrategy = NONE
+     * medium : preloadingStrategy = COLLECTION
+     * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
+     */
+    private CompletableFuture<NetworkModificationResult> executeApplications(Supplier<NetworkModificationResult> supplier, boolean isLarge) {
+        if (isLarge) {
+            return largeNetworkModificationExecutionService.supplyAsync(supplier);
+        } else {
+            return CompletableFuture.completedFuture(supplier.get());
+        }
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
@@ -242,10 +208,35 @@ public class NetworkModificationApplicator {
                 .add();
     }
 
-    public static boolean areSeveritiesEquals(TypedValue s1, TypedValue s2) {
+    private ReportNode createModificationApplicationGroupReportNode(ModificationApplicationGroup modificationGroupInfos) {
+        ReportNode reportNode;
+        if (modificationGroupInfos.reportInfos().getNodeUuid() != null) {
+            UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
+            reportNode = ReportNode.newRootReportNode()
+                .withAllResourceBundlesFromClasspath()
+                .withMessageTemplate("network.modification.server.nodeUuid")
+                .withUntypedValue("nodeUuid", reporterId.toString())
+                .build();
+        } else {
+            reportNode = ReportNode.NO_OP;
+        }
+        return reportNode;
+    }
+
+    private PreloadingStrategy getPreloadingStrategy(List<ModificationEntity> modificationApplicationGroup) {
+        return modificationApplicationGroup.stream()
+            .map(ModificationEntity::getType)
+            .map(ModificationType::valueOf)
+            .reduce(ModificationType::maxStrategy)
+            .map(ModificationType::getStrategy)
+            .orElse(PreloadingStrategy.NONE);
+    }
+
+    private static boolean areSeveritiesEquals(TypedValue s1, TypedValue s2) {
         return s1.getValue().toString().equals(s2.getValue().toString());
     }
 
+    // public only for tests
     public static ApplicationStatus getApplicationStatus(ReportNode reportNode) {
         if (reportNode.getChildren() != null && !reportNode.getChildren().isEmpty()) {
             return reportNode.getChildren().stream().map(NetworkModificationApplicator::getApplicationStatus)

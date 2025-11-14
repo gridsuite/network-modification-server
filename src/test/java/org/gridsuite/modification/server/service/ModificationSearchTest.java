@@ -41,9 +41,8 @@ import java.util.stream.Collectors;
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Tag("UnitTest")
@@ -54,9 +53,6 @@ class ModificationSearchTest {
 
     @Autowired
     private NetworkModificationApplicator networkModificationApplicator;
-
-    @Mock
-    private NetworkInfos networkInfos;
 
     @MockitoBean
     private NetworkStoreService networkStoreService;
@@ -84,9 +80,7 @@ class ModificationSearchTest {
         cleanDB();
         Network network = NetworkCreation.createLoadNetwork(networkUuid, new NetworkFactoryImpl());
         network.getVariantManager().cloneVariant(INITIAL_VARIANT_ID, variant2);
-        when(networkInfos.getNetwork()).thenReturn(network);
-        when(networkInfos.getNetworkUuuid()).thenReturn(networkUuid);
-        when(networkStoreService.getNetwork(eq(networkInfos.getNetworkUuuid()), any(PreloadingStrategy.class))).thenReturn(network);
+        when(networkStoreService.getNetwork(eq(networkUuid), any(PreloadingStrategy.class))).thenReturn(network);
     }
 
     @AfterEach
@@ -129,7 +123,8 @@ class ModificationSearchTest {
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
                 new ModificationApplicationGroup(groupUuid, entities, reportInfos),
-                networkInfos
+                networkUuid,
+                variant2
         );
         assertThat(result).isNotNull();
 
@@ -137,12 +132,12 @@ class ModificationSearchTest {
         assertThat(allModifications).hasSize(2);
 
         // search by userInput containing accent
-        List<ModificationApplicationInfos> hitsAccent2 = networkModificationService.searchNetworkModificationInfos(networkInfos.getNetworkUuuid(), "test");
+        List<ModificationApplicationInfos> hitsAccent2 = networkModificationService.searchNetworkModificationInfos(networkUuid, "test");
         assertThat(hitsAccent2).hasSize(1);
         assertThat(hitsAccent2.getFirst().getCreatedEquipmentIds()).contains(equipmentIdAccent);
 
         // search by term containing special chars
-        List<ModificationApplicationInfos> hitsSpecial = networkModificationService.searchNetworkModificationInfos(networkInfos.getNetworkUuuid(), "SpecialChars@");
+        List<ModificationApplicationInfos> hitsSpecial = networkModificationService.searchNetworkModificationInfos(networkUuid, "SpecialChars@");
         assertThat(hitsSpecial).hasSize(1);
         assertThat(hitsSpecial.getFirst().getCreatedEquipmentIds()).contains(equipmentIdSpecial);
     }
@@ -169,7 +164,8 @@ class ModificationSearchTest {
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
                 new ModificationApplicationGroup(groupUuid, entities, reportInfos),
-                networkInfos
+                networkUuid,
+                variant2
         );
         assertThat(result).isNotNull();
 
@@ -178,7 +174,7 @@ class ModificationSearchTest {
 
         // Search with network UUID and userInput 'Id' to search all equipmentIds containing 'Id'
         List<ModificationApplicationInfos> hits = networkModificationService
-                .searchNetworkModificationInfos(networkInfos.getNetworkUuuid(), "Id");
+                .searchNetworkModificationInfos(networkUuid, "Id");
 
         assertThat(hits)
                 .hasSize(3)
@@ -188,7 +184,7 @@ class ModificationSearchTest {
                         .collect(Collectors.toSet())::contains);
 
         // search with userInput 'load'
-        hits = networkModificationService.searchNetworkModificationInfos(networkInfos.getNetworkUuuid(), "load");
+        hits = networkModificationService.searchNetworkModificationInfos(networkUuid, "load");
         assertThat(hits).hasSize(1);
 
         ModificationApplicationInfos hit = hits.getFirst();
@@ -202,7 +198,7 @@ class ModificationSearchTest {
         assertThat(hit.getModificationUuid()).isEqualTo(loadModificationApplicationInfos.getModificationUuid());
 
         // search using an equipment identifier that doesn't exist ("notFound")
-        hits = networkModificationService.searchNetworkModificationInfos(networkInfos.getNetworkUuuid(), "notFound");
+        hits = networkModificationService.searchNetworkModificationInfos(networkUuid, "notFound");
         Assertions.assertThat(hits).isEmpty();
 
         // search using an equipment identifier on non-existing network

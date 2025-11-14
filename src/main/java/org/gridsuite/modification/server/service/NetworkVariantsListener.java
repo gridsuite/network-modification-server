@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.service;
 
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.Identifiable;
-import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.NetworkListener;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -23,12 +22,9 @@ public class NetworkVariantsListener implements NetworkListener {
 
     private final UUID networkUuid;
 
-    private final Network network;
-
     private final EquipmentInfosService equipmentInfosService;
 
-    protected NetworkVariantsListener(Network network, UUID networkUuid, EquipmentInfosService equipmentInfosService) {
-        this.network = network;
+    public NetworkVariantsListener(UUID networkUuid, EquipmentInfosService equipmentInfosService) {
         this.networkUuid = networkUuid;
         this.equipmentInfosService = equipmentInfosService;
     }

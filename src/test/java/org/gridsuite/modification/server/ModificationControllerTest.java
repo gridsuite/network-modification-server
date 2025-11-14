@@ -307,7 +307,7 @@ class ModificationControllerTest {
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
+        testEmptyImpacts(mapper, mvcResult.getResponse().getContentAsString());
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true, false);
         assertEquals(1, modifications.size());
@@ -334,7 +334,7 @@ class ModificationControllerTest {
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
-        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
+        testEmptyImpacts(mapper, mvcResult.getResponse().getContentAsString());
 
         List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
         assertEquals(1, modifications.size());

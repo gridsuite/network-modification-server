@@ -45,7 +45,7 @@ class NetworkVariantsListenerTests {
 
     @Test
     void testVariantNotifications() {
-        NetworkVariantsListener listener = new NetworkVariantsListener(null, NETWORK_UUID, equipmentInfosService);
+        NetworkVariantsListener listener = new NetworkVariantsListener(NETWORK_UUID, equipmentInfosService);
 
         listener.onVariantRemoved(VARIANT_ID);
         listener.onVariantCreated("variant_1", "variant_2");

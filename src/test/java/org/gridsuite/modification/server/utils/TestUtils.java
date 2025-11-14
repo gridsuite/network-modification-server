@@ -23,7 +23,6 @@ import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationContext;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
@@ -233,7 +232,10 @@ public final class TestUtils {
         return new ObjectMapper().registerModule(new JavaTimeModule());
     }
 
-    public static NetworkModificationResult applyModificationsBlocking(NetworkModificationApplicator applicator, ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
-        return applicator.applyModifications(modificationInfosGroup, networkInfos).join();
+    public static NetworkModificationResult applyModificationsBlocking(NetworkModificationApplicator applicator,
+                                                                       ModificationApplicationGroup modificationInfosGroup,
+                                                                       UUID networkUuid,
+                                                                       String variantId) {
+        return applicator.applyModificationGroupIncremental(modificationInfosGroup, networkUuid, variantId).join();
     }
 }
