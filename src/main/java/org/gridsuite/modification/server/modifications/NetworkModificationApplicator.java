@@ -21,6 +21,8 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
+import org.gridsuite.modification.server.network.ModificationNetwork;
+import org.gridsuite.modification.server.network.ModificationNetworkService;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +34,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import static org.gridsuite.modification.server.modifications.NetworkUtils.switchOnExistingVariant;
-import static org.gridsuite.modification.server.modifications.NetworkUtils.switchOnNewVariant;
+import static org.gridsuite.modification.server.network.NetworkUtils.switchOnExistingVariant;
+import static org.gridsuite.modification.server.network.NetworkUtils.switchOnNewVariant;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 
 /**

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.network;
 
 import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
@@ -14,7 +14,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.service.NetworkVariantsListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

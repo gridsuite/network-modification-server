@@ -1,11 +1,11 @@
-/**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+/*
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.service;
+package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
@@ -21,10 +21,12 @@ import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
-import org.gridsuite.modification.server.modifications.ModificationNetwork;
-import org.gridsuite.modification.server.modifications.ModificationNetworkService;
-import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
-import org.gridsuite.modification.server.modifications.NetworkUtils;
+import org.gridsuite.modification.server.network.ModificationNetwork;
+import org.gridsuite.modification.server.network.ModificationNetworkService;
+import org.gridsuite.modification.server.network.NetworkUtils;
+import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.NetworkModificationObserver;
+import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.*;

@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
-import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
+import static org.gridsuite.modification.server.utils.AsyncUtils.scheduleApplyModifications;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
