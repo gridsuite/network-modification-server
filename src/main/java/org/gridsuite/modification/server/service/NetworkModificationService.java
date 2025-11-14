@@ -297,9 +297,7 @@ public class NetworkModificationService {
                 List<ModificationEntity> modifications = List.of();
                 try {
                     // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getActiveModificationsEntities(groupUuid, modificationsToExclude)
-                        .stream()
-                        .toList();
+                    modifications = networkModificationRepository.getActiveModificationsEntities(groupUuid, modificationsToExclude);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;

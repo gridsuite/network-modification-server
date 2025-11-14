@@ -414,15 +414,6 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    private List<ModificationEntity> getModificationsEntitiesNonTransactional(List<UUID> groupUuids, boolean onlyStashed) {
-        Stream<ModificationEntity> entityStream = groupUuids.stream().flatMap(this::getModificationEntityStream);
-        if (onlyStashed) {
-            return entityStream.filter(m -> m.getStashed() == onlyStashed).toList();
-        } else {
-            return entityStream.toList();
-        }
-    }
-
     @Transactional(readOnly = true)
     public List<ModificationEntity> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = getModificationEntityStream(groupUuid)
@@ -443,8 +434,9 @@ public class NetworkModificationRepository {
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
-        return getModificationsEntitiesNonTransactional(groupUuids, onlyStashed).stream()
-            .map(this::getModificationInfos).toList();
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
+                .map(this::getModificationInfos).toList();
     }
 
     @Transactional(readOnly = true)
