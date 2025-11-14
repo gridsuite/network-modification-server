@@ -104,7 +104,7 @@ public class NetworkModificationApplicator {
     }
 
     /* This method is used when building a variant
-     * building a variant is limited to ${consumer.concurrency} (typically 2) concurrent builds thanks to rabbitmq queue.
+     * Building a variant is limited to ${consumer.concurrency} (typically 2) concurrent builds thanks to rabbitmq queue.
      * Note : it is possible that the rabbitmq consumer threads here will be blocked by modifications applied directly in the other applyModificationGroupIncremental method
      * and no more builds can go through. If this causes problems we should put them in separate rabbitmq queues.
      */
@@ -148,7 +148,6 @@ public class NetworkModificationApplicator {
     ) {
         ReportNode reportNode = createModificationApplicationGroupReportNode(modificationGroupInfos);
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-            .filter(m -> m.getActivated() && !m.getStashed())
             .map(m -> {
                 modificationNetwork.initModificationApplication(modificationGroupInfos.groupUuid(), m);
                 return applyModification(m.toModificationInfos(), modificationNetwork, reportNode);

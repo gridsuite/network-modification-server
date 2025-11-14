@@ -250,10 +250,10 @@ public class NetworkModificationService {
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reportInfos) -> {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
-                List<ModificationEntity> modifications = List.of();
+                List<ModificationEntity> applicableModifications = List.of();
                 try {
                     // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
+                    applicableModifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
                         .stream()
                         .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
                         .filter(m -> m.getActivated() && !m.getStashed())
@@ -263,7 +263,7 @@ public class NetworkModificationService {
                         throw e;
                     }
                 }
-                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, modifications, reportInfos));
+                modificationGroupsInfos.add(new ModificationApplicationGroup(groupUuid, applicableModifications, reportInfos));
             }
         );
 
