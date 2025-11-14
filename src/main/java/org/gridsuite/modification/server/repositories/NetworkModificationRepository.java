@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
@@ -416,10 +417,7 @@ public class NetworkModificationRepository {
 
     @Transactional(readOnly = true)
     public List<ModificationEntity> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
-        List<ModificationEntity> modificationsEntities = getModificationEntityStream(groupUuid)
-                .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
-                .filter(m -> !m.getStashed() && m.getActivated())
-                .toList();
+        List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
         // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
         modificationsEntities.forEach(ModificationEntity::toModificationInfos);
         return modificationsEntities;
