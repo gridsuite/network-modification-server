@@ -59,12 +59,14 @@ public class NetworkModificationApplicator {
 
     private final ModificationNetworkService modificationNetworkService;
 
-    public NetworkModificationApplicator(ReportService reportService,
-                                         FilterService filterService,
-                                         LoadFlowService loadFlowService,
-                                         NetworkModificationObserver networkModificationObserver,
-                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService,
-                                         NamingStrategy namingStrategy, ModificationNetworkService modificationNetworkService) {
+    public NetworkModificationApplicator(
+        ReportService reportService,
+        FilterService filterService,
+        LoadFlowService loadFlowService,
+        NetworkModificationObserver networkModificationObserver,
+        LargeNetworkModificationExecutionService largeNetworkModificationExecutionService,
+        NamingStrategy namingStrategy, ModificationNetworkService modificationNetworkService
+    ) {
         this.reportService = reportService;
         this.filterService = filterService;
         this.loadFlowService = loadFlowService;
@@ -188,7 +190,10 @@ public class NetworkModificationApplicator {
      * medium : preloadingStrategy = COLLECTION
      * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
      */
-    private CompletableFuture<NetworkModificationResult> executeApplications(Supplier<NetworkModificationResult> supplier, boolean isLarge) {
+    private CompletableFuture<NetworkModificationResult> executeApplications(
+        Supplier<NetworkModificationResult> supplier,
+        boolean isLarge
+    ) {
         if (isLarge) {
             return largeNetworkModificationExecutionService.supplyAsync(supplier);
         } else {
@@ -248,7 +253,11 @@ public class NetworkModificationApplicator {
         }
 
         TypedValue severity = reportNode.getValues().get(ReportConstants.SEVERITY_KEY);
-        if (severity == null || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY) || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY) || areSeveritiesEquals(severity, TypedValue.DETAIL_SEVERITY)) {
+        if (severity == null
+            || areSeveritiesEquals(severity, TypedValue.TRACE_SEVERITY)
+            || areSeveritiesEquals(severity, TypedValue.DEBUG_SEVERITY)
+            || areSeveritiesEquals(severity, TypedValue.INFO_SEVERITY)
+            || areSeveritiesEquals(severity, TypedValue.DETAIL_SEVERITY)) {
             return ApplicationStatus.ALL_OK;
         } else if (areSeveritiesEquals(severity, TypedValue.WARN_SEVERITY)) {
             return ApplicationStatus.WITH_WARNINGS;
