@@ -559,11 +559,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getActiveModificationsInfos(@NonNull UUID groupUuid) {
-        return getActiveModificationsInfosNonTransactional(groupUuid);
+    public List<ModificationInfos> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
+        return getUnstashedModificationsInfosNonTransactional(groupUuid);
     }
 
-    private List<ModificationInfos> getActiveModificationsInfosNonTransactional(UUID groupUuid) {
+    private List<ModificationInfos> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
         return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::getModificationInfos).toList();
     }
 
@@ -757,7 +757,7 @@ public class NetworkModificationRepository {
 
     @Transactional
     public List<ModificationEntity> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getActiveModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
+        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
         return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
     }
 

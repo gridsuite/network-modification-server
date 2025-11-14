@@ -348,7 +348,7 @@ public class NetworkModificationService {
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
-            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getActiveModificationsInfos(sourceGroupUuid);
+            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
             List<ModificationEntity> duplicatedModificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
