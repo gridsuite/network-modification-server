@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 @Service
 class LargeNetworkModificationExecutionService {
 
-    private ThreadPoolExecutor executorService;
+    private final ThreadPoolExecutor executorService;
 
     LargeNetworkModificationExecutionService(@Value("${max-large-concurrent-applications}") int maxConcurrentLargeModifications,
                                              @NonNull NetworkModificationObserver networkModificationObserver) {
