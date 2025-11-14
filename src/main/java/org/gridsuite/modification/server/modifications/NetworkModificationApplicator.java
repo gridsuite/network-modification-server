@@ -79,26 +79,28 @@ public class NetworkModificationApplicator {
         UUID networkUuid,
         String variantId
     ) {
-        if (!modificationApplicationGroup.modifications().isEmpty()) {
-            PreloadingStrategy preloadingStrategy = getPreloadingStrategy(modificationApplicationGroup.modifications());
-            ModificationNetwork modificationNetwork = modificationNetworkService.getNetwork(
-                networkUuid,
-                preloadingStrategy
+        if (modificationApplicationGroup.modifications().isEmpty()) {
+            // In case there are no modifications to apply
+            return CompletableFuture.completedFuture(
+                NetworkModificationResult.builder()
+                    .applicationStatus(ApplicationStatus.ALL_OK)
+                    .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
+                    .build()
             );
-            if (switchOnExistingVariant(modificationNetwork.network(), variantId)) {
-                return executeApplications(
-                    () -> applyModificationGroups(List.of(modificationApplicationGroup), modificationNetwork),
-                    preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
-                );
-            }
         }
-        // In case there are no modifications to apply or that the variant does not exist i.e. the node is not built
-        return CompletableFuture.completedFuture(
-            NetworkModificationResult.builder()
-                .applicationStatus(ApplicationStatus.ALL_OK)
-                .lastGroupApplicationStatus(ApplicationStatus.ALL_OK)
-                .build()
+        PreloadingStrategy preloadingStrategy = getPreloadingStrategy(modificationApplicationGroup.modifications());
+        ModificationNetwork modificationNetwork = modificationNetworkService.getNetwork(
+            networkUuid,
+            preloadingStrategy
         );
+        if (switchOnExistingVariant(modificationNetwork.network(), variantId)) {
+            return executeApplications(
+                () -> applyModificationGroups(List.of(modificationApplicationGroup), modificationNetwork),
+                preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
+            );
+        } else { // In case the variant does not exist i.e. the node is not built
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
     /* This method is used when building a variant
