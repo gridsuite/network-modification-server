@@ -12,24 +12,17 @@ import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.utils.ModificationCreation;
 import org.gridsuite.modification.server.utils.NetworkCreation;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static com.vladmihalcea.sql.SQLStatementCountValidator.assertSelectCount;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,21 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class CompositeModificationsTest extends AbstractNetworkModificationTest {
-
-    @MockitoBean
-    private NetworkModificationApplicator networkModificationApplicator;
-
-    @BeforeEach
-    void specificSetUp() {
-        // Currently we never apply composite modifications (apply mocked)
-        CompletableFuture<NetworkModificationResult> networkModificationResultMock = CompletableFuture.completedFuture(NetworkModificationResult.builder()
-                .applicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
-                .lastGroupApplicationStatus(NetworkModificationResult.ApplicationStatus.ALL_OK)
-                .networkImpacts(List.of())
-                .build());
-        when(networkModificationApplicator.applyModifications(any(ModificationApplicationGroup.class), any()))
-                .then(invocation -> networkModificationResultMock);
-    }
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
@@ -110,5 +88,23 @@ class CompositeModificationsTest extends AbstractNetworkModificationTest {
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications", getGroupId()))
                 .andExpect(status().isOk());
         SQLStatementCountValidator.assertSelectCount(8);
+    }
+
+    @Override
+    @Test
+    public void testCopy() {
+        // Ignored because we cannot apply this modification yet
+    }
+
+    @Override
+    @Test
+    public void testCreateDisabledModification() {
+        // Ignored because we cannot apply this modification yet
+    }
+
+    @Override
+    @Test
+    public void testCreate() {
+        // Ignored because we cannot apply this modification yet
     }
 }

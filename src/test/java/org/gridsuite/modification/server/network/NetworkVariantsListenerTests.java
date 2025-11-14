@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.service;
+package org.gridsuite.modification.server.network;
 
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -45,7 +45,7 @@ class NetworkVariantsListenerTests {
 
     @Test
     void testVariantNotifications() {
-        NetworkVariantsListener listener = new NetworkVariantsListener(null, NETWORK_UUID, equipmentInfosService);
+        NetworkVariantsListener listener = new NetworkVariantsListener(NETWORK_UUID, equipmentInfosService);
 
         listener.onVariantRemoved(VARIANT_ID);
         listener.onVariantCreated("variant_1", "variant_2");

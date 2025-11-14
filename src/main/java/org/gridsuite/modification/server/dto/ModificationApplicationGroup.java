@@ -12,7 +12,21 @@ import java.util.List;
 import java.util.UUID;
 
 /**
+ * This object is used as entrypoint for NetworkModificationApplicator,
+ * then it forces to contain only applicable modifications. Otherwise, it would not make sense.
+ *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public record ModificationApplicationGroup(UUID groupUuid, List<ModificationEntity> modifications, ReportInfos reportInfos) {
+public record ModificationApplicationGroup(
+    UUID groupUuid,
+    List<ModificationEntity> modifications,
+    ReportInfos reportInfos
+) {
+    public ModificationApplicationGroup(UUID groupUuid, List<ModificationEntity> modifications, ReportInfos reportInfos) {
+        this.groupUuid = groupUuid;
+        this.modifications = modifications.stream()
+            .filter(m -> m.getActivated() && !m.getStashed())
+            .toList();
+        this.reportInfos = reportInfos;
+    }
 }

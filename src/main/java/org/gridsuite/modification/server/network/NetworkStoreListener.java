@@ -1,15 +1,14 @@
 /*
-  Copyright (c) 2020, RTE (http://www.rte-france.com)
-  This Source Code Form is subject to the terms of the Mozilla Public
-  License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package org.gridsuite.modification.server.modifications;
+package org.gridsuite.modification.server.network;
 
 import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
-import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.elasticsearch.BasicEquipmentInfos;
@@ -23,6 +22,8 @@ import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
+import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
+import org.gridsuite.modification.server.modifications.IndexedImpactedEquipmentInfos;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -35,11 +36,10 @@ import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosServ
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public class NetworkStoreListener implements NetworkListener {
+class NetworkStoreListener implements NetworkListener {
 
     private final UUID networkUuid;
 
-    @Getter
     private final Network network;
 
     private final NetworkStoreService networkStoreService;
@@ -74,7 +74,7 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
+    static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
                                               EquipmentInfosService equipmentInfosService, ModificationApplicationInfosService modificationApplicationInfosService, Integer collectionThreshold) {
         var listener = new NetworkStoreListener(network, networkUuid, networkStoreService, equipmentInfosService, modificationApplicationInfosService, collectionThreshold);
         network.addListener(listener);
@@ -249,7 +249,7 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public void initModificationApplication(UUID groupUuid, ModificationEntity modification) {
+    void initModificationApplication(UUID groupUuid, ModificationEntity modification) {
         ModificationApplicationInfos modificationApplication = ModificationApplicationInfos.builder()
             .groupUuid(groupUuid)
             .modificationUuid(modification.getId())
@@ -259,7 +259,7 @@ public class NetworkStoreListener implements NetworkListener {
         modificationApplicationInfosList.add(modificationApplication);
     }
 
-    public List<AbstractBaseImpact> flushModificationApplications() {
+    List<AbstractBaseImpact> flushModificationApplications() {
         try {
             networkStoreService.flush(network); // At first
             flushImpactedEquipments();

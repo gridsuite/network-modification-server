@@ -1,38 +1,40 @@
-/**
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+/*
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.gridsuite.modification.server.service;
+package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
-import com.powsybl.network.store.client.NetworkStoreService;
-import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.iidm.network.Network;
 import org.gridsuite.modification.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitModificationEntity;
 import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
-import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.network.ModificationNetwork;
+import org.gridsuite.modification.server.network.ModificationNetworkService;
+import org.gridsuite.modification.server.network.NetworkUtils;
+import org.gridsuite.modification.server.service.FilterService;
+import org.gridsuite.modification.server.service.NetworkModificationObserver;
+import org.gridsuite.modification.server.service.ReportService;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -52,7 +54,9 @@ import static org.mockito.Mockito.*;
 class NetworkModificationApplicatorTest {
 
     @MockitoBean
-    private NetworkStoreService networkStoreService;
+    private ModificationNetworkService modificationNetworkService;
+
+    private MockedStatic<NetworkUtils> networkUtils;
 
     @MockitoBean
     private ReportService reportService;
@@ -70,49 +74,43 @@ class NetworkModificationApplicatorTest {
     private NetworkModificationApplicator networkModificationApplicator;
 
     @Mock
-    private NetworkInfos networkInfos;
-
-    @Mock
     private ReportInfos reportInfos;
+
+    private final UUID networkUuid = UUID.randomUUID();
+
+    private final String variantId = UUID.randomUUID().toString();
 
     @BeforeEach
     void setUp() {
-        when(networkInfos.getNetwork()).thenReturn(new NetworkFactoryImpl().createNetwork("test", "test"));
+        Network network = mock(Network.class);
+        ModificationNetwork modificationNetwork = mock(ModificationNetwork.class);
+        when(modificationNetwork.network()).thenReturn(network);
+        networkUtils = mockStatic(NetworkUtils.class);
+        networkUtils.when(() -> NetworkUtils.switchOnExistingVariant(eq(network), eq(variantId))).thenReturn(true);
+        when(modificationNetworkService.getNetwork(eq(networkUuid), any())).thenReturn(modificationNetwork);
+    }
+
+    @AfterEach
+    void tearDown() {
+        networkUtils.close();
     }
 
     @Test
     void testApplyModificationsWithAllCollectionsNeededForBusView() {
-        var modificationInfos = VoltageInitModificationInfos.builder()
-            .stashed(false)
-            .activated(true)
+        var modificationInfosPreloadingAllCollections = VoltageInitModificationInfos.builder().build();
+        var modificationInfosPreloadingNone = VoltageLevelModificationInfos.builder()
+            .equipmentId(UUID.randomUUID().toString())
             .build();
-        List<ModificationEntity> modificationInfosList = List.of(new VoltageInitModificationEntity(modificationInfos));
+        List<ModificationEntity> modificationInfosList = List.of(
+            new VoltageInitModificationEntity(modificationInfosPreloadingAllCollections),
+            new VoltageLevelModificationEntity(modificationInfosPreloadingNone)
+        );
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(
             networkModificationApplicator,
             new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos),
-            networkInfos
-        );
-
-        assertNotNull(result);
-        verify(largeNetworkModificationExecutionService).supplyAsync(any());
-    }
-
-    @Test
-    void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusView() {
-        var modificationInfos = VoltageInitModificationInfos.builder()
-            .stashed(false)
-            .activated(true)
-            .build();
-        List<ModificationEntity> modificationInfosList = List.of(new VoltageInitModificationEntity(modificationInfos));
-        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-            new ModificationApplicationGroup(
-                UUID.randomUUID(),
-                modificationInfosList,
-                mock(ReportInfos.class)
-            ));
-
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
+            networkUuid,
+            variantId);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
@@ -120,57 +118,21 @@ class NetworkModificationApplicatorTest {
 
     @Test
     void testApplyModificationsWithAllCollectionsNeededForBusViewStashedAndNotActivated() {
-        var modificationInfosList = createModificationsWithUnactiveAllCollectionAndActiveNone();
+        var modificationInfosPreloadingNone = VoltageLevelModificationInfos.builder()
+            .equipmentId(UUID.randomUUID().toString())
+            .build();
+        List<ModificationEntity> modificationInfosList = List.of(
+            new VoltageLevelModificationEntity(modificationInfosPreloadingNone)
+        );
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(
             networkModificationApplicator,
             new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos),
-            networkInfos
-        );
+            networkUuid,
+            variantId);
 
         assertNotNull(result);
         verifyNoInteractions(largeNetworkModificationExecutionService);
-    }
-
-    @Test
-    void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusViewStashedAndNotActivated() {
-        var modificationInfosList = createModificationsWithUnactiveAllCollectionAndActiveNone();
-        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-            new ModificationApplicationGroup(
-                UUID.randomUUID(),
-                modificationInfosList,
-                mock(ReportInfos.class)
-            ));
-
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
-
-        assertNotNull(result);
-        verifyNoInteractions(largeNetworkModificationExecutionService);
-    }
-
-    private List<ModificationEntity> createModificationsWithUnactiveAllCollectionAndActiveNone() {
-        // All collections but stashed
-        var modificationInfosStashed = VoltageInitModificationInfos.builder()
-            .stashed(true)
-            .activated(true)
-            .build();
-        // All collections but not activated
-        var modificationInfosNotActivated = VoltageInitModificationInfos.builder()
-            .stashed(true)
-            .activated(false)
-            .build();
-        // None and active
-        var modificationInfosPreloadingNone = VoltageLevelModificationInfos.builder()
-            .stashed(false)
-            .activated(true)
-            .equipmentId(UUID.randomUUID().toString())
-            .build();
-        // So in the end strategy should be none
-        return List.of(
-            new VoltageInitModificationEntity(modificationInfosStashed),
-            new VoltageInitModificationEntity(modificationInfosNotActivated),
-            new VoltageLevelModificationEntity(modificationInfosPreloadingNone)
-        );
     }
 
     @ParameterizedTest
