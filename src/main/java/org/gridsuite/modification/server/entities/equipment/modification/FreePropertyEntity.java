@@ -11,15 +11,18 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.dto.FreePropertyInfos;
+import org.gridsuite.modification.server.entities.ModificationEntity;
 
 import java.util.UUID;
-import org.gridsuite.modification.dto.FreePropertyInfos;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
  */
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
@@ -46,6 +49,10 @@ public class FreePropertyEntity {
     @Column(name = "previous_value")
     private String previousValue;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipment_modification_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "free_property_modification_id_fk_constraint"))
+    private ModificationEntity modification;
+
     public FreePropertyInfos toInfos() {
         return FreePropertyInfos.builder()
             .name(name)
@@ -57,6 +64,7 @@ public class FreePropertyEntity {
     }
 
     public FreePropertyEntity(FreePropertyInfos freePropertyInfos) {
-        this(null, freePropertyInfos.getName(), freePropertyInfos.getValue(), freePropertyInfos.isDeletionMark(), freePropertyInfos.isAdded(), freePropertyInfos.getPreviousValue());
+        this(null, freePropertyInfos.getName(), freePropertyInfos.getValue(), freePropertyInfos.isDeletionMark(),
+                freePropertyInfos.isAdded(), freePropertyInfos.getPreviousValue(), null);
     }
 }
