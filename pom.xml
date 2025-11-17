@@ -44,14 +44,13 @@
     </developers>
 
     <properties>
-        <gridsuite-dependencies.version>44.1.0-SNAPSHOT</gridsuite-dependencies.version>
+        <gridsuite-dependencies.version>44.1.0</gridsuite-dependencies.version>
         <db-util.version>1.0.5</db-util.version>
         <mockwebserver3.version>5.0.0-alpha.14</mockwebserver3.version>
         <liquibase-hibernate-package>org.gridsuite.modification.server</liquibase-hibernate-package>
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
-        <powsybl-balances-adjustment.version>2.14.1</powsybl-balances-adjustment.version>
     </properties>
 
     <build>
@@ -97,7 +96,6 @@
             <dependency>
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-balances-adjustment</artifactId>
-                <version>${powsybl-balances-adjustment.version}</version>
             </dependency>
             
             <!-- imports -->
