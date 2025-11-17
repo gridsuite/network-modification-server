@@ -297,11 +297,7 @@ public class NetworkModificationService {
                 List<ModificationEntity> modifications = List.of();
                 try {
                     // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
-                        .stream()
-                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
-                        .filter(m -> !m.getStashed())
-                        .toList();
+                    modifications = networkModificationRepository.getActiveModificationsEntities(groupUuid, modificationsToExclude);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -314,6 +310,7 @@ public class NetworkModificationService {
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
+            .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationEntity::getType)
             .map(ModificationType::valueOf)
             .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
@@ -351,7 +348,7 @@ public class NetworkModificationService {
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
-            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getActiveModificationsInfos(sourceGroupUuid);
+            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
             List<ModificationEntity> duplicatedModificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
@@ -371,6 +368,7 @@ public class NetworkModificationService {
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
+                .filter(m -> m.getActivated() && !m.getStashed())
                 .map(ModificationEntity::getType)
                 .map(ModificationType::valueOf)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
