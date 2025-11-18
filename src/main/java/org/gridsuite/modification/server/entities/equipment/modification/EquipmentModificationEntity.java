@@ -57,7 +57,7 @@ public class EquipmentModificationEntity extends ModificationEntity {
                 this.properties.addAll(newProperties);
             }
         } else {
-            this.properties = (newProperties != null) ? new ArrayList<>(newProperties) : new ArrayList<>();
+            this.properties = newProperties;
         }
     }
 }
