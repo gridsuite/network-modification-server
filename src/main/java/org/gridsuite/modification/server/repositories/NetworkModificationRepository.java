@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
@@ -414,20 +415,11 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    private List<ModificationEntity> getModificationsEntitiesNonTransactional(List<UUID> groupUuids, boolean onlyStashed) {
-        Stream<ModificationEntity> entityStream = groupUuids.stream().flatMap(this::getModificationEntityStream);
-        if (onlyStashed) {
-            return entityStream.filter(m -> m.getStashed() == onlyStashed).toList();
-        } else {
-            return entityStream.toList();
-        }
-    }
-
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
-        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+    public List<ModificationEntity> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
+        List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
         // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        modificationsEntities.forEach(m -> m.toModificationInfos());
+        modificationsEntities.forEach(ModificationEntity::toModificationInfos);
         return modificationsEntities;
     }
 
@@ -440,8 +432,9 @@ public class NetworkModificationRepository {
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
-        return getModificationsEntitiesNonTransactional(groupUuids, onlyStashed).stream()
-            .map(this::getModificationInfos).toList();
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
+                .map(this::getModificationInfos).toList();
     }
 
     @Transactional(readOnly = true)
@@ -564,11 +557,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getActiveModificationsInfos(@NonNull UUID groupUuid) {
-        return getActiveModificationsInfosNonTransactional(groupUuid);
+    public List<ModificationInfos> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
+        return getUnstashedModificationsInfosNonTransactional(groupUuid);
     }
 
-    private List<ModificationInfos> getActiveModificationsInfosNonTransactional(UUID groupUuid) {
+    private List<ModificationInfos> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
         return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::getModificationInfos).toList();
     }
 
@@ -762,7 +755,7 @@ public class NetworkModificationRepository {
 
     @Transactional
     public List<ModificationEntity> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getActiveModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
+        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
         return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
     }
 
