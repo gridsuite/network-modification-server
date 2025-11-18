@@ -93,10 +93,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-balances-adjustment</artifactId>
-            </dependency>
             
             <!-- imports -->
             <dependency>
