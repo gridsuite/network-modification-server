@@ -24,4 +24,16 @@
     <changeSet author="rehiligha (generated)" id="1761058240544-46">
         <addForeignKeyConstraint baseColumnNames="equipment_modification_id" baseTableName="free_property" constraintName="free_property_modification_id_fk_constraint" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="modification" validate="true"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-47">
+        <dropForeignKeyConstraint baseTableName="vsc_creation" constraintName="converter_station_1_id_fk"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-48">
+        <dropForeignKeyConstraint baseTableName="vsc_creation" constraintName="converter_station_2_id_fk"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-49">
+        <addForeignKeyConstraint baseColumnNames="converter_station_1_id" baseTableName="vsc_creation" constraintName="converter_station_creation_1_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761058240544-50">
+        <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_creation" constraintName="converter_station_creation_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
+    </changeSet>
 </databaseChangeLog>
