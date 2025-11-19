@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 
@@ -95,8 +96,9 @@ public class NetworkModificationApplicator {
      * medium : preloadingStrategy = COLLECTION
      * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
      */
-    public NetworkModificationResult applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
+    public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
+            .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationEntity::getType)
             .map(ModificationType::valueOf)
             .reduce(ModificationType::maxStrategy)
@@ -106,10 +108,9 @@ public class NetworkModificationApplicator {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener))
-                .join();
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener));
         } else {
-            return applyAndFlush(modificationInfosGroup, listener);
+            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener));
         }
     }
 
@@ -140,6 +141,7 @@ public class NetworkModificationApplicator {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
                 .map(ModificationApplicationGroup::modifications)
                 .flatMap(List::stream)
+                .filter(m -> m.getActivated() && !m.getStashed())
                 .map(ModificationEntity::getType)
                 .map(ModificationType::valueOf)
                 .reduce(ModificationType::maxStrategy)

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
@@ -169,7 +170,8 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        loadFullModificationsEntities(movedModifications);
+        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
+        movedModifications.forEach(ModificationEntity::toModificationInfos);
         return movedModifications;
     }
 
@@ -413,20 +415,11 @@ public class NetworkModificationRepository {
         return modificationEntity.toModificationInfos();
     }
 
-    private List<ModificationEntity> getModificationsEntitiesNonTransactional(List<UUID> groupUuids, boolean onlyStashed) {
-        Stream<ModificationEntity> entityStream = groupUuids.stream().flatMap(this::getModificationEntityStream);
-        if (onlyStashed) {
-            return entityStream.filter(m -> m.getStashed() == onlyStashed).toList();
-        } else {
-            return entityStream.toList();
-        }
-    }
-
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
-        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
+    public List<ModificationEntity> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
+        List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
         // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        modificationsEntities.forEach(m -> m.toModificationInfos());
+        modificationsEntities.forEach(ModificationEntity::toModificationInfos);
         return modificationsEntities;
     }
 
@@ -439,8 +432,9 @@ public class NetworkModificationRepository {
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
-        return getModificationsEntitiesNonTransactional(groupUuids, onlyStashed).stream()
-            .map(this::getModificationInfos).toList();
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
+                .map(this::getModificationInfos).toList();
     }
 
     @Transactional(readOnly = true)
@@ -459,8 +453,10 @@ public class NetworkModificationRepository {
         try {
             ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
             if (!groupEntity.getModifications().isEmpty()) {
-                deleteModifications(groupEntity.getModifications().stream().filter(Objects::nonNull).toList());
-                groupEntity.getModifications().clear();
+                //TODO: is there a way to avoid doing this setGroup(null) that triggers a useless update since the entity will be deleted right after
+                groupEntity.getModifications().forEach(modif -> modif.setGroup(null));
+                List<ModificationEntity> modifications = groupEntity.getModifications();
+                deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
             }
             modificationGroupRepository.delete(groupEntity);
         } catch (NetworkModificationException e) {
@@ -514,11 +510,6 @@ public class NetworkModificationRepository {
         return modificationRepository.countByGroupIdAndStashed(groupUuid, stashed);
     }
 
-    @Transactional(readOnly = true)
-    public List<ModificationInfos> getModificationsInfos(@NonNull List<UUID> uuids) {
-        return getModificationsInfosNonTransactional(uuids);
-    }
-
     private List<ModificationInfos> getModificationsInfosNonTransactional(List<UUID> uuids) {
         // Spring-data findAllById doc says: the order of elements in the result is not guaranteed
         Map<UUID, ModificationEntity> entities = modificationRepository.findAllById(uuids)
@@ -566,11 +557,11 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getActiveModificationsInfos(@NonNull UUID groupUuid) {
-        return getActiveModificationsInfosNonTransactional(groupUuid);
+    public List<ModificationInfos> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
+        return getUnstashedModificationsInfosNonTransactional(groupUuid);
     }
 
-    private List<ModificationInfos> getActiveModificationsInfosNonTransactional(UUID groupUuid) {
+    private List<ModificationInfos> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
         return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::getModificationInfos).toList();
     }
 
@@ -764,7 +755,7 @@ public class NetworkModificationRepository {
 
     @Transactional
     public List<ModificationEntity> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getActiveModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
+        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
         return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
     }
 

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -175,6 +176,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         return OperationalLimitsGroupModificationInfos.builder()
                 .id("testName")
                 .applicability(applicability)
+                .limitsProperties(Collections.emptyList())
                 .modificationType(OperationalLimitsGroupModificationType.ADD)
                 .temporaryLimitsModificationType(TemporaryLimitModificationType.ADD)
                 .currentLimits(CurrentLimitsModificationInfos.builder()

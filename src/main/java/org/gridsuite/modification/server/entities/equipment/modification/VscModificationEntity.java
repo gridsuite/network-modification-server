@@ -105,7 +105,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
             name = "converter_station_1_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
-                    name = "converter_station_1_id_fk"
+                    name = "converter_station_modification_1_id_fk"
             ))
     private ConverterStationModificationEntity converterStation1;
 
@@ -114,7 +114,7 @@ public class VscModificationEntity extends BasicEquipmentModificationEntity {
             name = "converter_station_2_id",
             referencedColumnName = "id",
             foreignKey = @ForeignKey(
-                    name = "converter_station_2_id_fk"
+                    name = "converter_station_modification_2_id_fk"
             ))
     private ConverterStationModificationEntity converterStation2;
 
