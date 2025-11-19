@@ -28,7 +28,6 @@ import static org.gridsuite.modification.server.entities.equipment.creation.Reac
 @Getter
 @Entity
 @Table(name = "converterStationCreation")
-@PrimaryKeyJoinColumn(foreignKey = @ForeignKey(name = "converterStationCreation_id_fk_constraint"))
 public class ConverterStationCreationEntity extends InjectionCreationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
