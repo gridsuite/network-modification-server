@@ -109,13 +109,21 @@ public class NetworkModificationRepository {
     // This method should be package-private and not used as API of the service as it uses ModificationEntity and
     // we want to encapsulate the use of Entity related objects to this service.
     // Nevertheless We have to keep it public for transactional annotation.
-    public List<ModificationEntity> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
-        return saveModificationsNonTransactional(groupUuid, modifications);
+    public List<ModificationInfos> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
+        List<ModificationEntity> entities = saveModificationsNonTransactional(groupUuid, modifications);
+        return loadFullModificationsEntities(entities);
     }
 
     @Transactional
-    public List<ModificationEntity> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
-        return saveModificationInfosNonTransactional(groupUuid, modifications);
+    public List<ModificationInfos> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
+        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+        return loadFullModificationsEntities(entities);
+    }
+
+    @Transactional
+    public List<UUID> saveModificationInfosLight(UUID groupUuid, List<ModificationInfos> modifications) {
+        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+        return entities.stream().map(ModificationEntity::getId).toList();
     }
 
     private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid,
@@ -168,11 +176,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
+    public List<ModificationInfos> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        movedModifications.forEach(ModificationEntity::toModificationInfos);
-        return movedModifications;
+        return loadFullModificationsEntities(movedModifications);
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
@@ -378,7 +384,10 @@ public class NetworkModificationRepository {
                 // load MCS modifications with properties
                 modifications = shuntCompensatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             default ->
-                throw new UnsupportedOperationException(String.format("No sub-modifications loading for modification type: %s", modificationType));
+                throw new NetworkModificationException(
+                    UNKNOWN_MODIFICATION_TYPE,
+                    String.format("No sub-modifications loading for modification type: %s", modificationType)
+                );
         }
         return modifications;
     }
@@ -416,19 +425,15 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
+    public List<ModificationInfos> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
-        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        modificationsEntities.forEach(ModificationEntity::toModificationInfos);
-        return modificationsEntities;
+        return loadFullModificationsEntities(modificationsEntities);
     }
 
-    private void loadFullModificationsEntities(List<ModificationEntity> modificationsEntities) {
-        // Force load subentities/collections, needed later when the transaction is closed
-        // Necessary for applying network modifications
-        // to avoid LazyInitialisationException. Maybe better to refactor to return the dto ?
+    private List<ModificationInfos> loadFullModificationsEntities(List<ModificationEntity> modificationsEntities) {
+        // Force load subentities/collections, needed later when the transaction is closed.
         // And refactor to more efficiently load the data (avoid 1+N) ?
-        modificationsEntities.forEach(this::getModificationInfos);
+        return modificationsEntities.stream().map(this::getModificationInfos).toList();
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
@@ -725,7 +730,10 @@ public class NetworkModificationRepository {
             case SUBSTATION_MODIFICATION ->
                 Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(substationModificationRepository::deleteSomeTabularSubModifications);
             default ->
-                throw new UnsupportedOperationException(String.format("No sub-modifications deletion method for type: %s", tabularModificationType));
+                throw new NetworkModificationException(
+                    UNKNOWN_MODIFICATION_TYPE,
+                    String.format("No sub-modifications deletion method for type: %s", tabularModificationType)
+                );
         }
     }
 
@@ -754,14 +762,14 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationEntity> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
+    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
-        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
-    public List<ModificationEntity> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
+    public List<ModificationInfos> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
-        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }

@@ -12,13 +12,13 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.BasicEquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -249,12 +249,11 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public void initModificationApplication(UUID groupUuid, ModificationEntity modification) {
+    public void initModificationApplication(UUID groupUuid, ModificationInfos modification) {
         ModificationApplicationInfos modificationApplication = ModificationApplicationInfos.builder()
             .groupUuid(groupUuid)
-            .modificationUuid(modification.getId())
+            .modificationUuid(modification.getUuid())
             .networkUuid(networkUuid)
-            .modification(modification)
             .build();
         modificationApplicationInfosList.add(modificationApplication);
     }

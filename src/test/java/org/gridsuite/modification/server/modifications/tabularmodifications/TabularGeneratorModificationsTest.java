@@ -14,7 +14,6 @@ import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.dto.tabular.TabularPropertyInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.modifications.AbstractNetworkModificationTest;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.TabularPropertyRepository;
@@ -26,7 +25,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 
@@ -43,8 +41,6 @@ import static com.vladmihalcea.sql.SQLStatementCountValidator.reset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -603,45 +599,9 @@ class TabularGeneratorModificationsTest extends AbstractNetworkModificationTest 
         String tabularModificationJson = getJsonBody(tabularInfos, null);
 
         // creation
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularModificationJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(request().asyncStarted());
-        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
-        NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertNotNull(result);
-        assertEquals(1, result.modificationUuids().size());
-        UUID modifId = result.modificationUuids().get(0);
-
-        // try to get via the group
-        UnsupportedOperationException exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
-        );
-        assertEquals("No sub-modifications loading for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
-
-        // try to get via id
-        exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.getModificationInfo(modifId)
-        );
-        assertEquals("No sub-modifications loading for modification type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
-
-        // try to update
-        exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.updateModification(modifId, tabularInfos)
-        );
-        // deletion error because we try to remove the sub-modifications before updating them
-        assertEquals("No sub-modifications deletion method for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
-
-        // try to delete
-        List<UUID> ids = List.of(modifId);
-        exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
-        );
-        assertEquals("No sub-modifications deletion method for type: STATIC_VAR_COMPENSATOR_CREATION", exception.getMessage());
+        mockMvc.perform(post(getNetworkModificationUri()).content(tabularModificationJson)
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());
     }
 
     @Override

@@ -8,7 +8,6 @@ package org.gridsuite.modification.server.dto.elasticsearch;
 
 import lombok.*;
 import org.gridsuite.modification.server.elasticsearch.ESConfig;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
 import org.gridsuite.modification.server.modifications.IndexedImpactedEquipmentInfos;
 import org.springframework.data.annotation.AccessType;
@@ -82,9 +81,6 @@ public class ModificationApplicationInfos {
     @Transient
     @Builder.Default
     ImpactedEquipmentsInfos impactedEquipmentsInfos = new ImpactedEquipmentsInfos();
-
-    @Transient
-    ModificationEntity modification;
 
     public ModificationApplicationInfos flushImpactedEquipments() {
         createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream()

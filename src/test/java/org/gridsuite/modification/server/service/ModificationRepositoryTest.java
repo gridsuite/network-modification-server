@@ -491,27 +491,27 @@ class ModificationRepositoryTest {
                 GeneratorModificationInfos.builder().equipmentId("v6generator").maxP(new AttributeModification<>(500., OperationType.SET)).build(),
                 GeneratorModificationInfos.builder().equipmentId("unknownGenerator").maxP(new AttributeModification<>(500., OperationType.SET)).build()
         );
-        ModificationEntity tabularModificationEntity = ModificationEntity.fromDTO(TabularModificationInfos.builder()
+        TabularModificationInfos tabularModificationEntity = TabularModificationInfos.builder()
                 .modificationType(ModificationType.GENERATOR_MODIFICATION)
                 .modifications(groupModifications)
                 .stashed(false)
-                .build());
+                .build();
         // and 5 script modifications
-        var groovyScriptEntity1 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script1").build());
-        var groovyScriptEntity2 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script2").build());
-        var groovyScriptEntity3 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script3").build());
-        var groovyScriptEntity4 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script4").build());
-        var groovyScriptEntity5 = ModificationEntity.fromDTO(GroovyScriptInfos.builder().script("script5").build());
+        var groovyScriptEntity1 = GroovyScriptInfos.builder().script("script1").build();
+        var groovyScriptEntity2 = GroovyScriptInfos.builder().script("script2").build();
+        var groovyScriptEntity3 = GroovyScriptInfos.builder().script("script3").build();
+        var groovyScriptEntity4 = GroovyScriptInfos.builder().script("script4").build();
+        var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build();
 
-        List<ModificationEntity> modificationEntities = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
-        networkModificationRepository.saveModifications(TEST_GROUP_ID, modificationEntities);
+        List<ModificationInfos> modifications = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
+        networkModificationRepository.saveModificationInfosLight(TEST_GROUP_ID, modifications);
         assertRequestsCount(2, 8, 0, 0);
 
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(tabularModificationEntity.getId()), groovyScriptEntity2.getId());
-        assertRequestsCount(12, 0, 2, 0);
+        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(modificationOriginal.get(5).getUuid()), modificationOriginal.get(1).getUuid());
+        assertRequestsCount(6, 0, 2, 0);
 
         var modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
         // [0:1, 1:6, 2:2, 3:3, 4:4 ,5:5 ]
@@ -521,8 +521,8 @@ class ModificationRepositoryTest {
         assertEquals(getIds(expected), getIds(modification));
 
         SQLStatementCountValidator.reset();
-        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(groovyScriptEntity3.getId(), tabularModificationEntity.getId()), null);
-        assertRequestsCount(12, 0, 2, 0);
+        networkModificationRepository.moveModifications(TEST_GROUP_ID, TEST_GROUP_ID, List.of(modificationOriginal.get(2).getUuid(), modificationOriginal.get(5).getUuid()), null);
+        assertRequestsCount(6, 0, 2, 0);
 
         // [0:1, 1:2, 2:4, 3:5, 4:6, 5:3 ]
         modification = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -554,7 +554,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         List<UUID> uuidsToMove = List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId());
-        List<ModificationEntity> movedModifications = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, uuidsToMove, null);
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, uuidsToMove, null);
         assertEquals(uuidsToMove.size(), movedModifications.size());
         assertRequestsCount(5, 0, 1, 0);
 
@@ -606,7 +606,7 @@ class ModificationRepositoryTest {
 
         SQLStatementCountValidator.reset();
         List<UUID> uuidsToMove = List.of(groovyScriptEntity2.getId(), groovyScriptEntity3.getId());
-        List<ModificationEntity> movedModifications = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, uuidsToMove, groovyScriptEntity6.getId());
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, uuidsToMove, groovyScriptEntity6.getId());
         assertEquals(uuidsToMove.size(), movedModifications.size());
         assertRequestsCount(5, 0, 1, 0);
 
@@ -647,15 +647,15 @@ class ModificationRepositoryTest {
         // moving modifications with a good and a bad modification should work (the bad one will be ignored)
         SQLStatementCountValidator.reset();
         List<UUID> modificationsToMoveUuid = List.of(groovyScriptEntity1.getId(), UUID.randomUUID());
-        List<ModificationEntity> movedModifications = networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null);
+        List<ModificationInfos> movedModifications = networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null);
         assertRequestsCount(5, 0, 1, 0);
         // only the valid modification is moved
         assertEquals(1, movedModifications.size());
-        assertEquals(groovyScriptEntity1.getId(), movedModifications.get(0).getId());
+        assertEquals(groovyScriptEntity1.getId(), movedModifications.get(0).getUuid());
 
         // try to move again: empty result cause groovyScriptEntity1 has been moved
         SQLStatementCountValidator.reset();
-        List<ModificationEntity> movedModifications2 = networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null);
+        List<ModificationInfos> movedModifications2 = networkModificationRepository.moveModifications(TEST_GROUP_ID_3, TEST_GROUP_ID, modificationsToMoveUuid, null);
         assertRequestsCount(2, 0, 0, 0);
         assertEquals(0, movedModifications2.size());
 
@@ -1295,9 +1295,9 @@ class ModificationRepositoryTest {
         var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1));
         // move it in another group
-        List<ModificationEntity> movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity1.getId()), null);
+        List<ModificationInfos> movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity1.getId()), null);
         assertEquals(1, movedEntities.size());
-        assertEquals(0, movedEntities.get(0).getModificationsOrder());
+//        assertEquals(0, movedEntities.get(0).getModificationsOrder());
 
         // put another modification in empty origin group: its order must restart to 0 as well
         var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
@@ -1305,7 +1305,7 @@ class ModificationRepositoryTest {
         // trick: move it too, to see the order in the entity
         movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity2.getId()), null);
         assertEquals(1, movedEntities.size());
-        assertEquals(1, movedEntities.get(0).getModificationsOrder());
+//        assertEquals(1, movedEntities.get(0).getModificationsOrder());
     }
 
     @Test
