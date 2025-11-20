@@ -13,14 +13,18 @@ import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.ModificationType;
+import org.gridsuite.modification.dto.VoltageInitModificationInfos;
+import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitModificationEntity;
+import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -78,11 +82,17 @@ class NetworkModificationApplicatorTest {
 
     @Test
     void testApplyModificationsWithAllCollectionsNeededForBusView() {
-        List<ModificationEntity> modificationInfosList = List.of(mock(ModificationEntity.class));
+        var modificationInfos = VoltageInitModificationInfos.builder()
+            .stashed(false)
+            .activated(true)
+            .build();
+        List<ModificationEntity> modificationInfosList = List.of(new VoltageInitModificationEntity(modificationInfos));
 
-        when(modificationInfosList.get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
-
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos), networkInfos);
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(
+            networkModificationApplicator,
+            new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos),
+            networkInfos
+        );
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
@@ -90,14 +100,77 @@ class NetworkModificationApplicatorTest {
 
     @Test
     void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusView() {
-        List<ModificationApplicationGroup> modificationInfosGroups = List.of(new ModificationApplicationGroup(UUID.randomUUID(), List.of(mock(ModificationEntity.class)), mock(ReportInfos.class)));
-
-        when(modificationInfosGroups.get(0).modifications().get(0).getType()).thenReturn(ModificationType.VOLTAGE_INIT_MODIFICATION.name());
+        var modificationInfos = VoltageInitModificationInfos.builder()
+            .stashed(false)
+            .activated(true)
+            .build();
+        List<ModificationEntity> modificationInfosList = List.of(new VoltageInitModificationEntity(modificationInfos));
+        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
+            new ModificationApplicationGroup(
+                UUID.randomUUID(),
+                modificationInfosList,
+                mock(ReportInfos.class)
+            ));
 
         NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
 
         assertNotNull(result);
         verify(largeNetworkModificationExecutionService).supplyAsync(any());
+    }
+
+    @Test
+    void testApplyModificationsWithAllCollectionsNeededForBusViewStashedAndNotActivated() {
+        var modificationInfosList = createModificationsWithUnactiveAllCollectionAndActiveNone();
+
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(
+            networkModificationApplicator,
+            new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos),
+            networkInfos
+        );
+
+        assertNotNull(result);
+        verifyNoInteractions(largeNetworkModificationExecutionService);
+    }
+
+    @Test
+    void testApplyModificationsWithGroupsAndAllCollectionsNeededForBusViewStashedAndNotActivated() {
+        var modificationInfosList = createModificationsWithUnactiveAllCollectionAndActiveNone();
+        List<ModificationApplicationGroup> modificationInfosGroups = List.of(
+            new ModificationApplicationGroup(
+                UUID.randomUUID(),
+                modificationInfosList,
+                mock(ReportInfos.class)
+            ));
+
+        NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, networkInfos);
+
+        assertNotNull(result);
+        verifyNoInteractions(largeNetworkModificationExecutionService);
+    }
+
+    private List<ModificationEntity> createModificationsWithUnactiveAllCollectionAndActiveNone() {
+        // All collections but stashed
+        var modificationInfosStashed = VoltageInitModificationInfos.builder()
+            .stashed(true)
+            .activated(true)
+            .build();
+        // All collections but not activated
+        var modificationInfosNotActivated = VoltageInitModificationInfos.builder()
+            .stashed(true)
+            .activated(false)
+            .build();
+        // None and active
+        var modificationInfosPreloadingNone = VoltageLevelModificationInfos.builder()
+            .stashed(false)
+            .activated(true)
+            .equipmentId(UUID.randomUUID().toString())
+            .build();
+        // So in the end strategy should be none
+        return List.of(
+            new VoltageInitModificationEntity(modificationInfosStashed),
+            new VoltageInitModificationEntity(modificationInfosNotActivated),
+            new VoltageLevelModificationEntity(modificationInfosPreloadingNone)
+        );
     }
 
     @ParameterizedTest

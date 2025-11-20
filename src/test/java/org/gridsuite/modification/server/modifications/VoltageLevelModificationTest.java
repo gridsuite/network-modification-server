@@ -17,6 +17,7 @@ import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,9 @@ import static org.gridsuite.modification.NetworkModificationException.Type.MODIF
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -242,9 +245,11 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
 
     private void applyModification(VoltageLevelModificationInfos infos) throws Exception {
         String body = getJsonBody(infos, null);
-        mockMvc.perform(post(getNetworkModificationUri())
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri())
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
     }
 
