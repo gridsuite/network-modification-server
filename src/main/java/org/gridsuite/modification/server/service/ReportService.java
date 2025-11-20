@@ -36,16 +36,18 @@ public class ReportService {
 
     private String reportServerBaseUri;
 
-    private RestTemplate reportServerRest = new RestTemplate();
+    private RestTemplate reportServerRest;
 
     private final ObjectMapper objectMapper;
 
     public ReportService(@Value("${gridsuite.services.report-server.base-uri:http://report-server}") String reportServerURI,
-                         ObjectMapper objectMapper) {
+                         ObjectMapper objectMapper,
+                         RestTemplate restTemplate) {
         this.reportServerBaseUri = reportServerURI;
         this.objectMapper = objectMapper;
         this.objectMapper.registerModule(new ReportNodeJsonModule());
         this.objectMapper.setInjectableValues(new InjectableValues.Std().addValue(ReportNodeDeserializer.DICTIONARY_VALUE_ID, null));
+        this.reportServerRest = restTemplate;
     }
 
     public void setReportServerBaseUri(String reportServerBaseUri) {
