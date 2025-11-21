@@ -101,9 +101,9 @@ class VoltageInitReportTest {
     }
 
     private ApplicationStatus applyModification(Network network, VoltageInitModificationInfos infos) {
-        List<ModificationEntity> entities = modificationRepository.saveModifications(GROUP_ID, List.of(ModificationEntity.fromDTO(infos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(GROUP_ID, List.of(ModificationEntity.fromDTO(infos)));
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-                new ModificationApplicationGroup(GROUP_ID, entities, new ReportInfos(REPORT_ID, NODE_ID))
+                new ModificationApplicationGroup(GROUP_ID, modifications, new ReportInfos(REPORT_ID, NODE_ID))
         );
         NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, NETWORK_ID, true));
         return result.getApplicationStatus();

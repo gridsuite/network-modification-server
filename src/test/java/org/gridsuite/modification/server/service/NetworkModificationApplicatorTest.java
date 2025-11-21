@@ -13,6 +13,7 @@ import com.powsybl.commons.report.ReportNodeAdder;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.VoltageInitModificationInfos;
 import org.gridsuite.modification.dto.VoltageLevelModificationInfos;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
@@ -20,9 +21,6 @@ import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.dto.ReportInfos;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.VoltageInitModificationEntity;
-import org.gridsuite.modification.server.entities.equipment.modification.VoltageLevelModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -86,11 +84,10 @@ class NetworkModificationApplicatorTest {
             .stashed(false)
             .activated(true)
             .build();
-        List<ModificationEntity> modificationInfosList = List.of(new VoltageInitModificationEntity(modificationInfos));
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(
             networkModificationApplicator,
-            new ModificationApplicationGroup(UUID.randomUUID(), modificationInfosList, reportInfos),
+            new ModificationApplicationGroup(UUID.randomUUID(), List.of(modificationInfos), reportInfos),
             networkInfos
         );
 
@@ -104,11 +101,10 @@ class NetworkModificationApplicatorTest {
             .stashed(false)
             .activated(true)
             .build();
-        List<ModificationEntity> modificationInfosList = List.of(new VoltageInitModificationEntity(modificationInfos));
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
             new ModificationApplicationGroup(
                 UUID.randomUUID(),
-                modificationInfosList,
+                List.of(modificationInfos),
                 mock(ReportInfos.class)
             ));
 
@@ -148,7 +144,7 @@ class NetworkModificationApplicatorTest {
         verifyNoInteractions(largeNetworkModificationExecutionService);
     }
 
-    private List<ModificationEntity> createModificationsWithUnactiveAllCollectionAndActiveNone() {
+    private List<ModificationInfos> createModificationsWithUnactiveAllCollectionAndActiveNone() {
         // All collections but stashed
         var modificationInfosStashed = VoltageInitModificationInfos.builder()
             .stashed(true)
@@ -167,9 +163,9 @@ class NetworkModificationApplicatorTest {
             .build();
         // So in the end strategy should be none
         return List.of(
-            new VoltageInitModificationEntity(modificationInfosStashed),
-            new VoltageInitModificationEntity(modificationInfosNotActivated),
-            new VoltageLevelModificationEntity(modificationInfosPreloadingNone)
+            modificationInfosStashed,
+            modificationInfosNotActivated,
+            modificationInfosPreloadingNone
         );
     }
 

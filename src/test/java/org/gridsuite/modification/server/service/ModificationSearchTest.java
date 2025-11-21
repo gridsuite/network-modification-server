@@ -119,7 +119,7 @@ class ModificationSearchTest {
                 .properties(null)
                 .build();
 
-        List<ModificationEntity> entities = modificationRepository.saveModifications(
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(
                 groupUuid,
                 List.of(
                         ModificationEntity.fromDTO(creationWithAccent),
@@ -128,7 +128,7 @@ class ModificationSearchTest {
         );
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
-                new ModificationApplicationGroup(groupUuid, entities, reportInfos),
+                new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
                 networkInfos
         );
         assertThat(result).isNotNull();
@@ -165,10 +165,10 @@ class ModificationSearchTest {
 
         // Load creation for equipment Id newLoadId
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
         NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
-                new ModificationApplicationGroup(groupUuid, entities, reportInfos),
+                new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
                 networkInfos
         );
         assertThat(result).isNotNull();
