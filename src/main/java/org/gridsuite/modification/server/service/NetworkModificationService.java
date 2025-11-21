@@ -349,11 +349,11 @@ public class NetworkModificationService {
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
             List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-            List<UUID> uuids = networkModificationRepository.saveModificationInfosLight(groupUuid, modificationToDuplicateInfos);
+            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
             for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
-                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), uuids.get(i));
+                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
             }
 
             return duplicateModificationMapping;

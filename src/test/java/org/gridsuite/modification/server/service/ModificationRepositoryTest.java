@@ -504,7 +504,7 @@ class ModificationRepositoryTest {
         var groovyScriptEntity5 = GroovyScriptInfos.builder().script("script5").build();
 
         List<ModificationInfos> modifications = List.of(groovyScriptEntity1, groovyScriptEntity2, groovyScriptEntity3, groovyScriptEntity4, groovyScriptEntity5, tabularModificationEntity);
-        networkModificationRepository.saveModificationInfosLight(TEST_GROUP_ID, modifications);
+        networkModificationRepository.saveModificationInfos(TEST_GROUP_ID, modifications);
         assertRequestsCount(2, 8, 0, 0);
 
         var modificationOriginal = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);

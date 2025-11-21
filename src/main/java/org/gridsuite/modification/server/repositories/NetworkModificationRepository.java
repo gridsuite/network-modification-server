@@ -120,12 +120,6 @@ public class NetworkModificationRepository {
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
-    @Transactional
-    public List<UUID> saveModificationInfosLight(UUID groupUuid, List<ModificationInfos> modifications) {
-        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
-        return entities.stream().map(ModificationEntity::getId).toList();
-    }
-
     private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid,
             List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
