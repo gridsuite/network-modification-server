@@ -422,7 +422,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
+    public List<ModificationInfos> getActiveModifications(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
         return modificationsEntities.stream().map(this::getModificationInfos).toList();
     }

@@ -298,7 +298,7 @@ public class NetworkModificationService {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
                 List<ModificationInfos> modifications = List.of();
                 try {
-                    modifications = networkModificationRepository.getActiveModificationsEntities(groupUuid, modificationsToExclude);
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
