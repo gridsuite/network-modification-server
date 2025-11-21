@@ -764,12 +764,14 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
-        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        return loadFullModificationsEntities(newEntities);
     }
 
     @Transactional
     public List<ModificationInfos> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
-        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos).stream().map(ModificationEntity::toModificationInfos).toList();
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        return loadFullModificationsEntities(newEntities);
     }
 }
