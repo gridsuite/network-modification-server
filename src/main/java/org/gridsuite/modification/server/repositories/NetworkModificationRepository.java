@@ -111,13 +111,13 @@ public class NetworkModificationRepository {
     // Nevertheless We have to keep it public for transactional annotation.
     public List<ModificationInfos> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
         List<ModificationEntity> entities = saveModificationsNonTransactional(groupUuid, modifications);
-        return loadFullModificationsEntities(entities);
+        return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
     public List<ModificationInfos> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
-        return loadFullModificationsEntities(entities);
+        return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
@@ -178,7 +178,7 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        return loadFullModificationsEntities(movedModifications);
+        return movedModifications.stream().map(this::getModificationInfos).toList();
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
@@ -384,10 +384,7 @@ public class NetworkModificationRepository {
                 // load MCS modifications with properties
                 modifications = shuntCompensatorModificationRepository.findAllPropertiesByIdIn(subModificationsUuids);
             default ->
-                throw new NetworkModificationException(
-                    UNKNOWN_MODIFICATION_TYPE,
-                    String.format("No sub-modifications loading for modification type: %s", modificationType)
-                );
+                throw new UnsupportedOperationException(String.format("No sub-modifications loading for modification type: %s", modificationType));
         }
         return modifications;
     }
@@ -427,12 +424,6 @@ public class NetworkModificationRepository {
     @Transactional(readOnly = true)
     public List<ModificationInfos> getActiveModificationsEntities(UUID groupUuid, Set<UUID> modificationsToExclude) {
         List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
-        return loadFullModificationsEntities(modificationsEntities);
-    }
-
-    private List<ModificationInfos> loadFullModificationsEntities(List<ModificationEntity> modificationsEntities) {
-        // Force load subentities/collections, needed later when the transaction is closed.
-        // And refactor to more efficiently load the data (avoid 1+N) ?
         return modificationsEntities.stream().map(this::getModificationInfos).toList();
     }
 
@@ -730,10 +721,7 @@ public class NetworkModificationRepository {
             case SUBSTATION_MODIFICATION ->
                 Lists.partition(subModificationsIds, SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE).forEach(substationModificationRepository::deleteSomeTabularSubModifications);
             default ->
-                throw new NetworkModificationException(
-                    UNKNOWN_MODIFICATION_TYPE,
-                    String.format("No sub-modifications deletion method for type: %s", tabularModificationType)
-                );
+                throw new UnsupportedOperationException(String.format("No sub-modifications deletion method for type: %s", tabularModificationType));
         }
     }
 
@@ -765,13 +753,13 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
-        return loadFullModificationsEntities(newEntities);
+        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
     public List<ModificationInfos> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
-        return loadFullModificationsEntities(newEntities);
+        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }
