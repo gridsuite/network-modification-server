@@ -1292,20 +1292,42 @@ class ModificationRepositoryTest {
     @Test
     void testModificationOrder() {
         // add 1 modification in a group
-        var modifEntity1 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id1").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity1 = ModificationEntity.fromDTO(
+            EquipmentAttributeModificationInfos.builder()
+                .equipmentId("id1")
+                .equipmentAttributeName("attribute")
+                .equipmentAttributeValue("foo")
+                .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
+                .build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity1));
         // move it in another group
-        List<ModificationInfos> movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity1.getId()), null);
+        List<ModificationInfos> movedEntities = networkModificationRepository.moveModifications(
+            TEST_GROUP_ID_2,
+            TEST_GROUP_ID,
+            List.of(modifEntity1.getId()),
+            null);
         assertEquals(1, movedEntities.size());
-//        assertEquals(0, movedEntities.get(0).getModificationsOrder());
+        ModificationEntity entity1 = modificationRepository.findById(movedEntities.get(0).getUuid()).orElseThrow();
+        assertEquals(0, entity1.getModificationsOrder());
 
         // put another modification in empty origin group: its order must restart to 0 as well
-        var modifEntity2 = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id2").equipmentAttributeName("attribute").equipmentAttributeValue("foo").equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
+        var modifEntity2 = ModificationEntity.fromDTO(
+            EquipmentAttributeModificationInfos.builder()
+                .equipmentId("id2")
+                .equipmentAttributeName("attribute")
+                .equipmentAttributeValue("foo")
+                .equipmentType(IdentifiableType.VOLTAGE_LEVEL)
+                .build());
         networkModificationRepository.saveModifications(TEST_GROUP_ID, List.of(modifEntity2));
         // trick: move it too, to see the order in the entity
-        movedEntities = networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, List.of(modifEntity2.getId()), null);
+        movedEntities = networkModificationRepository.moveModifications(
+            TEST_GROUP_ID_2,
+            TEST_GROUP_ID,
+            List.of(modifEntity2.getId()),
+            null);
         assertEquals(1, movedEntities.size());
-//        assertEquals(1, movedEntities.get(0).getModificationsOrder());
+        ModificationEntity entity2 = modificationRepository.findById(movedEntities.get(0).getUuid()).orElseThrow();
+        assertEquals(1, entity2.getModificationsOrder());
     }
 
     @Test
