@@ -392,9 +392,9 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modificationEntities = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
-        List<UUID> ids = modificationEntities.stream().map(ModificationInfos::getUuid).toList();
-        return applyModifications(targetGroupUuid, modificationEntities, applicationContexts).thenApply(result ->
+        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
+        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
     }
 
