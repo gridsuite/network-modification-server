@@ -117,6 +117,7 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+        // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
         return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
@@ -747,6 +748,7 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
@@ -754,6 +756,7 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }
