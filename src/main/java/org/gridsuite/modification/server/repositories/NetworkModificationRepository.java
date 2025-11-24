@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static org.apache.commons.collections4.SetUtils.emptyIfNull;
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
@@ -108,13 +109,16 @@ public class NetworkModificationRepository {
     // This method should be package-private and not used as API of the service as it uses ModificationEntity and
     // we want to encapsulate the use of Entity related objects to this service.
     // Nevertheless We have to keep it public for transactional annotation.
-    public List<ModificationEntity> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
-        return saveModificationsNonTransactional(groupUuid, modifications);
+    public List<ModificationInfos> saveModifications(UUID groupUuid, List<ModificationEntity> modifications) {
+        List<ModificationEntity> entities = saveModificationsNonTransactional(groupUuid, modifications);
+        return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
-    public List<ModificationEntity> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
-        return saveModificationInfosNonTransactional(groupUuid, modifications);
+    public List<ModificationInfos> saveModificationInfos(UUID groupUuid, List<ModificationInfos> modifications) {
+        List<ModificationEntity> entities = saveModificationInfosNonTransactional(groupUuid, modifications);
+        // We can't return input modifications directly because it wouldn't have the IDs coming from the saved entities
+        return entities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid,
@@ -128,7 +132,7 @@ public class NetworkModificationRepository {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::getModificationInfos)
+                .map(this::toModificationsInfosOptimizedForTabular)
                 .map(ModificationEntity::fromDTO)
                 .toList();
         compositeEntity.setModifications(copyEntities);
@@ -145,7 +149,7 @@ public class NetworkModificationRepository {
         }
 
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::getModificationInfos)
+                .map(this::toModificationsInfosOptimizedForTabular)
                 .map(ModificationEntity::fromDTO)
                 .toList();
         compositeEntity.getModifications().clear();
@@ -167,11 +171,9 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationEntity> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
+    public List<ModificationInfos> moveModifications(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
         List<ModificationEntity> movedModifications = moveModificationsNonTransactional(destinationGroupUuid, originGroupUuid, modificationsToMoveUUID, referenceModificationUuid);
-        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        movedModifications.forEach(ModificationEntity::toModificationInfos);
-        return movedModifications;
+        return movedModifications.stream().map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
     private List<ModificationEntity> moveModificationsNonTransactional(UUID destinationGroupUuid, UUID originGroupUuid, List<UUID> modificationsToMoveUUID, UUID referenceModificationUuid) {
@@ -259,7 +261,7 @@ public class NetworkModificationRepository {
         // findAllById does not keep sourceModificationUuids order, but
         // sourceEntities, copyEntities, newEntities have the same order.
         List<ModificationEntity> copyEntities = sourceEntities.stream()
-                .map(this::getModificationInfos)
+                .map(this::toModificationsInfosOptimizedForTabular)
                 .map(ModificationEntity::fromDTO)
                 .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
@@ -296,13 +298,13 @@ public class NetworkModificationRepository {
                 .findAllBaseByGroupIdReverse(getModificationGroup(groupUuid).getId())
                 .stream()
                 .filter(ModificationEntity::getStashed)
-                .map(this::getModificationInfos)
+                .map(this::toModificationsInfosOptimizedForTabular)
                 .collect(Collectors.toList());
         } else {
             return modificationRepository
                 .findAllBaseByGroupId(getModificationGroup(groupUuid).getId())
                 .stream()
-                .map(this::getModificationInfos)
+                .map(this::toModificationsInfosOptimizedForTabular)
                 .collect(Collectors.toList());
         }
     }
@@ -407,46 +409,28 @@ public class NetworkModificationRepository {
                 .build();
     }
 
-    public ModificationInfos getModificationInfos(ModificationEntity modificationEntity) {
+    public ModificationInfos toModificationsInfosOptimizedForTabular(ModificationEntity modificationEntity) {
         if (modificationEntity instanceof TabularModificationsEntity tabularEntity) {
             return loadTabularModification(tabularEntity);
         }
         return modificationEntity.toModificationInfos();
     }
 
-    private List<ModificationEntity> getModificationsEntitiesNonTransactional(List<UUID> groupUuids, boolean onlyStashed) {
-        Stream<ModificationEntity> entityStream = groupUuids.stream().flatMap(this::getModificationEntityStream);
-        if (onlyStashed) {
-            return entityStream.filter(m -> m.getStashed() == onlyStashed).toList();
-        } else {
-            return entityStream.toList();
-        }
-    }
-
     @Transactional(readOnly = true)
-    public List<ModificationEntity> getModificationsEntities(List<UUID> groupUuids, boolean onlyStashed) {
-        List<ModificationEntity> modificationsEntities = getModificationsEntitiesNonTransactional(groupUuids, onlyStashed);
-        // TODO resolve lazy initialisation exception : replace this line by loadFullModificationsEntities
-        modificationsEntities.forEach(m -> m.toModificationInfos());
-        return modificationsEntities;
-    }
-
-    private void loadFullModificationsEntities(List<ModificationEntity> modificationsEntities) {
-        // Force load subentities/collections, needed later when the transaction is closed
-        // Necessary for applying network modifications
-        // to avoid LazyInitialisationException. Maybe better to refactor to return the dto ?
-        // And refactor to more efficiently load the data (avoid 1+N) ?
-        modificationsEntities.forEach(this::getModificationInfos);
+    public List<ModificationInfos> getActiveModifications(UUID groupUuid, Set<UUID> modificationsToExclude) {
+        List<ModificationEntity> modificationsEntities = modificationRepository.findAllActiveModificationsByGroupId(groupUuid, emptyIfNull(modificationsToExclude));
+        return modificationsEntities.stream().map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
-        return getModificationsEntitiesNonTransactional(groupUuids, onlyStashed).stream()
-            .map(this::getModificationInfos).toList();
+        return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
+                .map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
-        return getModificationInfos(getModificationEntity(modificationUuid));
+        return toModificationsInfosOptimizedForTabular(getModificationEntity(modificationUuid));
     }
 
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
@@ -525,7 +509,7 @@ public class NetworkModificationRepository {
                 ModificationEntity::getId,
                 Function.identity()
             ));
-        return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::getModificationInfos).toList();
+        return uuids.stream().map(entities::get).filter(Objects::nonNull).map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
     /**
@@ -540,7 +524,7 @@ public class NetworkModificationRepository {
         return networkModificationsUuids.stream()
                 .map(entitiesById::get)
                 .filter(Objects::nonNull)
-                .map(this::getModificationInfos)
+                .map(this::toModificationsInfosOptimizedForTabular)
                 .toList();
     }
 
@@ -564,12 +548,12 @@ public class NetworkModificationRepository {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getActiveModificationsInfos(@NonNull UUID groupUuid) {
-        return getActiveModificationsInfosNonTransactional(groupUuid);
+    public List<ModificationInfos> getUnstashedModificationsInfos(@NonNull UUID groupUuid) {
+        return getUnstashedModificationsInfosNonTransactional(groupUuid);
     }
 
-    private List<ModificationInfos> getActiveModificationsInfosNonTransactional(UUID groupUuid) {
-        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::getModificationInfos).toList();
+    private List<ModificationInfos> getUnstashedModificationsInfosNonTransactional(UUID groupUuid) {
+        return getModificationEntityStream(groupUuid).filter(m -> !m.getStashed()).map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
     @Transactional
@@ -761,14 +745,18 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public List<ModificationEntity> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
-        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getActiveModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
-        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+    public List<ModificationInfos> saveDuplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids) {
+        List<ModificationInfos> modificationInfos = originGroupUuid != null ? getUnstashedModificationsInfosNonTransactional(originGroupUuid) : getModificationsInfosNonTransactional(modificationsUuids);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
+        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 
     @Transactional
-    public List<ModificationEntity> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
+    public List<ModificationInfos> saveCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids) {
         List<ModificationInfos> modificationInfos = getCompositeModificationsInfosNonTransactional(modificationsUuids);
-        return saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
+        // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
+        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }

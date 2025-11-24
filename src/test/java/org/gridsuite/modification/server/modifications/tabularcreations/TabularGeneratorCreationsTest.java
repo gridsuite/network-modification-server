@@ -348,10 +348,10 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
 
         // creation
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(tabularCreationJson)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(request().asyncStarted());
         MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk()).andReturn();
+            .andExpect(status().isOk()).andReturn();
         NetworkModificationsResult result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(result);
         assertEquals(1, result.modificationUuids().size());
@@ -359,22 +359,22 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
 
         // try to get via the group
         UnsupportedOperationException exception = assertThrows(
-                UnsupportedOperationException.class,
+            UnsupportedOperationException.class,
             () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true)
         );
         assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
 
         // try to get via id
         exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.getModificationInfo(modifId)
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.getModificationInfo(modifId)
         );
         assertEquals("No sub-modifications loading for modification type: SUBSTATION_CREATION", exception.getMessage());
 
         // try to update
         exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.updateModification(modifId, creationInfos)
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.updateModification(modifId, creationInfos)
         );
         // deletion error because we try to remove the sub-modifications before updating them
         assertEquals("No sub-modifications deletion method for type: SUBSTATION_CREATION", exception.getMessage());
@@ -382,8 +382,8 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         // try to delete
         List<UUID> ids = List.of(modifId);
         exception = assertThrows(
-                UnsupportedOperationException.class,
-                () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
+            UnsupportedOperationException.class,
+            () -> networkModificationRepository.deleteModifications(TEST_GROUP_ID, ids)
         );
         assertEquals("No sub-modifications deletion method for type: SUBSTATION_CREATION", exception.getMessage());
     }

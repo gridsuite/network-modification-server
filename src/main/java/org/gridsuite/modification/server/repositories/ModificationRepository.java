@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -33,6 +34,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
     List<ModificationEntity> findAllByGroupId(@Param("groupId") UUID groupId, @Param("stashed") Boolean stashed);
+
+    @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = false AND m.activated = true AND m.id NOT IN (?2) order by m.modificationsOrder")
+    List<ModificationEntity> findAllActiveModificationsByGroupId(UUID groupUuid, Set<UUID> excludedList);
 
     @Query(value = "SELECT new ModificationEntity(m.id, m.type) FROM ModificationEntity m WHERE m.id IN (?1)")
     List<ModificationEntity> findMetadataIn(List<UUID> uuids);

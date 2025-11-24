@@ -241,16 +241,16 @@ public class NetworkModificationService {
     }
 
     public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
-        List<UUID> ids = modificationEntities.stream().map(ModificationEntity::getId).toList();
-        return applyModifications(groupUuid, modificationEntities, applicationContexts).thenApply(results ->
+        List<ModificationInfos> modifications = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
+        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(groupUuid, modifications, applicationContexts).thenApply(results ->
             new NetworkModificationsResult(ids, results));
     }
 
     /**
      * Apply modifications on several networks
      */
-    private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationEntity> modifications, List<ModificationApplicationContext> applicationContexts) {
+    private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts) {
         // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
         // sequentially like before for now
         return scheduleApplyModifications(
@@ -259,7 +259,9 @@ public class NetworkModificationService {
                     modificationApplicationContext.networkUuid(),
                     modificationApplicationContext.variantId(),
                     new ModificationApplicationGroup(groupUuid,
-                        modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getId())).toList(),
+                        modifications.stream()
+                            .filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid()))
+                            .toList(),
                         new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
                     )
                 ),
@@ -294,14 +296,9 @@ public class NetworkModificationService {
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reportInfos) -> {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
-                List<ModificationEntity> modifications = List.of();
+                List<ModificationInfos> modifications = List.of();
                 try {
-                    // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
-                        .stream()
-                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
-                        .filter(m -> !m.getStashed())
-                        .toList();
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -315,8 +312,7 @@ public class NetworkModificationService {
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
             .filter(m -> m.getActivated() && !m.getStashed())
-            .map(ModificationEntity::getType)
-            .map(ModificationType::valueOf)
+            .map(ModificationInfos::getType)
             .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
 
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
@@ -344,20 +340,20 @@ public class NetworkModificationService {
                                                                        boolean applyModifications) {
         // update origin/destinations groups to cut and paste all modificationsToMove
         // FullDto needed for toModificationInfos() after the modifications have been applied
-        List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modificationEntities.isEmpty() ? applyModifications(destinationGroupUuid, modificationEntities, applicationContexts) : CompletableFuture.completedFuture(List.of());
-        return futureResult.thenApply(result -> new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), result));
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
+        return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
     }
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
-            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getActiveModificationsInfos(sourceGroupUuid);
-            List<ModificationEntity> duplicatedModificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
+            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
+            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
             for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
-                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), duplicatedModificationEntities.get(i).getId());
+                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
             }
 
             return duplicateModificationMapping;
@@ -373,8 +369,7 @@ public class NetworkModificationService {
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
                 .filter(m -> m.getActivated() && !m.getStashed())
-                .map(ModificationEntity::getType)
-                .map(ModificationType::valueOf)
+                .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
@@ -390,16 +385,16 @@ public class NetworkModificationService {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
             throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
         }
-        List<ModificationEntity> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
-        List<UUID> ids = duplicateModifications.stream().map(ModificationEntity::getId).toList();
+        List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
+        List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
     }
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationEntity> modificationEntities = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
-        List<UUID> ids = modificationEntities.stream().map(ModificationEntity::getId).toList();
-        return applyModifications(targetGroupUuid, modificationEntities, applicationContexts).thenApply(result ->
+        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
+        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
     }
 
