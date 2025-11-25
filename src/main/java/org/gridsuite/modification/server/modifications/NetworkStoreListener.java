@@ -135,7 +135,7 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addIndexationInfosForModification(Identifiable<?> identifiable, String attribute) {
-        if (shouldIndexEquipment(identifiable, attribute)) {
+        if (hasIndexedEquipmentType(identifiable) && "name".equals(attribute)) {
             addEquipmentInfos(identifiable);
             if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
                 VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
@@ -146,7 +146,7 @@ public class NetworkStoreListener implements NetworkListener {
                 addEquipmentInfosLinkedToSubstation(updatedSubstation);
             }
         }
-        if (shouldIndexModification(identifiable)) {
+        if (hasIndexedModificationType(identifiable)) {
             modificationApplicationInfosList.getLast().getModifiedEquipmentIds().add(identifiable.getId());
         }
     }
@@ -161,7 +161,7 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void addEquipmentInfosLinkedToVoltageLevel(VoltageLevel voltageLevel) {
         voltageLevel.getConnectableStream()
-            .filter(this::shouldIndexEquipment)
+            .filter(this::hasIndexedEquipmentType)
             .forEach(this::addEquipmentInfos);
     }
 
@@ -324,23 +324,23 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addIndexationInfosForCreation(Identifiable<?> identifiable) {
-        if (shouldIndexEquipment(identifiable)) {
+        if (hasIndexedEquipmentType(identifiable)) {
             addEquipmentInfos(identifiable);
         }
-        if (shouldIndexModification(identifiable)) {
+        if (hasIndexedModificationType(identifiable)) {
             modificationApplicationInfosList.getLast().getCreatedEquipmentIds().add(identifiable.getId());
         }
     }
 
     private void addIndexationInfosForDeletion(Identifiable<?> identifiable) {
-        if (shouldIndexEquipment(identifiable)) {
+        if (hasIndexedEquipmentType(identifiable)) {
             tombstonedEquipmentInfos.add(TombstonedEquipmentInfos.builder()
                 .networkUuid(networkUuid)
                 .variantId(network.getVariantManager().getWorkingVariantId())
                 .id(identifiable.getId())
                 .build());
         }
-        if (shouldIndexModification(identifiable)) {
+        if (hasIndexedModificationType(identifiable)) {
             modificationApplicationInfosList.getLast().getDeletedEquipmentIds().add(identifiable.getId());
         }
     }
@@ -357,19 +357,11 @@ public class NetworkStoreListener implements NetworkListener {
             .build());
     }
 
-    private boolean shouldIndexModification(Identifiable<?> identifiable) {
+    private boolean hasIndexedModificationType(Identifiable<?> identifiable) {
         return getIndexedEquipmentTypesInModification().contains(identifiable.getType());
     }
 
-    private boolean shouldIndexEquipment(Identifiable<?> identifiable) {
-        return shouldIndexEquipment(identifiable, true, null);
-    }
-
-    private boolean shouldIndexEquipment(Identifiable<?> identifiable, String attribute) {
-        return shouldIndexEquipment(identifiable, false, attribute);
-    }
-
-    private boolean shouldIndexEquipment(Identifiable<?> identifiable, boolean isCreationOrDeletion, String attribute) {
-        return getIndexedEquipmentTypes().contains(identifiable.getType()) && (isCreationOrDeletion || "name".equals(attribute));
+    private boolean hasIndexedEquipmentType(Identifiable<?> identifiable) {
+        return getIndexedEquipmentTypes().contains(identifiable.getType());
     }
 }
