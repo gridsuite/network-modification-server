@@ -141,13 +141,19 @@ class EquipmentIndexationTest {
         List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(11, equipmentsIndexedAfterVlModif.size());
 
-        Set<String> indexEquipmentTypeNames = EquipmentInfosService.getIndexedEquipmentTypes().stream().map(type -> type.name()).collect(Collectors.toSet());
-        indexEquipmentTypeNames.add("VSC_CONVERTER_STATION");
-        indexEquipmentTypeNames.add("LCC_CONVERTER_STATION");
-        indexEquipmentTypeNames.add("HVDC_LINE_VSC");
-        indexEquipmentTypeNames.add("HVDC_LINE_LCC");
         assertTrue(equipmentsIndexedAfterVlModif.stream()
-                .allMatch(equipmentInfos -> indexEquipmentTypeNames.contains(equipmentInfos.getType())));
+                .allMatch(equipmentInfos -> EquipmentInfosService.getIndexedEquipmentTypes().contains(getExtendedIdentifiableType(equipmentInfos))));
+    }
+
+    private static IdentifiableType getExtendedIdentifiableType(EquipmentInfos equipmentInfos) {
+        String type = equipmentInfos.getType();
+        if (type.equals("HVDC_LINE_VSC") || type.equals("HVDC_LINE_LCC")) {
+            return IdentifiableType.HVDC_LINE;
+        }
+        if (type.equals("VSC_CONVERTER_STATION") || type.equals("LCC_CONVERTER_STATION")) {
+            return IdentifiableType.HVDC_CONVERTER_STATION;
+        }
+        return IdentifiableType.valueOf(type);
     }
 
     @Test
