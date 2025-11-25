@@ -24,4 +24,7 @@
     <changeSet author="rehiligha (generated)" id="1761045634057-24">
         <addUniqueConstraint columnNames="current_limits_id" constraintName="uc_operational_limits_group_modification_current_limits_id_col" tableName="operational_limits_group_modification"/>
     </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761045634057-25">
+        <dropColumn columnName="PHASE_TAP_CHANGER_LOAD_TAP_CHANGING_CAPABILITIES" tableName="TWO_WINDINGS_TRANSFORMER_CREATION"/>
+    </changeSet>
 </databaseChangeLog>

@@ -36,7 +36,4 @@
     <changeSet author="rehiligha (generated)" id="1761058240544-50">
         <addForeignKeyConstraint baseColumnNames="converter_station_2_id" baseTableName="vsc_creation" constraintName="converter_station_creation_2_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="converter_station_creation" validate="true"/>
     </changeSet>
-    <changeSet author="rehiligha (generated)" id="1761058240544-51">
-        <dropColumn columnName="PHASE_TAP_CHANGER_LOAD_TAP_CHANGING_CAPABILITIES" tableName="TWO_WINDINGS_TRANSFORMER_CREATION"/>
-    </changeSet>
 </databaseChangeLog>
