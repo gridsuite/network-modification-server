@@ -334,15 +334,19 @@ public class NetworkStoreListener implements NetworkListener {
 
     private void addIndexationInfosForDeletedEquipment(Identifiable<?> identifiable) {
         if (hasIndexedEquipmentType(identifiable)) {
-            tombstonedEquipmentInfos.add(TombstonedEquipmentInfos.builder()
-                .networkUuid(networkUuid)
-                .variantId(network.getVariantManager().getWorkingVariantId())
-                .id(identifiable.getId())
-                .build());
+            addTombstonedEquipmentInfos(identifiable);
         }
         if (hasIndexedModificationType(identifiable)) {
             modificationApplicationInfosList.getLast().getDeletedEquipmentIds().add(identifiable.getId());
         }
+    }
+
+    private void addTombstonedEquipmentInfos(Identifiable<?> identifiable) {
+        tombstonedEquipmentInfos.add(TombstonedEquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(network.getVariantManager().getWorkingVariantId())
+            .id(identifiable.getId())
+            .build());
     }
 
     private void addEquipmentInfos(Identifiable<?> identifiable) {
