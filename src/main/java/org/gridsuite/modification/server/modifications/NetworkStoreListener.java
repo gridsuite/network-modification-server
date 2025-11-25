@@ -113,28 +113,28 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
         addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
-        addIndexationInfosForModification(identifiable, attribute);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
         addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
-        addIndexationInfosForModification(identifiable, attribute);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
-        addIndexationInfosForModification(identifiable, attribute);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
         addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
-        addIndexationInfosForModification(identifiable, attribute);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
-    private void addIndexationInfosForModification(Identifiable<?> identifiable, String attribute) {
+    private void addIndexationInfosForModifiedEquipment(Identifiable<?> identifiable, String attribute) {
         if (hasIndexedEquipmentType(identifiable) && "name".equals(attribute)) {
             addEquipmentInfos(identifiable);
             if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
@@ -167,13 +167,13 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        addIndexationInfosForCreation(identifiable);
+        addIndexationInfosForCreatedEquipment(identifiable);
         addSimpleModificationImpact(identifiable, SimpleImpactType.CREATION);
     }
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        addIndexationInfosForDeletion(identifiable);
+        addIndexationInfosForDeletedEquipment(identifiable);
         addSimpleModificationImpact(identifiable, SimpleImpactType.DELETION);
     }
 
@@ -288,7 +288,7 @@ public class NetworkStoreListener implements NetworkListener {
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
         addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
-        addIndexationInfosForModification(identifiable, null);
+        addIndexationInfosForModifiedEquipment(identifiable, null);
     }
 
     @Override
@@ -305,7 +305,7 @@ public class NetworkStoreListener implements NetworkListener {
     public void onExtensionUpdate(Extension<?> extension, String attribute, String variantId, Object oldValue, Object newValue) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
         addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
-        addIndexationInfosForModification(identifiable, null);
+        addIndexationInfosForModifiedEquipment(identifiable, null);
     }
 
     @Override
@@ -323,7 +323,7 @@ public class NetworkStoreListener implements NetworkListener {
         // FIXME: implement this method
     }
 
-    private void addIndexationInfosForCreation(Identifiable<?> identifiable) {
+    private void addIndexationInfosForCreatedEquipment(Identifiable<?> identifiable) {
         if (hasIndexedEquipmentType(identifiable)) {
             addEquipmentInfos(identifiable);
         }
@@ -332,7 +332,7 @@ public class NetworkStoreListener implements NetworkListener {
         }
     }
 
-    private void addIndexationInfosForDeletion(Identifiable<?> identifiable) {
+    private void addIndexationInfosForDeletedEquipment(Identifiable<?> identifiable) {
         if (hasIndexedEquipmentType(identifiable)) {
             tombstonedEquipmentInfos.add(TombstonedEquipmentInfos.builder()
                 .networkUuid(networkUuid)
