@@ -29,7 +29,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.VariantManagerConstants.INITIAL_VARIANT_ID;
 
@@ -138,8 +140,14 @@ class EquipmentIndexationTest {
         mockMvc.perform(post(URI_NETWORK_MODIF).content(vlModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         List<EquipmentInfos> equipmentsIndexedAfterVlModif = equipmentInfosRepository.findAllByNetworkUuidAndVariantId(NETWORK_UUID, NEW_VARIANT);
         assertEquals(11, equipmentsIndexedAfterVlModif.size());
+
+        Set<String> indexEquipmentTypeNames = EquipmentInfosService.getIndexedEquipmentTypes().stream().map(type -> type.name()).collect(Collectors.toSet());
+        indexEquipmentTypeNames.add("VSC_CONVERTER_STATION");
+        indexEquipmentTypeNames.add("LCC_CONVERTER_STATION");
+        indexEquipmentTypeNames.add("HVDC_LINE_VSC");
+        indexEquipmentTypeNames.add("HVDC_LINE_LCC");
         assertTrue(equipmentsIndexedAfterVlModif.stream()
-                .allMatch(equipmentInfos -> EquipmentInfosService.getIndexedEquipmentTypes().contains(IdentifiableType.valueOf(equipmentInfos.getType()))));
+                .allMatch(equipmentInfos -> indexEquipmentTypeNames.contains(equipmentInfos.getType())));
     }
 
     @Test
