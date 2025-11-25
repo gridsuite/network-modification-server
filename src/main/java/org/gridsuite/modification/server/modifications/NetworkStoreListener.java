@@ -99,7 +99,7 @@ public class NetworkStoreListener implements NetworkListener {
         return ids;
     }
 
-    private void addSimpleModificationImpact(Identifiable<?> identifiable, SimpleImpactType type) {
+    private void addSimpleImpact(Identifiable<?> identifiable, SimpleImpactType type) {
         simpleImpacts.add(
             SimpleElementImpact.builder()
                 .simpleImpactType(type)
@@ -112,25 +112,25 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
-        addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
         addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
-        addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
         addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
         addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
         addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
@@ -168,13 +168,13 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onCreation(Identifiable identifiable) {
         addIndexationInfosForCreatedEquipment(identifiable);
-        addSimpleModificationImpact(identifiable, SimpleImpactType.CREATION);
+        addSimpleImpact(identifiable, SimpleImpactType.CREATION);
     }
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
         addIndexationInfosForDeletedEquipment(identifiable);
-        addSimpleModificationImpact(identifiable, SimpleImpactType.DELETION);
+        addSimpleImpact(identifiable, SimpleImpactType.DELETION);
     }
 
     @Override
@@ -287,7 +287,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
-        addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
         addIndexationInfosForModifiedEquipment(identifiable, null);
     }
 
@@ -304,7 +304,7 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onExtensionUpdate(Extension<?> extension, String attribute, String variantId, Object oldValue, Object newValue) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
-        addSimpleModificationImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
         addIndexationInfosForModifiedEquipment(identifiable, null);
     }
 
