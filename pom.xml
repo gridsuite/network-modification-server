@@ -199,6 +199,10 @@
             <artifactId>powsybl-open-loadflow</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>context-propagation</artifactId>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
