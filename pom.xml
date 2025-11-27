@@ -51,7 +51,7 @@
         <sonar.coverage.exclusions>**/migration/**/*</sonar.coverage.exclusions>
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
-        <network-modification.version>0.49.0</network-modification.version>
+        <network-modification.version>0.51.0</network-modification.version>
     </properties>
 
     <build>
@@ -86,6 +86,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.gridsuite</groupId>
+                <artifactId>gridsuite-network-modification</artifactId>
+                <version>${network-modification.version}</version>
+            </dependency>
             <!-- overrides of imports -->
             <dependency><!-- To remove when integrate in next release of gridsuite-dependencies or powsybl-ws-dependencies -->
                 <groupId>com.squareup.okhttp3</groupId>
@@ -118,7 +123,6 @@
         <dependency>
             <groupId>org.gridsuite</groupId>
             <artifactId>gridsuite-network-modification</artifactId>
-            <version>${network-modification.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
