@@ -64,9 +64,8 @@ public class ReportService {
     }
 
     public void sendReport(UUID reportUuid, ReportNode reportNode, ReportMode reportMode) {
-        String endpoint = reportMode == ReportMode.REPLACE ? "replace" : "";
-        var path = UriComponentsBuilder.fromPath("{reportUuid}" + (endpoint.isEmpty() ? "" : "/" + endpoint))
-            .buildAndExpand(reportUuid)
+        var path = UriComponentsBuilder.fromPath("{reportUuid}{endpoint}")
+            .buildAndExpand(reportUuid, reportMode == ReportMode.REPLACE ? "/replace" : "")
             .toUriString();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
