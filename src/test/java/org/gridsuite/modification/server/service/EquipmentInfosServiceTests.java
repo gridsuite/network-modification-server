@@ -279,7 +279,7 @@ class EquipmentInfosServiceTests {
         UUID networkUuid = UUID.randomUUID();
         Network network = NetworkCreation.createMixedTopology(networkUuid);
         HvdcConverterStation<?> hvdcConverterStation = network.getHvdcConverterStation("v1lcc");
-        assertEquals(EquipmentInfos.getEquipmentTypeName(hvdcConverterStation), String.format("%s_%s", hvdcConverterStation.getHvdcType(), "CONVERTER_STATION"));
+        assertEquals(String.format("%s_%s", hvdcConverterStation.getHvdcType(), "CONVERTER_STATION"), EquipmentInfos.getEquipmentTypeName(hvdcConverterStation));
     }
 
     @AfterEach
