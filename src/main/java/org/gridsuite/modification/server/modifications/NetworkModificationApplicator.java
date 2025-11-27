@@ -221,7 +221,11 @@ public class NetworkModificationApplicator {
         modification.initApplicationContext(this.filterService, this.loadFlowService);
 
         // apply all changes on the network
-        modification.apply(network, new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategy).orElse(new DefaultNamingStrategy()), subReportNode);
+        modification.apply(network,
+            new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategy).orElse(new DefaultNamingStrategy()),
+            false,
+            largeNetworkModificationExecutionService.getComputationManager(),
+            subReportNode);
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
