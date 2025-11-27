@@ -961,8 +961,8 @@ class ModificationControllerTest {
                 .busOrBusbarSectionId2("bus2")
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(c1).applicability(SIDE1).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(c2).applicability(SIDE2).build()
+                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(c1).applicability(SIDE1).build(),
+                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(c2).applicability(SIDE2).build()
                     )
                 )
                 .build();
