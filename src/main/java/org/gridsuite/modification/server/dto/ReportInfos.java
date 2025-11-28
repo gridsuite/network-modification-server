@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -16,10 +17,19 @@ import java.util.UUID;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Schema(description = "Report infos")
 public class ReportInfos {
     private UUID reportUuid;
 
     private UUID nodeUuid;
+
+    private ReportMode reportMode;
+
+    public ReportInfos(UUID reportUuid, UUID nodeUuid) {
+        this.reportUuid = reportUuid;
+        this.nodeUuid = nodeUuid;
+        this.reportMode = ReportMode.APPEND;
+    }
 }

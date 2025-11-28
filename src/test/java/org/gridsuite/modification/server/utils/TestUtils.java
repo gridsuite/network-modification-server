@@ -21,10 +21,7 @@ import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationApplicationContext;
-import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
@@ -144,7 +141,7 @@ public final class TestUtils {
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), eq(ReportMode.APPEND));
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
         assertTrue(message.isPresent());
@@ -157,7 +154,7 @@ public final class TestUtils {
 
     public static void assertLogMessageWithoutRank(String expectedMessage, String reportKey, ReportService reportService) {
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), eq(ReportMode.APPEND));
         assertNotNull(reporterCaptor.getValue());
         assertTrue(assertMessageFoundFromReporter(expectedMessage, reportKey, reporterCaptor.getValue()));
     }
