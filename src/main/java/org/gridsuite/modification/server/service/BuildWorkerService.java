@@ -45,8 +45,8 @@ public class BuildWorkerService {
     @NonNull private final NetworkModificationObserver networkModificationObserver;
     @NonNull private final ObjectMapper objectMapper;
     @NonNull private final BuildStoppedPublisherService stoppedPublisherService;
-    private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
     @NonNull private NotificationService notificationService;
+    private final ExecutionService executionService;
 
     private final Map<String, CompletableFuture<NetworkModificationResult>> futures = new ConcurrentHashMap<>();
 
@@ -68,10 +68,10 @@ public class BuildWorkerService {
 
             buildRequests.add(execContext.getReceiver()); // receiver is the node uuid to build
 
-            CompletableFuture<NetworkModificationResult> future = largeNetworkModificationExecutionService.supplyAsync(() -> {
+            CompletableFuture<NetworkModificationResult> future = CompletableFuture.supplyAsync(() -> {
                 LOGGER.info("Starting build on variant : {}", buildInfos.getDestinationVariantId());
                 return networkModificationObserver.observeBuild(execContext, () -> networkModificationService.buildVariant(networkUuid, buildInfos));
-            });
+            }, executionService.getExecutorService());
 
             futures.put(receiver, future);
 

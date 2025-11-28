@@ -11,6 +11,7 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportConstants;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
+import com.powsybl.computation.ComputationManager;
 import com.powsybl.iidm.modification.topology.DefaultNamingStrategy;
 import com.powsybl.iidm.modification.topology.NamingStrategiesServiceLoader;
 import com.powsybl.iidm.network.Network;
@@ -20,6 +21,7 @@ import lombok.Getter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
+import org.gridsuite.modification.server.service.ExecutionService;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
@@ -59,6 +61,7 @@ public class NetworkModificationApplicator {
     @Getter private final LoadFlowService loadFlowService;
 
     private final LargeNetworkModificationExecutionService largeNetworkModificationExecutionService;
+    private final ExecutionService executionService;
 
     private final NetworkModificationObserver networkModificationObserver;
 
@@ -73,7 +76,7 @@ public class NetworkModificationApplicator {
                                          ReportService reportService, FilterService filterService,
                                          LoadFlowService loadFlowService,
                                          NetworkModificationObserver networkModificationObserver,
-                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService) {
+                                         LargeNetworkModificationExecutionService largeNetworkModificationExecutionService, ExecutionService executionService) {
         this.networkStoreService = networkStoreService;
         this.equipmentInfosService = equipmentInfosService;
         this.applicationInfosService = applicationInfosService;
@@ -82,6 +85,7 @@ public class NetworkModificationApplicator {
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
+        this.executionService = executionService;
     }
 
     /* This method is used for incremental modifications
@@ -105,16 +109,18 @@ public class NetworkModificationApplicator {
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
+            ComputationManager computationManager = largeNetworkModificationExecutionService.getComputationManager();
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener));
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener, computationManager));
         } else {
-            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener));
+            ComputationManager computationManager = executionService.getComputationManager();
+            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener, computationManager));
         }
     }
 
     private NetworkModificationResult applyAndFlush(ModificationApplicationGroup modificationInfosGroup,
-            NetworkStoreListener listener) {
-        return flushModificationApplications(apply(modificationInfosGroup, listener), listener);
+            NetworkStoreListener listener, ComputationManager computationManager) {
+        return flushModificationApplications(apply(modificationInfosGroup, listener, computationManager), listener);
     }
 
     private NetworkModificationResult flushModificationApplications(ApplicationStatus groupApplicationStatus, NetworkStoreListener listener) {
@@ -147,23 +153,25 @@ public class NetworkModificationApplicator {
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
+            ComputationManager computationManager = largeNetworkModificationExecutionService.getComputationManager();
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener))
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroups, listener, computationManager))
                 .join();
         } else {
-            return applyAndFlush(modificationInfosGroups, listener);
+            ComputationManager computationManager = executionService.getComputationManager();
+            return applyAndFlush(modificationInfosGroups, listener, computationManager);
         }
     }
 
     private NetworkModificationResult applyAndFlush(List<ModificationApplicationGroup> modificationInfosGroups,
-            NetworkStoreListener listener) {
-        return flushModificationApplications(apply(modificationInfosGroups, listener), listener);
+            NetworkStoreListener listener, ComputationManager computationManager) {
+        return flushModificationApplications(apply(modificationInfosGroups, listener, computationManager), listener);
     }
 
     // This method is used when building a variant
-    private List<ApplicationStatus> apply(List<ModificationApplicationGroup> modificationInfosGroups, NetworkStoreListener listener) {
+    private List<ApplicationStatus> apply(List<ModificationApplicationGroup> modificationInfosGroups, NetworkStoreListener listener, ComputationManager computationManager) {
         return modificationInfosGroups.stream()
-            .map(g -> apply(g, listener))
+            .map(g -> apply(g, listener, computationManager))
             .toList();
     }
 
@@ -177,7 +185,7 @@ public class NetworkModificationApplicator {
             .build();
     }
 
-    private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener) {
+    private ApplicationStatus apply(ModificationApplicationGroup modificationGroupInfos, NetworkStoreListener listener, ComputationManager computationManager) {
         ReportNode reportNode;
         if (modificationGroupInfos.reportInfos().getNodeUuid() != null) {
             UUID reporterId = modificationGroupInfos.reportInfos().getNodeUuid();
@@ -193,7 +201,7 @@ public class NetworkModificationApplicator {
                 .filter(ModificationInfos::getActivated)
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m, listener.getNetwork(), reportNode);
+                    return apply(m, listener.getNetwork(), reportNode, computationManager);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
@@ -203,17 +211,17 @@ public class NetworkModificationApplicator {
         return groupApplicationStatus;
     }
 
-    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode) {
+    private ApplicationStatus apply(ModificationInfos modificationInfos, Network network, ReportNode reportNode, ComputationManager computationManager) {
         ReportNode subReportNode = modificationInfos.createSubReportNode(reportNode);
         try {
-            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode));
+            networkModificationObserver.observeApply(modificationInfos.getType(), () -> apply(modificationInfos.toModification(), network, subReportNode, computationManager));
         } catch (Exception e) {
             handleException(subReportNode, e);
         }
         return getApplicationStatus(reportNode);
     }
 
-    private void apply(AbstractModification modification, Network network, ReportNode subReportNode) {
+    private void apply(AbstractModification modification, Network network, ReportNode subReportNode, ComputationManager computationManager) {
         // check input data but don't change the network
         modification.check(network);
 
@@ -224,7 +232,7 @@ public class NetworkModificationApplicator {
         modification.apply(network,
             new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategy).orElse(new DefaultNamingStrategy()),
             false,
-            largeNetworkModificationExecutionService.getComputationManager(),
+            computationManager,
             subReportNode);
     }
 
