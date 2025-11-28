@@ -603,10 +603,10 @@ class BuildTest {
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).build()).applicability(SIDE1)
                         .build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(2.).build()).applicability(SIDE2)
                             .build()
                     )
