@@ -8,18 +8,14 @@ package org.gridsuite.modification.server.dto.elasticsearch;
 
 import lombok.*;
 import org.gridsuite.modification.server.elasticsearch.ESConfig;
-import org.gridsuite.modification.server.entities.ModificationEntity;
-import org.gridsuite.modification.server.modifications.ImpactedEquipmentsInfos;
-import org.gridsuite.modification.server.modifications.IndexedImpactedEquipmentInfos;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.*;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * @author Kevin Le Saulnier <kevin.lesaulnier at rte-france.com>
@@ -59,54 +55,30 @@ public class ModificationApplicationInfos {
                 @InnerField(suffix = "raw", type = FieldType.Keyword)
             }
     )
-    private Set<String> createdEquipmentIds;
-
-    @MultiField(
-            mainField = @Field(type = FieldType.Text),
-            otherFields = {
-                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
-                @InnerField(suffix = "raw", type = FieldType.Keyword)
-            }
-    )
-    private Set<String> modifiedEquipmentIds;
-
-    @MultiField(
-            mainField = @Field(type = FieldType.Text),
-            otherFields = {
-                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
-                @InnerField(suffix = "raw", type = FieldType.Keyword)
-            }
-    )
-    private Set<String> deletedEquipmentIds;
-
-    @Transient
     @Builder.Default
-    ImpactedEquipmentsInfos impactedEquipmentsInfos = new ImpactedEquipmentsInfos();
+    private Set<String> createdEquipmentIds = new HashSet<>();
 
-    @Transient
-    ModificationEntity modification;
+    @MultiField(
+            mainField = @Field(type = FieldType.Text),
+            otherFields = {
+                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
+                @InnerField(suffix = "raw", type = FieldType.Keyword)
+            }
+    )
+    @Builder.Default
+    private Set<String> modifiedEquipmentIds = new HashSet<>();
 
-    public ModificationApplicationInfos flushImpactedEquipments() {
-        createdEquipmentIds = impactedEquipmentsInfos.getCreatedEquipments().stream()
-            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
-            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
-            .map(BasicEquipmentInfos::getId)
-            .collect(Collectors.toSet());
-        modifiedEquipmentIds = impactedEquipmentsInfos.getModifiedEquipments().stream()
-            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
-            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
-            .map(BasicEquipmentInfos::getId)
-            .collect(Collectors.toSet());
-        deletedEquipmentIds = impactedEquipmentsInfos.getTombstonedEquipments().stream()
-            .filter(IndexedImpactedEquipmentInfos::shouldIndexInModification)
-            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
-            .map(BasicEquipmentInfos::getId)
-            .collect(Collectors.toSet());
-        impactedEquipmentsInfos = null;
-        return this;
-    }
+    @MultiField(
+            mainField = @Field(type = FieldType.Text),
+            otherFields = {
+                @InnerField(suffix = "fullascii", type = FieldType.Keyword, normalizer = "fullascii"),
+                @InnerField(suffix = "raw", type = FieldType.Keyword)
+            }
+    )
+    @Builder.Default
+    private Set<String> deletedEquipmentIds = new HashSet<>();
 
-    public boolean hasAnyImpactedEquipment() {
-        return impactedEquipmentsInfos.hasAnyImpactedEquipmentToIndexInModification();
+    public boolean isNotEmpty() {
+        return !createdEquipmentIds.isEmpty() || !modifiedEquipmentIds.isEmpty() || !deletedEquipmentIds.isEmpty();
     }
 }

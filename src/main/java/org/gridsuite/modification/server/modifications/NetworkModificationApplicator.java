@@ -26,7 +26,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
@@ -99,8 +98,7 @@ public class NetworkModificationApplicator {
     public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
             .filter(m -> m.getActivated() && !m.getStashed())
-            .map(ModificationEntity::getType)
-            .map(ModificationType::valueOf)
+            .map(ModificationInfos::getType)
             .reduce(ModificationType::maxStrategy)
             .map(ModificationType::getStrategy)
             .orElse(PreloadingStrategy.NONE);
@@ -142,8 +140,7 @@ public class NetworkModificationApplicator {
                 .map(ModificationApplicationGroup::modifications)
                 .flatMap(List::stream)
                 .filter(m -> m.getActivated() && !m.getStashed())
-                .map(ModificationEntity::getType)
-                .map(ModificationType::valueOf)
+                .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy)
                 .map(ModificationType::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
@@ -193,10 +190,10 @@ public class NetworkModificationApplicator {
             reportNode = ReportNode.NO_OP;
         }
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(ModificationEntity::getActivated)
+                .filter(ModificationInfos::getActivated)
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m.toModificationInfos(), listener.getNetwork(), reportNode);
+                    return apply(m, listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);

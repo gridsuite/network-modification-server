@@ -601,10 +601,10 @@ class BuildTest {
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).build()).applicability(SIDE1)
                         .build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
                                 CurrentLimitsInfos.builder().permanentLimit(2.).build()).applicability(SIDE2)
                             .build()
                     )
@@ -876,7 +876,7 @@ class BuildTest {
         entities1.add(ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("v1d1").equipmentAttributeName("open").equipmentAttributeValue(true).equipmentType(IdentifiableType.SWITCH).build()));
         entities1.add(ModificationEntity.fromDTO(LoadCreationInfos.builder().equipmentId("willBeExcludedLoad").equipmentName("willBeExcludedLoad").loadType(LoadType.AUXILIARY).voltageLevelId("v1").busOrBusbarSectionId("1.1").p0(10.).q0(20.).connectionName("vn").connectionDirection(ConnectablePosition.Direction.TOP).terminalConnected(true).build()));
 
-        List<ModificationEntity> savedModificationEntities = modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(TEST_GROUP_ID, entities1);
 
         testNetworkModificationsCount(TEST_GROUP_ID, entities1.size());
 
@@ -886,7 +886,7 @@ class BuildTest {
             .destinationVariantId(NetworkCreation.VARIANT_ID)
             .modificationGroupUuids(List.of(TEST_GROUP_ID))
             .reportsInfos(List.of(new ReportInfos(UUID.randomUUID(), TEST_SUB_REPORTER_ID_1)))
-            .modificationUuidsToExclude(Map.of(TEST_GROUP_ID, Set.of(savedModificationEntities.get(1).getId())))
+            .modificationUuidsToExclude(Map.of(TEST_GROUP_ID, Set.of(modifications.get(1).getUuid())))
             .build();
         networkModificationService.buildVariant(TEST_NETWORK_ID, buildInfos);
 
@@ -979,11 +979,11 @@ class BuildTest {
         UUID reporterId = UUID.randomUUID();
         String variantId = network.getVariantManager().getWorkingVariantId();
 
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
         // Building mode : No error send with exception
         NetworkModificationResult networkModificationResult = TestUtils.applyModificationsBlocking(networkModificationApplicator,
-            new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, reporterId)),
+            new ModificationApplicationGroup(groupUuid, modifications, new ReportInfos(reportUuid, reporterId)),
             new NetworkInfos(network, TEST_NETWORK_ID, true));
         assertNotNull(networkModificationResult);
         testEmptyImpactsWithErrors(networkModificationResult);
@@ -1015,10 +1015,10 @@ class BuildTest {
         UUID nodeUuid1 = UUID.randomUUID();
         UUID nodeUuid2 = UUID.randomUUID();
 
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(loadCreationInfos)));
 
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-            new ModificationApplicationGroup(groupUuid, entities, new ReportInfos(reportUuid, nodeUuid1)),
+            new ModificationApplicationGroup(groupUuid, modifications, new ReportInfos(reportUuid, nodeUuid1)),
             new ModificationApplicationGroup(UUID.randomUUID(), List.of(), new ReportInfos(UUID.randomUUID(), nodeUuid2))
         );
 

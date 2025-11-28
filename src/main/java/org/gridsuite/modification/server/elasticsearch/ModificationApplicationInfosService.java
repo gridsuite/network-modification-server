@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.entities.ModificationApplicationEntity;
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
+import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,15 +27,18 @@ import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_
 public class ModificationApplicationInfosService {
     private final ModificationApplicationInfosRepository modificationApplicationInfosRepository;
     private final ModificationApplicationRepository modificationApplicationRepository;
+    private final ModificationRepository modificationRepository;
     @Value("${spring.data.elasticsearch.partition-size:10000}")
     private int partitionSize;
     @Value("${spring.data.elasticsearch.partition-size-for-deletion:2048}")
     public int partitionSizeForDeletion;
 
     public ModificationApplicationInfosService(ModificationApplicationInfosRepository modificationApplicationInfosRepository,
-                                               ModificationApplicationRepository modificationApplicationRepository) {
+                                               ModificationApplicationRepository modificationApplicationRepository,
+                                               ModificationRepository modificationRepository) {
         this.modificationApplicationInfosRepository = modificationApplicationInfosRepository;
         this.modificationApplicationRepository = modificationApplicationRepository;
+        this.modificationRepository = modificationRepository;
     }
 
     public void addAll(List<ModificationApplicationInfos> modificationApplicationInfos) {
@@ -50,7 +54,9 @@ public class ModificationApplicationInfosService {
                             .modifiedEquipmentIds(modificationInfo.getModifiedEquipmentIds())
                             .deletedEquipmentIds(modificationInfo.getDeletedEquipmentIds())
                             .build();
-                        newModificationApplicationEntity.setModification(modificationInfo.getModification());
+                        newModificationApplicationEntity.setModification(
+                            modificationRepository.getReferenceById(modificationInfo.getModificationUuid())
+                        );
                         return newModificationApplicationEntity;
                     }).toList()));
         Lists.partition(modificationApplicationInfos, partitionSize)
