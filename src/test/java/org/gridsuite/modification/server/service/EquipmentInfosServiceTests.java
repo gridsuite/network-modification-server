@@ -274,6 +274,14 @@ class EquipmentInfosServiceTests {
         assertEquals(NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId()).getMessage(), errorMessage);
     }
 
+    @Test
+    void testHvdcConverterStationTypeName() {
+        UUID networkUuid = UUID.randomUUID();
+        Network network = NetworkCreation.createMixedTopology(networkUuid);
+        HvdcConverterStation<?> hvdcConverterStation = network.getHvdcConverterStation("v1lcc");
+        assertEquals(String.format("%s_%s", hvdcConverterStation.getHvdcType(), "CONVERTER_STATION"), EquipmentInfos.getEquipmentTypeName(hvdcConverterStation));
+    }
+
     @AfterEach
     public void tearDown() {
         equipmentInfosService.deleteVariants(NETWORK_UUID, List.of(VARIANT_NAME_1, VARIANT_NAME_2, VARIANT_NAME_3));

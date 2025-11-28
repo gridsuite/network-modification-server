@@ -67,10 +67,10 @@ class TwoWindingsTransformerCreationBusBreakerTest extends AbstractNetworkModifi
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(98647).value(45.).build())).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )

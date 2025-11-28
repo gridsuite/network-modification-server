@@ -198,7 +198,11 @@ public class NetworkModificationApplicator {
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         if (modificationGroupInfos.reportInfos().getReportUuid() != null) {
-            reportService.sendReport(modificationGroupInfos.reportInfos().getReportUuid(), reportNode);
+            reportService.sendReport(
+                modificationGroupInfos.reportInfos().getReportUuid(),
+                reportNode,
+                modificationGroupInfos.reportInfos().getReportMode()
+            );
         }
         return groupApplicationStatus;
     }
