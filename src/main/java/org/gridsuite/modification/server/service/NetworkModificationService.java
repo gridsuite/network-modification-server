@@ -17,8 +17,10 @@ import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
@@ -39,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,6 +49,7 @@ import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
+import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -69,6 +73,8 @@ public class NetworkModificationService {
 
     private final ModificationApplicationInfosService applicationInfosService;
 
+    private final FilterService filterService;
+
     static final String NETWORK_UUID = "networkUuid.keyword";
     static final String CREATED_EQUIPMENT_IDS = "createdEquipmentIds.fullascii";
     static final String MODIFIED_EQUIPMENT_IDS = "modifiedEquipmentIds.fullascii";
@@ -76,9 +82,16 @@ public class NetworkModificationService {
     private final ModificationRepository modificationRepository;
     private static final int PAGE_MAX_SIZE = 500;
 
-    public NetworkModificationService(NetworkStoreService networkStoreService, NetworkModificationRepository networkModificationRepository,
-                                      EquipmentInfosService equipmentInfosService, NotificationService notificationService,
-                                      NetworkModificationApplicator applicationService, ObjectMapper objectMapper, ModificationApplicationInfosService applicationInfosService, ElasticsearchOperations elasticsearchOperations, ModificationRepository modificationRepository) {
+    public NetworkModificationService(NetworkStoreService networkStoreService,
+                                      NetworkModificationRepository networkModificationRepository,
+                                      EquipmentInfosService equipmentInfosService,
+                                      NotificationService notificationService,
+                                      NetworkModificationApplicator applicationService,
+                                      ObjectMapper objectMapper,
+                                      ModificationApplicationInfosService applicationInfosService,
+                                      ElasticsearchOperations elasticsearchOperations,
+                                      ModificationRepository modificationRepository,
+                                      FilterService filterService) {
         this.networkStoreService = networkStoreService;
         this.networkModificationRepository = networkModificationRepository;
         this.equipmentInfosService = equipmentInfosService;
@@ -88,6 +101,7 @@ public class NetworkModificationService {
         this.applicationInfosService = applicationInfosService;
         this.elasticsearchOperations = elasticsearchOperations;
         this.modificationRepository = modificationRepository;
+        this.filterService = filterService;
     }
 
     public List<UUID> getModificationGroups() {
@@ -123,9 +137,44 @@ public class NetworkModificationService {
         }
     }
 
+    private void checkGenerationDispatchFilters(GenerationDispatchInfos generationDispatchInfos) {
+        // set filter name to null for non existing filters
+        Map<UUID, String> filterNamesByUuid = new LinkedHashMap<>();
+        generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
+        generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()));
+        generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
+            frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> filterNamesByUuid.put(filterInfos.getId(), filterInfos.getName()))
+        );
+        if (!filterNamesByUuid.isEmpty()) {
+            List<AbstractFilter> filters = filterService.getFilters(new ArrayList<>(filterNamesByUuid.keySet()));
+            Set<UUID> validFilters = filters.stream().map(AbstractFilter::getId).collect(Collectors.toSet());
+            Set<UUID> missingFilters = filterNamesByUuid.keySet().stream().filter(filterId -> !validFilters.contains(filterId)).collect(Collectors.toSet());
+            generationDispatchInfos.getGeneratorsWithoutOutage().forEach(filterInfos -> {
+                if (missingFilters.contains(filterInfos.getId())) {
+                    filterInfos.setName(null);
+                }
+            });
+            generationDispatchInfos.getGeneratorsWithFixedSupply().forEach(filterInfos -> {
+                if (missingFilters.contains(filterInfos.getId())) {
+                    filterInfos.setName(null);
+                }
+            });
+            generationDispatchInfos.getGeneratorsFrequencyReserve().forEach(frequencyReserveInfos ->
+                frequencyReserveInfos.getGeneratorsFilters().forEach(filterInfos -> {
+                    if (missingFilters.contains(filterInfos.getId())) {
+                        filterInfos.setName(null);
+                    }
+                }));
+        }
+    }
+
     @Transactional(readOnly = true)
     public ModificationInfos getNetworkModification(UUID networkModificationUuid) {
-        return networkModificationRepository.getModificationInfo(networkModificationUuid);
+        ModificationInfos modificationInfos = networkModificationRepository.getModificationInfo(networkModificationUuid);
+        if (modificationInfos instanceof GenerationDispatchInfos generationDispatchInfos) {
+            checkGenerationDispatchFilters(generationDispatchInfos);
+        }
+        return modificationInfos;
     }
 
     public Integer getNetworkModificationsCount(UUID groupUuid, boolean stashed) {
@@ -191,26 +240,33 @@ public class NetworkModificationService {
             networkModificationRepository.getModificationsCount(groupUuid, false));
     }
 
-    public NetworkModificationsResult createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationEntity> modificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
-
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(),
-            applyModifications(groupUuid, modificationEntities, applicationContexts));
+    public CompletableFuture<NetworkModificationsResult> createNetworkModification(@NonNull UUID groupUuid, @NonNull ModificationInfos modificationInfo, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        List<ModificationInfos> modifications = networkModificationRepository.saveModificationInfos(groupUuid, List.of(modificationInfo));
+        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(groupUuid, modifications, applicationContexts).thenApply(results ->
+            new NetworkModificationsResult(ids, results));
     }
 
     /**
      * Apply modifications on several networks
      */
-    private List<Optional<NetworkModificationResult>> applyModifications(UUID groupUuid, List<ModificationEntity> modifications, List<ModificationApplicationContext> applicationContexts) {
-        return applicationContexts.stream().map(modificationApplicationContext ->
-            applyModifications(
-                modificationApplicationContext.networkUuid(),
-                modificationApplicationContext.variantId(),
-                new ModificationApplicationGroup(groupUuid,
-                    modifications.stream().filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getId())).toList(),
-                    new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
-                ))
-        ).toList();
+    private CompletableFuture<List<Optional<NetworkModificationResult>>> applyModifications(UUID groupUuid, List<ModificationInfos> modifications, List<ModificationApplicationContext> applicationContexts) {
+        // Do we want to do these all in parallel (CompletableFuture.allOf) or sequentially (like in Flux.concatMap) or something in between ?
+        // sequentially like before for now
+        return scheduleApplyModifications(
+            modificationApplicationContext ->
+                applyModifications(
+                    modificationApplicationContext.networkUuid(),
+                    modificationApplicationContext.variantId(),
+                    new ModificationApplicationGroup(groupUuid,
+                        modifications.stream()
+                            .filter(m -> !modificationApplicationContext.excludedModifications().contains(m.getUuid()))
+                            .toList(),
+                        new ReportInfos(modificationApplicationContext.reportUuid(), modificationApplicationContext.reporterId())
+                    )
+                ),
+            applicationContexts
+        );
     }
 
     public Network cloneNetworkVariant(UUID networkUuid,
@@ -240,14 +296,9 @@ public class NetworkModificationService {
         Streams.forEachPair(buildInfos.getModificationGroupUuids().stream(), buildInfos.getReportsInfos().stream(),
             (groupUuid, reportInfos) -> {
                 Set<UUID> modificationsToExclude = buildInfos.getModificationUuidsToExclude().get(groupUuid);
-                List<ModificationEntity> modifications = List.of();
+                List<ModificationInfos> modifications = List.of();
                 try {
-                    // FullDto needed for toModificationInfos() after the modifications have been applied
-                    modifications = networkModificationRepository.getModificationsEntities(List.of(groupUuid), false)
-                        .stream()
-                        .filter(m -> modificationsToExclude == null || !modificationsToExclude.contains(m.getId()))
-                        .filter(m -> !m.getStashed())
-                        .toList();
+                    modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
                 } catch (NetworkModificationException e) {
                     if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
                         throw e;
@@ -260,8 +311,8 @@ public class NetworkModificationService {
 
         PreloadingStrategy preloadingStrategy = modificationGroupsInfos.stream().map(ModificationApplicationGroup::modifications)
             .flatMap(Collection::stream)
-            .map(ModificationEntity::getType)
-            .map(ModificationType::valueOf)
+            .filter(m -> m.getActivated() && !m.getStashed())
+            .map(ModificationInfos::getType)
             .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
 
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
@@ -284,25 +335,25 @@ public class NetworkModificationService {
         }
     }
 
-    public NetworkModificationsResult moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
+    public CompletableFuture<NetworkModificationsResult> moveModifications(@NonNull UUID destinationGroupUuid, @NonNull UUID originGroupUuid, UUID beforeModificationUuid,
                                                                        @NonNull List<UUID> modificationsToMoveUuids, @NonNull List<ModificationApplicationContext> applicationContexts,
                                                                        boolean applyModifications) {
         // update origin/destinations groups to cut and paste all modificationsToMove
         // FullDto needed for toModificationInfos() after the modifications have been applied
-        List<ModificationEntity> modificationEntities = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
+        List<ModificationInfos> modifications = networkModificationRepository.moveModifications(destinationGroupUuid, originGroupUuid, modificationsToMoveUuids, beforeModificationUuid);
 
-        List<Optional<NetworkModificationResult>> result = applyModifications && !modificationEntities.isEmpty() ? applyModifications(destinationGroupUuid, modificationEntities, applicationContexts) : List.of();
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), result);
+        CompletableFuture<List<Optional<NetworkModificationResult>>> futureResult = applyModifications && !modifications.isEmpty() ? applyModifications(destinationGroupUuid, modifications, applicationContexts) : CompletableFuture.completedFuture(List.of());
+        return futureResult.thenApply(result -> new NetworkModificationsResult(modifications.stream().map(ModificationInfos::getUuid).toList(), result));
     }
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
         try {
-            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getActiveModificationsInfos(sourceGroupUuid);
-            List<ModificationEntity> duplicatedModificationEntities = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
+            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
+            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
 
             Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
             for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
-                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), duplicatedModificationEntities.get(i).getId());
+                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
             }
 
             return duplicateModificationMapping;
@@ -314,36 +365,37 @@ public class NetworkModificationService {
         }
     }
 
-    private Optional<NetworkModificationResult> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
+    private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {
         if (!modificationGroupInfos.modifications().isEmpty()) {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
-                .map(ModificationEntity::getType)
-                .map(ModificationType::valueOf)
+                .filter(m -> m.getActivated() && !m.getStashed())
+                .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
             // try to apply the duplicated modifications (incremental mode)
             if (networkInfos.isVariantPresent()) {
-                return Optional.of(modificationApplicator.applyModifications(modificationGroupInfos, networkInfos));
+                return modificationApplicator.applyModifications(modificationGroupInfos, networkInfos).thenApply(Optional::of);
             }
         }
-        return Optional.empty();
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    public NetworkModificationsResult duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+    public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
             throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
         }
-        List<ModificationEntity> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
-        return new NetworkModificationsResult(
-            duplicateModifications.stream().map(ModificationEntity::getId).toList(),
-            applyModifications(targetGroupUuid, duplicateModifications, applicationContexts)
-        );
+        List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
+        List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(targetGroupUuid, duplicateModifications, applicationContexts).thenApply(result ->
+            new NetworkModificationsResult(ids, result));
     }
 
-    public NetworkModificationsResult insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationEntity> modificationEntities = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
-        return new NetworkModificationsResult(modificationEntities.stream().map(ModificationEntity::getId).toList(), applyModifications(targetGroupUuid, modificationEntities, applicationContexts));
+    public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
+        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
+            new NetworkModificationsResult(ids, result));
     }
 
     @Transactional

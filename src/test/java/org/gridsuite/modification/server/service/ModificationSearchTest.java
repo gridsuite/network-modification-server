@@ -24,6 +24,7 @@ import org.gridsuite.modification.server.modifications.NetworkModificationApplic
 import org.gridsuite.modification.server.repositories.ModificationApplicationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.gridsuite.modification.server.utils.TestUtils;
 import org.gridsuite.modification.server.utils.assertions.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,7 +119,7 @@ class ModificationSearchTest {
                 .properties(null)
                 .build();
 
-        List<ModificationEntity> entities = modificationRepository.saveModifications(
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(
                 groupUuid,
                 List.of(
                         ModificationEntity.fromDTO(creationWithAccent),
@@ -126,8 +127,8 @@ class ModificationSearchTest {
                 )
         );
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(
-                new ModificationApplicationGroup(groupUuid, entities, reportInfos),
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
+                new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
                 networkInfos
         );
         assertThat(result).isNotNull();
@@ -164,10 +165,10 @@ class ModificationSearchTest {
 
         // Load creation for equipment Id newLoadId
         LoadCreationInfos loadCreationInfos = createLoadCreationInfos("newLoadId");
-        List<ModificationEntity> entities = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(groupUuid, List.of(ModificationEntity.fromDTO(substationCreationInfos), ModificationEntity.fromDTO(substationModificationInfos), ModificationEntity.fromDTO(loadCreationInfos)));
 
-        NetworkModificationResult result = networkModificationApplicator.applyModifications(
-                new ModificationApplicationGroup(groupUuid, entities, reportInfos),
+        NetworkModificationResult result = TestUtils.applyModificationsBlocking(networkModificationApplicator,
+                new ModificationApplicationGroup(groupUuid, modifications, reportInfos),
                 networkInfos
         );
         assertThat(result).isNotNull();

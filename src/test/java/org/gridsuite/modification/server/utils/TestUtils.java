@@ -21,11 +21,13 @@ import com.powsybl.iidm.network.extensions.OperatingStatusAdder;
 import mockwebserver3.MockWebServer;
 import org.apache.commons.text.StringSubstitutor;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.server.dto.ModificationApplicationContext;
+import org.gridsuite.modification.server.dto.*;
+import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.service.ReportService;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
+import org.springframework.test.web.servlet.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +40,8 @@ import java.util.stream.IntStream;
 import static com.vladmihalcea.sql.SQLStatementCountValidator.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -48,6 +52,13 @@ public final class TestUtils {
 
     private TestUtils() {
         throw new IllegalCallerException("Utility class");
+    }
+
+    public static MvcResult runRequestAsync(MockMvc mockMvc, RequestBuilder requestBuilder, ResultMatcher... matchers) throws Exception {
+        ResultActions mockMvcResultActions = mockMvc.perform(requestBuilder).andExpect(request().asyncStarted());
+        return mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
+            .andExpectAll(matchers)
+            .andReturn();
     }
 
     public static Set<String> getRequestsDone(int n, MockWebServer server) throws UncheckedInterruptedException {
@@ -130,7 +141,7 @@ public final class TestUtils {
 
     public static void assertLogNthMessage(String expectedMessage, String reportKey, ReportService reportService, int rank) {
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), eq(ReportMode.APPEND));
         assertNotNull(reporterCaptor.getValue());
         Optional<String> message = getMessageFromReporter(reportKey, reporterCaptor.getValue(), rank);
         assertTrue(message.isPresent());
@@ -143,7 +154,7 @@ public final class TestUtils {
 
     public static void assertLogMessageWithoutRank(String expectedMessage, String reportKey, ReportService reportService) {
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), eq(ReportMode.APPEND));
         assertNotNull(reporterCaptor.getValue());
         assertTrue(assertMessageFoundFromReporter(expectedMessage, reportKey, reporterCaptor.getValue()));
     }
@@ -217,5 +228,9 @@ public final class TestUtils {
 
     private static ObjectMapper getObjectMapper() {
         return new ObjectMapper().registerModule(new JavaTimeModule());
+    }
+
+    public static NetworkModificationResult applyModificationsBlocking(NetworkModificationApplicator applicator, ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
+        return applicator.applyModifications(modificationInfosGroup, networkInfos).join();
     }
 }

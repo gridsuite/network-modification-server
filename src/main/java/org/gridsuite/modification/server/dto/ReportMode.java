@@ -6,13 +6,10 @@
  */
 package org.gridsuite.modification.server.dto;
 
-import org.gridsuite.modification.dto.ModificationInfos;
-
-import java.util.List;
-import java.util.UUID;
-
 /**
- * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Achour BERRAHMA <achour.berrahma at rte-france.com>
  */
-public record ModificationApplicationGroup(UUID groupUuid, List<ModificationInfos> modifications, ReportInfos reportInfos) {
+public enum ReportMode {
+    APPEND,
+    REPLACE
 }

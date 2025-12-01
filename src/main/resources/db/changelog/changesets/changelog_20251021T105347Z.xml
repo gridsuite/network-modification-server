@@ -1,0 +1,30 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="rehiligha (generated)" id="1761044043763-31">
+        <addUniqueConstraint columnNames="additional_equipment_deletion_entity_id" constraintName="uc_equipment_deletion-additional_equipment_deletion_entity_id_col" tableName="equipment_deletion"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761044043763-32">
+        <addUniqueConstraint columnNames="line_creation_id" constraintName="uc_line_attach_to_voltage_level_line_creation_id_col" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761044043763-33">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="uc_line_attach_to_voltage_level_may_voltage_level_creation_id_col" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761044043763-34">
+        <addUniqueConstraint columnNames="may_voltage_level_creation_id" constraintName="uc_line_split_to_voltage_level_may_voltage_level_creation_id_col" tableName="line_split_with_voltage_level"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761044043763-35">
+        <addUniqueConstraint columnNames="substation_creation_id" constraintName="uc_voltage_level_creation_entity_substation_creation_id_col" tableName="voltage_level_creation_entity"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761044043763-36">
+        <addUniqueConstraint columnNames="converter_station_1_id" constraintName="uc_vsc_creation_converter_station_1_id_col" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761044043763-37">
+        <addUniqueConstraint columnNames="converter_station_2_id" constraintName="uc_vsc_creation_converter_station_2_id_col" tableName="vsc_creation"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761045634057-24">
+        <addUniqueConstraint columnNames="current_limits_id" constraintName="uc_operational_limits_group_modification_current_limits_id_col" tableName="operational_limits_group_modification"/>
+    </changeSet>
+    <changeSet author="rehiligha (generated)" id="1761045634057-25">
+        <dropColumn columnName="PHASE_TAP_CHANGER_LOAD_TAP_CHANGING_CAPABILITIES" tableName="TWO_WINDINGS_TRANSFORMER_CREATION"/>
+    </changeSet>
+</databaseChangeLog>

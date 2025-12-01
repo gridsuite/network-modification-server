@@ -15,11 +15,8 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ThreeSides;
 import lombok.extern.slf4j.Slf4j;
 import org.gridsuite.modification.dto.*;
-import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
-import org.gridsuite.modification.server.dto.NetworkInfos;
-import org.gridsuite.modification.server.dto.NetworkModificationResult;
+import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
-import org.gridsuite.modification.server.dto.ReportInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -47,6 +44,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,7 +88,7 @@ class VoltageInitReportTest {
 
         // check produced report json data
         ArgumentCaptor<ReportNode> reporterCaptor = ArgumentCaptor.forClass(ReportNode.class);
-        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture());
+        verify(reportService, atLeast(1)).sendReport(any(UUID.class), reporterCaptor.capture(), eq(ReportMode.APPEND));
         final ReportNode result = reporterCaptor.getValue();
         assertNotNull(result);
         JSONAssert.assertEquals("voltage-init plan logs aggregated",
@@ -101,9 +99,9 @@ class VoltageInitReportTest {
     }
 
     private ApplicationStatus applyModification(Network network, VoltageInitModificationInfos infos) {
-        List<ModificationEntity> entities = modificationRepository.saveModifications(GROUP_ID, List.of(ModificationEntity.fromDTO(infos)));
+        List<ModificationInfos> modifications = modificationRepository.saveModifications(GROUP_ID, List.of(ModificationEntity.fromDTO(infos)));
         List<ModificationApplicationGroup> modificationInfosGroups = List.of(
-                new ModificationApplicationGroup(GROUP_ID, entities, new ReportInfos(REPORT_ID, NODE_ID))
+                new ModificationApplicationGroup(GROUP_ID, modifications, new ReportInfos(REPORT_ID, NODE_ID))
         );
         NetworkModificationResult result = networkModificationApplicator.applyModifications(modificationInfosGroups, new NetworkInfos(network, NETWORK_ID, true));
         return result.getApplicationStatus();

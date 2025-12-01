@@ -10,15 +10,13 @@ import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.server.dto.elasticsearch.BasicEquipmentInfos;
+import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -48,6 +46,10 @@ public class NetworkStoreListener implements NetworkListener {
 
     private final ModificationApplicationInfosService modificationApplicationInfosService;
 
+    private final List<EquipmentInfos> equipmentInfos = new LinkedList<>();
+
+    private final List<TombstonedEquipmentInfos> tombstonedEquipmentInfos = new LinkedList<>();
+
     private final List<ModificationApplicationInfos> modificationApplicationInfosList = new LinkedList<>();
 
     private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
@@ -63,15 +65,6 @@ public class NetworkStoreListener implements NetworkListener {
         this.equipmentInfosService = equipmentInfosService;
         this.modificationApplicationInfosService = modificationApplicationInfosService;
         this.collectionThreshold = collectionThreshold;
-    }
-
-    private void updateImpactedEquipment(BasicEquipmentInfos impactedEquipment, SimpleImpactType impactType, boolean shouldIndexEquipment, boolean shouldIndexModification) {
-        ImpactedEquipmentsInfos infosToUpdate = modificationApplicationInfosList.getLast().getImpactedEquipmentsInfos();
-        switch (impactType) {
-            case CREATION -> infosToUpdate.getCreatedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, shouldIndexEquipment, shouldIndexModification));
-            case MODIFICATION -> infosToUpdate.getModifiedEquipments().add(new IndexedImpactedEquipmentInfos<>((EquipmentInfos) impactedEquipment, shouldIndexEquipment, shouldIndexModification));
-            case DELETION -> infosToUpdate.getTombstonedEquipments().add(new IndexedImpactedEquipmentInfos<>((TombstonedEquipmentInfos) impactedEquipment, shouldIndexEquipment, shouldIndexModification));
-        }
     }
 
     public static NetworkStoreListener create(Network network, UUID networkUuid, NetworkStoreService networkStoreService,
@@ -106,10 +99,10 @@ public class NetworkStoreListener implements NetworkListener {
         return ids;
     }
 
-    private void addSimpleModificationImpact(Identifiable<?> identifiable) {
+    private void addSimpleImpact(Identifiable<?> identifiable, SimpleImpactType type) {
         simpleImpacts.add(
             SimpleElementImpact.builder()
-                .simpleImpactType(SimpleImpactType.MODIFICATION)
+                .simpleImpactType(type)
                 .elementType(identifiable.getType())
                 .elementId(identifiable.getId())
                 .substationIds(getSubstationIds(identifiable))
@@ -119,129 +112,69 @@ public class NetworkStoreListener implements NetworkListener {
 
     @Override
     public void onPropertyRemoved(Identifiable identifiable, String attribute, Object oldValue) {
-        addSimpleModificationImpact(identifiable);
-        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onPropertyAdded(Identifiable identifiable, String attribute, Object newValue) {
-        addSimpleModificationImpact(identifiable);
-        updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onPropertyReplaced(Identifiable identifiable, String attribute, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable);
-        boolean shouldIndexEquipment = getIndexedEquipmentTypes().contains(identifiable.getType());
-        boolean shouldIndexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
-        if (shouldIndexEquipment || shouldIndexModification) {
-            updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
-        }
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
     @Override
     public void onUpdate(Identifiable identifiable, String attribute, String variantId, Object oldValue, Object newValue) {
-        addSimpleModificationImpact(identifiable);
-        if (getIndexedEquipmentTypesInModification().contains(identifiable.getType())) {
-            updateEquipmentIndexation(identifiable, attribute, networkUuid, network.getVariantManager().getWorkingVariantId());
-        }
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addIndexationInfosForModifiedEquipment(identifiable, attribute);
     }
 
-    private void updateEquipmentIndexation(Identifiable<?> identifiable, String attribute, UUID networkUuid, String variantId) {
-        // Equipments should be indexed in equipment index only if equipment name has been updated
-        boolean shouldIndexEquipment = getIndexedEquipmentTypes().contains(identifiable.getType()) && "name".equals(attribute);
-        boolean shouldIndexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
-
-        updateImpactedEquipment(
-            toEquipmentInfos(identifiable, networkUuid, variantId),
-            SimpleImpactType.MODIFICATION,
-            shouldIndexEquipment,
-            shouldIndexModification
-        );
-
-        // If the updated attribute is "name" and the identifiable is a VOLTAGE_LEVEL or SUBSTATION,
-        // we must update all linked equipment in equipment index to reflect the name change
-        // modification index is not updated here
-        if (shouldIndexEquipment
-                && (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)
-                || identifiable.getType().equals(IdentifiableType.SUBSTATION))) {
-            updateLinkedEquipments(identifiable);
-        }
-    }
-
-    private void updateLinkedEquipments(Identifiable<?> identifiable) {
-        if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
-            VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
-            // update all equipments linked to voltageLevel
-            updateEquipmentsLinkedToVoltageLevel(updatedVoltageLevel);
-            // update substation linked to voltageLevel
-            Optional<Substation> linkedSubstation = updatedVoltageLevel.getSubstation();
-            if (linkedSubstation.isPresent()) {
-                updateImpactedEquipment(toEquipmentInfos(linkedSubstation.get(), networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION, true, false);
+    private void addIndexationInfosForModifiedEquipment(Identifiable<?> identifiable, String attribute) {
+        if (hasIndexedEquipmentType(identifiable) && "name".equals(attribute)) {
+            addEquipmentInfos(identifiable);
+            if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
+                VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());
+                addEquipmentInfosLinkedToVoltageLevel(updatedVoltageLevel);
+                updatedVoltageLevel.getSubstation().ifPresent(this::addEquipmentInfos);
+            } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
+                Substation updatedSubstation = network.getSubstation(identifiable.getId());
+                addEquipmentInfosLinkedToSubstation(updatedSubstation);
             }
-        } else if (identifiable.getType().equals(IdentifiableType.SUBSTATION)) {
-            Substation updatedSubstation = network.getSubstation(identifiable.getId());
-            updateEquipmentsLinkedToSubstation(updatedSubstation);
+        }
+        if (hasIndexedModificationType(identifiable)) {
+            modificationApplicationInfosList.getLast().getModifiedEquipmentIds().add(identifiable.getId());
         }
     }
 
-    private void updateEquipmentsLinkedToSubstation(Substation substation) {
+    private void addEquipmentInfosLinkedToSubstation(Substation substation) {
         Iterable<VoltageLevel> linkedVoltageLevels = substation.getVoltageLevels();
         // update all voltageLevels linked to substation
-        linkedVoltageLevels.forEach(vl -> updateImpactedEquipment(toEquipmentInfos(vl, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION, true, false));
+        linkedVoltageLevels.forEach(this::addEquipmentInfos);
         // update all equipments linked to each of the voltageLevels
-        linkedVoltageLevels.forEach(this::updateEquipmentsLinkedToVoltageLevel);
+        linkedVoltageLevels.forEach(this::addEquipmentInfosLinkedToVoltageLevel);
     }
 
-    private void updateEquipmentsLinkedToVoltageLevel(VoltageLevel voltageLevel) {
+    private void addEquipmentInfosLinkedToVoltageLevel(VoltageLevel voltageLevel) {
         voltageLevel.getConnectableStream()
-            .filter(connectable -> getIndexedEquipmentTypes().contains(connectable.getType()))
-            .forEach(c -> updateImpactedEquipment(toEquipmentInfos(c, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION, true, false));
+            .filter(this::hasIndexedEquipmentType)
+            .forEach(this::addEquipmentInfos);
     }
 
     @Override
     public void onCreation(Identifiable identifiable) {
-        boolean shouldIndexEquipment = getIndexedEquipmentTypes().contains(identifiable.getType());
-        boolean shouldIndexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
-        if (shouldIndexEquipment || shouldIndexModification) {
-            updateImpactedEquipment(EquipmentInfos.builder()
-                .networkUuid(networkUuid)
-                .variantId(network.getVariantManager().getWorkingVariantId())
-                .id(identifiable.getId())
-                .name(identifiable.getNameOrId())
-                .type(EquipmentInfos.getEquipmentTypeName(identifiable))
-                .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
-                .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-                .build(), SimpleImpactType.CREATION, shouldIndexEquipment, shouldIndexModification);
-        }
-        simpleImpacts.add(
-            SimpleElementImpact.builder()
-                .simpleImpactType(SimpleImpactType.CREATION)
-                .elementType(identifiable.getType())
-                .elementId(identifiable.getId())
-                .substationIds(getSubstationIds(identifiable))
-                .build()
-        );
+        addIndexationInfosForCreatedEquipment(identifiable);
+        addSimpleImpact(identifiable, SimpleImpactType.CREATION);
     }
 
     @Override
     public void beforeRemoval(Identifiable identifiable) {
-        boolean shouldIndexEquipment = getIndexedEquipmentTypes().contains(identifiable.getType());
-        boolean shouldIndexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
-        updateImpactedEquipment(TombstonedEquipmentInfos.builder()
-                .networkUuid(networkUuid)
-                .variantId(network.getVariantManager().getWorkingVariantId())
-                .id(identifiable.getId())
-                .build(), SimpleImpactType.DELETION, shouldIndexEquipment, shouldIndexModification);
-
-        simpleImpacts.add(
-            SimpleElementImpact.builder()
-                .simpleImpactType(SimpleImpactType.DELETION)
-                .elementType(identifiable.getType())
-                .elementId(identifiable.getId())
-                .substationIds(getSubstationIds(identifiable))
-                .build()
-        );
+        addIndexationInfosForDeletedEquipment(identifiable);
+        addSimpleImpact(identifiable, SimpleImpactType.DELETION);
     }
 
     @Override
@@ -249,12 +182,11 @@ public class NetworkStoreListener implements NetworkListener {
         // Do nothing
     }
 
-    public void initModificationApplication(UUID groupUuid, ModificationEntity modification) {
+    public void initModificationApplication(UUID groupUuid, ModificationInfos modification) {
         ModificationApplicationInfos modificationApplication = ModificationApplicationInfos.builder()
             .groupUuid(groupUuid)
-            .modificationUuid(modification.getId())
+            .modificationUuid(modification.getUuid())
             .networkUuid(networkUuid)
-            .modification(modification)
             .build();
         modificationApplicationInfosList.add(modificationApplication);
     }
@@ -270,31 +202,18 @@ public class NetworkStoreListener implements NetworkListener {
         return reduceNetworkImpacts();
     }
 
-    private static EquipmentInfos toEquipmentInfos(Identifiable<?> identifiable, UUID networkUuid, String variantId) {
-        return EquipmentInfos.builder()
-            .networkUuid(networkUuid)
-            .variantId(variantId)
-            .id(identifiable.getId())
-            .name(identifiable.getNameOrId())
-            .type(EquipmentInfos.getEquipmentTypeName(identifiable))
-            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
-            .substations(EquipmentInfos.getSubstationsInfos(identifiable))
-            .build();
-    }
-
     private void flushImpactedEquipments() {
         flushDeletedEquipments();
-        equipmentInfosService.addAllEquipmentInfos(CollectionUtils.union(getAllCreatedEquipments(), getAllModifiedEquipmentsToBeIndexed()).stream().toList());
-        modificationApplicationInfosService.addAll(modificationApplicationInfosList.stream()
-            .filter(ModificationApplicationInfos::hasAnyImpactedEquipment)
-            .map(ModificationApplicationInfos::flushImpactedEquipments).toList());
+        equipmentInfosService.addAllEquipmentInfos(equipmentInfos);
+        modificationApplicationInfosService.addAll(
+            modificationApplicationInfosList.stream().filter(ModificationApplicationInfos::isNotEmpty).toList());
     }
 
     private void flushDeletedEquipments() {
         String variantId = network.getVariantManager().getWorkingVariantId();
-        List<String> equipmentDeletionsIds = getAllTombstonedEquipments().stream().map(TombstonedEquipmentInfos::getId).toList();
+        List<String> equipmentDeletionsIds = tombstonedEquipmentInfos.stream().map(TombstonedEquipmentInfos::getId).toList();
         equipmentInfosService.deleteEquipmentInfosList(equipmentDeletionsIds, networkUuid, variantId);
-        equipmentInfosService.addAllTombstonedEquipmentInfos(getAllTombstonedEquipments());
+        equipmentInfosService.addAllTombstonedEquipmentInfos(tombstonedEquipmentInfos);
     }
 
     private List<AbstractBaseImpact> reduceNetworkImpacts() {
@@ -365,44 +284,11 @@ public class NetworkStoreListener implements NetworkListener {
             .toList();
     }
 
-    private List<EquipmentInfos> getAllCreatedEquipments() {
-        return modificationApplicationInfosList.stream()
-            .map(ModificationApplicationInfos::getImpactedEquipmentsInfos)
-            .map(ImpactedEquipmentsInfos::getCreatedEquipments)
-            .flatMap(List::stream)
-            .filter(IndexedImpactedEquipmentInfos::shouldIndexImpactedEquipment)
-            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
-            .toList();
-    }
-
-    private List<TombstonedEquipmentInfos> getAllTombstonedEquipments() {
-        return modificationApplicationInfosList.stream()
-            .map(ModificationApplicationInfos::getImpactedEquipmentsInfos)
-            .map(ImpactedEquipmentsInfos::getTombstonedEquipments)
-            .flatMap(List::stream)
-            .filter(IndexedImpactedEquipmentInfos::shouldIndexImpactedEquipment)
-            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
-            .toList();
-    }
-
-    private List<EquipmentInfos> getAllModifiedEquipmentsToBeIndexed() {
-        return modificationApplicationInfosList.stream()
-            .map(ModificationApplicationInfos::getImpactedEquipmentsInfos)
-            .map(ImpactedEquipmentsInfos::getModifiedEquipments)
-            .flatMap(List::stream)
-            .filter(IndexedImpactedEquipmentInfos::shouldIndexImpactedEquipment)
-            .map(IndexedImpactedEquipmentInfos::impactedEquipmentInfos)
-            .toList();
-    }
-
     @Override
     public void onExtensionCreation(Extension<?> extension) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
-        boolean shouldIndexEquipment = getIndexedEquipmentTypes().contains(identifiable.getType());
-        boolean shouldIndexModification = getIndexedEquipmentTypesInModification().contains(identifiable.getType());
-        updateImpactedEquipment(toEquipmentInfos(identifiable, networkUuid, network.getVariantManager().getWorkingVariantId()), SimpleImpactType.MODIFICATION, shouldIndexEquipment, shouldIndexModification);
-
-        addSimpleModificationImpact(identifiable);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addIndexationInfosForModifiedEquipment(identifiable, null);
     }
 
     @Override
@@ -418,7 +304,8 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onExtensionUpdate(Extension<?> extension, String attribute, String variantId, Object oldValue, Object newValue) {
         Identifiable<?> identifiable = (Identifiable<?>) extension.getExtendable();
-        onUpdate(identifiable, attribute, variantId, oldValue, newValue);
+        addSimpleImpact(identifiable, SimpleImpactType.MODIFICATION);
+        addIndexationInfosForModifiedEquipment(identifiable, null);
     }
 
     @Override
@@ -434,5 +321,51 @@ public class NetworkStoreListener implements NetworkListener {
     @Override
     public void onVariantRemoved(String variantId) {
         // FIXME: implement this method
+    }
+
+    private void addIndexationInfosForCreatedEquipment(Identifiable<?> identifiable) {
+        if (hasIndexedEquipmentType(identifiable)) {
+            addEquipmentInfos(identifiable);
+        }
+        if (hasIndexedModificationType(identifiable)) {
+            modificationApplicationInfosList.getLast().getCreatedEquipmentIds().add(identifiable.getId());
+        }
+    }
+
+    private void addIndexationInfosForDeletedEquipment(Identifiable<?> identifiable) {
+        if (hasIndexedEquipmentType(identifiable)) {
+            addTombstonedEquipmentInfos(identifiable);
+        }
+        if (hasIndexedModificationType(identifiable)) {
+            modificationApplicationInfosList.getLast().getDeletedEquipmentIds().add(identifiable.getId());
+        }
+    }
+
+    private void addTombstonedEquipmentInfos(Identifiable<?> identifiable) {
+        tombstonedEquipmentInfos.add(TombstonedEquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(network.getVariantManager().getWorkingVariantId())
+            .id(identifiable.getId())
+            .build());
+    }
+
+    private void addEquipmentInfos(Identifiable<?> identifiable) {
+        equipmentInfos.add(EquipmentInfos.builder()
+            .networkUuid(networkUuid)
+            .variantId(network.getVariantManager().getWorkingVariantId())
+            .id(identifiable.getId())
+            .name(identifiable.getNameOrId())
+            .type(EquipmentInfos.getEquipmentTypeName(identifiable))
+            .voltageLevels(EquipmentInfos.getVoltageLevelsInfos(identifiable))
+            .substations(EquipmentInfos.getSubstationsInfos(identifiable))
+            .build());
+    }
+
+    private boolean hasIndexedModificationType(Identifiable<?> identifiable) {
+        return getIndexedEquipmentTypesInModification().contains(identifiable.getType());
+    }
+
+    private boolean hasIndexedEquipmentType(Identifiable<?> identifiable) {
+        return getIndexedEquipmentTypes().contains(identifiable.getType());
     }
 }

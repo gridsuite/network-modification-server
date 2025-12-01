@@ -26,7 +26,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
@@ -36,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 
@@ -95,10 +95,10 @@ public class NetworkModificationApplicator {
      * medium : preloadingStrategy = COLLECTION
      * large : preloadingStrategy = ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
      */
-    public NetworkModificationResult applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
+    public CompletableFuture<NetworkModificationResult> applyModifications(ModificationApplicationGroup modificationInfosGroup, NetworkInfos networkInfos) {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
-            .map(ModificationEntity::getType)
-            .map(ModificationType::valueOf)
+            .filter(m -> m.getActivated() && !m.getStashed())
+            .map(ModificationInfos::getType)
             .reduce(ModificationType::maxStrategy)
             .map(ModificationType::getStrategy)
             .orElse(PreloadingStrategy.NONE);
@@ -106,10 +106,9 @@ public class NetworkModificationApplicator {
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
         if (preloadingStrategy == PreloadingStrategy.ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW) {
             return largeNetworkModificationExecutionService
-                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener))
-                .join();
+                .supplyAsync(() -> applyAndFlush(modificationInfosGroup, listener));
         } else {
-            return applyAndFlush(modificationInfosGroup, listener);
+            return CompletableFuture.completedFuture(applyAndFlush(modificationInfosGroup, listener));
         }
     }
 
@@ -140,8 +139,8 @@ public class NetworkModificationApplicator {
         PreloadingStrategy preloadingStrategy = modificationInfosGroups.stream()
                 .map(ModificationApplicationGroup::modifications)
                 .flatMap(List::stream)
-                .map(ModificationEntity::getType)
-                .map(ModificationType::valueOf)
+                .filter(m -> m.getActivated() && !m.getStashed())
+                .map(ModificationInfos::getType)
                 .reduce(ModificationType::maxStrategy)
                 .map(ModificationType::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
@@ -191,15 +190,19 @@ public class NetworkModificationApplicator {
             reportNode = ReportNode.NO_OP;
         }
         ApplicationStatus groupApplicationStatus = modificationGroupInfos.modifications().stream()
-                .filter(ModificationEntity::getActivated)
+                .filter(ModificationInfos::getActivated)
                 .map(m -> {
                     listener.initModificationApplication(modificationGroupInfos.groupUuid(), m);
-                    return apply(m.toModificationInfos(), listener.getNetwork(), reportNode);
+                    return apply(m, listener.getNetwork(), reportNode);
                 })
                 .reduce(ApplicationStatus::max)
                 .orElse(ApplicationStatus.ALL_OK);
         if (modificationGroupInfos.reportInfos().getReportUuid() != null) {
-            reportService.sendReport(modificationGroupInfos.reportInfos().getReportUuid(), reportNode);
+            reportService.sendReport(
+                modificationGroupInfos.reportInfos().getReportUuid(),
+                reportNode,
+                modificationGroupInfos.reportInfos().getReportMode()
+            );
         }
         return groupApplicationStatus;
     }

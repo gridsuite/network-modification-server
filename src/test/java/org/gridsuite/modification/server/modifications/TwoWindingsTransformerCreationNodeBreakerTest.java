@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +33,9 @@ import static org.gridsuite.modification.server.impacts.TestImpactUtils.testBran
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("IntegrationTest")
@@ -66,13 +69,13 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
                 .connected2(true)
                 .operationalLimitsGroups(
                     List.of(
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(3.).temporaryLimits(List.of(
                                     CurrentTemporaryLimitCreationInfos.builder().name("IT5").acceptableDuration(2147483647).value(671.).build()
                                 )
                             ).build()
                         ).applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                        OperationalLimitsGroupInfos.builder().currentLimits(
+                        OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(2.).temporaryLimits(List.of(CurrentTemporaryLimitCreationInfos.builder().name("IT10").acceptableDuration(683647).value(791.).build())).build()
                         ).applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                     )
@@ -540,7 +543,9 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         twoWindingsTransformerCreationInfos.setEquipmentId("id2wt3");
         twoWindingsTransformerCreationInfos.setEquipmentName("name2wt3");
         twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, "variant_not_existing");
-        MvcResult mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        MvcResult mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         NetworkModificationsResult networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertNotNull(networkModificationsResult);
@@ -565,7 +570,9 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         final String transformerId = twoWindingsTransformerCreationInfos.getEquipmentId();
 
         String twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
-        mvcResult = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(request().asyncStarted());
+        mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
         TwoWindingsTransformer twoWindingsTransformer = getNetwork().getTwoWindingsTransformer(transformerId);
         assertNotNull(twoWindingsTransformer);  // transformer was created

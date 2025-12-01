@@ -242,10 +242,10 @@ class LineCreationInBusBreakerTest extends AbstractNetworkModificationTest {
             .busOrBusbarSectionId1("bus1")
             .operationalLimitsGroups(
                 List.of(
-                    OperationalLimitsGroupInfos.builder().currentLimits(
+                    OperationalLimitsGroupInfos.builder().id("olg1").currentLimits(
                         CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                         .applicability(SIDE1).limitsProperties(Collections.emptyList()).build(),
-                    OperationalLimitsGroupInfos.builder().currentLimits(
+                    OperationalLimitsGroupInfos.builder().id("olg2").currentLimits(
                             CurrentLimitsInfos.builder().permanentLimit(5.).temporaryLimits(Collections.emptyList()).build())
                         .applicability(SIDE2).limitsProperties(Collections.emptyList()).build()
                 )
