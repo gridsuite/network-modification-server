@@ -8,4 +8,7 @@
     <changeSet author="lesoteti (generated)" id="1764314651440-26">
         <addForeignKeyConstraint baseColumnNames="attachment_point_detail_information_id" baseTableName="line_attach_to_voltage_level" constraintName="attachment_point_detail_information_id_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="voltage_level_creation_entity" validate="true"/>
     </changeSet>
+    <changeSet author="lesoteti (generated)" id="1764588388713-6">
+        <addUniqueConstraint columnNames="attachment_point_detail_information_id" constraintName="UC_LINE_ATTACH_TO_VOLTAGE_LEVELATTACHMENT_POINT_DETAIL_INFORMAT" tableName="line_attach_to_voltage_level"/>
+    </changeSet>
 </databaseChangeLog>
