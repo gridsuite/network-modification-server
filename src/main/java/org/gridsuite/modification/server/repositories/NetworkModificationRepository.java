@@ -612,6 +612,14 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
+    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, String description) {
+        ModificationEntity modificationEntity = this.modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+        modificationEntity.setDescription(description);
+    }
+
+    @Transactional
     public void updateModification(@NonNull UUID modificationUuid, @NonNull ModificationInfos modificationInfos) {
         ModificationEntity entity = getModificationEntity(modificationUuid);
         // Tabular modifications optimization:

@@ -225,6 +225,11 @@ public class NetworkModificationService {
     }
 
     @Transactional
+    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, String description) {
+        networkModificationRepository.updateNetworkModificationDescription(modificationUuid, description);
+    }
+
+    @Transactional
     public void stashNetworkModifications(UUID groupUuid, @NonNull List<UUID> modificationUuids) {
         networkModificationRepository.stashNetworkModifications(modificationUuids, networkModificationRepository.getModificationsCount(groupUuid, true));
     }
