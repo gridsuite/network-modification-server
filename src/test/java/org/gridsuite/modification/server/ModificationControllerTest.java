@@ -60,6 +60,7 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1609,6 +1610,9 @@ class ModificationControllerTest {
                     .v(226.)
                     .angle(0.6)
                     .build()))
+            .rootNetworkName("rootNetwork")
+            .nodeName("node")
+            .computationDate(Instant.now())
             .build();
 
         UUID groupUuid = UUID.randomUUID();

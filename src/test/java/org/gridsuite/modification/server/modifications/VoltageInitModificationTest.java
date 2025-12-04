@@ -14,8 +14,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gridsuite.modification.server.utils.NetworkUtil.createGenerator;
@@ -205,6 +208,9 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
                     .v(230.)
                     .angle(0.5)
                     .build()))
+            .rootNetworkName("rootNetwork1")
+            .nodeName("node1")
+            .computationDate(Instant.now())
             .build();
     }
 
@@ -266,6 +272,9 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
                     .connect(false)
                     .build()))
             .buses(List.of())
+            .rootNetworkName("rootNetwork2")
+            .nodeName("node2")
+            .computationDate(Instant.now())
             .build();
     }
 
@@ -365,5 +374,21 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
         assertEquals(0, getNetwork().getShuntCompensator("v5shunt").getSectionCount());
         assertEquals(225., getNetwork().getShuntCompensator("v5shunt").getTargetV(), 0.001);
         assertEquals(0, getNetwork().getShuntCompensator("v6shunt").getSectionCount());
+    }
+
+    @Override
+    protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("VOLTAGE_INIT_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("rootNetwork1", createdValues.get("rootNetworkName"));
+        assertEquals("node1", createdValues.get("nodeName"));
+    }
+
+    @Override
+    protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
+        assertEquals("VOLTAGE_INIT_MODIFICATION", modificationInfos.getMessageType());
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        assertEquals("rootNetwork2", updatedValues.get("rootNetworkName"));
+        assertEquals("node2", updatedValues.get("nodeName"));
     }
 }
