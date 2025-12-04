@@ -7,14 +7,14 @@
 
 package org.gridsuite.modification.server.service;
 
+import io.micrometer.context.ContextExecutorService;
+import io.micrometer.context.ContextSnapshotFactory;
 import jakarta.annotation.PreDestroy;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -23,12 +23,14 @@ import java.util.function.Supplier;
 @Service
 public class LargeNetworkModificationExecutionService {
 
-    private ThreadPoolExecutor executorService;
+    private final ExecutorService executorService;
 
     public LargeNetworkModificationExecutionService(@Value("${max-large-concurrent-applications}") int maxConcurrentLargeModifications,
                                                     @NonNull NetworkModificationObserver networkModificationObserver) {
-        executorService = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxConcurrentLargeModifications);
-        networkModificationObserver.createThreadPoolMetric(executorService);
+        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxConcurrentLargeModifications);
+        networkModificationObserver.createThreadPoolMetric(threadPoolExecutor);
+        var snapshotFactory = ContextSnapshotFactory.builder().build();
+        executorService = ContextExecutorService.wrap(threadPoolExecutor, snapshotFactory);
     }
 
     @PreDestroy
