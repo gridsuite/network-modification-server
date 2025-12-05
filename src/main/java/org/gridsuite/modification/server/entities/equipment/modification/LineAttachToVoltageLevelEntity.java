@@ -42,6 +42,9 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     private String attachmentPointName;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private VoltageLevelCreationEntity attachmentPointDetailInformation;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private VoltageLevelCreationEntity mayVoltageLevelCreation;
 
     @Column
@@ -85,6 +88,10 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
             mayVoltageLevelCreation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
         }
+        attachmentPointDetailInformation = null;
+        if (lineAttachToVoltageLevelInfos.getAttachmentPointDetailInformation() != null) {
+            attachmentPointDetailInformation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getAttachmentPointDetailInformation());
+        }
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
         if (lineAttachToVoltageLevelInfos.getAttachmentLine() == null) {
@@ -113,6 +120,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
                 .attachmentPointName(getAttachmentPointName())
+                .attachmentPointDetailInformation(attachmentPointDetailInformation == null ? null : attachmentPointDetailInformation.toVoltageLevelCreationInfos())
                 .existingVoltageLevelId(getExistingVoltageLevelId())
                 .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
                 .bbsOrBusId(getBbsOrBusId())
