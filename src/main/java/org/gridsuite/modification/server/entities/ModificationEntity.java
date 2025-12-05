@@ -68,7 +68,7 @@ public class ModificationEntity {
     @Column(name = "description")
     private String description;
 
-    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues) {
+    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
         this.date = date;
@@ -76,6 +76,7 @@ public class ModificationEntity {
         this.activated = activated;
         this.messageType = messageType;
         this.messageValues = messageValues;
+        this.description = description;
     }
 
     public ModificationEntity(UUID id, String type) {
