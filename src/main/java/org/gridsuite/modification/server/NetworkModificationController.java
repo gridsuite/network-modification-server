@@ -149,16 +149,6 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/network-modifications/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, params = "description")
-    @Operation(summary = "Update the description of a network modification")
-    @ApiResponse(responseCode = "200", description = "The description of the network modification has been successfully updated")
-    public ResponseEntity<Void> updateNetworkModificationDescription(
-            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
-            @Parameter(description = "description of the network modification") @RequestParam(name = "description") String description) {
-        networkModificationService.updateNetworkModificationDescription(networkModificationUuid, description);
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping(value = "/network-modifications/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a network modification")
     @ApiResponse(responseCode = "200", description = "The network modifications were returned")
@@ -285,6 +275,16 @@ public class NetworkModificationController {
         @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
         @Parameter(description = "activate or deactivate network modifications") @RequestParam(name = "activated") Boolean activated) {
         networkModificationService.updateNetworkModificationActivation(networkModificationUuids, activated);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/network-modifications/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, params = "description")
+    @Operation(summary = "Updates the description of a network modification")
+    @ApiResponse(responseCode = "200", description = "The description of the network modification has been successfully updated")
+    public ResponseEntity<Void> updateNetworkModificationDescription(
+            @Parameter(description = "Network modification UUID") @PathVariable("uuid") UUID networkModificationUuid,
+            @Parameter(description = "description of the network modification") @RequestParam(name = "description") String description) {
+        networkModificationService.updateNetworkModificationDescription(networkModificationUuid, description);
         return ResponseEntity.ok().build();
     }
 
