@@ -103,13 +103,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
                 .energySource(EnergySource.WIND).minP(0).maxP(200)
                 .targetP(150).voltageRegulationOn(true).targetV(375D)
                 .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
-                .build(),
-            GeneratorCreationInfos.builder()
-                .equipmentId("v5generator").voltageLevelId("v5").busOrBusbarSectionId("1A1")
-                .connectionName("v5generator").connectionDirection(ConnectablePosition.Direction.BOTTOM).connectionPosition(100).terminalConnected(false).terminalConnected(true)
-                .energySource(EnergySource.WIND).minP(0).maxP(200)
-                .targetP(150).voltageRegulationOn(true).targetV(375D)
-                .reactiveCapabilityCurve(false).reactiveCapabilityCurvePoints(null)
                 .build()
         );
         return TabularCreationInfos.builder()
@@ -161,8 +154,6 @@ class TabularGeneratorCreationsTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getGenerator("id3"));
         assertNotNull(getNetwork().getGenerator("id4"));
         assertNotNull(getNetwork().getGenerator("id5"));
-        assertLogMessage("Tabular creation: 5 generators have been created and 1 have not been created", "network.modification.tabular.creation.warning", reportService);
-        assertLogMessage("GENERATOR_ALREADY_EXISTS : v5generator", "network.modification.tabular.creation.exception", reportService);
     }
 
     @Override

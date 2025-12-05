@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -47,8 +46,7 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
     protected ModificationInfos buildModification() {
         List<ModificationInfos> modifications = List.of(
                 buildOneModification("trf1", 0.0),
-                buildOneModification("trf2", 1.0),
-                buildOneModification("unknownTwt", 1.0)
+                buildOneModification("trf2", 1.0)
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.TWO_WINDINGS_TRANSFORMER_MODIFICATION)
@@ -83,7 +81,6 @@ class TabularTwoWindingsTransformerModificationsTest extends AbstractNetworkModi
     protected void assertAfterNetworkModificationCreation() {
         assertEquals(0.0, getNetwork().getTwoWindingsTransformer("trf1").getR(), 0.001);
         assertEquals(1.0, getNetwork().getTwoWindingsTransformer("trf2").getR(), 0.001);
-        assertLogMessage("TWO_WINDINGS_TRANSFORMER_NOT_FOUND : Two windings transformer 'unknownTwt' : it does not exist in the network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override

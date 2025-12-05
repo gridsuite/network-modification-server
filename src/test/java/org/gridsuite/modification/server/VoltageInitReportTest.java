@@ -34,7 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -62,7 +62,7 @@ class VoltageInitReportTest {
     @Autowired
     private NetworkModificationApplicator networkModificationApplicator;
 
-    @MockBean
+    @MockitoBean
     protected ReportService reportService;
 
     private static final UUID NETWORK_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
