@@ -147,6 +147,9 @@ class VoltageInitReportTest {
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v5shunt").sectionCount(0).connect(false).build(),
                     VoltageInitShuntCompensatorModificationInfos.builder().shuntCompensatorId("v6shunt").sectionCount(1).connect(false).build()))
                 .buses(List.of())
+                .rootNetworkName("rootNetwork")
+                .nodeName("node")
+                .computationDate(Instant.now())
                 .build())
         );
     }
