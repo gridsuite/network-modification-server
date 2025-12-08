@@ -13,9 +13,7 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,8 +44,8 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                 .ipMax(10.0)
                 .busbarCount(2)
                 .sectionCount(2)
-                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
+                .switchKinds(List.of(SwitchKind.BREAKER))
+                .couplingDevices(Collections.singletonList(CouplingDeviceInfos.builder().busbarSectionId1("1A").busbarSectionId2("1B").build()))
                 .build();
     }
 

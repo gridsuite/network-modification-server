@@ -85,13 +85,15 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         percent = lineAttachToVoltageLevelInfos.getPercent();
         attachmentPointId = lineAttachToVoltageLevelInfos.getAttachmentPointId();
         attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
-        mayVoltageLevelCreation = null; // Needed for the update
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
             mayVoltageLevelCreation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
+        } else {
+            mayVoltageLevelCreation = null;
         }
-        attachmentPointDetailInformation = null;
         if (lineAttachToVoltageLevelInfos.getAttachmentPointDetailInformation() != null) {
             attachmentPointDetailInformation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getAttachmentPointDetailInformation());
+        } else {
+            attachmentPointDetailInformation = null;
         }
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
