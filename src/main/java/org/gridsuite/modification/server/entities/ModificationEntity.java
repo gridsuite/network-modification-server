@@ -65,7 +65,7 @@ public class ModificationEntity {
     @Column(name = "activated", columnDefinition = "boolean default true")
     private Boolean activated = true;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "CLOB")
     private String description;
 
     public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
