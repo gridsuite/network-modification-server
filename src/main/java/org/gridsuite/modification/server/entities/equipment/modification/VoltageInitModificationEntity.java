@@ -31,6 +31,7 @@ import jakarta.persistence.Column;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -79,11 +80,11 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_buses_fk1"))
     private List<VoltageInitBusModificationEmbeddable> buses;
 
-    @Column(name = "rootNetworkName")
-    private String rootNetworkName;
+    @Column(name = "rootNetworkId")
+    private UUID rootNetworkId;
 
-    @Column(name = "nodeName")
-    private String nodeName;
+    @Column(name = "nodeId")
+    private UUID nodeId;
 
     @Column(name = "computationDate", columnDefinition = "timestamptz")
     private Instant computationDate;
@@ -106,8 +107,8 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         vscConverterStations = toEmbeddableVoltageInitVscConverterStations(voltageInitModificationInfos.getVscConverterStations());
         shuntCompensators = toEmbeddableVoltageInitShuntCompensators(voltageInitModificationInfos.getShuntCompensators());
         buses = toEmbeddableVoltageInitBuses(voltageInitModificationInfos.getBuses());
-        rootNetworkName = voltageInitModificationInfos.getRootNetworkName();
-        nodeName = voltageInitModificationInfos.getNodeName();
+        rootNetworkId = voltageInitModificationInfos.getRootNetworkId();
+        nodeId = voltageInitModificationInfos.getNodeId();
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.computationDate = voltageInitModificationInfos.getComputationDate() != null ? voltageInitModificationInfos.getComputationDate().truncatedTo(ChronoUnit.MICROS) : null;
     }
@@ -203,8 +204,8 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .vscConverterStations(toVscConverterStationsModification(vscConverterStations))
             .shuntCompensators(toShuntCompensatorsModification(shuntCompensators))
             .buses(toBusesModification(buses))
-            .rootNetworkName(getRootNetworkName())
-            .nodeName(getNodeName())
+            .rootNetworkId(getRootNetworkId())
+            .nodeId(getNodeId())
             .computationDate(getComputationDate())
             .build();
     }

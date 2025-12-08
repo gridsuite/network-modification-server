@@ -35,6 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Tag("IntegrationTest")
 class VoltageInitModificationTest extends AbstractNetworkModificationTest {
+    private static final UUID CREATE_ROOT_NETWORK_UUID = UUID.randomUUID();
+    private static final UUID CREATE_NODE_UUID = UUID.randomUUID();
+    private static final UUID UPDATE_ROOT_NETWORK_UUID = UUID.randomUUID();
+    private static final UUID UPDATE_NODE_UUID = UUID.randomUUID();
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         Network network = NetworkCreation.create(networkUuid, true);
@@ -208,8 +213,8 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
                     .v(230.)
                     .angle(0.5)
                     .build()))
-            .rootNetworkName("rootNetwork1")
-            .nodeName("node1")
+            .rootNetworkId(CREATE_ROOT_NETWORK_UUID)
+            .nodeId(CREATE_NODE_UUID)
             .computationDate(Instant.now())
             .build();
     }
@@ -272,8 +277,8 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
                     .connect(false)
                     .build()))
             .buses(List.of())
-            .rootNetworkName("rootNetwork2")
-            .nodeName("node2")
+            .rootNetworkId(UPDATE_ROOT_NETWORK_UUID)
+            .nodeId(UPDATE_NODE_UUID)
             .computationDate(Instant.now())
             .build();
     }
@@ -380,15 +385,15 @@ class VoltageInitModificationTest extends AbstractNetworkModificationTest {
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_INIT_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("rootNetwork1", createdValues.get("rootNetworkName"));
-        assertEquals("node1", createdValues.get("nodeName"));
+        assertEquals(CREATE_ROOT_NETWORK_UUID.toString(), createdValues.get("rootNetworkId"));
+        assertEquals(CREATE_NODE_UUID.toString(), createdValues.get("nodeId"));
     }
 
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("VOLTAGE_INIT_MODIFICATION", modificationInfos.getMessageType());
         Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
-        assertEquals("rootNetwork2", updatedValues.get("rootNetworkName"));
-        assertEquals("node2", updatedValues.get("nodeName"));
+        assertEquals(UPDATE_ROOT_NETWORK_UUID, updatedValues.get("rootNetworkId"));
+        assertEquals(UPDATE_NODE_UUID, updatedValues.get("nodeId"));
     }
 }
