@@ -42,6 +42,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     private String attachmentPointName;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "attachmentPointDetailInformationId", foreignKey = @ForeignKey(name = "attachment_point_detail_information_id_fk"))
     private VoltageLevelCreationEntity attachmentPointDetailInformation;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
