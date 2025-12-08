@@ -122,6 +122,7 @@ public class LccModificationEntity extends BasicEquipmentModificationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
+            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .nominalV(toAttributeModification(getNominalV()))

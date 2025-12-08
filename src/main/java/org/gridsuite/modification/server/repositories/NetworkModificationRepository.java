@@ -400,6 +400,7 @@ public class NetworkModificationRepository {
                 .date(tabularEntity.getDate())
                 .stashed(tabularEntity.getStashed())
                 .activated(tabularEntity.getActivated())
+                .description(tabularEntity.getDescription())
                 .modificationType(tabularEntity.getModificationType())
                 .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
                 .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
