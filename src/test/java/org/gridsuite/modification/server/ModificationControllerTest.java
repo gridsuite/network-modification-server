@@ -984,7 +984,7 @@ class ModificationControllerTest {
                 .build();
 
         LineAttachToVoltageLevelInfos lineAttachToVL = new LineAttachToVoltageLevelInfos("line3",
-                10.0, "AttPointId", "attPointName", null, null, "v4",
+                10.0, "AttPointId", "attPointName", null, "v4",
                 "1.A", attachmentLine, "nl1", "NewLine1", "nl2", "NewLine2");
         String bodyJson2 = getJsonBody(lineAttachToVL, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(bodyJson2).contentType(MediaType.APPLICATION_JSON), status().isOk());
@@ -1610,8 +1610,8 @@ class ModificationControllerTest {
                     .v(226.)
                     .angle(0.6)
                     .build()))
-            .rootNetworkId(UUID.randomUUID())
-            .nodeId(UUID.randomUUID())
+            .rootNetworkName("rootNetwork")
+            .nodeName("node")
             .computationDate(Instant.now())
             .build();
 

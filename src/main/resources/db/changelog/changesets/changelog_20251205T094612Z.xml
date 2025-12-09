@@ -1,18 +1,18 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="lecuyerfra (generated)" id="1765198573920-1">
+    <changeSet author="lecuyerfra (generated)" id="1764928014619-1">
         <addColumn tableName="voltage_init_modification">
             <column name="computation_date" type="timestamptz"/>
         </addColumn>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="1765198573920-2">
+    <changeSet author="lecuyerfra (generated)" id="1764928014619-2">
         <addColumn tableName="voltage_init_modification">
-            <column name="node_id" type="uuid"/>
+            <column name="node_name" type="varchar(255)"/>
         </addColumn>
     </changeSet>
-    <changeSet author="lecuyerfra (generated)" id="1765198573920-3">
+    <changeSet author="lecuyerfra (generated)" id="1764928014619-3">
         <addColumn tableName="voltage_init_modification">
-            <column name="root_network_id" type="uuid"/>
+            <column name="root_network_name" type="varchar(255)"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>
