@@ -613,7 +613,7 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, String description) {
+    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, @NonNull String description) {
         ModificationEntity modificationEntity = this.modificationRepository
             .findById(modificationUuid)
             .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));

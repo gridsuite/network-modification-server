@@ -225,7 +225,7 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, String description) {
+    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, @NonNull String description) {
         networkModificationRepository.updateNetworkModificationDescription(modificationUuid, description);
     }
 

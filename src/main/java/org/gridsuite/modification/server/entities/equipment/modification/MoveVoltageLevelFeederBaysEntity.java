@@ -73,7 +73,6 @@ public class MoveVoltageLevelFeederBaysEntity extends ModificationEntity {
             .stashed(getStashed())
             .activated(getActivated())
             .description(getDescription())
-            .description(getDescription())
             .voltageLevelId(voltageLevelId)
             .feederBays(moveFeederBays.stream()
                 .map(MoveFeederBayEmbeddable::toConnectablePositionModificationInfos).toList());
