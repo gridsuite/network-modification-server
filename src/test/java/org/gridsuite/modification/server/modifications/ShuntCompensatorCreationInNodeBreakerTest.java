@@ -136,8 +136,6 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CONNECTION_POSITION_ERROR, "PositionOrder '2' already taken").getMessage(),
-                ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test

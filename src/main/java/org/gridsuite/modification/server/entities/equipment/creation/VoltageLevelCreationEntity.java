@@ -144,8 +144,8 @@ public class VoltageLevelCreationEntity extends EquipmentCreationEntity {
         this.ipMax = voltageLevelCreationInfos.getIpMax();
         this.busbarCount = voltageLevelCreationInfos.getBusbarCount();
         this.sectionCount = voltageLevelCreationInfos.getSectionCount();
-        this.switchKinds = new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
-        this.couplingDevices = toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
+        this.switchKinds = voltageLevelCreationInfos.getSwitchKinds() == null ? new ArrayList<>() : new ArrayList<>(voltageLevelCreationInfos.getSwitchKinds());
+        this.couplingDevices = voltageLevelCreationInfos.getCouplingDevices() == null ? new ArrayList<>() : toEmbeddableCouplingDevices(voltageLevelCreationInfos.getCouplingDevices());
         this.substationCreation = Optional.ofNullable(voltageLevelCreationInfos.getSubstationCreation())
                 .map(SubstationCreationEntity::new)
                 .orElse(null);
