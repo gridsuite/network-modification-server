@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.LoadType;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.LoadCreationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -26,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.VOLTAGE_LEVEL_NOT_FOUND;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,7 +65,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         loadCreationInfosJson = getJsonBody(loadCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
+        assertLogMessage("Voltage level notFoundVoltageLevelId does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 3);
 
@@ -78,7 +75,7 @@ class LoadCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         loadCreationInfosJson = getJsonBody(loadCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(loadCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
+        assertLogMessage("Busbar section notFoundBusbarSection does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 4);
 

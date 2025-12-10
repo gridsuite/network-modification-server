@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.EnergySource;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -22,7 +21,6 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -152,7 +150,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId").getMessage(),
+        assertLogMessage("Voltage level notFoundVoltageLevelId does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
 
         // not found busbar section
@@ -162,7 +160,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection").getMessage(),
+        assertLogMessage("Busbar section notFoundBusbarSection does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
 
         // invalid min active power
@@ -186,7 +184,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : minimum reactive power is not set").getMessage(),
+        assertLogMessage("Generator 'idGenerator1' : minimum reactive power is not set",
             ERROR_MESSAGE_KEY, reportService);
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -197,7 +195,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is not set").getMessage(),
+        assertLogMessage("Generator 'idGenerator1' : maximum reactive power is not set",
             ERROR_MESSAGE_KEY, reportService);
 
         generatorCreationInfos = (GeneratorCreationInfos) buildModification();
@@ -209,7 +207,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : maximum reactive power is expected to be greater than or equal to minimum reactive power").getMessage(),
+        assertLogMessage("Generator 'idGenerator1' : maximum reactive power is expected to be greater than or equal to minimum reactive power",
             ERROR_MESSAGE_KEY, reportService);
 
         // invalid reactive capability curve limit
@@ -220,7 +218,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_GENERATOR_ERROR, "Generator 'idGenerator1' : P is not set in a reactive capability curve limits point").getMessage(),
+        assertLogMessage("Generator 'idGenerator1' : P is not set in a reactive capability curve limits point",
             ERROR_MESSAGE_KEY, reportService);
 
         // try to create an existing generator
@@ -230,7 +228,7 @@ class GeneratorCreationInNodeBreakerTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(generatorCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(GENERATOR_ALREADY_EXISTS, "v5generator").getMessage(),
+        assertLogMessage("Generator already exists: v5generator",
                ERROR_MESSAGE_KEY, reportService);
 
         // Test create generator on not yet existing variant VARIANT_NOT_EXISTING_ID :

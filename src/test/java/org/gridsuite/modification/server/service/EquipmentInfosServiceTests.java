@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.service;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.network.store.iidm.impl.NetworkImpl;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.SubstationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
@@ -256,13 +255,13 @@ class EquipmentInfosServiceTests {
     void testBadType() {
         Identifiable<Network> network = new NetworkFactoryImpl().createNetwork("test", "test");
 
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getVoltageLevelsInfos(network)).getMessage();
+        String errorMessage = assertThrows(RuntimeException.class, () -> EquipmentInfos.getVoltageLevelsInfos(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
 
-        errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getSubstationsInfos(network)).getMessage();
+        errorMessage = assertThrows(RuntimeException.class, () -> EquipmentInfos.getSubstationsInfos(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
 
-        errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getSubstationsInfos(network)).getMessage();
+        errorMessage = assertThrows(RuntimeException.class, () -> EquipmentInfos.getSubstationsInfos(network)).getMessage();
         assertTrue(errorMessage.contains(String.format("The equipment type : %s is unknown", NetworkImpl.class.getSimpleName())));
     }
 
@@ -270,8 +269,8 @@ class EquipmentInfosServiceTests {
     void testUnsupportedHybridHvdc() {
         Network network = NetworkCreation.create(NETWORK_UUID, true);
         HvdcLine hvdcLine = network.getHvdcLine("hvdcLine");
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getEquipmentTypeName(hvdcLine)).getMessage();
-        assertEquals(NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId()).getMessage(), errorMessage);
+        String errorMessage = assertThrows(RuntimeException.class, () -> EquipmentInfos.getEquipmentTypeName(hvdcLine)).getMessage();
+        assertEquals("The hybrid Hvdc line hvdcLine is unsupported", errorMessage);
     }
 
     @Test

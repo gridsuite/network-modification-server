@@ -10,13 +10,13 @@ import com.powsybl.commons.extensions.Extension;
 import com.powsybl.iidm.network.*;
 import com.powsybl.network.store.client.NetworkStoreService;
 import lombok.Getter;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.EquipmentInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
+import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -25,7 +25,6 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpac
 import java.util.*;
 import java.util.stream.Stream;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypesInModification;
 
@@ -196,7 +195,7 @@ public class NetworkStoreListener implements NetworkListener {
             networkStoreService.flush(network); // At first
             flushImpactedEquipments();
         } catch (Exception e) {
-            throw new NetworkModificationException(MODIFICATION_ERROR, e);
+            throw new NetworkModificationServerRunException(e.getMessage(), e);
         }
 
         return reduceNetworkImpacts();

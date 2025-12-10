@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,7 +19,6 @@ import org.springframework.http.MediaType;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.OPERATING_STATUS_MODIFICATION_ERROR;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -98,7 +96,7 @@ class OperatingStatusModificationEnergiseSideOneLineTest extends AbstractNetwork
 
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(OPERATING_STATUS_MODIFICATION_ERROR, "Unable to energise equipment end").getMessage(),
+        assertLogMessage("Unable to energise equipment end",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

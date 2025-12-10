@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -104,7 +102,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
+        assertLogMessage("Equipment not found: " + switchNotFoundId,
                 ERROR_MESSAGE_KEY, reportService);
 
         // switch closing when already closed
@@ -160,7 +158,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage()));
+                content().string("For switch status, the attribute name is only 'open'"));
 
         // bad equipment attribute value
         switchStatusModificationInfos.setEquipmentAttributeName("open");
@@ -170,7 +168,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                 status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage()));
+                content().string("For switch status, the attribute values are only " + Set.of(true, false)));
     }
 
     @Override

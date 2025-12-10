@@ -12,7 +12,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.PhaseTapChanger;
 import com.powsybl.iidm.network.TwoWindingsTransformer;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testBranchCreationImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -534,7 +532,7 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND, "notFoundBus").getMessage(),
+        assertLogMessage("Busbar section notFoundBus does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 2);
 
@@ -560,7 +558,7 @@ class TwoWindingsTransformerCreationNodeBreakerTest extends AbstractNetworkModif
         twoWindingsTransformerCreationInfosJson = getJsonBody(twoWindingsTransformerCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(twoWindingsTransformerCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_ALREADY_EXISTS, "trf1").getMessage(),
+        assertLogMessage("Two winding transformer already exists: trf1",
                 ERROR_MESSAGE_KEY, reportService);
         testNetworkModificationsCount(getGroupId(), 4);
     }

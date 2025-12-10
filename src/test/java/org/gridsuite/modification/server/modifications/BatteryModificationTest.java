@@ -310,7 +310,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
-        assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
+        assertLogMessage("Battery '" + "v3Battery" + "' : Active power " + activePower + " is expected to be equal to 0 or within the range of minimum active power and maximum active power: [" + minActivePower + ", " + maxActivePower + "]",
                 ERROR_MESSAGE_KEY, reportService);
 
     }
@@ -357,7 +357,7 @@ class BatteryModificationTest extends AbstractInjectionModificationTest {
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk()).andReturn();
-        assertLogMessage("MODIFY_BATTERY_ERROR : Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
+        assertLogMessage("Battery '" + "v3Battery" + "' : maximum reactive power " + maxQ.get() + " is expected to be greater than or equal to minimum reactive power " + minQ.get(),
                 ERROR_MESSAGE_KEY, reportService);
     }
 

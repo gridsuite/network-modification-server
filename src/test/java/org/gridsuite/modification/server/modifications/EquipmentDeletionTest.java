@@ -13,7 +13,6 @@ import com.powsybl.iidm.modification.topology.RemoveSubstation;
 import com.powsybl.iidm.modification.topology.RemoveSubstationBuilder;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentDeletionInfos;
 import org.gridsuite.modification.dto.HvdcLccDeletionInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -34,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.EQUIPMENT_NOT_FOUND;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -108,7 +106,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         String body = getJsonBody(equipmentDeletionInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "Equipment with id=notFoundLoad not found or of bad type").getMessage(),
+        assertLogMessage("LOAD with id :notFoundLoad not found",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

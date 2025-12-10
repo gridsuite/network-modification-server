@@ -17,7 +17,6 @@ import com.powsybl.iidm.network.extensions.Measurement;
 import com.powsybl.iidm.network.extensions.Measurements;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
@@ -36,7 +35,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -249,7 +247,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                 .content(lineModificationInfosJson)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LINE_NOT_FOUND, "Line 'lineNotFound' : does not exist in network").getMessage(),
+        assertLogMessage("Line 'lineNotFound' : does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

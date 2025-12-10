@@ -21,7 +21,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
@@ -32,6 +31,7 @@ import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
@@ -64,10 +64,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -200,13 +198,6 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testModificationException() {
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() + " : Error message");
-    }
-
-    @Test
     void testEquipmentIdNonNull() {
         String errorMessage = "equipmentId is marked non-null but is null";
         LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
@@ -222,15 +213,15 @@ class ModificationControllerTest {
         MvcResult mvcResult = runRequestAsync(mockMvc,
             post(NETWORK_MODIFICATION_URI).content(body).contentType(MediaType.APPLICATION_JSON),
             status().isNotFound());
-        assertEquals(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage(), mvcResult.getResponse().getContentAsString());
+        assertEquals("(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage()", mvcResult.getResponse().getContentAsString());
     }
 
     @Test
     void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
-        assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("%s", modificationUuid)).getMessage(), errorMessage);
+        String errorMessage = assertThrows(RuntimeException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
+        assertEquals("Modification not found: " + modificationUuid, errorMessage);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
     }
 
@@ -283,7 +274,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
-                    content().string(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage()));
+                    content().string(new NetworkModificationServerRunException("Modification group " + TEST_GROUP_ID + " not found").getMessage()));
 
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
@@ -431,7 +422,7 @@ class ModificationControllerTest {
     void testDeleteModificationMissingParamError() throws Exception {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
                 .andExpect(status().isInternalServerError())
-                .andExpect(result -> assertInstanceOf(NetworkModificationException.class, result.getResolvedException()))
+                .andExpect(result -> assertInstanceOf(RuntimeException.class, result.getResolvedException()))
                 .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
@@ -578,7 +569,7 @@ class ModificationControllerTest {
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest()).andReturn();
-        assertEquals(new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID).getMessage(), mvcResult.getResponse().getContentAsString());
+        assertEquals("DUPLICATION_ARGUMENT_INVALID", mvcResult.getResponse().getContentAsString());
     }
 
     /**
@@ -1391,8 +1382,8 @@ class ModificationControllerTest {
         assertEquals(0, result2);
 
         ModificationUtils modificationUtils = ModificationUtils.getInstance();
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
-        assertEquals(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "invalidBbsId").getMessage(), errorMessage);
+        String errorMessage = assertThrows(RuntimeException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
+        assertEquals("Busbar section invalidBbsId does not exist in network", errorMessage);
     }
 
     @Test
@@ -1721,7 +1712,7 @@ class ModificationControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.get(0), groupModifications.get(0).getUuid());
         // duplicate has been deleted
-        assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
+        assertEquals("Modification not found: " + returnedNewId, assertThrows(RuntimeException.class, ()
                 -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
     }
 
@@ -1818,8 +1809,7 @@ class ModificationControllerTest {
                         .queryParam("uuids", switchModificationId.toString()))
                 .andExpectAll(
                     status().is5xxServerError(),
-                    content().string(new NetworkModificationException(MODIFICATION_DELETION_ERROR,
-                        String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
+                    content().string(new NetworkModificationServerRunException(String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
             );
     }
 

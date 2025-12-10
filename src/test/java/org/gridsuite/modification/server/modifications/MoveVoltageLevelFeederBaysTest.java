@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.MoveFeederBayInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.MoveVoltageLevelFeederBaysInfos;
@@ -182,8 +181,8 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
                 .build();
         MoveVoltageLevelFeederBays moveVoltageLevelFeederBays = (MoveVoltageLevelFeederBays) moveVoltageLevelFeederBaysInfos.toModification();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", moveVoltageLevelFeederBays.getName());
-        String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
-        assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
+        String message = assertThrows(RuntimeException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
+        assertEquals("MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
         // busbar not found on a branch
         MoveFeederBayInfos connectablePositionModification2 = MoveFeederBayInfos.builder()
             .equipmentId("line1")
@@ -193,8 +192,8 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionPosition(4)
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
-        message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
-        assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : Invalid connection side: THREE for branch line1", message);
+        message = assertThrows(RuntimeException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
+        assertEquals("Invalid connection side: THREE for branch line1", message);
         // injection with no error
         MoveFeederBayInfos connectablePositionModification3 = MoveFeederBayInfos.builder()
             .equipmentId("v3Battery")

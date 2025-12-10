@@ -14,7 +14,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.modifications.VscModification;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -26,7 +25,6 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
 import static org.gridsuite.modification.modifications.VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
 import static org.junit.jupiter.api.Assertions.*;
 /**
@@ -273,11 +271,10 @@ class VscModificationTest extends AbstractNetworkModificationTest {
 
     private static void checkDroopWithAbsentInfos(VscModificationInfos modificationInfos, Network networkWithoutExt) {
         VscModification vscModification = new VscModification(modificationInfos);
-        String message = assertThrows(NetworkModificationException.class,
+        String message = assertThrows(RuntimeException.class,
                 () -> vscModification.check(networkWithoutExt))
             .getMessage();
-        assertThat(message).isEqualTo(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL.name() + " : "
-              + ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+        assertEquals(ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG, message);
     }
 
     @Test
@@ -358,7 +355,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModification vscModification = new VscModification(modificationInfos);
-        assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
+        assertThrows(RuntimeException.class, () -> vscModification.check(networkWitoutExt));
     }
 
     @Test

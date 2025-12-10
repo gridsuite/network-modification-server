@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -23,7 +22,6 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -76,7 +74,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_NOT_FOUND, "notFoundVoltageLevelId1").getMessage(),
+        assertLogMessage("Voltage level notFoundVoltageLevelId1 does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
@@ -84,7 +82,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "notFoundBusbarSection1").getMessage(),
+        assertLogMessage("Busbar section notFoundBusbarSection1 does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
 
         lineCreationInfos.setVoltageLevelId1("v1");
@@ -107,7 +105,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line2").getMessage(),
+        assertLogMessage(":line already exists: line2",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

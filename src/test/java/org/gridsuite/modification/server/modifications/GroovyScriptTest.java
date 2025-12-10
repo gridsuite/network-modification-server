@@ -7,7 +7,6 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.GroovyScriptInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -20,7 +19,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.GROOVY_SCRIPT_EMPTY;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -136,14 +134,14 @@ class GroovyScriptTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(groovyScriptInfos, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
+        assertLogMessage("Groovy script empty",
                 ERROR_MESSAGE_KEY, reportService);
 
         groovyScriptInfos.setScript("      ");
         // apply blank groovy script
         mockMvc.perform(post(getNetworkModificationUri()).content(getJsonBody(groovyScriptInfos, null)).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(GROOVY_SCRIPT_EMPTY).getMessage(),
+        assertLogMessage("Groovy script empty",
                 ERROR_MESSAGE_KEY, reportService);
 
         groovyScriptInfos.setScript("network.getGenerator('there is no generator').targetP=12\n");

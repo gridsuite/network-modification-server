@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.ShuntCompensatorLinearModel;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Test;
@@ -22,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_SHUNT_COMPENSATOR_ERROR;
-import static org.gridsuite.modification.NetworkModificationException.Type.SHUNT_COMPENSATOR_NOT_FOUND;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createShuntCompensator;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -56,8 +53,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_NOT_FOUND,
-                        "Shunt compensator wrong id does not exist in network").getMessage(),
+        assertLogMessage("Shunt compensator wrong id does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -74,8 +70,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Maximum section count should be greater or equal to 1")).getMessage(),
+        assertLogMessage("Unable to modify shunt compensator: Maximum section count should be greater or equal to 1",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -92,8 +87,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
+        assertLogMessage("Unable to modify shunt compensator: Section count should be between 0 and Maximum section count (1), actual : 3",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -116,8 +110,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        String.format("Section count should be between 0 and Maximum section count (1), actual : 3")).getMessage(),
+        assertLogMessage("Unable to modify shunt compensator: Section count should be between 0 and Maximum section count (1), actual : 3",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -140,8 +133,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                         "Section count should be between 0 and Maximum section count (1), actual : -1").getMessage(),
+        assertLogMessage("Unable to modify shunt compensator: Section count should be between 0 and Maximum section count (1), actual : -1",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -158,8 +150,7 @@ class ShuntCompensatorModificationTest extends AbstractInjectionModificationTest
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(MODIFY_SHUNT_COMPENSATOR_ERROR,
-                        "Qmax at nominal voltage should be greater or equal to 0").getMessage(),
+        assertLogMessage("Unable to modify shunt compensator: Qmax at nominal voltage should be greater or equal to 0",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

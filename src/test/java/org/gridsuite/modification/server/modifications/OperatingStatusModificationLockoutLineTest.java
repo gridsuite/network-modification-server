@@ -13,7 +13,6 @@ import com.powsybl.iidm.network.SwitchKind;
 
 import com.powsybl.iidm.network.extensions.OperatingStatus;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -28,7 +27,6 @@ import java.util.UUID;
 
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.FORCED_OUTAGE;
 import static com.powsybl.iidm.network.extensions.OperatingStatus.Status.PLANNED_OUTAGE;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.NetworkUtil.createSwitch;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
@@ -169,7 +167,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
-        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, "notFound").getMessage(),
+        assertLogMessage("Equipment not found: notFound",
                 ERROR_MESSAGE_KEY, reportService);
 
         // modification action empty
@@ -179,7 +177,7 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
                     status().isBadRequest(),
-                    content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage())
+                    content().string("OPERATING_ACTION_TYPE_EMPTY")
             );
         // modification action not existing
         // note: should never happen in real

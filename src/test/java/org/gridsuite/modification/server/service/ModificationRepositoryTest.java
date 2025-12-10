@@ -10,7 +10,6 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.TabularModificationInfos;
 import org.gridsuite.modification.server.entities.ModificationEntity;
@@ -34,7 +33,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.powsybl.iidm.network.StaticVarCompensator.RegulationMode.VOLTAGE;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.*;
 import static org.gridsuite.modification.dto.VoltageRegulationType.DISTANT;
 import static org.gridsuite.modification.server.utils.TestUtils.assertRequestsCount;
@@ -127,8 +125,8 @@ class ModificationRepositoryTest {
     @Test
     void test() {
         assertEquals(List.of(), this.networkModificationRepository.getModificationGroupsUuids());
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
         assertEquals(0, networkModificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
 
         var nullModifEntity = ModificationEntity.fromDTO(EquipmentAttributeModificationInfos.builder().equipmentId("id0").equipmentAttributeName("attribute").equipmentAttributeValue(null).equipmentType(IdentifiableType.VOLTAGE_LEVEL).build());
@@ -169,8 +167,8 @@ class ModificationRepositoryTest {
 
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertEquals(0, modificationRepository.findAll().size());
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -210,8 +208,8 @@ class ModificationRepositoryTest {
         assertRequestsCount(1, 0, 0, 0);
 
         // Non-existent modification uuid
-        assertThrows(NetworkModificationException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID),
-                new NetworkModificationException(MODIFICATION_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> getEquipmentAttributeModification(TEST_GROUP_ID));
+        assertEquals("Modification not found: 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -229,8 +227,9 @@ class ModificationRepositoryTest {
         assertRequestsCount(5, 0, 1, 3);
 
         // Non-existent group modification uuid
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
+
     }
 
     @Test
@@ -267,8 +266,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 1, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -348,8 +347,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 1, 4);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -398,8 +397,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 1, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -478,8 +477,8 @@ class ModificationRepositoryTest {
         // https://github.com/jdbc-observations/datasource-proxy/issues/123
         assertRequestsCount(10, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -663,8 +662,8 @@ class ModificationRepositoryTest {
         SQLStatementCountValidator.reset();
         List <UUID> modificationsToMoveUuid2 = List.of(groovyScriptEntity2.getId());
         UUID referenceNodeUuid = groovyScriptEntity2.getId();
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid),
-                new NetworkModificationException(MOVE_MODIFICATION_ERROR).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.moveModifications(TEST_GROUP_ID_2, TEST_GROUP_ID, modificationsToMoveUuid2, referenceNodeUuid));
+        assertEquals("Insert modification error", exception.getMessage());
         assertRequestsCount(5, 0, 0, 0);
 
         var modification1 = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true);
@@ -717,8 +716,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(4, 0, 1, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -770,8 +769,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 1, 4);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -806,8 +805,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     private static VoltageLevelCreationInfos makeAVoltageLevelInfos() {
@@ -911,8 +910,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -973,8 +972,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -1023,8 +1022,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -1091,8 +1090,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test
@@ -1133,8 +1132,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(2, 0, 0, 1);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, false, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     private static <T> void testModificationEmbedded(IAttributeModificationEmbeddable<T> modification, T val) {
@@ -1392,8 +1391,8 @@ class ModificationRepositoryTest {
         networkModificationRepository.deleteModificationGroup(TEST_GROUP_ID, true);
         assertRequestsCount(5, 0, 1, 3);
 
-        assertThrows(NetworkModificationException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true),
-                new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> networkModificationRepository.getModifications(TEST_GROUP_ID, true, true));
+        assertEquals("Modification Group not found 7928181c-7977-4592-ba19-88027e4254e4", exception.getMessage());
     }
 
     @Test

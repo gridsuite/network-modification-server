@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -105,7 +103,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         String vliJson = getJsonBody(vli, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(SUBSTATION_NOT_FOUND, "absent_station").getMessage(),
+        assertLogMessage("Substation absent_station does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
@@ -115,7 +113,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "Coupling between same bus bar section is not allowed").getMessage(),
+        assertLogMessage("Coupling between same bus bar section is not allowed",
                 ERROR_MESSAGE_KEY, reportService);
 
         vli = (VoltageLevelCreationInfos) buildModification();
@@ -124,7 +122,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vliJsonObject = getJsonBody(vli, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(),
+        assertLogMessage("IpMax is required",
                 ERROR_MESSAGE_KEY, reportService);
 
         vli = (VoltageLevelCreationInfos) buildModificationUpdate();
@@ -141,7 +139,7 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
         vliJsonObject = getJsonBody(vli, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(vliJsonObject).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(VOLTAGE_LEVEL_ALREADY_EXISTS, "v1").getMessage(),
+        assertLogMessage("Voltage level v1 already exists",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -206,22 +204,22 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
                 .andExpect(status().isOk());
         // VL could not have been created
         assertNull(getNetwork().getVoltageLevel("vl_ko"));
-        assertLogMessage(new NetworkModificationException(CREATE_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage(reportError, ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
     void testIpMinGreaterThanIpMax() throws Exception {
-        testIccWithError(15.1, 15.0, "IpMin cannot be greater than IpMax");
+        testIccWithError(15.1, 15.0, "Voltage level creation error: IpMin cannot be greater than IpMax");
     }
 
     @Test
     void testIpMinNegative() throws Exception {
-        testIccWithError(-25.0, 15.0, "IpMin must be positive");
+        testIccWithError(-25.0, 15.0, "Voltage level creation error: IpMin must be positive");
     }
 
     @Test
     void testIpMaxNegative() throws Exception {
-        testIccWithError(25.0, -15.0, "IpMax must be positive");
+        testIccWithError(25.0, -15.0, "Voltage level creation error: IpMax must be positive");
     }
 
     @Override
