@@ -377,6 +377,33 @@ class ModificationControllerTest {
     }
 
     @Test
+    void updateModificationDescription() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .equipmentType(IdentifiableType.SWITCH)
+            .equipmentAttributeName("open")
+            .equipmentAttributeValue(true)
+            .equipmentId("v1b1")
+            .stashed(false)
+            .description("old description")
+            .build();
+        String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modifications.size());
+        assertEquals("old description", modifications.getFirst().getDescription());
+
+        String uuidString = modifications.getFirst().getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE + "/" + uuidString)
+                .queryParam("description", "new description"))
+            .andExpect(status().isOk());
+        assertEquals("new description", modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getDescription());
+    }
+
+    @Test
     void testDeleteModification() throws Exception {
         MvcResult mvcResult;
         EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
