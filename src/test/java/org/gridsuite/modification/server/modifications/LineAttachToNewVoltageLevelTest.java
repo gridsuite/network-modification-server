@@ -7,8 +7,8 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.network.SwitchKind;
+import com.powsybl.iidm.network.*;
+import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -49,6 +49,37 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                 .build();
     }
 
+    private static VoltageLevelCreationInfos getAttachmentPoint() {
+        return VoltageLevelCreationInfos.builder()
+                .equipmentId("AttPointId")
+                .stashed(false)
+                .nominalV(0)
+                .substationCreation(SubstationCreationInfos.builder().stashed(false)
+                        .equipmentId("attachmentPointSubstation")
+                        .equipmentName("attachmentPointSubstationName")
+                        .country(Country.FR)
+                        .properties(List.of(FreePropertyInfos.builder()
+                                .added(true)
+                                .name("substationProp")
+                                .value("valueSubstation")
+                                .build()))
+                        .build())
+                .lowVoltageLimit(50.0)
+                .highVoltageLimit(100.0)
+                .ipMin(5.0)
+                .ipMax(20.0)
+                .busbarCount(1)
+                .sectionCount(1)
+                .properties(List.of(FreePropertyInfos.builder()
+                        .added(true)
+                        .name("voltageLevelProp")
+                        .value("valueVoltageLevel")
+                        .build()))
+                .switchKinds(Collections.emptyList())
+                .couplingDevices(Collections.emptyList())
+                .build();
+    }
+
     @Override
     protected Network createNetwork(UUID networkUuid) {
         return NetworkCreation.create(networkUuid, true);
@@ -62,6 +93,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                 .percent(20.0)
                 .attachmentPointId("AttPointId")
                 .attachmentPointName("attPointName")
+                .attachmentPointDetailInformation(getAttachmentPoint())
                 .mayNewVoltageLevelInfos(getNewVoltageLevel())  // create another new VL
                 .existingVoltageLevelId(null)
                 .bbsOrBusId("1.A")
@@ -81,6 +113,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
                 .percent(10.0)
                 .attachmentPointId("AttPointId")   // created VL
                 .attachmentPointName("attPointName")
+                .attachmentPointDetailInformation(getAttachmentPoint())
                 .mayNewVoltageLevelInfos(null)
                 .existingVoltageLevelId("v4")     // use existing VL
                 .bbsOrBusId("1.A")
@@ -102,6 +135,30 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
         assertNotNull(getNetwork().getVoltageLevel("newVoltageLevel"));
         // replaced line is gone
         assertNull(getNetwork().getLine("line3"));
+
+        // attachment point substation
+        Substation attachmentPointSubstation = getNetwork().getSubstation("attachmentPointSubstation");
+        assertNotNull(attachmentPointSubstation);
+        assertTrue(attachmentPointSubstation.getOptionalName().isPresent());
+        assertEquals("attachmentPointSubstationName", attachmentPointSubstation.getOptionalName().get());
+        assertEquals("valueSubstation", attachmentPointSubstation.getProperty("substationProp"));
+        assertTrue(attachmentPointSubstation.getCountry().isPresent());
+        assertEquals(Country.FR, attachmentPointSubstation.getCountry().get());
+        assertTrue(attachmentPointSubstation.isFictitious());
+
+        // attachment point voltage level
+        VoltageLevel attachmentPointVoltageLevel = getNetwork().getVoltageLevel("AttPointId");
+        assertNotNull(attachmentPointVoltageLevel);
+        assertEquals("valueVoltageLevel", attachmentPointVoltageLevel.getProperty("voltageLevelProp"));
+        assertEquals(380.0, attachmentPointVoltageLevel.getNominalV(), 0.001);
+        assertEquals(50.0, attachmentPointVoltageLevel.getLowVoltageLimit(), 0.001);
+        assertEquals(100.0, attachmentPointVoltageLevel.getHighVoltageLimit(), 0.001);
+        assertTrue(attachmentPointVoltageLevel.isFictitious());
+
+        IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit = attachmentPointVoltageLevel.getExtension(IdentifiableShortCircuit.class);
+        assertNotNull(identifiableShortCircuit);
+        assertEquals(5.0, identifiableShortCircuit.getIpMin(), 0.001);
+        assertEquals(20.0, identifiableShortCircuit.getIpMax(), 0.001);
     }
 
     @Override
@@ -110,6 +167,7 @@ class LineAttachToNewVoltageLevelTest extends AbstractNetworkModificationTest {
         assertNull(getNetwork().getLine("nl1"));
         assertNull(getNetwork().getLine("nl2"));
         assertNull(getNetwork().getVoltageLevel("AttPointId"));
+        assertNull(getNetwork().getSubstation("attachmentPointSubstation"));
         assertNull(getNetwork().getVoltageLevel("newVoltageLevel"));
         assertNotNull(getNetwork().getLine("line3"));
     }
