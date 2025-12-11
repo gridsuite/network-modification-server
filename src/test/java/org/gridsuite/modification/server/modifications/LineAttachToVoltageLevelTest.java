@@ -25,7 +25,6 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -150,10 +149,12 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         lineMissingLine.setAttachmentLine(null); // we omit a mandatory input data
         String lineMissingLineJson = getJsonBody(lineMissingLine, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string("Missing required attachment line description")
-            );
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals("Failed to map DTO to Entity: Missing required attachment line description", ex.getMessage());
+            });
         testNetworkModificationsCount(getGroupId(), 1);
     }
 

@@ -89,7 +89,7 @@ abstract class AbstractModificationByAssignmentTest extends AbstractNetworkModif
     public void testByModificationError() throws Exception {
         //Test with modification = null
         mockMvc.perform(post(getNetworkModificationUri()).content(mapper.writeValueAsString(null)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
 
         // Test with empty list of assignment
         checkCreationApplicationStatus(List.of(), NetworkModificationResult.ApplicationStatus.WITH_ERRORS);

@@ -105,7 +105,7 @@ class LineCreationInNodeBreakerTest extends AbstractNetworkModificationTest {
         lineCreationInfosJson = getJsonBody(lineCreationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineCreationInfosJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(":line already exists: line2",
+        assertLogMessage("line already exists: line2",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

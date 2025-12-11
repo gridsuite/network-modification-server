@@ -209,17 +209,17 @@ class VoltageLevelCreationTest extends AbstractNetworkModificationTest {
 
     @Test
     void testIpMinGreaterThanIpMax() throws Exception {
-        testIccWithError(15.1, 15.0, "Voltage level creation error: IpMin cannot be greater than IpMax");
+        testIccWithError(15.1, 15.0, "IpMin cannot be greater than IpMax");
     }
 
     @Test
     void testIpMinNegative() throws Exception {
-        testIccWithError(-25.0, 15.0, "Voltage level creation error: IpMin must be positive");
+        testIccWithError(-25.0, 15.0, "IpMin must be positive");
     }
 
     @Test
     void testIpMaxNegative() throws Exception {
-        testIccWithError(25.0, -15.0, "Voltage level creation error: IpMax must be positive");
+        testIccWithError(25.0, -15.0, "IpMax must be positive");
     }
 
     @Override

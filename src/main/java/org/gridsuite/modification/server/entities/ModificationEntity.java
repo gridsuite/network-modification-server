@@ -130,7 +130,7 @@ public class ModificationEntity {
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
-                throw new NetworkModificationServerRunException("Failed to map DTO to Entity", e);
+                throw new NetworkModificationServerRunException("Failed to map DTO to Entity: " + e.getCause().getMessage(), e);
             }
         } else {
             throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());

@@ -18,6 +18,7 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.gridsuite.modification.server.error.NetworkModificationGroupNotFoundException;
 import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,7 +122,7 @@ public class NetworkModificationRepository {
     }
 
     private List<ModificationEntity> saveModificationInfosNonTransactional(UUID groupUuid,
-            List<ModificationInfos> modifications) {
+                                                                           List<ModificationInfos> modifications) {
         List<ModificationEntity> entities = modifications.stream().map(ModificationEntity::fromDTO).toList();
 
         return saveModificationsNonTransactional(groupUuid, entities);
@@ -131,25 +132,25 @@ public class NetworkModificationRepository {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimizedForTabular)
-                .map(ModificationEntity::fromDTO)
-                .toList();
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .map(ModificationEntity::fromDTO)
+            .toList();
         compositeEntity.setModifications(copyEntities);
         return modificationRepository.save(compositeEntity).getId();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
         ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> new NetworkModificationServerRunException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+            .orElseThrow(() -> new NetworkModificationServerRunException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
 
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
             throw new NetworkModificationServerRunException(String.format("Modification (%s) is not a composite modification", compositeUuid));
         }
 
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
-                .map(this::toModificationsInfosOptimizedForTabular)
-                .map(ModificationEntity::fromDTO)
-                .toList();
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .map(ModificationEntity::fromDTO)
+            .toList();
         compositeEntity.getModifications().clear();
         compositeEntity.getModifications().addAll(copyEntities);
         modificationRepository.save(compositeEntity);
@@ -216,10 +217,10 @@ public class NetworkModificationRepository {
     private void insertModifications(List<ModificationEntity> modificationsList, List<ModificationEntity> modificationsToAdd, UUID referenceModificationUuid) {
         // If referenceModificationUuid == null we will append at the end of list, otherwise we will insert before referenceModification
         int insertionIndex = referenceModificationUuid == null ?
-                modificationsList.size() : IntStream.range(0, modificationsList.size())
-                        .filter(i -> referenceModificationUuid.equals(modificationsList.get(i).getId()))
-                        .findFirst()
-                        .orElseThrow(() -> new NetworkModificationServerRunException("Insert modification error"));
+            modificationsList.size() : IntStream.range(0, modificationsList.size())
+            .filter(i -> referenceModificationUuid.equals(modificationsList.get(i).getId()))
+            .findFirst()
+            .orElseThrow(() -> new NetworkModificationServerRunException("Insert modification error"));
         modificationsList.addAll(insertionIndex, modificationsToAdd);
         for (int order = 0; order < modificationsList.size(); order++) {
             modificationsList.get(order).setModificationsOrder(order);
@@ -249,8 +250,8 @@ public class NetworkModificationRepository {
 
     public List<UUID> getModificationGroupsUuids() {
         return this.modificationGroupRepository.findAll().stream()
-                .map(ModificationGroupEntity::getId)
-                .collect(Collectors.toList());
+            .map(ModificationGroupEntity::getId)
+            .collect(Collectors.toList());
     }
 
     @Transactional
@@ -259,9 +260,9 @@ public class NetworkModificationRepository {
         // findAllById does not keep sourceModificationUuids order, but
         // sourceEntities, copyEntities, newEntities have the same order.
         List<ModificationEntity> copyEntities = sourceEntities.stream()
-                .map(this::toModificationsInfosOptimizedForTabular)
-                .map(ModificationEntity::fromDTO)
-                .toList();
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .map(ModificationEntity::fromDTO)
+            .toList();
         List<ModificationEntity> newEntities = modificationRepository.saveAll(copyEntities);
 
         // Iterate through sourceEntities and newEntities collections simultaneously to map sourceId -> newId
@@ -280,13 +281,15 @@ public class NetworkModificationRepository {
     }
 
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
-        // TODO check this: e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
-        //                return List.of();
-
-        if (!errorOnGroupNotFound) {
-            return List.of();
+        try {
+            return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
+        } catch (NetworkModificationGroupNotFoundException e) {
+            if (!errorOnGroupNotFound) {
+                return List.of();
+            } else {
+                throw e;
+            }
         }
-        return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
     }
 
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
@@ -308,14 +311,14 @@ public class NetworkModificationRepository {
 
     private List<EquipmentModificationEntity> reorderModifications(List<? extends EquipmentModificationEntity> modifications, List<UUID> subModificationsOrderedUuids) {
         Map<UUID, EquipmentModificationEntity> modificationsMap = modifications.stream()
-                .collect(Collectors.toMap(
-                        ModificationEntity::getId,
-                        Function.identity()
-                ));
+            .collect(Collectors.toMap(
+                ModificationEntity::getId,
+                Function.identity()
+            ));
         return subModificationsOrderedUuids
-                .stream()
-                .map(modificationsMap::get)
-                .toList();
+            .stream()
+            .map(modificationsMap::get)
+            .toList();
     }
 
     private List<? extends EquipmentModificationEntity> loadTabularModificationSubEntities(List<UUID> subModificationsUuids, ModificationType modificationType) {
@@ -394,16 +397,16 @@ public class NetworkModificationRepository {
             default -> TabularModificationInfos.builder();
         };
         return builder.uuid(tabularEntity.getId())
-                .date(tabularEntity.getDate())
-                .stashed(tabularEntity.getStashed())
-                .activated(tabularEntity.getActivated())
-                .modificationType(tabularEntity.getModificationType())
-                .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
-                .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
-                        .map(TabularPropertyEntity::toInfos)
-                        .toList())
-                .csvFilename(tabularEntity.getCsvFilename())
-                .build();
+            .date(tabularEntity.getDate())
+            .stashed(tabularEntity.getStashed())
+            .activated(tabularEntity.getActivated())
+            .modificationType(tabularEntity.getModificationType())
+            .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
+            .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
+                .map(TabularPropertyEntity::toInfos)
+                .toList())
+            .csvFilename(tabularEntity.getCsvFilename())
+            .build();
     }
 
     public ModificationInfos toModificationsInfosOptimizedForTabular(ModificationEntity modificationEntity) {
@@ -421,8 +424,8 @@ public class NetworkModificationRepository {
 
     private List<ModificationInfos> getModificationsInfos(List<UUID> groupUuids, boolean onlyStashed) {
         return groupUuids.stream().flatMap(this::getModificationEntityStream)
-                .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
-                .map(this::toModificationsInfosOptimizedForTabular).toList();
+            .filter(m -> !onlyStashed || m.getStashed() == onlyStashed)
+            .map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
     @Transactional(readOnly = true)
@@ -438,20 +441,20 @@ public class NetworkModificationRepository {
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
     public void deleteModificationGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-       // TODO check this: e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
-        //                return;
-        if (!errorOnGroupNotFound) {
-            return;
+        try {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            if (!groupEntity.getModifications().isEmpty()) {
+                //TODO: is there a way to avoid doing this setGroup(null) that triggers a useless update since the entity will be deleted right after
+                groupEntity.getModifications().forEach(modif -> modif.setGroup(null));
+                List<ModificationEntity> modifications = groupEntity.getModifications();
+                deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
+            }
+            modificationGroupRepository.delete(groupEntity);
+        } catch (NetworkModificationGroupNotFoundException e) {
+            if (errorOnGroupNotFound) {
+                throw e;
+            }
         }
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        if (!groupEntity.getModifications().isEmpty()) {
-            //TODO: is there a way to avoid doing this setGroup(null) that triggers a useless update since the entity will be deleted right after
-            groupEntity.getModifications().forEach(modif -> modif.setGroup(null));
-            List<ModificationEntity> modifications = groupEntity.getModifications();
-            deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
-        }
-        modificationGroupRepository.delete(groupEntity);
-
     }
 
     @Transactional // To have the find and delete in the same transaction (atomic)
@@ -481,7 +484,7 @@ public class NetworkModificationRepository {
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
-        return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationServerRunException("Modification Group not found " + groupUuid));
+        return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationGroupNotFoundException("Modification Group not found " + groupUuid));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
@@ -516,12 +519,12 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull UUID uuid) {
         List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
         Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
         return networkModificationsUuids.stream()
-                .map(entitiesById::get)
-                .filter(Objects::nonNull)
-                .map(this::toModificationsInfosOptimizedForTabular)
-                .toList();
+            .map(entitiesById::get)
+            .filter(Objects::nonNull)
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .toList();
     }
 
     @Transactional(readOnly = true)
@@ -532,13 +535,13 @@ public class NetworkModificationRepository {
     private List<ModificationInfos> getCompositeModificationsInfosNonTransactional(@NonNull List<UUID> uuids) {
         List<ModificationInfos> entities = new ArrayList<>();
         uuids.forEach(uuid -> {
-            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-            List<ModificationInfos> orderedModifications = foundEntities
+                List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+                List<ModificationInfos> orderedModifications = foundEntities
                     .stream()
                     .map(this::getModificationInfo)
                     .toList();
-            entities.addAll(orderedModifications);
-        }
+                entities.addAll(orderedModifications);
+            }
         );
         return entities;
     }
@@ -558,8 +561,8 @@ public class NetworkModificationRepository {
         List<ModificationEntity> modificationEntities = new ArrayList<>();
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
-                    .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationServerRunException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+                .findById(modificationUuid)
+                .orElseThrow(() -> new NetworkModificationServerRunException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
             modificationEntity.setModificationsOrder(stashModificationOrder);
             modificationEntities.add(modificationEntity);
@@ -614,8 +617,8 @@ public class NetworkModificationRepository {
         // Before updating/adding with new sub-modifications, we delete and clear existing sub-modifications manually
         // to avoid JPA to make a huge query to find them (no need to read them, they are going to be replaced).
         if (modificationInfos.getType() == ModificationType.TABULAR_CREATION
-                || modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION
-                || modificationInfos.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
+            || modificationInfos.getType() == ModificationType.TABULAR_MODIFICATION
+            || modificationInfos.getType() == ModificationType.LIMIT_SETS_TABULAR_MODIFICATION) {
             TabularModificationsEntity tabularEntity = (TabularModificationsEntity) entity;
             deleteTabularModificationSubModifications(tabularEntity);
             tabularEntity.update(modificationInfos);
@@ -626,19 +629,20 @@ public class NetworkModificationRepository {
 
     @Transactional
     public void deleteStashedModificationInGroup(UUID groupUuid, boolean errorOnGroupNotFound) {
-       // TODO check this: if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
-        //                return;
-        if (!errorOnGroupNotFound) {
-            return;
-        }
-        ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
-        List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
-            .filter(Objects::nonNull)
-            .filter(ModificationEntity::getStashed)
-            .toList();
-        if (!modifications.isEmpty()) {
-            groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
-            deleteModifications(modifications);
+        try {
+            ModificationGroupEntity groupEntity = getModificationGroup(groupUuid);
+            List<ModificationEntity> modifications = getModificationEntityStream(groupUuid)
+                .filter(Objects::nonNull)
+                .filter(ModificationEntity::getStashed)
+                .toList();
+            if (!modifications.isEmpty()) {
+                groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
+                deleteModifications(modifications);
+            }
+        } catch (NetworkModificationGroupNotFoundException e) {
+            if (errorOnGroupNotFound) {
+                throw e;
+            }
         }
     }
 
@@ -648,9 +652,9 @@ public class NetworkModificationRepository {
         return modificationRepository.findMetadataIn(uuids)
             .stream()
             .map(entity -> ModificationMetadata.builder()
-                    .id(entity.getId())
-                    .type(ModificationType.valueOf(entity.getType()))
-                    .build())
+                .id(entity.getId())
+                .type(ModificationType.valueOf(entity.getType()))
+                .build())
             .toList();
     }
 

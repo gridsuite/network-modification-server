@@ -25,6 +25,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationGroupNotFoundException;
 import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
@@ -326,17 +327,19 @@ public class NetworkModificationService {
     }
 
     public Map<UUID, UUID> duplicateGroup(UUID sourceGroupUuid, UUID groupUuid) {
-        // TODO check this if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
-        //                return Map.of();
-        List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
-        List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
+        try {
+            List<ModificationInfos> modificationToDuplicateInfos = networkModificationRepository.getUnstashedModificationsInfos(sourceGroupUuid);
+            List<ModificationInfos> newModifications = networkModificationRepository.saveModificationInfos(groupUuid, modificationToDuplicateInfos);
 
-        Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
-        for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
-            duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
+            Map<UUID, UUID> duplicateModificationMapping = new HashMap<>();
+            for (int i = 0; i < modificationToDuplicateInfos.size(); i++) {
+                duplicateModificationMapping.put(modificationToDuplicateInfos.get(i).getUuid(), newModifications.get(i).getUuid());
+            }
+
+            return duplicateModificationMapping;
+        } catch (NetworkModificationGroupNotFoundException e) {
+            return Map.of();
         }
-
-        return duplicateModificationMapping;
     }
 
     private CompletableFuture<Optional<NetworkModificationResult>> applyModifications(UUID networkUuid, String variantId, ModificationApplicationGroup modificationGroupInfos) {

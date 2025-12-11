@@ -33,7 +33,6 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,37 +56,37 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         createSwitch(getNetwork().getVoltageLevel("vl2"), "br22", "br22", switchKind, false, false, isFictitious, 0, 3);
 
         return getNetwork().newLine()
-                .setId("line1")
-                .setName("line1")
-                .setVoltageLevel1("vl1")
-                .setVoltageLevel2("vl2")
-                .setR(0.1)
-                .setX(10.0)
-                .setG1(0.0)
-                .setG2(0.0)
-                .setB1(0.0)
-                .setB2(0.0)
-                .setNode1(3)
-                .setNode2(3)
-                .add();
+            .setId("line1")
+            .setName("line1")
+            .setVoltageLevel1("vl1")
+            .setVoltageLevel2("vl2")
+            .setR(0.1)
+            .setX(10.0)
+            .setG1(0.0)
+            .setG2(0.0)
+            .setB1(0.0)
+            .setB2(0.0)
+            .setNode1(3)
+            .setNode2(3)
+            .add();
     }
 
     @Override
     protected ModificationInfos buildModification() {
         return OperatingStatusModificationInfos.builder()
-                .stashed(false)
-                .equipmentId(TARGET_LINE_ID)
-                .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();
+            .stashed(false)
+            .equipmentId(TARGET_LINE_ID)
+            .energizedVoltageLevelId("energizedVoltageLevelId")
+            .action(OperatingStatusModificationInfos.ActionType.LOCKOUT).build();
     }
 
     @Override
     protected ModificationInfos buildModificationUpdate() {
         return OperatingStatusModificationInfos.builder()
-                .stashed(false)
-                .equipmentId(UPDATE_BRANCH_ID)
-                .energizedVoltageLevelId("energizedVoltageLevelId")
-                .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
+            .stashed(false)
+            .equipmentId(UPDATE_BRANCH_ID)
+            .energizedVoltageLevelId("energizedVoltageLevelId")
+            .action(OperatingStatusModificationInfos.ActionType.SWITCH_ON).build();
     }
 
     @Override
@@ -103,9 +102,9 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         assertNull(getNetwork().getLine(lineID).getExtension(OperatingStatus.class));
 
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
         TestUtils.assertOperatingStatus(getNetwork(), lineID, TARGET_BRANCH_STATUS);
     }
 
@@ -168,28 +167,31 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
             .andExpect(status().isOk());
         assertNull(getNetwork().getLine("notFound"));
         assertLogMessage("Equipment not found: notFound",
-                ERROR_MESSAGE_KEY, reportService);
+            ERROR_MESSAGE_KEY, reportService);
 
         // modification action empty
         modificationInfos.setEquipmentId("line2");
         modificationInfos.setAction(null);
         modificationJson = getJsonBody(modificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                    status().isBadRequest(),
-                    content().string("OPERATING_ACTION_TYPE_EMPTY")
-            );
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals("Empty operating action type", ex.getMessage());
+            });
+
         // modification action not existing
         // note: should never happen in real
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson.replace("LOCKOUT", "INVALID_ACTION")).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(
-                        status().is4xxClientError());
+            .andExpect(
+                status().isInternalServerError());
     }
 
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
+        });
         assertEquals("energizedVoltageLevelId", createdValues.get("energizedVoltageLevelId"));
         assertEquals("LOCKOUT", createdValues.get("action"));
         assertEquals("line2", createdValues.get("equipmentId"));
@@ -198,7 +200,8 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("OPERATING_STATUS_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Map<String, String> updatedValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
+        });
         assertEquals("energizedVoltageLevelId", updatedValues.get("energizedVoltageLevelId"));
         assertEquals("SWITCH_ON", updatedValues.get("action"));
         assertEquals("line1", updatedValues.get("equipmentId"));

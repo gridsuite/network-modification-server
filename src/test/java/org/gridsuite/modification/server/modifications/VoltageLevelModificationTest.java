@@ -157,31 +157,31 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
     @Test
     void testIpMinGreaterThanIpMax() throws Exception {
         // check only modification inputs
-        testIpMinIpMaxNotChanged(30.0, 29.0, "Voltage level modification error: IpMin cannot be greater than IpMax");
+        testIpMinIpMaxNotChanged(30.0, 29.0, "IpMin cannot be greater than IpMax");
     }
 
     @Test
     void testIpMinNegative() throws Exception {
         // check only modification inputs
-        testIpMinIpMaxNotChanged(-30.0, 0.0, "Voltage level modification error: IpMin must be positive");
+        testIpMinIpMaxNotChanged(-30.0, 0.0, "IpMin must be positive");
     }
 
     @Test
     void testIpMaxNegative() throws Exception {
         // check only modification inputs
-        testIpMinIpMaxNotChanged(0.0, -12.0, "Voltage level modification error: IpMax must be positive");
+        testIpMinIpMaxNotChanged(0.0, -12.0, "IpMax must be positive");
     }
 
     @Test
     void testIpMinGreaterThanEquipmentIpMax() throws Exception {
         // check ipMin modification input against equipement ipMax real value (25.0)
-        testIpMinIpMaxNotChanged(30.0, null, "Voltage level modification error: IpMin cannot be greater than IpMax");
+        testIpMinIpMaxNotChanged(30.0, null, "IpMin cannot be greater than IpMax");
     }
 
     @Test
     void testEquipmentIpMinGreaterThanIpMax() throws Exception {
         // check ipMax modification input against equipement ipMin real value (15.0)
-        testIpMinIpMaxNotChanged(null, 14.9, "Voltage level modification error: IpMin cannot be greater than IpMax");
+        testIpMinIpMaxNotChanged(null, 14.9, "IpMin cannot be greater than IpMax");
     }
 
     @Test
@@ -216,7 +216,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithNoIcc);
         assertNotNull(voltageLevelUpdated);
         assertNull(voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class));
-        assertLogMessage("Voltage level modification error: IpMax is required", ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage("IpMax is required", ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
