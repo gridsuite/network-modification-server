@@ -84,6 +84,7 @@ public class VoltageLevelTopologyModificationEntity extends EquipmentModificatio
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .equipmentAttributeModificationList(Optional.ofNullable(attributeModificationEntities)
                         .map(list -> list.stream()
                                 .map(EquipmentAttributeModificationEntity::toModificationInfos)

@@ -78,6 +78,7 @@ public class TabularModificationsEntity extends ModificationEntity {
                 .uuid(getId())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .modificationType(modificationType)
                 .modifications(modificationsInfos)
                 .properties(CollectionUtils.isEmpty(getProperties()) ? null : getProperties().stream()

@@ -400,6 +400,7 @@ public class NetworkModificationRepository {
                 .date(tabularEntity.getDate())
                 .stashed(tabularEntity.getStashed())
                 .activated(tabularEntity.getActivated())
+                .description(tabularEntity.getDescription())
                 .modificationType(tabularEntity.getModificationType())
                 .modifications(orderedModifications.stream().map(ModificationEntity::toModificationInfos).toList())
                 .properties(CollectionUtils.isEmpty(tabularEntity.getProperties()) ? null : tabularEntity.getProperties().stream()
@@ -609,6 +610,14 @@ public class NetworkModificationRepository {
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setActivated(activated);
         }
+    }
+
+    @Transactional
+    public void updateNetworkModificationDescription(@NonNull UUID modificationUuid, @NonNull String description) {
+        ModificationEntity modificationEntity = this.modificationRepository
+            .findById(modificationUuid)
+            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+        modificationEntity.setDescription(description);
     }
 
     @Transactional

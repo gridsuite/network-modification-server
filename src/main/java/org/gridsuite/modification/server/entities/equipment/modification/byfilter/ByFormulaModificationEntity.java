@@ -63,6 +63,7 @@ public class ByFormulaModificationEntity extends ModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .identifiableType(getIdentifiableType())
                 .formulaInfosList(getFormulaEntities().stream()
                         .map(FormulaEntity::toFormulaInfos)

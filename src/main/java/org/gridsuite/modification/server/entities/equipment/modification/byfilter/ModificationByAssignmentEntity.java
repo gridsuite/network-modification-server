@@ -73,6 +73,7 @@ public class ModificationByAssignmentEntity extends ModificationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
+            .description(getDescription())
             .equipmentType(equipmentType)
             .assignmentInfosList(assignmentEntities.stream()
                 .map(AssignmentEntity::toAssignmentInfos)

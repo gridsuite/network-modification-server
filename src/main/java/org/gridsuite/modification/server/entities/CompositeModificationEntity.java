@@ -45,6 +45,7 @@ public class CompositeModificationEntity extends ModificationEntity {
         List<ModificationInfos> modificationsInfos = modifications.stream().map(ModificationEntity::toModificationInfos).toList();
         return CompositeModificationInfos.builder()
                 .activated(getActivated())
+                .description(getDescription())
                 .date(getDate())
                 .uuid(getId())
                 .stashed(getStashed())
