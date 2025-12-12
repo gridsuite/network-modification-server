@@ -26,6 +26,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,6 +79,15 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         foreignKey = @ForeignKey(name = "VoltageInitModificationEntity_buses_fk1"))
     private List<VoltageInitBusModificationEmbeddable> buses;
 
+    @Column(name = "rootNetworkName")
+    private String rootNetworkName;
+
+    @Column(name = "nodeName")
+    private String nodeName;
+
+    @Column(name = "computationDate", columnDefinition = "timestamptz")
+    private Instant computationDate;
+
     public VoltageInitModificationEntity(VoltageInitModificationInfos voltageInitModificationInfos) {
         super(voltageInitModificationInfos);
         assignAttributes(voltageInitModificationInfos);
@@ -93,7 +106,10 @@ public class VoltageInitModificationEntity extends ModificationEntity {
         vscConverterStations = toEmbeddableVoltageInitVscConverterStations(voltageInitModificationInfos.getVscConverterStations());
         shuntCompensators = toEmbeddableVoltageInitShuntCompensators(voltageInitModificationInfos.getShuntCompensators());
         buses = toEmbeddableVoltageInitBuses(voltageInitModificationInfos.getBuses());
-
+        rootNetworkName = voltageInitModificationInfos.getRootNetworkName();
+        nodeName = voltageInitModificationInfos.getNodeName();
+        //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
+        this.computationDate = voltageInitModificationInfos.getComputationDate() != null ? voltageInitModificationInfos.getComputationDate().truncatedTo(ChronoUnit.MICROS) : null;
     }
 
     public static List<VoltageInitGeneratorModificationEmbeddable> toEmbeddableVoltageInitGenerators(List<VoltageInitGeneratorModificationInfos> generators) {
@@ -188,6 +204,9 @@ public class VoltageInitModificationEntity extends ModificationEntity {
             .vscConverterStations(toVscConverterStationsModification(vscConverterStations))
             .shuntCompensators(toShuntCompensatorsModification(shuntCompensators))
             .buses(toBusesModification(buses))
+            .rootNetworkName(getRootNetworkName())
+            .nodeName(getNodeName())
+            .computationDate(getComputationDate())
             .build();
     }
 }
