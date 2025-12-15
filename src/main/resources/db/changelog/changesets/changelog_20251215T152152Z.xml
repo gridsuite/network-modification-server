@@ -16,18 +16,18 @@
 
     <changeSet id="migrate-temporary-limit-modification-op-values" author="marcelinhug">
         <update tableName="current_temporary_limits_modification">
-            <column name="nameOp" value="SET"/>
+            <column name="name_op" value="SET"/>
             <where>name IS NOT NULL</where>
         </update>
 
         <update tableName="current_temporary_limits_modification">
-            <column name="valueOp" value="SET"/>
+            <column name="value_op" value="SET"/>
             <where>value_ IS NOT NULL</where>
         </update>
 
         <update tableName="current_temporary_limits_modification">
-            <column name="acceptableDurationOp" value="SET"/>
-            <where>acceptableDuration IS NOT NULL</where>
+            <column name="acceptable_duration_op" value="SET"/>
+            <where>acceptable_duration IS NOT NULL</where>
         </update>
     </changeSet>
 </databaseChangeLog>
