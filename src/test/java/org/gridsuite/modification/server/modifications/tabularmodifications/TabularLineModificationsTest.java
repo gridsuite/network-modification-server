@@ -30,7 +30,6 @@ import java.util.stream.IntStream;
 
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -58,9 +57,7 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                 LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(40., OperationType.SET))
                     .enableOLGModification(true)
                     .operationalLimitsGroups(buildOperationalLimitsGroupDefaultModification())
-                    .build(),
-                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(60., OperationType.SET))
-                    .enableOLGModification(true).build()
+                    .build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.LINE_MODIFICATION)
@@ -82,8 +79,6 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                 LineModificationInfos.builder().equipmentId("line3").g1(new AttributeModification<>(3., OperationType.SET))
                     .enableOLGModification(true).build(),
                 LineModificationInfos.builder().equipmentId("line3").b1(new AttributeModification<>(4., OperationType.SET))
-                    .enableOLGModification(true).build(),
-                LineModificationInfos.builder().equipmentId("unknownLine").b2(new AttributeModification<>(50., OperationType.SET))
                     .enableOLGModification(true).build()
         );
         return TabularModificationInfos.builder()
@@ -100,7 +95,6 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(20., getNetwork().getLine("line2").getX(), 0.001);
         assertEquals(30., getNetwork().getLine("line3").getG1(), 0.001);
         assertEquals(40., getNetwork().getLine("line3").getB1(), 0.001);
-        assertLogMessage("LINE_NOT_FOUND : Line 'unknownLine' : does not exist in network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override

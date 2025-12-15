@@ -55,6 +55,9 @@ powsybl-ws:
     name: networkmodifications
     queryBegin: '&'
     customQuery: ${powsybl-ws.database.customQueryBegin}reWriteBatchedInserts=true
+  autoconfigure:
+    base-exception-handler:
+      enable: false
 
 # maximum concurrent applications of modifications with preloadingStrategy=ALL_COLLECTIONS_NEEDED_FOR_BUS_VIEW
 # to avoid out of memory issues

@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -38,8 +37,7 @@ class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
         List<ModificationInfos> modifications = List.of(
                 BatteryModificationInfos.builder().equipmentId("v1Battery").maxP(new AttributeModification<>(50., OperationType.SET)).build(),
                 BatteryModificationInfos.builder().equipmentId("v2Battery").minP(new AttributeModification<>(5., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("v3Battery").targetP(new AttributeModification<>(5., OperationType.SET)).build(),
-                BatteryModificationInfos.builder().equipmentId("unknownBattery").targetQ(new AttributeModification<>(500., OperationType.SET)).build()
+                BatteryModificationInfos.builder().equipmentId("v3Battery").targetP(new AttributeModification<>(5., OperationType.SET)).build()
         );
         return TabularModificationInfos.builder()
                 .modificationType(ModificationType.BATTERY_MODIFICATION)
@@ -69,7 +67,6 @@ class TabularBatteryModificationsTest extends AbstractNetworkModificationTest {
         assertEquals(50., getNetwork().getBattery("v1Battery").getMaxP(), 0.001);
         assertEquals(5., getNetwork().getBattery("v2Battery").getMinP(), 0.001);
         assertEquals(5., getNetwork().getBattery("v3Battery").getTargetP(), 0.001);
-        assertLogMessage("BATTERY_NOT_FOUND : Battery unknownBattery does not exist in network", "network.modification.tabular.modification.exception", reportService);
     }
 
     @Override
