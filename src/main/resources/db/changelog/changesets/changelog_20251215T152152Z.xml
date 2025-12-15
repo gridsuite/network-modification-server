@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="add-temporary-limit-modification-op-columns" author="marcelinhug">
+        <addColumn tableName="current_temporary_limits_modification">
+            <column name="nameOp" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="valueOp" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="acceptableDurationOp" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="migrate-temporary-limit-modification-op-values" author="marcelinhug">
+        <update tableName="current_temporary_limits_modification">
+            <column name="nameOp" value="SET"/>
+            <where>name IS NOT NULL</where>
+        </update>
+
+        <update tableName="current_temporary_limits_modification">
+            <column name="valueOp" value="SET"/>
+            <where>value_ IS NOT NULL</where>
+        </update>
+
+        <update tableName="current_temporary_limits_modification">
+            <column name="acceptableDurationOp" value="SET"/>
+            <where>acceptableDuration IS NOT NULL</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>
