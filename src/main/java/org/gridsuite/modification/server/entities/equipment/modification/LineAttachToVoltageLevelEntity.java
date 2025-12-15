@@ -42,6 +42,10 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
     private String attachmentPointName;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "attachmentPointDetailInformationId", foreignKey = @ForeignKey(name = "attachment_point_detail_information_id_fk"))
+    private VoltageLevelCreationEntity attachmentPointDetailInformation;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private VoltageLevelCreationEntity mayVoltageLevelCreation;
 
     @Column
@@ -81,9 +85,15 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
         percent = lineAttachToVoltageLevelInfos.getPercent();
         attachmentPointId = lineAttachToVoltageLevelInfos.getAttachmentPointId();
         attachmentPointName = lineAttachToVoltageLevelInfos.getAttachmentPointName();
-        mayVoltageLevelCreation = null; // Needed for the update
         if (lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos() != null) {
             mayVoltageLevelCreation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getMayNewVoltageLevelInfos());
+        } else {
+            mayVoltageLevelCreation = null;
+        }
+        if (lineAttachToVoltageLevelInfos.getAttachmentPointDetailInformation() != null) {
+            attachmentPointDetailInformation = new VoltageLevelCreationEntity(lineAttachToVoltageLevelInfos.getAttachmentPointDetailInformation());
+        } else {
+            attachmentPointDetailInformation = null;
         }
         existingVoltageLevelId = lineAttachToVoltageLevelInfos.getExistingVoltageLevelId();
         bbsOrBusId = lineAttachToVoltageLevelInfos.getBbsOrBusId();
@@ -113,6 +123,7 @@ public class LineAttachToVoltageLevelEntity extends ModificationEntity {
                 .percent(getPercent())
                 .attachmentPointId(getAttachmentPointId())
                 .attachmentPointName(getAttachmentPointName())
+                .attachmentPointDetailInformation(attachmentPointDetailInformation == null ? null : attachmentPointDetailInformation.toVoltageLevelCreationInfos())
                 .existingVoltageLevelId(getExistingVoltageLevelId())
                 .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())
                 .bbsOrBusId(getBbsOrBusId())
