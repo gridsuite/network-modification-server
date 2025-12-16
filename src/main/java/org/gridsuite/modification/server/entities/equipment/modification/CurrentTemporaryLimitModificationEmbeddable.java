@@ -64,9 +64,9 @@ public class CurrentTemporaryLimitModificationEmbeddable {
         return limits.stream()
                 .map(limit -> {
                     return new CurrentTemporaryLimitModificationEmbeddable(
-                            new StringModificationEmbedded(limit.getName()),
-                            new DoubleModificationEmbedded(limit.getValue()),
-                            new IntegerModificationEmbedded(limit.getAcceptableDuration()),
+                            limit.getName() != null ? new StringModificationEmbedded(limit.getName()) : null,
+                            limit.getValue() != null ? new DoubleModificationEmbedded(limit.getValue()) : null,
+                            limit.getAcceptableDuration() != null ? new IntegerModificationEmbedded(limit.getAcceptableDuration()) : null,
                             limit.getModificationType());
                 }).toList();
     }
