@@ -74,6 +74,7 @@ public class BalancesAdjustmentEntity extends ModificationEntity {
                 .uuid(getId())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .areas(areas.stream().map(BalancesAdjustmentAreaEntity::getAreaInfos).toList())
                 .thresholdNetPosition(thresholdNetPosition)
                 .maxNumberIterations(maxNumberIterations)

@@ -105,6 +105,7 @@ public class BatteryCreationEntity extends InjectionCreationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // injection
