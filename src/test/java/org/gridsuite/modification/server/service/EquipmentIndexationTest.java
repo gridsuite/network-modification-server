@@ -119,8 +119,8 @@ class EquipmentIndexationTest {
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         List<EquipmentInfos> equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT);
         assertEquals(1, equipmentInfos.size());
-        assertEquals("v2", equipmentInfos.getFirst().getId());
-        assertEquals("v2", equipmentInfos.getFirst().getName());
+        assertEquals("v2", equipmentInfos.getFirst().getVoltageLevels().stream().findFirst().get().getId());
+        assertEquals("v2", equipmentInfos.getFirst().getVoltageLevels().stream().findFirst().get().getName());
     }
 
     @Test
