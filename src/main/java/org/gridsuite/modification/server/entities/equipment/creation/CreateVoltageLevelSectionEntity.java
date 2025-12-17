@@ -70,6 +70,7 @@ public class CreateVoltageLevelSectionEntity extends ModificationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .voltageLevelId(getVoltageLevelId())
                 .busbarSectionId(getBusbarSectionId())
                 .busbarIndex(getBusbarIndex())

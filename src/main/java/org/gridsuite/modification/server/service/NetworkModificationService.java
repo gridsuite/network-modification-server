@@ -220,8 +220,8 @@ public class NetworkModificationService {
     }
 
     @Transactional
-    public void updateNetworkModificationActivation(@NonNull List<UUID> modificationUuids, boolean activated) {
-        networkModificationRepository.updateNetworkModificationsActivation(modificationUuids, activated);
+    public void updateNetworkModificationMetadata(@NonNull List<UUID> modificationUuids, @NonNull ModificationInfos metadata) {
+        networkModificationRepository.updateNetworkModificationMetadata(modificationUuids, metadata);
     }
 
     @Transactional

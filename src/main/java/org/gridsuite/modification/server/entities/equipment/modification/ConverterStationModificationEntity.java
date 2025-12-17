@@ -109,6 +109,7 @@ public class ConverterStationModificationEntity extends InjectionModificationEnt
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
+            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .lossFactor(toAttributeModification(getLossFactor()))
