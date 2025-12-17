@@ -112,6 +112,15 @@ class EquipmentIndexationTest {
         String loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
         mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
         assertEquals("v1load_newname", equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT).get(0).getName());
+
+        // load modification - assert voltage level modification
+        loadModification = ModificationCreation.getModificationLoad("v1Load", "v2", null, "1A", null, null, null);
+        loadModificationJson = mapper.writeValueAsString(org.springframework.data.util.Pair.of(loadModification, List.of(getNetworkModificationContext(NEW_VARIANT))));
+        mockMvc.perform(post(URI_NETWORK_MODIF).content(loadModificationJson).contentType(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+        List<EquipmentInfos> equipmentInfos = equipmentInfosRepository.findByIdInAndNetworkUuidAndVariantId(List.of("v1Load"), NETWORK_UUID, NEW_VARIANT);
+        assertEquals(1, equipmentInfos.size());
+        assertEquals("v2", equipmentInfos.getFirst().getVoltageLevels().stream().findFirst().get().getId());
+        assertEquals("v2", equipmentInfos.getFirst().getVoltageLevels().stream().findFirst().get().getName());
     }
 
     @Test
