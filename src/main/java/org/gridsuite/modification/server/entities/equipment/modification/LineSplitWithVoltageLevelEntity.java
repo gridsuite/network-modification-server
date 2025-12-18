@@ -91,6 +91,7 @@ public class LineSplitWithVoltageLevelEntity extends ModificationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
+            .description(getDescription())
             .lineToSplitId(getLineToSplitId())
             .percent(getPercent())
             .mayNewVoltageLevelInfos(mayVoltageLevelCreation == null ? null : mayVoltageLevelCreation.toVoltageLevelCreationInfos())

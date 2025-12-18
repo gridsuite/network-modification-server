@@ -268,13 +268,13 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE, params = "activated")
-    @Operation(summary = "Activate or deactivate network modifications")
-    @ApiResponse(responseCode = "200", description = "The activation status related to the network modification was successfully updated")
-    public ResponseEntity<Void> updateNetworkModificationsActivationStatus(
-        @Parameter(description = "Network modification UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
-        @Parameter(description = "activate or deactivate network modifications") @RequestParam(name = "activated") Boolean activated) {
-        networkModificationService.updateNetworkModificationActivation(networkModificationUuids, activated);
+    @PutMapping(value = "/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Updates the metadata of network modifications")
+    @ApiResponse(responseCode = "200", description = "The metadata of the network modifications has been successfully updated")
+    public ResponseEntity<Void> updateNetworkModificationMetadata(
+            @Parameter(description = "Network modifications UUIDs") @RequestParam("uuids") List<UUID> networkModificationUuids,
+            @RequestBody ModificationInfos metadata) {
+        networkModificationService.updateNetworkModificationMetadata(networkModificationUuids, metadata);
         return ResponseEntity.ok().build();
     }
 
