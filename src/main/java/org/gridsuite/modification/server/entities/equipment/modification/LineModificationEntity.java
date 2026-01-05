@@ -86,6 +86,7 @@ public class LineModificationEntity extends BranchModificationEntity {
             .date(getDate())
             .stashed(getStashed())
             .activated(getActivated())
+            .description(getDescription())
             .equipmentId(getEquipmentId())
             .equipmentName(AttributeModification.toAttributeModification(getEquipmentNameValue(), getEquipmentNameOp()))
             .voltageLevelId1(toAttributeModification(getVoltageLevelId1()))

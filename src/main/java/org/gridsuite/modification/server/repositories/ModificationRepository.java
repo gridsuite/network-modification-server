@@ -26,10 +26,10 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     //TODO This doesn't return a proper entity, it's actually just a DTO:
     //See https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#projections.dtos
     //TODO can we use the simpler interface based projections instead ? To avoid repeating the columns in @Query
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder")
     List<ModificationEntity> findAllBaseByGroupId(UUID uuid);
 
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder desc")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.group.id = ?1 order by m.modificationsOrder desc")
     List<ModificationEntity> findAllBaseByGroupIdReverse(UUID uuid);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.group.id = ?1 AND m.stashed = ?2 order by m.modificationsOrder")
@@ -44,7 +44,7 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     /**
      * @return base data of the network modifications (the data from the main common table, not those specific to each modification)
      */
-    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues) FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
+    @Query(value = "SELECT new ModificationEntity(m.id, m.type, m.date, m.stashed, m.activated, m.messageType, m.messageValues, m.description) FROM ModificationEntity m WHERE m.id IN (?1) order by m.modificationsOrder")
     List<ModificationEntity> findBaseDataByIdIn(List<UUID> uuids);
 
     @Query(value = "SELECT m FROM ModificationEntity m WHERE m.id IN (?1) ORDER BY m.modificationsOrder")
