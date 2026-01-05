@@ -6,19 +6,19 @@
  */
 package org.gridsuite.modification.server.entities.equipment.modification;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.dto.CurrentTemporaryLimitModificationInfos;
 import org.gridsuite.modification.dto.TemporaryLimitModificationType;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.DoubleModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IAttributeModificationEmbeddable;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.IntegerModificationEmbedded;
+import org.gridsuite.modification.server.entities.equipment.modification.attribute.StringModificationEmbedded;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Ayoub LABIDI <ayoub.labidi at rte-france.com>
@@ -30,29 +30,55 @@ import java.util.stream.Collectors;
 public class CurrentTemporaryLimitModificationEmbeddable {
 
     @Column(name = "name")
-    private String name;
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "name")),
+        @AttributeOverride(name = "opType", column = @Column(name = "nameOp"))
+    })
+    private StringModificationEmbedded name;
 
     @Column(name = "value_")
-    private Double value;
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "value_")),
+        @AttributeOverride(name = "opType", column = @Column(name = "valueOp"))
+    })
+    private DoubleModificationEmbedded value;
 
     @Column(name = "acceptableDuration")
-    private Integer acceptableDuration;
+    @Embedded
+    @AttributeOverrides(value = {
+        @AttributeOverride(name = "value", column = @Column(name = "acceptableDuration")),
+        @AttributeOverride(name = "opType", column = @Column(name = "acceptableDurationOp"))
+    })
+    private IntegerModificationEmbedded acceptableDuration;
 
     @Column(name = "modificationType")
     @Enumerated(EnumType.STRING)
     private TemporaryLimitModificationType modificationType;
 
     public static List<CurrentTemporaryLimitModificationEmbeddable> toEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitModificationInfos> limits) {
-        return limits == null ? null :
-                limits.stream()
-                        .map(limit -> new CurrentTemporaryLimitModificationEmbeddable(limit.getName(), limit.getValue(), limit.getAcceptableDuration(), limit.getModificationType()))
-                        .collect(Collectors.toList());
+        if (limits == null) {
+            return Collections.emptyList();
+        }
+        return limits.stream()
+                .map(limit -> {
+                    return new CurrentTemporaryLimitModificationEmbeddable(
+                            limit.getName() != null ? new StringModificationEmbedded(limit.getName()) : null,
+                            limit.getValue() != null ? new DoubleModificationEmbedded(limit.getValue()) : null,
+                            limit.getAcceptableDuration() != null ? new IntegerModificationEmbedded(limit.getAcceptableDuration()) : null,
+                            limit.getModificationType());
+                }).toList();
     }
 
     public static List<CurrentTemporaryLimitModificationInfos> fromEmbeddableCurrentTemporaryLimits(List<CurrentTemporaryLimitModificationEmbeddable> limits) {
         return limits == null ? null :
                 limits.stream()
-                        .map(limit -> new CurrentTemporaryLimitModificationInfos(limit.getName(), limit.getValue(), limit.getAcceptableDuration(), limit.getModificationType()))
-                        .collect(Collectors.toList());
+                        .map(limit -> new CurrentTemporaryLimitModificationInfos(
+                                IAttributeModificationEmbeddable.toAttributeModification(limit.getName()),
+                                IAttributeModificationEmbeddable.toAttributeModification(limit.getValue()),
+                                IAttributeModificationEmbeddable.toAttributeModification(limit.getAcceptableDuration()),
+                                limit.getModificationType()))
+                        .toList();
     }
 }
