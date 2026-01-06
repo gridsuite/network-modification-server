@@ -181,6 +181,7 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .date(getDate())
                 .stashed(getStashed())
                 .activated(getActivated())
+                .description(getDescription())
                 .equipmentId(getEquipmentId())
                 .equipmentName(getEquipmentName())
                 // branch
@@ -192,8 +193,8 @@ public class TwoWindingsTransformerCreationEntity extends BranchCreationEntity {
                 .busOrBusbarSectionId2(getBusOrBusbarSectionId2())
                 .connectionName1(getConnectionName1())
                 .connectionName2(getConnectionName2())
-                .selectedOperationalLimitsGroup1(getSelectedOperationalLimitsGroupId1())
-                .selectedOperationalLimitsGroup2(getSelectedOperationalLimitsGroupId2())
+                .selectedOperationalLimitsGroupId1(getSelectedOperationalLimitsGroupId1())
+                .selectedOperationalLimitsGroupId2(getSelectedOperationalLimitsGroupId2())
                 .connectionDirection1(getConnectionDirection1())
                 .connectionDirection2(getConnectionDirection2())
                 .connectionPosition1(getConnectionPosition1())

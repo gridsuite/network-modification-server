@@ -61,10 +61,11 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.gridsuite.modification.ModificationType.EQUIPMENT_ATTRIBUTE_MODIFICATION;
+import static org.gridsuite.modification.ModificationType.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
@@ -370,13 +371,52 @@ class ModificationControllerTest {
         assertEquals(1, modifications.size());
         assertEquals(true, modifications.get(0).getActivated());
 
-        String uuidString = modifications.get(0).getUuid().toString();
+        ModificationInfos metadata = new ModificationInfos();
+        metadata.setType(LINE_MODIFICATION);
+        metadata.setActivated(false);
+        String uuidString = modifications.getFirst().getUuid().toString();
         mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
                 .queryParam("groupUuid", TEST_GROUP_ID.toString())
                 .queryParam("uuids", uuidString)
-                .queryParam("activated", "false"))
-            .andExpect(status().isOk());
+                .content(mapper.writeValueAsString(metadata))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk());
         assertEquals(false, modificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0).getActivated());
+    }
+
+    @Test
+    void updateModificationDescription() throws Exception {
+        MvcResult mvcResult;
+        EquipmentAttributeModificationInfos switchStatusModificationInfos = EquipmentAttributeModificationInfos.builder()
+            .equipmentType(IdentifiableType.SWITCH)
+            .equipmentAttributeName("open")
+            .equipmentAttributeValue(true)
+            .equipmentId("v1b1")
+            .stashed(false)
+            .description("old description")
+            .build();
+        String updateModificationDescriptionJson = getJsonBody(switchStatusModificationInfos, TEST_NETWORK_ID, NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(updateModificationDescriptionJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+        testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
+
+        List<ModificationInfos> modifications = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
+        assertEquals(1, modifications.size());
+        assertEquals("old description", modifications.getFirst().getDescription());
+
+        ModificationInfos metadata = new ModificationInfos();
+        metadata.setDescription("new description");
+        metadata.setType(LINE_MODIFICATION);
+        metadata.setActivated(null);
+        String uuidString = modifications.getFirst().getUuid().toString();
+        mockMvc.perform(put(URI_NETWORK_MODIF_BASE)
+                        .queryParam("groupUuid", TEST_GROUP_ID.toString())
+                        .queryParam("uuids", uuidString)
+                        .content(mapper.writeValueAsString(metadata))
+                        .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isOk());
+
+        assertEquals("new description", modificationRepository.getModifications(TEST_GROUP_ID, true, true).getFirst().getDescription());
     }
 
     @Test
@@ -1631,6 +1671,9 @@ class ModificationControllerTest {
                     .v(226.)
                     .angle(0.6)
                     .build()))
+            .rootNetworkName("rootNetwork")
+            .nodeName("node")
+            .computationDate(Instant.now())
             .build();
 
         UUID groupUuid = UUID.randomUUID();

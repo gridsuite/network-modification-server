@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 
+import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.modifications.TwoWindingsTransformerModification.processPhaseTapRegulation;
@@ -75,7 +76,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
                                                                 .acceptableDuration(null)
-                                                                .name("name31")
+                                                                .name(toAttributeModification("name31", OperationType.SET))
                                                                 .value(null)
                                                                 .build())
                                                 ).build()
@@ -91,15 +92,15 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                                 .temporaryLimits(
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
-                                                                .acceptableDuration(32)
-                                                                .name("name32")
-                                                                .value(42.0)
+                                                                .acceptableDuration(toAttributeModification(32, OperationType.SET))
+                                                                .name(toAttributeModification("name32", OperationType.SET))
+                                                                .value(toAttributeModification(42., OperationType.SET))
                                                                 .build())
                                                 ).build()
                                 ).build()
                 ))
-                .selectedOperationalLimitsGroup1(new AttributeModification<String>("DEFAULT", OperationType.SET))
-                .selectedOperationalLimitsGroup2(new AttributeModification<String>("DEFAULT", OperationType.SET))
+                .selectedOperationalLimitsGroupId1(new AttributeModification<>("DEFAULT", OperationType.SET))
+                .selectedOperationalLimitsGroupId2(new AttributeModification<>("DEFAULT", OperationType.SET))
                 .voltageLevelId1(new AttributeModification<>("v1", OperationType.SET))
                 .voltageLevelId2(new AttributeModification<>("v2", OperationType.SET))
                 .busOrBusbarSectionId1(new AttributeModification<>("1.1", OperationType.SET))
@@ -339,9 +340,9 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                                 .temporaryLimits(
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
-                                                                .acceptableDuration(33)
-                                                                .name("name33")
-                                                                .value(41.1)
+                                                                .acceptableDuration(toAttributeModification(33, OperationType.SET))
+                                                                .name(toAttributeModification("name33", OperationType.SET))
+                                                                .value(toAttributeModification(41.1, OperationType.SET))
                                                                 .build())
                                                 ).build()
                                 ).build(),
@@ -356,15 +357,15 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                                                 .temporaryLimits(
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
-                                                                .acceptableDuration(35)
-                                                                .name("name35")
-                                                                .value(42.1)
+                                                                .acceptableDuration(toAttributeModification(35, OperationType.SET))
+                                                                .name(toAttributeModification("name35", OperationType.SET))
+                                                                .value(toAttributeModification(42.1, OperationType.SET))
                                                                 .build())
                                                 ).build()
                                 ).build()
                 ))
-                .selectedOperationalLimitsGroup1(new AttributeModification<String>("DEFAULT", OperationType.SET))
-                .selectedOperationalLimitsGroup2(new AttributeModification<String>("DEFAULT", OperationType.SET))
+                .selectedOperationalLimitsGroupId1(new AttributeModification<>("DEFAULT", OperationType.SET))
+                .selectedOperationalLimitsGroupId2(new AttributeModification<>("DEFAULT", OperationType.SET))
                 .ratioTapChanger(RatioTapChangerModificationInfos.builder()
                         .enabled(new AttributeModification<Boolean>(true, OperationType.SET))
                         .regulating(new AttributeModification<Boolean>(true, OperationType.SET))

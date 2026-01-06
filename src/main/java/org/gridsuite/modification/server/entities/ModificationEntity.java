@@ -63,7 +63,10 @@ public class ModificationEntity {
     @Column(name = "activated", columnDefinition = "boolean default true")
     private Boolean activated = true;
 
-    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues) {
+    @Column(name = "description", columnDefinition = "CLOB")
+    private String description;
+
+    public ModificationEntity(UUID id, String type, Instant date, Boolean stashed, Boolean activated, String messageType, String messageValues, String description) {
         this.id = id;
         this.type = type;
         this.date = date;
@@ -71,6 +74,7 @@ public class ModificationEntity {
         this.activated = activated;
         this.messageType = messageType;
         this.messageValues = messageValues;
+        this.description = description;
     }
 
     public ModificationEntity(UUID id, String type) {
@@ -97,6 +101,7 @@ public class ModificationEntity {
             .date(this.date)
             .stashed(this.stashed)
             .activated(this.activated)
+            .description(this.description)
             .messageType(this.messageType)
             .messageValues(this.messageValues)
             .build();
@@ -116,6 +121,7 @@ public class ModificationEntity {
     private void assignAttributes(ModificationInfos modificationInfos) {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
+        this.setDescription(modificationInfos.getDescription());
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 

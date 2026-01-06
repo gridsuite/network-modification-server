@@ -23,6 +23,7 @@ import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact.SimpleImpactType;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
@@ -54,6 +55,8 @@ public class NetworkStoreListener implements NetworkListener {
     private final Set<SimpleElementImpact> simpleImpacts = new LinkedHashSet<>();
 
     private final Integer collectionThreshold;
+
+    private static final Pattern ATTRIBUTE_NAME_PATTERN = Pattern.compile("^(name|terminal[123])$");
 
     protected NetworkStoreListener(Network network, UUID networkUuid,
                                    NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
@@ -134,7 +137,8 @@ public class NetworkStoreListener implements NetworkListener {
     }
 
     private void addIndexationInfosForModifiedEquipment(Identifiable<?> identifiable, String attribute) {
-        if (hasIndexedEquipmentType(identifiable) && "name".equals(attribute)) {
+        if (hasIndexedEquipmentType(identifiable) &&
+            attribute != null && ATTRIBUTE_NAME_PATTERN.matcher(attribute).matches()) {
             addEquipmentInfos(identifiable);
             if (identifiable.getType().equals(IdentifiableType.VOLTAGE_LEVEL)) {
                 VoltageLevel updatedVoltageLevel = network.getVoltageLevel(identifiable.getId());

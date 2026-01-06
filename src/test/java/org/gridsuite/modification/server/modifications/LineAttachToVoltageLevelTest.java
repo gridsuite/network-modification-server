@@ -7,7 +7,9 @@
 package org.gridsuite.modification.server.modifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.powsybl.iidm.network.Line;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.OperationalLimitsGroup;
 import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -16,17 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author David Braquart <david.braquart at rte-france.com>
@@ -35,11 +34,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
 
     private static LineCreationInfos getAttachmentLine(String lineName) {
+        List<FreePropertyInfos> propertiesList = new ArrayList<>();
+        FreePropertyInfos propertyOne = new FreePropertyInfos();
+        propertyOne.setName("property");
+        propertyOne.setValue("value");
+        propertiesList.add(propertyOne);
+        List<OperationalLimitsGroupInfos> operationalLimitsList = new ArrayList<>();
+        OperationalLimitsGroupInfos limitsGroup = new OperationalLimitsGroupInfos();
+        limitsGroup.setId("groupId");
+        limitsGroup.setApplicability(OperationalLimitsGroupInfos.Applicability.SIDE1);
+        // to make the tests pass (when comparing otherwise it is null and not an empty list)
+        limitsGroup.setLimitsProperties(Collections.emptyList());
+        CurrentLimitsInfos currentLimitsInfos = new CurrentLimitsInfos();
+        currentLimitsInfos.setPermanentLimit(1.0);
+        // to make the tests pass (when comparing otherwise it is null and not an empty list)
+        currentLimitsInfos.setTemporaryLimits(Collections.emptyList());
+        limitsGroup.setCurrentLimits(currentLimitsInfos);
+        operationalLimitsList.add(limitsGroup);
         return LineCreationInfos.builder()
                 .stashed(false)
                 .equipmentId(lineName)
                 .r(50.6)
                 .x(25.3)
+                .properties(propertiesList)
+                .operationalLimitsGroups(operationalLimitsList)
                 .build();
     }
 
@@ -56,8 +74,8 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
                 .ipMax(10.0)
                 .busbarCount(2)
                 .sectionCount(2)
-                .switchKinds(Arrays.asList(SwitchKind.BREAKER))
-                .couplingDevices(Arrays.asList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
+                .switchKinds(List.of(SwitchKind.BREAKER))
+                .couplingDevices(Collections.singletonList(CouplingDeviceInfos.builder().busbarSectionId1("bbs.nw").busbarSectionId2("bbs.ne").build()))
                 .build();
     }
 
@@ -107,12 +125,23 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
     @Override
     protected void assertAfterNetworkModificationCreation() {
         // new equipments in the network:
-        assertNotNull(getNetwork().getLine("attachmentLine"));
         assertNotNull(getNetwork().getLine("nl1"));
         assertNotNull(getNetwork().getLine("nl2"));
         assertNotNull(getNetwork().getVoltageLevel("AttPointId"));
         // replaced line is gone
         assertNull(getNetwork().getLine("line3"));
+
+        // check attachment Line
+        Line attachmentLine = getNetwork().getLine("attachmentLine");
+        assertNotNull(attachmentLine);
+        assertFalse(attachmentLine.getOperationalLimitsGroups1().isEmpty());
+        Optional<OperationalLimitsGroup> operationalLimitsGroup = attachmentLine.getOperationalLimitsGroup1("groupId");
+        assertTrue(operationalLimitsGroup.isPresent());
+        assertEquals("groupId", operationalLimitsGroup.get().getId());
+        assertTrue(operationalLimitsGroup.get().getCurrentLimits().isPresent());
+        assertEquals(1.0, operationalLimitsGroup.get().getCurrentLimits().get().getPermanentLimit());
+        assertFalse(attachmentLine.getPropertyNames().isEmpty());
+        assertTrue(attachmentLine.getPropertyNames().contains("property"));
     }
 
     @Override
