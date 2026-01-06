@@ -9,13 +9,13 @@ package org.gridsuite.modification.server.error;
 /**
  * @author Mohamed Benrejeb <mohamed.benrejeb at rte-france.com>
  */
-public class NetworkModificationServerRunException extends RuntimeException {
+public class NetworkModificationServerException extends RuntimeException {
 
-    public NetworkModificationServerRunException(String message) {
+    public NetworkModificationServerException(String message) {
         super(message);
     }
 
-    public NetworkModificationServerRunException(String message, Throwable cause) {
+    public NetworkModificationServerException(String message, Throwable cause) {
         super(message, cause);
     }
 

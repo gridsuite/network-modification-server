@@ -26,7 +26,7 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;
@@ -230,8 +230,7 @@ public class NetworkModificationApplicator {
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
-        boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass())
-            || NetworkModificationServerRunException.class.isAssignableFrom(e.getClass());
+        boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass());
         if (!isApplicationException && LOGGER.isErrorEnabled()) {
             LOGGER.error(e.toString(), e);
         }

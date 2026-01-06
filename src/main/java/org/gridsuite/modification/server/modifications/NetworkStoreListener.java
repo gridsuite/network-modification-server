@@ -16,7 +16,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.dto.elasticsearch.TombstonedEquipmentInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.CollectionElementImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
@@ -199,7 +199,7 @@ public class NetworkStoreListener implements NetworkListener {
             networkStoreService.flush(network); // At first
             flushImpactedEquipments();
         } catch (Exception e) {
-            throw new NetworkModificationServerRunException(e.getMessage(), e);
+            throw new NetworkModificationServerException(e.getMessage(), e);
         }
 
         return reduceNetworkImpacts();

@@ -21,7 +21,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
-import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 
 
 /**
@@ -96,7 +96,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
                 Constructor<? extends EquipmentAttributeModificationEntity<?>> constructor = entityClass.getConstructor(EquipmentAttributeModificationInfos.class);
                 return constructor.newInstance(dto);
             } catch (Exception e) {
-                throw new NetworkModificationServerRunException("Failed to map DTO to Entity", e);
+                throw new NetworkModificationServerException("Failed to map DTO to Entity" + e.getCause().getMessage(), e);
             }
         } else {
             throw new IllegalArgumentException("No entity class registered for attribute value class: " + attributeValueClass);

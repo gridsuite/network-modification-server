@@ -11,7 +11,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.SubstationInfos;
 import org.gridsuite.modification.server.dto.VoltageLevelInfos;
-import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.NonNull;
@@ -84,7 +84,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
             ).collect(Collectors.toSet());
         }
 
-        throw new NetworkModificationServerRunException("The equipment type : " + identifiable.getClass().getSimpleName() + " is unknown");
+        throw new NetworkModificationServerException("The equipment type : " + identifiable.getClass().getSimpleName() + " is unknown");
     }
 
     public static String getEquipmentTypeName(@NonNull Identifiable<?> identifiable) {
@@ -101,7 +101,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
      */
     private static String getHvdcLineTypeName(HvdcLine hvdcLine) {
         if (hvdcLine.getConverterStation1().getHvdcType() != hvdcLine.getConverterStation2().getHvdcType()) {
-            throw new NetworkModificationServerRunException(String.format("The hybrid Hvdc line %s is unsupported", hvdcLine.getId()));
+            throw new NetworkModificationServerException(String.format("The hybrid Hvdc line %s is unsupported", hvdcLine.getId()));
         }
 
         return String.format("%s_%s", hvdcLine.getType().name(), hvdcLine.getConverterStation1().getHvdcType().name());

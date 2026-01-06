@@ -26,7 +26,7 @@ import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
 import org.gridsuite.modification.server.error.NetworkModificationGroupNotFoundException;
-import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -121,7 +121,7 @@ public class NetworkModificationService {
             .stream().map(ModificationInfos::getUuid)
             .collect(Collectors.toSet())
             .containsAll(modificationUuids)) {
-            throw new NetworkModificationServerRunException("Modifications not found");
+            throw new NetworkModificationServerException("Modifications not found");
         }
     }
 
@@ -311,7 +311,7 @@ public class NetworkModificationService {
 
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
-            throw new NetworkModificationServerRunException("No modifications found");
+            throw new NetworkModificationServerException("No modifications found");
         }
     }
 
@@ -360,7 +360,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
-            throw new NetworkModificationServerRunException("Invalid argument for duplication");
+            throw new NetworkModificationServerException("Invalid argument for duplication");
         }
         List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();

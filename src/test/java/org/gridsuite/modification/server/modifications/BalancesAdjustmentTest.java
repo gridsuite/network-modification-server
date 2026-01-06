@@ -13,7 +13,7 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
-import org.gridsuite.modification.server.error.NetworkModificationServerRunException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +66,7 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
         // Mock for server error case
         when(loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID))
-                .thenThrow(new NetworkModificationServerRunException("LOAD_FLOW_PARAMETERS_FETCH_ERROR : Internal server error"));
+                .thenThrow(new NetworkModificationServerException("LOAD_FLOW_PARAMETERS_FETCH_ERROR : Internal server error"));
     }
 
     @Override
