@@ -19,7 +19,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
 import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.error.NetworkModificationRunException;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
 import org.gridsuite.modification.server.dto.NetworkInfos;
@@ -231,7 +230,7 @@ public class NetworkModificationApplicator {
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
-        boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass()) || NetworkModificationRunException.class.isAssignableFrom(e.getClass())
+        boolean isApplicationException = PowsyblException.class.isAssignableFrom(e.getClass())
             || NetworkModificationServerRunException.class.isAssignableFrom(e.getClass());
         if (!isApplicationException && LOGGER.isErrorEnabled()) {
             LOGGER.error(e.toString(), e);
