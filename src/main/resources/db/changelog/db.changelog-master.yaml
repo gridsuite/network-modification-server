@@ -444,3 +444,12 @@ databaseChangeLog:
   - include:
       file: changesets/changelog_20251128T072356Z.xml
       relativeToChangelogFile: true
+  - include:
+      relativeToChangelogFile: true
+      file: changesets/changelog_20251205T094612Z.xml
+  - include:
+      relativeToChangelogFile: true
+      file: changesets/changelog_20251208T124345Z.xml
+  - include:
+      file: changesets/changelog_20251215T152152Z.xml
+      relativeToChangelogFile: true
