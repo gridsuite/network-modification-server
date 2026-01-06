@@ -148,8 +148,8 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                         )).build())
                                 .build()
                 ))
-                .selectedOperationalLimitsGroup1(new AttributeModification<String>("newOpLG1", OperationType.SET))
-                .selectedOperationalLimitsGroup2(new AttributeModification<String>("newOpLG2", OperationType.SET))
+                .selectedOperationalLimitsGroupId1(new AttributeModification<>("newOpLG1", OperationType.SET))
+                .selectedOperationalLimitsGroupId2(new AttributeModification<>("newOpLG2", OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
