@@ -14,6 +14,7 @@ import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.HvdcAngleDroopActivePowerControl;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRange;
 import com.powsybl.iidm.network.extensions.HvdcOperatorActivePowerRangeAdder;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.modifications.VscModification;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -271,7 +272,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
 
     private static void checkDroopWithAbsentInfos(VscModificationInfos modificationInfos, Network networkWithoutExt) {
         VscModification vscModification = new VscModification(modificationInfos);
-        String message = assertThrows(RuntimeException.class,
+        String message = assertThrows(NetworkModificationException.class,
                 () -> vscModification.check(networkWithoutExt))
             .getMessage();
         assertEquals(ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG, message);
@@ -355,7 +356,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         var networkuuid = UUID.randomUUID();
         Network networkWitoutExt = NetworkCreation.createWithVSC(networkuuid, true);
         VscModification vscModification = new VscModification(modificationInfos);
-        assertThrows(RuntimeException.class, () -> vscModification.check(networkWitoutExt));
+        assertThrows(NetworkModificationException.class, () -> vscModification.check(networkWitoutExt));
     }
 
     @Test

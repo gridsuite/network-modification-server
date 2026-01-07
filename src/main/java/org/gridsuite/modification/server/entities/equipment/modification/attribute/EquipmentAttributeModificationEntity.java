@@ -96,7 +96,7 @@ public class EquipmentAttributeModificationEntity<T> extends EquipmentModificati
                 Constructor<? extends EquipmentAttributeModificationEntity<?>> constructor = entityClass.getConstructor(EquipmentAttributeModificationInfos.class);
                 return constructor.newInstance(dto);
             } catch (Exception e) {
-                throw new NetworkModificationServerException("Failed to map DTO to Entity" + e.getCause().getMessage(), e);
+                throw new NetworkModificationServerException("Failed to map DTO to Entity: " + e.getCause().getMessage(), e);
             }
         } else {
             throw new IllegalArgumentException("No entity class registered for attribute value class: " + attributeValueClass);

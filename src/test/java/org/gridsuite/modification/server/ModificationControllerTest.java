@@ -22,6 +22,7 @@ import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
 import com.powsybl.ws.commons.error.BaseExceptionHandler;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.LoadCreationInfos.LoadCreationInfosBuilder;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
@@ -32,6 +33,7 @@ import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
@@ -223,7 +225,7 @@ class ModificationControllerTest {
     void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
-        String errorMessage = assertThrows(RuntimeException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
+        String errorMessage = assertThrows(NetworkModificationServerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
         assertEquals("Modification not found: " + modificationUuid, errorMessage);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
     }
@@ -474,7 +476,7 @@ class ModificationControllerTest {
     void testDeleteModificationMissingParamError() throws Exception {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
             .andExpect(status().isInternalServerError())
-            .andExpect(result -> assertInstanceOf(RuntimeException.class, result.getResolvedException()))
+            .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
             .andExpect(result -> assertEquals("Modification deletion error: need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
@@ -1446,7 +1448,7 @@ class ModificationControllerTest {
         assertEquals(0, result2);
 
         ModificationUtils modificationUtils = ModificationUtils.getInstance();
-        String errorMessage = assertThrows(RuntimeException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
+        String errorMessage = assertThrows(NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
         assertEquals("Busbar section invalidBbsId does not exist in network", errorMessage);
     }
 
@@ -1789,7 +1791,7 @@ class ModificationControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.get(0), groupModifications.get(0).getUuid());
         // duplicate has been deleted
-        assertEquals("Modification not found: " + returnedNewId, assertThrows(RuntimeException.class, ()
+        assertEquals("Modification not found: " + returnedNewId, assertThrows(NetworkModificationServerException.class, ()
             -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
     }
 

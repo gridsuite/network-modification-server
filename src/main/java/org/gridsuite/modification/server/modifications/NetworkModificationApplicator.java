@@ -26,7 +26,6 @@ import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult.ApplicationStatus;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
-import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.service.*;
 import org.slf4j.Logger;

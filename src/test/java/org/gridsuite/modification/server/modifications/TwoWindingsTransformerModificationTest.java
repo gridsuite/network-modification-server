@@ -11,6 +11,7 @@ import com.powsybl.commons.report.ReportNode;
 import com.powsybl.iidm.network.*;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
 import com.powsybl.iidm.network.extensions.TwoWindingsTransformerToBeEstimated;
+import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -830,12 +831,12 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         preparePhaseTapChangerAdder(adder);
         AttributeModification<Double> regulationValueModification = new AttributeModification<>(10.0, OperationType.SET);
         AttributeModification<Boolean> regulatingModification = new AttributeModification<>(true, OperationType.SET);
-        String message = assertThrows(RuntimeException.class, () -> processPhaseTapRegulation(null, adder, false,
+        String message = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             null, regulationValueModification, null, regulatingModification, regulationReports)).getMessage();
         assertEquals("Two winding transformer creation error: Regulation mode is missing when creating tap phase changer with regulation enabled", message);
 
         AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET);
-        String message2 = assertThrows(RuntimeException.class, () -> processPhaseTapRegulation(null, adder, false,
+        String message2 = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             regulationModeModification, null, null, regulatingModification, regulationReports)).getMessage();
         assertEquals("Two winding transformer creation error: Regulation value is missing when creating tap phase changer with regulation enabled", message2);
         processPhaseTapRegulation(null, adder, false,

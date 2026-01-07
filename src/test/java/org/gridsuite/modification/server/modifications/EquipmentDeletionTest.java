@@ -106,7 +106,7 @@ class EquipmentDeletionTest extends AbstractNetworkModificationTest {
         String body = getJsonBody(equipmentDeletionInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(body).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage("LOAD with id :notFoundLoad not found",
+        assertLogMessage("LOAD with id :notFoundLoad not found or of bad type",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

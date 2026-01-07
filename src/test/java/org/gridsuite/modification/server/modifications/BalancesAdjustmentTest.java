@@ -166,8 +166,8 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
      */
     @Test
     void testGetLoadFlowParametersInfosServerError() {
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
+        NetworkModificationServerException exception = assertThrows(
+                NetworkModificationServerException.class,
                 () -> loadFlowService.getLoadFlowParametersInfos(ERROR_LOADFLOW_PARAMETERS_UUID)
         );
 
