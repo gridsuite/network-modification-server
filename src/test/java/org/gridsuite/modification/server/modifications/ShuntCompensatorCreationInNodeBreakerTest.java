@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.extensions.ConnectablePosition;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.FreePropertyInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.ShuntCompensatorCreationInfos;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
@@ -99,7 +97,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(SHUNT_COMPENSATOR_ALREADY_EXISTS, "v5shunt").getMessage(),
+        assertLogMessage("Shunt compensator already exists: v5shunt",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -111,7 +109,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Maximum section count should be greater or equal to 1").getMessage(),
+        assertLogMessage("Maximum section count should be greater or equal to 1",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -124,7 +122,7 @@ class ShuntCompensatorCreationInNodeBreakerTest extends AbstractNetworkModificat
         String modificationToCreateJson = getJsonBody(modificationToCreate, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationToCreateJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(CREATE_SHUNT_COMPENSATOR_ERROR, "Section count should be between 0 and Maximum section count (2), actual : 3").getMessage(),
+        assertLogMessage("Section count should be between 0 and Maximum section count (2), actual : 3",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

@@ -183,7 +183,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
         MoveVoltageLevelFeederBays moveVoltageLevelFeederBays = (MoveVoltageLevelFeederBays) moveVoltageLevelFeederBaysInfos.toModification();
         assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS", moveVoltageLevelFeederBays.getName());
         String message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification)).getMessage();
-        assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
+        assertEquals("MoveVoltageLevelFeederBays is not implemented for class com.powsybl.network.store.iidm.impl.ThreeWindingsTransformerImpl", message);
         // busbar not found on a branch
         MoveFeederBayInfos connectablePositionModification2 = MoveFeederBayInfos.builder()
             .equipmentId("line1")
@@ -194,7 +194,7 @@ class MoveVoltageLevelFeederBaysTest extends AbstractNetworkModificationTest {
             .connectionDirection(ConnectablePosition.Direction.TOP)
             .build();
         message = assertThrows(NetworkModificationException.class, () -> moveVoltageLevelFeederBays.getTerminal(network, connectablePositionModification2)).getMessage();
-        assertEquals("MOVE_VOLTAGE_LEVEL_FEEDER_BAYS_ERROR : Invalid connection side: THREE for branch line1", message);
+        assertEquals("Invalid connection side: THREE for branch line1", message);
         // injection with no error
         MoveFeederBayInfos connectablePositionModification3 = MoveFeederBayInfos.builder()
             .equipmentId("v3Battery")

@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.SwitchKind;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CouplingDeviceInfos;
 import org.gridsuite.modification.dto.LineSplitWithVoltageLevelInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -23,8 +22,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.BUSBAR_SECTION_NOT_FOUND;
-import static org.gridsuite.modification.NetworkModificationException.Type.LINE_ALREADY_EXISTS;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -110,7 +107,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine1IdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage(),
+        assertLogMessage("Line already exists: line1",
                 ERROR_MESSAGE_KEY, reportService);
 
         // same test with "newLine2Id"
@@ -120,7 +117,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithNewLine2IdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(LINE_ALREADY_EXISTS, "line1").getMessage(),
+        assertLogMessage("Line already exists: line1",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -133,7 +130,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithBadIdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "999A").getMessage(),
+        assertLogMessage("Busbar section 999A does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
 
         // try with a switch, not a busbar
@@ -143,7 +140,7 @@ class LineSplitWithVoltageLevelTest extends AbstractNetworkModificationTest {
 
         mockMvc.perform(post(getNetworkModificationUri()).content(tryWithSwitchIdJson).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "v1d1").getMessage(),
+        assertLogMessage("Busbar section v1d1 does not exist in network",
                 ERROR_MESSAGE_KEY, reportService);
     }
 

@@ -133,7 +133,7 @@ abstract class AbstractByFilterDeletionTest extends AbstractNetworkModificationT
                 .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
                 .andExpect(status().isOk());
-        assertLogMessage(byFilterDeletionInfos.getErrorType().name() + ": There is no valid equipment ID among the provided filter(s)",
+        assertLogMessage("There is no valid equipment ID among the provided filter(s)",
             "network.modification.invalidFilters", reportService);
         wireMockUtils.verifyGetRequest(stubId, PATH, handleQueryParams(filters.stream().map(AbstractFilter::getId).collect(Collectors.toList())), false);
     }

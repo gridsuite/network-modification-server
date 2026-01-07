@@ -15,13 +15,12 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.entities.equipment.modification.attribute.EquipmentAttributeModificationEntity;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 
 import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-
-import static org.gridsuite.modification.NetworkModificationException.Type.MISSING_MODIFICATION_DESCRIPTION;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -86,7 +85,7 @@ public class ModificationEntity {
 
     protected ModificationEntity(ModificationInfos modificationInfos) {
         if (modificationInfos == null) {
-            throw new NetworkModificationException(MISSING_MODIFICATION_DESCRIPTION, "Missing network modification description");
+            throw new NetworkModificationException("Missing network modification description");
         }
         //We need to limit the precision to avoid database precision storage limit issue (postgres has a precision of 6 digits while h2 can go to 9)
         this.date = Instant.now().truncatedTo(ChronoUnit.MICROS);
@@ -138,7 +137,7 @@ public class ModificationEntity {
                 Constructor<? extends ModificationEntity> constructor = entityClass.getConstructor(dto.getClass());
                 return constructor.newInstance(dto);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to map DTO to Entity", e);
+                throw new NetworkModificationServerException("Failed to map DTO to Entity: " + e.getCause().getMessage(), e);
             }
         } else {
             throw new IllegalArgumentException("No entity class registered for DTO class: " + dto.getClass());

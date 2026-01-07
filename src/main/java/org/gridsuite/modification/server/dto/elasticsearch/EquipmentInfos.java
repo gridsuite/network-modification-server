@@ -84,7 +84,7 @@ public class EquipmentInfos extends BasicEquipmentInfos {
             ).collect(Collectors.toSet());
         }
 
-        throw NetworkModificationException.createEquipmentTypeUnknown(identifiable.getClass().getSimpleName());
+        throw new NetworkModificationException("The equipment type : " + identifiable.getClass().getSimpleName() + " is unknown");
     }
 
     public static String getEquipmentTypeName(@NonNull Identifiable<?> identifiable) {
@@ -98,11 +98,10 @@ public class EquipmentInfos extends BasicEquipmentInfos {
     /**
      * @param hvdcLine The hvdc line to get hvdc type name
      * @return The hvdc type name string
-     * @throws NetworkModificationException if converter station types don't match
      */
     private static String getHvdcLineTypeName(HvdcLine hvdcLine) {
         if (hvdcLine.getConverterStation1().getHvdcType() != hvdcLine.getConverterStation2().getHvdcType()) {
-            throw NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId());
+            throw new NetworkModificationException(String.format("The hybrid Hvdc line %s is unsupported", hvdcLine.getId()));
         }
 
         return String.format("%s_%s", hvdcLine.getType().name(), hvdcLine.getConverterStation1().getHvdcType().name());

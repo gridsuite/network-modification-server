@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.gridsuite.modification.NetworkModificationException.Type.WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL;
 import static org.gridsuite.modification.modifications.VscModification.ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG;
 import static org.junit.jupiter.api.Assertions.*;
 /**
@@ -276,8 +275,7 @@ class VscModificationTest extends AbstractNetworkModificationTest {
         String message = assertThrows(NetworkModificationException.class,
                 () -> vscModification.check(networkWithoutExt))
             .getMessage();
-        assertThat(message).isEqualTo(WRONG_HVDC_ANGLE_DROOP_ACTIVE_POWER_CONTROL.name() + " : "
-              + ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG);
+        assertEquals(ACTIVE_POWER_CONTROL_DROOP_P0_REQUIRED_ERROR_MSG, message);
     }
 
     @Test

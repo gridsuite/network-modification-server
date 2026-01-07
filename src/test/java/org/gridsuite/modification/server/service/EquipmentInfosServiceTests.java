@@ -271,7 +271,7 @@ class EquipmentInfosServiceTests {
         Network network = NetworkCreation.create(NETWORK_UUID, true);
         HvdcLine hvdcLine = network.getHvdcLine("hvdcLine");
         String errorMessage = assertThrows(NetworkModificationException.class, () -> EquipmentInfos.getEquipmentTypeName(hvdcLine)).getMessage();
-        assertEquals(NetworkModificationException.createHybridHvdcUnsupported(hvdcLine.getId()).getMessage(), errorMessage);
+        assertEquals("The hybrid Hvdc line hvdcLine is unsupported", errorMessage);
     }
 
     @Test

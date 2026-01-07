@@ -11,7 +11,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.junit.jupiter.api.Tag;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_VOLTAGE_LEVEL_ERROR;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage;
 import static org.junit.jupiter.api.Assertions.*;
@@ -153,7 +151,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         assertNotNull(identifiableShortCircuit1);
         assertEquals(beforeUpdateIpMin, identifiableShortCircuit1.getIpMin(), 0);
         assertEquals(beforeUpdateIpMax, identifiableShortCircuit1.getIpMax(), 0);
-        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, reportError).getMessage(), ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage(reportError, ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test
@@ -218,7 +216,7 @@ class VoltageLevelModificationTest extends AbstractNetworkModificationTest {
         VoltageLevel voltageLevelUpdated = getNetwork().getVoltageLevel(vlWithNoIcc);
         assertNotNull(voltageLevelUpdated);
         assertNull(voltageLevelUpdated.getExtension(IdentifiableShortCircuit.class));
-        assertLogMessage(new NetworkModificationException(MODIFY_VOLTAGE_LEVEL_ERROR, "IpMax is required").getMessage(), ERROR_MESSAGE_KEY, reportService);
+        assertLogMessage("IpMax is required", ERROR_MESSAGE_KEY, reportService);
     }
 
     @Test

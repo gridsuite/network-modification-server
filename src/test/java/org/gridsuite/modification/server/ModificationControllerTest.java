@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.extensions.GeneratorStartup;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import com.powsybl.network.store.iidm.impl.NetworkFactoryImpl;
+import com.powsybl.ws.commons.error.BaseExceptionHandler;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gridsuite.modification.NetworkModificationException;
@@ -32,6 +33,7 @@ import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.gridsuite.modification.server.impacts.AbstractBaseImpact;
 import org.gridsuite.modification.server.impacts.SimpleElementImpact;
 import org.gridsuite.modification.server.impacts.TestImpactUtils;
@@ -51,6 +53,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -65,10 +68,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.gridsuite.modification.ModificationType.*;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.elasticsearch.EquipmentInfosService.getIndexedEquipmentTypes;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.*;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -77,8 +78,7 @@ import static org.gridsuite.modification.server.utils.TestUtils.runRequestAsync;
 import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -89,6 +89,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @AutoConfigureMockMvc
 @SpringBootTest
+@Import(BaseExceptionHandler.class)
 @Tag("IntegrationTest")
 class ModificationControllerTest {
 
@@ -159,7 +160,7 @@ class ModificationControllerTest {
         networkWithTeePoint = NetworkWithTeePoint.create(TEST_NETWORK_WITH_TEE_POINT_ID);
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_WITH_TEE_POINT_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> networkWithTeePoint);
 
-        when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), nullable(PreloadingStrategy.class))).thenThrow(new PowsyblException());
+        when(networkStoreService.getNetwork(eq(NOT_FOUND_NETWORK_ID), nullable(PreloadingStrategy.class))).thenThrow(new PowsyblException("network-not-found-root-cause"));
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_WITH_FLUSH_ERROR_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> NetworkCreation.create(TEST_NETWORK_WITH_FLUSH_ERROR_ID, true));
 
         networkBusBreaker = NetworkCreation.createBusBreaker(TEST_NETWORK_BUS_BREAKER_ID);
@@ -167,7 +168,7 @@ class ModificationControllerTest {
 
         when(networkStoreService.getNetwork(eq(TEST_NETWORK_MIXED_TOPOLOGY_ID), nullable(PreloadingStrategy.class))).then((Answer<Network>) invocation -> NetworkCreation.createMixedTopology(TEST_NETWORK_MIXED_TOPOLOGY_ID));
 
-        doThrow(new PowsyblException()).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
+        doThrow(new PowsyblException("flush-error-root-cause")).when(networkStoreService).flush(argThat(n -> TEST_NETWORK_WITH_FLUSH_ERROR_ID.toString().equals(n.getId())));
 
         // clean DB
         modificationRepository.deleteAll();
@@ -201,13 +202,6 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testModificationException() {
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR).getMessage(), MODIFICATION_ERROR.name());
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, "Error message").getMessage(), MODIFICATION_ERROR.name() + " : Error message");
-        assertEquals(new NetworkModificationException(MODIFICATION_ERROR, new IllegalArgumentException("Error message")).getMessage(), MODIFICATION_ERROR.name() + " : Error message");
-    }
-
-    @Test
     void testEquipmentIdNonNull() {
         String errorMessage = "equipmentId is marked non-null but is null";
         LoadCreationInfosBuilder<?, ?> loadCreationBuilder = LoadCreationInfos.builder();
@@ -222,16 +216,16 @@ class ModificationControllerTest {
         String body = getJsonBody(LoadCreationInfos.builder().equipmentId("id").build(), NOT_FOUND_NETWORK_ID, NetworkCreation.VARIANT_ID);
         MvcResult mvcResult = runRequestAsync(mockMvc,
             post(NETWORK_MODIFICATION_URI).content(body).contentType(MediaType.APPLICATION_JSON),
-            status().isNotFound());
-        assertEquals(new NetworkModificationException(NETWORK_NOT_FOUND, NOT_FOUND_NETWORK_ID.toString()).getMessage(), mvcResult.getResponse().getContentAsString());
+            status().isInternalServerError());
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("\"detail\":\"network-not-found-root-cause\""));
     }
 
     @Test
     void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
-        assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("%s", modificationUuid)).getMessage(), errorMessage);
+        String errorMessage = assertThrows(NetworkModificationServerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
+        assertEquals("Modification not found: " + modificationUuid, errorMessage);
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
     }
 
@@ -283,8 +277,13 @@ class ModificationControllerTest {
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
-                    content().string(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage()));
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID))
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals(String.format("Modification Group not found " + TEST_GROUP_ID), ex.getMessage());
+            });
 
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
@@ -436,7 +435,7 @@ class ModificationControllerTest {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isInternalServerError());
 
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -449,9 +448,9 @@ class ModificationControllerTest {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isInternalServerError());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isInternalServerError());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
     }
 
@@ -471,8 +470,8 @@ class ModificationControllerTest {
     void testDeleteModificationMissingParamError() throws Exception {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE))
                 .andExpect(status().isInternalServerError())
-                .andExpect(result -> assertInstanceOf(NetworkModificationException.class, result.getResolvedException()))
-                .andExpect(result -> assertEquals("MODIFICATION_DELETION_ERROR : need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
+                .andExpect(result -> assertInstanceOf(NetworkModificationServerException.class, result.getResolvedException()))
+                .andExpect(result -> assertEquals("Modification deletion error: need to specify the group or give a list of UUIDs", result.getResolvedException().getMessage()));
     }
 
     @Test
@@ -482,8 +481,8 @@ class ModificationControllerTest {
                 .script("network.getGenerator('idGenerator').targetP=10\nnetwork.getGenerator('idGenerator').targetP=20\n")
                 .build();
         String groovyScriptInfosJson = getJsonBody(groovyScriptInfos, TEST_NETWORK_WITH_FLUSH_ERROR_ID, NetworkCreation.VARIANT_ID);
-        runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON), status().is5xxServerError());
-
+        MvcResult mvcResult = runRequestAsync(mockMvc, post(NETWORK_MODIFICATION_URI).content(groovyScriptInfosJson).contentType(MediaType.APPLICATION_JSON), status().isInternalServerError());
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("\"detail\":\"flush-error-root-cause\""));
         assertEquals(1, modificationRepository.getModifications(TEST_GROUP_ID, true, false).size());
     }
 
@@ -574,7 +573,7 @@ class ModificationControllerTest {
                 put("/v1/groups/" + TEST_GROUP_ID + "?action=XXXXXXX")
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isInternalServerError());
 
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();
@@ -613,12 +612,16 @@ class ModificationControllerTest {
 
         // Duplicate modifications from a group and from a list : illegal operation
         bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
-        mvcResult = mockMvc.perform(
+        mockMvc.perform(
                 put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest()).andReturn();
-        assertEquals(new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID).getMessage(), mvcResult.getResponse().getContentAsString());
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals("Invalid argument for duplication", ex.getMessage());
+            }).andReturn();
     }
 
     /**
@@ -657,7 +660,7 @@ class ModificationControllerTest {
                 put(wrongUrl)
                     .content(bodyJson)
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isInternalServerError());
 
         // create 1 modification in another group
         UUID otherGroupId = UUID.randomUUID();
@@ -1432,7 +1435,7 @@ class ModificationControllerTest {
 
         ModificationUtils modificationUtils = ModificationUtils.getInstance();
         String errorMessage = assertThrows(NetworkModificationException.class, () -> modificationUtils.getPosition("invalidBbsId", network, vl)).getMessage();
-        assertEquals(new NetworkModificationException(BUSBAR_SECTION_NOT_FOUND, "invalidBbsId").getMessage(), errorMessage);
+        assertEquals("Busbar section invalidBbsId does not exist in network", errorMessage);
     }
 
     @Test
@@ -1764,8 +1767,8 @@ class ModificationControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.get(0), groupModifications.get(0).getUuid());
         // duplicate has been deleted
-        assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
-                -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
+        assertEquals("Modification not found: " + returnedNewId, assertThrows(NetworkModificationServerException.class, ()
+            -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
     }
 
     @Test
@@ -1808,7 +1811,7 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid)
                 .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -1858,12 +1861,13 @@ class ModificationControllerTest {
 
         // Try to delete this modification without its group: not allowed
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
-                        .queryParam("uuids", switchModificationId.toString()))
-                .andExpectAll(
-                    status().is5xxServerError(),
-                    content().string(new NetworkModificationException(MODIFICATION_DELETION_ERROR,
-                        String.format("%s is owned by group %s", switchModificationId, TEST_GROUP_ID)).getMessage())
-            );
+                .queryParam("uuids", switchModificationId.toString()))
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals(String.format("Modification deletion error: %s is owned by group %s", switchModificationId, TEST_GROUP_ID), ex.getMessage());
+            });
     }
 
     @Test
@@ -1877,12 +1881,12 @@ class ModificationControllerTest {
         // try to verify unexisting modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
             .param("uuids", UUID.randomUUID().toString()))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isInternalServerError());
 
         // try to verify invalid modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP2_ID)
                 .param("uuids", switchModificationId.toString()))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isInternalServerError());
 
         // try to verify valid modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)

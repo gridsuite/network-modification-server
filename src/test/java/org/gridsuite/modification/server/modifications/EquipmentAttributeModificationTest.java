@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.modifications;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.IdentifiableType;
 import com.powsybl.iidm.network.Network;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
@@ -24,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testElementModificationImpact;
 import static org.gridsuite.modification.server.impacts.TestImpactUtils.testEmptyImpacts;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -32,7 +30,6 @@ import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessage
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,7 +63,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         // switch opening
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1"));
@@ -75,7 +72,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentId("break1Variant");
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, NetworkCreation.VARIANT_ID);
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
             .andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), Set.of("s1Variant"));
@@ -101,18 +98,18 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentId(switchNotFoundId);
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
         ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-                .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(EQUIPMENT_NOT_FOUND, switchNotFoundId).getMessage(),
-                ERROR_MESSAGE_KEY, reportService);
+            .andExpect(status().isOk());
+        assertLogMessage("Equipment not found: " + switchNotFoundId,
+            ERROR_MESSAGE_KEY, reportService);
 
         // switch closing when already closed
         switchStatusModificationInfos.setEquipmentId(switchId1);
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
         testEmptyImpacts(mapper, mvcResult.getResponse().getContentAsString());
 
@@ -120,7 +117,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
@@ -129,7 +126,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentAttributeValue(false);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), substationsIds);
 
@@ -138,7 +135,7 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfos.setEquipmentAttributeValue(true);
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, extraParams);
         mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
+            .andExpect(request().asyncStarted());
         mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn())).andExpect(status().isOk()).andReturn();
         testElementModificationImpact(mapper, mvcResult.getResponse().getContentAsString(), otherSubstationsIds);
 
@@ -157,10 +154,13 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
             .build();
 
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
+
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage()));
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals("For switch status, the attribute name is only 'open'", ex.getMessage());
+            });
 
         // bad equipment attribute value
         switchStatusModificationInfos.setEquipmentAttributeName("open");
@@ -168,9 +168,12 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
 
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
-            .andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage()));
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> {
+                Throwable ex = result.getResolvedException();
+                assertNotNull(ex);
+                assertEquals("For switch status, the attribute values are only " + Set.of(true, false), ex.getMessage());
+            });
     }
 
     @Override
@@ -213,7 +216,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
     @Override
     protected void testCreationModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
+        });
         assertEquals("open", createdValues.get("equipmentAttributeName"));
         assertEquals("v1b1", createdValues.get("equipmentId"));
         assertEquals("true", createdValues.get("equipmentAttributeValue"));
@@ -222,7 +226,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
     @Override
     protected void testUpdateModificationMessage(ModificationInfos modificationInfos) throws Exception {
         assertEquals("EQUIPMENT_ATTRIBUTE_MODIFICATION", modificationInfos.getMessageType());
-        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() { });
+        Map<String, String> createdValues = mapper.readValue(modificationInfos.getMessageValues(), new TypeReference<>() {
+        });
         assertEquals("open", createdValues.get("equipmentAttributeName"));
         assertEquals("v1b1Edited", createdValues.get("equipmentId"));
         assertEquals("false", createdValues.get("equipmentAttributeValue"));

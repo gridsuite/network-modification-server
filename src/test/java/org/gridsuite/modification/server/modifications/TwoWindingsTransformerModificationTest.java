@@ -24,8 +24,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 
-import static org.gridsuite.modification.NetworkModificationException.Type.MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR;
-import static org.gridsuite.modification.NetworkModificationException.Type.TWO_WINDINGS_TRANSFORMER_NOT_FOUND;
 import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
@@ -319,7 +317,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
                         .content(modificationInfosJson)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        assertLogMessage(new NetworkModificationException(TWO_WINDINGS_TRANSFORMER_NOT_FOUND, "Two windings transformer '2wt_not_existing' : it does not exist in the network").getMessage(),
+        assertLogMessage("Two windings transformer '2wt_not_existing' : it does not exist in the network",
                 ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -717,7 +715,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
 
         // modification 1 assert
         runRequestAsync(mockMvc, post(getNetworkModificationUri()).content(modificationToModifyJson1).contentType(MediaType.APPLICATION_JSON), status().isOk());
-        assertLogMessage(new NetworkModificationException(MODIFY_TWO_WINDINGS_TRANSFORMER_ERROR, "Regulation value is missing when modifying, phase tap changer can not regulate").getMessage(),
+        assertLogMessage("Two winding transformer modification error: Regulation value is missing when modifying, phase tap changer can not regulate",
             ERROR_MESSAGE_KEY, reportService);
     }
 
@@ -767,7 +765,7 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
             // change not applied
             assertThat(terminal.isConnected()).isNotEqualTo(expectedState);
             assertEquals(NetworkModificationResult.ApplicationStatus.WITH_ERRORS, extractApplicationStatus(networkModificationsResult).getFirst());
-            assertLogMessage("BRANCH_MODIFICATION_ERROR : " + errorMessage, ERROR_MESSAGE_KEY, reportService);
+            assertLogMessage(errorMessage, ERROR_MESSAGE_KEY, reportService);
         } else {
             // connection state has changed as expected
             assertThat(terminal.isConnected()).isEqualTo(expectedState);
@@ -835,12 +833,12 @@ class TwoWindingsTransformerModificationTest extends AbstractNetworkModification
         AttributeModification<Boolean> regulatingModification = new AttributeModification<>(true, OperationType.SET);
         String message = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             null, regulationValueModification, null, regulatingModification, regulationReports)).getMessage();
-        assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation mode is missing when creating tap phase changer with regulation enabled", message);
+        assertEquals("Two winding transformer creation error: Regulation mode is missing when creating tap phase changer with regulation enabled", message);
 
         AttributeModification<PhaseTapChanger.RegulationMode> regulationModeModification = new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET);
         String message2 = assertThrows(NetworkModificationException.class, () -> processPhaseTapRegulation(null, adder, false,
             regulationModeModification, null, null, regulatingModification, regulationReports)).getMessage();
-        assertEquals("CREATE_TWO_WINDINGS_TRANSFORMER_ERROR : Regulation value is missing when creating tap phase changer with regulation enabled", message2);
+        assertEquals("Two winding transformer creation error: Regulation value is missing when creating tap phase changer with regulation enabled", message2);
         processPhaseTapRegulation(null, adder, false,
             new AttributeModification<>(PhaseTapChanger.RegulationMode.CURRENT_LIMITER, OperationType.SET),
             null, null, null, regulationReports);

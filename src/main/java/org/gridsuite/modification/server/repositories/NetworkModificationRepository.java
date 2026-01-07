@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 import org.gridsuite.modification.ModificationType;
-import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.dto.tabular.*;
 import org.gridsuite.modification.server.dto.ModificationMetadata;
@@ -19,6 +18,8 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.gridsuite.modification.server.error.NetworkModificationGroupNotFoundException;
+import org.gridsuite.modification.server.error.NetworkModificationServerException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.apache.commons.collections4.SetUtils.emptyIfNull;
-import static org.gridsuite.modification.NetworkModificationException.Type.*;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_DELETION_BATCH_SIZE;
 import static org.gridsuite.modification.server.utils.DatabaseConstants.SQL_SUB_MODIFICATION_WITH_LIMITSET_DELETION_BATCH_SIZE;
 
@@ -141,11 +141,10 @@ public class NetworkModificationRepository {
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
         ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
-                .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
+                .orElseThrow(() -> new NetworkModificationServerException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
 
         if (!(modificationEntity instanceof CompositeModificationEntity compositeEntity)) {
-            throw new NetworkModificationException(MODIFICATION_ERROR,
-                    String.format("Modification (%s) is not a composite modification", compositeUuid));
+            throw new NetworkModificationServerException(String.format("Modification (%s) is not a composite modification", compositeUuid));
         }
 
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -221,7 +220,7 @@ public class NetworkModificationRepository {
                 modificationsList.size() : IntStream.range(0, modificationsList.size())
                         .filter(i -> referenceModificationUuid.equals(modificationsList.get(i).getId()))
                         .findFirst()
-                        .orElseThrow(() -> new NetworkModificationException(MOVE_MODIFICATION_ERROR));
+                        .orElseThrow(() -> new NetworkModificationServerException("Insert modification error"));
         modificationsList.addAll(insertionIndex, modificationsToAdd);
         for (int order = 0; order < modificationsList.size(); order++) {
             modificationsList.get(order).setModificationsOrder(order);
@@ -284,8 +283,8 @@ public class NetworkModificationRepository {
     public List<ModificationInfos> getModifications(UUID groupUuid, boolean onlyMetadata, boolean errorOnGroupNotFound, boolean onlyStashed) {
         try {
             return onlyMetadata ? getModificationsMetadata(groupUuid, onlyStashed) : getModificationsInfos(List.of(groupUuid), onlyStashed);
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+        } catch (NetworkModificationGroupNotFoundException e) {
+            if (!errorOnGroupNotFound) {
                 return List.of();
             }
             throw e;
@@ -437,7 +436,7 @@ public class NetworkModificationRepository {
     public ModificationEntity getModificationEntity(UUID modificationUuid) {
         return modificationRepository
             .findById(modificationUuid)
-            .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, modificationUuid.toString()));
+            .orElseThrow(() -> new NetworkModificationServerException("Modification not found: " + modificationUuid.toString()));
     }
 
     @Transactional // To have the 2 delete in the same transaction (atomic)
@@ -451,11 +450,10 @@ public class NetworkModificationRepository {
                 deleteModifications(modifications.stream().filter(Objects::nonNull).toList());
             }
             modificationGroupRepository.delete(groupEntity);
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
-                return;
+        } catch (NetworkModificationGroupNotFoundException e) {
+            if (errorOnGroupNotFound) {
+                throw e;
             }
-            throw e;
         }
     }
 
@@ -474,11 +472,11 @@ public class NetworkModificationRepository {
             modifications = modificationRepository.findAllById(uuids);
             Optional<ModificationEntity> optionalModificationWithGroup = modifications.stream().filter(m -> m.getGroup() != null).findFirst();
             if (optionalModificationWithGroup.isPresent()) {
-                throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, String.format("%s is owned by group %s",
+                throw new NetworkModificationServerException(String.format("Modification deletion error: %s is owned by group %s",
                     optionalModificationWithGroup.get().getId().toString(), optionalModificationWithGroup.get().getGroup().getId()));
             }
         } else {
-            throw new NetworkModificationException(MODIFICATION_DELETION_ERROR, "need to specify the group or give a list of UUIDs");
+            throw new NetworkModificationServerException("Modification deletion error: need to specify the group or give a list of UUIDs");
         }
         int count = modifications.size();
         deleteModifications(modifications);
@@ -486,7 +484,7 @@ public class NetworkModificationRepository {
     }
 
     private ModificationGroupEntity getModificationGroup(UUID groupUuid) {
-        return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, groupUuid.toString()));
+        return this.modificationGroupRepository.findById(groupUuid).orElseThrow(() -> new NetworkModificationGroupNotFoundException("Modification Group not found " + groupUuid));
     }
 
     private ModificationGroupEntity getOrCreateModificationGroup(UUID groupUuid) {
@@ -564,7 +562,7 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+                    .orElseThrow(() -> new NetworkModificationServerException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             modificationEntity.setStashed(true);
             modificationEntity.setModificationsOrder(stashModificationOrder);
             modificationEntities.add(modificationEntity);
@@ -593,7 +591,7 @@ public class NetworkModificationRepository {
         int modificationOrder = unstashedSize;
         List<ModificationEntity> modifications = modificationRepository.findAllByIdInReverse(modificationUuids);
         if (modifications.size() != modificationUuids.size()) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new NetworkModificationServerException("Modification not found");
         }
         for (ModificationEntity modification : modifications) {
             modification.setStashed(false);
@@ -607,7 +605,7 @@ public class NetworkModificationRepository {
         for (UUID modificationUuid : modificationUuids) {
             ModificationEntity modificationEntity = this.modificationRepository
                     .findById(modificationUuid)
-                    .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
+                    .orElseThrow(() -> new NetworkModificationServerException(String.format(MODIFICATION_NOT_FOUND_MESSAGE, modificationUuid)));
             if (metadata.getDescription() != null) {
                 modificationEntity.setDescription(metadata.getDescription());
             }
@@ -646,11 +644,10 @@ public class NetworkModificationRepository {
                 groupEntity.getModifications().removeAll(modifications); // No need to remove the group from the modification as we're going to delete it
                 deleteModifications(modifications);
             }
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
-                return;
+        } catch (NetworkModificationGroupNotFoundException e) {
+            if (errorOnGroupNotFound) {
+                throw e;
             }
-            throw e;
         }
     }
 
