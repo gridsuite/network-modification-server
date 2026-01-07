@@ -6,7 +6,6 @@
  */
 package org.gridsuite.modification.server;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,10 +14,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServerNameProvider implements com.powsybl.ws.commons.error.ServerNameProvider {
 
-    private final String name;
+    private final String name = "network-modification-server";
 
-    public ServerNameProvider(@Value("${spring.application.name:network-modification-server}") String name) {
-        this.name = name;
+    public ServerNameProvider() {
     }
 
     @Override

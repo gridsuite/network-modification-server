@@ -1,8 +1,4 @@
 spring:
-  main:
-    web-application-type: servlet
-  application:
-    name: network-modification-server
   jpa:
     database: H2
     properties:
