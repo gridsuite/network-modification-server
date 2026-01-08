@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.LINE_NOT_FOUND;
+import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.gridsuite.modification.server.report.NetworkModificationServerReportResourceBundle.ERROR_MESSAGE_KEY;
@@ -108,7 +109,7 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
                                                                 .acceptableDuration(null)
-                                                                .name("name31")
+                                                                .name(toAttributeModification("name31", OperationType.SET))
                                                                 .value(null)
                                                                 .build())
                                                 ).build()
@@ -124,9 +125,9 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                                 .temporaryLimits(
                                                         List.of(CurrentTemporaryLimitModificationInfos.builder()
                                                                 .modificationType(TemporaryLimitModificationType.ADD)
-                                                                .acceptableDuration(32)
-                                                                .name("name32")
-                                                                .value(42.0)
+                                                                .acceptableDuration(toAttributeModification(32, OperationType.SET))
+                                                                .name(toAttributeModification("name32", OperationType.SET))
+                                                                .value(toAttributeModification(42., OperationType.SET))
                                                                 .build())
                                                 ).build()
                                 ).build(),
@@ -140,15 +141,15 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                         .temporaryLimits(List.of(
                                                 CurrentTemporaryLimitModificationInfos.builder()
                                                         .modificationType(TemporaryLimitModificationType.REPLACE)
-                                                        .name("test1")
-                                                        .acceptableDuration(2)
-                                                        .value(10.)
+                                                        .name(toAttributeModification("test1", OperationType.SET))
+                                                        .acceptableDuration(toAttributeModification(2, OperationType.SET))
+                                                        .value(toAttributeModification(10., OperationType.SET))
                                                         .build()
                                         )).build())
                                 .build()
                 ))
-                .selectedOperationalLimitsGroup1(new AttributeModification<String>("newOpLG1", OperationType.SET))
-                .selectedOperationalLimitsGroup2(new AttributeModification<String>("newOpLG2", OperationType.SET))
+                .selectedOperationalLimitsGroupId1(new AttributeModification<>("newOpLG1", OperationType.SET))
+                .selectedOperationalLimitsGroupId2(new AttributeModification<>("newOpLG2", OperationType.SET))
                 .properties(List.of(FreePropertyInfos.builder().name(PROPERTY_NAME).value(PROPERTY_VALUE).build()))
                 .build();
     }
@@ -176,9 +177,9 @@ class LineModificationTest extends AbstractNetworkModificationTest {
                                 .temporaryLimits(List.of(
                                         CurrentTemporaryLimitModificationInfos.builder()
                                                 .modificationType(TemporaryLimitModificationType.REPLACE)
-                                                .name("test2")
-                                                .acceptableDuration(2)
-                                                .value(10.)
+                                                .name(toAttributeModification("test2", OperationType.SET))
+                                                .acceptableDuration(toAttributeModification(2, OperationType.SET))
+                                                .value(toAttributeModification(10., OperationType.SET))
                                                 .build()
                                 )).build())
                         .build()))

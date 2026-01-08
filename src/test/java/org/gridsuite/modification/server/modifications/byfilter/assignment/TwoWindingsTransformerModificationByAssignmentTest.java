@@ -280,25 +280,25 @@ class TwoWindingsTransformerModificationByAssignmentTest extends AbstractModific
 
         StringAssignmentInfos assignmentInfos16 = StringAssignmentInfos.builder()
             .filters(List.of(filter1))
-            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_1.name())
+            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID1.name())
             .value("group1")
             .build();
 
         StringAssignmentInfos assignmentInfos17 = StringAssignmentInfos.builder()
             .filters(List.of(filter2))
-            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_2.name())
+            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID2.name())
             .value("group2")
             .build();
 
         StringAssignmentInfos assignmentInfos18 = StringAssignmentInfos.builder()
             .filters(List.of(filter3))
-            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_1.name())
+            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID1.name())
             .value(null)
             .build();
 
         StringAssignmentInfos assignmentInfos19 = StringAssignmentInfos.builder()
             .filters(List.of(filter3))
-            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_2.name())
+            .editedField(TwoWindingsTransformerField.SELECTED_OPERATIONAL_LIMITS_GROUP_ID2.name())
             .value("")
             .build();
 

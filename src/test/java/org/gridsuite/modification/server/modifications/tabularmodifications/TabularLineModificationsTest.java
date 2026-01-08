@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import static org.gridsuite.modification.dto.AttributeModification.toAttributeModification;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE1;
 import static org.gridsuite.modification.dto.OperationalLimitsGroupInfos.Applicability.SIDE2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -178,9 +179,9 @@ class TabularLineModificationsTest extends AbstractNetworkModificationTest {
                         .temporaryLimits(List.of(
                                 CurrentTemporaryLimitModificationInfos.builder()
                                         .modificationType(TemporaryLimitModificationType.ADD)
-                                        .name("testLimit")
-                                        .acceptableDuration(2)
-                                        .value(10.)
+                                        .name(toAttributeModification("testLimit", OperationType.SET))
+                                        .acceptableDuration(toAttributeModification(2, OperationType.SET))
+                                        .value(toAttributeModification(10., OperationType.SET))
                                         .build()
                         )).build())
                 .build();
