@@ -14,6 +14,7 @@ import com.powsybl.iidm.network.SwitchKind;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -181,8 +182,8 @@ class LineAttachToVoltageLevelTest extends AbstractNetworkModificationTest {
         String lineMissingLineJson = getJsonBody(lineMissingLine, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(lineMissingLineJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().is4xxClientError(),
-                    content().string(new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description").getMessage())
+                    status().isInternalServerError(),
+                    content().string(StringContains.containsString(new NetworkModificationException(LINE_ATTACH_DESCRIPTION_ERROR, "Missing required attachment line description").getMessage()))
             );
         testNetworkModificationsCount(getGroupId(), 1);
     }

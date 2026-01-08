@@ -10,7 +10,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
@@ -197,12 +195,7 @@ public class NetworkModificationService {
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {
-        Network network;
-        try {
-            network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
-        } catch (PowsyblException e) {
-            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
-        }
+        Network network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
         boolean isVariantPresent = true;
         if (variantId != null) {
             if (network.getVariantManager().getVariantIds().stream().anyMatch(id -> id.equals(variantId))) {
@@ -273,20 +266,12 @@ public class NetworkModificationService {
                                        String originVariantId,
                                        String destinationVariantId,
                                        PreloadingStrategy preloadingStrategy) {
-        Network network;
-        try {
-            network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
-            network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
-        } catch (PowsyblException e) {
-            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
-        }
+
+        Network network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
+        network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
         String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
-        try {
-            network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
-            network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
-        } catch (PowsyblException e) {
-            throw new NetworkModificationException(VARIANT_NOT_FOUND, startingVariant);
-        }
+        network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
+        network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
         return network;
     }
 
@@ -383,7 +368,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
-            throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
+            throw new NetworkModificationServerException("Invalid argument for duplication");
         }
         List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();

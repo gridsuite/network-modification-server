@@ -6,10 +6,8 @@
  */
 package org.gridsuite.modification.server.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.ReportNodeDeserializer;
 import com.powsybl.commons.report.ReportNodeJsonModule;
@@ -69,11 +67,7 @@ public class ReportService {
             .toUriString();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        try {
-            reportServerRest.exchange(this.getReportServerURI() + path, HttpMethod.PUT, new HttpEntity<>(objectMapper.writeValueAsString(reportNode), headers), ReportNode.class);
-        } catch (JsonProcessingException error) {
-            throw new PowsyblException("error creating report", error);
-        }
+        reportServerRest.exchange(this.getReportServerURI() + path, HttpMethod.PUT, new HttpEntity<>(reportNode, headers), ReportNode.class);
     }
 
     public void sendReport(UUID reportUuid, ReportNode reportNode) {
