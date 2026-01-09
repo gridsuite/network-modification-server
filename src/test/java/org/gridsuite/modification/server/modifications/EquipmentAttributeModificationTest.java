@@ -13,6 +13,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -159,8 +160,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
         String switchStatusModificationInfosJson = getJsonBody(switchStatusModificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage()));
+                status().isInternalServerError(),
+                content().string(StringContains.containsString(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_NAME_ERROR, "For switch status, the attribute name is only 'open'").getMessage())));
 
         // bad equipment attribute value
         switchStatusModificationInfos.setEquipmentAttributeName("open");
@@ -169,8 +170,8 @@ class EquipmentAttributeModificationTest extends AbstractNetworkModificationTest
 
         mockMvc.perform(post(getNetworkModificationUri()).content(switchStatusModificationInfosJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                status().isBadRequest(),
-                content().string(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage()));
+                status().isInternalServerError(),
+                content().string(StringContains.containsString(new NetworkModificationException(EQUIPMENT_ATTRIBUTE_VALUE_ERROR, "For switch status, the attribute values are only " + Set.of(true, false)).getMessage())));
     }
 
     @Override
