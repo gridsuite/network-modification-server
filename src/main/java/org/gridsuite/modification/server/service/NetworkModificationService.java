@@ -36,8 +36,11 @@ import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -122,7 +125,7 @@ public class NetworkModificationService {
             .stream().map(ModificationInfos::getUuid)
             .collect(Collectors.toSet())
             .containsAll(modificationUuids)) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Modification not found");
         }
     }
 
@@ -284,8 +287,8 @@ public class NetworkModificationService {
                 List<ModificationInfos> modifications = List.of();
                 try {
                     modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
-                } catch (NetworkModificationException e) {
-                    if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                } catch (ResponseStatusException e) {
+                    if (e.getStatusCode() == HttpStatusCode.valueOf(404)) { // May not exist
                         throw e;
                     }
                 }
@@ -316,7 +319,7 @@ public class NetworkModificationService {
 
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Modification not found");
         }
     }
 
@@ -342,8 +345,8 @@ public class NetworkModificationService {
             }
 
             return duplicateModificationMapping;
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode() == HttpStatusCode.valueOf(404)) { // May not exist
                 return Map.of();
             }
             throw e;

@@ -60,6 +60,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -234,8 +235,8 @@ class ModificationControllerTest {
     void assertThrowsUpdateModificationNotFound() {
         UUID modificationUuid = UUID.randomUUID();
         ModificationInfos modificationInfos = LoadCreationInfos.builder().equipmentId("id").build();
-        String errorMessage = assertThrows(NetworkModificationException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
-        assertEquals(new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format("%s", modificationUuid)).getMessage(), errorMessage);
+        String errorMessage = assertThrows(ResponseStatusException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, modificationInfos)).getMessage();
+        assertTrue(errorMessage.contains(String.format("Modification (%s) not found", modificationUuid)));
         assertThrows(NullPointerException.class, () -> networkModificationService.updateNetworkModification(modificationUuid, null));
     }
 
@@ -287,8 +288,8 @@ class ModificationControllerTest {
         mockMvc.perform(delete("/v1/groups/{groupUuid}", TEST_GROUP_ID))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isInternalServerError(),
-                    content().string(StringContains.containsString(new NetworkModificationException(MODIFICATION_GROUP_NOT_FOUND, TEST_GROUP_ID.toString()).getMessage())));
+        mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true", TEST_GROUP_ID)).andExpectAll(status().isNotFound(),
+                    content().string(StringContains.containsString("Modification group not found " + TEST_GROUP_ID)));
 
         mvcResult = mockMvc.perform(get("/v1/groups/{groupUuid}/network-modifications?onlyMetadata=true&errorOnGroupNotFound=false", TEST_GROUP_ID)).andExpectAll(
          status().isOk(),
@@ -440,7 +441,7 @@ class ModificationControllerTest {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", UUID.randomUUID().toString())
                         .queryParam("uuids", uuidString))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
@@ -453,9 +454,9 @@ class ModificationControllerTest {
         mockMvc.perform(delete(URI_NETWORK_MODIF_BASE)
                         .queryParam("groupUuid", TEST_GROUP_ID.toString())
                         .queryParam("uuids", uuidString))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isOk());
-        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isInternalServerError());
+        mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID)).andExpect(status().isNotFound());
         mockMvc.perform(delete("/v1/groups/" + TEST_GROUP_ID).queryParam("errorOnGroupNotFound", "false")).andExpect(status().isOk());
     }
 
@@ -1769,8 +1770,8 @@ class ModificationControllerTest {
         assertEquals(1, groupModifications.size());
         assertEquals(modificationUuidList.get(0), groupModifications.get(0).getUuid());
         // duplicate has been deleted
-        assertEquals("MODIFICATION_NOT_FOUND : " + returnedNewId, assertThrows(NetworkModificationException.class, ()
-                -> modificationRepository.getModificationInfo(returnedNewId)).getMessage());
+        assertTrue(assertThrows(ResponseStatusException.class, ()
+                -> modificationRepository.getModificationInfo(returnedNewId)).getMessage().contains(String.format("Modification (%s) not found", returnedNewId)));
     }
 
     @Test
@@ -1813,7 +1814,7 @@ class ModificationControllerTest {
 
         mockMvc.perform(put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/" + nonExistentUuid)
                 .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -1882,12 +1883,12 @@ class ModificationControllerTest {
         // try to verify unexisting modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
             .param("uuids", UUID.randomUUID().toString()))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
 
         // try to verify invalid modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP2_ID)
                 .param("uuids", switchModificationId.toString()))
-            .andExpect(status().isInternalServerError());
+            .andExpect(status().isNotFound());
 
         // try to verify valid modification
         mockMvc.perform(get("/v1/groups/{groupId}/network-modifications/verify", TEST_GROUP_ID)
