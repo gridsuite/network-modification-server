@@ -99,7 +99,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>

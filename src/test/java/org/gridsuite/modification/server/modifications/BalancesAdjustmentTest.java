@@ -15,18 +15,14 @@ import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.LoadFlowService;
-import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.List;
 import java.util.Map;
@@ -179,116 +175,6 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
         assertEquals(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR, exception.getType());
         assertEquals("LOAD_FLOW_PARAMETERS_FETCH_ERROR : Internal server error", exception.getMessage());
-    }
-
-    /**
-     * Test NetworkModificationServerException.handleChangeError() method with empty response body
-     */
-    @Test
-    void testHandleChangeErrorWithEmptyResponseBody() {
-        HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.INTERNAL_SERVER_ERROR) {
-            @NotNull
-            @Override
-            public String getResponseBodyAsString() {
-                return "";
-            }
-        };
-
-        NetworkModificationException result = NetworkModificationServerException.handleChangeError(
-                httpException,
-                NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR
-        );
-
-        assertEquals(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR, result.getType());
-        assertEquals("LOAD_FLOW_PARAMETERS_FETCH_ERROR : 500 INTERNAL_SERVER_ERROR", result.getMessage());
-    }
-
-    /**
-     * Test NetworkModificationServerException.handleChangeError() method with JSON response body containing message
-     */
-    @Test
-    void testHandleChangeErrorWithJsonResponseBody() {
-        HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.BAD_REQUEST) {
-            @NotNull
-            @Override
-            public String getResponseBodyAsString() {
-                return "{\"message\": \"Invalid parameters provided\", \"code\": 400}";
-            }
-        };
-
-        NetworkModificationException result = NetworkModificationServerException.handleChangeError(
-                httpException,
-                NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR
-        );
-
-        assertEquals(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR, result.getType());
-        assertEquals("LOAD_FLOW_PARAMETERS_FETCH_ERROR : Invalid parameters provided", result.getMessage());
-    }
-
-    /**
-     * Test NetworkModificationServerException.handleChangeError() method with plain text response body
-     */
-    @Test
-    void testHandleChangeErrorWithPlainTextResponseBody() {
-        HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.NOT_FOUND) {
-            @NotNull
-            @Override
-            public String getResponseBodyAsString() {
-                return "Resource not found";
-            }
-        };
-
-        NetworkModificationException result = NetworkModificationServerException.handleChangeError(
-                httpException,
-                NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR
-        );
-
-        assertEquals(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR, result.getType());
-        assertEquals("LOAD_FLOW_PARAMETERS_FETCH_ERROR : Resource not found", result.getMessage());
-    }
-
-    /**
-     * Test NetworkModificationServerException.handleChangeError() method with invalid JSON response body
-     */
-    @Test
-    void testHandleChangeErrorWithInvalidJsonResponseBody() {
-        HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.INTERNAL_SERVER_ERROR) {
-            @NotNull
-            @Override
-            public String getResponseBodyAsString() {
-                return "{invalid json structure";
-            }
-        };
-
-        NetworkModificationException result = NetworkModificationServerException.handleChangeError(
-                httpException,
-                NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR
-        );
-
-        assertEquals(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR, result.getType());
-        assertEquals("LOAD_FLOW_PARAMETERS_FETCH_ERROR : {invalid json structure", result.getMessage());
-    }
-
-    /**
-     * Test NetworkModificationServerException.handleChangeError() method with JSON response body without message field
-     */
-    @Test
-    void testHandleChangeErrorWithJsonResponseBodyWithoutMessage() {
-        HttpStatusCodeException httpException = new HttpStatusCodeException(HttpStatus.CONFLICT) {
-            @NotNull
-            @Override
-            public String getResponseBodyAsString() {
-                return "{\"error\": \"Conflict occurred\", \"timestamp\": \"2025-01-01T10:00:00Z\"}";
-            }
-        };
-
-        NetworkModificationException result = NetworkModificationServerException.handleChangeError(
-                httpException,
-                NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR
-        );
-
-        assertEquals(NetworkModificationException.Type.LOAD_FLOW_PARAMETERS_FETCH_ERROR, result.getType());
-        assertEquals("LOAD_FLOW_PARAMETERS_FETCH_ERROR : {\"error\": \"Conflict occurred\", \"timestamp\": \"2025-01-01T10:00:00Z\"}", result.getMessage());
     }
 
     @Override

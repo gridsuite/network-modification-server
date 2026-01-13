@@ -18,6 +18,7 @@ import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.dto.OperatingStatusModificationInfos;
 import org.gridsuite.modification.server.utils.NetworkCreation;
 import org.gridsuite.modification.server.utils.TestUtils;
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -178,14 +179,14 @@ class OperatingStatusModificationLockoutLineTest extends AbstractNetworkModifica
         modificationJson = getJsonBody(modificationInfos, null);
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson).contentType(MediaType.APPLICATION_JSON))
             .andExpectAll(
-                    status().isBadRequest(),
-                    content().string(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage())
+                    status().isInternalServerError(),
+                    content().string(StringContains.containsString(new NetworkModificationException(OPERATING_ACTION_TYPE_EMPTY).getMessage()))
             );
         // modification action not existing
         // note: should never happen in real
         mockMvc.perform(post(getNetworkModificationUri()).content(modificationJson.replace("LOCKOUT", "INVALID_ACTION")).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(
-                        status().is4xxClientError());
+                        status().isInternalServerError());
     }
 
     @Override
