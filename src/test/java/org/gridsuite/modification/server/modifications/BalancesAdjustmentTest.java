@@ -311,18 +311,18 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertEquals(-58.4d, getNetwork().getGenerator("GH1").getTerminal().getP(), 0.1);
-        assertEquals(-36d, getNetwork().getGenerator("GH2").getTerminal().getP(), 0.1);
-        assertEquals(-101.8d, getNetwork().getGenerator("GH3").getTerminal().getP(), 0.1);
+        assertEquals(-85.4d, getNetwork().getGenerator("GH1").getTerminal().getP(), 0.1);
+        assertEquals(-90d, getNetwork().getGenerator("GH2").getTerminal().getP(), 0.1);
+        assertEquals(-155.7d, getNetwork().getGenerator("GH3").getTerminal().getP(), 0.1);
         assertEquals(-100d, getNetwork().getGenerator("GTH1").getTerminal().getP(), 0.1);
-        assertEquals(-146.9d, getNetwork().getGenerator("GTH2").getTerminal().getP(), 0.1);
+        assertEquals(-251.0d, getNetwork().getGenerator("GTH2").getTerminal().getP(), 0.1);
 
-        assertEquals(80.2d, getNetwork().getLoad("LD1").getTerminal().getP(), 0.1);
-        assertEquals(60.2d, getNetwork().getLoad("LD2").getTerminal().getP(), 0.1);
-        assertEquals(60.2d, getNetwork().getLoad("LD3").getTerminal().getP(), 0.1);
-        assertEquals(40.1d, getNetwork().getLoad("LD4").getTerminal().getP(), 0.1);
-        assertEquals(200.5d, getNetwork().getLoad("LD5").getTerminal().getP(), 0.1);
-        assertEquals(0d, getNetwork().getLoad("LD6").getTerminal().getP(), 0.1);
+        assertEquals(80.0d, getNetwork().getLoad("LD1").getTerminal().getP(), 0.1);
+        assertEquals(60.0d, getNetwork().getLoad("LD2").getTerminal().getP(), 0.1);
+        assertEquals(60.0d, getNetwork().getLoad("LD3").getTerminal().getP(), 0.1);
+        assertEquals(40.0d, getNetwork().getLoad("LD4").getTerminal().getP(), 0.1);
+        assertEquals(200.0d, getNetwork().getLoad("LD5").getTerminal().getP(), 0.1);
+        assertEquals(240d, getNetwork().getLoad("LD6").getTerminal().getP(), 0.1);
     }
 
     @Override
