@@ -7,13 +7,11 @@
 
 package org.gridsuite.modification.server.modifications;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.powsybl.iidm.network.Country;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlowParameters;
 import org.gridsuite.modification.dto.*;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.server.dto.NetworkModificationsResult;
 import org.gridsuite.modification.server.service.LoadFlowService;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.utils.elasticsearch.DisableElasticsearch;
@@ -22,23 +20,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.gridsuite.modification.server.utils.assertions.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Joris Mancini <joris.mancini_externe at rte-france.com>
@@ -77,7 +67,12 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
     @Override
     protected Network createNetwork(UUID networkUuid) {
-        return Network.read("fourSubstationsNb_country 2_N1.xiidm", getClass().getResourceAsStream("/fourSubstationsNb_country 2_N1.xiidm"));
+        Network network = Network.read("fourSubstationsNb_country 2_N1.xiidm", getClass().getResourceAsStream("/fourSubstationsNb_country 2_N1.xiidm"));
+        String initialVariant = network.getVariantManager().getWorkingVariantId();
+        String modificationVariant = "ModificationVariant";
+        network.getVariantManager().cloneVariant(initialVariant, modificationVariant);
+        network.getVariantManager().setWorkingVariant(modificationVariant);
+        return network;
     }
 
     @Override
@@ -116,31 +111,6 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
                 .withLoadFlow(true)
                 .loadFlowParametersId(LOADFLOW_PARAMETERS_UUID)
                 .build();
-    }
-
-    @Test
-    @Override // We have to override this method to remove check on errors
-    public void testCreate() throws Exception {
-        MvcResult mvcResult;
-        NetworkModificationsResult networkModificationsResult;
-        ModificationInfos modificationToCreate = buildModification();
-        String bodyJson = getJsonBody(modificationToCreate, null);
-
-        ResultActions mockMvcResultActions = mockMvc.perform(post(getNetworkModificationUri()).content(bodyJson).contentType(MediaType.APPLICATION_JSON))
-                .andExpect(request().asyncStarted());
-        mvcResult = mockMvc.perform(asyncDispatch(mockMvcResultActions.andReturn()))
-            .andExpect(status().isOk()).andReturn();
-        networkModificationsResult = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
-        assertEquals(1, extractApplicationStatus(networkModificationsResult).size());
-        assertResultImpacts(getNetworkImpacts(networkModificationsResult));
-        ModificationInfos createdModification = networkModificationRepository.getModifications(TEST_GROUP_ID, false, true).get(0);
-
-        assertThat(createdModification).recursivelyEquals(modificationToCreate);
-        testNetworkModificationsCount(TEST_GROUP_ID, 1);
-        assertAfterNetworkModificationCreation();
-
-        ModificationInfos createdModificationWithOnlyMetadata = networkModificationRepository.getModifications(TEST_GROUP_ID, true, true).get(0);
-        testCreationModificationMessage(createdModificationWithOnlyMetadata);
     }
 
     /**
@@ -311,18 +281,18 @@ class BalancesAdjustmentTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-        assertEquals(-85.4d, getNetwork().getGenerator("GH1").getTerminal().getP(), 0.1);
-        assertEquals(-90d, getNetwork().getGenerator("GH2").getTerminal().getP(), 0.1);
-        assertEquals(-155.7d, getNetwork().getGenerator("GH3").getTerminal().getP(), 0.1);
+        assertEquals(-58.4d, getNetwork().getGenerator("GH1").getTerminal().getP(), 0.1);
+        assertEquals(-36d, getNetwork().getGenerator("GH2").getTerminal().getP(), 0.1);
+        assertEquals(-101.8d, getNetwork().getGenerator("GH3").getTerminal().getP(), 0.1);
         assertEquals(-100d, getNetwork().getGenerator("GTH1").getTerminal().getP(), 0.1);
-        assertEquals(-251.0d, getNetwork().getGenerator("GTH2").getTerminal().getP(), 0.1);
+        assertEquals(-146.9d, getNetwork().getGenerator("GTH2").getTerminal().getP(), 0.1);
 
-        assertEquals(80.0d, getNetwork().getLoad("LD1").getTerminal().getP(), 0.1);
-        assertEquals(60.0d, getNetwork().getLoad("LD2").getTerminal().getP(), 0.1);
-        assertEquals(60.0d, getNetwork().getLoad("LD3").getTerminal().getP(), 0.1);
-        assertEquals(40.0d, getNetwork().getLoad("LD4").getTerminal().getP(), 0.1);
-        assertEquals(200.0d, getNetwork().getLoad("LD5").getTerminal().getP(), 0.1);
-        assertEquals(240d, getNetwork().getLoad("LD6").getTerminal().getP(), 0.1);
+        assertEquals(80.2d, getNetwork().getLoad("LD1").getTerminal().getP(), 0.1);
+        assertEquals(60.2d, getNetwork().getLoad("LD2").getTerminal().getP(), 0.1);
+        assertEquals(60.2d, getNetwork().getLoad("LD3").getTerminal().getP(), 0.1);
+        assertEquals(40.1d, getNetwork().getLoad("LD4").getTerminal().getP(), 0.1);
+        assertEquals(200.5d, getNetwork().getLoad("LD5").getTerminal().getP(), 0.1);
+        assertEquals(0d, getNetwork().getLoad("LD6").getTerminal().getP(), 0.1);
     }
 
     @Override
