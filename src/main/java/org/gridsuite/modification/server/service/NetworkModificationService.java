@@ -10,7 +10,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
@@ -37,8 +36,11 @@ import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -48,7 +50,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.gridsuite.modification.NetworkModificationException.Type.*;
-import static org.gridsuite.modification.server.NetworkModificationServerException.Type.DUPLICATION_ARGUMENT_INVALID;
 import static org.gridsuite.modification.server.modifications.AsyncUtils.scheduleApplyModifications;
 
 /**
@@ -124,7 +125,7 @@ public class NetworkModificationService {
             .stream().map(ModificationInfos::getUuid)
             .collect(Collectors.toSet())
             .containsAll(modificationUuids)) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Modification not found");
         }
     }
 
@@ -197,12 +198,7 @@ public class NetworkModificationService {
     }
 
     public NetworkInfos getNetworkInfos(UUID networkUuid, String variantId, PreloadingStrategy preloadingStrategy) {
-        Network network;
-        try {
-            network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
-        } catch (PowsyblException e) {
-            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
-        }
+        Network network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
         boolean isVariantPresent = true;
         if (variantId != null) {
             if (network.getVariantManager().getVariantIds().stream().anyMatch(id -> id.equals(variantId))) {
@@ -273,20 +269,12 @@ public class NetworkModificationService {
                                        String originVariantId,
                                        String destinationVariantId,
                                        PreloadingStrategy preloadingStrategy) {
-        Network network;
-        try {
-            network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
-            network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
-        } catch (PowsyblException e) {
-            throw new NetworkModificationException(NETWORK_NOT_FOUND, networkUuid.toString());
-        }
+
+        Network network = networkStoreService.getNetwork(networkUuid, preloadingStrategy);
+        network.addListener(new NetworkVariantsListener(network, networkUuid, equipmentInfosService));
         String startingVariant = StringUtils.isBlank(originVariantId) ? VariantManagerConstants.INITIAL_VARIANT_ID : originVariantId;
-        try {
-            network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
-            network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
-        } catch (PowsyblException e) {
-            throw new NetworkModificationException(VARIANT_NOT_FOUND, startingVariant);
-        }
+        network.getVariantManager().cloneVariant(startingVariant, destinationVariantId, true);  // cloning variant
+        network.getVariantManager().setWorkingVariant(destinationVariantId);  // set current variant to destination variant
         return network;
     }
 
@@ -299,8 +287,8 @@ public class NetworkModificationService {
                 List<ModificationInfos> modifications = List.of();
                 try {
                     modifications = networkModificationRepository.getActiveModifications(groupUuid, modificationsToExclude);
-                } catch (NetworkModificationException e) {
-                    if (e.getType() != MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+                } catch (ResponseStatusException e) {
+                    if (e.getStatusCode() == HttpStatusCode.valueOf(404)) { // May not exist
                         throw e;
                     }
                 }
@@ -331,7 +319,7 @@ public class NetworkModificationService {
 
     public void deleteNetworkModifications(UUID groupUuid, List<UUID> modificationsUuids) {
         if (networkModificationRepository.deleteModifications(groupUuid, modificationsUuids) == 0) {
-            throw new NetworkModificationException(MODIFICATION_NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Modification not found");
         }
     }
 
@@ -357,8 +345,8 @@ public class NetworkModificationService {
             }
 
             return duplicateModificationMapping;
-        } catch (NetworkModificationException e) {
-            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND) { // May not exist
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode() == HttpStatusCode.valueOf(404)) { // May not exist
                 return Map.of();
             }
             throw e;
@@ -383,7 +371,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> duplicateModifications(@NonNull UUID targetGroupUuid, UUID originGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         if (originGroupUuid != null && !modificationsUuids.isEmpty()) { // Duplicate modifications from a group or from a list only
-            throw new NetworkModificationServerException(DUPLICATION_ARGUMENT_INVALID);
+            throw new NetworkModificationServerException("Invalid argument for duplication");
         }
         List<ModificationInfos> duplicateModifications = networkModificationRepository.saveDuplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids);
         List<UUID> ids = duplicateModifications.stream().map(ModificationInfos::getUuid).toList();
