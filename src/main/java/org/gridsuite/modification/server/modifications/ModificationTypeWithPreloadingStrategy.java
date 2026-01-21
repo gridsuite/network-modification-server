@@ -10,7 +10,7 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
 import org.gridsuite.modification.ModificationType;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -75,7 +75,7 @@ public enum ModificationTypeWithPreloadingStrategy {
     private static final Map<ModificationType, ModificationTypeWithPreloadingStrategy> TYPE_MAP;
 
     static {
-        TYPE_MAP = new HashMap<>();
+        TYPE_MAP = new EnumMap<>(ModificationType.class);
         for (ModificationTypeWithPreloadingStrategy value : values()) {
             TYPE_MAP.put(value.type, value);
         }
