@@ -6,52 +6,51 @@
  */
 package org.gridsuite.modification.server;
 
+import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.gridsuite.modification.ModificationType;
-
 /**
  * @author Antoine Bouhours <antoine.bouhours at rte-france.com>
  */
-class ModificationTypeTest {
+class ModificationTypeWithPreloadingStrategyTest {
     @Test
     void testMaxStrategyNoneVsNone() {
-        ModificationType noneStrategy1 = ModificationType.LOAD_CREATION;
-        ModificationType noneStrategy2 = ModificationType.LOAD_MODIFICATION;
+        ModificationTypeWithPreloadingStrategy noneStrategy1 = ModificationTypeWithPreloadingStrategy.LOAD_CREATION;
+        ModificationTypeWithPreloadingStrategy noneStrategy2 = ModificationTypeWithPreloadingStrategy.LOAD_MODIFICATION;
         assertEquals(noneStrategy1, noneStrategy1.maxStrategy(noneStrategy2));
         assertEquals(noneStrategy2, noneStrategy2.maxStrategy(noneStrategy1));
     }
 
     @Test
     void testMaxStrategyNoneVsCollection() {
-        ModificationType noneStrategy = ModificationType.LOAD_CREATION;
-        ModificationType collectionStrategy = ModificationType.TABULAR_MODIFICATION;
+        ModificationTypeWithPreloadingStrategy noneStrategy = ModificationTypeWithPreloadingStrategy.LOAD_CREATION;
+        ModificationTypeWithPreloadingStrategy collectionStrategy = ModificationTypeWithPreloadingStrategy.TABULAR_MODIFICATION;
         assertEquals(collectionStrategy, noneStrategy.maxStrategy(collectionStrategy));
         assertEquals(collectionStrategy, collectionStrategy.maxStrategy(noneStrategy));
     }
 
     @Test
     void testMaxStrategyNoneVsAllCollectionsNeededForBusView() {
-        ModificationType noneStrategy = ModificationType.LOAD_CREATION;
-        ModificationType allCollectionsNeededForBusViewStrategy = ModificationType.VOLTAGE_INIT_MODIFICATION;
+        ModificationTypeWithPreloadingStrategy noneStrategy = ModificationTypeWithPreloadingStrategy.LOAD_CREATION;
+        ModificationTypeWithPreloadingStrategy allCollectionsNeededForBusViewStrategy = ModificationTypeWithPreloadingStrategy.VOLTAGE_INIT_MODIFICATION;
         assertEquals(allCollectionsNeededForBusViewStrategy, noneStrategy.maxStrategy(allCollectionsNeededForBusViewStrategy));
         assertEquals(allCollectionsNeededForBusViewStrategy, allCollectionsNeededForBusViewStrategy.maxStrategy(noneStrategy));
     }
 
     @Test
     void testMaxStrategyCollectionVsCollection() {
-        ModificationType collectionStrategy1 = ModificationType.TABULAR_MODIFICATION;
-        ModificationType collectionStrategy2 = ModificationType.TABULAR_CREATION;
+        ModificationTypeWithPreloadingStrategy collectionStrategy1 = ModificationTypeWithPreloadingStrategy.TABULAR_MODIFICATION;
+        ModificationTypeWithPreloadingStrategy collectionStrategy2 = ModificationTypeWithPreloadingStrategy.TABULAR_CREATION;
         assertEquals(collectionStrategy1, collectionStrategy1.maxStrategy(collectionStrategy2));
         assertEquals(collectionStrategy2, collectionStrategy2.maxStrategy(collectionStrategy1));
     }
 
     @Test
     void testMaxStrategyCollectionVsAllCollectionsNeededForBusView() {
-        ModificationType collectionStrategy = ModificationType.TABULAR_MODIFICATION;
-        ModificationType allCollectionsNeededForBusViewStrategy = ModificationType.VOLTAGE_INIT_MODIFICATION;
+        ModificationTypeWithPreloadingStrategy collectionStrategy = ModificationTypeWithPreloadingStrategy.TABULAR_MODIFICATION;
+        ModificationTypeWithPreloadingStrategy allCollectionsNeededForBusViewStrategy = ModificationTypeWithPreloadingStrategy.VOLTAGE_INIT_MODIFICATION;
         assertEquals(allCollectionsNeededForBusViewStrategy, collectionStrategy.maxStrategy(allCollectionsNeededForBusViewStrategy));
         assertEquals(allCollectionsNeededForBusViewStrategy, allCollectionsNeededForBusViewStrategy.maxStrategy(collectionStrategy));
     }

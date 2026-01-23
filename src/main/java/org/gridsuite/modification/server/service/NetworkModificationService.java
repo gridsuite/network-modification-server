@@ -18,7 +18,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
@@ -28,6 +27,7 @@ import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicati
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.ModificationApplicationInfosService;
 import org.gridsuite.modification.server.entities.ModificationEntity;
+import org.gridsuite.modification.server.modifications.ModificationTypeWithPreloadingStrategy;
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
@@ -313,7 +313,10 @@ public class NetworkModificationService {
             .flatMap(Collection::stream)
             .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationInfos::getType)
-            .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+            .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
+            .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
+            .map(ModificationTypeWithPreloadingStrategy::getStrategy)
+            .orElse(PreloadingStrategy.NONE);
 
         Network network = cloneNetworkVariant(networkUuid, buildInfos.getOriginVariantId(), buildInfos.getDestinationVariantId(), preloadingStrategy);
         NetworkInfos networkInfos = new NetworkInfos(network, networkUuid, true);
@@ -370,7 +373,10 @@ public class NetworkModificationService {
             PreloadingStrategy preloadingStrategy = modificationGroupInfos.modifications().stream()
                 .filter(m -> m.getActivated() && !m.getStashed())
                 .map(ModificationInfos::getType)
-                .reduce(ModificationType::maxStrategy).map(ModificationType::getStrategy).orElse(PreloadingStrategy.NONE);
+                .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
+                .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
+                .map(ModificationTypeWithPreloadingStrategy::getStrategy)
+                .orElse(PreloadingStrategy.NONE);
             NetworkInfos networkInfos = getNetworkInfos(networkUuid, variantId, preloadingStrategy);
 
             // try to apply the duplicated modifications (incremental mode)

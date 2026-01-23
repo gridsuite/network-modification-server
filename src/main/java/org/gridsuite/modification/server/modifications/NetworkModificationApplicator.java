@@ -17,7 +17,6 @@ import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
 import lombok.Getter;
-import org.gridsuite.modification.ModificationType;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.modifications.AbstractModification;
 import org.gridsuite.modification.server.dto.ModificationApplicationGroup;
@@ -99,8 +98,9 @@ public class NetworkModificationApplicator {
         PreloadingStrategy preloadingStrategy = modificationInfosGroup.modifications().stream()
             .filter(m -> m.getActivated() && !m.getStashed())
             .map(ModificationInfos::getType)
-            .reduce(ModificationType::maxStrategy)
-            .map(ModificationType::getStrategy)
+            .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
+            .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
+            .map(ModificationTypeWithPreloadingStrategy::getStrategy)
             .orElse(PreloadingStrategy.NONE);
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
@@ -141,8 +141,9 @@ public class NetworkModificationApplicator {
                 .flatMap(List::stream)
                 .filter(m -> m.getActivated() && !m.getStashed())
                 .map(ModificationInfos::getType)
-                .reduce(ModificationType::maxStrategy)
-                .map(ModificationType::getStrategy)
+                .map(ModificationTypeWithPreloadingStrategy::fromModificationType)
+                .reduce(ModificationTypeWithPreloadingStrategy::maxStrategy)
+                .map(ModificationTypeWithPreloadingStrategy::getStrategy)
                 .orElse(PreloadingStrategy.NONE);
 
         NetworkStoreListener listener = NetworkStoreListener.create(networkInfos.getNetwork(), networkInfos.getNetworkUuuid(), networkStoreService, equipmentInfosService, applicationInfosService, collectionThreshold);
