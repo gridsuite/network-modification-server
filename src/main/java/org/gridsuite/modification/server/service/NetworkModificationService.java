@@ -129,11 +129,11 @@ public class NetworkModificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getNetworkModificationsFromComposite(UUID compositeModificationUuid, boolean onlyMetadata) {
+    public List<ModificationInfos> getNetworkModificationsFromComposite(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
         if (onlyMetadata) {
-            return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuid);
+            return networkModificationRepository.getBasicNetworkModificationsFromComposite(compositeModificationUuids);
         } else {
-            return networkModificationRepository.getCompositeModificationsInfos(List.of(compositeModificationUuid));
+            return networkModificationRepository.getCompositeModificationsInfos(compositeModificationUuids);
         }
     }
 
