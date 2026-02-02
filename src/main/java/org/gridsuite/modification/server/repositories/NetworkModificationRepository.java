@@ -519,18 +519,14 @@ public class NetworkModificationRepository {
      */
     @Transactional(readOnly = true)
     public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
-        List<ModificationInfos> result = new ArrayList<>();
-        uuids.forEach(uuid -> {
-            List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
-            Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-            result.addAll(networkModificationsUuids.stream()
-                .map(entitiesById::get)
-                .filter(Objects::nonNull)
-                .map(this::toModificationsInfosOptimizedForTabular)
-                .toList());
-        });
-        return result;
+        List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationIdIn(uuids);
+        Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return new ArrayList<>(networkModificationsUuids.stream()
+            .map(entitiesById::get)
+            .filter(Objects::nonNull)
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .toList());
     }
 
     @Transactional(readOnly = true)
