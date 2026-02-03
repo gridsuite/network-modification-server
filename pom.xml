@@ -52,6 +52,8 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <network-modification.version>0.61.0</network-modification.version>
+        <!-- TODO network-store.version remove when included in powsybl-ws-dependencies -->
+        <network-store-client.version>1.38.0</network-store-client.version>
     </properties>
 
     <build>
@@ -86,7 +88,26 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-client</artifactId>
+                <version>${network-store-client.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-iidm-impl</artifactId>
+                <version>${network-store-client.version}</version>
+            </dependency>
+            <!-- FIXME: to be removed at next powsybl-ws-dependencies upgrade  -->
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-network-store-model</artifactId>
+                <version>${network-store-client.version}</version>
+            </dependency>
             <!-- overrides of imports -->
+
             <dependency><!-- To remove when integrate in next release of gridsuite-dependencies or powsybl-ws-dependencies -->
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp-bom</artifactId>
