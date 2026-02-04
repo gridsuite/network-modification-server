@@ -62,6 +62,9 @@ public interface ModificationRepository extends JpaRepository<ModificationEntity
     @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id = :uuid ORDER BY modifications_order", nativeQuery = true)
     List<UUID> findModificationIdsByCompositeModificationId(UUID uuid);
 
+    @Query(value = "SELECT cast(modification_id AS VARCHAR) FROM composite_modification_sub_modifications WHERE id IN (?1) ORDER BY modifications_order", nativeQuery = true)
+    List<UUID> findModificationIdsByCompositeModificationIdIn(List<UUID> uuids);
+
     Integer countByGroupIdAndStashed(UUID groupId, boolean stashed);
 
     @Query(value = "SELECT cast(operational_limits_groups_id AS VARCHAR) FROM line_modification_operational_limits_groups WHERE branch_id IN ?1", nativeQuery = true)
