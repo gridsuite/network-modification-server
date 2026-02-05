@@ -23,8 +23,7 @@ import org.gridsuite.modification.dto.byfilter.formula.ReferenceFieldOrValue;
 import java.util.Date;
 import java.util.List;
 
-import static org.gridsuite.modification.modifications.byfilter.AbstractModificationByAssignment.REPORT_KEY_BY_FILTER_MODIFICATION_SOME;
-import static org.gridsuite.modification.modifications.byfilter.AbstractModificationByAssignment.REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_NULL;
+import static org.gridsuite.modification.modifications.byfilter.AbstractModificationByAssignment.*;
 import static org.gridsuite.modification.server.utils.TestUtils.assertLogMessageWithoutRank;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -170,8 +169,15 @@ class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificatio
             ReferenceFieldOrValue.builder().equipmentField(VoltageLevelField.LOW_SHORT_CIRCUIT_CURRENT_LIMIT.name()).build()
         );
 
+        FormulaInfos formulaInfos10 = getFormulaInfo(VoltageLevelField.LOW_VOLTAGE_LIMIT.name(),
+                List.of(filter6),
+                Operator.DIVISION,
+                ReferenceFieldOrValue.builder().value(100.).build(),
+                ReferenceFieldOrValue.builder().value(0.).build()
+        );
+
         return List.of(formulaInfos1, formulaInfos2, formulaInfos3, formulaInfos4, formulaInfos5,
-            formulaInfos6, formulaInfos7, formulaInfos8, formulaInfos9);
+            formulaInfos6, formulaInfos7, formulaInfos8, formulaInfos9, formulaInfos10);
     }
 
     @Override
@@ -239,8 +245,9 @@ class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificatio
 
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getLowVoltageLimit()));
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getHighVoltageLimit()));
-        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is null", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_NULL, reportService);
-        assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 4 equipment(s) not modified", REPORT_KEY_BY_FILTER_MODIFICATION_SOME, reportService);
+        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is not a number", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_NAN, reportService);
+        assertLogMessageWithoutRank("Cannot modify equipment v7 : The value or referenced field of the second operand in the division operator is zero", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_ZERO, reportService);
+        assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 5 equipment(s) not modified", REPORT_KEY_BY_FILTER_MODIFICATION_SOME, reportService);
     }
 
     @Override
