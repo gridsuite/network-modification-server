@@ -19,6 +19,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.NetworkModificationException;
+import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
@@ -404,9 +405,15 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
+    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationIntoGroup(@NonNull UUID targetGroupUuid, @NonNull UUID compositeModificationUuid, @NonNull ModificationApplicationContext applicationContext) {
+        CompositeModificationInfos modification = networkModificationRepository.insertCompositeModificationIntoGroup(targetGroupUuid, compositeModificationUuid);
+        return applyModifications(targetGroupUuid, List.of(modification), List.of(applicationContext)).thenApply(result ->
+            new NetworkModificationsResult(List.of(modification.getUuid()), result));
+    }
+
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
+        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, null);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {

@@ -128,7 +128,7 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, String name) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -136,6 +136,7 @@ public class NetworkModificationRepository {
                 .map(ModificationEntity::fromDTO)
                 .toList();
         compositeEntity.setModifications(copyEntities);
+        compositeEntity.setCompositeName(name);
         return modificationRepository.save(compositeEntity).getId();
     }
 
@@ -764,5 +765,16 @@ public class NetworkModificationRepository {
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modificationInfos);
         // We can't return modificationInfos directly because it wouldn't have the IDs coming from the new saved entities
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
+    }
+
+    @Transactional
+    public CompositeModificationInfos insertCompositeModificationIntoGroup(@NonNull UUID targetGroupUuid, @NonNull UUID compositeModificationUuid) {
+        CompositeModificationEntity oldCompositeModification = (CompositeModificationEntity) getModificationEntity(compositeModificationUuid);
+        List<UUID> oldModificationsUuids = oldCompositeModification.getModifications().stream().map(ModificationEntity::getId).collect(Collectors.toList());
+
+        UUID newCompositeModificationUuid = createNetworkCompositeModification(oldModificationsUuids, "test de nom bidon"); // TODO : adds this into controller ??
+        CompositeModificationEntity newCompositeModification = (CompositeModificationEntity) getModificationEntity(newCompositeModificationUuid);
+        saveModificationInfosNonTransactional(targetGroupUuid, List.of(newCompositeModification.toModificationInfos()));
+        return newCompositeModification.toModificationInfos();
     }
 }
