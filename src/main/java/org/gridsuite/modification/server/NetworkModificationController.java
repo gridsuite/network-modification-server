@@ -37,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
 public class NetworkModificationController {
 
     private enum GroupModificationAction {
-        MOVE, COPY, INSERT
+        MOVE, COPY, INSERT, INSERT_AS_COMPOSITE
     }
 
     private final NetworkModificationService networkModificationService;
@@ -100,6 +100,12 @@ public class NetworkModificationController {
                 networkModificationService.duplicateModifications(targetGroupUuid, originGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
             case INSERT ->
                 networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+            case INSERT_AS_COMPOSITE ->
+                networkModificationService.insertCompositeModificationIntoGroup(
+                        targetGroupUuid,
+                        modificationContextInfos.getFirst().getFirst(),
+                        modificationContextInfos.getSecond().getFirst()
+                ).thenApply(ResponseEntity.ok()::body);
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean applyModifications = canApply;
