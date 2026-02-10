@@ -851,8 +851,8 @@ class ModificationControllerTest {
         assertEquals("v1b1", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
 
         // Insert the composite modification in the group
-        String bodyJson = getJsonBody(List.of(compositeModificationUuid), NetworkCreation.VARIANT_ID);
-        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        final String bodyJson = getJsonBody(List.of(compositeModificationUuid), NetworkCreation.VARIANT_ID);
+        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=SPLIT_COMPOSITE").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         assertApplicationStatusOK(mvcResult);
 
@@ -861,6 +861,12 @@ class ModificationControllerTest {
         List<UUID> newModificationUuidList = newModificationList.stream().map(ModificationInfos::getUuid).toList();
         assertEquals(modificationUuids.get(0), newModificationUuidList.get(0));
         assertThat(modificationList.get(0)).recursivelyEquals(newModificationList.get(modificationsNumber));
+
+        // insert the same composite modification inside the same group but this time as a complete composite, not split into regular network modifications
+        mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT_COMPOSITE&compositeName='random name'").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
+        assertApplicationStatusOK(mvcResult);
+        newModificationList = modificationRepository.getModifications(TEST_GROUP_ID, false, true);
+        assertEquals(modificationsNumber * 2 + 1, newModificationList.size());
     }
 
     /**

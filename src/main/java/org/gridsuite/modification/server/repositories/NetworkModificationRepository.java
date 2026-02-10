@@ -768,11 +768,14 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public CompositeModificationInfos insertCompositeModificationIntoGroup(@NonNull UUID targetGroupUuid, @NonNull UUID compositeModificationUuid) {
+    public CompositeModificationInfos insertCompositeModificationIntoGroup(
+            @NonNull UUID targetGroupUuid,
+            @NonNull UUID compositeModificationUuid,
+            @NonNull String compositeName) {
         CompositeModificationEntity oldCompositeModification = (CompositeModificationEntity) getModificationEntity(compositeModificationUuid);
         List<UUID> oldModificationsUuids = oldCompositeModification.getModifications().stream().map(ModificationEntity::getId).collect(Collectors.toList());
 
-        UUID newCompositeModificationUuid = createNetworkCompositeModification(oldModificationsUuids, "test de nom bidon"); // TODO : adds this into controller ??
+        UUID newCompositeModificationUuid = createNetworkCompositeModification(oldModificationsUuids, compositeName);
         CompositeModificationEntity newCompositeModification = (CompositeModificationEntity) getModificationEntity(newCompositeModificationUuid);
         saveModificationInfosNonTransactional(targetGroupUuid, List.of(newCompositeModification.toModificationInfos()));
         return newCompositeModification.toModificationInfos();

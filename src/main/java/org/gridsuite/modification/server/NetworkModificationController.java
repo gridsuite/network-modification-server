@@ -37,7 +37,10 @@ import java.util.concurrent.CompletableFuture;
 public class NetworkModificationController {
 
     private enum GroupModificationAction {
-        MOVE, COPY, INSERT, INSERT_AS_COMPOSITE
+        MOVE,
+        COPY,
+        SPLIT_COMPOSITE, // the network modifications contained into the composite modifications are extracted and inserted one by one
+        INSERT_COMPOSITE // the composite modifications are fully inserted as composote modifications
     }
 
     private final NetworkModificationService networkModificationService;
@@ -89,22 +92,25 @@ public class NetworkModificationController {
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "For a list of network modifications passed in body, Move them before another one or at the end of the list, or Duplicate them at the end of the list, or Insert them (composite) at the end of the list")
     @ApiResponse(responseCode = "200", description = "The modification list of the group has been updated.")
-    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(@Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
-                                                                                                @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
-                                                                                                @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
-                                                                                                @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
-                                                                                                @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-                                                                                                @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
+    public CompletableFuture<ResponseEntity<NetworkModificationsResult>> handleNetworkModifications(
+            @Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,
+            @Parameter(description = "kind of modification", required = true) @RequestParam(value = "action") GroupModificationAction action,
+            @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
+            @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
+            @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
+            @Parameter(description = "composite modification name") @RequestParam(value = "compositeName", required = false, defaultValue = "My Composite") String compositeName,
+            @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY ->
                 networkModificationService.duplicateModifications(targetGroupUuid, originGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
-            case INSERT ->
-                networkModificationService.insertCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
-            case INSERT_AS_COMPOSITE ->
+            case SPLIT_COMPOSITE ->
+                networkModificationService.splitCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+            case INSERT_COMPOSITE ->
                 networkModificationService.insertCompositeModificationIntoGroup(
                         targetGroupUuid,
                         modificationContextInfos.getFirst().getFirst(),
-                        modificationContextInfos.getSecond().getFirst()
+                        modificationContextInfos.getSecond().getFirst(),
+                        compositeName
                 ).thenApply(ResponseEntity.ok()::body);
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;

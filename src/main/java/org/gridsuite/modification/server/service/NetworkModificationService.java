@@ -398,15 +398,23 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
-    public CompletableFuture<NetworkModificationsResult> insertCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+    /**
+     * all their network modifications are extracted from the composite modifications and inserted into the group
+     * @param modificationsUuids uuids of the composite modifications
+     */
+    public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
     }
 
-    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationIntoGroup(@NonNull UUID targetGroupUuid, @NonNull UUID compositeModificationUuid, @NonNull ModificationApplicationContext applicationContext) {
-        CompositeModificationInfos modification = networkModificationRepository.insertCompositeModificationIntoGroup(targetGroupUuid, compositeModificationUuid);
+    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationIntoGroup(
+            @NonNull UUID targetGroupUuid,
+            @NonNull UUID compositeModificationUuid,
+            @NonNull ModificationApplicationContext applicationContext,
+            @NonNull String compositeName) {
+        CompositeModificationInfos modification = networkModificationRepository.insertCompositeModificationIntoGroup(targetGroupUuid, compositeModificationUuid, compositeName);
         return applyModifications(targetGroupUuid, List.of(modification), List.of(applicationContext)).thenApply(result ->
             new NetworkModificationsResult(List.of(modification.getUuid()), result));
     }
