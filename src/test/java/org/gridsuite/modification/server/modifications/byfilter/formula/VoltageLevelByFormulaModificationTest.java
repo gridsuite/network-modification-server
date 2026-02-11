@@ -245,7 +245,7 @@ class VoltageLevelByFormulaModificationTest extends AbstractByFormulaModificatio
 
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getLowVoltageLimit()));
         assertTrue(Double.isNaN(getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7).getHighVoltageLimit()));
-        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is not a number", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_NAN, reportService);
+        assertLogMessageWithoutRank("Cannot modify equipment v7 : At least one of the value or referenced field is missing", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_MISSING, reportService);
         assertLogMessageWithoutRank("Cannot modify equipment v7 : The value or referenced field of the second operand in the division operator is zero", REPORT_KEY_EQUIPMENT_MODIFIED_ERROR_ZERO, reportService);
         assertLogMessageWithoutRank("Some of the equipment have been modified : 14 equipment(s) modified and 5 equipment(s) not modified", REPORT_KEY_BY_FILTER_MODIFICATION_SOME, reportService);
     }
