@@ -98,7 +98,7 @@ public class NetworkModificationController {
             @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
             @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
             @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-            @Parameter(description = "composite modification name") @RequestParam(value = "compositeName", required = false, defaultValue = "My Composite") String compositeName,
+            @Parameter(description = "composite modifications names") @RequestParam(value = "compositeNames", required = false) List<String> compositeNames,
             @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY ->
@@ -106,11 +106,11 @@ public class NetworkModificationController {
             case SPLIT_COMPOSITE ->
                 networkModificationService.splitCompositeModifications(targetGroupUuid, modificationContextInfos.getFirst(), modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
             case INSERT_COMPOSITE ->
-                networkModificationService.insertCompositeModificationIntoGroup(
+                networkModificationService.insertCompositeModificationsIntoGroup(
                         targetGroupUuid,
-                        modificationContextInfos.getFirst().getFirst(),
-                        modificationContextInfos.getSecond().getFirst(),
-                        compositeName
+                        modificationContextInfos.getFirst(),
+                        modificationContextInfos.getSecond(),
+                        compositeNames
                 ).thenApply(ResponseEntity.ok()::body);
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;

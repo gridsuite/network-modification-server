@@ -128,7 +128,7 @@ public class NetworkModificationRepository {
         return saveModificationsNonTransactional(groupUuid, entities);
     }
 
-    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids, String name) {
+    public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
         CompositeModificationInfos compositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         CompositeModificationEntity compositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(compositeInfos);
         List<ModificationEntity> copyEntities = modificationRepository.findAllByIdIn(modificationUuids).stream()
@@ -136,8 +136,18 @@ public class NetworkModificationRepository {
                 .map(ModificationEntity::fromDTO)
                 .toList();
         compositeEntity.setModifications(copyEntities);
-        compositeEntity.setCompositeName(name);
         return modificationRepository.save(compositeEntity).getId();
+    }
+
+    public UUID cloneCompositeModification(@NonNull UUID compositeModificationUuid, String name) {
+        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
+        CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
+        List<ModificationEntity> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModificationUuid)).stream()
+                .map(ModificationEntity::fromDTO)
+                .toList();
+        newCompositeEntity.setModifications(copiedModifications);
+        newCompositeEntity.setCompositeName(name);
+        return modificationRepository.save(newCompositeEntity).getId();
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -768,16 +778,19 @@ public class NetworkModificationRepository {
     }
 
     @Transactional
-    public CompositeModificationInfos insertCompositeModificationIntoGroup(
+    public List<ModificationInfos> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull UUID compositeModificationUuid,
-            @NonNull String compositeName) {
-        CompositeModificationEntity oldCompositeModification = (CompositeModificationEntity) getModificationEntity(compositeModificationUuid);
-        List<UUID> oldModificationsUuids = oldCompositeModification.getModifications().stream().map(ModificationEntity::getId).collect(Collectors.toList());
-
-        UUID newCompositeModificationUuid = createNetworkCompositeModification(oldModificationsUuids, compositeName);
-        CompositeModificationEntity newCompositeModification = (CompositeModificationEntity) getModificationEntity(newCompositeModificationUuid);
-        saveModificationInfosNonTransactional(targetGroupUuid, List.of(newCompositeModification.toModificationInfos()));
-        return newCompositeModification.toModificationInfos();
+            @NonNull List<UUID> compositeModificationsUuids,
+            @NonNull List<String> compositeNames) {
+        List<CompositeModificationEntity> newCompositeModifications = new ArrayList<>();
+        for (int i = 0; i < Math.min(compositeNames.size(), compositeModificationsUuids.size()); i++) {
+            UUID newCompositeModificationUuid = cloneCompositeModification(compositeModificationsUuids.get(i), compositeNames.get(i)); // ici c'est fait orderonné par modification order plutôt que UUID
+            newCompositeModifications.add((CompositeModificationEntity) getModificationEntity(newCompositeModificationUuid));
+        }
+        List<ModificationInfos> modifs = newCompositeModifications.stream()
+                .map(modif -> (ModificationInfos) modif.toModificationInfos())
+                .toList();
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modifs);
+        return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }

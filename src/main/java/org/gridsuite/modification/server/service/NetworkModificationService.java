@@ -19,7 +19,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.NetworkModificationException;
-import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
@@ -409,19 +408,21 @@ public class NetworkModificationService {
             new NetworkModificationsResult(ids, result));
     }
 
-    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationIntoGroup(
+    public CompletableFuture<NetworkModificationsResult> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull UUID compositeModificationUuid,
-            @NonNull ModificationApplicationContext applicationContext,
-            @NonNull String compositeName) {
-        CompositeModificationInfos modification = networkModificationRepository.insertCompositeModificationIntoGroup(targetGroupUuid, compositeModificationUuid, compositeName);
-        return applyModifications(targetGroupUuid, List.of(modification), List.of(applicationContext)).thenApply(result ->
-            new NetworkModificationsResult(List.of(modification.getUuid()), result));
+            @NonNull List<UUID> compositeModificationUuids,
+            @NonNull List<ModificationApplicationContext> applicationContexts,
+            @NonNull List<String> compositeNames) {
+        List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModificationsIntoGroup(
+                targetGroupUuid, compositeModificationUuids, compositeNames);
+        List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
+        return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
+            new NetworkModificationsResult(ids, result));
     }
 
     @Transactional
     public UUID createNetworkCompositeModification(@NonNull List<UUID> modificationUuids) {
-        return networkModificationRepository.createNetworkCompositeModification(modificationUuids, null);
+        return networkModificationRepository.createNetworkCompositeModification(modificationUuids);
     }
 
     public Map<UUID, UUID> duplicateCompositeModifications(List<UUID> sourceModificationUuids) {
