@@ -13,7 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.TemporaryLimitInfos;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,14 +40,9 @@ public class LimitsForLineTypeEntity {
     @Column
     private Double permanentLimit;
 
-    @Column
-    private Double temporaryLimitValue;
-
-    @Column
-    private Integer temporaryLimitAcceptableDuration;
-
-    @Column
-    private String temporaryLimitName;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "temporary_limit_id", nullable = false)
+    private List<TemporaryLimitEntity> temporaryLimits;
 
     @Column
     private String area;
@@ -58,9 +55,7 @@ public class LimitsForLineTypeEntity {
             .id(id)
             .limitSetName(limitSetName)
             .permanentLimit(permanentLimit)
-            .temporaryLimitValue(temporaryLimitValue)
-            .temporaryLimitAcceptableDuration(temporaryLimitAcceptableDuration)
-            .temporaryLimitName(temporaryLimitName)
+                .temporaryLimits(temporaryLimits.stream().map(TemporaryLimitEntity::toTemporaryLimitInfos).toList())
             .area(area)
             .temperature(temperature)
             .build();
@@ -70,9 +65,7 @@ public class LimitsForLineTypeEntity {
         this(limitsForLineTypeInfos.getId(),
             limitsForLineTypeInfos.getLimitSetName(),
             limitsForLineTypeInfos.getPermanentLimit(),
-            limitsForLineTypeInfos.getTemporaryLimitValue(),
-            limitsForLineTypeInfos.getTemporaryLimitAcceptableDuration(),
-            limitsForLineTypeInfos.getTemporaryLimitName(),
+            limitsForLineTypeInfos.getTemporaryLimits() != null ? limitsForLineTypeInfos.getTemporaryLimits().stream().map(TemporaryLimitInfos::toTemporaryLimitEntity).toList() : null,
             limitsForLineTypeInfos.getArea(),
             limitsForLineTypeInfos.getTemperature());
     }

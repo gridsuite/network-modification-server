@@ -56,7 +56,7 @@ public class LineTypesCatalogService {
 
     public void resetLineTypes(MultipartFile file) {
         try (GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream())) {
-            List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<>() {
+            List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<List<LineTypeInfos>>() {
             });
             deleteLineTypesCatalog();
             // remove duplicates in file

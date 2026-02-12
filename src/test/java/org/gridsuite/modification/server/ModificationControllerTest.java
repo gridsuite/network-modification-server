@@ -1567,9 +1567,9 @@ class ModificationControllerTest {
         assertEquals(2, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
         assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
-        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitValue());
-        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitName());
-        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitAcceptableDuration());
+        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
     }
@@ -1999,5 +1999,95 @@ class ModificationControllerTest {
                 new TypeReference<>() {
                 });
         assertEquals(0, networkModificationsResult.size());
+    }
+
+    @Test
+    void test() throws JsonProcessingException {
+        String test = "[\n" +
+                " {\n" +
+                "    \"category\": \"AERIAL\",\n" +
+                "    \"type\": \"TEST1 123AB\",\n" +
+                "    \"voltage\": 63,\n" +
+                "    \"conductorType\": \"AL - Aluminium\",\n" +
+                "    \"section\": 27.5,\n" +
+                "    \"conductorsNumber\": 1,\n" +
+                "    \"circuitsNumber\": 1,\n" +
+                "    \"groundWiresNumber\": 0,\n" +
+                "    \"linearResistance\": 0.00047,\n" +
+                "    \"linearReactance\": 0.000345,\n" +
+                "    \"linearCapacity\": 0.00000000727,\n" +
+                "    \"limitsForLineType\": [\n" +
+                "      {\n" +
+                "        \"limitSetName\": \"LimitSet1\",\n" +
+                "        \"permanentLimit\": 10,\n" +
+                "        \"temporaryLimits\": [\n" +
+                "          {\n" +
+                "            \"limitValue\": 20,\n" +
+                "            \"acceptableDuration\": 100,\n" +
+                "            \"name\": \"TemporaryLimit1\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"temperature\": 37,\n" +
+                "        \"area\": 1\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"limitSetName\": \"LimitSet2\",\n" +
+                "        \"permanentLimit\": 12,\n" +
+                "        \"temporaryLimits\": [\n" +
+                "          {\n" +
+                "            \"limitValue\": 25,\n" +
+                "            \"acceptableDuration\": 100,\n" +
+                "            \"name\": \"TemporaryLimit2\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"temperature\": 21,\n" +
+                "        \"area\": 2\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }, {\n" +
+                "    \"category\": \"UNDERGROUND\",\n" +
+                "    \"type\": \"CS1 123AB\",\n" +
+                "    \"voltage\": 400,\n" +
+                "    \"conductorType\": \"Aluminium\",\n" +
+                "    \"section\": 24,\n" +
+                "    \"insulator\": \"AB\",\n" +
+                "    \"screen\": \"Aluminium\",\n" +
+                "    \"linearResistance\": 0.010,\n" +
+                "    \"linearReactance\": 0.120,\n" +
+                "    \"linearCapacity\": 0.000000123,\n" +
+                "    \"limitsForLineType\": [\n" +
+                "      {\n" +
+                "        \"limitSetName\": \"LimitSet1\",\n" +
+                "        \"permanentLimit\": 10,\n" +
+                "        \"temporaryLimits\": [\n" +
+                "          {\n" +
+                "            \"limitValue\": 20,\n" +
+                "            \"acceptableDuration\": 100,\n" +
+                "            \"name\": \"TemporaryLimit1\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"temperature\": 37,\n" +
+                "        \"area\": 1\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"limitSetName\": \"LimitSet2\",\n" +
+                "        \"permanentLimit\": 12,\n" +
+                "        \"temporaryLimits\": [\n" +
+                "          {\n" +
+                "            \"limitValue\": 25,\n" +
+                "            \"acceptableDuration\": 100,\n" +
+                "            \"name\": \"TemporaryLimit2\"\n" +
+                "          }\n" +
+                "        ],\n" +
+                "        \"temperature\": 21,\n" +
+                "        \"area\": 2\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }" +
+
+                "]";
+        List<LineTypeInfos> lineTypes = mapper.readValue(test, new TypeReference<List<LineTypeInfos>>() {
+        });
+        System.out.println(lineTypes);
     }
 }

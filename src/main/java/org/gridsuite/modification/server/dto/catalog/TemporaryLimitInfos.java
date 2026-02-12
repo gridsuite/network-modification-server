@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ * Copyright (c) 2026, RTE (http://www.rte-france.com)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -13,8 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.gridsuite.modification.server.entities.catalog.TemporaryLimitEntity;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,24 +25,24 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Limits for line type")
-public class LimitsForLineTypeInfos {
-
+@Schema(description = "Temporary Limits infos")
+public class TemporaryLimitInfos {
     @Schema(description = "id")
     private UUID id;
 
-    @Schema(description = "Limit set name")
-    private String limitSetName;
+    @Schema(description = "Temporary limit value")
+    private Double limitValue;
 
-    @Schema(description = "Permanent limit")
-    private Double permanentLimit;
+    @Schema(description = "Temporary limit acceptable duration")
+    private Integer acceptableDuration;
 
-    @Schema(description = "temporary limits list")
-    List<TemporaryLimitInfos> temporaryLimits;
+    @Schema(description = "Temporary limit name")
+    private String name;
 
-    @Schema(description = "Area")
-    private String area;
-
-    @Schema(description = "Temperature")
-    private String temperature;
+    public TemporaryLimitEntity toTemporaryLimitEntity() {
+        return TemporaryLimitEntity.builder()
+                .limitValue(limitValue)
+                .acceptableDuration(acceptableDuration)
+                .name(name).build();
+    }
 }
