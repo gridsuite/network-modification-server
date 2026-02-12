@@ -43,6 +43,7 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
     private static final String GENERATOR_ID_8 = "gen8";
     private static final String GENERATOR_ID_9 = "gen9";
     private static final String GENERATOR_ID_10 = "gen10";
+    private static final String GENERATOR_ID_11 = "gen11";
 
     @Test
     void testCreateWithWarning() throws Exception {
@@ -69,22 +70,22 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
                 .setTargetQ(20)
                 .newExtension(GeneratorStartupAdder.class)
                 .withMarginalCost(30.)
-                .withPlannedOutageRate(25.)
+                .withPlannedOutageRate(0.25)
                 .withPlannedActivePowerSetpoint(40.)
-                .withForcedOutageRate(55.)
+                .withForcedOutageRate(0.55)
                 .add();
 
         getNetwork().getGenerator(GENERATOR_ID_2)
                 .setTargetP(200)
                 .setMaxP(2000)
-                .setMinP(50)
+                .setMinP(10)
                 .setTargetV(10)
                 .setTargetQ(20)
                 .newExtension(GeneratorStartupAdder.class)
                 .withMarginalCost(30.)
-                .withPlannedOutageRate(25.)
+                .withPlannedOutageRate(0.25)
                 .withPlannedActivePowerSetpoint(40.)
-                .withForcedOutageRate(55.)
+                .withForcedOutageRate(0.55)
                 .add();
 
         getNetwork().getGenerator(GENERATOR_ID_3)
@@ -213,7 +214,7 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
 
         DoubleAssignmentInfos assignmentInfos10 = DoubleAssignmentInfos.builder()
                 .editedField(GeneratorField.MAXIMUM_ACTIVE_POWER.name())
-                .value(50.)
+                .value(300.)
                 .filters(List.of(filter1, filter2, filter3, filter4, filter5))
                 .build();
 
@@ -290,7 +291,7 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertEquals(0.1, generatorStartup1.getPlannedOutageRate(), 0);
         assertEquals(0.05, generatorStartup1.getForcedOutageRate(), 0);
         assertEquals(10, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(50, generator1.getMaxP(), 0);
+        assertEquals(300., generator1.getMaxP(), 0);
         assertEquals(2, generator1.getMinP(), 0);
         assertEquals(true, generator1.isVoltageRegulatorOn());
 
@@ -303,7 +304,7 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertEquals(0.1, generatorStartup2.getPlannedOutageRate(), 0);
         assertEquals(0.05, generatorStartup2.getForcedOutageRate(), 0);
         assertEquals(10, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
-        assertEquals(50, generator2.getMaxP(), 0);
+        assertEquals(300, generator2.getMaxP(), 0);
         assertEquals(2, generator2.getMinP(), 0);
 
         Generator generator3 = getNetwork().getGenerator(GENERATOR_ID_3);
@@ -312,7 +313,7 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertEquals(300, generator3.getTargetP(), 0);
         assertEquals(0.2, generatorShortCircuit3.getDirectTransX(), 0);
         assertEquals(0.3, generatorShortCircuit3.getStepUpTransformerX(), 0);
-        assertEquals(50, generator3.getMaxP(), 0);
+        assertEquals(300, generator3.getMaxP(), 0);
         assertEquals(2, generator3.getMinP(), 0);
 
         Generator generator4 = getNetwork().getGenerator(GENERATOR_ID_4);
@@ -321,19 +322,19 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertEquals(0.2, generatorShortCircuit4.getDirectTransX(), 0);
         assertEquals(0.3, generatorShortCircuit4.getStepUpTransformerX(), 0);
         assertEquals(400, generator4.getTargetP(), 0);
-        assertEquals(50, generator4.getMaxP(), 0);
+        assertEquals(700, generator4.getMaxP(), 0);
         assertEquals(2, generator4.getMinP(), 0);
 
         Generator generator5 = getNetwork().getGenerator(GENERATOR_ID_5);
         ActivePowerControl activePowerControl5 = generator5.getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl5);
-        assertEquals(50, generator5.getMaxP(), 0);
+        assertEquals(300, generator5.getMaxP(), 0);
         assertEquals(2, activePowerControl5.getDroop(), 0);
 
         Generator generator6 = getNetwork().getGenerator(GENERATOR_ID_6);
         ActivePowerControl activePowerControl6 = generator6.getExtension(ActivePowerControl.class);
         assertNotNull(activePowerControl6);
-        assertEquals(50, generator6.getMaxP(), 0);
+        assertEquals(300, generator6.getMaxP(), 0);
         assertEquals(2, activePowerControl6.getDroop(), 0);
 
         Generator generator7 = getNetwork().getGenerator(GENERATOR_ID_7);
@@ -363,8 +364,8 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertNotNull(generatorStartup1);
         assertEquals(100, generator1.getTargetP(), 0);
         assertEquals(30, generatorStartup1.getMarginalCost(), 0);
-        assertEquals(25, generatorStartup1.getPlannedOutageRate(), 0);
-        assertEquals(55, generatorStartup1.getForcedOutageRate(), 0);
+        assertEquals(0.25, generatorStartup1.getPlannedOutageRate(), 0);
+        assertEquals(0.55, generatorStartup1.getForcedOutageRate(), 0);
         assertEquals(40, generatorStartup1.getPlannedActivePowerSetpoint(), 0);
         assertEquals(500, generator1.getMaxP(), 0);
         assertEquals(0, generator1.getMinP(), 0);
@@ -374,11 +375,11 @@ class GeneratorModificationByAssignmentTest extends AbstractModificationByAssign
         assertNotNull(generatorStartup2);
         assertEquals(200, generator2.getTargetP(), 0);
         assertEquals(30, generatorStartup2.getMarginalCost(), 0);
-        assertEquals(25, generatorStartup2.getPlannedOutageRate(), 0);
-        assertEquals(55, generatorStartup2.getForcedOutageRate(), 0);
+        assertEquals(0.25, generatorStartup2.getPlannedOutageRate(), 0);
+        assertEquals(0.55, generatorStartup2.getForcedOutageRate(), 0);
         assertEquals(40, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
         assertEquals(2000, generator2.getMaxP(), 0);
-        assertEquals(50, generator2.getMinP(), 0);
+        assertEquals(10, generator2.getMinP(), 0);
 
         Generator generator3 = getNetwork().getGenerator(GENERATOR_ID_3);
         GeneratorShortCircuit generatorShortCircuit3 = generator3.getExtension(GeneratorShortCircuit.class);

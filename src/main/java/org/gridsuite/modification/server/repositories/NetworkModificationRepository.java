@@ -514,19 +514,19 @@ public class NetworkModificationRepository {
     }
 
     /**
-     * returns the data from all the network modifications contained in the composite modification sent as parameter
+     * returns the data from all the network modifications contained in the composite modifications sent as parameter
      * but only returns the basic data common to all the modifications form the ModificationInfos, not from the extended classes
      */
     @Transactional(readOnly = true)
-    public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull UUID uuid) {
-        List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+    public List<ModificationInfos> getBasicNetworkModificationsFromComposite(@NonNull List<UUID> uuids) {
+        List<UUID> networkModificationsUuids = modificationRepository.findModificationIdsByCompositeModificationIdIn(uuids);
         Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
-                .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
-        return networkModificationsUuids.stream()
-                .map(entitiesById::get)
-                .filter(Objects::nonNull)
-                .map(this::toModificationsInfosOptimizedForTabular)
-                .toList();
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return new ArrayList<>(networkModificationsUuids.stream()
+            .map(entitiesById::get)
+            .filter(Objects::nonNull)
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .toList());
     }
 
     @Transactional(readOnly = true)

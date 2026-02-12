@@ -7,6 +7,7 @@
 package org.gridsuite.modification.server.modifications.byfilter.assignment;
 
 import com.powsybl.iidm.network.IdentifiableType;
+import com.powsybl.iidm.network.TopologyKind;
 import com.powsybl.iidm.network.VoltageLevel;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuit;
 import com.powsybl.iidm.network.extensions.IdentifiableShortCircuitAdder;
@@ -34,6 +35,7 @@ class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAss
     private static final String VOLTAGE_LEVEL_ID_4 = "v4";
     private static final String VOLTAGE_LEVEL_ID_5 = "v5";
     private static final String VOLTAGE_LEVEL_ID_6 = "v6";
+    private static final String VOLTAGE_LEVEL_ID_7 = "v7";
 
     @Override
     protected void createEquipments() {
@@ -66,6 +68,17 @@ class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAss
                 .setHighVoltageLimit(1000)
                 .setLowVoltageLimit(90)
                 .newExtension(IdentifiableShortCircuitAdder.class).withIpMin(100).withIpMax(200).add();
+        // to test exceptions
+        getNetwork().newVoltageLevel()
+                .setId(VOLTAGE_LEVEL_ID_7)
+                .setName(VOLTAGE_LEVEL_ID_7)
+                .setTopologyKind(TopologyKind.NODE_BREAKER)
+                .setNominalV(400)
+                .setHighVoltageLimit(430)
+                .setLowVoltageLimit(370)
+                .add();
+        getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_7)
+                .newExtension(IdentifiableShortCircuitAdder.class).withIpMin(100).withIpMax(200).add();
     }
 
     @Override
@@ -91,7 +104,11 @@ class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAss
                 new IdentifierListFilterEquipmentAttributes(VOLTAGE_LEVEL_ID_6, 7.0)))
             .build();
 
-        return List.of(filter1, filter2, filter3, filter4, filter5);
+        IdentifierListFilter filter6 = IdentifierListFilter.builder().id(FILTER_ID_6).modificationDate(new Date()).equipmentType(EquipmentType.VOLTAGE_LEVEL)
+                .filterEquipmentsAttributes(List.of(new IdentifierListFilterEquipmentAttributes(VOLTAGE_LEVEL_ID_7, 1.0)))
+                .build();
+
+        return List.of(filter1, filter2, filter3, filter4, filter5, filter6);
     }
 
     @Override
@@ -122,11 +139,36 @@ class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAss
 
         DoubleAssignmentInfos assignmentInfos5 = DoubleAssignmentInfos.builder()
                 .editedField(VoltageLevelField.HIGH_SHORT_CIRCUIT_CURRENT_LIMIT.name())
-                .value(5.)
+                .value(80.)
                 .filters(List.of(filter4, filter5))
                 .build();
 
-        return List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3, assignmentInfos4, assignmentInfos5);
+        DoubleAssignmentInfos assignmentInfos6 = DoubleAssignmentInfos.builder()
+                .editedField(VoltageLevelField.LOW_VOLTAGE_LIMIT.name())
+                .value(440.)
+                .filters(List.of(filter6))
+                .build();
+
+        DoubleAssignmentInfos assignmentInfos7 = DoubleAssignmentInfos.builder()
+                .editedField(VoltageLevelField.HIGH_VOLTAGE_LIMIT.name())
+                .value(360.)
+                .filters(List.of(filter6))
+                .build();
+
+        DoubleAssignmentInfos assignmentInfos8 = DoubleAssignmentInfos.builder()
+                .editedField(VoltageLevelField.LOW_SHORT_CIRCUIT_CURRENT_LIMIT.name())
+                .value(220.)
+                .filters(List.of(filter6))
+                .build();
+
+        DoubleAssignmentInfos assignmentInfos9 = DoubleAssignmentInfos.builder()
+                .editedField(VoltageLevelField.HIGH_SHORT_CIRCUIT_CURRENT_LIMIT.name())
+                .value(80.)
+                .filters(List.of(filter6))
+                .build();
+
+        return List.of(assignmentInfos1, assignmentInfos2, assignmentInfos3, assignmentInfos4, assignmentInfos5,
+                assignmentInfos6, assignmentInfos7, assignmentInfos8, assignmentInfos9);
     }
 
     @Override
@@ -176,21 +218,21 @@ class VoltageLevelModificationByAssignmentTest extends AbstractModificationByAss
         assertNotNull(identifiableShortCircuit4);
         assertEquals(10, voltageLevel4.getLowVoltageLimit(), 0);
         assertEquals(2, identifiableShortCircuit4.getIpMin(), 0);
-        assertEquals(5, identifiableShortCircuit4.getIpMax(), 0);
+        assertEquals(80, identifiableShortCircuit4.getIpMax(), 0);
 
         VoltageLevel voltageLevel5 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_5);
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit5 = voltageLevel5.getExtension(IdentifiableShortCircuit.class);
         assertNotNull(identifiableShortCircuit5);
         assertEquals(120, voltageLevel5.getHighVoltageLimit(), 0);
         assertEquals(150, voltageLevel5.getNominalV(), 0);
-        assertEquals(5, identifiableShortCircuit5.getIpMax(), 0);
+        assertEquals(80, identifiableShortCircuit5.getIpMax(), 0);
 
         VoltageLevel voltageLevel6 = getNetwork().getVoltageLevel(VOLTAGE_LEVEL_ID_6);
         IdentifiableShortCircuit<VoltageLevel> identifiableShortCircuit6 = voltageLevel6.getExtension(IdentifiableShortCircuit.class);
         assertNotNull(identifiableShortCircuit6);
         assertEquals(120, voltageLevel6.getHighVoltageLimit(), 0);
         assertEquals(2, identifiableShortCircuit6.getIpMin(), 0);
-        assertEquals(5, identifiableShortCircuit6.getIpMax(), 0);
+        assertEquals(80, identifiableShortCircuit6.getIpMax(), 0);
     }
 
     @Override

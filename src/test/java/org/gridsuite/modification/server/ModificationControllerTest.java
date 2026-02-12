@@ -106,7 +106,7 @@ class ModificationControllerTest {
 
     private static final String URI_NETWORK_MODIF_BASE = "/v1/network-modifications";
     private static final String URI_COMPOSITE_NETWORK_MODIF_BASE = "/v1/network-composite-modifications";
-    private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modification/";
+    private static final String URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT = "/v1/network-composite-modifications/";
     private static final String URI_LINE_CATALOG = URI_NETWORK_MODIF_BASE + "/catalog/line_types";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_1 = "/lines-catalog.json.gz";
     private static final String LINE_TYPES_CATALOG_JSON_FILE_2 = "/line_types_catalog_2.json.gz";
@@ -805,11 +805,11 @@ class ModificationControllerTest {
         UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertThat(modificationRepository.getModificationInfo(compositeModificationUuid)).recursivelyEquals(compositeModificationInfos);
 
-        // get the modification infos (metadata only)
         List<ModificationInfos> modificationInfosList = modificationRepository.getModifications(TEST_GROUP_ID, true, true);
         assertEquals(modificationsNumber, modificationInfosList.size());
+
         // get the composite modification (metadata only)
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications"))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeModificationUuid))
             .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(modificationsNumber, compositeModificationContent.size());
@@ -823,8 +823,26 @@ class ModificationControllerTest {
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentType());
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
 
+        // create another composite modification
+        List<ModificationInfos> otherModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, modificationsNumber);
+        List<UUID> otherModificationUuids = otherModificationList.stream().map(ModificationInfos::getUuid).toList();
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                .content(mapper.writeValueAsString(otherModificationUuids)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        ModificationInfos otherCompositeModificationInfos = CompositeModificationInfos.builder()
+            .modifications(otherModificationList)
+            .build();
+        UUID otherCompositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertThat(modificationRepository.getModificationInfo(otherCompositeModificationUuid)).recursivelyEquals(otherCompositeModificationInfos);
+
+        // get both composite modifications
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids=" + compositeModificationUuid + "&uuids=" + otherCompositeModificationUuid))
+            .andExpect(status().isOk()).andReturn();
+        List<ModificationInfos> compositeModificationsContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+        assertEquals(modificationsNumber * 2, compositeModificationsContent.size());
+
         // get the composite modification (complete data)
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications?onlyMetadata=false"))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
             .andExpect(status().isOk()).andReturn();
         compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
@@ -870,7 +888,7 @@ class ModificationControllerTest {
         assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
 
         // get the composite modification (metadata only)
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications"))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals(modificationsNumber, compositeModificationContent.size());
@@ -882,7 +900,7 @@ class ModificationControllerTest {
         assertNull(((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentId());
 
         // get the composite modification (complete data)
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications?onlyMetadata=false"))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
             .andExpect(status().isOk()).andReturn();
         compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         assertEquals("open", ((EquipmentAttributeModificationInfos) compositeModificationContent.get(0)).getEquipmentAttributeName());
@@ -1793,7 +1811,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         // Get the composite modification content and verify it has been updated
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications?onlyMetadata=false"))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> updatedCompositeContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
@@ -1828,7 +1846,7 @@ class ModificationControllerTest {
                 .andExpect(status().isOk());
 
         // Verify that the composite now contains no modifications
-        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + compositeModificationUuid + "/network-modifications?onlyMetadata=false"))
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications?uuids={id}&onlyMetadata=false", compositeModificationUuid))
                 .andExpect(status().isOk()).andReturn();
         List<ModificationInfos> updatedCompositeContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
 
