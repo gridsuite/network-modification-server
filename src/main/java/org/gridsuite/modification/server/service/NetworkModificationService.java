@@ -399,10 +399,9 @@ public class NetworkModificationService {
 
     /**
      * all their network modifications are extracted from the composite modifications and inserted into the group
-     * @param modificationsUuids uuids of the composite modifications
      */
-    public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> modificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
-        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, modificationsUuids);
+    public CompletableFuture<NetworkModificationsResult> splitCompositeModifications(@NonNull UUID targetGroupUuid, @NonNull List<UUID> compositeModificationsUuids, @NonNull List<ModificationApplicationContext> applicationContexts) {
+        List<ModificationInfos> modifications = networkModificationRepository.saveCompositeModifications(targetGroupUuid, compositeModificationsUuids);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));

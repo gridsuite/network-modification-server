@@ -139,7 +139,7 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public UUID cloneCompositeModification(@NonNull UUID compositeModificationUuid, String name) {
+    public CompositeModificationEntity cloneCompositeModification(@NonNull UUID compositeModificationUuid, String name) {
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
         List<ModificationEntity> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModificationUuid)).stream()
@@ -147,7 +147,7 @@ public class NetworkModificationRepository {
                 .toList();
         newCompositeEntity.setModifications(copiedModifications);
         newCompositeEntity.setCompositeName(name);
-        return modificationRepository.save(newCompositeEntity).getId();
+        return modificationRepository.save(newCompositeEntity);
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -783,9 +783,9 @@ public class NetworkModificationRepository {
             @NonNull List<UUID> compositeModificationsUuids,
             @NonNull List<String> compositeNames) {
         List<CompositeModificationEntity> newCompositeModifications = new ArrayList<>();
-        for (int i = 0; i < Math.min(compositeNames.size(), compositeModificationsUuids.size()); i++) {
-            UUID newCompositeModificationUuid = cloneCompositeModification(compositeModificationsUuids.get(i), compositeNames.get(i)); // ici c'est fait orderonné par modification order plutôt que UUID
-            newCompositeModifications.add((CompositeModificationEntity) getModificationEntity(newCompositeModificationUuid));
+        for (int i = 0; i < compositeModificationsUuids.size(); i++) {
+            CompositeModificationEntity newCompositeModification = cloneCompositeModification(compositeModificationsUuids.get(i), compositeNames.get(i));
+            newCompositeModifications.add(newCompositeModification);
         }
         List<ModificationInfos> modifs = newCompositeModifications.stream()
                 .map(modif -> (ModificationInfos) modif.toModificationInfos())
