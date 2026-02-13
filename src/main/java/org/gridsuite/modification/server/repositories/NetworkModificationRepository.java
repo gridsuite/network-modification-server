@@ -139,15 +139,13 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public CompositeModificationEntity cloneCompositeModification(@NonNull UUID compositeModificationUuid, String name) {
+    public CompositeModificationInfos cloneCompositeModification(@NonNull UUID compositeModificationUuid, String name) {
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
-        CompositeModificationEntity newCompositeEntity = (CompositeModificationEntity) ModificationEntity.fromDTO(newCompositeInfos);
-        List<ModificationEntity> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModificationUuid)).stream()
-                .map(ModificationEntity::fromDTO)
+        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModificationUuid)).stream()
                 .toList();
-        newCompositeEntity.setModifications(copiedModifications);
-        newCompositeEntity.setCompositeName(name);
-        return modificationRepository.save(newCompositeEntity);
+        newCompositeInfos.setModifications(copiedModifications);
+        newCompositeInfos.setCompositeName(name);
+        return newCompositeInfos;
     }
 
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
@@ -782,15 +780,12 @@ public class NetworkModificationRepository {
             @NonNull UUID targetGroupUuid,
             @NonNull List<UUID> compositeModificationsUuids,
             @NonNull List<String> compositeNames) {
-        List<CompositeModificationEntity> newCompositeModifications = new ArrayList<>();
+        List<ModificationInfos> newCompositeModifications = new ArrayList<>();
         for (int i = 0; i < compositeModificationsUuids.size(); i++) {
-            CompositeModificationEntity newCompositeModification = cloneCompositeModification(compositeModificationsUuids.get(i), compositeNames.get(i));
+            CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModificationsUuids.get(i), compositeNames.get(i));
             newCompositeModifications.add(newCompositeModification);
         }
-        List<ModificationInfos> modifs = newCompositeModifications.stream()
-                .map(modif -> (ModificationInfos) modif.toModificationInfos())
-                .toList();
-        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, modifs);
+        List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
 }
