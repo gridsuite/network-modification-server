@@ -52,7 +52,7 @@
         <sonar.organization>gridsuite</sonar.organization>
         <sonar.projectKey>org.gridsuite:network-modification-server</sonar.projectKey>
         <!-- TODO network-modification.version remove when included in gridsuite-dependencies -->
-        <network-modification.version>0.64.0</network-modification.version>
+        <network-modification.version>0.65.0</network-modification.version>
         <!-- TODO network-store.version remove when included in powsybl-ws-dependencies -->
         <network-store-client.version>1.38.0</network-store-client.version>
     </properties>
@@ -122,7 +122,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- imports -->
             <dependency>
                 <groupId>org.gridsuite</groupId>
