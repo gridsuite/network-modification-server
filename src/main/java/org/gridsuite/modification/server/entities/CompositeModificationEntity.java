@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.List;
 public class CompositeModificationEntity extends ModificationEntity {
 
     @Column(name = "composite_name")
+    @ColumnDefault("'My Composite'")
     private String compositeName;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
