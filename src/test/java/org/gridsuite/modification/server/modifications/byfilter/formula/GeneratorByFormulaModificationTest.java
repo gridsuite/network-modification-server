@@ -305,7 +305,7 @@ class GeneratorByFormulaModificationTest extends AbstractByFormulaModificationTe
         assertEquals(0.055, generatorStartup2.getForcedOutageRate(), 0);
         assertEquals(50, generatorStartup2.getPlannedActivePowerSetpoint(), 0);
         assertEquals(2002, generator2.getMaxP(), 0);
-        assertEquals(100, generator2.getMinP(), 0);
+        assertEquals(50, generator2.getMinP(), 0);
 
         Generator generator3 = getNetwork().getGenerator(GENERATOR_ID_3);
         GeneratorShortCircuit generatorShortCircuit3 = generator3.getExtension(GeneratorShortCircuit.class);
