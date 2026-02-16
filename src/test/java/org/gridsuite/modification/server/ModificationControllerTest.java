@@ -1558,6 +1558,8 @@ class ModificationControllerTest {
         // getting the whole catalog does not load the limits
         assertNull(lineTypes.get(0).getLimitsForLineType());
         assertNull(lineTypes.get(1).getLimitsForLineType());
+
+        // get one line of the catalog does not load limits too
         mvcResult = mockMvc
             .perform(get(URI_LINE_CATALOG + "/" + lineTypes.get(0).getId()).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -1565,6 +1567,21 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(2, selectedLineType.getLimitsForLineType().size());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+
+        // get one line with specified area and temperature
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG + "/" + lineTypes.getFirst().getId() + "/area/1/temperature/37").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+
+        assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
         assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
         assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
