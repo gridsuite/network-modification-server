@@ -50,8 +50,6 @@ public class LimitsForLineTypeEntity {
     @Column
     private String temperature;
 
-
-
     public LimitsForLineTypeInfos toLineTypeInfosWithoutLimits() {
         return LimitsForLineTypeInfos.builder()
                 .id(id)
