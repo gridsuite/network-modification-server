@@ -60,9 +60,11 @@ public class AerialLineTypeEntity extends LineTypeEntity {
     }
 
     @Override
-    public AerialLineTypeInfos toDtoWithLimits() {
+    public AerialLineTypeInfos toDtoWithLimits(String area, String temperature) {
         return toDtoBuilder()
-            .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .limitsForLineType(this.getLimitsForLineType().stream()
+                    .filter((limitsForLineTypeEntity) -> limitsForLineTypeEntity.getArea().equals(area) && limitsForLineTypeEntity.getTemperature().equals(temperature))
+                    .map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
             .build();
     }
 }

@@ -50,12 +50,22 @@ public class LimitsForLineTypeEntity {
     @Column
     private String temperature;
 
+
+
+    public LimitsForLineTypeInfos toLineTypeInfosWithoutLimits() {
+        return LimitsForLineTypeInfos.builder()
+                .id(id)
+                .area(area)
+                .temperature(temperature)
+                .build();
+    }
+
     public LimitsForLineTypeInfos toLineTypeInfos() {
         return LimitsForLineTypeInfos.builder()
             .id(id)
             .limitSetName(limitSetName)
             .permanentLimit(permanentLimit)
-                .temporaryLimits(temporaryLimits.stream().map(TemporaryLimitEntity::toTemporaryLimitInfos).toList())
+            .temporaryLimits(temporaryLimits.parallelStream().map(TemporaryLimitEntity::toTemporaryLimitInfos).toList())
             .area(area)
             .temperature(temperature)
             .build();

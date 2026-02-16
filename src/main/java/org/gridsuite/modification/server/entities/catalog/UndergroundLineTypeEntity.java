@@ -59,10 +59,13 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
     }
 
     @Override
-    public UndergroundLineTypeInfos toDtoWithLimits() {
+    public UndergroundLineTypeInfos toDtoWithLimits(String area, String temperature) {
         return toDtoBuilder()
             .shapeFactors(SHAPE_FACTORS)
-            .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .limitsForLineType(this.getLimitsForLineType().parallelStream()
+                    .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area))
+                    .map(LimitsForLineTypeEntity::toLineTypeInfos)
+                    .toList())
             .build();
     }
 }

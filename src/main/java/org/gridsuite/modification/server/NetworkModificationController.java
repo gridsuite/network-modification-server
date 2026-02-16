@@ -16,6 +16,8 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,8 @@ public class NetworkModificationController {
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
     }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationController.class);
 
     private final NetworkModificationService networkModificationService;
 
@@ -197,15 +201,25 @@ public class NetworkModificationController {
     @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a line types catalog")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
-    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable("uuid") UUID uuid) {
-        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithLimits(uuid));
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithAreaAndTemperature(@PathVariable("uuid") UUID uuid) {
+        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithAreaAndTemperature(uuid));
+    }
+
+    @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}/area/{area}/temperature/{temperature}", params = {}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line types catalog")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable UUID uuid, @PathVariable String area, @PathVariable String temperature) {
+        LineTypeInfos test = lineTypesCatalogService.getLineTypesWithLimits(uuid, area, temperature);
+        return ResponseEntity.ok().body(test);
     }
 
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
     public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) {
+        LOGGER.info("Resetting line types catalog with file: {}", file.getOriginalFilename());
         lineTypesCatalogService.resetLineTypes(file);
+        LOGGER.info("Resetting line types catalog is over");
         return ResponseEntity.ok().build();
     }
 

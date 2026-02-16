@@ -46,6 +46,7 @@ public class TemporaryLimitEntity {
                 .id(id)
                 .limitValue(limitValue)
                 .acceptableDuration(acceptableDuration)
-                .name(name).build();
+                .name(name)
+                .build();
     }
 }
