@@ -219,9 +219,7 @@ public class NetworkModificationController {
     @Operation(summary = "Create or reset completely a line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is created or reset")
     public ResponseEntity<Void> resetLineTypes(@RequestParam("file") MultipartFile file) {
-        LOGGER.info("Resetting line types catalog with file: {}", file.getOriginalFilename());
         lineTypesCatalogService.resetLineTypes(file);
-        LOGGER.info("Resetting line types catalog is over");
         return ResponseEntity.ok().build();
     }
 
