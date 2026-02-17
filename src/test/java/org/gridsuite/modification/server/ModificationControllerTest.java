@@ -1532,7 +1532,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testGetLineTypeWithLimitsCatalog() throws Exception {
+    void testGetLineTypeWithoutLimitsCatalog() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
 
@@ -1560,8 +1560,6 @@ class ModificationControllerTest {
         // getting the whole catalog does not load the limits
         assertNull(lineTypes.get(0).getLimitsForLineType());
         assertNull(lineTypes.get(1).getLimitsForLineType());
-        UUID aerialLineId = lineTypes.get(0) instanceof AerialLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
-        UUID underGroundLineId = lineTypes.get(0) instanceof UndergroundLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
 
         // get one line of the catalog does not load limits too
         mvcResult = mockMvc
@@ -1577,13 +1575,33 @@ class ModificationControllerTest {
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
 
+
+    }
+
+    @Test
+    void testGetLineTypeWithLimitsCatalog() throws Exception {
+        // Create the catalog with some line types
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                        .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_3)))
+                .andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, lineTypes.size());
+        UUID aerialLineId = lineTypes.get(0) instanceof AerialLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+        UUID underGroundLineId = lineTypes.get(0) instanceof UndergroundLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+
         // get one aerial line with limits
         mvcResult = mockMvc
                 .perform(get(URI_LINE_CATALOG + "/" + aerialLineId + "/withLimits?area=1&temperature=37").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
-        selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+        LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
 
         assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
