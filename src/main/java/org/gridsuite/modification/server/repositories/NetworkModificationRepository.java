@@ -139,12 +139,12 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public CompositeModificationInfos cloneCompositeModification(@NonNull UUID compositeModificationUuid, String name) {
+    public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationsToCopyInfos compositeModification) {
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
-        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModificationUuid)).stream()
+        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()
                 .toList();
         newCompositeInfos.setModifications(copiedModifications);
-        newCompositeInfos.setCompositeName(name);
+        newCompositeInfos.setCompositeName(compositeModification.getCompositeName());
         return newCompositeInfos;
     }
 
@@ -778,11 +778,10 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<UUID> compositeModificationsUuids,
-            @NonNull List<String> compositeNames) {
+            @NonNull List<ModificationsToCopyInfos> compositeModifications) {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (int i = 0; i < compositeModificationsUuids.size(); i++) {
-            CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModificationsUuids.get(i), compositeNames.get(i));
+        for (ModificationsToCopyInfos compositeModification : compositeModifications) {
+            CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModification);
             newCompositeModifications.add(newCompositeModification);
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);

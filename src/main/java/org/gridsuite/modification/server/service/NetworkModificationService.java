@@ -21,6 +21,7 @@ import org.gridsuite.filter.AbstractFilter;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
+import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -409,11 +410,10 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<UUID> compositeModificationUuids,
-            @NonNull List<ModificationApplicationContext> applicationContexts,
-            @NonNull List<String> compositeNames) {
+            @NonNull List<ModificationsToCopyInfos> compositeModifications,
+            @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModificationsIntoGroup(
-                targetGroupUuid, compositeModificationUuids, compositeNames);
+                targetGroupUuid, compositeModifications);
         List<UUID> ids = modifications.stream().map(ModificationInfos::getUuid).toList();
         return applyModifications(targetGroupUuid, modifications, applicationContexts).thenApply(result ->
             new NetworkModificationsResult(ids, result));
