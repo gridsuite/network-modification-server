@@ -9,7 +9,6 @@ package org.gridsuite.modification.server.entities.catalog;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 
 import java.util.List;
@@ -89,20 +88,14 @@ public class LineTypeEntity {
         return toBuilder().build();
     }
 
-    public LineTypeInfos toDtoWithAreaAndTemperature() {
+    public LineTypeInfos toDtoWithAreaTemperatureShapeFactors() {
         return toBuilder()
                 .limitsForLineType(this.limitsForLineType.parallelStream().map(LimitsForLineTypeEntity::toLineTypeInfosWithoutLimits).toList())
                 .build();
     }
 
-    public LineTypeInfos toDtoWithLimits(String area, String temperature) {
-        List<LimitsForLineTypeInfos> test = this.limitsForLineType
-                .stream()
-                .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area) && limitsForLineTypeEntity.getTemperature().equals(temperature))
-                .map(LimitsForLineTypeEntity::toLineTypeInfos).toList();
-        return toBuilder()
-            .limitsForLineType(test)
-            .build();
+    public LineTypeInfos toDtoWithLimits(String area, String temperature, String shapeFactor) {
+        throw new UnsupportedOperationException("Not implemented, only implemented for subClasses AerialLineTypeEntity and UndergroundLineTypeEntity");
     }
 }
 

@@ -202,14 +202,16 @@ public class NetworkModificationController {
     @Operation(summary = "Get a line types catalog")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
     public ResponseEntity<LineTypeInfos> getOneLineTypeWithAreaAndTemperature(@PathVariable("uuid") UUID uuid) {
-        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithAreaAndTemperature(uuid));
+        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithAreaTemperatureShapeFactors(uuid));
     }
 
-    @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}/area/{area}/temperature/{temperature}", params = {}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}/withLimits", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get a line types catalog")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
-    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable UUID uuid, @PathVariable String area, @PathVariable String temperature) {
-        LineTypeInfos test = lineTypesCatalogService.getLineTypesWithLimits(uuid, area, temperature);
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable UUID uuid, @RequestParam String area,
+                                                                  @RequestParam(required = false) String temperature,
+                                                                  @RequestParam(required = false) String shapeFactor) {
+        LineTypeInfos test = lineTypesCatalogService.getLineTypesWithLimits(uuid, area, temperature, shapeFactor);
         return ResponseEntity.ok().body(test);
     }
 

@@ -8,6 +8,7 @@ package org.gridsuite.modification.server.entities.catalog;
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
 import java.util.List;
@@ -59,14 +60,27 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
     }
 
     @Override
-    public UndergroundLineTypeInfos toDtoWithLimits(String area, String temperature) {
+    public UndergroundLineTypeInfos toDtoWithLimits(String area, String temperature, String shapeFactor) {
+        double shapeFactorValue = shapeFactor == null ? 0 : Double.parseDouble(shapeFactor);
         return toDtoBuilder()
-            .shapeFactors(SHAPE_FACTORS)
-            .limitsForLineType(this.getLimitsForLineType().parallelStream()
+            .limitsForLineType(this.getLimitsForLineType().stream()
                     .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area))
+                    .peek(limitsForLineTypeEntity -> {
+                        limitsForLineTypeEntity.setPermanentLimit(shapeFactorValue * limitsForLineTypeEntity.getPermanentLimit());
+                        limitsForLineTypeEntity.getTemporaryLimits().forEach(temporaryLimit ->
+                                temporaryLimit.setLimitValue(shapeFactorValue * temporaryLimit.getLimitValue()));
+                    })
                     .map(LimitsForLineTypeEntity::toLineTypeInfos)
                     .toList())
             .build();
+    }
+
+    @Override
+    public LineTypeInfos toDtoWithAreaTemperatureShapeFactors() {
+        return toDtoBuilder()
+                .shapeFactors(SHAPE_FACTORS)
+                .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfosWithoutLimits).toList())
+                .build();
     }
 }
 

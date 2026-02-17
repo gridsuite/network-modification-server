@@ -49,15 +49,15 @@ public class LineTypesCatalogService {
     }
 
     @Transactional(readOnly = true)
-    public LineTypeInfos getLineTypesWithLimits(UUID id, String area, String temperature) {
+    public LineTypeInfos getLineTypesWithLimits(UUID id, String area, String temperature, String shapeFactor) {
         Optional<LineTypeEntity> lineTypeEntity = lineTypesCatalogRepository.findById(id);
-        return lineTypeEntity.map((LineTypeEntity lineType) -> lineType.toDtoWithLimits(area, temperature)).orElse(null);
+        return lineTypeEntity.map((LineTypeEntity lineType) -> lineType.toDtoWithLimits(area, temperature, shapeFactor)).orElse(null);
     }
 
     @Transactional(readOnly = true)
-    public LineTypeInfos getLineTypesWithAreaAndTemperature(UUID id) {
+    public LineTypeInfos getLineTypesWithAreaTemperatureShapeFactors(UUID id) {
         Optional<LineTypeEntity> lineTypeEntity = lineTypesCatalogRepository.findById(id);
-        return lineTypeEntity.map(LineTypeEntity::toDtoWithAreaAndTemperature).orElse(null);
+        return lineTypeEntity.map(LineTypeEntity::toDtoWithAreaTemperatureShapeFactors).orElse(null);
     }
 
     public void deleteLineTypesCatalog() {

@@ -28,7 +28,9 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.ModificationsSearchResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -1558,6 +1560,8 @@ class ModificationControllerTest {
         // getting the whole catalog does not load the limits
         assertNull(lineTypes.get(0).getLimitsForLineType());
         assertNull(lineTypes.get(1).getLimitsForLineType());
+        UUID aerialLineId = lineTypes.get(0) instanceof AerialLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+        UUID underGroundLineId = lineTypes.get(0) instanceof UndergroundLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
 
         // get one line of the catalog does not load limits too
         mvcResult = mockMvc
@@ -1573,9 +1577,9 @@ class ModificationControllerTest {
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
 
-        // get one line with specified area and temperature
+        // get one aerial line with limits
         mvcResult = mockMvc
-                .perform(get(URI_LINE_CATALOG + "/" + lineTypes.getFirst().getId() + "/area/1/temperature/37").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "/" + aerialLineId + "/withLimits?area=1&temperature=37").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -1585,6 +1589,22 @@ class ModificationControllerTest {
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
         assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
         assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+
+        // get one underground line with limits
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG + "/" + underGroundLineId + "/withLimits?area=1&shapeFactor=0.9").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, selectedLineType.getLimitsForLineType().size());
+        assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertEquals(9.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertEquals(18.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
         assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());

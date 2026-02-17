@@ -9,6 +9,7 @@ package org.gridsuite.modification.server.entities.catalog;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 
 /**
  * @author Sylvain Bouzols <sylvain.bouzols at rte-france.com>
@@ -41,17 +42,17 @@ public class AerialLineTypeEntity extends LineTypeEntity {
 
     AerialLineTypeInfos.AerialLineTypeInfosBuilder<?, ?> toDtoBuilder() {
         return AerialLineTypeInfos.builder()
-            .id(this.getId())
-            .type(this.getType())
-            .voltage(this.getVoltage())
-            .conductorType(this.getConductorType())
-            .section(this.getSection())
-            .conductorsNumber(this.conductorsNumber)
-            .circuitsNumber(this.circuitsNumber)
-            .groundWiresNumber(this.groundWiresNumber)
-            .linearResistance(this.getLinearResistance())
-            .linearReactance(this.getLinearReactance())
-            .linearCapacity(this.getLinearCapacity());
+                .id(this.getId())
+                .type(this.getType())
+                .voltage(this.getVoltage())
+                .conductorType(this.getConductorType())
+                .section(this.getSection())
+                .conductorsNumber(this.conductorsNumber)
+                .circuitsNumber(this.circuitsNumber)
+                .groundWiresNumber(this.groundWiresNumber)
+                .linearResistance(this.getLinearResistance())
+                .linearReactance(this.getLinearReactance())
+                .linearCapacity(this.getLinearCapacity());
     }
 
     @Override
@@ -60,12 +61,20 @@ public class AerialLineTypeEntity extends LineTypeEntity {
     }
 
     @Override
-    public AerialLineTypeInfos toDtoWithLimits(String area, String temperature) {
+    public AerialLineTypeInfos toDtoWithLimits(String area, String temperature, String shapeFactor) {
         return toDtoBuilder()
-            .limitsForLineType(this.getLimitsForLineType().stream()
-                    .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area) && limitsForLineTypeEntity.getTemperature().equals(temperature))
-                    .map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
-            .build();
+                .limitsForLineType(this.getLimitsForLineType().stream()
+                        .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area) &&
+                                limitsForLineTypeEntity.getTemperature().equals(temperature))
+                        .map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+                .build();
+    }
+
+    @Override
+    public LineTypeInfos toDtoWithAreaTemperatureShapeFactors() {
+        return toDtoBuilder()
+                .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfosWithoutLimits).toList())
+                .build();
     }
 }
 
