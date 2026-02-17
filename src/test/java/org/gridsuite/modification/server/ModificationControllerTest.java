@@ -1574,8 +1574,6 @@ class ModificationControllerTest {
         assertNull(selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
-
-
     }
 
     @Test
