@@ -16,8 +16,6 @@ import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
 import org.gridsuite.modification.server.service.NetworkModificationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +39,6 @@ public class NetworkModificationController {
     private enum GroupModificationAction {
         MOVE, COPY, INSERT
     }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkModificationController.class);
 
     private final NetworkModificationService networkModificationService;
 
