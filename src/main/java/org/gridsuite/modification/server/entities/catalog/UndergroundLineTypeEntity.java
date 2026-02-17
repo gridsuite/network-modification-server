@@ -61,7 +61,7 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
 
     @Override
     public UndergroundLineTypeInfos toDtoWithLimits(String area, String temperature, String shapeFactor) {
-        double shapeFactorValue = shapeFactor == null ? 0 : Double.parseDouble(shapeFactor);
+        double shapeFactorValue = shapeFactor == null ? 1 : Double.parseDouble(shapeFactor);
         return toDtoBuilder()
             .limitsForLineType(this.getLimitsForLineType().stream()
                     .filter(limitsForLineTypeEntity -> limitsForLineTypeEntity.getArea().equals(area))
