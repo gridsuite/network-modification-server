@@ -1574,6 +1574,8 @@ class ModificationControllerTest {
         assertNull(selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -1625,6 +1627,9 @@ class ModificationControllerTest {
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
     }
 
     private MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
