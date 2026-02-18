@@ -196,6 +196,10 @@ class ModificationControllerTest {
         return TestUtils.getJsonBody(modificationInfos, networkUuid, variantId);
     }
 
+    private String getJsonBodyModificationsToCopyInfos(List<ModificationsToCopyInfos> modifs, String variantId) throws JsonProcessingException {
+        return TestUtils.getJsonBodyModificationsToCopyInfos(modifs, TEST_NETWORK_ID, variantId);
+    }
+
     private String getJsonBody(List<UUID> uuids, String variantId) throws JsonProcessingException {
         return TestUtils.getJsonBody(uuids, TEST_NETWORK_ID, variantId);
     }
@@ -554,7 +558,11 @@ class ModificationControllerTest {
         List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
         duplicateModificationUuidList.addAll(badModificationUuidList);
-        String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+
+        List<ModificationsToCopyInfos> duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
+
         MvcResult mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=COPY").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
@@ -583,7 +591,9 @@ class ModificationControllerTest {
 
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
-        bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + otherGroupId + "?action=COPY").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
@@ -612,7 +622,9 @@ class ModificationControllerTest {
         }
 
         // Duplicate modifications from a group and from a list : illegal operation
-        bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         mvcResult = mockMvc.perform(
                 put("/v1/groups/" + otherGroupId + "?action=COPY" + "&originGroupUuid=" + TEST_GROUP_ID)
                     .content(bodyJson)
@@ -635,7 +647,9 @@ class ModificationControllerTest {
         List<UUID> duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         List<UUID> badModificationUuidList = List.of(UUID.randomUUID(), UUID.randomUUID());
         duplicateModificationUuidList.addAll(badModificationUuidList);
-        String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY";
         MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
@@ -667,7 +681,10 @@ class ModificationControllerTest {
         // Duplicate the same modifications, and append them at the end of this new group modification list.
         duplicateModificationUuidList = new ArrayList<>(modificationUuidList.subList(0, 2));
         String copyUrl = "/v1/groups/" + otherGroupId + "?action=COPY";
-        bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
+
         mvcResult = runRequestAsync(mockMvc, put(copyUrl).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
         assertApplicationStatusOK(mvcResult);
 
@@ -704,7 +721,9 @@ class ModificationControllerTest {
 
         // Try to copy an unexisting Modification
         List<UUID> duplicateModificationUuidList = List.of(UUID.randomUUID());
-        String bodyJson = getJsonBody(duplicateModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> duplicateModificationList = duplicateModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(duplicateModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=COPY" + "&before=" + modificationUuidList.get(0);
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -773,7 +792,9 @@ class ModificationControllerTest {
 
         // swap modifications: move [1] before [0]
         List<UUID> movingModificationUuidList = List.of(modificationUuidList.get(1));
-        String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> movingModificationList = movingModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(movingModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&before=" + modificationUuidList.get(0);
         mockMvc.perform(put(url).content(bodyJson)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -848,7 +869,9 @@ class ModificationControllerTest {
         checkCompositeModificationContent(compositeModificationContent);
 
         // Insert the composite modification in the group
-        final String bodyJson = getJsonBody(List.of(compositeModificationUuid), NetworkCreation.VARIANT_ID);
+        final String bodyJson = getJsonBodyModificationsToCopyInfos(
+                List.of(ModificationsToCopyInfos.builder().uuid(compositeModificationUuid).compositeName("random name").build()),
+                NetworkCreation.VARIANT_ID);
         mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=SPLIT_COMPOSITE").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
         assertApplicationStatusOK(mvcResult);
@@ -862,7 +885,7 @@ class ModificationControllerTest {
         // insert the same composite modification inside the same group but this time as a complete composite, not split into regular network modifications
         mvcResult = runRequestAsync(
                 mockMvc,
-                put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT_COMPOSITE&compositeName='random name'")
+                put("/v1/groups/" + TEST_GROUP_ID + "?action=INSERT_COMPOSITE")
                         .content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk()
         );
         assertApplicationStatusOK(mvcResult);
@@ -922,7 +945,9 @@ class ModificationControllerTest {
             .andExpect(status().isOk()).andReturn();
         compositeModificationContent = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
         checkCompositeModificationContent(compositeModificationContent);
-        String bodyJson = getJsonBody(List.of(compositeModificationUuid), NetworkCreation.VARIANT_ID);
+        final String bodyJson = getJsonBodyModificationsToCopyInfos(
+                List.of(ModificationsToCopyInfos.builder().uuid(compositeModificationUuid).build()),
+                NetworkCreation.VARIANT_ID);
         // Insert the composite modification in the group
         mvcResult = runRequestAsync(mockMvc, put("/v1/groups/" + TEST_GROUP_ID + "?action=SPLIT_COMPOSITE").content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
@@ -952,7 +977,9 @@ class ModificationControllerTest {
 
         // cut origin[0] and append to destination
         List<UUID> movingModificationUuidList = List.of(originSingleModification);
-        String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> movingModificationList = movingModificationUuidList.stream().map(
+                uuid -> ModificationsToCopyInfos.builder().uuid(uuid).build()).toList();
+        String bodyJson = getJsonBodyModificationsToCopyInfos(movingModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP2_ID + "&build=true";
         MvcResult mvcResult = runRequestAsync(mockMvc, put(url).content(bodyJson).contentType(MediaType.APPLICATION_JSON), status().isOk());
 
@@ -990,8 +1017,8 @@ class ModificationControllerTest {
                 stream().map(ModificationInfos::getUuid).collect(Collectors.toList());
 
         // try to move an unexisting modification before [0]: no error, no change
-        List<UUID> movingModificationUuidList = List.of(UUID.randomUUID());
-        String bodyJson = getJsonBody(movingModificationUuidList, NetworkCreation.VARIANT_ID);
+        List<ModificationsToCopyInfos> movingModificationList = List.of(ModificationsToCopyInfos.builder().uuid(UUID.randomUUID()).build());
+        String bodyJson = getJsonBodyModificationsToCopyInfos(movingModificationList, NetworkCreation.VARIANT_ID);
         String url = "/v1/groups/" + TEST_GROUP_ID + "?action=MOVE" + "&originGroupUuid=" + TEST_GROUP_ID + "&before=" + modificationUuidList.get(0);
 
         mockMvc.perform(put(url).content(bodyJson)
