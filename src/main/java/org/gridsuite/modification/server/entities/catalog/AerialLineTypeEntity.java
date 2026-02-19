@@ -42,17 +42,17 @@ public class AerialLineTypeEntity extends LineTypeEntity {
 
     AerialLineTypeInfos.AerialLineTypeInfosBuilder<?, ?> toDtoBuilder() {
         return AerialLineTypeInfos.builder()
-                .id(this.getId())
-                .type(this.getType())
-                .voltage(this.getVoltage())
-                .conductorType(this.getConductorType())
-                .section(this.getSection())
-                .conductorsNumber(this.conductorsNumber)
-                .circuitsNumber(this.circuitsNumber)
-                .groundWiresNumber(this.groundWiresNumber)
-                .linearResistance(this.getLinearResistance())
-                .linearReactance(this.getLinearReactance())
-                .linearCapacity(this.getLinearCapacity());
+            .id(this.getId())
+            .type(this.getType())
+            .voltage(this.getVoltage())
+            .conductorType(this.getConductorType())
+            .section(this.getSection())
+            .conductorsNumber(this.conductorsNumber)
+            .circuitsNumber(this.circuitsNumber)
+            .groundWiresNumber(this.groundWiresNumber)
+            .linearResistance(this.getLinearResistance())
+            .linearReactance(this.getLinearReactance())
+            .linearCapacity(this.getLinearCapacity());
     }
 
     @Override
