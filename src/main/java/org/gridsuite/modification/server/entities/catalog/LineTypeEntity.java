@@ -88,10 +88,14 @@ public class LineTypeEntity {
         return toBuilder().build();
     }
 
-    public LineTypeInfos toDtoWithLimits() {
+    public LineTypeInfos toDtoWithAreaTemperatureShapeFactors() {
         return toBuilder()
-            .limitsForLineType(this.limitsForLineType.stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
-            .build();
+                .limitsForLineType(this.limitsForLineType.parallelStream().map(LimitsForLineTypeEntity::toLineTypeInfosWithoutLimits).toList())
+                .build();
+    }
+
+    public LineTypeInfos toDtoWithLimits(String area, String temperature, String shapeFactor) {
+        throw new UnsupportedOperationException("Not implemented, only implemented for subClasses AerialLineTypeEntity and UndergroundLineTypeEntity");
     }
 }
 
