@@ -1597,7 +1597,7 @@ class ModificationControllerTest {
 
         // get one aerial line with limits
         mvcResult = mockMvc
-                .perform(get(URI_LINE_CATALOG + "/" + aerialLineId + "/withLimits?area=1&temperature=37").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "/" + aerialLineId + "/with-limits?area=1&temperature=37").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
@@ -1614,7 +1614,7 @@ class ModificationControllerTest {
 
         // get one underground line with limits
         mvcResult = mockMvc
-                .perform(get(URI_LINE_CATALOG + "/" + underGroundLineId + "/withLimits?area=1&shapeFactor=0.9").contentType(MediaType.APPLICATION_JSON))
+                .perform(get(URI_LINE_CATALOG + "/" + underGroundLineId + "/with-limits?area=1&shapeFactor=0.9").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();

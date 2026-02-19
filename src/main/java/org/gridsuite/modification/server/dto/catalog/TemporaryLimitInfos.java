@@ -25,7 +25,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@Schema(description = "Temporary Limits infos")
+@Schema(description = "Temporary limits infos")
 public class TemporaryLimitInfos {
     @Schema(description = "id")
     private UUID id;

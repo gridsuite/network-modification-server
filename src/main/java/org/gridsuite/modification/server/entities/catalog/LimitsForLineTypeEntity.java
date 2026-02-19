@@ -65,7 +65,7 @@ public class LimitsForLineTypeEntity {
             .id(id)
             .limitSetName(limitSetName)
             .permanentLimit(permanentLimit)
-            .temporaryLimits(temporaryLimits.parallelStream().map(TemporaryLimitEntity::toTemporaryLimitInfos).toList())
+            .temporaryLimits(temporaryLimits.stream().map(TemporaryLimitEntity::toTemporaryLimitInfos).toList())
             .area(area)
             .temperature(temperature)
             .build();
