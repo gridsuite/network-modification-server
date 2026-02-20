@@ -144,7 +144,7 @@ public class NetworkModificationRepository {
         List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()
                 .toList();
         newCompositeInfos.setModifications(copiedModifications);
-        newCompositeInfos.setCompositeName(compositeModification.getCompositeName());
+        newCompositeInfos.setName(compositeModification.getCompositeName());
         return newCompositeInfos;
     }
 
