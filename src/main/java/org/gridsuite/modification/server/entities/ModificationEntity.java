@@ -121,16 +121,12 @@ public class ModificationEntity {
 
     @SneakyThrows
     private void assignAttributes(ModificationInfos modificationInfos) {
-        if (modificationInfos.getType() != null) {
-            this.setType(modificationInfos.getType().name());
-            this.setMessageType(modificationInfos.getType().name());
-        }
+        this.setType(modificationInfos.getType().name());
+        this.setMessageType(modificationInfos.getType().name());
         if (modificationInfos.getDescription() != null) {
             this.setDescription(modificationInfos.getDescription());
         }
-        if (modificationInfos.getMessageValues() != null) {
-            this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
-        }
+        this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
     public static ModificationEntity fromDTO(ModificationInfos dto) {
