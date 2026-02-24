@@ -304,10 +304,10 @@ class ModificationIndexationTest {
         ((NetworkImpl) networkInfos.getNetwork()).getListeners().clear();
 
         /*
-        Insert as composite this modification to group 2, variant 2
+        Split this composite and insert the contained modifications to group 2, variant 2
          */
         UUID groupUuid2 = UUID.randomUUID();
-        NetworkModificationsResult modificationsResult = networkModificationService.insertCompositeModifications(
+        NetworkModificationsResult modificationsResult = networkModificationService.splitCompositeModifications(
             groupUuid2,
             List.of(compositeUuid),
             List.of(new ModificationApplicationContext(networkInfos.getNetworkUuuid(), variant2, UUID.randomUUID(), UUID.randomUUID()))

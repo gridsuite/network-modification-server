@@ -123,7 +123,9 @@ public class ModificationEntity {
     private void assignAttributes(ModificationInfos modificationInfos) {
         this.setType(modificationInfos.getType().name());
         this.setMessageType(modificationInfos.getType().name());
-        this.setDescription(modificationInfos.getDescription());
+        if (modificationInfos.getDescription() != null) {
+            this.setDescription(modificationInfos.getDescription());
+        }
         this.setMessageValues(new ObjectMapper().writeValueAsString(modificationInfos.getMapMessageValues()));
     }
 
