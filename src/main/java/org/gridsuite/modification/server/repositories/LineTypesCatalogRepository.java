@@ -8,7 +8,10 @@ package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -17,4 +20,14 @@ import java.util.UUID;
  */
 @Repository
 public interface LineTypesCatalogRepository extends JpaRepository<LineTypeEntity, UUID> {
+
+    @Transactional
+    @Modifying
+    @Query(value = """
+        TRUNCATE TABLE line_types_catalog,
+                      aerial_line_types_catalog,
+                      underground_line_types_catalog
+        RESTART IDENTITY CASCADE
+        """, nativeQuery = true)
+    void truncateCatalogFast();
 }

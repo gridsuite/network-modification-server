@@ -14,7 +14,15 @@
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1770820556280-16">
-        <addForeignKeyConstraint baseColumnNames="temporary_limit_id" baseTableName="temporary_limit_for_line_catalog" constraintName="temporary_limit_for_line_catalog_limits_for_line_type_fk" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="limits_for_line_type" validate="true"/>
+        <addForeignKeyConstraint baseColumnNames="temporary_limit_id"
+                                 baseTableName="temporary_limit_for_line_catalog"
+                                 constraintName="temporary_limit_for_line_catalog_limits_for_line_type_fk"
+                                 deferrable="false"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="id"
+                                 referencedTableName="limits_for_line_type"
+                                 validate="true"
+                                 onDelete="CASCADE"/>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1770820556280-17">
         <dropColumn columnName="TEMPORARY_LIMIT_ACCEPTABLE_DURATION" tableName="LIMITS_FOR_LINE_TYPE"/>
@@ -24,5 +32,20 @@
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1770820556280-19">
         <dropColumn columnName="TEMPORARY_LIMIT_VALUE" tableName="LIMITS_FOR_LINE_TYPE"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-20">
+        <dropForeignKeyConstraint  baseTableName="limits_for_line_type"
+                                   constraintName="limits_for_line_type_id_fk"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-21">
+        <addForeignKeyConstraint baseColumnNames="line_type_id"
+                                 baseTableName="limits_for_line_type"
+                                 constraintName="limits_for_line_type_id_fk"
+                                 deferrable="false"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="id"
+                                 referencedTableName="line_types_catalog"
+                                 validate="true"
+                                 onDelete="CASCADE"/>
     </changeSet>
 </databaseChangeLog>

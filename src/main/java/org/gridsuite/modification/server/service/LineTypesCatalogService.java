@@ -61,7 +61,9 @@ public class LineTypesCatalogService {
     }
 
     public void deleteLineTypesCatalog() {
-        lineTypesCatalogRepository.deleteAll();
+        LOGGER.info("Starting to delete all line types from the catalog");
+        lineTypesCatalogRepository.truncateCatalogFast();
+        LOGGER.info("All line types from the catalog deleted");
     }
 
     public void resetLineTypes(MultipartFile file) {
