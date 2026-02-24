@@ -68,6 +68,7 @@
                     <configuration>
                         <classpathDependencyExcludes>
                             <classpathDependencyExclude>com.powsybl:powsybl-config-classic</classpathDependencyExclude>
+                            <classpathDependencyExclude>com.powsybl:powsybl-iidm-impl</classpathDependencyExclude>
                         </classpathDependencyExcludes>
                     </configuration>
                 </plugin>
