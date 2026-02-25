@@ -64,6 +64,14 @@ public class NetworkModificationController {
         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
     }
 
+    @GetMapping(value = "/groups/{groupUuid}/network-modifications/export", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get list modifications to export for a group")
+    @ApiResponse(responseCode = "200", description = "List of modifications of the group to export")
+    public ResponseEntity<NetworkModificationExportInfos> getNetworkModificationsToExport(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+                                                                                          @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsInfosToExport(groupUuid, errorOnGroupNotFound));
+    }
+
     @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Check modifications list belong to a group")
     @ApiResponse(responseCode = "200", description = "List of modifications")
