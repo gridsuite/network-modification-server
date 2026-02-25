@@ -118,7 +118,7 @@ public class NetworkModificationService {
 
     @Transactional(readOnly = true)
     public NetworkModificationExportInfos getNetworkModificationsInfosToExport(UUID groupUuid, boolean errorOnGroupNotFound) {
-        List<ModificationInfos> allModifications = getNetworkModifications(groupUuid, false, errorOnGroupNotFound, false);
+        List<ModificationInfos> allModifications = networkModificationRepository.getModifications(groupUuid, false, errorOnGroupNotFound, false);
         List<ModificationInfos> exportable = new ArrayList<>();
         List<NetworkModificationExportInfos.UnexportedModification> unexported = new ArrayList<>();
         for (ModificationInfos modification : allModifications) {

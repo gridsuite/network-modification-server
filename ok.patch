@@ -1,0 +1,100 @@
+diff --git a/src/main/java/org/gridsuite/modification/server/NetworkModificationController.java b/src/main/java/org/gridsuite/modification/server/NetworkModificationController.java
+index f4870290..eb35e6c6 100644
+--- a/src/main/java/org/gridsuite/modification/server/NetworkModificationController.java
++++ b/src/main/java/org/gridsuite/modification/server/NetworkModificationController.java
+@@ -53,7 +53,7 @@ public class NetworkModificationController {
+         this.networkModificationService = networkModificationService;
+         this.lineTypesCatalogService = lineTypesCatalogService;
+     }
+-
++/*
+     @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
+     @Operation(summary = "Get modifications list of a group")
+     @ApiResponse(responseCode = "200", description = "List of modifications of the group")
+@@ -62,6 +62,15 @@ public class NetworkModificationController {
+                                                                            @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed,
+                                                                            @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
+         return ResponseEntity.ok().body(networkModificationService.getNetworkModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, onlyStashed));
++    }*/
++    @GetMapping(value = "/groups/{groupUuid}/network-modifications", produces = MediaType.APPLICATION_JSON_VALUE)
++    @Operation(summary = "Get modifications list of a group")
++    @ApiResponse(responseCode = "200", description = "List of modifications of the group")
++    public ResponseEntity<NetworkModificationExportInfos> getNetworkModificationsToExport(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
++                                                                                  @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "false") Boolean onlyMetadata,
++                                                                                  @Parameter(description = "Stashed modifications") @RequestParam(name = "onlyStashed", required = false, defaultValue = "false") Boolean onlyStashed,
++                                                                                  @Parameter(description = "Return 404 if group is not found or an empty list") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
++        return ResponseEntity.ok().body(networkModificationService.getNetworkModificationsToExport(groupUuid, errorOnGroupNotFound));
+     }
+ 
+     @GetMapping(value = "/groups/{groupUuid}/network-modifications/verify", produces = MediaType.APPLICATION_JSON_VALUE)
+diff --git a/src/main/java/org/gridsuite/modification/server/dto/NetworkModificationExportInfos.java b/src/main/java/org/gridsuite/modification/server/dto/NetworkModificationExportInfos.java
+index 9c5786fa..212950bc 100644
+--- a/src/main/java/org/gridsuite/modification/server/dto/NetworkModificationExportInfos.java
++++ b/src/main/java/org/gridsuite/modification/server/dto/NetworkModificationExportInfos.java
+@@ -10,12 +10,12 @@ import java.util.UUID;
+ /**
+  * Représente les modifications d’un noeud pour l’export JSON.
+  */
+-public record NetworkModificationsExport(
++public record NetworkModificationExportInfos(
+         @JsonProperty("modifications")
+         List<ModificationInfos> modifications,
+ 
+-        @JsonProperty("unexportedModifications")
+-        List<BasicModificationRef> unexportedModifications
++        @JsonProperty("unexported")
++        List<BasicModificationRef> unexported
+ ) {
+ 
+  /**
+@@ -23,6 +23,6 @@ public record NetworkModificationsExport(
+   */
+  public record BasicModificationRef(
+          UUID uuid,
+-         ModificationType type
++         String type
+  ) {}
+ }
+\ No newline at end of file
+diff --git a/src/main/java/org/gridsuite/modification/server/service/NetworkModificationService.java b/src/main/java/org/gridsuite/modification/server/service/NetworkModificationService.java
+index 820cbee9..d77d81ff 100644
+--- a/src/main/java/org/gridsuite/modification/server/service/NetworkModificationService.java
++++ b/src/main/java/org/gridsuite/modification/server/service/NetworkModificationService.java
+@@ -19,6 +19,7 @@ import lombok.NonNull;
+ import org.apache.commons.lang3.StringUtils;
+ import org.gridsuite.filter.AbstractFilter;
+ import org.gridsuite.modification.NetworkModificationException;
++import org.gridsuite.modification.dto.EquipmentModificationInfos;
+ import org.gridsuite.modification.dto.GenerationDispatchInfos;
+ import org.gridsuite.modification.dto.ModificationInfos;
+ import org.gridsuite.modification.dto.ModificationsToCopyInfos;
+@@ -115,6 +116,29 @@ public class NetworkModificationService {
+         return networkModificationRepository.getModifications(groupUuid, onlyMetadata, errorOnGroupNotFound, stashedModifications);
+     }
+ 
++    @Transactional(readOnly = true)
++    public NetworkModificationExportInfos getNetworkModificationsToExport(UUID groupUuid, boolean errorOnGroupNotFound) {
++         List<ModificationInfos> allModifications = getNetworkModifications(groupUuid, false, errorOnGroupNotFound, false);
++
++        List<ModificationInfos> exportable = new ArrayList<>();
++        List<NetworkModificationExportInfos.BasicModificationRef> unexported = new ArrayList<>();
++
++        for (ModificationInfos mod : allModifications) {
++            if (mod instanceof EquipmentModificationInfos) {
++                // Exportable → on garde tous les champs
++                exportable.add(mod);
++            } else {
++                // Non exportable → juste uuid + type
++                unexported.add(
++                        new NetworkModificationExportInfos.BasicModificationRef(mod.getUuid(), mod.getType().name())
++                );
++            }
++        }
++
++
++        return   new NetworkModificationExportInfos(exportable, unexported);
++    }
++
+     public List<ModificationEntity> getModificationsByUuids(List<UUID> modificationUuids) {
+         return modificationRepository.findAllByIdIn(modificationUuids);
+     }
