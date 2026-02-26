@@ -70,9 +70,7 @@ public class LineTypesCatalogService {
         try (GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream())) {
             List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<List<LineTypeInfos>>() {
             });
-            LOGGER.info("Starting to delete all line types from the catalog");
             deleteLineTypesCatalog();
-            LOGGER.info("All line types from the catalog deleted");
             // remove duplicates in file
             Set<LineTypeInfos> lineTypesSet = lineTypes.stream().collect(Collectors.toSet());
 
