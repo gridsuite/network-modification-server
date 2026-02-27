@@ -36,7 +36,7 @@ public class NotificationService {
     @Autowired
     private StreamBridge publisher;
 
-    private void sendMessage(Message<? extends Object> message, String bindingName) {
+    public void sendMessage(Message<? extends Object> message, String bindingName) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         publisher.send(bindingName, message);
     }

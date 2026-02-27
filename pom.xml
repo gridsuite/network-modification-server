@@ -68,6 +68,7 @@
                     <configuration>
                         <classpathDependencyExcludes>
                             <classpathDependencyExclude>com.powsybl:powsybl-config-classic</classpathDependencyExclude>
+                            <classpathDependencyExclude>com.powsybl:powsybl-iidm-impl</classpathDependencyExclude>
                         </classpathDependencyExcludes>
                     </configuration>
                 </plugin>
@@ -164,6 +165,10 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-modification</artifactId>
         </dependency>
         <dependency>
@@ -198,6 +203,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-case-datasource-client</artifactId>
         </dependency>
 
         <!-- elasticsearch -->
