@@ -8,8 +8,11 @@ package org.gridsuite.modification.server.entities.catalog;
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
+import org.gridsuite.modification.server.dto.catalog.LimitsForLineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,11 +62,28 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
     }
 
     @Override
-    public UndergroundLineTypeInfos toDtoWithLimits() {
+    public UndergroundLineTypeInfos toDtoWithLimits(String area, String temperature, String shapeFactor) {
+        double shapeFactorValue = shapeFactor == null ? 1 : Double.parseDouble(shapeFactor);
+        List<LimitsForLineTypeInfos> filterAndAdaptedLimits = new ArrayList<>();
+        for (LimitsForLineTypeEntity limitsForLineTypeEntity : this.getLimitsForLineType()) {
+            if (limitsForLineTypeEntity.getArea().equals(area)) {
+                limitsForLineTypeEntity.setPermanentLimit(shapeFactorValue * limitsForLineTypeEntity.getPermanentLimit());
+                limitsForLineTypeEntity.getTemporaryLimits().forEach(temporaryLimit ->
+                        temporaryLimit.setLimitValue(shapeFactorValue * temporaryLimit.getLimitValue()));
+                filterAndAdaptedLimits.add(limitsForLineTypeEntity.toLineTypeInfos());
+            }
+        }
         return toDtoBuilder()
-            .shapeFactors(SHAPE_FACTORS)
-            .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfos).toList())
+            .limitsForLineType(filterAndAdaptedLimits)
             .build();
+    }
+
+    @Override
+    public LineTypeInfos toDtoWithAreaTemperatureShapeFactors() {
+        return toDtoBuilder()
+                .shapeFactors(SHAPE_FACTORS)
+                .limitsForLineType(this.getLimitsForLineType().stream().map(LimitsForLineTypeEntity::toLineTypeInfosWithoutLimits).toList())
+                .build();
     }
 }
 

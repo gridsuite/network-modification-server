@@ -1,0 +1,51 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="lesoteti (generated)" id="1770820556280-15">
+        <createTable tableName="temporary_limit_for_line_catalog">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="temporary_limit_for_line_catalogPK"/>
+            </column>
+            <column name="acceptable_duration" type="INT"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="limit_value" type="FLOAT(53)"/>
+            <column name="temporary_limit_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-16">
+        <addForeignKeyConstraint baseColumnNames="temporary_limit_id"
+                                 baseTableName="temporary_limit_for_line_catalog"
+                                 constraintName="temporary_limit_for_line_catalog_limits_for_line_type_fk"
+                                 deferrable="false"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="id"
+                                 referencedTableName="limits_for_line_type"
+                                 validate="true"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-17">
+        <dropColumn columnName="TEMPORARY_LIMIT_ACCEPTABLE_DURATION" tableName="LIMITS_FOR_LINE_TYPE"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-18">
+        <dropColumn columnName="TEMPORARY_LIMIT_NAME" tableName="LIMITS_FOR_LINE_TYPE"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-19">
+        <dropColumn columnName="TEMPORARY_LIMIT_VALUE" tableName="LIMITS_FOR_LINE_TYPE"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-20">
+        <dropForeignKeyConstraint  baseTableName="limits_for_line_type"
+                                   constraintName="limits_for_line_type_id_fk"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-21">
+        <addForeignKeyConstraint baseColumnNames="line_type_id"
+                                 baseTableName="limits_for_line_type"
+                                 constraintName="limits_for_line_type_id_fk"
+                                 deferrable="false"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="id"
+                                 referencedTableName="line_types_catalog"
+                                 validate="true"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>

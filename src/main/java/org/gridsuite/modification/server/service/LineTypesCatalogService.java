@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.gridsuite.modification.server.repositories.LineTypesCatalogRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +34,8 @@ public class LineTypesCatalogService {
     private final LineTypesCatalogRepository lineTypesCatalogRepository;
     private final ObjectMapper mapper;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LineTypesCatalogService.class);
+
     public LineTypesCatalogService(LineTypesCatalogRepository lineTypesCatalogRepository, ObjectMapper objectMapper) {
         this.lineTypesCatalogRepository = lineTypesCatalogRepository;
         this.mapper = objectMapper;
@@ -45,18 +49,26 @@ public class LineTypesCatalogService {
     }
 
     @Transactional(readOnly = true)
-    public LineTypeInfos getLineTypesWithLimits(UUID id) {
+    public LineTypeInfos getLineTypesWithLimits(UUID id, String area, String temperature, String shapeFactor) {
         Optional<LineTypeEntity> lineTypeEntity = lineTypesCatalogRepository.findById(id);
-        return lineTypeEntity.map(LineTypeEntity::toDtoWithLimits).orElse(null);
+        return lineTypeEntity.map((LineTypeEntity lineType) -> lineType.toDtoWithLimits(area, temperature, shapeFactor)).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public LineTypeInfos getLineTypesWithAreaTemperatureShapeFactors(UUID id) {
+        Optional<LineTypeEntity> lineTypeEntity = lineTypesCatalogRepository.findById(id);
+        return lineTypeEntity.map(LineTypeEntity::toDtoWithAreaTemperatureShapeFactors).orElse(null);
     }
 
     public void deleteLineTypesCatalog() {
-        lineTypesCatalogRepository.deleteAll();
+        LOGGER.info("Starting to delete all line types from the catalog");
+        lineTypesCatalogRepository.truncateCatalogFast();
+        LOGGER.info("All line types from the catalog deleted");
     }
 
     public void resetLineTypes(MultipartFile file) {
         try (GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream())) {
-            List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<>() {
+            List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<List<LineTypeInfos>>() {
             });
             deleteLineTypesCatalog();
             // remove duplicates in file
@@ -65,7 +77,9 @@ public class LineTypesCatalogService {
             List<LineTypeEntity> lineTypesEntities = lineTypesSet.stream()
                 .map(LineTypeInfos::toEntity)
                 .collect(Collectors.toList());
+            LOGGER.info("Starting to save {} line types in the catalog", lineTypesEntities.size());
             lineTypesCatalogRepository.saveAll(lineTypesEntities);
+            LOGGER.info("all line types saved in the catalog");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

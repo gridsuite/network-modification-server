@@ -28,7 +28,9 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.ModificationsSearchResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.catalog.AerialLineTypeInfos;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
+import org.gridsuite.modification.server.dto.catalog.UndergroundLineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
 import org.gridsuite.modification.server.elasticsearch.TombstonedEquipmentInfosRepository;
@@ -1572,7 +1574,7 @@ class ModificationControllerTest {
     }
 
     @Test
-    void testGetLineTypeWithLimitsCatalog() throws Exception {
+    void testGetLineTypeWithoutLimitsCatalog() throws Exception {
         MvcResult mvcResult;
         String resultAsString;
 
@@ -1600,6 +1602,8 @@ class ModificationControllerTest {
         // getting the whole catalog does not load the limits
         assertNull(lineTypes.get(0).getLimitsForLineType());
         assertNull(lineTypes.get(1).getLimitsForLineType());
+
+        // get one line of the catalog does not load limits too
         mvcResult = mockMvc
             .perform(get(URI_LINE_CATALOG + "/" + lineTypes.get(0).getId()).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -1607,13 +1611,67 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(2, selectedLineType.getLimitsForLineType().size());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertNull(selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void testGetLineTypeWithLimitsCatalog() throws Exception {
+        // Create the catalog with some line types
+        mockMvc.perform(multipart(URI_LINE_CATALOG)
+                        .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_3)))
+                .andExpect(status().isOk());
+
+        MvcResult mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        String resultAsString = mvcResult.getResponse().getContentAsString();
+        List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(2, lineTypes.size());
+        UUID aerialLineId = lineTypes.get(0) instanceof AerialLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+        UUID underGroundLineId = lineTypes.get(0) instanceof UndergroundLineTypeInfos ? lineTypes.get(0).getId() : lineTypes.get(1).getId();
+
+        // get one aerial line with limits
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG + "/" + aerialLineId + "/with-limits?area=1&temperature=37").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        LineTypeInfos selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+
+        assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
         assertEquals(10.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
-        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitValue());
-        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitName());
-        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimitAcceptableDuration());
+        assertEquals(20.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
         assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+
+        // get one underground line with limits
+        mvcResult = mockMvc
+                .perform(get(URI_LINE_CATALOG + "/" + underGroundLineId + "/with-limits?area=1&shapeFactor=0.9").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        resultAsString = mvcResult.getResponse().getContentAsString();
+        selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
+        assertEquals(1, selectedLineType.getLimitsForLineType().size());
+        assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
+        assertEquals(9.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
+        assertEquals(18.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
+        assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
+        assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
+        assertEquals("1", selectedLineType.getLimitsForLineType().getFirst().getArea());
+
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
     }
 
     private MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
