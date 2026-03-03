@@ -8,13 +8,13 @@
             <column name="acceptable_duration" type="INT"/>
             <column name="name" type="VARCHAR(255)"/>
             <column name="limit_value" type="FLOAT(53)"/>
-            <column name="temporary_limit_id" type="UUID">
+            <column name="limit_for_line_type_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
     <changeSet author="lesoteti (generated)" id="1770820556280-16">
-        <addForeignKeyConstraint baseColumnNames="temporary_limit_id"
+        <addForeignKeyConstraint baseColumnNames="limit_for_line_type_id"
                                  baseTableName="temporary_limit_for_line_catalog"
                                  constraintName="temporary_limit_for_line_catalog_limits_for_line_type_fk"
                                  deferrable="false"
@@ -47,5 +47,10 @@
                                  referencedTableName="line_types_catalog"
                                  validate="true"
                                  onDelete="CASCADE"/>
+    </changeSet>
+    <changeSet author="lesoteti (generated)" id="1770820556280-22">
+        <createIndex indexName="temporary_limit_for_line_catalog_limit_for_line_type_id_idx" tableName="temporary_limit_for_line_catalog">
+            <column name="limit_for_line_type_id"/>
+        </createIndex>
     </changeSet>
 </databaseChangeLog>

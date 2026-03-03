@@ -43,7 +43,7 @@ public class LimitsForLineTypeEntity {
     private Double permanentLimit;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "temporary_limit_id", nullable = false)
+    @JoinColumn(name = "limit_for_line_type_id", nullable = false)
     private List<TemporaryLimitEntity> temporaryLimits;
 
     @Column

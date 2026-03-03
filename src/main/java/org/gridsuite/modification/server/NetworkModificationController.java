@@ -231,6 +231,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    // TODO : delete this endpoint
     @DeleteMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")

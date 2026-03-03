@@ -62,7 +62,15 @@ public class LineTypesCatalogService {
 
     public void deleteLineTypesCatalog() {
         LOGGER.info("Starting to delete all line types from the catalog");
-        lineTypesCatalogRepository.truncateCatalogFast();
+        lineTypesCatalogRepository.deleteAllTemporaryLimits();
+        LOGGER.info("All temporary limits deleted");
+        lineTypesCatalogRepository.deleteAllLimitsForLineType();
+        LOGGER.info("All limits deleted");
+        lineTypesCatalogRepository.deleteAllAerialLineTypes();
+        LOGGER.info("All aerial lines deleted");
+        lineTypesCatalogRepository.deleteAllUndergroundLineTypes();
+        LOGGER.info("All underground lines deleted");
+        lineTypesCatalogRepository.deleteAllLineTypes();
         LOGGER.info("All line types from the catalog deleted");
     }
 

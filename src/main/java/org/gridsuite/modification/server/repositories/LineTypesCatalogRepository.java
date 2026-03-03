@@ -23,11 +23,26 @@ public interface LineTypesCatalogRepository extends JpaRepository<LineTypeEntity
 
     @Transactional
     @Modifying
-    @Query(value = """
-        TRUNCATE TABLE line_types_catalog,
-                      aerial_line_types_catalog,
-                      underground_line_types_catalog
-        RESTART IDENTITY CASCADE
-        """, nativeQuery = true)
-    void truncateCatalogFast();
+    @Query(value = "DELETE FROM temporary_limit_for_line_catalog", nativeQuery = true)
+    void deleteAllTemporaryLimits();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM limits_for_line_type", nativeQuery = true)
+    void deleteAllLimitsForLineType();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM aerial_line_types_catalog", nativeQuery = true)
+    void deleteAllAerialLineTypes();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM underground_line_types_catalog", nativeQuery = true)
+    void deleteAllUndergroundLineTypes();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM line_types_catalog", nativeQuery = true)
+    void deleteAllLineTypes();
 }
