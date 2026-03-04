@@ -28,6 +28,7 @@ import org.gridsuite.modification.server.dto.ModificationMetadata;
 import org.gridsuite.modification.server.dto.ModificationsSearchResult;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
+import org.gridsuite.modification.server.dto.NetworkModificationsWithMissingInfo;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosRepository;
 import org.gridsuite.modification.server.elasticsearch.EquipmentInfosService;
@@ -895,6 +896,79 @@ class ModificationControllerTest {
                 modificationInfos.getType().equals(COMPOSITE_MODIFICATION)).findFirst().orElseThrow();
         assertNotNull(insertedComposite);
         checkCompositeModificationContent(insertedComposite.getModifications());
+    }
+
+    @Test
+    void testNetworkCompositeModificationWithMissingInfo() throws Exception {
+        // Insert some switch modifications in the group
+        int modificationsNumber = 2;
+        List<ModificationInfos> modificationList = createSomeSwitchModifications(TEST_GROUP_ID, modificationsNumber);
+        assertEquals(modificationsNumber, modificationRepository.getModifications(TEST_GROUP_ID, true, true).size());
+
+        // Create a composite modification with the switch modifications
+        List<UUID> modificationUuids = modificationList.stream().map(ModificationInfos::getUuid).toList();
+        MvcResult mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                .content(mapper.writeValueAsString(modificationUuids)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        UUID compositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Create another composite modification
+        List<ModificationInfos> otherModificationList = createSomeSwitchModifications(TEST_GROUP2_ID, modificationsNumber);
+        List<UUID> otherModificationUuids = otherModificationList.stream().map(ModificationInfos::getUuid).toList();
+        mvcResult = mockMvc.perform(post(URI_COMPOSITE_NETWORK_MODIF_BASE)
+                .content(mapper.writeValueAsString(otherModificationUuids)).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk()).andReturn();
+        UUID otherCompositeModificationUuid = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        UUID nonExistingUuid1 = UUID.randomUUID();
+        UUID nonExistingUuid2 = UUID.randomUUID();
+
+        // Test with metadata only and mixed existing/non-existing UUIDs
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications-with-missing-info")
+                .param("uuids", compositeModificationUuid.toString())
+                .param("uuids", nonExistingUuid1.toString())
+                .param("uuids", otherCompositeModificationUuid.toString())
+                .param("uuids", nonExistingUuid2.toString())
+                .param("onlyMetadata", "true"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        NetworkModificationsWithMissingInfo result = mapper.readValue(
+            mvcResult.getResponse().getContentAsString(),
+            new TypeReference<>() { });
+
+        // Verify metadata for network modifications are returned for existing composite modifications
+        assertEquals(modificationsNumber * 2, result.networkModifications().size());
+        assertNotNull(result.networkModifications().get(0).getMessageType());
+        assertNotNull(result.networkModifications().get(0).getMessageValues());
+        assertNull(((EquipmentAttributeModificationInfos) result.networkModifications().get(0)).getEquipmentAttributeName());
+        assertNull(((EquipmentAttributeModificationInfos) result.networkModifications().get(0)).getEquipmentAttributeValue());
+
+        // Verify missing UUIDs are reported
+        assertEquals(2, result.missingCompositeModifications().size());
+        assertTrue(result.missingCompositeModifications().contains(nonExistingUuid1));
+        assertTrue(result.missingCompositeModifications().contains(nonExistingUuid2));
+
+        // Test with complete data and mixed existing/non-existing UUIDs
+        mvcResult = mockMvc.perform(get(URI_GET_COMPOSITE_NETWORK_MODIF_CONTENT + "/network-modifications-with-missing-info")
+                .param("uuids", compositeModificationUuid.toString())
+                .param("uuids", nonExistingUuid1.toString())
+                .param("onlyMetadata", "false"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        result = mapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() { });
+
+        // Verify complete data for network modifications are returned for existing composite modifications
+        assertEquals(modificationsNumber, result.networkModifications().size());
+        assertNotNull(((EquipmentAttributeModificationInfos) result.networkModifications().get(0)).getEquipmentAttributeName());
+        assertNotNull(((EquipmentAttributeModificationInfos) result.networkModifications().get(0)).getEquipmentAttributeValue());
+        assertNotNull(((EquipmentAttributeModificationInfos) result.networkModifications().get(0)).getEquipmentType());
+        assertNotNull(((EquipmentAttributeModificationInfos) result.networkModifications().get(0)).getEquipmentId());
+
+        // Verify missing UUIDs are reported
+        assertEquals(1, result.missingCompositeModifications().size());
+        assertTrue(result.missingCompositeModifications().contains(nonExistingUuid1));
     }
 
     private static void checkCompositeModificationContent(List<ModificationInfos> compositeModificationContent) {
