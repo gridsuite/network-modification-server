@@ -215,10 +215,20 @@ public class NetworkModificationController {
     }
 
     @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Get a line types catalog")
+    @Operation(summary = "Get a line type from the catalog with area and temperature but no limits")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
-    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable("uuid") UUID uuid) {
-        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithLimits(uuid));
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithAreaAndTemperature(@PathVariable("uuid") UUID uuid) {
+        return ResponseEntity.ok().body(lineTypesCatalogService.getLineTypesWithAreaTemperatureShapeFactors(uuid));
+    }
+
+    @GetMapping(value = "/network-modifications/catalog/line_types/{uuid}/with-limits", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get a line type from the catalog with the limits associated with requested area, temperature and shape factor")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The line types catalog is returned")})
+    public ResponseEntity<LineTypeInfos> getOneLineTypeWithLimits(@PathVariable UUID uuid, @RequestParam String area,
+                                                                  @RequestParam(required = false) String temperature,
+                                                                  @RequestParam(required = false) String shapeFactor) {
+        LineTypeInfos test = lineTypesCatalogService.getLineTypesWithLimits(uuid, area, temperature, shapeFactor);
+        return ResponseEntity.ok().body(test);
     }
 
     @PostMapping(value = "/network-modifications/catalog/line_types", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -229,6 +239,7 @@ public class NetworkModificationController {
         return ResponseEntity.ok().build();
     }
 
+    // TODO : delete this endpoint
     @DeleteMapping(value = "/network-modifications/catalog/line_types", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Delete line types catalog")
     @ApiResponse(responseCode = "200", description = "The line types catalog is deleted")
