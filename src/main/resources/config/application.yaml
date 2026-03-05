@@ -14,7 +14,7 @@ spring:
         order_inserts: true
         order_updates: true
         jdbc:
-          batch_size: 128
+          batch_size: 512
 
   cloud:
     function:

@@ -8,7 +8,10 @@ package org.gridsuite.modification.server.repositories;
 
 import org.gridsuite.modification.server.entities.catalog.LineTypeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -17,4 +20,29 @@ import java.util.UUID;
  */
 @Repository
 public interface LineTypesCatalogRepository extends JpaRepository<LineTypeEntity, UUID> {
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM temporary_limit_for_line_catalog", nativeQuery = true)
+    void deleteAllTemporaryLimits();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM limits_for_line_type", nativeQuery = true)
+    void deleteAllLimitsForLineType();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM aerial_line_types_catalog", nativeQuery = true)
+    void deleteAllAerialLineTypes();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM underground_line_types_catalog", nativeQuery = true)
+    void deleteAllUndergroundLineTypes();
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM line_types_catalog", nativeQuery = true)
+    void deleteAllLineTypes();
 }
