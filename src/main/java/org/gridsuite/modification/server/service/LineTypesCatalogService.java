@@ -19,10 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
@@ -74,13 +71,13 @@ public class LineTypesCatalogService {
         LOGGER.info("All line types from the catalog deleted");
     }
 
-    public void resetLineTypes(MultipartFile file) {
+    public void addLineTypes(MultipartFile file) {
         try (GZIPInputStream gzipInputStream = new GZIPInputStream(file.getInputStream())) {
             List<LineTypeInfos> lineTypes = mapper.readValue(gzipInputStream, new TypeReference<List<LineTypeInfos>>() {
             });
-            deleteLineTypesCatalog();
+
             // remove duplicates in file
-            Set<LineTypeInfos> lineTypesSet = lineTypes.stream().collect(Collectors.toSet());
+            Set<LineTypeInfos> lineTypesSet = new HashSet<>(lineTypes);
 
             List<LineTypeEntity> lineTypesEntities = lineTypesSet.stream()
                 .map(LineTypeInfos::toEntity)
