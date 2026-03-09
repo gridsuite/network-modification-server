@@ -1546,6 +1546,10 @@ class ModificationControllerTest {
         List<LineTypeInfos> lineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(10, lineTypes.size());
 
+        // need to delete before adding the new catalog
+        mockMvc.perform(delete(URI_LINE_CATALOG))
+                .andExpect(status().isOk());
+
         // Check if catalog is completely updated
         mockMvc.perform(multipart(URI_LINE_CATALOG)
                 .file(createMockMultipartFile(LINE_TYPES_CATALOG_JSON_FILE_2)))
