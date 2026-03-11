@@ -139,6 +139,7 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
+    // TODO : à changer cf JIRA
     public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationCompositeInfos compositeModification) {
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()

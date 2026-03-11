@@ -227,7 +227,6 @@ public final class TestUtils {
         return createJsonPayload(uuids, networkUuid, variantId);
     }
 
-    // TODO : à nettoyer : cette construction json devrait être inutile pour les copies etc
     public static String getJsonBodyModificationCompositeInfos(List<ModificationCompositeInfos> modifs, UUID networkUuid, String variantId) throws JsonProcessingException {
         return createJsonPayload(modifs, networkUuid, variantId);
     }

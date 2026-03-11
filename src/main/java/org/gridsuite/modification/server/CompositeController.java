@@ -46,7 +46,7 @@ public class CompositeController {
     }
 
     @PutMapping(value = "/groups/{groupUuid}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "For a list of composite network modifications passed in body, insert them at the end of the list as complete composite modifications or split into their network modification content ")
+    @Operation(summary = "Insert a list of composite network modifications passed in body at the end of a group")
     @ApiResponse(responseCode = "200", description = "The composite modification list has been added to the group.")
     public CompletableFuture<ResponseEntity<NetworkModificationsResult>> insertCompositeModifications(
             @Parameter(description = "updated group UUID, where modifications are pasted") @PathVariable("groupUuid") UUID targetGroupUuid,

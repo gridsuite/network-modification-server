@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationCompositeInfos;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.catalog.LineTypeInfos;
 import org.gridsuite.modification.server.service.LineTypesCatalogService;
@@ -105,18 +104,29 @@ public class NetworkModificationController {
             @Parameter(description = "the modification Uuid to move before (MOVE option, empty means moving at the end)") @RequestParam(value = "before", required = false) UUID beforeModificationUuid,
             @Parameter(description = "origin group UUID, where modifications are copied or cut") @RequestParam(value = "originGroupUuid", required = false) UUID originGroupUuid,
             @Parameter(description = "modifications can be applied (default is true)") @RequestParam(value = "build", required = false, defaultValue = "true") Boolean canApply,
-            @RequestBody Pair<List<ModificationCompositeInfos>, List<ModificationApplicationContext>> modificationContextInfos) { // TODO : go back to only uuid
-        List<UUID> modificationsUuids = modificationContextInfos.getFirst().stream().map(ModificationCompositeInfos::getUuid).toList();
+            @RequestBody Pair<List<UUID>, List<ModificationApplicationContext>> modificationContextInfos) {
         return switch (action) {
             case COPY ->
-                networkModificationService.duplicateModifications(targetGroupUuid, originGroupUuid, modificationsUuids, modificationContextInfos.getSecond()).thenApply(ResponseEntity.ok()::body);
+                networkModificationService.duplicateModifications(
+                        targetGroupUuid,
+                        originGroupUuid,
+                        modificationContextInfos.getFirst(),
+                        modificationContextInfos.getSecond()
+                ).thenApply(ResponseEntity.ok()::body);
             case MOVE -> {
                 UUID sourceGroupUuid = originGroupUuid == null ? targetGroupUuid : originGroupUuid;
                 boolean applyModifications = canApply;
                 if (sourceGroupUuid.equals(targetGroupUuid)) {
                     applyModifications = false;
                 }
-                yield networkModificationService.moveModifications(targetGroupUuid, sourceGroupUuid, beforeModificationUuid, modificationsUuids, modificationContextInfos.getSecond(), applyModifications).thenApply(ResponseEntity.ok()::body);
+                yield networkModificationService.moveModifications(
+                        targetGroupUuid,
+                        sourceGroupUuid,
+                        beforeModificationUuid,
+                        modificationContextInfos.getFirst(),
+                        modificationContextInfos.getSecond(),
+                        applyModifications
+                ).thenApply(ResponseEntity.ok()::body);
             }
         };
     }
