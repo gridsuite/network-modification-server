@@ -139,7 +139,7 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationsToCopyInfos compositeModification) {
+    public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationCompositeInfos compositeModification) {
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
         List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()
                 .toList();
@@ -301,6 +301,7 @@ public class NetworkModificationRepository {
         }
     }
 
+    // TODO : check this for metadata ??
     public List<ModificationInfos> getModificationsMetadata(UUID groupUuid, boolean onlyStashed) {
         if (onlyStashed) {
             return modificationRepository
@@ -778,9 +779,9 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<ModificationsToCopyInfos> compositeModifications) {
+            @NonNull List<ModificationCompositeInfos> compositeModifications) {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (ModificationsToCopyInfos compositeModification : compositeModifications) {
+        for (ModificationCompositeInfos compositeModification : compositeModifications) {
             CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModification);
             newCompositeModifications.add(newCompositeModification);
         }

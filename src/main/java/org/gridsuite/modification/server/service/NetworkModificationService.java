@@ -22,7 +22,7 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationsToCopyInfos;
+import org.gridsuite.modification.dto.ModificationCompositeInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -428,7 +428,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<ModificationsToCopyInfos> compositeModifications,
+            @NonNull List<ModificationCompositeInfos> compositeModifications,
             @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModificationsIntoGroup(
                 targetGroupUuid, compositeModifications);
