@@ -140,16 +140,6 @@ public class NetworkModificationRepository {
         return modificationRepository.save(compositeEntity).getId();
     }
 
-    // TODO : à changer cf JIRA
-    public CompositeModificationInfos cloneCompositeModification(@NonNull Pair<UUID, String> compositeModification) {
-        CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
-        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getFirst())).stream()
-                .toList();
-        newCompositeInfos.setModifications(copiedModifications);
-        newCompositeInfos.setName(compositeModification.getSecond());
-        return newCompositeInfos;
-    }
-
     public void updateCompositeModification(@NonNull UUID compositeUuid, @NonNull List<UUID> modificationUuids) {
         ModificationEntity modificationEntity = modificationRepository.findById(compositeUuid)
                 .orElseThrow(() -> new NetworkModificationException(MODIFICATION_NOT_FOUND, String.format(MODIFICATION_NOT_FOUND_MESSAGE, compositeUuid)));
@@ -781,11 +771,19 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<Pair<UUID, String>> compositeModifications) {
+            @NonNull List<Pair<UUID, String>> compositesUuidName) {
+        List<UUID> compositeUuids = compositesUuidName.stream().map(Pair::getFirst).toList();
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (Pair<UUID, String> compositeModification : compositeModifications) {
-            CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModification);
-            newCompositeModifications.add(newCompositeModification);
+        List<ModificationInfos> modificationInfos = getModificationsInfosNonTransactional(compositeUuids);
+        // apply the new composite name to the corresponding composite modifications
+        for (Pair<UUID, String> compositeUuidName : compositesUuidName) {
+            CompositeModificationInfos newCompositeModification = (CompositeModificationInfos) modificationInfos.stream()
+                    .filter(modif -> modif.getUuid().equals(compositeUuidName.getFirst()))
+                    .findFirst().orElse(null);
+            if (newCompositeModification != null) {
+                newCompositeModification.setName(compositeUuidName.getSecond());
+                newCompositeModifications.add(newCompositeModification);
+            }
         }
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
