@@ -6,6 +6,7 @@
  */
 package org.gridsuite.modification.server;
 
+import com.powsybl.iidm.network.SwitchKind;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,10 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -312,7 +310,7 @@ public class NetworkModificationController {
     @DeleteMapping(value = "/groups/{groupUuid}/stashed-modifications")
     @Operation(summary = "Delete the stashed modifications in a group")
     @ApiResponse(responseCode = "200", description = "Stashed modifications in the group deleted")
-    public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
+        public ResponseEntity<Void> deleteStashedModificationInGroup(@Parameter(description = "Group UUID") @PathVariable("groupUuid") UUID groupUuid,
                                                         @Parameter(description = "Return 404 if group is not found") @RequestParam(name = "errorOnGroupNotFound", required = false, defaultValue = "true") Boolean errorOnGroupNotFound) {
         networkModificationService.deleteStashedModificationInGroup(groupUuid, errorOnGroupNotFound);
         return ResponseEntity.ok().build();
@@ -342,5 +340,18 @@ public class NetworkModificationController {
             @RequestParam(value = "userInput") String userInput) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(networkModificationService.searchNetworkModifications(networkUuid, userInput));
+    }
+
+    @GetMapping(value = "/network-modifications/busbar-sections-for-new-coupler", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Generate bus bar section suggestions for new coupler")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "List of generated bus bar sections ids")
+    })
+    public ResponseEntity<List<String>> getBusBarSectionsForNewCoupler(
+            @Parameter(description = "Voltage level id") @RequestParam("voltageLevelId") String voltageLevelId,
+            @Parameter(description = "Bus bar count") @RequestParam("busBarCount") Integer busBarCount,
+            @Parameter(description = "Section count") @RequestParam("sectionCount") Integer sectionCount,
+            @Parameter(description = "Switch kinds list") @RequestParam(name="switchKindList", defaultValue = "") Optional<List<SwitchKind>> switchKindList) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.getBusBarSectionsForNewCoupler(voltageLevelId, busBarCount, sectionCount, switchKindList.orElse(List.of())));
     }
 }

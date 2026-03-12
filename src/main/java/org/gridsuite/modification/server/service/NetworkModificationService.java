@@ -11,7 +11,11 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
 import com.powsybl.commons.PowsyblException;
+import com.powsybl.iidm.modification.topology.DefaultNamingStrategy;
+import com.powsybl.iidm.modification.topology.NamingStrategiesServiceLoader;
+import com.powsybl.iidm.modification.topology.NamingStrategy;
 import com.powsybl.iidm.network.Network;
+import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
@@ -33,6 +37,7 @@ import org.gridsuite.modification.server.modifications.ModificationTypeWithPrelo
 import org.gridsuite.modification.server.modifications.NetworkModificationApplicator;
 import org.gridsuite.modification.server.repositories.ModificationRepository;
 import org.gridsuite.modification.server.repositories.NetworkModificationRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -577,5 +582,16 @@ public class NetworkModificationService {
                 .filter(List.of(equipmentImpactedQuery._toQuery(), networkFilter));
 
         return boolQueryBuilder.build();
+    }
+
+    public List<String> getBusBarSectionsForNewCoupler(String voltageLevelId, Integer busBarCount, Integer sectionCount, List<SwitchKind> switchKindList) {
+        List<String> bbsIds = new ArrayList<>();
+        NamingStrategy namingStrategy = new NamingStrategiesServiceLoader().findNamingStrategyByName(modificationApplicator.getNamingStrategy()).orElse(new DefaultNamingStrategy());
+        for (int i = 1; i < busBarCount + 1; i++) {
+            for (int j = 1; j < sectionCount + 1; j++) {
+                bbsIds.add(namingStrategy.getBusbarId(voltageLevelId, switchKindList, i, j));
+            }
+        }
+        return bbsIds;
     }
 }

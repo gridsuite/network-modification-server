@@ -64,8 +64,9 @@ public class NetworkModificationApplicator {
     @Value("${impacts.collection-threshold:50}")
     private Integer collectionThreshold;
 
+    @Getter
     @Value("${naming-strategy:Default}")
-    private String namingStrategy;
+    public String namingStrategy;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
