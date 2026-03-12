@@ -17,7 +17,6 @@ import com.powsybl.network.store.client.PreloadingStrategy;
 import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.CompositeModificationInfos;
 import org.gridsuite.modification.dto.EquipmentAttributeModificationInfos;
-import org.gridsuite.modification.dto.ModificationCompositeInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
 import org.gridsuite.modification.server.dto.NetworkModificationResult;
 import org.gridsuite.modification.server.dto.NetworkModificationsResult;
@@ -32,6 +31,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.util.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -162,7 +162,7 @@ class CompositeControllerTest {
 
         // Insert the composite modification in the group
         final String bodyJson = getJsonBodyModificationCompositeInfos(
-                List.of(ModificationCompositeInfos.builder().uuid(compositeModificationUuid).compositeName("random name").build()));
+                List.of(Pair.of(compositeModificationUuid, "random name")));
         mvcResult = runRequestAsync(
                 mockMvc,
                 put(URI_COMPOSITE_NETWORK_MODIF_BASE + "/groups/" + TEST_GROUP_ID + "?action=SPLIT")
@@ -219,7 +219,7 @@ class CompositeControllerTest {
         return modificationList;
     }
 
-    private String getJsonBodyModificationCompositeInfos(List<ModificationCompositeInfos> modifs) throws JsonProcessingException {
+    private String getJsonBodyModificationCompositeInfos(List<Pair<UUID, String>> modifs) throws JsonProcessingException {
         return TestUtils.getJsonBodyModificationCompositeInfos(modifs, TEST_NETWORK_ID, VARIANT_ID);
     }
 

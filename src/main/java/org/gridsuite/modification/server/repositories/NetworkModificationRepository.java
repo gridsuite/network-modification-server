@@ -19,6 +19,7 @@ import org.gridsuite.modification.server.entities.*;
 import org.gridsuite.modification.server.entities.equipment.modification.EquipmentModificationEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularModificationsEntity;
 import org.gridsuite.modification.server.entities.tabular.TabularPropertyEntity;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,12 +141,12 @@ public class NetworkModificationRepository {
     }
 
     // TODO : à changer cf JIRA
-    public CompositeModificationInfos cloneCompositeModification(@NonNull ModificationCompositeInfos compositeModification) {
+    public CompositeModificationInfos cloneCompositeModification(@NonNull Pair<UUID, String> compositeModification) {
         CompositeModificationInfos newCompositeInfos = CompositeModificationInfos.builder().modifications(List.of()).build();
-        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getUuid())).stream()
+        List<ModificationInfos> copiedModifications = getCompositeModificationsInfosNonTransactional(List.of(compositeModification.getFirst())).stream()
                 .toList();
         newCompositeInfos.setModifications(copiedModifications);
-        newCompositeInfos.setName(compositeModification.getCompositeName());
+        newCompositeInfos.setName(compositeModification.getSecond());
         return newCompositeInfos;
     }
 
@@ -780,9 +781,9 @@ public class NetworkModificationRepository {
     @Transactional
     public List<ModificationInfos> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<ModificationCompositeInfos> compositeModifications) {
+            @NonNull List<Pair<UUID, String>> compositeModifications) {
         List<ModificationInfos> newCompositeModifications = new ArrayList<>();
-        for (ModificationCompositeInfos compositeModification : compositeModifications) {
+        for (Pair<UUID, String> compositeModification : compositeModifications) {
             CompositeModificationInfos newCompositeModification = cloneCompositeModification(compositeModification);
             newCompositeModifications.add(newCompositeModification);
         }
