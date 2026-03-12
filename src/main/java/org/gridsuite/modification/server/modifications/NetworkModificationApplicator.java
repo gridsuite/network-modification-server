@@ -66,7 +66,7 @@ public class NetworkModificationApplicator {
 
     @Getter
     @Value("${naming-strategy:Default}")
-    public String namingStrategy;
+    private String namingStrategy;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
