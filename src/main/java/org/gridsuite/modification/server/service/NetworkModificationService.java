@@ -19,6 +19,7 @@ import com.powsybl.iidm.network.SwitchKind;
 import com.powsybl.iidm.network.VariantManagerConstants;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
+import jakarta.validation.constraints.Positive;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.gridsuite.filter.AbstractFilter;
@@ -586,10 +587,9 @@ public class NetworkModificationService {
 
     public List<String> getBusBarSectionsForNewCoupler(@NonNull String voltageLevelId, @NonNull Integer busBarCount, @NonNull Integer sectionCount, List<SwitchKind> switchKindList) {
         List<String> bbsIds = new ArrayList<>();
-        NamingStrategy namingStrategy = new NamingStrategiesServiceLoader().findNamingStrategyByName(modificationApplicator.getNamingStrategy()).orElse(new DefaultNamingStrategy());
         for (int i = 1; i < busBarCount + 1; i++) {
             for (int j = 1; j < sectionCount + 1; j++) {
-                bbsIds.add(namingStrategy.getBusbarId(voltageLevelId, switchKindList, i, j));
+                bbsIds.add(modificationApplicator.getNamingStrategy().getBusbarId(voltageLevelId, switchKindList, i, j));
             }
         }
         return bbsIds;

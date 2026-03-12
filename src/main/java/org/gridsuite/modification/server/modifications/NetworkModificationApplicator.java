@@ -13,6 +13,7 @@ import com.powsybl.commons.report.ReportNode;
 import com.powsybl.commons.report.TypedValue;
 import com.powsybl.iidm.modification.topology.DefaultNamingStrategy;
 import com.powsybl.iidm.modification.topology.NamingStrategiesServiceLoader;
+import com.powsybl.iidm.modification.topology.NamingStrategy;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.network.store.client.NetworkStoreService;
 import com.powsybl.network.store.client.PreloadingStrategy;
@@ -66,7 +67,10 @@ public class NetworkModificationApplicator {
 
     @Getter
     @Value("${naming-strategy:Default}")
-    private String namingStrategy;
+    private String namingStrategyValue;
+
+    @Getter
+    private final NamingStrategy namingStrategy;
 
     public NetworkModificationApplicator(NetworkStoreService networkStoreService, EquipmentInfosService equipmentInfosService,
                                          ModificationApplicationInfosService applicationInfosService,
@@ -82,6 +86,7 @@ public class NetworkModificationApplicator {
         this.loadFlowService = loadFlowService;
         this.networkModificationObserver = networkModificationObserver;
         this.largeNetworkModificationExecutionService = largeNetworkModificationExecutionService;
+        this.namingStrategy = new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategyValue).orElse(new DefaultNamingStrategy());
     }
 
     /* This method is used for incremental modifications
@@ -227,7 +232,7 @@ public class NetworkModificationApplicator {
         modification.initApplicationContext(this.filterService, this.loadFlowService);
 
         // apply all changes on the network
-        modification.apply(network, new NamingStrategiesServiceLoader().findNamingStrategyByName(namingStrategy).orElse(new DefaultNamingStrategy()), subReportNode);
+        modification.apply(network, namingStrategy, subReportNode);
     }
 
     private void handleException(ReportNode subReportNode, Exception e) {
