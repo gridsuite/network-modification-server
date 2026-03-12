@@ -350,7 +350,7 @@ public class NetworkModificationController {
             @Parameter(description = "Voltage level id") @RequestParam("voltageLevelId") String voltageLevelId,
             @Parameter(description = "Bus bar count") @RequestParam("busBarCount") Integer busBarCount,
             @Parameter(description = "Section count") @RequestParam("sectionCount") Integer sectionCount,
-            @Parameter(description = "Switch kinds list") @RequestParam(name="switchKindList", required = false) Optional<List<SwitchKind>> switchKindList) {
+            @Parameter(description = "Switch kinds list") @RequestParam(name = "switchKindList", required = false) Optional<List<SwitchKind>> switchKindList) {
         return ResponseEntity.ok().body(networkModificationService.getBusBarSectionsForNewCoupler(voltageLevelId, busBarCount, sectionCount, switchKindList.orElse(List.of())));
     }
 }
