@@ -584,7 +584,7 @@ public class NetworkModificationService {
         return boolQueryBuilder.build();
     }
 
-    public List<String> getBusBarSectionsForNewCoupler(String voltageLevelId, Integer busBarCount, Integer sectionCount, List<SwitchKind> switchKindList) {
+    public List<String> getBusBarSectionsForNewCoupler(@NonNull String voltageLevelId, @NonNull Integer busBarCount, @NonNull Integer sectionCount, List<SwitchKind> switchKindList) {
         List<String> bbsIds = new ArrayList<>();
         NamingStrategy namingStrategy = new NamingStrategiesServiceLoader().findNamingStrategyByName(modificationApplicator.getNamingStrategy()).orElse(new DefaultNamingStrategy());
         for (int i = 1; i < busBarCount + 1; i++) {
