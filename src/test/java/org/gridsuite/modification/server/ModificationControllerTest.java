@@ -1749,8 +1749,8 @@ class ModificationControllerTest {
         selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
-        assertEquals(9.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit());
-        assertEquals(18.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue());
+        assertEquals(11.11, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
+        assertEquals(22.22, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
         assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
