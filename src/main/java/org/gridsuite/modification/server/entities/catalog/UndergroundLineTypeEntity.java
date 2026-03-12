@@ -67,9 +67,9 @@ public class UndergroundLineTypeEntity extends LineTypeEntity {
         List<LimitsForLineTypeInfos> filterAndAdaptedLimits = new ArrayList<>();
         for (LimitsForLineTypeEntity limitsForLineTypeEntity : this.getLimitsForLineType()) {
             if (limitsForLineTypeEntity.getArea().equals(area)) {
-                limitsForLineTypeEntity.setPermanentLimit(shapeFactorValue * limitsForLineTypeEntity.getPermanentLimit());
+                limitsForLineTypeEntity.setPermanentLimit(limitsForLineTypeEntity.getPermanentLimit()/shapeFactorValue);
                 limitsForLineTypeEntity.getTemporaryLimits().forEach(temporaryLimit ->
-                        temporaryLimit.setLimitValue(shapeFactorValue * temporaryLimit.getLimitValue()));
+                        temporaryLimit.setLimitValue(temporaryLimit.getLimitValue()/shapeFactorValue));
                 filterAndAdaptedLimits.add(limitsForLineTypeEntity.toLineTypeInfos());
             }
         }
