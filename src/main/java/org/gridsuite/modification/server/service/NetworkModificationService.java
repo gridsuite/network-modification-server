@@ -22,7 +22,6 @@ import org.gridsuite.modification.NetworkModificationException;
 import org.gridsuite.modification.dto.EquipmentModificationInfos;
 import org.gridsuite.modification.dto.GenerationDispatchInfos;
 import org.gridsuite.modification.dto.ModificationInfos;
-import org.gridsuite.modification.dto.ModificationsToCopyInfos;
 import org.gridsuite.modification.server.NetworkModificationServerException;
 import org.gridsuite.modification.server.dto.*;
 import org.gridsuite.modification.server.dto.elasticsearch.ModificationApplicationInfos;
@@ -39,6 +38,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -428,7 +428,7 @@ public class NetworkModificationService {
 
     public CompletableFuture<NetworkModificationsResult> insertCompositeModificationsIntoGroup(
             @NonNull UUID targetGroupUuid,
-            @NonNull List<ModificationsToCopyInfos> compositeModifications,
+            @NonNull List<Pair<UUID, String>> compositeModifications,
             @NonNull List<ModificationApplicationContext> applicationContexts) {
         List<ModificationInfos> modifications = networkModificationRepository.insertCompositeModificationsIntoGroup(
                 targetGroupUuid, compositeModifications);
