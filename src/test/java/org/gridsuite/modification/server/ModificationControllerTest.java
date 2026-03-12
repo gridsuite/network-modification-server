@@ -264,6 +264,7 @@ class ModificationControllerTest {
                 .equipmentType(IdentifiableType.LOAD)
                 .equipmentAttributeName("open")
                 .equipmentAttributeValue(true)
+                .stashed(true)
                 .equipmentAttributeName("v1load")
                 .equipmentId("v1load")
                 .build();
@@ -300,7 +301,7 @@ class ModificationControllerTest {
         resultAsString = mvcResult.getResponse().getContentAsString();
         NetworkModificationExportInfos exportInfos = mapper.readValue(resultAsString, NetworkModificationExportInfos.class);
 
-        assertEquals(2, exportInfos.exportedModifications().size());
+        assertEquals(1, exportInfos.exportedModifications().size());
         assertEquals(1, exportInfos.unexportedModifications().size());
         assertEquals(exportInfos.unexportedModifications().getFirst().type(), byFormulaModificationInfos.getType());
 

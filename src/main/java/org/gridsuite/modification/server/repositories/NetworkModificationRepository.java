@@ -438,6 +438,19 @@ public class NetworkModificationRepository {
                 .map(this::toModificationsInfosOptimizedForTabular).toList();
     }
 
+    public List<ModificationInfos> getModificationsInfosToExport(List<UUID> groupUuids, boolean errorOnGroupNotFound) {
+        try {
+            return groupUuids.stream().flatMap(this::getModificationEntityStream)
+                    .filter(modification -> !modification.getStashed())
+                    .map(this::toModificationsInfosOptimizedForTabular).toList();
+        } catch (NetworkModificationException e) {
+            if (e.getType() == MODIFICATION_GROUP_NOT_FOUND && !errorOnGroupNotFound) {
+                return List.of();
+            }
+            throw e;
+        }
+    }
+
     @Transactional(readOnly = true)
     public ModificationInfos getModificationInfo(UUID modificationUuid) {
         return toModificationsInfosOptimizedForTabular(getModificationEntity(modificationUuid));
