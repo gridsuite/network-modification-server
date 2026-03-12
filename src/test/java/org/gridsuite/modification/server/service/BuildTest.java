@@ -110,7 +110,7 @@ class BuildTest {
     private CountDownLatch waitStartBuild;
     private CountDownLatch blockBuild;
 
-    @Value("${spring.cloud.stream.bindings.consumeBuild-in-0.destination}")
+    @Value("${spring.cloud.stream.bindings.consumeBuild1-in-0.destination}")
     private String consumeBuildDestination;
 
     @Value("${spring.cloud.stream.bindings.consumeCancelBuild-in-0.destination}")
