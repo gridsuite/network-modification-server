@@ -2186,4 +2186,40 @@ class ModificationControllerTest {
                 });
         assertEquals(0, networkModificationsResult.size());
     }
+
+    @Test
+    void testGetBusBarSectionsForNewCoupler() throws Exception {
+        MvcResult result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+        List<String> bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
+
+        result = mockMvc.perform(get(URI_NETWORK_MODIF_BASE + "/busbar-sections-for-new-coupler")
+                        .param("voltageLevelId", "VL1")
+                        .param("busBarCount", Integer.toString(2))
+                        .param("sectionCount", Integer.toString(3))
+                        .param("switchKindList", SwitchKind.BREAKER.toString())
+                        .param("switchKindList", SwitchKind.DISCONNECTOR.toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        bbsIds = mapper.readValue(
+                result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
+        assertEquals(6, bbsIds.size());
+        assertEquals("VL1_1_1", bbsIds.getFirst());
+        assertEquals("VL1_2_3", bbsIds.getLast());
+    }
 }
