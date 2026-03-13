@@ -343,4 +343,16 @@ public class NetworkModificationController {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(networkModificationService.searchNetworkModifications(networkUuid, userInput));
     }
+
+    @GetMapping(value = "/network-composite-modifications/network-modifications-with-missing-info", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get the list of all the network modifications inside a list of composite modifications with information about missing composite modifications")
+    @ApiResponse(responseCode = "200", description = "List of modifications inside the composite modifications and list of missing composite modifications UUIDs")
+    public ResponseEntity<NetworkModificationsWithMissingInfo> getNetworkModificationsFromCompositeWithMissingInfo(
+            @Parameter(description = "Composite modifications uuids list") @RequestParam("uuids") List<UUID> compositeModificationUuids,
+            @Parameter(description = "Only metadata") @RequestParam(name = "onlyMetadata", required = false, defaultValue = "true") Boolean onlyMetadata) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(networkModificationService.getNetworkModificationsFromCompositeWithMissingInfo(compositeModificationUuids, onlyMetadata)
+        );
+    }
 }

@@ -800,4 +800,49 @@ public class NetworkModificationRepository {
         List<ModificationEntity> newEntities = saveModificationInfosNonTransactional(targetGroupUuid, newCompositeModifications);
         return newEntities.stream().map(ModificationEntity::toModificationInfos).toList();
     }
+
+    private List<UUID> findModificationIdsByCompositeModificationIdInWithFoundUuids(List<UUID> compositeModificationIds, List<UUID> foundUuids) {
+        List<UUID> allModificationIds = new ArrayList<>();
+        compositeModificationIds.forEach(compositeId -> {
+            List<UUID> modificationIds = modificationRepository.findModificationIdsByCompositeModificationId(compositeId);
+            if (!modificationIds.isEmpty()) {
+                foundUuids.add(compositeId);
+                allModificationIds.addAll(modificationIds);
+            }
+        });
+        return allModificationIds;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getBasicNetworkModificationsFromCompositeWithFoundUuids(@NonNull List<UUID> uuids, List<UUID> foundUuids) {
+        List<UUID> networkModificationsUuids = findModificationIdsByCompositeModificationIdInWithFoundUuids(uuids, foundUuids);
+        Map<UUID, ModificationEntity> entitiesById = modificationRepository.findBaseDataByIdIn(networkModificationsUuids).stream()
+            .collect(Collectors.toMap(ModificationEntity::getId, Function.identity()));
+        return new ArrayList<>(networkModificationsUuids.stream()
+            .map(entitiesById::get)
+            .filter(Objects::nonNull)
+            .map(this::toModificationsInfosOptimizedForTabular)
+            .toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ModificationInfos> getCompositeModificationsInfosWithFoundUuids(@NonNull List<UUID> uuids, List<UUID> foundUuids) {
+        return getCompositeModificationsInfosNonTransactionalWithFoundUuids(uuids, foundUuids);
+    }
+
+    private List<ModificationInfos> getCompositeModificationsInfosNonTransactionalWithFoundUuids(@NonNull List<UUID> uuids, List<UUID> foundUuids) {
+        List<ModificationInfos> entities = new ArrayList<>();
+        uuids.forEach(uuid -> {
+            List<UUID> foundEntities = modificationRepository.findModificationIdsByCompositeModificationId(uuid);
+            if (!foundEntities.isEmpty()) {
+                foundUuids.add(uuid);
+                List<ModificationInfos> orderedModifications = foundEntities
+                        .stream()
+                        .map(this::getModificationInfo)
+                        .toList();
+                entities.addAll(orderedModifications);
+            }
+        });
+        return entities;
+    }
 }

@@ -578,4 +578,19 @@ public class NetworkModificationService {
 
         return boolQueryBuilder.build();
     }
+
+    @Transactional(readOnly = true)
+    public NetworkModificationsWithMissingInfo getNetworkModificationsFromCompositeWithMissingInfo(List<UUID> compositeModificationUuids, boolean onlyMetadata) {
+        List<UUID> foundUuids = new ArrayList<>();
+        List<ModificationInfos> networkModifications;
+
+        if (onlyMetadata) {
+            networkModifications = networkModificationRepository.getBasicNetworkModificationsFromCompositeWithFoundUuids(compositeModificationUuids, foundUuids);
+        } else {
+            networkModifications = networkModificationRepository.getCompositeModificationsInfosWithFoundUuids(compositeModificationUuids, foundUuids);
+        }
+
+        List<UUID> missingUuids = compositeModificationUuids.stream().filter(uuid -> !foundUuids.contains(uuid)).toList();
+        return new NetworkModificationsWithMissingInfo(networkModifications, missingUuids);
+    }
 }
