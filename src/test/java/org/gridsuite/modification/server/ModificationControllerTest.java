@@ -1671,7 +1671,7 @@ class ModificationControllerTest {
             .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
-git st        assertEquals(0, emptyLineTypes.size());
+        assertEquals(0, emptyLineTypes.size());
 
         // Create the catalog with some line types
         mockMvc.perform(multipart(URI_LINE_CATALOG)
