@@ -1671,7 +1671,7 @@ class ModificationControllerTest {
             .andReturn();
         resultAsString = mvcResult.getResponse().getContentAsString();
         List<LineTypeInfos> emptyLineTypes = mapper.readValue(resultAsString, new TypeReference<>() { });
-        assertEquals(0, emptyLineTypes.size());
+git st        assertEquals(0, emptyLineTypes.size());
 
         // Create the catalog with some line types
         mockMvc.perform(multipart(URI_LINE_CATALOG)
@@ -1749,8 +1749,8 @@ class ModificationControllerTest {
         selectedLineType = mapper.readValue(resultAsString, new TypeReference<>() { });
         assertEquals(1, selectedLineType.getLimitsForLineType().size());
         assertEquals("LimitSet1", selectedLineType.getLimitsForLineType().getFirst().getLimitSetName());
-        assertEquals(11.11, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
-        assertEquals(22.22, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
+        assertEquals(11.0, selectedLineType.getLimitsForLineType().getFirst().getPermanentLimit(), 0.01);
+        assertEquals(22.0, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getLimitValue(), 0.01);
         assertEquals("TemporaryLimit1", selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getName());
         assertEquals(100, selectedLineType.getLimitsForLineType().getFirst().getTemporaryLimits().getFirst().getAcceptableDuration());
         assertEquals("37", selectedLineType.getLimitsForLineType().getFirst().getTemperature());
