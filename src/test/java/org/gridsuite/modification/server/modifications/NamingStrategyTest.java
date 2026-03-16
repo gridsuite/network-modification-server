@@ -67,7 +67,6 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
         assertTrue(busbarIds.containsAll(Set.of("1.1", "1A", "1B", "1.A", "1A1", "3A", "1B1", "BUSBAR_1_1", "BUSBAR_2_1", "BUSBAR_1_2", "BUSBAR_2_2")));
     }
 
-
     @Override
     protected void assertAfterNetworkModificationDeletion() {
         // nothing to test
