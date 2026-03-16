@@ -60,11 +60,13 @@ class NamingStrategyTest extends AbstractNetworkModificationTest {
 
     @Override
     protected void assertAfterNetworkModificationCreation() {
-
-        assertTrue(getNetwork().getBusbarSectionStream().map(BusbarSection::getId).collect(Collectors.toSet())
-                // verify that the switches names follow the dummy naming strategy
-                .containsAll(Set.of("vl1_1_1", "vl1_1_2", "vl1_2_2")));
+        Set<String> busbarIds = getNetwork()
+                .getBusbarSectionStream()
+                .map(BusbarSection::getId)
+                .collect(Collectors.toSet());
+        assertTrue(busbarIds.containsAll(Set.of("1.1", "1A", "1B", "1.A", "1A1", "3A", "1B1", "BUSBAR_1_1", "BUSBAR_2_1", "BUSBAR_1_2", "BUSBAR_2_2")));
     }
+
 
     @Override
     protected void assertAfterNetworkModificationDeletion() {
